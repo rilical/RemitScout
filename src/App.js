@@ -1,60 +1,93 @@
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
+import Home from "./Components/Home";
+import ProviderList from "./Components/ProviderList";
+import ProviderDetail from "./Components/ProviderDetail";
+import Payment from "./Components/Payment";
+import Favorites from "./Components/Favorites";
 import SignIn from "./Components/SignIn";
 import SignUp from "./Components/SignUp";
-import Main from "./Components/Home";
-import ListView from "./Components/List";
-import ProfileEdit from "./Components/Account";
-import Favourite from "./Components/FavList";
-import DetailCard from "./Components/DetailCard";
-import NotFound from "./Components/PageNotFound";
-import { Routes, Route } from "react-router-dom";
-import Maintainance from "./Components/Maintainance";
-import Payment from "./Components/Payment";
-import Trips from "./Components/Trips";
+import NotFound from "./Components/NotFound";
 import PrivateRoute from "./Components/PrivateRoute";
+import Profile from "./Components/Profile";
+import Transactions from "./Components/Transactions";
+import ContactUs from "./Components/ContactUs";
+import PrivacyPolicy from "./Components/PrivacyPolicy";
+
 function App() {
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      <Routes>
-        <Route path="/signin" element={<SignIn />}></Route>
-        <Route path="/signup" element={<SignUp />}></Route>
-        <Route path="/account" element={<ProfileEdit />}></Route>
-        <Route path="/stays" element={<ListView />}></Route>
-        <Route path="/detail-page/:id" element={<DetailCard />}></Route>
-        <Route path="/stays/:cityName" element={<ListView />}></Route>
-        <Route path="/" element={<Main />}></Route>
-        <Route
-          path="/favourite"
-          element={
-            <PrivateRoute>
-              <Favourite />
-            </PrivateRoute>
-          }
-        ></Route>
-        <Route path="*" element={<NotFound />}></Route>
-        <Route path="/feedback" element={<Maintainance />}></Route>
-        <Route path="/support" element={<Maintainance />}></Route>
-        <Route
-          path="/trips"
-          element={
-            <PrivateRoute>
-              <Trips />
-            </PrivateRoute>
-          }
-        ></Route>
-        <Route
-          path="/payment/:id"
-          element={
-            <PrivateRoute>
-              <Payment />
-            </PrivateRoute>
-          }
-        ></Route>
-      </Routes>
+      <div style={{ flex: 1 }}>
+        <Routes>
+          {/* Landing */}
+          <Route path="/" element={<Home />} />
+
+          {/* Show all or filtered providers */}
+          <Route path="/providers" element={<ProviderList />} />
+
+          {/* Single provider details */}
+          <Route path="/provider/:id" element={<ProviderDetail />} />
+
+          {/* Payment checkout (protected) */}
+          <Route
+            path="/payment/:id"
+            element={
+              <PrivateRoute>
+                <Payment />
+              </PrivateRoute>
+            }
+          />
+
+          {/* User favorites (protected) */}
+          <Route
+            path="/favorites"
+            element={
+              <PrivateRoute>
+                <Favorites />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Past transactions (protected) */}
+          <Route
+            path="/transactions"
+            element={
+              <PrivateRoute>
+                <Transactions />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Simple user profile page (protected) */}
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Auth */}
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+
+          {/* Contact Us */}
+          <Route path="/contact" element={<ContactUs />} />
+
+          {/* Privacy Policy */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
       <Footer />
-    </>
+    </div>
   );
 }
+
 export default App;

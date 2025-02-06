@@ -11,15 +11,13 @@ import "./index.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ChakraProvider>
-        <AuthContextProvider>
-          <ProvidersContextProvider>
-            <App />
-          </ProvidersContextProvider>
-        </AuthContextProvider>
-      </ChakraProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+  <BrowserRouter>
+    <ChakraProvider>
+      <AuthContextProvider>
+        <ProvidersContextProvider>
+          <App />
+        </ProvidersContextProvider>
+      </AuthContextProvider>
+    </ChakraProvider>
+  </BrowserRouter>
+); 

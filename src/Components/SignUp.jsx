@@ -1,164 +1,307 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  Input,
+  Box,
+  Container,
+  Heading,
+  Text,
+  Button,
   FormControl,
   FormLabel,
-  FormHelperText,
-  Button,
-  Flex,
-  Heading,
-  useMediaQuery,
+  Input,
+  Stack,
+  Link as ChakraLink,
   useToast,
-  Spinner,
+  InputGroup,
+  InputRightElement,
+  Icon,
+  Grid,
+  GridItem,
+  Checkbox,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../Context/AuthContext";
-function SignUp() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [userData, setUserData] = useState({
-    email: "",
+import { Link, useNavigate } from "react-router-dom";
+import {
+  MdEmail,
+  MdLock,
+  MdVisibility,
+  MdVisibilityOff,
+  MdPerson,
+  MdPhone,
+  MdLocationOn,
+} from "react-icons/md";
+
+const SignUp = () => {
+  const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
+    phone: "",
+    address: "",
     password: "",
+    confirmPassword: "",
   });
-  const { SignUp } = useContext(AuthContext);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const navigate = useNavigate();
   const toast = useToast();
-  const Navigate = useNavigate();
-  const [isLargerThan992] = useMediaQuery("(min-width: 992px)");
 
-  useEffect(() => {
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-  }, []);
-  const onChangeInput = (e) => {
-    const { id, value } = e.target;
-    setUserData({ ...userData, [id]: value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (
-      userData.email == "" ||
-      userData.firstName == "" ||
-      userData.lastName == "" ||
-      userData.password == ""
-    )
-      return toast({
-        title: "Fill all the details !!!",
+
+    // Basic validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      toast({
+        title: "Please fill all required fields",
         status: "error",
-        duration: 1500,
+        duration: 2000,
         isClosable: true,
         position: "top",
       });
-    SignUp(userData);
-    setTimeout(() => {
-      Navigate("/signin");
-    }, 2000);
-    setUserData({
-      email: "",
-      firstName: "",
-      lastName: "",
-      password: "",
-    });
-    toast({
-      title: "Signup Successfull !!!",
-      status: "success",
-      duration: 1500,
-      isClosable: true,
-      position: "top",
-    });
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords do not match",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+
+    if (!acceptTerms) {
+      toast({
+        title: "Please accept the terms and conditions",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+
+    try {
+      // Simulate user registration
+      toast({
+        title: "Account created successfully",
+        description: "You can now sign in with your credentials",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+      navigate("/signin");
+    } catch (error) {
+      toast({
+        title: "Error creating account",
+        description: error.message,
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+    }
   };
+
   return (
-    <>
-      {isLoading ? (
-        <Flex justify="center" mt={"5"}>
-          <Spinner
-            thickness="5px"
-            speed="0.65s"
-            emptyColor="gray.200"
-            color="#3182ce"
-            size="lg"
-          />
-        </Flex>
-      ) : (
-        <Flex
-          justify="center"
-          align="center"
-          direction="column"
-          textAlign="center"
-          pb={10}
-          boxShadow="base"
-        >
-          <Heading mt="10" as="h2" size="lg">
-            Sign Up
-          </Heading>
-          <FormControl
-            w={isLargerThan992 ? "30%" : "70%"}
-            borderRadius="lg"
-            p={"3"}
-            cursor="pointer"
-            mt={5}
-          >
-            <FormLabel htmlFor="firstName">First Name</FormLabel>
-            <Input
-              mb={4}
-              value={userData.firstName}
-              type="text"
-              id="firstName"
-              onChange={(e) => {
-                onChangeInput(e);
-              }}
-              placeholder="Enter a first name"
-            />
-            <FormLabel htmlFor="lastName">Last Name</FormLabel>
-            <Input
-              mb={4}
-              value={userData.lastName}
-              type="text"
-              id="lastName"
-              onChange={(e) => {
-                onChangeInput(e);
-              }}
-              placeholder="enter lastname"
-            />
-            <FormLabel htmlFor="email">Email address</FormLabel>
-            <Input
-              value={userData.email}
-              type="email"
-              id="email"
-              onChange={(e) => {
-                onChangeInput(e);
-              }}
-              placeholder="enter email"
-            />
-            <FormHelperText>We'll never share your email.</FormHelperText>
-            <FormLabel htmlFor="password">Password</FormLabel>
-            <Input
-              value={userData.password}
-              id="password"
-              onChange={(e) => {
-                onChangeInput(e);
-              }}
-              type="password"
-              placeholder="enter password"
-            />
-            <Button
-              w="100%"
-              mt={4}
-              colorScheme="blue"
-              type="submit"
-              onClick={(e) => {
-                handleSubmit(e);
-              }}
-            >
-              Submit
-            </Button>
-          </FormControl>
-        </Flex>
-      )}
-    </>
+    <Box bgColor="#f7f9fb" minH="100vh" py={8}>
+      <Container maxW="container.md">
+        <Box bg="white" p={8} borderRadius="lg" boxShadow="base">
+          <Stack spacing={6}>
+            <Box textAlign="center">
+              <Heading size="xl" mb={2}>
+                Create Your Account
+              </Heading>
+              <Text color="gray.600">
+                Join RemitScout for secure and affordable money transfers
+              </Text>
+            </Box>
+
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={6}>
+                {/* Personal Information */}
+                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+                  <FormControl isRequired>
+                    <FormLabel>First Name</FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        placeholder="Enter your first name"
+                      />
+                      <InputRightElement>
+                        <Icon as={MdPerson} color="gray.500" />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Last Name</FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Enter your last name"
+                      />
+                      <InputRightElement>
+                        <Icon as={MdPerson} color="gray.500" />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+                </Grid>
+
+                <FormControl isRequired>
+                  <FormLabel>Email</FormLabel>
+                  <InputGroup>
+                    <Input
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Enter your email"
+                    />
+                    <InputRightElement>
+                      <Icon as={MdEmail} color="gray.500" />
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
+
+                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+                  <FormControl>
+                    <FormLabel>Phone Number</FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        placeholder="Enter your phone number"
+                      />
+                      <InputRightElement>
+                        <Icon as={MdPhone} color="gray.500" />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Address</FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder="Enter your address"
+                      />
+                      <InputRightElement>
+                        <Icon as={MdLocationOn} color="gray.500" />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+                  <FormControl isRequired>
+                    <FormLabel>Password</FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        placeholder="Create a password"
+                      />
+                      <InputRightElement>
+                        <Icon
+                          as={showPassword ? MdVisibilityOff : MdVisibility}
+                          color="gray.500"
+                          cursor="pointer"
+                          onClick={() => setShowPassword(!showPassword)}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        placeholder="Confirm your password"
+                      />
+                      <InputRightElement>
+                        <Icon
+                          as={showConfirmPassword ? MdVisibilityOff : MdVisibility}
+                          color="gray.500"
+                          cursor="pointer"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+                </Grid>
+
+                <Checkbox
+                  isChecked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                >
+                  I accept the{" "}
+                  <ChakraLink as={Link} to="/terms" color="blue.500">
+                    terms and conditions
+                  </ChakraLink>
+                </Checkbox>
+
+                <Button type="submit" colorScheme="blue" size="lg">
+                  Create Account
+                </Button>
+
+                <Box textAlign="center">
+                  <Text>
+                    Already have an account?{" "}
+                    <ChakraLink as={Link} to="/signin" color="blue.500">
+                      Sign in
+                    </ChakraLink>
+                  </Text>
+                </Box>
+              </Stack>
+            </form>
+
+            {/* Trust Indicators */}
+            <Box borderTopWidth={1} pt={6}>
+              <Text textAlign="center" color="gray.600" fontSize="sm">
+                Your data is protected with bank-level security
+              </Text>
+              <Stack
+                direction="row"
+                spacing={4}
+                justify="center"
+                mt={4}
+                color="gray.500"
+              >
+                <Icon as={MdLock} w={6} h={6} />
+                <Text fontSize="sm">
+                  256-bit encryption for maximum security
+                </Text>
+              </Stack>
+            </Box>
+          </Stack>
+        </Box>
+      </Container>
+    </Box>
   );
-}
+};
 
 export default SignUp;
