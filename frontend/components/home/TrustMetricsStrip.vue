@@ -7,7 +7,7 @@
           Why Trust Remit-Scout?
         </h2>
         <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
-          Built by an expat who got tired of watching money disappear to bank fees. We track <span class="font-semibold whitespace-nowrap">30+ providers</span> across <span class="font-semibold whitespace-nowrap">150+ countries</span> in real time. <span class="font-semibold whitespace-nowrap">Providers cannot pay to rank higher</span>—we just show you which option gets the most money to your recipient.
+          Built by an expat who got tired of watching money disappear to bank fees. We track <span class="font-semibold whitespace-nowrap">{{ SITE_STATS.providers.display }} providers</span> across <span class="font-semibold whitespace-nowrap">{{ SITE_STATS.corridors.display }} countries</span> in real time. <span class="font-semibold whitespace-nowrap">Providers cannot pay to rank higher</span>—we just show you which option gets the most money to your recipient.
         </p>
       </div>
 
@@ -18,10 +18,10 @@
             <span class="text-3xl">👥</span>
           </div>
           <div class="text-3xl md:text-4xl font-bold text-white mb-1">
-            80k+
+            {{ SITE_STATS.users.display }}
           </div>
           <div class="text-sm text-white/90">
-            Users trust us
+            {{ SITE_STATS.users.label }}
           </div>
         </div>
 
@@ -30,10 +30,10 @@
             <span class="text-3xl">💰</span>
           </div>
           <div class="text-3xl md:text-4xl font-bold text-white mb-1">
-            $2.5M+
+            {{ SITE_STATS.totalSaved.display }}
           </div>
           <div class="text-sm text-white/90">
-            Saved in fees
+            {{ SITE_STATS.totalSaved.label }}
           </div>
         </div>
 
@@ -42,10 +42,10 @@
             <span class="text-3xl">🏢</span>
           </div>
           <div class="text-3xl md:text-4xl font-bold text-white mb-1">
-            30+
+            {{ SITE_STATS.providers.display }}
           </div>
           <div class="text-sm text-white/90">
-            Providers compared
+            {{ SITE_STATS.providers.label }}
           </div>
         </div>
 
@@ -54,10 +54,10 @@
             <span class="text-3xl">🌍</span>
           </div>
           <div class="text-3xl md:text-4xl font-bold text-white mb-1">
-            150+
+            {{ SITE_STATS.corridors.display }}
           </div>
           <div class="text-sm text-white/90">
-            Corridors covered
+            {{ SITE_STATS.corridors.label }}
           </div>
         </div>
       </div>
@@ -79,5 +79,6 @@
 </template>
 
 <script setup lang="ts">
+import { SITE_STATS } from '~/config/stats';
 </script>
 

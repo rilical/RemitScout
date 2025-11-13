@@ -12,13 +12,15 @@
         <NuxtLink
           v-for="country in countries"
           :key="country.code"
-          :to="`/send-money/us-to-${country.code.toLowerCase()}`"
+          :to="getCorridorUrl(country.code)"
           class="group bg-white rounded-xl border border-neutral-200 p-5 transition-all hover:border-neutral-300 hover:shadow-sm flex items-center justify-between"
         >
           <div class="flex items-center gap-4">
             <span class="text-2xl">{{ getCountryFlag(country.code) }}</span>
             <div>
-              <div class="text-sm text-neutral-500 mb-0.5">Best ways to send money</div>
+              <div class="text-sm text-neutral-500 mb-0.5">
+                {{ userCountry === country.code ? 'Send money to' : `Send from ${userCountry} to` }}
+              </div>
               <div class="font-semibold text-neutral-900">{{ country.name }}</div>
             </div>
           </div>
@@ -56,6 +58,23 @@ import { COUNTRY_HIGHLIGHTS } from '~/utils/constants';
 const { STR } = useStrings();
 const countries = COUNTRY_HIGHLIGHTS;
 
+// Detect user's country for localized corridor URLs
+const userCountry = ref('US'); // Default to US
+
+// Detect user location on mount
+onMounted(async () => {
+  try {
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    if (data.country_code) {
+      userCountry.value = data.country_code.toUpperCase();
+    }
+  } catch (error) {
+    // Fallback to US if detection fails
+    console.log('Location detection failed, using US as default');
+  }
+});
+
 const countryFlags: Record<string, string> = {
   IN: '🇮🇳',
   CN: '🇨🇳',
@@ -82,5 +101,18 @@ const countryFlags: Record<string, string> = {
 
 const getCountryFlag = (code: string): string => {
   return countryFlags[code] || '🏳️';
+};
+
+// Generate localized corridor URL based on user's country
+const getCorridorUrl = (toCountry: string): string => {
+  const from = userCountry.value.toLowerCase();
+  const to = toCountry.toLowerCase();
+  
+  // If user is from the same country, default to US
+  if (from === to) {
+    return `/send-money/us-to-${to}`;
+  }
+  
+  return `/send-money/${from}-to-${to}`;
 };
 </script>

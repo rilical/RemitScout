@@ -127,7 +127,7 @@
 
           <div class="mt-4 text-xs text-neutral-500">
             <p>Last updated: {{ lastUpdatedText }}</p>
-            <p class="mt-1">Source: OANDA</p>
+            <p class="mt-1 italic">Historical trends for illustration purposes</p>
           </div>
         </div>
 
@@ -247,16 +247,21 @@ const chartWidth = 800;
 const chartHeight = 180;
 const chartPadding = 10;
 
+// TODO: Replace with real historical rate data from API (e.g., OANDA, XE, or similar provider)
+// Current implementation uses illustrative data for demonstration purposes only
 const generateHistoricalData = (days = 30) => {
   const data = [];
-  const baseRate = 0.85 + Math.random() * 0.1;
+  // Using a deterministic seed based on currency pair for consistent demo data
+  const seed = (selectedFromCountry.value + selectedToCountry.value).length;
+  const baseRate = 0.85 + (seed % 10) / 100;
   const today = new Date();
   
   for (let i = days; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     
-    const variation = (Math.sin(i / 5) * 0.02) + (Math.random() * 0.01 - 0.005);
+    // Deterministic variation instead of random for consistency
+    const variation = (Math.sin(i / 5) * 0.02) + (Math.sin(i / 3) * 0.01);
     const rate = Math.max(0.01, baseRate + variation);
     
     data.push({

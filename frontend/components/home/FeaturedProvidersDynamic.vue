@@ -32,14 +32,14 @@
         <!-- Scroll container -->
         <div 
           ref="scrollContainer"
-          class="overflow-x-auto scrollbar-hide -mx-4 px-4 scroll-smooth"
+          class="overflow-x-auto scrollbar-hide -mx-4 px-4 scroll-smooth snap-x snap-mandatory"
           @scroll="handleScroll"
         >
           <div class="flex gap-6 pb-4">
             <article
               v-for="provider in sortedProviders"
               :key="provider.id"
-              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
+              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col snap-start"
             >
               <!-- Score Badge at top center with circular progress -->
               <div class="flex justify-center pt-6 pb-4">
@@ -82,6 +82,19 @@
                   class="h-10 mx-auto object-contain"
                 />
                 <h3 v-else class="text-lg font-bold text-neutral-900">{{ provider.name }}</h3>
+              </div>
+
+              <!-- Find Out More Link -->
+              <div class="px-6 pb-6 text-center">
+                <NuxtLink
+                  :to="`/providers/${provider.slug || provider.name.toLowerCase().replace(/\s+/g, '-')}`"
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-md px-2 py-1"
+                >
+                  <span>Find out more</span>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
               </div>
 
               <!-- Metrics with Progress Bars -->
@@ -187,23 +200,57 @@
         </button>
       </div>
 
+      <!-- Pagination Indicators (Mobile) -->
+      <div class="flex lg:hidden items-center justify-center gap-2 mt-6" role="navigation" aria-label="Provider carousel pagination">
+        <span class="text-xs text-neutral-600 font-medium">
+          {{ currentPage }}/{{ totalPages }}
+        </span>
+        <div class="flex items-center gap-1.5 mx-2">
+          <button
+            v-for="(dot, index) in totalPages"
+            :key="index"
+            @click="scrollToPage(index)"
+            :aria-label="`Go to page ${index + 1}`"
+            :aria-current="currentPage === index + 1 ? 'true' : 'false'"
+            :class="[
+              'w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
+              currentPage === index + 1 
+                ? 'bg-brand-600 w-6' 
+                : 'bg-neutral-300 hover:bg-neutral-400'
+            ]"
+          />
+        </div>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import { useCompareForm } from '~/composables/useCompareForm'
 
-const from = ref('US')
-const to = ref('PH')
-const amount = ref(500)
-const method = ref<'bank' | 'cash' | 'wallet'>('bank')
+const props = defineProps<{
+  from?: string
+  to?: string
+  amount?: number
+  method?: 'bank' | 'cash' | 'wallet'
+}>()
+
+const { form } = useCompareForm()
+
+const from = computed(() => props.from || form.value.from || 'US')
+const to = computed(() => props.to || form.value.to || 'PH')
+const amount = computed(() => props.amount || form.value.amount || 500)
+const method = computed(() => props.method || form.value.method || 'bank')
+
 const sortBy = ref<'recipient' | 'fee' | 'speed' | 'rating'>('rating')
 
 const scrollContainer = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
 
 const { useProviders, attachRatings } = useRemittanceApi()
 
@@ -243,6 +290,18 @@ const handleScroll = () => {
   const container = scrollContainer.value
   canScrollLeft.value = container.scrollLeft > 0
   canScrollRight.value = container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+  
+  // Calculate current page for pagination
+  const cardWidth = 320 + 24 // card width + gap
+  const scrollPosition = container.scrollLeft
+  const visibleWidth = container.clientWidth
+  const totalScrollWidth = container.scrollWidth
+  
+  // Calculate total pages based on visible width
+  totalPages.value = Math.ceil(totalScrollWidth / visibleWidth)
+  
+  // Calculate current page
+  currentPage.value = Math.floor(scrollPosition / visibleWidth) + 1
 }
 
 const scrollLeft = () => {
@@ -255,6 +314,13 @@ const scrollRight = () => {
   if (!scrollContainer.value) return
   const cardWidth = 320 + 24
   scrollContainer.value.scrollBy({ left: cardWidth, behavior: 'smooth' })
+}
+
+const scrollToPage = (pageIndex: number) => {
+  if (!scrollContainer.value) return
+  const visibleWidth = scrollContainer.value.clientWidth
+  const targetScroll = pageIndex * visibleWidth
+  scrollContainer.value.scrollTo({ left: targetScroll, behavior: 'smooth' })
 }
 
 const getScoreColor = (score: number) => {

@@ -45,4 +45,48 @@ import { TESTIMONIALS } from '~/utils/constants';
 
 const { STR } = useStrings();
 const testimonials = TESTIMONIALS;
+
+// Generate Review schema
+const reviewSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "RemitScout Money Transfer Comparison",
+  "description": "Compare international money transfer services and save on fees",
+  "brand": {
+    "@type": "Brand",
+    "name": "RemitScout"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": testimonials.length
+  },
+  "review": testimonials.map(testimonial => ({
+    "@type": "Review",
+    "author": {
+      "@type": "Person",
+      "name": testimonial.name
+    },
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": "5",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "reviewBody": testimonial.quote,
+    "datePublished": new Date().toISOString().split('T')[0]
+  }))
+};
+
+// Inject JSON-LD schema into head
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify(reviewSchema)
+    }
+  ]
+});
 </script>

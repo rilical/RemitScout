@@ -1,141 +1,251 @@
+<script setup lang="ts">
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useCompareForm } from '~/composables/useCompareForm'
+import CountrySelect from '~/components/shared/CountrySelect.vue'
+
+const { form, sendMoneyUrl, submit, DELIVERY_METHODS } = useCompareForm()
+
+const isVisible = ref(false)
+const sheetOpen = ref(false)
+
+const defaultCurrencyByCountry: Record<string, string> = {
+  US: 'USD', UK: 'GBP', CA: 'CAD', AU: 'AUD', GB: 'GBP',
+  IN: 'INR', MX: 'MXN', PH: 'PHP', NG: 'NGN', FR: 'EUR',
+  DE: 'EUR', ES: 'EUR', IT: 'EUR', BR: 'BRL', CN: 'CNY',
+}
+
+const resolveCurrency = (countryCode: string): string => {
+  return defaultCurrencyByCountry[countryCode] || 'USD'
+}
+
+function handleScroll() {
+  const heroElement = document.getElementById('hero-dual-tab')
+  if (heroElement) {
+    const rect = heroElement.getBoundingClientRect()
+    isVisible.value = rect.bottom < 0
+  }
+}
+
+function openSheet() {
+  sheetOpen.value = true
+  document.body.style.overflow = 'hidden'
+  
+  setTimeout(() => {
+    const firstInput = document.querySelector<HTMLElement>('#sheet-from-country')
+    firstInput?.focus()
+  }, 100)
+}
+
+function closeSheet() {
+  sheetOpen.value = false
+  document.body.style.overflow = ''
+}
+
+async function handleSheetSubmit() {
+  const success = await submit()
+  if (success) {
+    closeSheet()
+  }
+}
+
+watch(() => form.value.from, (newCountry) => {
+  if (newCountry && !form.value.fromCurrency) {
+    form.value.fromCurrency = resolveCurrency(newCountry)
+  }
+})
+
+watch(() => form.value.to, (newCountry) => {
+  if (newCountry && !form.value.toCurrency) {
+    form.value.toCurrency = resolveCurrency(newCountry)
+  } else if (!newCountry) {
+    form.value.toCurrency = ''
+  }
+})
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+  handleScroll()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+  document.body.style.overflow = ''
+})
+</script>
+
 <template>
-  <Transition name="slide-down">
+  <Transition
+    enter-active-class="motion-safe:transition-all motion-safe:duration-300"
+    enter-from-class="opacity-0 translate-y-full"
+    enter-to-class="opacity-100 translate-y-0"
+    leave-active-class="motion-safe:transition-all motion-safe:duration-300"
+    leave-from-class="opacity-100 translate-y-0"
+    leave-to-class="opacity-0 translate-y-full"
+  >
     <div
       v-if="isVisible"
-      class="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-200 shadow-md"
+      class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-2xl"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <form @submit.prevent="handleSubmit" class="flex items-center gap-3 py-3">
-          <div class="flex items-center gap-2 flex-1">
-            <div class="flex-1 min-w-0">
-              <CountrySelect
-                v-model="from"
-                label="From"
-                id="sticky-from"
-                class="text-sm"
-                :select-class="'border-neutral-300 h-11'"
-              />
-            </div>
-
-            <svg class="h-4 w-4 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-
-            <div class="flex-1 min-w-0">
-              <CountrySelect
-                v-model="to"
-                label="To"
-                id="sticky-to"
-                class="text-sm"
-                :select-class="'border-neutral-300 h-11'"
-              />
-            </div>
-
-            <div class="flex-1 min-w-0">
-              <AmountInput
-                v-model="amount"
-                label="Amount"
-                id="sticky-amount"
-                :from="from"
-                :to="to"
-                :input-class="'border-neutral-300 h-11'"
-              />
-            </div>
-
-            <div class="hidden md:flex items-center gap-2">
-              <button
-                v-for="method in deliveryMethods"
-                :key="method.value"
-                type="button"
-                @click="selectedMethod = method.value"
-                :title="method.label"
-                class="h-11 w-11 flex items-center justify-center rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-brand-600"
-                :class="selectedMethod === method.value 
-                  ? 'border-brand-600 bg-brand-50' 
-                  : 'border-neutral-200 bg-white hover:border-brand-300'"
-              >
-                <span class="text-xl">{{ method.icon }}</span>
-              </button>
-            </div>
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex items-center justify-between gap-4">
+          <div class="hidden sm:flex items-center gap-2 text-sm text-slate-600">
+            <span class="font-medium">Compare providers:</span>
+            <span v-if="form.from && form.to">
+              {{ form.from }} → {{ form.to }}
+            </span>
+            <span v-else class="text-slate-400">Select countries</span>
           </div>
-
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="h-11 px-6 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:opacity-50 whitespace-nowrap"
-          >
-            {{ STR.stickyBar.cta }}
-          </button>
-        </form>
+          
+          <div class="flex items-center gap-3 flex-1 sm:flex-initial">
+            <button
+              @click="openSheet"
+              class="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>Compare Now</span>
+            </button>
+            
+            <NuxtLink
+              v-if="form.from && form.to"
+              :to="sendMoneyUrl"
+              class="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2"
+            >
+              <span>View details</span>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </NuxtLink>
+          </div>
+        </div>
       </div>
     </div>
   </Transition>
+
+  <Teleport to="body">
+    <Transition
+      enter-active-class="motion-safe:transition-opacity motion-safe:duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="motion-safe:transition-opacity motion-safe:duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="sheetOpen"
+        class="fixed inset-0 z-50 bg-neutral-900/50 backdrop-blur-sm"
+        @click="closeSheet"
+        aria-hidden="true"
+      />
+    </Transition>
+
+    <Transition
+      enter-active-class="motion-safe:transition-transform motion-safe:duration-300"
+      enter-from-class="translate-y-full"
+      enter-to-class="translate-y-0"
+      leave-active-class="motion-safe:transition-transform motion-safe:duration-200"
+      leave-from-class="translate-y-0"
+      leave-to-class="translate-y-full"
+    >
+      <div
+        v-if="sheetOpen"
+        class="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Compare providers"
+      >
+        <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+          <h2 class="text-lg font-bold text-neutral-900">Compare Providers</h2>
+          <button
+            @click="closeSheet"
+            class="rounded-full p-2 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Close"
+          >
+            <svg class="h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="px-6 py-6">
+          <form @submit.prevent="handleSheetSubmit" class="space-y-4">
+            <div>
+              <label for="sheet-from-country" class="block text-sm font-semibold text-neutral-700 mb-2">
+                <span class="mr-2">🛫</span>Sending from
+              </label>
+              <CountrySelect
+                id="sheet-from-country"
+                v-model="form.from"
+                label="Sending from"
+                placeholder="United States"
+              />
+            </div>
+
+            <div>
+              <label for="sheet-to-country" class="block text-sm font-semibold text-neutral-700 mb-2">
+                <span class="mr-2">🛬</span>Receiving in
+              </label>
+              <CountrySelect
+                id="sheet-to-country"
+                v-model="form.to"
+                label="Receiving in"
+                placeholder="Type in Country"
+              />
+            </div>
+
+            <div>
+              <label for="sheet-amount" class="block text-sm font-semibold text-neutral-700 mb-2">
+                You send
+              </label>
+              <input
+                id="sheet-amount"
+                v-model.number="form.amount"
+                type="number"
+                min="1"
+                step="1"
+                class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                placeholder="500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-neutral-700 mb-2">
+                Delivery method
+              </label>
+              <div class="flex gap-2">
+                <button
+                  v-for="method in DELIVERY_METHODS"
+                  :key="method.value"
+                  type="button"
+                  @click="form.method = method.value"
+                  :class="[
+                    'flex-1 flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium rounded-lg border transition-all',
+                    form.method === method.value
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-700 border-slate-300'
+                  ]"
+                  :aria-pressed="form.method === method.value"
+                >
+                  <span class="text-xl">{{ method.icon }}</span>
+                  <span>{{ method.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 text-base font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Compare 30+ providers
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { DELIVERY_METHODS } from '~/utils/constants';
-
-const { STR } = useStrings();
-
-interface Props {
-  scrollThreshold?: number;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  scrollThreshold: 80
-});
-
-const from = ref('US');
-const to = ref('PH');
-const amount = ref(500);
-const selectedMethod = ref('bank');
-const isSubmitting = ref(false);
-const isVisible = ref(false);
-const deliveryMethods = DELIVERY_METHODS;
-
-const handleScroll = () => {
-  isVisible.value = window.scrollY >= props.scrollThreshold;
-};
-
-const handleSubmit = async () => {
-  isSubmitting.value = true;
-  try {
-    await navigateTo(
-      `/send-money/${from.value.toLowerCase()}-to-${to.value.toLowerCase()}?amount=${amount.value}&method=${selectedMethod.value}`
-    );
-  } catch (error) {
-    console.error('Navigation error:', error);
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll, { passive: true });
-  handleScroll();
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', handleScroll);
-});
-</script>
-
-<style scoped>
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.slide-down-enter-from {
-  transform: translateY(-100%);
-  opacity: 0;
-}
-
-.slide-down-leave-to {
-  transform: translateY(-100%);
-  opacity: 0;
-}
-</style>
-
 

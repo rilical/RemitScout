@@ -1,15 +1,7 @@
 <template>
-  <div class="min-h-screen">
-    <!-- 1. Utility Trust Strip (very top) -->
-    <TopNoticeBar @open-modal="modalOpen = true" />
-
-    <!-- Sticky Compare Bar (shows on scroll) -->
-    <StickyCompareBar />
-
-    <!-- 2. Header / Nav (handled by layout) -->
-
-    <!-- 3. Hero: Converter (primary job to be done) -->
-    <HeroDualTab ref="heroDualTabRef" />
+  <div>
+    <!-- Hero: Converter (primary job to be done) -->
+    <HeroDualTab id="hero-dual-tab" ref="heroDualTabRef" />
 
     <!-- 4. Top 3 live results preview (right under hero) -->
     <FeaturedProvidersDynamic />
@@ -68,8 +60,6 @@
 
 <script setup lang="ts">
 import { ref, defineAsyncComponent } from 'vue'
-import TopNoticeBar from '~/components/home/TopNoticeBar.vue'
-import StickyCompareBar from '~/components/home/StickyCompareBar.vue'
 import HeroDualTab from '~/components/home/HeroDualTab.vue'
 import RemitScoreBanner from '~/components/home/RemitScoreBanner.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
@@ -79,15 +69,18 @@ import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 
-const CorridorsGridDynamic = defineAsyncComponent(() => import('~/components/home/CorridorsGridDynamic.vue'))
+// SEO-critical components: import directly for SSR
+import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
+import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
+import CountryGrid from '~/components/home/CountryGrid.vue'
+import HomeFaq from '~/components/home/HomeFaq.vue'
+import TestimonialsCarousel from '~/components/home/TestimonialsCarousel.vue'
+
+// Below-fold components: can stay async for code-splitting
 const BankVsSpecialistDynamic = defineAsyncComponent(() => import('~/components/home/BankVsSpecialistDynamic.vue'))
-const FeaturedProvidersDynamic = defineAsyncComponent(() => import('~/components/home/FeaturedProvidersDynamic.vue'))
 const RateAlertForm = defineAsyncComponent(() => import('~/components/home/RateAlertForm.vue'))
 const TravelToolsSection = defineAsyncComponent(() => import('~/components/home/TravelToolsSection.vue'))
-const TestimonialsCarousel = defineAsyncComponent(() => import('~/components/home/TestimonialsCarousel.vue'))
 const LatestGuides = defineAsyncComponent(() => import('~/components/home/LatestGuides.vue'))
-const CountryGrid = defineAsyncComponent(() => import('~/components/home/CountryGrid.vue'))
-const HomeFaq = defineAsyncComponent(() => import('~/components/home/HomeFaq.vue'))
 const CtaBanner = defineAsyncComponent(() => import('~/components/home/CtaBanner.vue'))
 const NewsletterSignup = defineAsyncComponent(() => import('~/components/home/NewsletterSignup.vue'))
 

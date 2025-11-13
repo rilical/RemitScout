@@ -75,14 +75,45 @@
           </p>
 
           <div
-            class="animate-scale-in relative rounded-3xl border border-neutral-200 bg-white p-8 shadow-lg delay-300"
+            class="animate-scale-in relative rounded-3xl border border-neutral-200 bg-white p-4 sm:p-8 shadow-lg delay-300"
           >
             <form
               role="search"
               aria-label="Money transfer comparison form"
               @submit.prevent="handleMoneySubmit"
             >
-              <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <!-- Mobile Stepper (visible on mobile only) -->
+              <div class="mb-4 flex items-center justify-center gap-2 sm:hidden">
+                <div 
+                  v-for="step in 3" 
+                  :key="step"
+                  class="flex items-center"
+                >
+                  <div 
+                    :class="[
+                      'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all',
+                      currentMobileStep >= step 
+                        ? 'bg-brand-600 text-white' 
+                        : 'bg-neutral-200 text-neutral-600'
+                    ]"
+                  >
+                    {{ step }}
+                  </div>
+                  <div 
+                    v-if="step < 3"
+                    :class="[
+                      'mx-1 h-0.5 w-8 transition-all',
+                      currentMobileStep > step ? 'bg-brand-600' : 'bg-neutral-200'
+                    ]"
+                  />
+                </div>
+              </div>
+
+              <!-- Step 1: Countries (always visible on desktop, conditional on mobile) -->
+              <div 
+                class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
+                :class="{ 'hidden sm:grid': currentMobileStep !== 1 }"
+              >
                 <div>
                   <label
                     for="from-country"
@@ -112,9 +143,25 @@
                     placeholder="Type in Country"
                   />
                 </div>
+
+                <!-- Mobile Next Button for Step 1 -->
+                <div class="sm:hidden">
+                  <button
+                    type="button"
+                    @click="currentMobileStep = 2"
+                    :disabled="!moneyForm.from || !moneyForm.to"
+                    class="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
 
-              <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <!-- Step 2: Currencies (always visible on desktop, conditional on mobile) -->
+              <div 
+                class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
+                :class="{ 'hidden sm:grid': currentMobileStep !== 2 }"
+              >
                 <div>
                   <label
                     for="from-currency"
@@ -150,9 +197,32 @@
                     :disabled="!moneyForm.to"
                   />
                 </div>
+
+                <!-- Mobile Navigation for Step 2 -->
+                <div class="flex gap-2 sm:hidden">
+                  <button
+                    type="button"
+                    @click="currentMobileStep = 1"
+                    class="flex-1 rounded-lg border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    @click="currentMobileStep = 3"
+                    :disabled="!moneyForm.fromCurrency || !moneyForm.toCurrency"
+                    class="flex-1 rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
 
-              <div class="mb-6">
+              <!-- Step 3: Amount (always visible on desktop, conditional on mobile) -->
+              <div 
+                class="mb-6"
+                :class="{ 'hidden sm:block': currentMobileStep !== 3 }"
+              >
                 <label for="amount" class="mb-2 block text-sm font-semibold text-neutral-700">
                   You send
                 </label>
@@ -165,28 +235,71 @@
                   class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
                   placeholder="500"
                 />
+
+                <!-- Mobile Back Button for Step 3 -->
+                <div class="mt-4 sm:hidden">
+                  <button
+                    type="button"
+                    @click="currentMobileStep = 2"
+                    class="w-full rounded-lg border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                  >
+                    ← Back
+                  </button>
+                </div>
+              </div>
+
+              <!-- Error/Success Messages -->
+              <div
+                v-if="formError || formSuccess"
+                role="alert"
+                aria-live="polite"
+                aria-atomic="true"
+                class="mb-4"
+              >
+                <div
+                  v-if="formError"
+                  class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800"
+                >
+                  <div class="flex items-start gap-2">
+                    <svg class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ formError }}</span>
+                  </div>
+                </div>
+                <div
+                  v-if="formSuccess"
+                  class="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800"
+                >
+                  <div class="flex items-start gap-2">
+                    <svg class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{{ formSuccess }}</span>
+                  </div>
+                </div>
               </div>
 
               <button
                 type="submit"
-                class="group min-h-btn w-full rounded-xl bg-brand-600 font-semibold text-white transition-all duration-200 hover:bg-brand-700"
+                class="group min-h-btn w-full rounded-xl bg-brand-600 font-semibold text-white transition-all duration-200 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 flex items-center justify-center gap-2"
+                :class="{ 'hidden sm:flex': currentMobileStep !== 3 }"
+                aria-describedby="form-errors"
               >
-                <span class="flex items-center justify-center gap-2">
-                  Compare 30+ providers
-                  <svg
-                    class="h-5 w-5 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                </span>
+                Compare 30+ providers
+                <svg
+                  class="h-5 w-5 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
               </button>
             </form>
 
@@ -209,21 +322,21 @@
               <!-- Money Saved -->
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">Total money saved for users</p>
-                <p class="text-4xl font-bold text-brand-600">$180M+</p>
+                <p class="text-4xl font-bold text-brand-600">{{ SITE_STATS.totalSaved.display }}</p>
                 <p class="mt-1 text-xs text-neutral-600">Since 2019</p>
               </div>
 
               <!-- Providers Compared -->
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">Licensed providers compared</p>
-                <p class="text-3xl font-bold text-neutral-900">30+</p>
-                <p class="mt-1 text-xs text-neutral-600">All fully regulated & trusted</p>
+                <p class="text-3xl font-bold text-neutral-900">{{ SITE_STATS.providers.display }}</p>
+                <p class="mt-1 text-xs text-neutral-600">{{ SITE_STATS.licensedProviders.label }}</p>
               </div>
 
               <!-- Countries Covered -->
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">Countries & corridors</p>
-                <p class="text-3xl font-bold text-neutral-900">150+</p>
+                <p class="text-3xl font-bold text-neutral-900">{{ SITE_STATS.corridors.display }}</p>
                 <p class="mt-1 text-xs text-neutral-600">Send money anywhere</p>
               </div>
 
@@ -266,17 +379,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRemittanceApi } from '~/composables/useRemittanceApi';
+import { useCompareForm } from '~/composables/useCompareForm';
 import JsonLdWebSiteSearch from '~/components/seo/JsonLdWebSiteSearch.vue';
 import CurrencySelect from '~/components/shared/CurrencySelect.vue';
+import { SITE_STATS } from '~/config/stats';
 
-interface MoneyForm {
-  from: string;
-  to: string;
-  amount: number;
-  method: string;
-  fromCurrency: string;
-  toCurrency: string;
-}
+const { form: moneyForm, validationError, submit: submitForm, DELIVERY_METHODS } = useCompareForm();
+
+const formError = validationError
+const formSuccess = ref<string>('')
+
+const currentMobileStep = ref(1)
 
 const currencyFallback = 'USD';
 
@@ -383,22 +496,10 @@ const resolveCurrency = (countryCode: string): string => {
 
 const { recordSearch, useRecentSearches } = useRemittanceApi();
 
-// Money Transfer Form
-const moneyForm = ref<MoneyForm>({
-  from: 'US',
-  to: '',
-  amount: 500,
-  method: 'bank',
-  fromCurrency: 'USD',
-  toCurrency: '',
-});
-
-// Dynamic families helped counter
 const familiesHelped = ref(1250);
 
-// Expose for parent component to prefill
 defineExpose({
-  prefillMoneyForm: (data: Partial<MoneyForm>) => {
+  prefillMoneyForm: (data: any) => {
     Object.assign(moneyForm.value, data);
   },
 });
@@ -501,11 +602,9 @@ watch(
 );
 
 const handleMoneySubmit = async () => {
-  const { from, to, amount, method, fromCurrency, toCurrency } = moneyForm.value;
+  const { from, to, amount, method } = moneyForm.value;
 
-  if (!from || !to) {
-    return;
-  }
+  formSuccess.value = ''
 
   try {
     await recordSearch({
@@ -518,9 +617,7 @@ const handleMoneySubmit = async () => {
     // Ignore recordSearch errors
   }
 
-  await navigateTo(
-    `/compare?from=${from}&to=${to}&amount=${amount}&method=${method}&fromCurrency=${fromCurrency}&toCurrency=${toCurrency}`
-  );
+  await submitForm();
 };
 
 // Update families helped based on recent searches

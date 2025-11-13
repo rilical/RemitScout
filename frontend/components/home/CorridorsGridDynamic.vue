@@ -237,8 +237,16 @@ const selectCorridor = (corridor: any) => {
     to: corridor.to 
   })
   
-  // Scroll to hero
-  document.getElementById('hero-dual-tab')?.scrollIntoView({ behavior: 'smooth' })
+  // Scroll to hero and focus the form
+  const heroElement = document.getElementById('hero-dual-tab')
+  if (heroElement) {
+    heroElement.scrollIntoView({ behavior: 'smooth' })
+    // Wait for scroll to finish, then focus the first form input
+    setTimeout(() => {
+      const firstInput = heroElement.querySelector<HTMLSelectElement>('#from-country')
+      firstInput?.focus()
+    }, 500)
+  }
 }
 
 onMounted(() => {

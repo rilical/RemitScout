@@ -77,5 +77,34 @@ const faqs = [
     answer: "We only share the information necessary to provide you with accurate quotes and to facilitate your transfer if you choose to proceed with a provider. We <span class=\"text-brand-600 font-semibold\">never sell your personal information</span> to third parties. Please review our privacy policy for detailed information about how we handle your data."
   }
 ];
+
+// Strip HTML tags from answers for schema
+const stripHtml = (html: string) => {
+  return html.replace(/<[^>]*>/g, '');
+};
+
+// Generate FAQPage schema
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": stripHtml(faq.answer)
+    }
+  }))
+};
+
+// Inject JSON-LD schema into head
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify(faqSchema)
+    }
+  ]
+});
 </script>
 

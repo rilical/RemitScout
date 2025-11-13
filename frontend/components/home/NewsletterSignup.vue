@@ -56,7 +56,10 @@ const handleSubmit = async () => {
   errorMessage.value = '';
 
   try {
-    // Simulate API call - replace with actual newsletter API endpoint
+    // TODO: CRITICAL - Replace with actual ESP/marketing endpoint before production
+    // This currently simulates signup but doesn't actually save the email
+    // Integrate with: Mailchimp, ConvertKit, SendGrid, or your preferred ESP
+    // Example: await fetch('/api/newsletter/subscribe', { method: 'POST', body: JSON.stringify({ email: email.value }) })
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     successMessage.value = '🎉 Thanks for subscribing! Check your inbox for confirmation.';
