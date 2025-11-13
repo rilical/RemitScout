@@ -66,7 +66,7 @@
           <div class="flex-1">
             <h4 class="font-bold text-neutral-900 mb-2"><span class="whitespace-nowrap">100% Independent</span> & Free</h4>
             <p class="text-neutral-700 leading-relaxed">
-              We're independent. <span class="whitespace-nowrap">Providers cannot pay to rank higher.</span> We earn a small commission when you use our links, but this never affects our rankings—we show you the best deal based on total cost, speed, and reliability.
+              We're independent. <span class="whitespace-nowrap">Providers cannot pay to rank higher.</span> We earn a small commission when you use our links, but this never affects our rankings, we show you the best deal based on total cost, speed, and reliability.
             </p>
           </div>
         </div>

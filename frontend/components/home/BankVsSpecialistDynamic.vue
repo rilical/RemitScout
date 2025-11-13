@@ -180,7 +180,7 @@
               Understanding the hidden costs
             </h3>
             <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
-              Banks don't just charge fees—they make most of their money through the exchange rate markup. Here's what you need to know.
+              Banks don't just charge fees, they make most of their money through the exchange rate markup. Here's what you need to know.
             </p>
           </div>
 
@@ -206,7 +206,7 @@
               </div>
               
               <p class="text-sm text-neutral-600 leading-relaxed">
-                On a <span class="whitespace-nowrap">$500 transfer,</span> that <span class="whitespace-nowrap">3% hidden markup</span> alone costs you <span class="whitespace-nowrap">$15—before</span> any stated fees. Most customers never notice this "hidden tax."
+                On a <span class="whitespace-nowrap">$500 transfer,</span> that <span class="whitespace-nowrap">3% hidden markup</span> alone costs you <span class="whitespace-nowrap">$15, before</span> any stated fees. Most customers never notice this "hidden tax."
               </p>
             </div>
 

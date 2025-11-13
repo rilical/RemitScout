@@ -133,7 +133,7 @@ export const travelTools: TravelTool[] = [
   {
     id: 'esim-finder',
     name: 'eSIM Quick Finder',
-    description: 'Compare prepaid data plans by country—activation in minutes, no roaming shock',
+    description: 'Compare prepaid data plans by country, activation in minutes, no roaming shock',
     icon: '📱',
     link: '/esim',
     category: 'connectivity'

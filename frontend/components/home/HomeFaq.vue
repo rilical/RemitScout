@@ -70,7 +70,7 @@ const faqs = [
   },
   {
     question: 'How can you offer this service for free?',
-    answer: "We earn a small commission from providers when you complete a transfer through our platform. This <span class=\"text-brand-600 font-semibold\">doesn't affect the rates or fees you pay</span>—it's built into the provider's standard pricing. Our commission model allows us to offer our comparison service <span class=\"text-brand-600 font-semibold\">completely free to users</span>."
+    answer: "We earn a small commission from providers when you complete a transfer through our platform. This <span class=\"text-brand-600 font-semibold\">doesn't affect the rates or fees you pay</span>, it's built into the provider's standard pricing. Our commission model allows us to offer our comparison service <span class=\"text-brand-600 font-semibold\">completely free to users</span>."
   },
   {
     question: 'Do you share my information with providers?',

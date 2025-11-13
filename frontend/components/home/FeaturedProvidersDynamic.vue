@@ -292,7 +292,6 @@ const handleScroll = () => {
   canScrollRight.value = container.scrollLeft < container.scrollWidth - container.clientWidth - 10
   
   // Calculate current page for pagination
-  const cardWidth = 320 + 24 // card width + gap
   const scrollPosition = container.scrollLeft
   const visibleWidth = container.clientWidth
   const totalScrollWidth = container.scrollWidth
@@ -300,8 +299,11 @@ const handleScroll = () => {
   // Calculate total pages based on visible width
   totalPages.value = Math.ceil(totalScrollWidth / visibleWidth)
   
-  // Calculate current page
-  currentPage.value = Math.floor(scrollPosition / visibleWidth) + 1
+  // Calculate current page (add small buffer to handle snap scrolling)
+  currentPage.value = Math.min(
+    Math.round(scrollPosition / visibleWidth) + 1,
+    totalPages.value
+  )
 }
 
 const scrollLeft = () => {
@@ -318,9 +320,14 @@ const scrollRight = () => {
 
 const scrollToPage = (pageIndex: number) => {
   if (!scrollContainer.value) return
-  const visibleWidth = scrollContainer.value.clientWidth
-  const targetScroll = pageIndex * visibleWidth
-  scrollContainer.value.scrollTo({ left: targetScroll, behavior: 'smooth' })
+  const container = scrollContainer.value
+  const visibleWidth = container.clientWidth
+  const maxScroll = container.scrollWidth - container.clientWidth
+  
+  // Calculate target scroll position, clamped to max scroll
+  const targetScroll = Math.min(pageIndex * visibleWidth, maxScroll)
+  
+  container.scrollTo({ left: targetScroll, behavior: 'smooth' })
 }
 
 const getScoreColor = (score: number) => {

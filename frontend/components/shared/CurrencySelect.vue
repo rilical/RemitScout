@@ -91,18 +91,18 @@ interface Props {
 }
 
 const defaultCurrencies: CurrencyOption[] = [
-  { value: 'USD', label: 'USD — US Dollar', symbol: '$' },
-  { value: 'EUR', label: 'EUR — Euro', symbol: '€' },
-  { value: 'GBP', label: 'GBP — British Pound', symbol: '£' },
-  { value: 'CAD', label: 'CAD — Canadian Dollar', symbol: 'C$' },
-  { value: 'AUD', label: 'AUD — Australian Dollar', symbol: 'A$' },
-  { value: 'NZD', label: 'NZD — New Zealand Dollar', symbol: 'NZ$' },
-  { value: 'INR', label: 'INR — Indian Rupee', symbol: '₹' },
-  { value: 'MXN', label: 'MXN — Mexican Peso', symbol: 'MX$' },
-  { value: 'PHP', label: 'PHP — Philippine Peso', symbol: '₱' },
-  { value: 'NGN', label: 'NGN — Nigerian Naira', symbol: '₦' },
-  { value: 'BRL', label: 'BRL — Brazilian Real', symbol: 'R$' },
-  { value: 'JPY', label: 'JPY — Japanese Yen', symbol: '¥' }
+  { value: 'USD', label: 'USD, US Dollar', symbol: '$' },
+  { value: 'EUR', label: 'EUR, Euro', symbol: '€' },
+  { value: 'GBP', label: 'GBP, British Pound', symbol: '£' },
+  { value: 'CAD', label: 'CAD, Canadian Dollar', symbol: 'C$' },
+  { value: 'AUD', label: 'AUD, Australian Dollar', symbol: 'A$' },
+  { value: 'NZD', label: 'NZD, New Zealand Dollar', symbol: 'NZ$' },
+  { value: 'INR', label: 'INR, Indian Rupee', symbol: '₹' },
+  { value: 'MXN', label: 'MXN, Mexican Peso', symbol: 'MX$' },
+  { value: 'PHP', label: 'PHP, Philippine Peso', symbol: '₱' },
+  { value: 'NGN', label: 'NGN, Nigerian Naira', symbol: '₦' },
+  { value: 'BRL', label: 'BRL, Brazilian Real', symbol: 'R$' },
+  { value: 'JPY', label: 'JPY, Japanese Yen', symbol: '¥' }
 ]
 
 const props = withDefaults(defineProps<Props>(), {

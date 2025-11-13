@@ -23,7 +23,7 @@ export const useStrings = () => {
     trust: {
       title: 'Trust & independence',
       bullets: [
-        'Independent & unbiased. Our rankings are based on total cost and speed—providers can\'t pay to improve placement.',
+        'Independent & unbiased. Our rankings are based on total cost and speed, providers can\'t pay to improve placement.',
         'Real‑time data. Quotes are refreshed around the clock and reflect fees + exchange margins.',
         'Secure & private. We never sell your personal data.',
         'Expat‑focused support. Help choosing the safest, quickest option for your family.'
@@ -44,7 +44,7 @@ export const useStrings = () => {
       title: 'Compare providers for your route',
       filterLabel: 'Filter',
       sortLabel: 'Sort by',
-      disclosure: 'We may earn a commission if you choose a provider—this never affects ranking.'
+      disclosure: 'We may earn a commission if you choose a provider, this never affects ranking.'
     },
     alerts: {
       title: 'Get rate alerts',
@@ -78,7 +78,7 @@ export const useStrings = () => {
       title: 'Compare providers by country'
     },
     footer: {
-      disclosure: 'Remit-Scout is an independent comparison service. We may earn a referral fee if you choose a provider via our links—this never affects our rankings. Providers are regulated in their operating regions. We do not handle your money.',
+      disclosure: 'Remit-Scout is an independent comparison service. We may earn a referral fee if you choose a provider via our links, this never affects our rankings. Providers are regulated in their operating regions. We do not handle your money.',
       copyright: `© ${new Date().getFullYear()} Remit-Scout. All rights reserved.`
     },
     notice: {

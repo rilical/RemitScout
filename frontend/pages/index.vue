@@ -97,7 +97,7 @@ const handleCorridorSelected = (data: { from: string, to: string }) => {
 const { public: { siteUrl } } = useRuntimeConfig()
 
 setSeo({
-  title: 'Remit-Scout — Compare International Money Transfer Services & Save on Fees',
+  title: 'Remit-Scout, Compare International Money Transfer Services & Save on Fees',
   description: 'Compare live rates, fees and delivery speed from 30+ licensed providers. Find the best way to support your family abroad.',
   canonical: `${siteUrl}/`,
 })

@@ -4,19 +4,12 @@
       <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
         <!-- Company Info -->
         <div class="lg:col-span-1">
-          <div class="mb-4 flex items-center">
-            <div class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-              <svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
-                />
-              </svg>
-            </div>
+          <div class="mb-4">
             <span class="text-xl font-bold">Remit-Scout</span>
+            <p class="text-sm text-gray-400 mt-1">For expats, by expats.</p>
           </div>
-          <p class="mb-4 text-gray-300">
-            Compare international money transfers and eSIM providers. Find the best rates and services
-            for your travel and remittance needs.
+          <p class="mb-4 text-sm text-gray-400">
+            Independent comparison platform helping you find the best rates and lowest fees for international money transfers.
           </p>
           <div class="flex space-x-4">
             <a href="#" class="text-gray-400 transition-colors hover:text-white">
@@ -97,9 +90,6 @@
                 >Methodology</NuxtLink
               >
             </li>
-            <li>
-              <a href="#" class="text-gray-300 transition-colors hover:text-white">Careers</a>
-            </li>
           </ul>
         </div>
 
@@ -144,20 +134,12 @@
           </p>
           
           <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 text-xs text-gray-500">
-              <button
-                @click="$emit('open-modal')"
-                class="hover:text-gray-300 underline transition-colors"
-              >
-                How we make money
-              </button>
-              <span>·</span>
-              <button class="hover:text-gray-300 transition-colors">EN</button>
-              <span>·</span>
-              <span>ES</span>
-              <span>·</span>
-              <span>FR</span>
-            </div>
+            <button
+              @click="$emit('open-modal')"
+              class="text-xs text-gray-500 hover:text-gray-300 underline transition-colors"
+            >
+              How we make money
+            </button>
           </div>
         </div>
       </div>

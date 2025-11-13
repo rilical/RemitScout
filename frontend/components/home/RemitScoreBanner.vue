@@ -13,10 +13,10 @@
             </div>
             <div>
               <h3 class="text-lg font-bold text-neutral-900 mb-2">
-                Understanding Our Ratings
+                How We Score Providers
               </h3>
               <p class="text-sm text-neutral-700 mb-3 max-w-3xl leading-relaxed">
-                Each provider gets a <span class="font-semibold">Remit-Score</span> (0-10 scale) based on real transfer data—not paid reviews. 
+                Each provider gets a <span class="font-semibold">Remit-Score</span> (0-10 scale) based on real transfer data, not paid reviews. 
                 Scores like <span class="font-bold text-brand-600">9.5</span>, <span class="font-bold text-brand-600">8.4</span>, or <span class="font-bold text-brand-600">7.2</span> reflect actual value, speed, reliability, and safety across thousands of transfers.
               </p>
               <button

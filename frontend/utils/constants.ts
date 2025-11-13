@@ -118,7 +118,7 @@ export const TESTIMONIALS = [
 export const GUIDE_CARDS = [
   {
     title: 'Best ways to send money to the Philippines (2025)',
-    blurb: 'Fees, exchange margins and speed compared—bank, cash and mobile wallet.',
+    blurb: 'Fees, exchange margins and speed compared, bank, cash and mobile wallet.',
     readTime: '7 min read',
     updated: 'May 2025',
     slug: 'best-ways-send-money-philippines',
@@ -148,7 +148,7 @@ export const GUIDE_CARDS = [
   },
   {
     title: 'Cash pickup vs bank deposit: what\'s faster?',
-    blurb: 'When cash pickup beats bank—plus safety checks for your recipient.',
+    blurb: 'When cash pickup beats bank, plus safety checks for your recipient.',
     readTime: '4 min read',
     updated: 'May 2025',
     slug: 'cash-pickup-vs-bank-deposit',

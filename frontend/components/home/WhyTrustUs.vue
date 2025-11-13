@@ -14,7 +14,7 @@
               </div>
               <div class="pt-2">
                 <p class="font-semibold text-white mb-1">100% independent rankings</p>
-                <p class="text-white/90 leading-relaxed">Providers can't pay for better placement. We rank purely on total cost, speed, and reliability—so you see what's genuinely best for your transfer.</p>
+                <p class="text-white/90 leading-relaxed">Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.</p>
               </div>
             </div>
 
@@ -34,7 +34,7 @@
               </div>
               <div class="pt-2">
                 <p class="font-semibold text-white mb-1">Your privacy protected</p>
-                <p class="text-white/90 leading-relaxed">We never sell or share your personal information. Compare rates anonymously—no account required.</p>
+                <p class="text-white/90 leading-relaxed">We never sell or share your personal information. Compare rates anonymously, no account required.</p>
               </div>
             </div>
 
