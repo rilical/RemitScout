@@ -1,0 +1,308 @@
+<template>
+  <section id="providers" class="py-16 sm:py-20 bg-white" aria-live="polite">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <!-- Heading -->
+      <div class="mb-12">
+        <div class="mb-4">
+          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+            Compare Money Transfer Providers. Find the Best Deal in Seconds.
+          </h2>
+          <p class="text-base sm:text-lg text-neutral-600 max-w-4xl">
+            We analyze real-time exchange rates, transfer fees, delivery speeds, and reliability scores across hundreds of providers. Our transparent rankings help you save money on every international transfer - no hidden agendas, just honest comparisons based on actual data.
+          </p>
+          <p class="text-sm text-neutral-500 mt-2">
+            Last updated: {{ lastUpdated }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div v-if="pending" class="relative">
+        <div class="overflow-x-auto scrollbar-hide -mx-4 px-4">
+          <div class="flex gap-6 pb-4">
+            <div v-for="i in 4" :key="i" class="flex-shrink-0 w-[280px] sm:w-[320px] animate-pulse">
+              <div class="h-[500px] bg-neutral-200 rounded-2xl"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provider cards horizontal scroll -->
+      <div v-else class="relative group/section">
+        <!-- Scroll container -->
+        <div 
+          ref="scrollContainer"
+          class="overflow-x-auto scrollbar-hide -mx-4 px-4 scroll-smooth"
+          @scroll="handleScroll"
+        >
+          <div class="flex gap-6 pb-4">
+            <article
+              v-for="provider in sortedProviders"
+              :key="provider.id"
+              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
+            >
+              <!-- Score Badge at top center with circular progress -->
+              <div class="flex justify-center pt-6 pb-4">
+                <div class="relative w-16 h-16">
+                  <svg class="w-16 h-16 transform -rotate-90">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="#e5e7eb"
+                      stroke-width="4"
+                      fill="none"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      :stroke="getScoreColor(provider.score)"
+                      stroke-width="4"
+                      fill="none"
+                      :stroke-dasharray="`${(provider.score / 10) * 175.93} 175.93`"
+                      stroke-linecap="round"
+                      class="transition-all duration-500"
+                    />
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xl font-bold" :class="getScoreTextClass(provider.score)">
+                      {{ provider.score.toFixed(1) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Provider Logo -->
+              <div class="px-6 pb-6 text-center">
+                <img 
+                  v-if="provider.logoUrl" 
+                  :src="provider.logoUrl" 
+                  :alt="provider.name"
+                  class="h-10 mx-auto object-contain"
+                />
+                <h3 v-else class="text-lg font-bold text-neutral-900">{{ provider.name }}</h3>
+              </div>
+
+              <!-- Metrics with Progress Bars -->
+              <div class="px-6 pb-6 space-y-4 flex-1">
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-neutral-700 font-medium">Delivered Value</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.trust || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
+                  </div>
+                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
+                      :style="{ width: `${(provider.scoreBreakdown?.trust || provider.reliability || 0.9) * 100}%` }"
+                    ></div>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-neutral-700 font-medium">Reliability & Success</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.service || 0.85) * 10).toFixed(1) }}</span>
+                  </div>
+                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
+                      :style="{ width: `${(provider.scoreBreakdown?.service || 0.85) * 100}%` }"
+                    ></div>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-neutral-700 font-medium">Friction & Speed</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.fees || (1 - provider.marginPct / 10)) * 10).toFixed(1) }}</span>
+                  </div>
+                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
+                      :style="{ width: `${(provider.scoreBreakdown?.fees || (1 - provider.marginPct / 10)) * 100}%` }"
+                    ></div>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-neutral-700 font-medium">Support & Refunds</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.satisfaction || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
+                  </div>
+                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
+                      :style="{ width: `${(provider.scoreBreakdown?.satisfaction || provider.reliability || 0.9) * 100}%` }"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CTAs -->
+              <div class="px-6 pb-6 space-y-3">
+                <a
+                  :href="`/go/${provider.id}`"
+                  target="_blank"
+                  rel="nofollow"
+                  class="block w-full rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-3 text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+                >
+                  Go to {{ provider.name }}
+                </a>
+                <p class="text-xs text-neutral-500 text-center">
+                  We may earn a commission. Rankings are independent.
+                </p>
+                <NuxtLink
+                  :to="`/providers/${provider.id}`"
+                  class="block w-full text-sm font-medium text-brand-600 hover:text-brand-700 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded"
+                >
+                  Read the full review
+                </NuxtLink>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- Navigation arrows (visible on hover on desktop) -->
+        <button
+          v-if="canScrollLeft"
+          @click="scrollLeft"
+          class="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
+          aria-label="Previous providers"
+        >
+          <svg class="h-5 w-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <button
+          v-if="canScrollRight"
+          @click="scrollRight"
+          class="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
+          aria-label="Next providers"
+        >
+          <svg class="h-5 w-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRemittanceApi } from '~/composables/useRemittanceApi'
+
+const from = ref('US')
+const to = ref('PH')
+const amount = ref(500)
+const method = ref<'bank' | 'cash' | 'wallet'>('bank')
+const sortBy = ref<'recipient' | 'fee' | 'speed' | 'rating'>('rating')
+
+const scrollContainer = ref<HTMLElement | null>(null)
+const canScrollLeft = ref(false)
+const canScrollRight = ref(false)
+
+const { useProviders, attachRatings } = useRemittanceApi()
+
+const { data, pending } = await useProviders(from.value, to.value, amount.value, method.value)
+
+const ratedProviders = computed(() => {
+  if (!data.value?.data) return []
+  return attachRatings(data.value.data)
+})
+
+const sortedProviders = computed(() => {
+  const providers = [...ratedProviders.value]
+  
+  switch (sortBy.value) {
+    case 'fee':
+      return providers.sort((a, b) => a.fee - b.fee)
+    case 'speed':
+      return providers.sort((a, b) => {
+        const getHours = (delivery: string) => {
+          if (delivery.includes('min')) return 0.5
+          if (delivery.includes('same day')) return 8
+          if (delivery.includes('day')) return 24
+          return 48
+        }
+        return getHours(a.delivery) - getHours(b.delivery)
+      })
+    case 'rating':
+      return providers.sort((a, b) => b.score - a.score)
+    default:
+      return providers.sort((a, b) => b.recipientGets - a.recipientGets)
+  }
+})
+
+const handleScroll = () => {
+  if (!scrollContainer.value) return
+  
+  const container = scrollContainer.value
+  canScrollLeft.value = container.scrollLeft > 0
+  canScrollRight.value = container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+}
+
+const scrollLeft = () => {
+  if (!scrollContainer.value) return
+  const cardWidth = 320 + 24
+  scrollContainer.value.scrollBy({ left: -cardWidth, behavior: 'smooth' })
+}
+
+const scrollRight = () => {
+  if (!scrollContainer.value) return
+  const cardWidth = 320 + 24
+  scrollContainer.value.scrollBy({ left: cardWidth, behavior: 'smooth' })
+}
+
+const getScoreColor = (score: number) => {
+  if (score >= 9.0) return '#10b981'
+  if (score >= 8.0) return '#3b82f6'
+  if (score >= 7.0) return '#eab308'
+  return '#ef4444'
+}
+
+const getScoreTextClass = (score: number) => {
+  if (score >= 9.0) return 'text-green-600'
+  if (score >= 8.0) return 'text-blue-600'
+  if (score >= 7.0) return 'text-yellow-600'
+  return 'text-red-600'
+}
+
+const lastUpdated = computed(() => {
+  const now = new Date()
+  return now.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+})
+
+onMounted(() => {
+  if (scrollContainer.value) {
+    handleScroll()
+  }
+})
+
+onUnmounted(() => {
+})
+</script>
+
+<style scoped>
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+</style>
+
+
+

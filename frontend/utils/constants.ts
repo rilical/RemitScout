@@ -1,0 +1,222 @@
+export const CORRIDOR_TILES = [
+  { from: 'US', to: 'PH', feeText: 'from $0 fee', timeText: '15–30 min' },
+  { from: 'US', to: 'MX', feeText: '$0–$3 fee', timeText: 'Instant–1 h' },
+  { from: 'US', to: 'IN', feeText: '$0–$4 fee', timeText: 'Same day' },
+  { from: 'UK', to: 'PK', feeText: 'from £0 fee', timeText: '1–24 h' },
+  { from: 'UK', to: 'NG', feeText: 'from £1 fee', timeText: 'Same day' },
+  { from: 'DE', to: 'MA', feeText: '€0–€2 fee', timeText: 'Cash same day' },
+  { from: 'CA', to: 'PH', feeText: 'from $0 fee', timeText: '15–30 min' },
+  { from: 'CA', to: 'IN', feeText: '$0–$3 fee', timeText: 'Same day' },
+  { from: 'FR', to: 'SN', feeText: '€0–€3 fee', timeText: '1 day' },
+  { from: 'ES', to: 'MA', feeText: '€0–€2 fee', timeText: 'Cash pickup fast' },
+  { from: 'IT', to: 'RO', feeText: '€0–€2 fee', timeText: 'Same day' },
+  { from: 'AE', to: 'IN', feeText: 'AED 0–10 fee', timeText: '15–60 min' },
+];
+
+export const SAMPLE_PROVIDERS = [
+  {
+    name: 'Wise',
+    slug: 'wise',
+    score: 8.9,
+    bestFor: 'Highest payout on bank transfers',
+    recipientGets: 28150,
+    fee: 2.99,
+    marginPct: 0.35,
+    delivery: 'Same day',
+    methods: ['bank'],
+    pros: ['Consistently strong rates', 'Transparent fees', 'Good mobile app'],
+    cons: ['ID verification for >$1,000', 'Limited weekend hours']
+  },
+  {
+    name: 'Remitly',
+    slug: 'remitly',
+    score: 8.7,
+    bestFor: 'Fast cash pickup',
+    recipientGets: 27980,
+    fee: 3.99,
+    marginPct: 0.65,
+    delivery: '15–30 min',
+    methods: ['bank', 'cash', 'wallet'],
+    pros: ['Fast cash pickup', 'Wide coverage', 'Promo for first transfer'],
+    cons: ['Higher fees on express', 'Rate varies by speed']
+  },
+  {
+    name: 'WorldRemit',
+    slug: 'worldremit',
+    score: 8.5,
+    bestFor: 'Mobile wallet options',
+    recipientGets: 27920,
+    fee: 2.99,
+    marginPct: 0.8,
+    delivery: 'Minutes–hours',
+    methods: ['bank', 'cash', 'wallet'],
+    pros: ['Great wallet support', 'Good coverage', 'Easy app'],
+    cons: ['Margin can be high', 'Verification delays']
+  },
+  {
+    name: 'Xoom',
+    slug: 'xoom',
+    score: 8.3,
+    bestFor: 'Wide cash network',
+    recipientGets: 27750,
+    fee: 3.99,
+    marginPct: 1.2,
+    delivery: 'Minutes–same day',
+    methods: ['bank', 'cash'],
+    pros: ['PayPal integration', 'Large network', 'Reliable'],
+    cons: ['Higher exchange margin', 'Fees can add up']
+  },
+  {
+    name: 'Ria',
+    slug: 'ria',
+    score: 8.1,
+    bestFor: 'Agent locations',
+    recipientGets: 27780,
+    fee: 5.0,
+    marginPct: 1.0,
+    delivery: 'Minutes–1 day',
+    methods: ['bank', 'cash'],
+    pros: ['Many agent locations', 'Cash pickup reliable', 'Good support'],
+    cons: ['Higher fees', 'Rate not always best']
+  },
+  {
+    name: 'Western Union',
+    slug: 'western-union',
+    score: 7.8,
+    bestFor: 'Global reach',
+    recipientGets: 27620,
+    fee: 7.99,
+    marginPct: 1.5,
+    delivery: 'Minutes–1 day',
+    methods: ['bank', 'cash'],
+    pros: ['Largest network', 'Trusted brand', 'Available everywhere'],
+    cons: ['Expensive', 'High margin', 'Better options exist']
+  },
+];
+
+export const TESTIMONIALS = [
+  {
+    name: 'Sarah DeAngelo',
+    corridor: '🇺🇸 US → Italy 🇮🇹',
+    useCase: 'Family Christmas treats',
+    quote: 'My parents got €120 more when I sent them holiday money last Christmas. I had no idea banks were charging that much in hidden fees until I compared here.'
+  },
+  {
+    name: 'Mars Kapadia',
+    corridor: '🇺🇸 US → India 🇮🇳',
+    useCase: 'Student tuition',
+    quote: 'Saved almost $200 on my sister\'s tuition payment by switching from Western Union. That\'s huge for us. The side-by-side comparison made it so obvious which one to pick.'
+  },
+  {
+    name: 'Kareem Jubair',
+    corridor: '🇵🇱 Poland → Jordan 🇯🇴',
+    useCase: 'Family support',
+    quote: 'I send money back home every month and was just using whatever app I knew. Turns out I was losing like 50-60 złoty each time. Been using the better option for 6 months now.'
+  }
+];
+
+export const GUIDE_CARDS = [
+  {
+    title: 'Best ways to send money to the Philippines (2025)',
+    blurb: 'Fees, exchange margins and speed compared—bank, cash and mobile wallet.',
+    readTime: '7 min read',
+    updated: 'May 2025',
+    slug: 'best-ways-send-money-philippines',
+    emoji: '🇵🇭',
+    gradient: 'from-blue-100 to-red-100',
+    category: 'Country Guide'
+  },
+  {
+    title: 'Wise vs Remitly vs WorldRemit for US→PH',
+    blurb: 'Which pays out more for $500? We tested fees, rates and delivery.',
+    readTime: '6 min read',
+    updated: 'May 2025',
+    slug: 'wise-vs-remitly-vs-worldremit',
+    emoji: '⚖️',
+    gradient: 'from-purple-100 to-pink-100',
+    category: 'Comparison'
+  },
+  {
+    title: 'Avoid hidden fees in international transfers',
+    blurb: 'Spot exchange mark‑ups and keep more in every transfer.',
+    readTime: '5 min read',
+    updated: 'May 2025',
+    slug: 'avoid-hidden-fees',
+    emoji: '💰',
+    gradient: 'from-emerald-100 to-teal-100',
+    category: 'Money Saving'
+  },
+  {
+    title: 'Cash pickup vs bank deposit: what\'s faster?',
+    blurb: 'When cash pickup beats bank—plus safety checks for your recipient.',
+    readTime: '4 min read',
+    updated: 'May 2025',
+    slug: 'cash-pickup-vs-bank-deposit',
+    emoji: '🏦',
+    gradient: 'from-amber-100 to-orange-100',
+    category: 'How To'
+  },
+];
+
+export const COUNTRY_HIGHLIGHTS = [
+  { code: 'IN', name: 'India', stat: 'Strong bank deposit rates' },
+  { code: 'CN', name: 'China', stat: 'Bank deposit preferred' },
+  { code: 'PH', name: 'Philippines', stat: 'Cash pickup in minutes' },
+  { code: 'NP', name: 'Nepal', stat: 'Fast bank transfers' },
+  { code: 'PK', name: 'Pakistan', stat: 'Fast bank transfers' },
+  { code: 'TH', name: 'Thailand', stat: 'Mobile wallet options' },
+  { code: 'LK', name: 'Sri Lanka', stat: 'Good bank coverage' },
+  { code: 'JP', name: 'Japan', stat: 'Fast bank transfers' },
+  { code: 'CA', name: 'Canada', stat: 'Competitive rates' },
+  { code: 'US', name: 'United States', stat: 'Multiple delivery options' },
+  { code: 'MX', name: 'Mexico', stat: 'Low fees for small amounts' },
+  { code: 'CO', name: 'Colombia', stat: 'Cash pickup widely available' },
+  { code: 'CL', name: 'Chile', stat: 'Bank deposit preferred' },
+  { code: 'BR', name: 'Brazil', stat: 'Growing provider options' },
+  { code: 'IT', name: 'Italy', stat: 'Competitive rates' },
+  { code: 'CH', name: 'Switzerland', stat: 'Fast bank transfers' },
+  { code: 'PL', name: 'Poland', stat: 'Good bank coverage' },
+  { code: 'DE', name: 'Germany', stat: 'Fast bank transfers' },
+  { code: 'NG', name: 'Nigeria', stat: 'Mobile wallet options' },
+  { code: 'GH', name: 'Ghana', stat: 'Mobile money popular' },
+  { code: 'GB', name: 'United Kingdom', stat: 'Competitive rates' },
+];
+
+export const DELIVERY_METHODS = [
+  { value: 'bank', label: 'Bank deposit', icon: '🏦' },
+  { value: 'cash', label: 'Cash pickup', icon: '💵' },
+  { value: 'wallet', label: 'Mobile wallet', icon: '📱' },
+];
+
+export const FILTER_OPTIONS = [
+  { value: 'fastest', label: 'Fastest' },
+  { value: 'highest-payout', label: 'Highest payout' },
+  { value: 'low-fee', label: 'Low fee' },
+  { value: 'promo', label: 'First-transfer promo' },
+  { value: 'cash', label: 'Cash pickup' },
+  { value: 'wallet', label: 'Mobile wallet' },
+  { value: 'bank', label: 'Bank deposit' },
+];
+
+export const SORT_OPTIONS = [
+  { value: 'recipient-gets', label: 'Recipient gets' },
+  { value: 'total-fee', label: 'Total fee' },
+  { value: 'delivery-time', label: 'Delivery time' },
+];
+
+export const BANK_VS_SPECIALIST_DATA = {
+  bank: {
+    rate: 55.10,
+    fee: 15.00,
+    delivery: '1–2 days',
+    recipientGets: 27550
+  },
+  specialist: {
+    rate: 56.40,
+    fee: 2.99,
+    delivery: '15–30 min (cash) • same day (bank)',
+    recipientGets: 28150
+  }
+};
+
+
