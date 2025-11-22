@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { NAV } from '~/config/nav';
 import MenuPanel from './MenuPanel.vue';
 import ComparePanel from './panels/ComparePanel.vue';
@@ -11,8 +11,29 @@ import { useCompareForm } from '~/composables/useCompareForm';
 const openMenu = ref<string | null>(null);
 const mobileMenuOpen = ref(false);
 const scrolled = ref(false);
+const languageMenuOpen = ref(false);
 
 const { compareUrl } = useCompareForm();
+
+const currentLocale = ref('en');
+const locales = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+];
+
+function toggleLanguageMenu() {
+  languageMenuOpen.value = !languageMenuOpen.value;
+}
+
+function selectLanguage(locale: string) {
+  currentLocale.value = locale;
+  languageMenuOpen.value = false;
+  // TODO: Implement actual language switching logic
+}
+
+function closeLanguageMenu() {
+  languageMenuOpen.value = false;
+}
 
 function toggle(menuId: string) {
   openMenu.value = openMenu.value === menuId ? null : menuId;
@@ -40,12 +61,20 @@ function onScroll() {
   scrolled.value = window.scrollY > 2;
 }
 
+function handleClickOutside(e: MouseEvent) {
+  if (languageMenuOpen.value && !(e.target as HTMLElement).closest('.language-selector')) {
+    closeLanguageMenu();
+  }
+}
+
 onMounted(() => {
   window.addEventListener('scroll', onScroll);
+  document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll);
+  document.removeEventListener('click', handleClickOutside);
 });
 
 // Close mobile menu on route change
@@ -53,6 +82,7 @@ const route = useRoute();
 watch(() => route.path, () => {
   closeMobileMenu();
   close();
+  closeLanguageMenu();
 });
 </script>
 
@@ -67,11 +97,12 @@ watch(() => route.path, () => {
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Left: Logo -->
       <div class="flex items-center gap-8">
-        <NuxtLink to="/" class="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md">
-          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-xl">💸</span>
-          <span class="hidden sm:inline text-lg font-bold">
-            <span class="text-blue-600">Remit</span><span class="text-neutral-900">Scout</span>
-          </span>
+        <NuxtLink to="/" class="flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md">
+          <img 
+            src="/logos/remit-scout.svg" 
+            alt="RemitScout" 
+            class="h-8 w-auto"
+          />
         </NuxtLink>
 
         <!-- Primary nav (Desktop) -->
@@ -80,7 +111,7 @@ watch(() => route.path, () => {
           <div class="relative">
             <button 
               data-menu-trigger
-              @click="toggle('compare')" 
+              @click="toggle('compare')"
               class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-haspopup="true" 
               :aria-expanded="openMenu==='compare'">
@@ -98,7 +129,7 @@ watch(() => route.path, () => {
           <div class="relative">
             <button 
               data-menu-trigger
-              @click="toggle('guides')" 
+              @click="toggle('guides')"
               class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-haspopup="true" 
               :aria-expanded="openMenu==='guides'">
@@ -116,7 +147,7 @@ watch(() => route.path, () => {
           <div class="relative">
             <button 
               data-menu-trigger
-              @click="toggle('expats')" 
+              @click="toggle('expats')"
               class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-haspopup="true" 
               :aria-expanded="openMenu==='expats'">
@@ -141,22 +172,42 @@ watch(() => route.path, () => {
 
       <!-- Right: Utility -->
       <div class="flex items-center gap-2">
-        <!-- Search (Desktop) -->
-        <button 
-          class="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 rounded-md border border-slate-200 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          aria-label="Search">
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <span class="text-xs text-slate-400">/</span>
-        </button>
-
-        <!-- Language (Desktop) -->
-        <button 
-          class="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 text-sm text-slate-700 rounded-md border border-slate-200 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" 
-          aria-label="Language">
-          EN
-        </button>
+        <!-- Language Selector (Desktop) -->
+        <div class="relative hidden lg:block language-selector">
+          <button 
+            @click.stop="toggleLanguageMenu"
+            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 rounded-md border border-slate-200 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Select language"
+            aria-haspopup="true"
+            :aria-expanded="languageMenuOpen">
+            <span class="text-base">{{ locales.find(l => l.code === currentLocale)?.flag || '🌐' }}</span>
+            <span class="text-xs font-medium">{{ currentLocale.toUpperCase() }}</span>
+            <svg class="h-3 w-3 transition-transform" :class="{ 'rotate-180': languageMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          <!-- Language Dropdown -->
+          <div 
+            v-if="languageMenuOpen"
+            @click.stop
+            class="absolute right-0 mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg z-50 py-1">
+            <button
+              v-for="locale in locales"
+              :key="locale.code"
+              @click="selectLanguage(locale.code)"
+              class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              :class="{ 'bg-blue-50 text-blue-700': currentLocale === locale.code }">
+              <span class="text-lg">{{ locale.flag }}</span>
+              <span class="flex-1 text-left">{{ locale.name }}</span>
+              <span v-if="currentLocale === locale.code" class="text-blue-600">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            </button>
+          </div>
+        </div>
 
         <!-- Compare CTA -->
         <NuxtLink 
@@ -208,9 +259,11 @@ watch(() => route.path, () => {
           aria-label="Mobile navigation">
           
           <div class="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-            <span class="text-lg font-bold">
-              <span class="text-blue-600">Remit</span><span class="text-neutral-900">Scout</span>
-            </span>
+            <img 
+              src="/logos/remit-scout.svg" 
+              alt="RemitScout" 
+              class="h-7 w-auto"
+            />
             <button 
               @click="closeMobileMenu"
               class="rounded-md p-2 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"

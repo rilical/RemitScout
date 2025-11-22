@@ -19,7 +19,7 @@
           </span>
           <span class="hidden h-4 w-px bg-gray-200 md:block" aria-hidden="true"></span>
           <NuxtLink
-            to="/disclosure"
+            to="/legal/disclosure"
             class="flex items-center gap-2 text-sm font-medium text-gray-700 transition-colors hover:text-primary-600"
           >
             <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 text-amber-500">💡</span>

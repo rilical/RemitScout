@@ -66,7 +66,7 @@ import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HowItWorks from '~/components/home/HowItWorks.vue'
 import FounderStory from '~/components/home/FounderStory.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
-import { setSeo } from '~/composables/useSeo'
+import { setSeo, jsonLdSiteNavigation } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 
 // SEO-critical components: import directly for SSR
@@ -114,5 +114,13 @@ addOrganizationSchema()
 addRemittanceServiceSchema()
 addBreadcrumbSchema([
   { name: 'Home', url: `${siteUrl}/` },
+])
+jsonLdSiteNavigation([
+  { name: 'Send Money', url: `${siteUrl}/send-money` },
+  { name: 'Provider Reviews', url: `${siteUrl}/reviews` },
+  { name: 'Exchange Rates', url: `${siteUrl}/exchange-rates` },
+  { name: 'Guides', url: `${siteUrl}/learn` },
+  { name: 'eSIM', url: `${siteUrl}/esim` },
+  { name: 'FAQ', url: `${siteUrl}/faq` },
 ])
 </script>

@@ -1,0 +1,328 @@
+{
+  "common": {
+    "siteName": "Remit-Scout",
+    "tagline": "Para expatriados, por expatriados.",
+    "compare": "Comparar",
+    "compareProviders": "Comparar proveedores",
+    "compareNow": "Comparar ahora",
+    "learnMore": "Saber más",
+    "getStarted": "Comenzar",
+    "readMore": "Leer más",
+    "viewAll": "Ver todo",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "close": "Cerrar",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar por",
+    "amount": "Cantidad",
+    "currency": "Moneda",
+    "country": "País",
+    "select": "Seleccionar",
+    "required": "Requerido",
+    "optional": "Opcional"
+  },
+  "nav": {
+    "skipToContent": "Saltar al contenido",
+    "compare": "Comparar",
+    "guides": "Guías",
+    "forExpats": "Para Expatriados",
+    "methodology": "Metodología",
+    "about": "Sobre Nosotros",
+    "contact": "Contacto",
+    "faq": "Preguntas Frecuentes",
+    "viewAllGuides": "Ver todas las guías →",
+    "menu": {
+      "open": "Abrir menú",
+      "close": "Cerrar menú"
+    },
+    "language": "Idioma",
+    "search": {
+      "placeholder": "Buscar...",
+      "label": "Buscar",
+      "shortcut": "/"
+    }
+  },
+  "hero": {
+    "title": "Envía más a casa,",
+    "titleHighlight": "paga menos",
+    "titleEnd": " en comisiones.",
+    "subtitle": "Compara tasas en vivo, comisiones totales y velocidad de entrega de más de 30 proveedores autorizados.",
+    "subtitleEnd": "Construido para expatriados, por expatriados.",
+    "form": {
+      "sendingFrom": "Enviando desde",
+      "receivingIn": "Recibiendo en",
+      "fromCurrency": "Moneda de origen",
+      "toCurrency": "Moneda de destino",
+      "youSend": "Tú envías",
+      "deliveryMethod": "Método de entrega",
+      "submit": "Comparar más de 30 proveedores",
+      "selectCountry": "Selecciona un país",
+      "selectCurrency": "Selecciona una moneda",
+      "selectMethod": "Selecciona un método",
+      "step": "Paso",
+      "of": "de"
+    },
+    "validation": {
+      "selectSendingCountry": "Por favor selecciona un país de envío",
+      "selectReceivingCountry": "Por favor selecciona un país de destino",
+      "selectSendingCurrency": "Por favor selecciona una moneda de envío",
+      "selectReceivingCurrency": "Por favor selecciona una moneda de destino",
+      "enterValidAmount": "Por favor ingresa una cantidad válida"
+    },
+    "stats": {
+      "totalSaved": "Dinero total ahorrado para usuarios",
+      "providersCompared": "Proveedores autorizados comparados",
+      "corridorsCovered": "Países y corredores",
+      "averageSavings": "Ahorro promedio vs bancos",
+      "since": "Desde 2019",
+      "sendMoneyAnywhere": "Envía dinero a cualquier lugar",
+      "onEveryTransfer": "En cada transferencia"
+    },
+    "whyRemitScout": "¿Por qué Remit-Scout?",
+    "features": {
+      "fastTransfers": "Transferencias rápidas",
+      "fastTransfersDesc": "La mayoría llega en 24 horas",
+      "independent": "100% independiente",
+      "independentDesc": "Sin pago por posición, resultados imparciales"
+    },
+    "disclaimer": "Ahorros típicos vs banco el mes pasado: 3–9%. Las estimaciones incluyen comisiones + margen de cambio."
+  },
+  "deliveryMethods": {
+    "bank": "Transferencia Bancaria",
+    "cash": "Retiro en Efectivo",
+    "wallet": "Billetera Móvil"
+  },
+  "providers": {
+    "title": "Compara Proveedores de Transferencias de Dinero. Encuentra la Mejor Oferta en Segundos.",
+    "subtitle": "Analizamos tasas de cambio en tiempo real, comisiones de transferencia, velocidades de entrega y puntuaciones de confiabilidad de cientos de proveedores. Nuestras clasificaciones transparentes te ayudan a ahorrar dinero en cada transferencia internacional, sin agendas ocultas, solo comparaciones honestas basadas en datos reales.",
+    "lastUpdated": "Última actualización",
+    "findOutMore": "Más información",
+    "goTo": "Ir a",
+    "readFullReview": "Leer la reseña completa",
+    "earningDisclosure": "Podemos ganar una comisión. Las clasificaciones son independientes.",
+    "metrics": {
+      "deliveredValue": "Valor Entregado",
+      "reliability": "Confiabilidad y Éxito",
+      "friction": "Fricción y Velocidad",
+      "support": "Soporte y Reembolsos"
+    },
+    "navigation": {
+      "previous": "Proveedores anteriores",
+      "next": "Siguientes proveedores"
+    },
+    "pagination": {
+      "page": "Página",
+      "goToPage": "Ir a la página"
+    }
+  },
+  "remitScore": {
+    "title": "Cómo Calificamos a los Proveedores",
+    "description": "Cada proveedor recibe un {remitScore} (escala 0-10) basado en datos reales de transferencias, no reseñas pagadas. Puntuaciones como {example1}, {example2}, o {example3} reflejan el valor real, velocidad, confiabilidad y seguridad en miles de transferencias.",
+    "remitScore": "Remit-Score",
+    "learnHow": "Aprende cómo calculamos Remit-Score",
+    "viewDetails": "Ver Detalles"
+  },
+  "trustMetrics": {
+    "title": "¿Por qué Confiar en Remit-Scout?",
+    "description": "Construido por un expatriado que se cansó de ver cómo el dinero desaparecía en comisiones bancarias. Rastreamos {providers} en {countries} en tiempo real. {noPay}, solo te mostramos qué opción lleva más dinero a tu destinatario.",
+    "providers": "{count} proveedores",
+    "countries": "{count} países",
+    "noPay": "Los proveedores no pueden pagar para clasificar mejor"
+  },
+  "corridors": {
+    "title": "Corredores Populares que Nuestros Expatriados Buscaron Hoy",
+    "subtitle": "Únete a miles de expatriados que confían en Remit-Scout para encontrar las mejores tasas de transferencia. Ve qué rutas están comparando personas reales ahora mismo.",
+    "searchesToday": "búsquedas hoy",
+    "navigation": {
+      "previous": "Corredores anteriores",
+      "next": "Siguientes corredores"
+    }
+  },
+  "howItWorks": {
+    "title": "Cómo Funciona",
+    "steps": {
+      "compare": {
+        "title": "Ingresa los Detalles de tu Transferencia",
+        "description": "Dinos desde dónde y hacia dónde envías dinero, más cuánto. Te mostraremos instantáneamente cotizaciones en vivo de más de 30 proveedores autorizados."
+      },
+      "choose": {
+        "title": "Compara y Elige",
+        "description": "Ve el costo total (comisiones + margen de tasa de cambio), velocidad de entrega y nuestro Remit-Score independiente para cada proveedor. Ordena por lo que más te importa."
+      },
+      "send": {
+        "title": "{independent} y Gratis",
+        "independent": "100% Independiente",
+        "description": "Somos independientes. {noPay} Ganamos una pequeña comisión cuando usas nuestros enlaces, pero esto nunca afecta nuestras clasificaciones, te mostramos la mejor oferta según el costo total, velocidad y confiabilidad.",
+        "noPay": "Los proveedores no pueden pagar para clasificar mejor."
+      }
+    }
+  },
+  "founderStory": {
+    "title": "Construido por un Expatriado, para Expatriados",
+    "story": "Después de mudarme al extranjero y ser golpeado con comisiones bancarias ocultas en cada transferencia a casa, me di cuenta de que algo tenía que cambiar. Los bancos tradicionales se aprovechaban de las personas que no sabían más, cobrando tasas de cambio infladas y enterrando comisiones en letra pequeña. Construí Remit-Scout para arrojar luz sobre los costos reales y ayudar a expatriados como tú a conservar más de tu dinero duramente ganado.",
+    "author": "Omar Ghabyen",
+    "role": "Fundador, Remit-Scout"
+  },
+  "bankVsSpecialist": {
+    "title": "Por Qué Tu Banco Cobra Más (Y Cómo Pagar Menos)",
+    "subtitle": "Los bancos no solo cobran comisiones, obtienen la mayor parte de su dinero a través del margen de la tasa de cambio. Esto es lo que necesitas saber.",
+    "hiddenCosts": {
+      "title": "Entendiendo los costos ocultos",
+      "bankMarkup": {
+        "title": "Cómo los Bancos Ocultan las Comisiones",
+        "description": "Cuando envías ${amount} al extranjero, tu banco muestra una \"comisión baja\" pero marca la tasa de cambio en un 3-5%. Ese margen es pura ganancia, invisible a menos que lo compares con la tasa del mercado medio.",
+        "example": "Si la tasa real {pair} es 18.50, un banco podría ofrecerte 18.00, embolsándose la {difference} en cada dólar que envías.",
+        "impact": "En una {transfer}, ese {markup} solo te cuesta {cost}, antes de cualquier comisión declarada. La mayoría de los clientes nunca notan este \"impuesto oculto\".",
+        "pair": "USD a MXN",
+        "difference": "diferencia de 0.50",
+        "transfer": "transferencia de $500",
+        "markup": "margen oculto del 3%",
+        "cost": "$15, antes"
+      },
+      "specialists": {
+        "title": "Por Qué los Especialistas Ganan",
+        "description": "Los especialistas en transferencias de dinero (como Wise, Remitly, Western Union) se enfocan solo en remesas, por lo que han construido infraestructura para ofrecer mejores tasas y comisiones más bajas. A menudo son 3–7 veces más baratos que los bancos.",
+        "benefits": "Muchos especialistas ofrecen entrega el mismo día o instantánea, opciones de retiro en efectivo y depósitos en billeteras móviles, características que la mayoría de los bancos no proporcionan."
+      },
+      "comparison": {
+        "title": "Ejemplo Real: EE. UU. → México",
+        "bank": "Cobros del banco",
+        "specialist": "Especialista (Remitly)",
+        "savings": "Ahorras"
+      }
+    }
+  },
+  "rateAlerts": {
+    "title": "Recibe Notificaciones Cuando las Tasas Alcancen Tu Objetivo",
+    "subtitle": "Configura una alerta de tasa y te enviaremos un correo electrónico cuando la tasa de cambio alcance tu nivel deseado, para que puedas programar tu transferencia y ahorrar más.",
+    "form": {
+      "from": "Desde",
+      "to": "Hasta",
+      "targetRate": "Tasa objetivo",
+      "email": "Tu correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "subscribe": "Configurar Alerta",
+      "processing": "Configurando...",
+      "success": "¡Alerta configurada! Te notificaremos cuando las tasas alcancen tu objetivo.",
+      "error": "Algo salió mal. Por favor intenta de nuevo."
+    }
+  },
+  "testimonials": {
+    "title": "Confiado por Expatriados en Todo el Mundo",
+    "subtitle": "Historias reales de personas que han ahorrado dinero usando Remit-Scout"
+  },
+  "guides": {
+    "title": "Aprende a Enviar Dinero de Manera Más Inteligente",
+    "subtitle": "Guías expertas para ayudarte a ahorrar en cada transferencia",
+    "readTime": "min de lectura",
+    "updated": "Actualizado",
+    "categories": {
+      "guides": "Guías",
+      "howTo": "Cómo Hacer",
+      "countryGuide": "Guía de País",
+      "moneySaving": "Ahorro de Dinero"
+    }
+  },
+  "travelTools": {
+    "title": "Herramientas Esenciales para Expatriados y Viajeros",
+    "subtitle": "Todo lo que necesitas para mantenerte conectado e informado en el extranjero",
+    "categories": {
+      "connectivity": "Conectividad",
+      "finance": "Finanzas",
+      "planning": "Planificación"
+    }
+  },
+  "countries": {
+    "title": "Envía Dinero a 154 Países",
+    "subtitle": "Compara tasas de transferencia y comisiones para cualquier corredor",
+    "search": "Buscar países...",
+    "viewRates": "Ver tasas"
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "subtitle": "Todo lo que necesitas saber sobre la comparación de transferencias de dinero"
+  },
+  "newsletter": {
+    "title": "Mantente Actualizado sobre las Mejores Tasas de Transferencia",
+    "subtitle": "Recibe consejos semanales, alertas de tasas y ofertas exclusivas en tu bandeja de entrada",
+    "form": {
+      "email": "Tu correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "subscribe": "Suscribirse",
+      "processing": "Suscribiendo...",
+      "success": "¡Gracias por suscribirte! Revisa tu correo electrónico para confirmar.",
+      "error": "Algo salió mal. Por favor intenta de nuevo."
+    },
+    "privacy": "Respetamos tu privacidad. Cancela tu suscripción en cualquier momento."
+  },
+  "ctaBanner": {
+    "title": "¿Listo para Ahorrar en Tu Próxima Transferencia?",
+    "subtitle": "Compara tasas en vivo de más de 30 proveedores en segundos",
+    "cta": "Comparar Proveedores Ahora"
+  },
+  "footer": {
+    "description": "Plataforma de comparación independiente que te ayuda a encontrar las mejores tasas y las comisiones más bajas para transferencias internacionales de dinero.",
+    "sections": {
+      "services": "Servicios",
+      "company": "Empresa",
+      "legal": "Legal"
+    },
+    "services": {
+      "moneyTransfers": "Transferencias de Dinero",
+      "esimCards": "Tarjetas eSIM",
+      "allProviders": "Todos los Proveedores",
+      "learn": "Aprender"
+    },
+    "company": {
+      "about": "Sobre Nosotros",
+      "contact": "Contacto",
+      "methodology": "Metodología"
+    },
+    "legal": {
+      "privacy": "Política de Privacidad",
+      "terms": "Términos de Servicio",
+      "disclosure": "Divulgación",
+      "faq": "Preguntas Frecuentes"
+    },
+    "disclosure": "Remit-Scout es un servicio de comparación independiente. Podemos ganar una comisión de referencia si eliges un proveedor a través de nuestros enlaces, esto nunca afecta nuestras clasificaciones. Los proveedores están regulados en sus regiones de operación. No manejamos tu dinero.",
+    "copyright": "© {year} Remit-Scout. Todos los derechos reservados.",
+    "howWeMakeMoney": "Cómo ganamos dinero"
+  },
+  "currencies": {
+    "USD": "Dólar Estadounidense",
+    "EUR": "Euro",
+    "GBP": "Libra Esterlina",
+    "CAD": "Dólar Canadiense",
+    "AUD": "Dólar Australiano",
+    "NZD": "Dólar Neozelandés",
+    "INR": "Rupia India",
+    "MXN": "Peso Mexicano",
+    "PHP": "Peso Filipino",
+    "NGN": "Naira Nigeriana",
+    "BRL": "Real Brasileño",
+    "JPY": "Yen Japonés"
+  },
+  "meta": {
+    "home": {
+      "title": "Remit-Scout, Compara Servicios de Transferencia Internacional de Dinero y Ahorra en Comisiones",
+      "description": "Compara tasas en vivo, comisiones y velocidad de entrega de más de 30 proveedores autorizados. Encuentra la mejor manera de apoyar a tu familia en el extranjero."
+    },
+    "providers": {
+      "title": "Comparar Proveedores de Transferencias de Dinero | Remit-Scout",
+      "description": "Compara comisiones, tasas de cambio y velocidades de entrega de los principales proveedores de transferencias de dinero. Encuentra la mejor oferta para tu transferencia internacional."
+    },
+    "guides": {
+      "title": "Guías de Transferencias de Dinero | Remit-Scout",
+      "description": "Guías expertas para ayudarte a ahorrar dinero en transferencias internacionales. Aprende cómo enviar dinero al extranjero de manera segura y asequible."
+    }
+  }
+}

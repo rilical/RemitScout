@@ -119,8 +119,14 @@
 </template>
 
 <script setup lang="ts">
-// Meta
 const route = useRoute();
+const isReviewPath = computed(() => route.path.startsWith('/reviews'))
+
+definePageMeta({
+  alias: ['/reviews/:slug'],
+});
+
+// Meta
 useHead({
   title: `${useProvider(route.params.slug as string)?.name || 'Provider'} | Reviews, Fees & Rates | Remit-Scout`,
   meta: [
@@ -134,7 +140,7 @@ useHead({
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
-  { name: 'Providers', path: '/providers' },
+  { name: isReviewPath.value ? 'Reviews' : 'Providers', path: isReviewPath.value ? '/reviews' : '/providers' },
   { name: useProvider(route.params.slug as string)?.name || 'Provider', path: route.path },
 ]);
 

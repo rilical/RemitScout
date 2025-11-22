@@ -1,66 +1,161 @@
 <template>
   <section
-    class="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-blue-50/20 py-16 sm:py-20 lg:py-24"
+    class="relative overflow-hidden bg-white py-16 sm:py-20 lg:py-24"
   >
-    <!-- Decorative Background Elements -->
-    <div class="absolute inset-0 opacity-30">
-      <div
-        class="absolute inset-0"
-        style="
-          background-image:
-            linear-gradient(to right, rgba(37, 99, 235, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
-          background-size: 60px 60px;
-        "
-      />
-    </div>
-    <div
-      class="animate-pulse-slow absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-brand-600/10 blur-3xl"
-    />
-    <div
-      class="animate-pulse-slow absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-brand-600/15 blur-3xl"
-      style="animation-delay: 1s"
-    />
-    <!-- Fintech Mesh Gradient Background -->
-    <div class="absolute inset-0 overflow-hidden">
-      <!-- Mesh gradient overlay -->
-      <div
-        class="absolute inset-0 opacity-40"
-        style="
-          background-image:
-            radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.12) 0%, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 90% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
-            radial-gradient(circle at 10% 80%, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
-          background-size: 100% 100%;
-        "
-      />
+    <!-- World Map/Globe with Animated Arrows - Desktop Only -->
+    <div class="hidden md:block absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <!-- Subtle gradient background -->
+      <div class="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/20 via-blue-300/15 to-transparent rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-40 -left-40 w-[700px] h-[700px] bg-gradient-to-tr from-emerald-400/20 via-emerald-300/15 to-transparent rounded-full blur-3xl"></div>
+      
+      <!-- World Map/Globe SVG with animated arrows -->
+      <svg class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-25" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <!-- Arrow markers -->
+          <marker id="globe-arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
+            <polygon points="0 0, 12 3, 0 6" fill="#3b82f6" opacity="0.8" />
+          </marker>
+          <marker id="globe-arrow-emerald" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
+            <polygon points="0 0, 12 3, 0 6" fill="#10b981" opacity="0.8" />
+          </marker>
+          <marker id="globe-arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
+            <polygon points="0 0, 12 3, 0 6" fill="#a855f7" opacity="0.8" />
+          </marker>
+          <!-- Gradient for arrows -->
+          <linearGradient id="arrow-gradient-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.6" />
+            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+          </linearGradient>
+          <linearGradient id="arrow-gradient-emerald" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.6" />
+            <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.3" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Simplified World Map Outline -->
+        <g opacity="0.2">
+          <!-- Continents simplified - better representation -->
+          <!-- North America -->
+          <path d="M120,180 Q150,160 200,170 Q240,175 260,200 Q270,220 260,250 Q250,270 230,280 Q200,285 170,280 Q140,275 130,250 Q125,220 120,180" fill="#3b82f6" stroke="#3b82f6" stroke-width="1.5"/>
+          <!-- South America -->
+          <path d="M200,300 Q210,320 220,350 Q225,380 230,420 Q225,450 210,460 Q195,455 185,430 Q180,400 185,370 Q190,340 200,300" fill="#3b82f6" stroke="#3b82f6" stroke-width="1.5"/>
+          <!-- Europe -->
+          <path d="M360,160 Q390,150 420,165 Q440,175 450,195 Q445,215 425,220 Q400,218 380,210 Q365,195 360,160" fill="#10b981" stroke="#10b981" stroke-width="1.5"/>
+          <!-- Africa -->
+          <path d="M380,240 Q390,260 400,300 Q405,340 410,390 Q405,430 390,440 Q375,435 370,400 Q365,360 370,320 Q375,280 380,240" fill="#10b981" stroke="#10b981" stroke-width="1.5"/>
+          <!-- Asia -->
+          <path d="M460,160 Q520,150 580,170 Q620,185 650,210 Q640,240 610,250 Q570,245 530,235 Q490,220 460,160" fill="#a855f7" stroke="#a855f7" stroke-width="1.5"/>
+          <!-- Australia -->
+          <path d="M560,360 Q580,350 600,365 Q610,380 605,395 Q595,405 580,400 Q565,395 560,380 Q555,370 560,360" fill="#a855f7" stroke="#a855f7" stroke-width="1.5"/>
+        </g>
+        
+        <!-- Animated Arrows flowing around the globe -->
+        <!-- Arrow 1: US to India (curved path) -->
+        <path 
+          d="M200,250 Q300,200 450,220 Q500,230 550,240" 
+          stroke="url(#arrow-gradient-blue)" 
+          stroke-width="4" 
+          fill="none"
+          marker-end="url(#globe-arrow-blue)"
+          style="stroke-dasharray: 800; stroke-dashoffset: 800; animation: drawPath 10s ease-in-out infinite;"
+        />
+        
+        <!-- Arrow 2: Europe to Asia -->
+        <path 
+          d="M400,200 Q450,250 500,230 Q520,220 550,240" 
+          stroke="url(#arrow-gradient-emerald)" 
+          stroke-width="4" 
+          fill="none"
+          marker-end="url(#globe-arrow-emerald)"
+          style="stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawPath 8s ease-in-out infinite 1s;"
+        />
+        
+        <!-- Arrow 3: US to Philippines -->
+        <path 
+          d="M220,240 Q350,300 500,350 Q550,360 580,380" 
+          stroke="url(#arrow-gradient-blue)" 
+          stroke-width="3.5" 
+          fill="none"
+          marker-end="url(#globe-arrow-blue)"
+          style="stroke-dasharray: 900; stroke-dashoffset: 900; animation: drawPath 12s ease-in-out infinite 0.5s;"
+        />
+        
+        <!-- Arrow 4: Europe to Africa -->
+        <path 
+          d="M390,220 Q400,280 400,320 Q400,360 400,400" 
+          stroke="url(#arrow-gradient-emerald)" 
+          stroke-width="3.5" 
+          fill="none"
+          marker-end="url(#globe-arrow-emerald)"
+          style="stroke-dasharray: 500; stroke-dashoffset: 500; animation: drawPath 7s ease-in-out infinite 1.5s;"
+        />
+        
+        <!-- Arrow 5: Asia to Australia -->
+        <path 
+          d="M550,250 Q560,300 570,350 Q580,370 590,390" 
+          stroke="url(#arrow-gradient-purple)" 
+          stroke-width="3" 
+          fill="none"
+          marker-end="url(#globe-arrow-purple)"
+          style="stroke-dasharray: 400; stroke-dashoffset: 400; animation: drawPath 6s ease-in-out infinite 2s;"
+        />
+        
+        <!-- Arrow 6: US to Europe -->
+        <path 
+          d="M280,220 Q320,200 360,190 Q380,185 400,200" 
+          stroke="url(#arrow-gradient-blue)" 
+          stroke-width="3.5" 
+          fill="none"
+          marker-end="url(#globe-arrow-blue)"
+          style="stroke-dasharray: 350; stroke-dashoffset: 350; animation: drawPath 9s ease-in-out infinite 0.25s;"
+        />
+        
+        <!-- Arrow 7: Asia to Europe (long route) -->
+        <path 
+          d="M600,240 Q550,200 500,180 Q450,170 400,190" 
+          stroke="url(#arrow-gradient-purple)" 
+          stroke-width="3" 
+          fill="none"
+          marker-end="url(#globe-arrow-purple)"
+          style="stroke-dasharray: 700; stroke-dashoffset: 700; animation: drawPath 11s ease-in-out infinite 1.25s;"
+        />
+        
+        <!-- Arrow 8: South America to Europe -->
+        <path 
+          d="M230,400 Q300,350 350,300 Q370,280 400,250" 
+          stroke="url(#arrow-gradient-emerald)" 
+          stroke-width="3.5" 
+          fill="none"
+          marker-end="url(#globe-arrow-emerald)"
+          style="stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawPath 10s ease-in-out infinite 2.5s;"
+        />
+        
+        <!-- Arrow 9: Africa to Asia -->
+        <path 
+          d="M410,400 Q450,350 500,300 Q530,270 550,250" 
+          stroke="url(#arrow-gradient-emerald)" 
+          stroke-width="3" 
+          fill="none"
+          marker-end="url(#globe-arrow-emerald)"
+          style="stroke-dasharray: 550; stroke-dashoffset: 550; animation: drawPath 9s ease-in-out infinite 3s;"
+        />
+        
+        <!-- Arrow 10: Circular flow around globe -->
+        <path 
+          d="M400,150 Q500,200 600,250 Q600,400 500,450 Q400,500 300,450 Q200,400 200,250 Q250,200 300,150 Q350,150 400,150" 
+          stroke="url(#arrow-gradient-blue)" 
+          stroke-width="2.5" 
+          fill="none"
+          marker-end="url(#globe-arrow-blue)"
+          style="stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: drawPath 15s ease-in-out infinite; opacity: 0.5;"
+        />
+      </svg>
+      
       <!-- Subtle grid pattern -->
-      <div
-        class="absolute inset-0 opacity-15"
-        style="
-          background-image:
-            linear-gradient(to right, rgba(37, 99, 235, 0.03) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
-          background-size: 80px 80px;
-        "
-      />
-      <!-- Center glow effect -->
-      <div
-        class="absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 transform rounded-full blur-3xl"
-        style="
-          background: radial-gradient(
-            circle,
-            rgba(37, 99, 235, 0.05) 0%,
-            rgba(37, 99, 235, 0.02) 40%,
-            transparent 70%
-          );
-        "
-      />
+      <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
     </div>
 
-    <div class="container-custom relative z-10 mx-auto max-w-7xl">
+    <div class="container-custom relative z-30 mx-auto max-w-7xl">
       <!-- Money Transfer Content -->
       <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-5 lg:gap-12">
         <div class="animate-fade-in-up delay-200 lg:col-span-3">
@@ -162,41 +257,38 @@
                 class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
                 :class="{ 'hidden sm:grid': currentMobileStep !== 2 }"
               >
-                <div>
-                  <label
-                    for="from-currency"
-                    class="mb-2 block text-sm font-semibold text-neutral-700"
-                  >
-                    From currency
-                  </label>
-                  <CurrencySelect
-                    id="from-currency"
-                    v-model="moneyForm.fromCurrency"
-                    :placeholder="
-                      moneyForm.to ? 'Choose currency' : 'Select receiving country first'
-                    "
-                    :currencies="availableFromCurrencies"
-                    :disabled="!moneyForm.to"
-                  />
-                </div>
+                    <div>
+                      <label
+                        for="from-currency"
+                        class="mb-2 block text-sm font-semibold text-neutral-700"
+                      >
+                        From currency
+                      </label>
+                      <CurrencySelect
+                        id="from-currency"
+                        v-model="moneyForm.fromCurrency"
+                        :country-code="moneyForm.from"
+                        placeholder="Choose currency"
+                      />
+                    </div>
 
-                <div>
-                  <label
-                    for="to-currency"
-                    class="mb-2 block text-sm font-semibold text-neutral-700"
-                  >
-                    To currency
-                  </label>
-                  <CurrencySelect
-                    id="to-currency"
-                    v-model="moneyForm.toCurrency"
-                    :placeholder="
-                      moneyForm.to ? 'Choose currency' : 'Select receiving country first'
-                    "
-                    :currencies="availableToCurrencies"
-                    :disabled="!moneyForm.to"
-                  />
-                </div>
+                    <div>
+                      <label
+                        for="to-currency"
+                        class="mb-2 block text-sm font-semibold text-neutral-700"
+                      >
+                        To currency
+                      </label>
+                      <CurrencySelect
+                        id="to-currency"
+                        v-model="moneyForm.toCurrency"
+                        :country-code="moneyForm.to"
+                        :placeholder="
+                          moneyForm.to ? 'Choose currency' : 'Select receiving country first'
+                        "
+                        :disabled="!moneyForm.to"
+                      />
+                    </div>
 
                 <!-- Mobile Navigation for Step 2 -->
                 <div class="flex gap-2 sm:hidden">
@@ -323,7 +415,7 @@
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">Total money saved for users</p>
                 <p class="text-4xl font-bold text-brand-600">{{ SITE_STATS.totalSaved.display }}</p>
-                <p class="mt-1 text-xs text-neutral-600">Since 2019</p>
+                <p class="mt-1 text-xs text-neutral-600">Since 2024</p>
               </div>
 
               <!-- Providers Compared -->
@@ -371,6 +463,9 @@
       </div>
     </div>
 
+    <!-- Gradient at the Bottom -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-brand-600/10 via-brand-500/5 to-transparent"></div>
+
     <!-- SEO: WebSite structured data with search action -->
     <JsonLdWebSiteSearch />
   </section>
@@ -383,6 +478,7 @@ import { useCompareForm } from '~/composables/useCompareForm';
 import JsonLdWebSiteSearch from '~/components/seo/JsonLdWebSiteSearch.vue';
 import CurrencySelect from '~/components/shared/CurrencySelect.vue';
 import { SITE_STATS } from '~/config/stats';
+import { getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies';
 
 const { form: moneyForm, validationError, submit: submitForm, DELIVERY_METHODS } = useCompareForm();
 
@@ -390,109 +486,6 @@ const formError = validationError
 const formSuccess = ref<string>('')
 
 const currentMobileStep = ref(1)
-
-const currencyFallback = 'USD';
-
-const defaultCurrencyByCountry: Record<string, string> = {
-  US: 'USD',
-  UK: 'GBP',
-  CA: 'CAD',
-  AU: 'AUD',
-  NZ: 'NZD',
-  IN: 'INR',
-  MX: 'MXN',
-  PH: 'PHP',
-  NG: 'NGN',
-  KE: 'KES',
-  UG: 'UGX',
-  GH: 'GHS',
-  ZA: 'ZAR',
-  PK: 'PKR',
-  BD: 'BDT',
-  LK: 'LKR',
-  NP: 'NPR',
-  VN: 'VND',
-  TH: 'THB',
-  ID: 'IDR',
-  MY: 'MYR',
-  SG: 'SGD',
-  HK: 'HKD',
-  CN: 'CNY',
-  JP: 'JPY',
-  KR: 'KRW',
-  BR: 'BRL',
-  AR: 'ARS',
-  CL: 'CLP',
-  CO: 'COP',
-  PE: 'PEN',
-  EC: 'USD',
-  VE: 'VES',
-  EG: 'EGP',
-  MA: 'MAD',
-  TN: 'TND',
-  DZ: 'DZD',
-  TR: 'TRY',
-  SA: 'SAR',
-  AE: 'AED',
-  QA: 'QAR',
-  KW: 'KWD',
-  BH: 'BHD',
-  OM: 'OMR',
-  JO: 'JOD',
-  LB: 'LBP',
-  IL: 'ILS',
-  PL: 'PLN',
-  RO: 'RON',
-  HU: 'HUF',
-  CZ: 'CZK',
-  SE: 'SEK',
-  NO: 'NOK',
-  DK: 'DKK',
-  CH: 'CHF',
-  RU: 'RUB',
-  UA: 'UAH',
-  BY: 'BYN',
-  KZ: 'KZT',
-  UZ: 'UZS',
-  GE: 'GEL',
-  AM: 'AMD',
-  AZ: 'AZN',
-  ET: 'ETB',
-  TZ: 'TZS',
-  RW: 'RWF',
-  SN: 'XOF',
-  CI: 'XOF',
-  CM: 'XAF',
-  ZM: 'ZMW',
-  ZW: 'ZWL',
-  MU: 'MUR',
-  RE: 'EUR',
-  MG: 'MGA',
-  GB: 'GBP',
-  IE: 'EUR',
-  FR: 'EUR',
-  DE: 'EUR',
-  IT: 'EUR',
-  ES: 'EUR',
-  PT: 'EUR',
-  GR: 'EUR',
-  NL: 'EUR',
-  BE: 'EUR',
-  AT: 'EUR',
-  FI: 'EUR',
-  LU: 'EUR',
-  MT: 'EUR',
-  CY: 'EUR',
-  SI: 'EUR',
-  SK: 'EUR',
-  EE: 'EUR',
-  LV: 'EUR',
-  LT: 'EUR',
-};
-
-const resolveCurrency = (countryCode: string): string => {
-  return defaultCurrencyByCountry[countryCode] || currencyFallback;
-};
 
 const { recordSearch, useRecentSearches } = useRemittanceApi();
 
@@ -513,12 +506,14 @@ const detectUserLocation = async () => {
     const data = await response.json();
     if (data.country_code) {
       const countryCode = data.country_code.toUpperCase();
-      if (countryCode === 'US') {
+      const country = getCountryByCode(countryCode);
+      
+      if (country) {
+        moneyForm.value.from = country.code;
+        moneyForm.value.fromCurrency = country.currency;
+      } else {
         moneyForm.value.from = 'US';
         moneyForm.value.fromCurrency = 'USD';
-      } else if (defaultCurrencyByCountry[countryCode]) {
-        moneyForm.value.from = countryCode;
-        moneyForm.value.fromCurrency = resolveCurrency(countryCode);
       }
     }
   } catch {
@@ -528,44 +523,14 @@ const detectUserLocation = async () => {
   }
 };
 
-// Currency filtering logic
+// Currency filtering logic - now using universal system
 const availableFromCurrencies = computed(() => {
-  const fromCountry = moneyForm.value.from;
-  const homeCurrency = resolveCurrency(fromCountry);
-
-  const baseCurrencies = ['USD', 'EUR', 'GBP'];
-  const currencies = new Set([homeCurrency, ...baseCurrencies]);
-
-  return Array.from(currencies)
-    .map(code => ({
-      value: code,
-      label: code,
-    }))
-    .sort((a, b) => {
-      if (a.value === homeCurrency) return -1;
-      if (b.value === homeCurrency) return 1;
-      return a.label.localeCompare(b.label);
-    });
+  return getAvailableCurrencies(moneyForm.value.from);
 });
 
 const availableToCurrencies = computed(() => {
-  const toCountry = moneyForm.value.to;
-  if (!toCountry) return [];
-
-  const homeCurrency = resolveCurrency(toCountry);
-  const baseCurrencies = ['USD', 'EUR', 'GBP'];
-  const currencies = new Set([homeCurrency, ...baseCurrencies]);
-
-  return Array.from(currencies)
-    .map(code => ({
-      value: code,
-      label: code,
-    }))
-    .sort((a, b) => {
-      if (a.value === homeCurrency) return -1;
-      if (b.value === homeCurrency) return 1;
-      return a.label.localeCompare(b.label);
-    });
+  if (!moneyForm.value.to) return [];
+  return getAvailableCurrencies(moneyForm.value.to);
 });
 
 // Watchers for currency synchronization
@@ -573,12 +538,12 @@ watch(
   () => moneyForm.value.from,
   newCountry => {
     if (newCountry) {
-      const newCurrency = resolveCurrency(newCountry);
-      if (
-        !moneyForm.value.fromCurrency ||
-        !availableFromCurrencies.value.find(c => c.value === moneyForm.value.fromCurrency)
-      ) {
-        moneyForm.value.fromCurrency = newCurrency;
+      const country = getCountryByCode(newCountry);
+      if (!country) return;
+      
+      const available = getAvailableCurrencies(newCountry);
+      if (!moneyForm.value.fromCurrency || !available.includes(moneyForm.value.fromCurrency)) {
+        moneyForm.value.fromCurrency = country.currency;
       }
     }
   }
@@ -588,12 +553,12 @@ watch(
   () => moneyForm.value.to,
   newCountry => {
     if (newCountry) {
-      const newCurrency = resolveCurrency(newCountry);
-      if (
-        !moneyForm.value.toCurrency ||
-        !availableToCurrencies.value.find(c => c.value === moneyForm.value.toCurrency)
-      ) {
-        moneyForm.value.toCurrency = newCurrency;
+      const country = getCountryByCode(newCountry);
+      if (!country) return;
+      
+      const available = getAvailableCurrencies(newCountry);
+      if (!moneyForm.value.toCurrency || !available.includes(moneyForm.value.toCurrency)) {
+        moneyForm.value.toCurrency = country.currency;
       }
     } else {
       moneyForm.value.toCurrency = '';

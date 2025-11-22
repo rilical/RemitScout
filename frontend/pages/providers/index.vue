@@ -4,10 +4,11 @@
       <Breadcrumbs :items="breadcrumbItems" />
 
       <div class="mb-8">
-        <h1 class="mb-4 text-4xl font-bold text-gray-900">Money Transfer Providers</h1>
-        <p class="mb-6 text-xl text-gray-600">
+        <h1 class="mb-4 text-4xl font-bold text-gray-900">Money Transfer Provider Reviews</h1>
+        <p class="mb-2 text-xl text-gray-600">
           Compare top money transfer companies and find the best provider for your needs.
         </p>
+        <p class="text-sm text-gray-500">Updated for 2025 · Fees, FX markups, payout and speed tested</p>
 
         <FiltersBar v-model="filters" />
       </div>
@@ -50,14 +51,18 @@
 <script setup lang="ts">
 // Meta
 useHead({
-  title: 'Money Transfer Providers | Compare Top Companies | Remit-Scout',
+  title: 'Money Transfer Provider Reviews | Compare Top Companies | Remit-Scout',
   meta: [
     {
       name: 'description',
       content:
-        'Compare top money transfer providers including Wise, Western Union, Remitly and more. Find the best rates, lowest fees, and fastest transfers.',
+        'Read independent reviews of Wise, Western Union, Remitly and more. Compare fees, FX rates, payout coverage, and transfer speed to choose the best provider.',
     },
   ],
+});
+
+definePageMeta({
+  alias: ['/reviews'],
 });
 
 // Breadcrumbs

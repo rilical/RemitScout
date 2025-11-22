@@ -1,13 +1,13 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 break-words [text-wrap:pretty]">
     <div v-for="(faq, index) in faqs" :key="index" class="rounded-lg border border-gray-200">
       <button
-        class="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-gray-50"
+        class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50"
         @click="toggleFaq(index)"
       >
-        <span class="font-medium text-gray-900">{{ faq.question }}</span>
+        <span class="flex-1 text-left font-medium leading-relaxed text-gray-900 [text-wrap:pretty]">{{ faq.question }}</span>
         <svg
-          class="h-5 w-5 transform text-gray-500 transition-transform"
+          class="mt-1 h-5 w-5 flex-shrink-0 transform text-gray-500 transition-transform"
           :class="{ 'rotate-180': openFaqs.includes(index) }"
           fill="none"
           stroke="currentColor"
@@ -21,8 +21,8 @@
           />
         </svg>
       </button>
-      <div v-if="openFaqs.includes(index)" class="px-6 pb-4 text-gray-600">
-        {{ faq.answer }}
+      <div v-if="openFaqs.includes(index)" class="px-6 pb-4 text-gray-600 prose prose-sm max-w-none break-words [text-wrap:pretty] mx-auto">
+        <div v-html="faq.answer" class="leading-relaxed"></div>
       </div>
     </div>
   </div>

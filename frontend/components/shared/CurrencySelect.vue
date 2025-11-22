@@ -5,21 +5,22 @@
         :id="id"
         v-model="searchQuery"
         @input="handleSearch"
-        @focus="openDropdown"
-        @blur="closeDropdown"
+        @focus="handleFocus"
+        @blur="handleBlur"
+        @click="handleFocus"
+        type="text"
         class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pr-10 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
         :class="selectClass"
         :placeholder="placeholder"
         autocomplete="off"
         :disabled="disabled"
       />
-      <!-- Dropdown arrow icon -->
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-        <svg 
+        <svg
           class="h-5 w-5 text-gray-400 transition-transform duration-200"
           :class="{ 'rotate-180': isOpen }"
-          fill="none" 
-          stroke="currentColor" 
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -27,40 +28,29 @@
       </div>
     </div>
 
-    <!-- Dropdown -->
-    <div
-      v-if="isOpen && filteredCurrencies.length > 0"
-      class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-    >
-      <button
-        v-for="currency in filteredCurrencies.slice(0, 12)"
-        :key="currency.value"
-        type="button"
-        @mousedown="selectCurrency(currency)"
-        class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none"
+    <Teleport to="body" v-if="isMounted">
+      <div
+        v-show="isOpen && filteredCurrencies.length > 0"
+        ref="dropdownRef"
+        class="fixed z-[9999] overflow-y-auto rounded-lg border-2 border-gray-300 bg-white py-1 shadow-2xl"
+        style="max-height: 400px;"
+        :style="dropdownStyle"
       >
-        <span>{{ currency.label }}</span>
-        <span class="text-xs text-gray-500">{{ currency.value }}</span>
-      </button>
-    </div>
-
-    <!-- Hidden select for form submission -->
-    <select
-      :id="id"
-      :value="modelValue"
-      @change="handleSelectChange"
-      class="sr-only"
-      :disabled="disabled"
-    >
-      <option value="" disabled>Select currency</option>
-      <option
-        v-for="currency in allCurrencies"
-        :key="currency.value"
-        :value="currency.value"
-      >
-        {{ currency.label }}
-      </option>
-    </select>
+        <div v-if="filteredCurrencies.length === 0" class="px-4 py-2 text-sm text-gray-500">
+          No currencies found
+        </div>
+        <button
+          v-for="currency in filteredCurrencies"
+          :key="currency.code"
+          type="button"
+          @mousedown.prevent="selectCurrency(currency)"
+          @touchstart.prevent="selectCurrency(currency)"
+          class="w-full px-4 py-2.5 text-left text-sm text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none active:bg-primary-100 transition-colors"
+        >
+          {{ currency.label }}
+        </button>
+      </div>
+    </Teleport>
 
     <slot name="error">
       <div v-if="error" class="mt-1 text-sm text-red-500">
@@ -71,12 +61,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { 
+  CURRENCIES, 
+  BASE_CURRENCIES, 
+  getAvailableCurrencies 
+} from '~/utils/countries-currencies'
 
 interface CurrencyOption {
-  value: string
+  code: string
   label: string
-  symbol?: string
+  name: string
+  symbol: string
 }
 
 interface Props {
@@ -85,33 +81,19 @@ interface Props {
   placeholder?: string
   disabled?: boolean
   error?: string
-  labelClass?: string
   selectClass?: string
-  currencies?: CurrencyOption[]
+  countryCode?: string
+  currencies?: string[]
 }
-
-const defaultCurrencies: CurrencyOption[] = [
-  { value: 'USD', label: 'USD, US Dollar', symbol: '$' },
-  { value: 'EUR', label: 'EUR, Euro', symbol: '€' },
-  { value: 'GBP', label: 'GBP, British Pound', symbol: '£' },
-  { value: 'CAD', label: 'CAD, Canadian Dollar', symbol: 'C$' },
-  { value: 'AUD', label: 'AUD, Australian Dollar', symbol: 'A$' },
-  { value: 'NZD', label: 'NZD, New Zealand Dollar', symbol: 'NZ$' },
-  { value: 'INR', label: 'INR, Indian Rupee', symbol: '₹' },
-  { value: 'MXN', label: 'MXN, Mexican Peso', symbol: 'MX$' },
-  { value: 'PHP', label: 'PHP, Philippine Peso', symbol: '₱' },
-  { value: 'NGN', label: 'NGN, Nigerian Naira', symbol: '₦' },
-  { value: 'BRL', label: 'BRL, Brazilian Real', symbol: 'R$' },
-  { value: 'JPY', label: 'JPY, Japanese Yen', symbol: '¥' }
-]
 
 const props = withDefaults(defineProps<Props>(), {
   id: undefined,
   placeholder: 'Select currency',
   disabled: false,
   error: '',
-  labelClass: '',
-  selectClass: ''
+  selectClass: '',
+  countryCode: undefined,
+  currencies: undefined
 })
 
 const emit = defineEmits<{
@@ -120,82 +102,184 @@ const emit = defineEmits<{
 
 const searchQuery = ref('')
 const isOpen = ref(false)
+const isMounted = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
+const dropdownStyle = ref({})
 
-const allCurrencies = computed(() =>
-  props.currencies?.length ? props.currencies : defaultCurrencies
-)
-
-const filteredCurrencies = ref(allCurrencies.value)
-
-const setSearchLabelFromValue = (value?: string) => {
-  if (!value) {
-    searchQuery.value = ''
-    return
+const availableCurrencyCodes = computed(() => {
+  if (props.currencies) {
+    console.log('Using provided currencies:', props.currencies)
+    return props.currencies
   }
+  
+  if (props.countryCode) {
+    const codes = getAvailableCurrencies(props.countryCode)
+    console.log('Country code:', props.countryCode, 'Available currencies:', codes)
+    return codes
+  }
+  
+  console.log('Using base currencies:', BASE_CURRENCIES)
+  return BASE_CURRENCIES
+})
 
-  const match = allCurrencies.value.find(currency => currency.value === value)
-  searchQuery.value = match ? match.label : ''
-}
+const allCurrencies = computed(() => {
+  const codes = availableCurrencyCodes.value
+  const currencies: CurrencyOption[] = []
+  
+  console.log('Building currency list from codes:', codes)
+  
+  codes.forEach(code => {
+    const currencyInfo = CURRENCIES[code]
+    if (currencyInfo) {
+      currencies.push({
+        code: currencyInfo.code,
+        label: `${currencyInfo.code} | ${currencyInfo.name}`,
+        name: currencyInfo.name,
+        symbol: currencyInfo.symbol
+      })
+    } else {
+      console.warn('Currency not found in CURRENCIES:', code)
+      currencies.push({
+        code,
+        label: code,
+        name: code,
+        symbol: code
+      })
+    }
+  })
+  
+  // Sort: base currencies first, then alphabetically
+  const sorted = currencies.sort((a, b) => {
+    const aIsBase = BASE_CURRENCIES.includes(a.code)
+    const bIsBase = BASE_CURRENCIES.includes(b.code)
+    
+    if (aIsBase && !bIsBase) return -1
+    if (!aIsBase && bIsBase) return 1
+    
+    const baseOrder = BASE_CURRENCIES.indexOf(a.code) - BASE_CURRENCIES.indexOf(b.code)
+    if (baseOrder !== 0) return baseOrder
+    
+    return a.name.localeCompare(b.name)
+  })
+  
+  console.log('Final currency list:', sorted.map(c => c.code))
+  return sorted
+})
+
+const filteredCurrencies = ref<CurrencyOption[]>([])
 
 const filterCurrencies = () => {
   if (!searchQuery.value) {
     filteredCurrencies.value = allCurrencies.value
-    return
-  }
-
-  const query = searchQuery.value.toLowerCase()
-  filteredCurrencies.value = allCurrencies.value.filter(currency => {
-    return (
+  } else {
+    const query = searchQuery.value.toLowerCase()
+    filteredCurrencies.value = allCurrencies.value.filter(currency =>
       currency.label.toLowerCase().includes(query) ||
-      currency.value.toLowerCase().includes(query) ||
-      (currency.symbol && currency.symbol.toLowerCase().includes(query))
+      currency.code.toLowerCase().includes(query)
     )
-  })
-}
-
-const handleSearch = (event: Event) => {
-  if (props.disabled) return
-  const target = event.target as HTMLInputElement
-  searchQuery.value = target.value
-  isOpen.value = true
-}
-
-const openDropdown = () => {
-  if (props.disabled) return
-  isOpen.value = true
-  filterCurrencies()
-}
-
-const closeDropdown = () => {
-  window.setTimeout(() => {
-    isOpen.value = false
-  }, 160)
-}
-
-const selectCurrency = (currency: CurrencyOption) => {
-  emit('update:modelValue', currency.value)
-  setSearchLabelFromValue(currency.value)
-  isOpen.value = false
-}
-
-const handleSelectChange = (event: Event) => {
-  const target = event.target as HTMLSelectElement
-  emit('update:modelValue', target.value)
-  setSearchLabelFromValue(target.value)
+  }
 }
 
 watch(searchQuery, filterCurrencies)
-
-watch(allCurrencies, newCurrencies => {
-  filteredCurrencies.value = newCurrencies
-  setSearchLabelFromValue(props.modelValue)
+watch(allCurrencies, () => {
+  filterCurrencies()
 })
+
+const selectCurrency = (currency: CurrencyOption) => {
+  console.log('=== Select Currency ===')
+  console.log('Selected:', currency.code, currency.name)
+  
+  emit('update:modelValue', currency.code)
+  emit('currency-selected', currency.code)
+  // Show just the code, not the full label
+  searchQuery.value = currency.code
+  isOpen.value = false
+  
+  console.log('searchQuery set to:', searchQuery.value)
+}
+
+const handleSearch = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  searchQuery.value = target.value
+  isOpen.value = true
+  updateDropdownPosition()
+}
+
+const handleFocus = async () => {
+  console.log('=== Currency Focus ===')
+  console.log('Current searchQuery:', searchQuery.value)
+  console.log('Current modelValue:', props.modelValue)
+  console.log('All currencies count:', allCurrencies.value.length)
+  
+  isOpen.value = true
+  
+  // Clear and force update
+  searchQuery.value = ''
+  await nextTick()
+  filteredCurrencies.value = [...allCurrencies.value]
+  
+  console.log('After clear - searchQuery:', searchQuery.value)
+  console.log('Filtered currencies count:', filteredCurrencies.value.length)
+  
+  updateDropdownPosition()
+}
+
+const handleBlur = () => {
+  setTimeout(() => {
+    isOpen.value = false
+  }, 200)
+}
+
+const updateDropdownPosition = async () => {
+  await nextTick()
+  const input = document.getElementById(props.id || '')
+  if (input) {
+    const rect = input.getBoundingClientRect()
+    dropdownStyle.value = {
+      top: `${rect.bottom + 4}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`
+    }
+  }
+}
 
 watch(
   () => props.modelValue,
-  newValue => {
-    setSearchLabelFromValue(newValue)
+  (newValue, oldValue) => {
+    console.log('=== ModelValue Watch ===')
+    console.log('Old:', oldValue, 'New:', newValue)
+    console.log('isOpen:', isOpen.value)
+    
+    if (newValue && !isOpen.value) {
+      // Only update searchQuery when dropdown is closed
+      // Show just the code for brevity
+      console.log('Setting searchQuery to:', newValue)
+      searchQuery.value = newValue
+    } else if (!newValue) {
+      console.log('Clearing searchQuery')
+      searchQuery.value = ''
+    } else {
+      console.log('Skipping update because dropdown is open')
+    }
   },
   { immediate: true }
 )
+
+onMounted(() => {
+  isMounted.value = true
+  filterCurrencies()
+  
+  if (props.modelValue) {
+    // Show just the code
+    searchQuery.value = props.modelValue
+  }
+  
+  window.addEventListener('scroll', updateDropdownPosition)
+  window.addEventListener('resize', updateDropdownPosition)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateDropdownPosition)
+  window.removeEventListener('resize', updateDropdownPosition)
+})
 </script>

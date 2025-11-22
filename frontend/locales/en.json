@@ -1,0 +1,328 @@
+{
+  "common": {
+    "siteName": "Remit-Scout",
+    "tagline": "For expats, by expats.",
+    "compare": "Compare",
+    "compareProviders": "Compare providers",
+    "compareNow": "Compare Now",
+    "learnMore": "Learn more",
+    "getStarted": "Get Started",
+    "readMore": "Read more",
+    "viewAll": "View all",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort by",
+    "amount": "Amount",
+    "currency": "Currency",
+    "country": "Country",
+    "select": "Select",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "nav": {
+    "skipToContent": "Skip to content",
+    "compare": "Compare",
+    "guides": "Guides",
+    "forExpats": "For Expats",
+    "methodology": "Methodology",
+    "about": "About Us",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "viewAllGuides": "View all guides →",
+    "menu": {
+      "open": "Open menu",
+      "close": "Close menu"
+    },
+    "language": "Language",
+    "search": {
+      "placeholder": "Search...",
+      "label": "Search",
+      "shortcut": "/"
+    }
+  },
+  "hero": {
+    "title": "Send more home,",
+    "titleHighlight": "pay less",
+    "titleEnd": " in fees.",
+    "subtitle": "Compare live rates, total fees, and delivery speed from 30+ licensed providers.",
+    "subtitleEnd": "Built for expats, by expats.",
+    "form": {
+      "sendingFrom": "Sending from",
+      "receivingIn": "Receiving in",
+      "fromCurrency": "From currency",
+      "toCurrency": "To currency",
+      "youSend": "You send",
+      "deliveryMethod": "Delivery method",
+      "submit": "Compare 30+ providers",
+      "selectCountry": "Select country",
+      "selectCurrency": "Select currency",
+      "selectMethod": "Select method",
+      "step": "Step",
+      "of": "of"
+    },
+    "validation": {
+      "selectSendingCountry": "Please select a sending country",
+      "selectReceivingCountry": "Please select a receiving country",
+      "selectSendingCurrency": "Please select a sending currency",
+      "selectReceivingCurrency": "Please select a receiving currency",
+      "enterValidAmount": "Please enter a valid amount"
+    },
+    "stats": {
+      "totalSaved": "Total money saved for users",
+      "providersCompared": "Licensed providers compared",
+      "corridorsCovered": "Countries & corridors",
+      "averageSavings": "Average savings vs banks",
+      "since": "Since 2019",
+      "sendMoneyAnywhere": "Send money anywhere",
+      "onEveryTransfer": "On every transfer"
+    },
+    "whyRemitScout": "Why Remit-Scout?",
+    "features": {
+      "fastTransfers": "Fast transfers",
+      "fastTransfersDesc": "Most arrive within 24 hours",
+      "independent": "100% independent",
+      "independentDesc": "No pay-to-rank, unbiased results"
+    },
+    "disclaimer": "Typical savings vs bank last month: 3–9%. Estimates include fees + exchange margin."
+  },
+  "deliveryMethods": {
+    "bank": "Bank Transfer",
+    "cash": "Cash Pickup",
+    "wallet": "Mobile Wallet"
+  },
+  "providers": {
+    "title": "Compare Money Transfer Providers. Find the Best Deal in Seconds.",
+    "subtitle": "We analyze real-time exchange rates, transfer fees, delivery speeds, and reliability scores across hundreds of providers. Our transparent rankings help you save money on every international transfer, no hidden agendas, just honest comparisons based on actual data.",
+    "lastUpdated": "Last updated",
+    "findOutMore": "Find out more",
+    "goTo": "Go to",
+    "readFullReview": "Read the full review",
+    "earningDisclosure": "We may earn a commission. Rankings are independent.",
+    "metrics": {
+      "deliveredValue": "Delivered Value",
+      "reliability": "Reliability & Success",
+      "friction": "Friction & Speed",
+      "support": "Support & Refunds"
+    },
+    "navigation": {
+      "previous": "Previous providers",
+      "next": "Next providers"
+    },
+    "pagination": {
+      "page": "Page",
+      "goToPage": "Go to page"
+    }
+  },
+  "remitScore": {
+    "title": "How We Score Providers",
+    "description": "Each provider gets a {remitScore} (0-10 scale) based on real transfer data, not paid reviews. Scores like {example1}, {example2}, or {example3} reflect actual value, speed, reliability, and safety across thousands of transfers.",
+    "remitScore": "Remit-Score",
+    "learnHow": "Learn how we calculate Remit-Score",
+    "viewDetails": "View Details"
+  },
+  "trustMetrics": {
+    "title": "Why Trust Remit-Scout?",
+    "description": "Built by an expat who got tired of watching money disappear to bank fees. We track {providers} across {countries} in real time. {noPay}, we just show you which option gets the most money to your recipient.",
+    "providers": "{count} providers",
+    "countries": "{count} countries",
+    "noPay": "Providers cannot pay to rank higher"
+  },
+  "corridors": {
+    "title": "Popular Corridors Our Expats Searched Today",
+    "subtitle": "Join thousands of expats who trust Remit-Scout to find the best transfer rates. See what routes real people are comparing right now.",
+    "searchesToday": "searches today",
+    "navigation": {
+      "previous": "Previous corridors",
+      "next": "Next corridors"
+    }
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "steps": {
+      "compare": {
+        "title": "Enter Your Transfer Details",
+        "description": "Tell us where you're sending money from and to, plus how much. We'll instantly show you live quotes from 30+ licensed providers."
+      },
+      "choose": {
+        "title": "Compare & Choose",
+        "description": "See total cost (fees + exchange rate markup), delivery speed, and our independent Remit-Score for each provider. Sort by what matters most to you."
+      },
+      "send": {
+        "title": "{independent} & Free",
+        "independent": "100% Independent",
+        "description": "We're independent. {noPay} We earn a small commission when you use our links, but this never affects our rankings, we show you the best deal based on total cost, speed, and reliability.",
+        "noPay": "Providers cannot pay to rank higher."
+      }
+    }
+  },
+  "founderStory": {
+    "title": "Built by an Expat, for Expats",
+    "story": "After moving abroad and getting hit with hidden bank fees on every transfer home, I realized something had to change. Traditional banks were taking advantage of people who didn't know better, charging inflated exchange rates and burying fees in fine print. I built Remit-Scout to shine a light on the real costs and help expats like you keep more of your hard-earned money.",
+    "author": "Omar Ghabyen",
+    "role": "Founder, Remit-Scout"
+  },
+  "bankVsSpecialist": {
+    "title": "Why Your Bank Charges More (And How to Pay Less)",
+    "subtitle": "Banks don't just charge fees, they make most of their money through the exchange rate markup. Here's what you need to know.",
+    "hiddenCosts": {
+      "title": "Understanding the hidden costs",
+      "bankMarkup": {
+        "title": "How Banks Hide Fees",
+        "description": "When you send ${amount} abroad, your bank shows a \"low fee\" but marks up the exchange rate by 3-5%. That markup is pure profit, invisible unless you compare to the mid-market rate.",
+        "example": "If the real {pair} rate is 18.50, a bank might offer you 18.00, pocketing the {difference} on every dollar you send.",
+        "impact": "On a {transfer}, that {markup} alone costs you {cost}, before any stated fees. Most customers never notice this \"hidden tax.\"",
+        "pair": "USD to MXN",
+        "difference": "0.50 difference",
+        "transfer": "$500 transfer",
+        "markup": "3% hidden markup",
+        "cost": "$15, before"
+      },
+      "specialists": {
+        "title": "Why Specialists Win",
+        "description": "Money transfer specialists (like Wise, Remitly, Western Union) focus only on remittances, so they've built infrastructure to offer better rates and lower fees. They're often 3–7x cheaper than banks.",
+        "benefits": "Many specialists offer same-day or instant delivery, cash pickup options, and mobile wallet deposits, features most banks don't provide."
+      },
+      "comparison": {
+        "title": "Real Example: US → Mexico",
+        "bank": "Bank charges",
+        "specialist": "Specialist (Remitly)",
+        "savings": "You save"
+      }
+    }
+  },
+  "rateAlerts": {
+    "title": "Get Notified When Rates Hit Your Target",
+    "subtitle": "Set a rate alert and we'll email you when the exchange rate reaches your desired level, so you can time your transfer to save more.",
+    "form": {
+      "from": "From",
+      "to": "To",
+      "targetRate": "Target rate",
+      "email": "Your email",
+      "emailPlaceholder": "you@example.com",
+      "subscribe": "Set Alert",
+      "processing": "Setting up...",
+      "success": "Alert set! We'll notify you when rates hit your target.",
+      "error": "Something went wrong. Please try again."
+    }
+  },
+  "testimonials": {
+    "title": "Trusted by Expats Worldwide",
+    "subtitle": "Real stories from people who've saved money using Remit-Scout"
+  },
+  "guides": {
+    "title": "Learn How to Send Money Smarter",
+    "subtitle": "Expert guides to help you save on every transfer",
+    "readTime": "min read",
+    "updated": "Updated",
+    "categories": {
+      "guides": "Guides",
+      "howTo": "How To",
+      "countryGuide": "Country Guide",
+      "moneySaving": "Money Saving"
+    }
+  },
+  "travelTools": {
+    "title": "Essential Tools for Expats & Travelers",
+    "subtitle": "Everything you need to stay connected and informed abroad",
+    "categories": {
+      "connectivity": "Connectivity",
+      "finance": "Finance",
+      "planning": "Planning"
+    }
+  },
+  "countries": {
+    "title": "Send Money to 154 Countries",
+    "subtitle": "Compare transfer rates and fees for any corridor",
+    "search": "Search countries...",
+    "viewRates": "View rates"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about comparing money transfers"
+  },
+  "newsletter": {
+    "title": "Stay Updated on the Best Transfer Rates",
+    "subtitle": "Get weekly tips, rate alerts, and exclusive deals delivered to your inbox",
+    "form": {
+      "email": "Your email",
+      "emailPlaceholder": "you@example.com",
+      "subscribe": "Subscribe",
+      "processing": "Subscribing...",
+      "success": "Thanks for subscribing! Check your email to confirm.",
+      "error": "Something went wrong. Please try again."
+    },
+    "privacy": "We respect your privacy. Unsubscribe anytime."
+  },
+  "ctaBanner": {
+    "title": "Ready to Save on Your Next Transfer?",
+    "subtitle": "Compare live rates from 30+ providers in seconds",
+    "cta": "Compare Providers Now"
+  },
+  "footer": {
+    "description": "Independent comparison platform helping you find the best rates and lowest fees for international money transfers.",
+    "sections": {
+      "services": "Services",
+      "company": "Company",
+      "legal": "Legal"
+    },
+    "services": {
+      "moneyTransfers": "Money Transfers",
+      "esimCards": "eSIM Cards",
+      "allProviders": "All Providers",
+      "learn": "Learn"
+    },
+    "company": {
+      "about": "About Us",
+      "contact": "Contact",
+      "methodology": "Methodology"
+    },
+    "legal": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "disclosure": "Disclosure",
+      "faq": "FAQ"
+    },
+    "disclosure": "Remit-Scout is an independent comparison service. We may earn a referral fee if you choose a provider via our links, this never affects our rankings. Providers are regulated in their operating regions. We do not handle your money.",
+    "copyright": "© {year} Remit-Scout. All rights reserved.",
+    "howWeMakeMoney": "How we make money"
+  },
+  "currencies": {
+    "USD": "US Dollar",
+    "EUR": "Euro",
+    "GBP": "British Pound",
+    "CAD": "Canadian Dollar",
+    "AUD": "Australian Dollar",
+    "NZD": "New Zealand Dollar",
+    "INR": "Indian Rupee",
+    "MXN": "Mexican Peso",
+    "PHP": "Philippine Peso",
+    "NGN": "Nigerian Naira",
+    "BRL": "Brazilian Real",
+    "JPY": "Japanese Yen"
+  },
+  "meta": {
+    "home": {
+      "title": "Remit-Scout, Compare International Money Transfer Services & Save on Fees",
+      "description": "Compare live rates, fees and delivery speed from 30+ licensed providers. Find the best way to support your family abroad."
+    },
+    "providers": {
+      "title": "Compare Money Transfer Providers | Remit-Scout",
+      "description": "Compare fees, exchange rates, and delivery speeds from top money transfer providers. Find the best deal for your international transfer."
+    },
+    "guides": {
+      "title": "Money Transfer Guides | Remit-Scout",
+      "description": "Expert guides to help you save money on international transfers. Learn how to send money abroad safely and affordably."
+    }
+  }
+}

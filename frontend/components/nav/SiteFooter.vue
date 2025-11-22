@@ -3,15 +3,19 @@
     <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
         <!-- Company Info -->
-        <div class="lg:col-span-1">
+        <div class="lg:col-span-1 flex flex-col">
           <div class="mb-4">
-            <span class="text-xl font-bold">Remit-Scout</span>
+            <img 
+              src="/logos/remit-scout.svg" 
+              alt="RemitScout" 
+              class="h-8 w-auto mb-2"
+            />
             <p class="text-sm text-gray-400 mt-1">For expats, by expats.</p>
           </div>
-          <p class="mb-4 text-sm text-gray-400">
-            Independent comparison platform helping you find the best rates and lowest fees for international money transfers.
+          <p class="mb-4 text-sm text-gray-400 leading-relaxed [text-wrap:pretty] flex-grow">
+            Independent comparison platform helping you find the best rates and lowest fees for international money transfers. Compare 30+ licensed providers in seconds.
           </p>
-          <div class="flex space-x-4">
+          <div class="flex space-x-4 mt-auto">
             <a href="#" class="text-gray-400 transition-colors hover:text-white">
               <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -45,77 +49,87 @@
         </div>
 
         <!-- Services -->
-        <div>
-          <h3 class="mb-4 text-lg font-semibold">Services</h3>
+        <div class="flex flex-col h-full">
+          <h3 class="mb-4 text-lg font-semibold text-white">Services</h3>
           <ul class="space-y-2">
             <li>
-              <NuxtLink to="/send-money/us-to-in" class="text-gray-300 transition-colors hover:text-white"
-                >Money Transfers</NuxtLink
-              >
+              <NuxtLink to="/send-money" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Money Transfers
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/esim" class="text-gray-300 transition-colors hover:text-white"
-                >eSIM Cards</NuxtLink
-              >
+              <NuxtLink to="/esim" class="text-gray-300 transition-colors hover:text-white text-sm">
+                eSIM Cards
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/providers" class="text-gray-300 transition-colors hover:text-white"
-                >All Providers</NuxtLink
-              >
+              <NuxtLink to="/providers" class="text-gray-300 transition-colors hover:text-white text-sm">
+                All Providers
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/learn" class="text-gray-300 transition-colors hover:text-white"
-                >Learn</NuxtLink
-              >
+              <NuxtLink to="/learn" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Learn
+              </NuxtLink>
             </li>
           </ul>
         </div>
 
         <!-- Company -->
-        <div>
-          <h3 class="mb-4 text-lg font-semibold">Company</h3>
+        <div class="flex flex-col h-full">
+          <h3 class="mb-4 text-lg font-semibold text-white">Company</h3>
           <ul class="space-y-2">
             <li>
-              <NuxtLink to="/about" class="text-gray-300 transition-colors hover:text-white"
-                >About Us</NuxtLink
-              >
+              <NuxtLink to="/about" class="text-gray-300 transition-colors hover:text-white text-sm">
+                About Us
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/contact" class="text-gray-300 transition-colors hover:text-white"
-                >Contact</NuxtLink
-              >
+              <NuxtLink to="/contact" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Contact
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/methodology" class="text-gray-300 transition-colors hover:text-white"
-                >Methodology</NuxtLink
-              >
+              <NuxtLink to="/methodology" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Methodology
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink to="/affiliate-partnerships" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Partnerships
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink to="/faq" class="text-gray-300 transition-colors hover:text-white text-sm">
+                FAQ
+              </NuxtLink>
             </li>
           </ul>
         </div>
 
         <!-- Legal -->
-        <div>
-          <h3 class="mb-4 text-lg font-semibold">Legal</h3>
+        <div class="flex flex-col h-full">
+          <h3 class="mb-4 text-lg font-semibold text-white">Legal</h3>
           <ul class="space-y-2">
             <li>
-              <NuxtLink to="/privacy" class="text-gray-300 transition-colors hover:text-white"
-                >Privacy Policy</NuxtLink
-              >
+              <NuxtLink to="/legal/privacy" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Privacy Policy
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/terms" class="text-gray-300 transition-colors hover:text-white"
-                >Terms of Service</NuxtLink
-              >
+              <NuxtLink to="/legal/terms" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Terms of Service
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/disclosure" class="text-gray-300 transition-colors hover:text-white"
-                >Disclosure</NuxtLink
-              >
+              <NuxtLink to="/legal/disclosure" class="text-gray-300 transition-colors hover:text-white text-sm">
+                Affiliate Disclosure
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/faq" class="text-gray-300 transition-colors hover:text-white"
-                >FAQ</NuxtLink
-              >
+              <NuxtLink to="/how-we-make-money" class="text-gray-300 transition-colors hover:text-white text-sm">
+                How We Make Money
+              </NuxtLink>
             </li>
           </ul>
         </div>
@@ -124,23 +138,14 @@
       <div class="mt-12 pt-8 border-t border-gray-800">
         <div class="mb-6 p-6 bg-gray-800 rounded-xl">
           <p class="text-sm text-gray-300 leading-relaxed">
-            {{ STR.footer.disclosure }}
+            Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up. Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.
           </p>
         </div>
 
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p class="text-sm text-gray-400">
-            {{ STR.footer.copyright }}
+            © {{ new Date().getFullYear() }} Remit-Scout. All rights reserved.
           </p>
-          
-          <div class="flex items-center gap-4">
-            <button
-              @click="$emit('open-modal')"
-              class="text-xs text-gray-500 hover:text-gray-300 underline transition-colors"
-            >
-              How we make money
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -148,8 +153,6 @@
 </template>
 
 <script setup lang="ts">
-const { STR } = useStrings();
-
 defineEmits<{
   'open-modal': []
 }>();

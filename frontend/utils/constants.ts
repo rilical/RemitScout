@@ -156,6 +156,56 @@ export const GUIDE_CARDS = [
     gradient: 'from-amber-100 to-orange-100',
     category: 'How To'
   },
+  {
+    title: 'US → India corridor playbook',
+    blurb: 'UPI vs bank deposits, FX markups, and promo codes compared.',
+    readTime: '6 min read',
+    updated: 'May 2025',
+    slug: 'send-money-us-to-india-guide',
+    emoji: '🇺🇸🇮🇳',
+    gradient: 'from-indigo-100 to-sky-100',
+    category: 'Country Guide'
+  },
+  {
+    title: 'Full review: Wise vs Remitly vs Western Union',
+    blurb: 'Which provider wins on fees, rates, speed, and trust scores.',
+    readTime: '8 min read',
+    updated: 'May 2025',
+    slug: 'wise-remitly-western-union-review',
+    emoji: '🧭',
+    gradient: 'from-lime-100 to-emerald-100',
+    category: 'Comparison'
+  },
+  {
+    title: 'Travel insurance for frequent senders',
+    blurb: 'Cover trips while you visit family abroad—medical, baggage, and delay.',
+    readTime: '5 min read',
+    updated: 'May 2025',
+    slug: 'travel-insurance',
+    emoji: '🛡️',
+    gradient: 'from-cyan-100 to-blue-100',
+    category: 'Travel'
+  },
+  {
+    title: 'International eSIM setup checklist',
+    blurb: 'Stay connected abroad without roaming; best-value providers to try.',
+    readTime: '4 min read',
+    updated: 'May 2025',
+    slug: 'international-esim-checklist',
+    emoji: '📱',
+    gradient: 'from-slate-100 to-gray-100',
+    category: 'Travel Tech'
+  },
+  {
+    title: 'USD→PHP rate watch guide',
+    blurb: 'Track live rates, avoid hidden margins, and time your transfers.',
+    readTime: '5 min read',
+    updated: 'May 2025',
+    slug: 'usd-php-exchange-rate-guide',
+    emoji: '⏱️',
+    gradient: 'from-rose-100 to-orange-100',
+    category: 'Exchange Rates'
+  },
 ];
 
 export const COUNTRY_HIGHLIGHTS = [
@@ -218,5 +268,4 @@ export const BANK_VS_SPECIALIST_DATA = {
     recipientGets: 28150
   }
 };
-
 

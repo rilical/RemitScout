@@ -18,9 +18,6 @@
           <div class="flex items-center gap-4">
             <span class="text-2xl">{{ getCountryFlag(country.code) }}</span>
             <div>
-              <div class="text-sm text-neutral-500 mb-0.5">
-                {{ userCountry === country.code ? 'Send money to' : `Send from ${userCountry} to` }}
-              </div>
               <div class="font-semibold text-neutral-900">{{ country.name }}</div>
             </div>
           </div>
@@ -31,7 +28,7 @@
             aria-label="View rates"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </button>
         </NuxtLink>
@@ -57,23 +54,6 @@ import { COUNTRY_HIGHLIGHTS } from '~/utils/constants';
 
 const { STR } = useStrings();
 const countries = COUNTRY_HIGHLIGHTS;
-
-// Detect user's country for localized corridor URLs
-const userCountry = ref('US'); // Default to US
-
-// Detect user location on mount
-onMounted(async () => {
-  try {
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
-    if (data.country_code) {
-      userCountry.value = data.country_code.toUpperCase();
-    }
-  } catch (error) {
-    // Fallback to US if detection fails
-    console.log('Location detection failed, using US as default');
-  }
-});
 
 const countryFlags: Record<string, string> = {
   IN: '🇮🇳',
@@ -103,16 +83,24 @@ const getCountryFlag = (code: string): string => {
   return countryFlags[code] || '🏳️';
 };
 
-// Generate localized corridor URL based on user's country
-const getCorridorUrl = (toCountry: string): string => {
-  const from = userCountry.value.toLowerCase();
-  const to = toCountry.toLowerCase();
-  
-  // If user is from the same country, default to US
-  if (from === to) {
-    return `/send-money/us-to-${to}`;
+// Convert country name to URL-friendly slug
+const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .trim();
+};
+
+// Generate URL using country name slug instead of country code
+const getCorridorUrl = (countryCode: string): string => {
+  const country = countries.find(c => c.code === countryCode);
+  if (!country) {
+    return `/send-money/`;
   }
   
-  return `/send-money/${from}-to-${to}`;
+  const countrySlug = slugify(country.name);
+  return `/send-money/${countrySlug}`;
 };
 </script>

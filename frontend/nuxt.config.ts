@@ -14,6 +14,38 @@ export default defineNuxtConfig({
   // Modules
   modules: ['@nuxtjs/tailwindcss', '@nuxt/image', '@nuxtjs/robots'],
 
+  // i18n Configuration (temporarily disabled)
+  // TODO: Re-enable after resolving module loading issues
+  // modules: ['@nuxtjs/tailwindcss', '@nuxt/image', '@nuxtjs/robots', '@nuxtjs/i18n'],
+  // i18n: {
+  //   locales: [
+  //     {
+  //       code: 'en',
+  //       iso: 'en-US',
+  //       name: 'English',
+  //       file: 'en.json'
+  //     },
+  //     {
+  //       code: 'es',
+  //       iso: 'es-ES',
+  //       name: 'Español',
+  //       file: 'es.json'
+  //     }
+  //   ],
+  //   lazy: true,
+  //   langDir: 'locales',
+  //   defaultLocale: 'en',
+  //   strategy: 'prefix_except_default',
+  //   detectBrowserLanguage: {
+  //     useCookie: true,
+  //     cookieKey: 'i18n_redirected',
+  //     redirectOn: 'root',
+  //     alwaysRedirect: false,
+  //     fallbackLocale: 'en'
+  //   },
+  //   vueI18n: './i18n.config.ts'
+  // },
+
   // App Head
   app: {
     head: {
@@ -74,6 +106,7 @@ export default defineNuxtConfig({
     '/providers/**': { isr: 1800 }, // 30 minutes
     '/compare/**': { isr: 86400 }, // 24 hours
     '/learn/**': { isr: 604800 }, // 7 days
+    '/legal/methodology': { redirect: '/methodology' },
   },
 
   // Experimental Features
