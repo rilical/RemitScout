@@ -232,12 +232,6 @@ export const COUNTRY_HIGHLIGHTS = [
   { code: 'GB', name: 'United Kingdom', stat: 'Competitive rates' },
 ];
 
-export const DELIVERY_METHODS = [
-  { value: 'bank', label: 'Bank deposit', icon: '🏦' },
-  { value: 'cash', label: 'Cash pickup', icon: '💵' },
-  { value: 'wallet', label: 'Mobile wallet', icon: '📱' },
-];
-
 export const FILTER_OPTIONS = [
   { value: 'fastest', label: 'Fastest' },
   { value: 'highest-payout', label: 'Highest payout' },
@@ -268,4 +262,3 @@ export const BANK_VS_SPECIALIST_DATA = {
     recipientGets: 28150
   }
 };
-

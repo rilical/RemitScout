@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { DELIVERY_METHODS } from '~/utils/constants';
+import { DELIVERY_METHODS } from '~/composables/useCompareForm';
 
 const { STR } = useStrings();
 
@@ -233,5 +233,4 @@ defineExpose({
   }
 });
 </script>
-
 

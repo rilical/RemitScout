@@ -1,161 +1,182 @@
 <template>
   <section
-    class="relative overflow-hidden bg-white py-16 sm:py-20 lg:py-24"
+    id="hero-dual-tab"
+    class="relative bg-white py-16 sm:py-20 lg:py-24 min-h-[700px]"
   >
-    <!-- World Map/Globe with Animated Arrows - Desktop Only -->
-    <div class="hidden md:block absolute inset-0 overflow-hidden pointer-events-none z-0">
-      <!-- Subtle gradient background -->
-      <div class="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/20 via-blue-300/15 to-transparent rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -left-40 w-[700px] h-[700px] bg-gradient-to-tr from-emerald-400/20 via-emerald-300/15 to-transparent rounded-full blur-3xl"></div>
-      
-      <!-- World Map/Globe SVG with animated arrows -->
-      <svg class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-25" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <!-- Arrow markers -->
-          <marker id="globe-arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
-            <polygon points="0 0, 12 3, 0 6" fill="#3b82f6" opacity="0.8" />
-          </marker>
-          <marker id="globe-arrow-emerald" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
-            <polygon points="0 0, 12 3, 0 6" fill="#10b981" opacity="0.8" />
-          </marker>
-          <marker id="globe-arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
-            <polygon points="0 0, 12 3, 0 6" fill="#a855f7" opacity="0.8" />
-          </marker>
-          <!-- Gradient for arrows -->
-          <linearGradient id="arrow-gradient-blue" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.6" />
-            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.3" />
-          </linearGradient>
-          <linearGradient id="arrow-gradient-emerald" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.6" />
-            <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.3" />
-          </linearGradient>
-        </defs>
-        
-        <!-- Simplified World Map Outline -->
-        <g opacity="0.2">
-          <!-- Continents simplified - better representation -->
-          <!-- North America -->
-          <path d="M120,180 Q150,160 200,170 Q240,175 260,200 Q270,220 260,250 Q250,270 230,280 Q200,285 170,280 Q140,275 130,250 Q125,220 120,180" fill="#3b82f6" stroke="#3b82f6" stroke-width="1.5"/>
-          <!-- South America -->
-          <path d="M200,300 Q210,320 220,350 Q225,380 230,420 Q225,450 210,460 Q195,455 185,430 Q180,400 185,370 Q190,340 200,300" fill="#3b82f6" stroke="#3b82f6" stroke-width="1.5"/>
-          <!-- Europe -->
-          <path d="M360,160 Q390,150 420,165 Q440,175 450,195 Q445,215 425,220 Q400,218 380,210 Q365,195 360,160" fill="#10b981" stroke="#10b981" stroke-width="1.5"/>
-          <!-- Africa -->
-          <path d="M380,240 Q390,260 400,300 Q405,340 410,390 Q405,430 390,440 Q375,435 370,400 Q365,360 370,320 Q375,280 380,240" fill="#10b981" stroke="#10b981" stroke-width="1.5"/>
-          <!-- Asia -->
-          <path d="M460,160 Q520,150 580,170 Q620,185 650,210 Q640,240 610,250 Q570,245 530,235 Q490,220 460,160" fill="#a855f7" stroke="#a855f7" stroke-width="1.5"/>
-          <!-- Australia -->
-          <path d="M560,360 Q580,350 600,365 Q610,380 605,395 Q595,405 580,400 Q565,395 560,380 Q555,370 560,360" fill="#a855f7" stroke="#a855f7" stroke-width="1.5"/>
-        </g>
-        
-        <!-- Animated Arrows flowing around the globe -->
-        <!-- Arrow 1: US to India (curved path) -->
-        <path 
-          d="M200,250 Q300,200 450,220 Q500,230 550,240" 
-          stroke="url(#arrow-gradient-blue)" 
-          stroke-width="4" 
+    <!-- World Map Background with Animated Transfer Arrows -->
+    <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <!-- World Map - More Visible -->
+      <img
+        src="/world.svg"
+        alt="World map"
+        class="absolute inset-0 w-full h-full object-cover opacity-50"
+        style="filter: brightness(0.95) contrast(1.1);"
+      />
+    </div>
+    
+    <!-- Animated Transfer Lines - Curved arrows flying around like country-to-country transfers -->
+    <div class="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-transparent">
+      <svg
+        class="absolute inset-0 w-full h-full"
+        viewBox="0 0 2000 857"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+        style="background: transparent;"
+      >
+        <!-- 7 Curved Arrows in Different Sizes - Within content width -->
+        <!-- 1. Left to Right - Top area (Blue, thick) -->
+        <path
+          d="M400,200 Q1000,80 1600,220"
+          stroke="#2563EB"
+          stroke-width="4"
           fill="none"
-          marker-end="url(#globe-arrow-blue)"
-          style="stroke-dasharray: 800; stroke-dashoffset: 800; animation: drawPath 10s ease-in-out infinite;"
+          class="transfer-arrow transfer-arrow-large"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8s ease-in-out infinite;"
         />
         
-        <!-- Arrow 2: Europe to Asia -->
-        <path 
-          d="M400,200 Q450,250 500,230 Q520,220 550,240" 
-          stroke="url(#arrow-gradient-emerald)" 
-          stroke-width="4" 
+        <!-- 2. Right to Left - Middle area (Green, medium) -->
+        <path
+          d="M1520,200 Q1000,150 450,250"
+          stroke="#10b981"
+          stroke-width="2.8"
           fill="none"
-          marker-end="url(#globe-arrow-emerald)"
-          style="stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawPath 8s ease-in-out infinite 1s;"
+          class="transfer-arrow transfer-arrow-medium"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7s ease-in-out infinite 4s;"
         />
         
-        <!-- Arrow 3: US to Philippines -->
-        <path 
-          d="M220,240 Q350,300 500,350 Q550,360 580,380" 
-          stroke="url(#arrow-gradient-blue)" 
-          stroke-width="3.5" 
+        <!-- 3. Left to Right - Middle (Blue, medium) -->
+        <path
+          d="M500,350 Q1050,280 1550,420"
+          stroke="#2563EB"
+          stroke-width="2.8"
           fill="none"
-          marker-end="url(#globe-arrow-blue)"
-          style="stroke-dasharray: 900; stroke-dashoffset: 900; animation: drawPath 12s ease-in-out infinite 0.5s;"
+          class="transfer-arrow transfer-arrow-medium"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9s ease-in-out infinite 5s;"
         />
         
-        <!-- Arrow 4: Europe to Africa -->
-        <path 
-          d="M390,220 Q400,280 400,320 Q400,360 400,400" 
-          stroke="url(#arrow-gradient-emerald)" 
-          stroke-width="3.5" 
+        <!-- 4. Right to Left - Extended Downward and More Left (Blue, small) -->
+        <path
+          d="M1300,250 Q1050,340 500,400"
+          stroke="#2563EB"
+          stroke-width="2.4"
           fill="none"
-          marker-end="url(#globe-arrow-emerald)"
-          style="stroke-dasharray: 500; stroke-dashoffset: 500; animation: drawPath 7s ease-in-out infinite 1.5s;"
+          class="transfer-arrow transfer-arrow-small"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 3.5s;"
         />
         
-        <!-- Arrow 5: Asia to Australia -->
-        <path 
-          d="M550,250 Q560,300 570,350 Q580,370 590,390" 
-          stroke="url(#arrow-gradient-purple)" 
-          stroke-width="3" 
+        <!-- 5. Left to Right - Lower area (Green, thick) -->
+        <path
+          d="M420,500 Q1000,420 1600,550"
+          stroke="#10b981"
+          stroke-width="4"
           fill="none"
-          marker-end="url(#globe-arrow-purple)"
-          style="stroke-dasharray: 400; stroke-dashoffset: 400; animation: drawPath 6s ease-in-out infinite 2s;"
+          class="transfer-arrow transfer-arrow-large"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 1.5s;"
         />
         
-        <!-- Arrow 6: US to Europe -->
-        <path 
-          d="M280,220 Q320,200 360,190 Q380,185 400,200" 
-          stroke="url(#arrow-gradient-blue)" 
-          stroke-width="3.5" 
+        <!-- 6. Right to Left - Bottom area (Green, small) -->
+        <path
+          d="M1570,600 Q1150,680 680,650"
+          stroke="#10b981"
+          stroke-width="2"
           fill="none"
-          marker-end="url(#globe-arrow-blue)"
-          style="stroke-dasharray: 350; stroke-dashoffset: 350; animation: drawPath 9s ease-in-out infinite 0.25s;"
+          class="transfer-arrow transfer-arrow-small"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.5s ease-in-out infinite 2.5s;"
         />
         
-        <!-- Arrow 7: Asia to Europe (long route) -->
-        <path 
-          d="M600,240 Q550,200 500,180 Q450,170 400,190" 
-          stroke="url(#arrow-gradient-purple)" 
-          stroke-width="3" 
+        <!-- 7. Left to Right - Mid-lower (Blue, small) -->
+        <path
+          d="M480,450 Q1000,520 1520,480"
+          stroke="#2563EB"
+          stroke-width="2.4"
           fill="none"
-          marker-end="url(#globe-arrow-purple)"
-          style="stroke-dasharray: 700; stroke-dashoffset: 700; animation: drawPath 11s ease-in-out infinite 1.25s;"
+          class="transfer-arrow transfer-arrow-small"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 3s;"
         />
         
-        <!-- Arrow 8: South America to Europe -->
-        <path 
-          d="M230,400 Q300,350 350,300 Q370,280 400,250" 
-          stroke="url(#arrow-gradient-emerald)" 
-          stroke-width="3.5" 
+        <!-- 8. Argentina to Australia - Long distance (Green, medium) -->
+        <path
+          d="M450,650 Q1000,200 1650,680"
+          stroke="#10b981"
+          stroke-width="2.8"
           fill="none"
-          marker-end="url(#globe-arrow-emerald)"
-          style="stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawPath 10s ease-in-out infinite 2.5s;"
+          class="transfer-arrow transfer-arrow-medium"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 11s ease-in-out infinite 6s;"
         />
         
-        <!-- Arrow 9: Africa to Asia -->
-        <path 
-          d="M410,400 Q450,350 500,300 Q530,270 550,250" 
-          stroke="url(#arrow-gradient-emerald)" 
-          stroke-width="3" 
+        <!-- 9. US to Bangladesh - North America to South Asia (Blue, medium) -->
+        <path
+          d="M440,250 Q1000,180 1500,420"
+          stroke="#2563EB"
+          stroke-width="2.8"
           fill="none"
-          marker-end="url(#globe-arrow-emerald)"
-          style="stroke-dasharray: 550; stroke-dashoffset: 550; animation: drawPath 9s ease-in-out infinite 3s;"
+          class="transfer-arrow transfer-arrow-medium"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9.5s ease-in-out infinite 7s;"
         />
         
-        <!-- Arrow 10: Circular flow around globe -->
-        <path 
-          d="M400,150 Q500,200 600,250 Q600,400 500,450 Q400,500 300,450 Q200,400 200,250 Q250,200 300,150 Q350,150 400,150" 
-          stroke="url(#arrow-gradient-blue)" 
-          stroke-width="2.5" 
+        <!-- 10. US to Vietnam - North America to Southeast Asia (Green, small) -->
+        <path
+          d="M460,320 Q1080,240 1640,480"
+          stroke="#10b981"
+          stroke-width="2"
           fill="none"
-          marker-end="url(#globe-arrow-blue)"
-          style="stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: drawPath 15s ease-in-out infinite; opacity: 0.5;"
+          class="transfer-arrow transfer-arrow-small"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8.5s ease-in-out infinite 1.2s;"
+        />
+        
+        <!-- 11. Canada to India - North America to South Asia (Blue, thick) -->
+        <path
+          d="M420,200 Q920,120 1470,380"
+          stroke="#2563EB"
+          stroke-width="4"
+          fill="none"
+          class="transfer-arrow transfer-arrow-large"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10.5s ease-in-out infinite 2.3s;"
+        />
+        
+        <!-- 12. US to China - North America to East Asia (Green, medium) -->
+        <path
+          d="M480,290 Q1120,160 1700,360"
+          stroke="#10b981"
+          stroke-width="2.8"
+          fill="none"
+          class="transfer-arrow transfer-arrow-medium"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9.8s ease-in-out infinite 3.8s;"
+        />
+        
+        <!-- 13. US to Nigeria - North America to West Africa (Blue, small) -->
+        <path
+          d="M450,480 Q920,560 950,600"
+          stroke="#2563EB"
+          stroke-width="2"
+          fill="none"
+          class="transfer-arrow transfer-arrow-small"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.8s ease-in-out infinite 4.5s;"
+        />
+        
+        <!-- 14. US to Brazil - North America to South America (Green, small) -->
+        <path
+          d="M470,550 Q500,680 520,720"
+          stroke="#10b981"
+          stroke-width="2"
+          fill="none"
+          class="transfer-arrow transfer-arrow-small"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.2s ease-in-out infinite 5.2s;"
+        />
+        
+        <!-- 15. US to Pakistan - North America to South Asia (Blue, medium) -->
+        <path
+          d="M440,390 Q1020,280 1420,410"
+          stroke="#2563EB"
+          stroke-width="2.8"
+          fill="none"
+          class="transfer-arrow transfer-arrow-medium"
+          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9.2s ease-in-out infinite 6.5s;"
         />
       </svg>
-      
-      <!-- Subtle grid pattern -->
-      <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
     </div>
 
-    <div class="container-custom relative z-30 mx-auto max-w-7xl">
+    <div class="container-custom relative z-10 mx-auto max-w-7xl">
       <!-- Money Transfer Content -->
       <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-5 lg:gap-12">
         <div class="animate-fade-in-up delay-200 lg:col-span-3">
@@ -499,6 +520,105 @@ defineExpose({
 
 const { data: recentData } = await useRecentSearches(100);
 
+const countryCoordinates: Record<string, { lat: number; lon: number }> = {
+  US: { lat: 37.1, lon: -95.7 },
+  CA: { lat: 56.1, lon: -106.3 },
+  MX: { lat: 23.6, lon: -102.5 },
+  GB: { lat: 55.3, lon: -3.4 },
+  IE: { lat: 53.3, lon: -8 },
+  FR: { lat: 46.2, lon: 2.2 },
+  DE: { lat: 51.2, lon: 10.4 },
+  ES: { lat: 40.4, lon: -3.7 },
+  PT: { lat: 39.4, lon: -8 },
+  IT: { lat: 41.9, lon: 12.5 },
+  PL: { lat: 51.9, lon: 19.1 },
+  NL: { lat: 52.1, lon: 5.3 },
+  BE: { lat: 50.5, lon: 4.7 },
+  CH: { lat: 46.8, lon: 8.2 },
+  IN: { lat: 20.6, lon: 78.9 },
+  PK: { lat: 30.4, lon: 69.3 },
+  BD: { lat: 23.7, lon: 90.4 },
+  LK: { lat: 7.9, lon: 80.7 },
+  NP: { lat: 28.4, lon: 84.1 },
+  PH: { lat: 12.9, lon: 122.6 },
+  MY: { lat: 4.2, lon: 101.9 },
+  VN: { lat: 14.1, lon: 108.3 },
+  TH: { lat: 15.8, lon: 101 },
+  KH: { lat: 12.6, lon: 104.9 },
+  ID: { lat: -0.8, lon: 113.9 },
+  SG: { lat: 1.35, lon: 103.8 },
+  CN: { lat: 35.8, lon: 104.2 },
+  HK: { lat: 22.3, lon: 114.2 },
+  JP: { lat: 36.2, lon: 138.3 },
+  KR: { lat: 35.9, lon: 127.8 },
+  TW: { lat: 23.7, lon: 121 },
+  AE: { lat: 23.4, lon: 53.8 },
+  SA: { lat: 23.9, lon: 45.1 },
+  QA: { lat: 25.3, lon: 51.2 },
+  KW: { lat: 29.3, lon: 47.5 },
+  BH: { lat: 26.1, lon: 50.6 },
+  OM: { lat: 21, lon: 55 },
+  NG: { lat: 9.1, lon: 8.7 },
+  GH: { lat: 7.9, lon: -1 },
+  KE: { lat: -0.02, lon: 37.9 },
+  TZ: { lat: -6.4, lon: 35 },
+  ZA: { lat: -30.6, lon: 22.9 },
+  MA: { lat: 31.8, lon: -7.1 },
+  EG: { lat: 26.8, lon: 30.8 },
+  SN: { lat: 14.5, lon: -14.5 },
+  BR: { lat: -14.2, lon: -51.9 },
+  AR: { lat: -38.4, lon: -63.6 },
+  CL: { lat: -35.7, lon: -71.5 },
+  CO: { lat: 4.6, lon: -74.3 },
+  PE: { lat: -9.2, lon: -75 },
+  VE: { lat: 6.4, lon: -66.6 },
+  AU: { lat: -25.3, lon: 133.8 },
+  NZ: { lat: -40.9, lon: 174.9 },
+};
+
+const projectCoord = (lat: number, lon: number) => ({
+  x: ((lon + 180) / 360) * 2000,
+  y: ((90 - lat) / 180) * 857,
+});
+
+const buildArrowPath = (fromCode: string, toCode: string) => {
+  const from = countryCoordinates[fromCode];
+  const to = countryCoordinates[toCode];
+  if (!from || !to) return null;
+
+  const start = projectCoord(from.lat, from.lon);
+  const end = projectCoord(to.lat, to.lon);
+
+  const midX = (start.x + end.x) / 2;
+  const lift = Math.min(
+    220,
+    Math.max(80, Math.abs(end.x - start.x) * 0.15 + Math.abs(end.y - start.y) * 0.05)
+  );
+  const controlY = Math.min(start.y, end.y) - lift;
+
+  return {
+    d: `M ${start.x.toFixed(1)},${start.y.toFixed(1)} Q ${midX.toFixed(1)},${controlY.toFixed(
+      1
+    )} ${end.x.toFixed(1)},${end.y.toFixed(1)}`,
+    start,
+    end,
+  };
+};
+
+const defaultArrow = buildArrowPath('US', 'PH');
+
+const arrowPath = computed(() => {
+  const fromCode = moneyForm.value.from?.toUpperCase();
+  const toCode = moneyForm.value.to?.toUpperCase();
+
+  if (fromCode && toCode) {
+    const path = buildArrowPath(fromCode, toCode);
+    if (path) return path;
+  }
+
+  return defaultArrow;
+});
+
 // Geolocation detection
 const detectUserLocation = async () => {
   try {
@@ -612,3 +732,22 @@ onMounted(() => {
   });
 });
 </script>
+
+<style scoped>
+.transfer-arrow {
+  stroke-linecap: round;
+}
+
+/* Different opacity levels for depth perception */
+.transfer-arrow-large {
+  opacity: 0.20;
+}
+
+.transfer-arrow-medium {
+  opacity: 0.144;
+}
+
+.transfer-arrow-small {
+  opacity: 0.096;
+}
+</style>

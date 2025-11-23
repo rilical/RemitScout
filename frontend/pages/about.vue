@@ -5,135 +5,33 @@
 
     <!-- Hero Section -->
     <div class="relative bg-gradient-to-br from-slate-50 to-white py-12 lg:py-16 overflow-hidden">
-      <!-- Enhanced About Graphics with Arrows -->
+      <!-- Subtle Background Graphics with minimal animations -->
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <!-- Enhanced gradient orbs -->
-        <div class="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-blue-400/25 via-blue-300/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-gradient-to-tr from-emerald-400/25 via-emerald-300/20 to-transparent rounded-full blur-3xl animate-pulse" style="animation-delay: 1.5s;"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-purple-300/15 via-blue-300/15 to-emerald-300/15 rounded-full blur-3xl"></div>
+        <!-- Subtle gradient orbs with gentle animation -->
+        <div class="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-blue-400/15 via-blue-300/10 to-transparent rounded-full blur-3xl animate-pulse" style="animation-duration: 8s;"></div>
+        <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-gradient-to-tr from-emerald-400/15 via-emerald-300/10 to-transparent rounded-full blur-3xl animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
         
-        <!-- Animated Arrow Paths (Money Transfer Flow) -->
-        <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <marker id="arrow-about-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <polygon points="0 0, 10 3, 0 6" fill="#3b82f6" />
-            </marker>
-            <marker id="arrow-about-emerald" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
-            </marker>
-            <marker id="arrow-about-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <polygon points="0 0, 10 3, 0 6" fill="#a855f7" />
-            </marker>
-          </defs>
-          
-          <!-- Multiple arrow paths showing money flow -->
-          <path 
-            d="M100,200 Q300,150 500,200 T900,200" 
-            stroke="#3b82f6" 
-            stroke-width="3" 
-            fill="none"
-            marker-end="url(#arrow-about-blue)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 6s ease-in-out infinite;"
-          />
-          <path 
-            d="M150,350 Q350,300 550,350 T950,350" 
-            stroke="#10b981" 
-            stroke-width="3" 
-            fill="none"
-            marker-end="url(#arrow-about-emerald)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8s ease-in-out infinite 1s;"
-          />
-          <path 
-            d="M200,100 Q400,50 600,100 T1000,100" 
-            stroke="#3b82f6" 
-            stroke-width="2.5" 
-            fill="none"
-            marker-end="url(#arrow-about-blue)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7s ease-in-out infinite 0.5s;"
-          />
-          <path 
-            d="M250,450 Q450,400 650,450 T1050,450" 
-            stroke="#a855f7" 
-            stroke-width="2.5" 
-            fill="none"
-            marker-end="url(#arrow-about-purple)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9s ease-in-out infinite 1.5s;"
-          />
-        </svg>
-        
-        <!-- Question Mark Icons (Better positioned) -->
-        <div class="absolute top-24 right-32 opacity-15">
-          <div class="relative">
-            <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-ping" style="animation-duration: 3s;"></div>
-            <svg class="relative w-24 h-24 text-blue-500/35 animate-float" style="animation-delay: 0s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        </div>
-        
-        <div class="absolute bottom-36 left-32 opacity-15">
-          <div class="relative">
-            <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-ping" style="animation-duration: 4s; animation-delay: 1s;"></div>
-            <svg class="relative w-20 h-20 text-emerald-500/35 animate-float" style="animation-delay: 1.5s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        </div>
-        
-        <!-- People/Team Icons (Better) -->
-        <div class="absolute top-1/4 right-24 opacity-12">
-          <svg class="w-20 h-20 text-blue-400/30 animate-float" style="animation-delay: 1s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- A few floating icons for visual interest -->
+        <div class="absolute top-24 right-32 opacity-8">
+          <svg class="w-16 h-16 text-blue-500/20 animate-float" style="animation-duration: 6s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
         
-        <!-- Trust/Shield Icon (Better) -->
-        <div class="absolute bottom-1/4 right-20 opacity-12">
-          <svg class="w-16 h-16 text-emerald-400/30 animate-float" style="animation-delay: 2.5s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="absolute bottom-32 left-24 opacity-8">
+          <svg class="w-14 h-14 text-emerald-500/20 animate-float" style="animation-duration: 7s; animation-delay: 1s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
         </div>
         
-        <!-- Flying Arrow Icons (Multiple directions) -->
-        <div class="absolute top-20 left-20 opacity-12">
-          <svg class="w-16 h-16 text-blue-500/30 animate-float" style="animation-delay: 0.5s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="absolute top-1/3 right-20 opacity-6">
+          <svg class="w-12 h-12 text-blue-400/15 animate-float" style="animation-duration: 8s; animation-delay: 2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </div>
         
-        <div class="absolute bottom-32 right-24 opacity-12">
-          <svg class="w-14 h-14 text-emerald-500/30 animate-float" style="animation-delay: 2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-        
-        <div class="absolute top-1/3 left-16 opacity-10">
-          <svg class="w-12 h-12 text-purple-500/25 animate-float" style="animation-delay: 3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </div>
-        
-        <div class="absolute bottom-1/3 right-16 opacity-10">
-          <svg class="w-10 h-10 text-blue-500/25 animate-float" style="animation-delay: 3.5s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </div>
-        
-        <div class="absolute top-1/2 right-20 opacity-10">
-          <svg class="w-12 h-12 text-emerald-500/25 animate-float" style="animation-delay: 4s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-        
-        <!-- Money/Currency Icon (Better) -->
-        <div class="absolute top-1/2 left-16 opacity-10">
-          <svg class="w-14 h-14 text-blue-500/25 animate-float" style="animation-delay: 1.5s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        
-        <!-- Subtle grid pattern -->
-        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <!-- Very subtle grid pattern -->
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       </div>
       
       <div class="container mx-auto px-4 max-w-5xl text-center relative z-10">
