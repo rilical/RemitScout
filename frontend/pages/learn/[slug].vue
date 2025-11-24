@@ -31,7 +31,11 @@
             </div>
             <div class="flex items-center space-x-4">
               <button class="flex items-center text-gray-500 hover:text-gray-700">
-                <svg class="mr-1 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  class="mr-1 h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"
                   />
@@ -39,7 +43,11 @@
                 Share
               </button>
               <button class="flex items-center text-gray-500 hover:text-gray-700">
-                <svg class="mr-1 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  class="mr-1 h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
                 </svg>
                 Save
@@ -56,7 +64,11 @@
           <div class="mb-6 flex items-center justify-between">
             <div class="flex items-center">
               <button class="mr-4 flex items-center text-gray-500 hover:text-gray-700">
-                <svg class="mr-1 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  class="mr-1 h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fill-rule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -68,12 +80,16 @@
               <span class="text-gray-500">{{ article?.helpfulCount }} found this helpful</span>
             </div>
             <div class="flex space-x-2">
-              <Badge variant="outline"> Updated {{ article?.lastUpdated }} </Badge>
+              <Badge variant="outline">
+                Updated {{ article?.lastUpdated }}
+              </Badge>
             </div>
           </div>
 
           <div class="rounded-lg bg-gray-50 p-6">
-            <h3 class="mb-2 text-lg font-semibold text-gray-900">Related Articles</h3>
+            <h3 class="mb-2 text-lg font-semibold text-gray-900">
+              Related Articles
+            </h3>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <NuxtLink
                 v-for="related in article?.relatedArticles"
@@ -96,26 +112,26 @@
 
 <script setup lang="ts">
 // Meta
-const route = useRoute();
+const route = useRoute()
 useHead({
   title: `${useArticle(route.params.slug as string)?.title || 'Article'} | Remit-Scout`,
   meta: [
     {
       name: 'description',
       content:
-        useArticle(route.params.slug as string)?.excerpt ||
-        'Learn about international money transfers and best practices.',
+        useArticle(route.params.slug as string)?.excerpt
+        || 'Learn about international money transfers and best practices.',
     },
   ],
-});
+})
 
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
   { name: useArticle(route.params.slug as string)?.title || 'Article', path: route.path },
-]);
+])
 
 // Article data
-const { data: article } = await useArticle(route.params.slug as string);
+const { data: article } = await useArticle(route.params.slug as string)
 </script>

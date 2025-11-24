@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center space-x-1" :aria-label="`Rated ${value} out of 5`">
+  <div
+    class="flex items-center space-x-1"
+    :aria-label="`Rated ${value} out of 5`"
+  >
     <!-- Stars -->
     <svg
       v-for="star in count"
@@ -30,15 +33,17 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  count: 5
+  count: 5,
 })
 
 const getStarClass = (starIndex: number) => {
   if (starIndex <= Math.floor(props.value)) {
     return 'text-yellow-400'
-  } else if (starIndex === Math.ceil(props.value) && props.value % 1 !== 0) {
+  }
+  else if (starIndex === Math.ceil(props.value) && props.value % 1 !== 0) {
     return 'text-yellow-400' // Partial star - for future enhancement
-  } else {
+  }
+  else {
     return 'text-gray-300'
   }
 }

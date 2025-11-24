@@ -7,29 +7,33 @@ interface SeoOptions {
 }
 
 export const setSeo = ({ title, description, canonical, noindex = false, ogImage }: SeoOptions) => {
-  const siteUrl = useRuntimeConfig().public.siteUrl;
+  const siteUrl = useRuntimeConfig().public.siteUrl
+  const route = useRoute()
+  const normalizedSiteUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl
+  const path = route?.path === '/' ? '' : route?.path || ''
+  const canonicalUrl = canonical || `${normalizedSiteUrl}${path || '/'}`
+  const robots = noindex ? 'noindex,nofollow' : 'index,follow'
+  const image = ogImage || `${normalizedSiteUrl}/og-image.jpg`
 
   useHead({
     title,
     meta: [
       { name: 'description', content: description },
-      ...(canonical
-        ? [{ name: 'robots', content: noindex ? 'noindex,nofollow' : 'index,follow' }]
-        : []),
+      { name: 'robots', content: robots },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
-      { property: 'og:image', content: ogImage || `${siteUrl}/og-image.jpg` },
-      { property: 'og:url', content: canonical || useRoute().path },
+      { property: 'og:image', content: image },
+      { property: 'og:url', content: canonicalUrl },
       { property: 'og:type', content: 'website' },
       { property: 'og:site_name', content: 'Remit-Scout' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
-      { name: 'twitter:image', content: ogImage || `${siteUrl}/og-image.jpg` },
+      { name: 'twitter:image', content: image },
     ],
-    link: [...(canonical ? [{ rel: 'canonical', href: canonical }] : [])],
-  });
-};
+    link: [{ rel: 'canonical', href: canonicalUrl }],
+  })
+}
 
 export const jsonLdWebSiteSearch = (siteUrl: string) => {
   useHead({
@@ -39,19 +43,19 @@ export const jsonLdWebSiteSearch = (siteUrl: string) => {
         children: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          name: 'Remit-Scout',
-          url: siteUrl,
-          description: 'Compare money transfer providers and find the best rates for international money transfers',
-          potentialAction: {
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+          'description': 'Compare money transfer providers and find the best rates for international money transfers',
+          'potentialAction': {
             '@type': 'SearchAction',
-            target: `${siteUrl}/search?q={search_term_string}`,
-            'query-input': 'required name=search_term_string'
-          }
-        })
-      }
-    ]
-  });
-};
+            'target': `${siteUrl}/search?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+          },
+        }),
+      },
+    ],
+  })
+}
 
 export const jsonLdOrganization = (siteUrl: string) => {
   useHead({
@@ -61,23 +65,23 @@ export const jsonLdOrganization = (siteUrl: string) => {
         children: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Organization',
-          name: 'Remit-Scout',
-          url: siteUrl,
-          logo: `${siteUrl}/logo.png`,
-          description: 'Compare money transfer providers and find the best rates for international money transfers',
-          sameAs: ['https://twitter.com/Remit-Scout', 'https://facebook.com/Remit-Scout'],
-          contactPoint: {
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+          'logo': `${siteUrl}/logo.png`,
+          'description': 'Compare money transfer providers and find the best rates for international money transfers',
+          'sameAs': ['https://twitter.com/Remit-Scout', 'https://facebook.com/Remit-Scout'],
+          'contactPoint': {
             '@type': 'ContactPoint',
-            contactType: 'customer service',
-            email: 'support@Remit-Scout.com'
-          }
-        })
-      }
-    ]
-  });
-};
+            'contactType': 'customer service',
+            'email': 'support@Remit-Scout.com',
+          },
+        }),
+      },
+    ],
+  })
+}
 
-export const jsonLdSiteNavigation = (items: Array<{ name: string; url: string }>) => {
+export const jsonLdSiteNavigation = (items: Array<{ name: string, url: string }>) => {
   useHead({
     script: [
       {
@@ -85,19 +89,19 @@ export const jsonLdSiteNavigation = (items: Array<{ name: string; url: string }>
         children: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'SiteNavigationElement',
-          name: 'Main Navigation',
-          hasPart: items.map(item => ({
+          'name': 'Main Navigation',
+          'hasPart': items.map(item => ({
             '@type': 'WebPage',
-            name: item.name,
-            url: item.url
-          }))
-        })
-      }
-    ]
-  });
-};
+            'name': item.name,
+            'url': item.url,
+          })),
+        }),
+      },
+    ],
+  })
+}
 
-export const jsonLdBreadcrumb = (items: Array<{ name: string; url: string }>) => {
+export const jsonLdBreadcrumb = (items: Array<{ name: string, url: string }>) => {
   useHead({
     script: [
       {
@@ -105,19 +109,19 @@ export const jsonLdBreadcrumb = (items: Array<{ name: string; url: string }>) =>
         children: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
-          itemListElement: items.map((item, index) => ({
+          'itemListElement': items.map((item, index) => ({
             '@type': 'ListItem',
-            position: index + 1,
-            name: item.name,
-            item: item.url
-          }))
-        })
-      }
-    ]
-  });
-};
+            'position': index + 1,
+            'name': item.name,
+            'item': item.url,
+          })),
+        }),
+      },
+    ],
+  })
+}
 
-export const jsonLdFaq = (items: Array<{ q: string; a: string }>) => {
+export const jsonLdFaq = (items: Array<{ q: string, a: string }>) => {
   useHead({
     script: [
       {
@@ -125,16 +129,16 @@ export const jsonLdFaq = (items: Array<{ q: string; a: string }>) => {
         children: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
-          mainEntity: items.map(item => ({
+          'mainEntity': items.map(item => ({
             '@type': 'Question',
-            name: item.q,
-            acceptedAnswer: {
+            'name': item.q,
+            'acceptedAnswer': {
               '@type': 'Answer',
-              text: item.a
-            }
-          }))
-        })
-      }
-    ]
-  });
-};
+              'text': item.a,
+            },
+          })),
+        }),
+      },
+    ],
+  })
+}

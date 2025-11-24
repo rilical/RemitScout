@@ -29,6 +29,6 @@ export const useOffers = () => {
         deliveryTime: '1-3 days',
         totalReceived: 1120.0,
       },
-    ];
-  });
-};
+    ]
+  })
+}

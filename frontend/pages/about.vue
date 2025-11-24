@@ -8,35 +8,74 @@
       <!-- Subtle Background Graphics with minimal animations -->
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <!-- Subtle gradient orbs with gentle animation -->
-        <div class="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-blue-400/15 via-blue-300/10 to-transparent rounded-full blur-3xl animate-pulse" style="animation-duration: 8s;"></div>
-        <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-gradient-to-tr from-emerald-400/15 via-emerald-300/10 to-transparent rounded-full blur-3xl animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
-        
+        <div
+          class="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-blue-400/15 via-blue-300/10 to-transparent rounded-full blur-3xl animate-pulse"
+          style="animation-duration: 8s;"
+        />
+        <div
+          class="absolute -bottom-20 -left-20 w-96 h-96 bg-gradient-to-tr from-emerald-400/15 via-emerald-300/10 to-transparent rounded-full blur-3xl animate-pulse"
+          style="animation-duration: 10s; animation-delay: 2s;"
+        />
+
         <!-- A few floating icons for visual interest -->
         <div class="absolute top-24 right-32 opacity-8">
-          <svg class="w-16 h-16 text-blue-500/20 animate-float" style="animation-duration: 6s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          <svg
+            class="w-16 h-16 text-blue-500/20 animate-float"
+            style="animation-duration: 6s;"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
           </svg>
         </div>
-        
+
         <div class="absolute bottom-32 left-24 opacity-8">
-          <svg class="w-14 h-14 text-emerald-500/20 animate-float" style="animation-duration: 7s; animation-delay: 1s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          <svg
+            class="w-14 h-14 text-emerald-500/20 animate-float"
+            style="animation-duration: 7s; animation-delay: 1s;"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
           </svg>
         </div>
-        
+
         <div class="absolute top-1/3 right-20 opacity-6">
-          <svg class="w-12 h-12 text-blue-400/15 animate-float" style="animation-duration: 8s; animation-delay: 2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          <svg
+            class="w-12 h-12 text-blue-400/15 animate-float"
+            style="animation-duration: 8s; animation-delay: 2s;"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 7l5 5m0 0l-5 5m5-5H6"
+            />
           </svg>
         </div>
-        
+
         <!-- Very subtle grid pattern -->
-        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
-      
+
       <div class="container mx-auto px-4 max-w-5xl text-center relative z-10">
         <Breadcrumbs :items="breadcrumbItems" />
-        
+
         <h1 class="mb-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
           About <span class="text-blue-600">Remit-Scout</span>
         </h1>
@@ -44,20 +83,28 @@
           Built by expats who got tired of losing money to fees
         </p>
         <p class="mx-auto max-w-3xl text-lg text-slate-600 leading-relaxed">
-          Remit-Scout is an expat-built research studio for cross-border money. Backed by <button @click="handleExternalLink('https://www.cmu.edu/swartz-center-for-entrepreneurship/')" class="text-blue-600 hover:text-blue-700 underline font-medium whitespace-nowrap">Carnegie Mellon's Swartz Entrepreneurship Program</button>, we run real transfers, surface the honest "recipient gets" number, and fight hidden markups so your family keeps every possible dollar.
+          Remit-Scout is an expat-built research studio for cross-border money. Backed by <button
+            class="text-blue-600 hover:text-blue-700 underline font-medium whitespace-nowrap"
+            @click="handleExternalLink('https://www.cmu.edu/swartz-center-for-entrepreneurship/')"
+          >
+            Carnegie Mellon's Swartz Entrepreneurship Program
+          </button>, we run real transfers, surface the honest "recipient gets" number, and fight hidden markups so your family keeps every possible dollar.
         </p>
       </div>
     </div>
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-12 max-w-6xl">
-      
       <!-- Impact Statistics -->
       <section class="mb-16">
         <div class="rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 p-8 lg:p-12 shadow-2xl">
           <div class="text-center mb-10">
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">Our Impact So Far 📈</h2>
-            <p class="text-blue-100 text-lg max-w-2xl mx-auto">Small team, big mission: helping families keep more of their hard‑earned money</p>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">
+              Our Impact So Far 📈
+            </h2>
+            <p class="text-blue-100 text-lg max-w-2xl mx-auto">
+              Small team, big mission: helping families keep more of their hard‑earned money
+            </p>
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -65,32 +112,48 @@
               <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
                 <span class="text-3xl">👥</span>
               </div>
-              <div class="text-3xl md:text-4xl font-bold text-white mb-1">80k+</div>
-              <div class="text-sm text-blue-100">people have used Remit-Scout</div>
+              <div class="text-3xl md:text-4xl font-bold text-white mb-1">
+                80k+
+              </div>
+              <div class="text-sm text-blue-100">
+                people have used Remit-Scout
+              </div>
             </div>
 
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
                 <span class="text-3xl">💰</span>
               </div>
-              <div class="text-3xl md:text-4xl font-bold text-white mb-1">$2.5M+</div>
-              <div class="text-sm text-blue-100">saved in fees and FX markups</div>
+              <div class="text-3xl md:text-4xl font-bold text-white mb-1">
+                $2.5M+
+              </div>
+              <div class="text-sm text-blue-100">
+                saved in fees and FX markups
+              </div>
             </div>
 
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
                 <span class="text-3xl">🏢</span>
               </div>
-              <div class="text-3xl md:text-4xl font-bold text-white mb-1">30+</div>
-              <div class="text-sm text-blue-100">providers tested</div>
+              <div class="text-3xl md:text-4xl font-bold text-white mb-1">
+                30+
+              </div>
+              <div class="text-sm text-blue-100">
+                providers tested
+              </div>
             </div>
 
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
                 <span class="text-3xl">🌍</span>
               </div>
-              <div class="text-3xl md:text-4xl font-bold text-white mb-1">150+</div>
-              <div class="text-sm text-blue-100">corridors covered</div>
+              <div class="text-3xl md:text-4xl font-bold text-white mb-1">
+                150+
+              </div>
+              <div class="text-sm text-blue-100">
+                corridors covered
+              </div>
             </div>
           </div>
 
@@ -114,14 +177,16 @@
                   :onerror="`this.src='/images/about/omar-placeholder.jpg'; this.onerror=null;`"
                   alt="Omar Ghabayen, Founder of Remit-Scout"
                   class="relative w-full h-full rounded-2xl object-cover border-4 border-white shadow-2xl"
-                />
+                >
               </div>
             </div>
             <div class="flex-1 text-center lg:text-left">
               <div class="inline-block mb-2 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full uppercase tracking-wide">
                 Founder
               </div>
-              <h3 class="text-3xl font-bold text-slate-900 mb-3">Omar Ghabayen</h3>
+              <h3 class="text-3xl font-bold text-slate-900 mb-3">
+                Omar Ghabayen
+              </h3>
               <div class="space-y-2 mb-4">
                 <div class="flex items-center justify-center lg:justify-start gap-2 text-slate-600">
                   <span>🌍</span>
@@ -150,8 +215,12 @@
               <span class="text-3xl">✈️</span>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-slate-900">Our Story</h2>
-              <p class="mt-1 text-slate-600">How losing $30 per transfer turned into a transparency project</p>
+              <h2 class="text-3xl font-bold text-slate-900">
+                Our Story
+              </h2>
+              <p class="mt-1 text-slate-600">
+                How losing $30 per transfer turned into a transparency project
+              </p>
             </div>
           </div>
         </div>
@@ -200,8 +269,12 @@
               <span class="text-3xl">🌍</span>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-slate-900">Our Mission</h2>
-              <p class="mt-1 text-slate-600">Make cross-border money as predictable as booking a plane ticket</p>
+              <h2 class="text-3xl font-bold text-slate-900">
+                Our Mission
+              </h2>
+              <p class="mt-1 text-slate-600">
+                Make cross-border money as predictable as booking a plane ticket
+              </p>
             </div>
           </div>
         </div>
@@ -237,7 +310,9 @@
                   <span class="text-2xl">👀</span>
                 </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-slate-900 mb-1">Transparency</h3>
+                  <h3 class="text-lg font-semibold text-slate-900 mb-1">
+                    Transparency
+                  </h3>
                   <p class="text-sm text-slate-700 leading-relaxed">
                     Clear "recipient gets" amounts, mid‑market benchmarks, and plain‑language explanations.
                   </p>
@@ -251,7 +326,9 @@
                   <span class="text-2xl">🛡️</span>
                 </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-slate-900 mb-1">Independence</h3>
+                  <h3 class="text-lg font-semibold text-slate-900 mb-1">
+                    Independence
+                  </h3>
                   <p class="text-sm text-slate-700 leading-relaxed">
                     No paid rankings. Ever. Revenue is separated from recommendations.
                   </p>
@@ -265,7 +342,9 @@
                   <span class="text-2xl">✅</span>
                 </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-slate-900 mb-1">Accuracy</h3>
+                  <h3 class="text-lg font-semibold text-slate-900 mb-1">
+                    Accuracy
+                  </h3>
                   <p class="text-sm text-slate-700 leading-relaxed">
                     Real transfers, real receipts, real delivery times.
                   </p>
@@ -279,7 +358,9 @@
                   <span class="text-2xl">🤝</span>
                 </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-slate-900 mb-1">Community</h3>
+                  <h3 class="text-lg font-semibold text-slate-900 mb-1">
+                    Community
+                  </h3>
                   <p class="text-sm text-slate-700 leading-relaxed">
                     Built by expats, for expats, with constant feedback loops.
                   </p>
@@ -298,38 +379,58 @@
     <section class="mb-16 py-12 sm:py-16 bg-brand-600 w-full">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-white mb-3">Who We Help 🌐</h2>
-          <p class="text-lg text-white/90 max-w-2xl mx-auto">Transparency matters for everyone sending money across borders</p>
+          <h2 class="text-3xl font-bold text-white mb-3">
+            Who We Help 🌐
+          </h2>
+          <p class="text-lg text-white/90 max-w-2xl mx-auto">
+            Transparency matters for everyone sending money across borders
+          </p>
         </div>
 
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-6 hover:bg-white/20 transition-all">
-            <div class="text-4xl mb-4">🎓</div>
-            <h3 class="text-lg font-semibold text-white mb-2">Students & Parents</h3>
+            <div class="text-4xl mb-4">
+              🎓
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">
+              Students & Parents
+            </h3>
             <p class="text-sm text-white/90 leading-relaxed">
               Sending tuition payments where every dollar counts toward your education.
             </p>
           </div>
 
           <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-6 hover:bg-white/20 transition-all">
-            <div class="text-4xl mb-4">👨‍👩‍👧‍👦</div>
-            <h3 class="text-lg font-semibold text-white mb-2">Families Supporting Loved Ones</h3>
+            <div class="text-4xl mb-4">
+              👨‍👩‍👧‍👦
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">
+              Families Supporting Loved Ones
+            </h3>
             <p class="text-sm text-white/90 leading-relaxed">
               Making sure grocery money actually buys groceries back home.
             </p>
           </div>
 
           <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-6 hover:bg-white/20 transition-all">
-            <div class="text-4xl mb-4">💼</div>
-            <h3 class="text-lg font-semibold text-white mb-2">Remote Workers & Freelancers</h3>
+            <div class="text-4xl mb-4">
+              💼
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">
+              Remote Workers & Freelancers
+            </h3>
             <p class="text-sm text-white/90 leading-relaxed">
               Getting paid internationally without losing a chunk to hidden fees.
             </p>
           </div>
 
           <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-6 hover:bg-white/20 transition-all">
-            <div class="text-4xl mb-4">🏢</div>
-            <h3 class="text-lg font-semibold text-white mb-2">Small Businesses</h3>
+            <div class="text-4xl mb-4">
+              🏢
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">
+              Small Businesses
+            </h3>
             <p class="text-sm text-white/90 leading-relaxed">
               Paying international contractors fairly and transparently.
             </p>
@@ -343,7 +444,9 @@
       <!-- What Makes Us Different -->
       <section class="mb-16">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-slate-900 mb-3">What Makes Remit-Scout Different</h2>
+          <h2 class="text-3xl font-bold text-slate-900 mb-3">
+            What Makes Remit-Scout Different
+          </h2>
         </div>
 
         <div class="space-y-8">
@@ -353,7 +456,9 @@
                 <span class="text-3xl">👀</span>
               </div>
               <div class="flex-1">
-                <h3 class="text-2xl font-semibold text-slate-900 mb-4">Radical Transparency</h3>
+                <h3 class="text-2xl font-semibold text-slate-900 mb-4">
+                  Radical Transparency
+                </h3>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
                   We show the total amount your recipient will receive, including:
                 </p>
@@ -388,7 +493,9 @@
                 <span class="text-3xl">🛡️</span>
               </div>
               <div class="flex-1">
-                <h3 class="text-2xl font-semibold text-slate-900 mb-4">Complete Independence</h3>
+                <h3 class="text-2xl font-semibold text-slate-900 mb-4">
+                  Complete Independence
+                </h3>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
                   <strong class="font-semibold text-slate-900">Providers cannot pay to rank higher—full stop.</strong>
                 </p>
@@ -443,7 +550,9 @@
                 <span class="text-3xl">✅</span>
               </div>
               <div class="flex-1">
-                <h3 class="text-2xl font-semibold text-slate-900 mb-4">Human-Verified Accuracy</h3>
+                <h3 class="text-2xl font-semibold text-slate-900 mb-4">
+                  Human-Verified Accuracy
+                </h3>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
                   We don't just read marketing pages. We:
                 </p>
@@ -478,7 +587,9 @@
                 <span class="text-3xl">🤝</span>
               </div>
               <div class="flex-1">
-                <h3 class="text-2xl font-semibold text-slate-900 mb-4">Community-Driven</h3>
+                <h3 class="text-2xl font-semibold text-slate-900 mb-4">
+                  Community-Driven
+                </h3>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
                   We're built by expats, for expats.
                 </p>
@@ -516,17 +627,31 @@
               <span class="text-3xl">🧪</span>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-slate-900">How We Work</h2>
-              <p class="mt-1 text-slate-600">A simple playbook: test, verify, explain</p>
+              <h2 class="text-3xl font-bold text-slate-900">
+                How We Work
+              </h2>
+              <p class="mt-1 text-slate-600">
+                A simple playbook: test, verify, explain
+              </p>
             </div>
           </div>
-          <NuxtLink 
+          <NuxtLink
             to="/methodology"
             class="hidden sm:flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
           >
             Read Methodology
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -536,25 +661,60 @@
           <div class="relative">
             <div class="absolute top-8 left-0 right-0 h-1 bg-gradient-to-r from-blue-200 via-emerald-200 via-purple-200 via-orange-200 to-slate-200" />
             <div class="relative flex justify-between items-start">
-              <div class="flex flex-col items-center" style="width: 20%">
-                <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">📊</div>
-                <div class="text-xs font-semibold text-center text-slate-700">Data Collection</div>
+              <div
+                class="flex flex-col items-center"
+                style="width: 20%"
+              >
+                <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">
+                  📊
+                </div>
+                <div class="text-xs font-semibold text-center text-slate-700">
+                  Data Collection
+                </div>
               </div>
-              <div class="flex flex-col items-center" style="width: 20%">
-                <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">💸</div>
-                <div class="text-xs font-semibold text-center text-slate-700">Real Testing</div>
+              <div
+                class="flex flex-col items-center"
+                style="width: 20%"
+              >
+                <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">
+                  💸
+                </div>
+                <div class="text-xs font-semibold text-center text-slate-700">
+                  Real Testing
+                </div>
               </div>
-              <div class="flex flex-col items-center" style="width: 20%">
-                <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">🧮</div>
-                <div class="text-xs font-semibold text-center text-slate-700">Cost Calculation</div>
+              <div
+                class="flex flex-col items-center"
+                style="width: 20%"
+              >
+                <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">
+                  🧮
+                </div>
+                <div class="text-xs font-semibold text-center text-slate-700">
+                  Cost Calculation
+                </div>
               </div>
-              <div class="flex flex-col items-center" style="width: 20%">
-                <div class="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">⭐</div>
-                <div class="text-xs font-semibold text-center text-slate-700">Remit Score</div>
+              <div
+                class="flex flex-col items-center"
+                style="width: 20%"
+              >
+                <div class="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">
+                  ⭐
+                </div>
+                <div class="text-xs font-semibold text-center text-slate-700">
+                  Remit Score
+                </div>
               </div>
-              <div class="flex flex-col items-center" style="width: 20%">
-                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">🔄</div>
-                <div class="text-xs font-semibold text-center text-slate-700">Ongoing Updates</div>
+              <div
+                class="flex flex-col items-center"
+                style="width: 20%"
+              >
+                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-3xl shadow-lg mb-3 relative z-10">
+                  🔄
+                </div>
+                <div class="text-xs font-semibold text-center text-slate-700">
+                  Ongoing Updates
+                </div>
               </div>
             </div>
           </div>
@@ -642,7 +802,9 @@
                   We compare the real "recipient gets" amount to the mid‑market rate (the rate banks give each other). The difference is the hidden markup.
                 </p>
                 <div class="bg-purple-50 border border-purple-200 rounded-xl p-5 mb-4">
-                  <p class="text-sm font-semibold text-purple-900 mb-2">Example:</p>
+                  <p class="text-sm font-semibold text-purple-900 mb-2">
+                    Example:
+                  </p>
                   <p class="text-sm text-slate-700 leading-relaxed">
                     If you send <strong>$1,000 USD to India</strong> when the real rate is <strong>83.00 INR</strong> but the provider pays <strong>81.50 INR</strong>, that's <strong class="text-purple-700">₹1,500 gone</strong>. We show:
                   </p>
@@ -670,8 +832,18 @@
               <div class="flex items-start gap-4">
                 <div class="flex-shrink-0">
                   <div class="w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    <svg
+                      class="w-6 h-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -680,23 +852,33 @@
                     <span class="text-orange-600">4.</span> Remit Score Rating System
                   </h3>
                   <p class="text-sm text-neutral-700 mb-3 max-w-3xl leading-relaxed">
-                    Each provider gets a <span class="font-semibold">Remit-Score</span> (0-10 scale) based on real transfer data, not paid reviews. 
+                    Each provider gets a <span class="font-semibold">Remit-Score</span> (0-10 scale) based on real transfer data, not paid reviews.
                     Scores like <span class="font-bold text-brand-600">9.5</span>, <span class="font-bold text-brand-600">8.4</span>, or <span class="font-bold text-brand-600">7.2</span> reflect actual value, speed, reliability, and safety across thousands of transfers.
                   </p>
                   <button
-                    @click="showRemitScoreModal = true"
                     class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                    @click="showRemitScoreModal = true"
                   >
                     Learn how we calculate Remit-Score
-                    <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="ml-1 w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </button>
                 </div>
               </div>
               <button
-                @click="showRemitScoreModal = true"
                 class="hidden sm:flex flex-shrink-0 px-4 py-2 bg-white border border-brand-300 hover:border-brand-600 text-brand-600 font-medium rounded-lg transition-colors text-sm"
+                @click="showRemitScoreModal = true"
               >
                 View Details
               </button>
@@ -741,8 +923,12 @@
       <!-- Mini FAQ for Trust Questions -->
       <section class="mb-16">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-slate-900 mb-3">Trust & Safety FAQ 🔒</h2>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Quick answers to common questions about how Remit-Scout works</p>
+          <h2 class="text-3xl font-bold text-slate-900 mb-3">
+            Trust & Safety FAQ 🔒
+          </h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Quick answers to common questions about how Remit-Scout works
+          </p>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2">
@@ -752,7 +938,9 @@
                 <span class="text-lg">💰</span>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 mb-2">How does Remit-Scout make money?</h3>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">
+                  How does Remit-Scout make money?
+                </h3>
                 <p class="text-sm text-slate-700 leading-relaxed">
                   We earn affiliate commissions when you click through and complete a transfer. But these partnerships never influence our rankings—providers cannot pay to rank higher.
                 </p>
@@ -766,7 +954,9 @@
                 <span class="text-lg">🏆</span>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 mb-2">Can providers pay to rank higher?</h3>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">
+                  Can providers pay to rank higher?
+                </h3>
                 <p class="text-sm text-slate-700 leading-relaxed">
                   No. Never. Rankings are based purely on data: total cost, delivery speed, reliability, and user experience. Sponsored content is clearly labeled and shown separately.
                 </p>
@@ -780,7 +970,9 @@
                 <span class="text-lg">🏦</span>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 mb-2">Do you hold or move my money?</h3>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">
+                  Do you hold or move my money?
+                </h3>
                 <p class="text-sm text-slate-700 leading-relaxed">
                   No. We're a comparison tool, not a bank or money transfer service. We link you to licensed providers—the actual transfer happens between you and them.
                 </p>
@@ -794,7 +986,9 @@
                 <span class="text-lg">⏱️</span>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 mb-2">How often are rates updated?</h3>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">
+                  How often are rates updated?
+                </h3>
                 <p class="text-sm text-slate-700 leading-relaxed">
                   Multiple times per day. We pull live rates from provider APIs so you're always seeing current market conditions, not stale data.
                 </p>
@@ -811,9 +1005,11 @@
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-600 text-white flex-shrink-0">
               <span class="text-2xl">🔒</span>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900">Your Safety & Privacy</h2>
+            <h2 class="text-2xl font-bold text-slate-900">
+              Your Safety & Privacy
+            </h2>
           </div>
-          
+
           <div class="space-y-4 text-base text-slate-700 leading-relaxed">
             <div class="flex items-start gap-3">
               <span class="text-green-600 font-bold mt-1">✓</span>
@@ -839,7 +1035,9 @@
               <span class="text-3xl">🤝</span>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-slate-900">Our Commitment to You</h2>
+              <h2 class="text-3xl font-bold text-slate-900">
+                Our Commitment to You
+              </h2>
             </div>
           </div>
         </div>
@@ -847,7 +1045,9 @@
         <div class="rounded-3xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8 lg:p-12">
           <div class="grid gap-8 lg:grid-cols-2">
             <div class="space-y-6">
-              <h3 class="text-2xl font-bold text-slate-900">Editorial Independence</h3>
+              <h3 class="text-2xl font-bold text-slate-900">
+                Editorial Independence
+              </h3>
               <div class="space-y-4 text-base leading-relaxed text-slate-700">
                 <p>
                   <strong class="font-semibold text-slate-900">Rankings are never for sale.</strong>
@@ -862,7 +1062,9 @@
             </div>
 
             <div class="space-y-6">
-              <h3 class="text-2xl font-bold text-slate-900">Always Improving</h3>
+              <h3 class="text-2xl font-bold text-slate-900">
+                Always Improving
+              </h3>
               <div class="space-y-4 text-base leading-relaxed text-slate-700">
                 <p>
                   We're committed to continuous improvement and expanding our coverage. Every day we're:
@@ -886,7 +1088,10 @@
                   </li>
                 </ul>
                 <p class="font-medium text-slate-900">
-                  If you need information about a corridor we don't fully cover yet, <NuxtLink to="/contact" class="text-blue-600 hover:underline">let us know</NuxtLink> and we'll prioritize adding it.
+                  If you need information about a corridor we don't fully cover yet, <NuxtLink
+                    to="/contact"
+                    class="text-blue-600 hover:underline"
+                  >let us know</NuxtLink> and we'll prioritize adding it.
                 </p>
               </div>
             </div>
@@ -897,23 +1102,39 @@
       <!-- Transparency & Links -->
       <section class="mb-16 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
         <div class="flex items-center gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">🔗</div>
-          <h3 class="text-xl font-semibold text-slate-900">See how we work</h3>
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+            🔗
+          </div>
+          <h3 class="text-xl font-semibold text-slate-900">
+            See how we work
+          </h3>
         </div>
         <p class="text-sm text-slate-700 [text-wrap:pretty]">
           Dive deeper into our testing, revenue disclosures, and support resources:
         </p>
         <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-          <NuxtLink to="/methodology" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors">
+          <NuxtLink
+            to="/methodology"
+            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors"
+          >
             <span>🧪</span><span class="font-semibold">Methodology</span>
           </NuxtLink>
-          <NuxtLink to="/faq" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors">
+          <NuxtLink
+            to="/faq"
+            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors"
+          >
             <span>❓</span><span class="font-semibold">FAQs</span>
           </NuxtLink>
-          <NuxtLink to="/how-we-make-money" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors">
+          <NuxtLink
+            to="/how-we-make-money"
+            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors"
+          >
             <span>📜</span><span class="font-semibold">How we make money</span>
           </NuxtLink>
-          <NuxtLink to="/contact" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors">
+          <NuxtLink
+            to="/contact"
+            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 hover:border-blue-300 hover:text-blue-700 transition-colors"
+          >
             <span>💬</span><span class="font-semibold">Talk to us</span>
           </NuxtLink>
         </div>
@@ -922,12 +1143,16 @@
       <!-- Services We Offer -->
       <section class="mb-16">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-slate-900 mb-3">Services We Offer 🎯</h2>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Everything you need for living, working, and traveling abroad</p>
+          <h2 class="text-3xl font-bold text-slate-900 mb-3">
+            Services We Offer 🎯
+          </h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Everything you need for living, working, and traveling abroad
+          </p>
         </div>
 
         <div class="grid gap-6 md:grid-cols-3">
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border-2 border-slate-200 bg-white p-8 hover:border-blue-400 hover:shadow-xl transition-all"
           >
@@ -942,13 +1167,23 @@
             </p>
             <div class="flex items-center gap-2 text-blue-600 font-semibold group-hover:gap-3 transition-all">
               <span>Explore Guides</span>
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/"
             class="group rounded-2xl border-2 border-slate-200 bg-white p-8 hover:border-emerald-400 hover:shadow-xl transition-all"
           >
@@ -963,13 +1198,23 @@
             </p>
             <div class="flex items-center gap-2 text-emerald-600 font-semibold group-hover:gap-3 transition-all">
               <span>Compare Now</span>
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/esim"
             class="group rounded-2xl border-2 border-slate-200 bg-white p-8 hover:border-purple-400 hover:shadow-xl transition-all"
           >
@@ -984,8 +1229,18 @@
             </p>
             <div class="flex items-center gap-2 text-purple-600 font-semibold group-hover:gap-3 transition-all">
               <span>Find eSIMs</span>
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </NuxtLink>
@@ -995,14 +1250,20 @@
       <!-- Partnerships -->
       <section class="mb-16">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-slate-900 mb-3">Partnerships 🤝</h2>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Work with us to bring transparency to cross-border payments</p>
+          <h2 class="text-3xl font-bold text-slate-900 mb-3">
+            Partnerships 🤝
+          </h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Work with us to bring transparency to cross-border payments
+          </p>
         </div>
 
         <div class="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 lg:p-12">
           <div class="grid gap-8 lg:grid-cols-2 lg:items-stretch">
             <div class="flex flex-col space-y-6">
-              <h3 class="text-2xl font-bold text-slate-900">For Money Transfer Providers</h3>
+              <h3 class="text-2xl font-bold text-slate-900">
+                For Money Transfer Providers
+              </h3>
               <p class="text-base leading-relaxed text-slate-700 flex-grow">
                 If you're a licensed money transfer provider, we'd love to include you in our comparisons. Our platform helps users find the best rates while driving qualified customers to services that genuinely offer value.
               </p>
@@ -1023,7 +1284,9 @@
             </div>
 
             <div class="flex flex-col space-y-6">
-              <h3 class="text-2xl font-bold text-slate-900">For Organizations & Media</h3>
+              <h3 class="text-2xl font-bold text-slate-900">
+                For Organizations & Media
+              </h3>
               <p class="text-base leading-relaxed text-slate-700 flex-grow">
                 We partner with universities, expat communities, financial education platforms, and media outlets to bring transparent money transfer information to wider audiences.
               </p>
@@ -1048,13 +1311,23 @@
             <p class="text-slate-700 mb-6">
               Interested in partnering with Remit-Scout? Let's talk about how we can work together.
             </p>
-            <NuxtLink 
+            <NuxtLink
               to="/contact"
               class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-8 py-4 text-lg font-semibold text-white hover:bg-slate-800 transition-colors shadow-lg"
             >
               Discuss Partnership
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -1064,12 +1337,16 @@
       <!-- Read Our Guides -->
       <section class="mb-16">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-slate-900 mb-3">Read Our Guides 📖</h2>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Expert advice for managing money across borders</p>
+          <h2 class="text-3xl font-bold text-slate-900 mb-3">
+            Read Our Guides 📖
+          </h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Expert advice for managing money across borders
+          </p>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg transition-all"
           >
@@ -1087,7 +1364,7 @@
             </p>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg transition-all"
           >
@@ -1105,7 +1382,7 @@
             </p>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg transition-all"
           >
@@ -1123,7 +1400,7 @@
             </p>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg transition-all"
           >
@@ -1141,7 +1418,7 @@
             </p>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg transition-all"
           >
@@ -1159,7 +1436,7 @@
             </p>
           </NuxtLink>
 
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg transition-all"
           >
@@ -1179,13 +1456,23 @@
         </div>
 
         <div class="mt-8 text-center">
-          <NuxtLink 
+          <NuxtLink
             to="/learn"
             class="inline-flex items-center gap-2 rounded-lg border-2 border-blue-600 bg-white px-8 py-4 text-lg font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
           >
             Browse All Guides
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -1194,16 +1481,32 @@
       <!-- Quick FAQ -->
       <section class="mb-16">
         <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-slate-900 mb-3">Frequently Asked Questions ❓</h2>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Common questions about Remit-Scout and money transfers</p>
+          <h2 class="text-3xl font-bold text-slate-900 mb-3">
+            Frequently Asked Questions ❓
+          </h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Common questions about Remit-Scout and money transfers
+          </p>
         </div>
 
         <div class="space-y-4 max-w-4xl mx-auto">
           <details class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all">
             <summary class="flex items-center justify-between cursor-pointer list-none">
-              <h3 class="text-lg font-semibold text-slate-900">Is Remit-Scout free to use?</h3>
-              <svg class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <h3 class="text-lg font-semibold text-slate-900">
+                Is Remit-Scout free to use?
+              </h3>
+              <svg
+                class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </summary>
             <p class="mt-4 text-slate-700 leading-relaxed">
@@ -1213,9 +1516,21 @@
 
           <details class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all">
             <summary class="flex items-center justify-between cursor-pointer list-none">
-              <h3 class="text-lg font-semibold text-slate-900">How do you choose which providers to recommend?</h3>
-              <svg class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <h3 class="text-lg font-semibold text-slate-900">
+                How do you choose which providers to recommend?
+              </h3>
+              <svg
+                class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </summary>
             <p class="mt-4 text-slate-700 leading-relaxed">
@@ -1225,9 +1540,21 @@
 
           <details class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all">
             <summary class="flex items-center justify-between cursor-pointer list-none">
-              <h3 class="text-lg font-semibold text-slate-900">Are all providers licensed and regulated?</h3>
-              <svg class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <h3 class="text-lg font-semibold text-slate-900">
+                Are all providers licensed and regulated?
+              </h3>
+              <svg
+                class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </summary>
             <p class="mt-4 text-slate-700 leading-relaxed">
@@ -1237,9 +1564,21 @@
 
           <details class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all">
             <summary class="flex items-center justify-between cursor-pointer list-none">
-              <h3 class="text-lg font-semibold text-slate-900">How accurate are your fee and rate comparisons?</h3>
-              <svg class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <h3 class="text-lg font-semibold text-slate-900">
+                How accurate are your fee and rate comparisons?
+              </h3>
+              <svg
+                class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </summary>
             <p class="mt-4 text-slate-700 leading-relaxed">
@@ -1249,9 +1588,21 @@
 
           <details class="group rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all">
             <summary class="flex items-center justify-between cursor-pointer list-none">
-              <h3 class="text-lg font-semibold text-slate-900">What if I have a problem with a transfer?</h3>
-              <svg class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <h3 class="text-lg font-semibold text-slate-900">
+                What if I have a problem with a transfer?
+              </h3>
+              <svg
+                class="h-5 w-5 text-slate-600 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </summary>
             <p class="mt-4 text-slate-700 leading-relaxed">
@@ -1261,13 +1612,23 @@
         </div>
 
         <div class="mt-8 text-center">
-          <NuxtLink 
+          <NuxtLink
             to="/faq"
             class="inline-flex items-center gap-2 rounded-lg border-2 border-slate-600 bg-white px-8 py-4 text-lg font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
           >
             View All FAQs
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -1280,54 +1641,86 @@
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-600 text-white flex-shrink-0">
               <span class="text-2xl">💬</span>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900">We Want to Hear From You</h2>
+            <h2 class="text-2xl font-bold text-slate-900">
+              We Want to Hear From You
+            </h2>
           </div>
-          
+
           <p class="text-base text-slate-700 leading-relaxed mb-6">
             Remit-Scout gets better with your feedback. Whether you found a bug, spotted incorrect fees, want to request a corridor, or have ideas for new features—we're listening.
           </p>
 
           <div class="grid gap-4 sm:grid-cols-3">
             <div class="rounded-xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
-              <div class="text-2xl mb-2">🐛</div>
-              <h3 class="text-sm font-semibold text-slate-900 mb-2">Report a Bug</h3>
-              <p class="text-xs text-slate-600 leading-relaxed">Something not working? Let us know so we can fix it.</p>
+              <div class="text-2xl mb-2">
+                🐛
+              </div>
+              <h3 class="text-sm font-semibold text-slate-900 mb-2">
+                Report a Bug
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Something not working? Let us know so we can fix it.
+              </p>
             </div>
 
             <div class="rounded-xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
-              <div class="text-2xl mb-2">💡</div>
-              <h3 class="text-sm font-semibold text-slate-900 mb-2">Suggest a Feature</h3>
-              <p class="text-xs text-slate-600 leading-relaxed">Have an idea? Share it. Many features come from user requests.</p>
+              <div class="text-2xl mb-2">
+                💡
+              </div>
+              <h3 class="text-sm font-semibold text-slate-900 mb-2">
+                Suggest a Feature
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Have an idea? Share it. Many features come from user requests.
+              </p>
             </div>
 
             <div class="rounded-xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
-              <div class="text-2xl mb-2">🌍</div>
-              <h3 class="text-sm font-semibold text-slate-900 mb-2">Request a Corridor</h3>
-              <p class="text-xs text-slate-600 leading-relaxed">Need a route we don't cover? Tell us and we'll prioritize it.</p>
+              <div class="text-2xl mb-2">
+                🌍
+              </div>
+              <h3 class="text-sm font-semibold text-slate-900 mb-2">
+                Request a Corridor
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Need a route we don't cover? Tell us and we'll prioritize it.
+              </p>
             </div>
           </div>
 
           <div class="mt-8 text-center">
-            <NuxtLink 
+            <NuxtLink
               to="/contact"
               class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-8 py-4 text-lg font-semibold text-white hover:bg-slate-800 transition-colors shadow-lg"
             >
               Contact Us
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
         </div>
       </section>
-
     </div>
 
     <!-- Trust Metrics Strip -->
     <TrustMetricsStrip />
 
     <!-- Remit Score Modal -->
-    <RemitScoreModal :is-open="showRemitScoreModal" @update:is-open="showRemitScoreModal = $event" />
+    <RemitScoreModal
+      :is-open="showRemitScoreModal"
+      @update:is-open="showRemitScoreModal = $event"
+    />
 
     <!-- External Link Modal -->
     <Teleport to="body">
@@ -1341,37 +1734,59 @@
           @click.stop
         >
           <button
-            @click="closeExternalLinkModal"
             class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
             aria-label="Close modal"
+            @click="closeExternalLinkModal"
           >
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              class="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
           <div class="text-center">
             <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
-              <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                class="h-8 w-8 text-yellow-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
             </div>
-            
-            <h3 class="mb-3 text-2xl font-bold text-slate-900">You are leaving Remit-Scout</h3>
+
+            <h3 class="mb-3 text-2xl font-bold text-slate-900">
+              You are leaving Remit-Scout
+            </h3>
             <p class="mb-6 text-slate-600 leading-relaxed">
               You're about to visit an external website. Remit-Scout is not responsible for the content or privacy practices of external sites.
             </p>
 
             <div class="flex gap-3">
               <button
-                @click="closeExternalLinkModal"
                 class="flex-1 rounded-lg border-2 border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                @click="closeExternalLinkModal"
               >
                 Cancel
               </button>
               <button
-                @click="confirmExternalLink"
                 class="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
+                @click="confirmExternalLink"
               >
                 Continue
               </button>
@@ -1389,6 +1804,7 @@ import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import RemitScoreModal from '~/components/shared/RemitScoreModal.vue'
+import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useSeo'
 
 const founderHeadshotUrl = '/images/about/omar-ghabayen-headshot.webp'
 
@@ -1416,18 +1832,23 @@ const closeExternalLinkModal = () => {
   pendingExternalUrl.value = ''
 }
 
-useHead({
-  title: 'About Us | Remit-Scout — Transparent Money Transfer Comparisons',
-  meta: [
-    {
-      name: 'description',
-      content: `Built by expats who got tired of losing grocery money to bank fees. Backed by Carnegie Mellon's Swartz Entrepreneurship Program, we run real transfers and fight hidden markups so your family keeps every possible dollar.`,
-    },
-  ],
-})
-
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'About Us', path: '/about' },
 ]
+
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'About Us | Remit-Scout — Transparent Money Transfer Comparisons',
+  description: `Built by expats who got tired of losing grocery money to bank fees. Backed by Carnegie Mellon's Swartz Entrepreneurship Program, we run real transfers and fight hidden markups so your family keeps every possible dollar.`,
+  canonical: `${siteUrl}/about`,
+})
+
+jsonLdBreadcrumb([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'About Us', url: `${siteUrl}/about` },
+])
+
+jsonLdOrganization(siteUrl)
 </script>

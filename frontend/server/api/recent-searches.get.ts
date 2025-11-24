@@ -1,4 +1,4 @@
-import { RecentSearch } from '~/types/remit'
+import type { RecentSearch } from '~/types/remit'
 
 // In-memory store (replace with Redis/DB in production)
 const RECENT_SEARCHES: RecentSearch[] = []
@@ -6,10 +6,10 @@ const RECENT_SEARCHES: RecentSearch[] = []
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const limit = Number(query.limit) || 12
-  
+
   // Get most recent searches
   const data = RECENT_SEARCHES.slice(-limit).reverse()
-  
+
   // Add mock data for demo
   if (data.length === 0) {
     const mockData: RecentSearch[] = [
@@ -43,22 +43,10 @@ export default defineEventHandler(async (event) => {
     ]
     return { data: mockData, updatedAt: new Date().toISOString() }
   }
-  
+
   return {
     data,
     updatedAt: new Date().toISOString(),
   }
 })
-
-
-
-
-
-
-
-
-
-
-
-
 

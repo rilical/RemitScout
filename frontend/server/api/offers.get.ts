@@ -1,5 +1,5 @@
-export default defineEventHandler(async event => {
-  const query = getQuery(event);
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event)
 
   // Mock offers data based on query parameters
   const offers = [
@@ -45,11 +45,11 @@ export default defineEventHandler(async event => {
       rating: 4.6,
       features: ['Express delivery', 'Mobile app', 'Great rates'],
     },
-  ];
+  ]
 
   return {
     offers,
     totalResults: offers.length,
     searchParams: query,
-  };
-});
+  }
+})

@@ -6,7 +6,9 @@
       <div class="rounded-3xl bg-white p-8 shadow-lg border border-neutral-200 mb-8">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p class="text-sm uppercase tracking-wide font-semibold text-brand-600 mb-2">Exchange rate</p>
+            <p class="text-sm uppercase tracking-wide font-semibold text-brand-600 mb-2">
+              Exchange rate
+            </p>
             <h1 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
               {{ pairLabel }} rate & transfer costs
             </h1>
@@ -15,16 +17,24 @@
             </p>
           </div>
           <div class="rounded-2xl bg-neutral-100 p-6 w-full lg:w-72">
-            <p class="text-sm text-neutral-600 mb-2">Mid-market rate</p>
-            <p class="text-3xl font-bold text-neutral-900 mb-1">{{ midMarketRate }}</p>
-            <p class="text-xs text-neutral-500">Updated hourly • For illustration</p>
+            <p class="text-sm text-neutral-600 mb-2">
+              Mid-market rate
+            </p>
+            <p class="text-3xl font-bold text-neutral-900 mb-1">
+              {{ midMarketRate }}
+            </p>
+            <p class="text-xs text-neutral-500">
+              Updated hourly • For illustration
+            </p>
           </div>
         </div>
       </div>
 
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-          <h2 class="text-xl font-bold text-neutral-900 mb-3">Provider markups</h2>
+          <h2 class="text-xl font-bold text-neutral-900 mb-3">
+            Provider markups
+          </h2>
           <p class="text-sm text-neutral-600 mb-4">
             We track how providers price {{ base }}/{{ quote }} relative to mid-market. Lower markup means your recipient keeps more.
           </p>
@@ -35,18 +45,28 @@
               class="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2"
             >
               <div>
-                <p class="text-sm font-semibold text-neutral-900">{{ row.name }}</p>
-                <p class="text-xs text-neutral-500">{{ row.speed }}</p>
+                <p class="text-sm font-semibold text-neutral-900">
+                  {{ row.name }}
+                </p>
+                <p class="text-xs text-neutral-500">
+                  {{ row.speed }}
+                </p>
               </div>
               <div class="text-right">
-                <p class="text-sm font-semibold text-neutral-900">{{ row.rate }}</p>
-                <p class="text-xs text-neutral-500">~{{ row.markup }}% vs mid</p>
+                <p class="text-sm font-semibold text-neutral-900">
+                  {{ row.rate }}
+                </p>
+                <p class="text-xs text-neutral-500">
+                  ~{{ row.markup }}% vs mid
+                </p>
               </div>
             </div>
           </div>
         </div>
         <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-          <h2 class="text-xl font-bold text-neutral-900 mb-3">When to send</h2>
+          <h2 class="text-xl font-bold text-neutral-900 mb-3">
+            When to send
+          </h2>
           <p class="text-sm text-neutral-600 mb-4">
             Timing and pay-in method both impact the real cost. Weekends often widen spreads; bank transfers are cheaper than cards.
           </p>
@@ -69,15 +89,27 @@
             class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 transition"
           >
             See provider reviews
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>
       </div>
 
       <div class="mt-8 rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-        <h2 class="text-xl font-bold text-neutral-900 mb-3">Popular corridors using {{ base }}/{{ quote }}</h2>
+        <h2 class="text-xl font-bold text-neutral-900 mb-3">
+          Popular corridors using {{ base }}/{{ quote }}
+        </h2>
         <p class="text-sm text-neutral-600 mb-4">
           See full comparison results for the most common remittance paths that rely on this pair.
         </p>

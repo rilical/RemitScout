@@ -10,7 +10,7 @@ export const useCountries = () => {
   const list = computed(() => {
     return COUNTRIES.map(country => ({
       value: country.code,
-      label: `${country.flag} ${country.name} (${country.currency})`
+      label: `${country.flag} ${country.name} (${country.currency})`,
     }))
   })
 
@@ -46,6 +46,6 @@ export const useCountry = (code: string) => {
       avgTransferTime: '1-2 business days',
       bankingHours: '9:00 AM - 5:00 PM',
       weekendProcessing: 'Limited',
-    };
-  });
-};
+    }
+  })
+}

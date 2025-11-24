@@ -1,4 +1,4 @@
-import { ProviderQuote } from '~/types/remit'
+import type { ProviderQuote } from '~/types/remit'
 
 function getCorridorSpecificProviders(from: string, to: string, amount: number): ProviderQuote[] {
   // Base provider data
@@ -85,11 +85,11 @@ function getCorridorSpecificProviders(from: string, to: string, amount: number):
       limits: 'Available in 200+ countries',
     },
   ]
-  
+
   // Add corridor-specific pros/cons and ranking explanations
   const corridor = `${from}→${to}`
-  
-  return baseProviders.map(provider => {
+
+  return baseProviders.map((provider) => {
     // Corridor-specific customization
     switch (corridor) {
       case 'US→PH':
@@ -97,13 +97,14 @@ function getCorridorSpecificProviders(from: string, to: string, amount: number):
           provider.corridorPros = ['Best PHP exchange rate', 'Direct to BPI/BDO', 'No receiving fee']
           provider.corridorCons = ['No cash pickup', 'Bank transfers only']
           provider.whyThisRanking = 'Ranked #1: Best total value for bank deposits in Philippines'
-        } else if (provider.id === 'remitly') {
+        }
+        else if (provider.id === 'remitly') {
           provider.corridorPros = ['Cash pickup at M Lhuillier', 'GCash supported', 'Express option']
           provider.corridorCons = ['Higher fee for cash', 'Rate varies by amount']
           provider.whyThisRanking = 'Ranked #2: Fastest for cash pickup in provinces'
         }
         break
-        
+
       case 'US→IN':
         if (provider.id === 'wise') {
           provider.corridorPros = ['Direct to all major banks', 'UPI supported', 'Best INR rate']
@@ -111,7 +112,7 @@ function getCorridorSpecificProviders(from: string, to: string, amount: number):
           provider.whyThisRanking = 'Ranked #1: Consistently highest INR payout'
         }
         break
-        
+
       case 'GB→PK':
         if (provider.id === 'wise') {
           provider.corridorPros = ['Fast to HBL/MCB', 'Low fee from UK', 'Great for tuition']
@@ -119,17 +120,17 @@ function getCorridorSpecificProviders(from: string, to: string, amount: number):
           provider.whyThisRanking = 'Ranked #1: Best for education payments'
         }
         break
-        
+
       default:
         provider.corridorPros = ['Licensed provider', 'Multiple delivery options']
         provider.corridorCons = ['Fees vary by method']
         provider.whyThisRanking = `Competitive option for ${from} to ${to} transfers`
     }
-    
+
     // Adjust recipient amount based on actual exchange calculation
     const actualAmount = amount - provider.fee
     provider.recipientGets = Math.round(actualAmount * provider.fxRate)
-    
+
     return provider
   })
 }
@@ -140,14 +141,14 @@ export default defineEventHandler(async (event) => {
   const to = (query.to as string) || 'PH'
   const amount = Number(query.amount) || 500
   const method = (query.method as string) || 'bank'
-  
+
   const allProviders = getCorridorSpecificProviders(from, to, amount)
-  
+
   // Filter by delivery method
-  const filtered = allProviders.filter(p => 
-    p.methods.includes(method as any)
+  const filtered = allProviders.filter(p =>
+    p.methods.includes(method as any),
   )
-  
+
   return {
     data: filtered,
     updatedAt: new Date().toISOString(),
@@ -156,16 +157,4 @@ export default defineEventHandler(async (event) => {
     method,
   }
 })
-
-
-
-
-
-
-
-
-
-
-
-
 

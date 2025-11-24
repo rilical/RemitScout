@@ -134,14 +134,14 @@ export const useProviders = (filters?: any) => {
           { range: '$500-$2,000', fee: '$6.99', exchangeRate: 'Mid-market -1.15%', totalCost: 'Medium' },
         ],
       },
-    ];
-  });
-};
+    ]
+  })
+}
 
 export const useProvider = (slug: string) => {
   return useLazyAsyncData(`provider-${slug}`, async () => {
     // Mock provider data
-    const providers = (await useProviders().data.value) || [];
-    return providers.find(p => p.slug === slug) || null;
-  });
-};
+    const providers = (await useProviders().data.value) || []
+    return providers.find(p => p.slug === slug) || null
+  })
+}

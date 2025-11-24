@@ -69,8 +69,18 @@
           class="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
         >
           <span class="text-sm font-semibold">Learn about our methodology</span>
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          <svg
+            class="w-4 h-4 group-hover:translate-x-1 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </NuxtLink>
       </div>
@@ -79,6 +89,5 @@
 </template>
 
 <script setup lang="ts">
-import { SITE_STATS } from '~/config/stats';
+import { SITE_STATS } from '~/config/stats'
 </script>
-

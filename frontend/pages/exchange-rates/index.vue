@@ -4,8 +4,12 @@
       <Breadcrumbs :items="breadcrumbItems" />
 
       <div class="rounded-3xl bg-gradient-to-r from-brand-600 to-brand-500 text-white p-8 shadow-lg mb-10">
-        <p class="text-sm uppercase tracking-wide font-semibold text-brand-50 mb-2">FX center</p>
-        <h1 class="text-3xl sm:text-4xl font-bold mb-3">Best exchange rates by currency pair</h1>
+        <p class="text-sm uppercase tracking-wide font-semibold text-brand-50 mb-2">
+          FX center
+        </p>
+        <h1 class="text-3xl sm:text-4xl font-bold mb-3">
+          Best exchange rates by currency pair
+        </h1>
         <p class="text-lg text-brand-50 max-w-3xl">
           Check today’s mid-market rate, see how providers price each pair, and learn when to send to keep more in your recipient’s currency.
         </p>
@@ -29,8 +33,12 @@
         >
           <div class="flex items-center justify-between mb-3">
             <div>
-              <p class="text-xs uppercase tracking-wide font-semibold text-brand-600">{{ bundle.kicker }}</p>
-              <h2 class="text-xl font-bold text-neutral-900">{{ bundle.title }}</h2>
+              <p class="text-xs uppercase tracking-wide font-semibold text-brand-600">
+                {{ bundle.kicker }}
+              </p>
+              <h2 class="text-xl font-bold text-neutral-900">
+                {{ bundle.title }}
+              </h2>
             </div>
             <span class="text-2xl">{{ bundle.emoji }}</span>
           </div>
@@ -54,16 +62,33 @@
       <div class="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-wide font-semibold text-brand-600">Why it matters</p>
-            <h3 class="text-xl font-bold text-neutral-900">Rates plus fees = real transfer cost</h3>
+            <p class="text-xs uppercase tracking-wide font-semibold text-brand-600">
+              Why it matters
+            </p>
+            <h3 class="text-xl font-bold text-neutral-900">
+              Rates plus fees = real transfer cost
+            </h3>
             <p class="text-sm text-neutral-600">
               We explain mid-market vs. provider markup, weekend spreads, and best payment/payout combinations.
             </p>
           </div>
-          <NuxtLink to="/learn/how-exchange-rates-work" class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 transition">
+          <NuxtLink
+            to="/learn/how-exchange-rates-work"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 transition"
+          >
             Understand FX basics
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -151,5 +176,6 @@ setSeo({
   description:
     'See live FX pairs for USD, GBP, CAD, and EUR to top remittance destinations. Understand mid-market vs. provider fees before you send.',
   canonical: `${siteUrl}/exchange-rates`,
+  ogImage: `${siteUrl}/images/og/exchange-rates.jpg`,
 })
 </script>

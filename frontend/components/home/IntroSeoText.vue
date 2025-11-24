@@ -1,8 +1,14 @@
 <template>
-  <section class="bg-white py-12" aria-labelledby="intro-heading">
+  <section
+    class="bg-white py-12"
+    aria-labelledby="intro-heading"
+  >
     <div class="container mx-auto px-4">
       <div class="mx-auto max-w-4xl text-center">
-        <h2 id="intro-heading" class="mb-6 text-2xl font-bold text-gray-900 md:text-3xl">
+        <h2
+          id="intro-heading"
+          class="mb-6 text-2xl font-bold text-gray-900 md:text-3xl"
+        >
           How Remit-Scout helps you save on international money transfers
         </h2>
 
@@ -42,22 +48,37 @@
         <!-- Key statistics -->
         <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
           <div class="text-center">
-            <div class="mb-2 text-3xl font-bold text-primary-600">30+</div>
-            <div class="text-gray-600">Money transfer providers compared</div>
+            <div class="mb-2 text-3xl font-bold text-primary-600">
+              30+
+            </div>
+            <div class="text-gray-600">
+              Money transfer providers compared
+            </div>
           </div>
           <div class="text-center">
-            <div class="mb-2 text-3xl font-bold text-primary-600">200+</div>
-            <div class="text-gray-600">Countries and territories covered</div>
+            <div class="mb-2 text-3xl font-bold text-primary-600">
+              200+
+            </div>
+            <div class="text-gray-600">
+              Countries and territories covered
+            </div>
           </div>
           <div class="text-center">
-            <div class="mb-2 text-3xl font-bold text-primary-600">24/7</div>
-            <div class="text-gray-600">Real-time rate monitoring</div>
+            <div class="mb-2 text-3xl font-bold text-primary-600">
+              24/7
+            </div>
+            <div class="text-gray-600">
+              Real-time rate monitoring
+            </div>
           </div>
         </div>
 
         <!-- CTA -->
         <div class="mt-10">
-          <NuxtLink to="/send-money" class="btn-primary inline-block text-center">
+          <NuxtLink
+            to="/send-money"
+            class="btn-primary inline-block text-center"
+          >
             Start Comparing Now
           </NuxtLink>
         </div>

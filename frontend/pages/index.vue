@@ -1,7 +1,10 @@
 <template>
   <div>
     <!-- Hero: Converter (primary job to be done) -->
-    <HeroDualTab id="hero-dual-tab" ref="heroDualTabRef" />
+    <HeroDualTab
+      id="hero-dual-tab"
+      ref="heroDualTabRef"
+    />
 
     <!-- 4. Top 3 live results preview (right under hero) -->
     <FeaturedProvidersDynamic />

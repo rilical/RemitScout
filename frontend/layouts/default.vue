@@ -4,13 +4,19 @@
 
     <NavSiteHeader />
 
-    <main id="main-content" class="flex-grow">
+    <main
+      id="main-content"
+      class="flex-grow"
+    >
       <slot />
     </main>
 
     <NavSiteFooter @open-modal="footerModalOpen = true" />
-    
-    <HowWeMakeMoneyModal :is-open="footerModalOpen" @update:is-open="footerModalOpen = $event" />
+
+    <HowWeMakeMoneyModal
+      :is-open="footerModalOpen"
+      @update:is-open="footerModalOpen = $event"
+    />
   </div>
 </template>
 

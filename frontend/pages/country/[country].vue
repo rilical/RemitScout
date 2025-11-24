@@ -4,7 +4,9 @@
       <Breadcrumbs :items="breadcrumbItems" />
 
       <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
-        <h1 class="mb-4 text-4xl font-bold text-gray-900">Send Money to {{ countryName }}</h1>
+        <h1 class="mb-4 text-4xl font-bold text-gray-900">
+          Send Money to {{ countryName }}
+        </h1>
         <p class="mb-6 text-xl text-gray-600">
           Compare money transfer providers for sending money to {{ countryName }}. Find the best
           rates and fastest transfer options.
@@ -15,19 +17,25 @@
             <div class="mb-2 text-3xl font-bold text-primary-600">
               {{ countryInfo?.currency }}
             </div>
-            <div class="text-gray-600">Currency</div>
+            <div class="text-gray-600">
+              Currency
+            </div>
           </div>
           <div class="text-center">
             <div class="mb-2 text-3xl font-bold text-primary-600">
               {{ countryInfo?.code }}
             </div>
-            <div class="text-gray-600">Country Code</div>
+            <div class="text-gray-600">
+              Country Code
+            </div>
           </div>
           <div class="text-center">
             <div class="mb-2 text-3xl font-bold text-primary-600">
               {{ countryInfo?.providers }}+
             </div>
-            <div class="text-gray-600">Available Providers</div>
+            <div class="text-gray-600">
+              Available Providers
+            </div>
           </div>
         </div>
       </div>
@@ -49,7 +57,9 @@
           </div>
 
           <div class="rounded-lg bg-white p-6 shadow-md">
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">Transfer Information</h2>
+            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+              Transfer Information
+            </h2>
             <div class="space-y-4">
               <div class="flex justify-between border-b py-2">
                 <span class="text-gray-600">Average Transfer Time</span>
@@ -69,20 +79,37 @@
 
         <div class="space-y-6">
           <div class="rounded-lg bg-white p-6 shadow-md">
-            <h3 class="mb-4 text-lg font-semibold text-gray-900">Quick Transfer</h3>
-            <CountrySelect v-model:from="fromCountry" v-model:to="toCountry" />
-            <AmountInput v-model="amount" :from="fromCountry" :to="toCountry" />
-            <NuxtLink to="/send-money" class="btn-primary mt-4 block w-full text-center">
+            <h3 class="mb-4 text-lg font-semibold text-gray-900">
+              Quick Transfer
+            </h3>
+            <CountrySelect
+              v-model:from="fromCountry"
+              v-model:to="toCountry"
+            />
+            <AmountInput
+              v-model="amount"
+              :from="fromCountry"
+              :to="toCountry"
+            />
+            <NuxtLink
+              to="/send-money"
+              class="btn-primary mt-4 block w-full text-center"
+            >
               Compare Providers
             </NuxtLink>
           </div>
 
           <div class="rounded-lg bg-white p-6 shadow-md">
-            <h3 class="mb-4 text-lg font-semibold text-gray-900">Need Help?</h3>
+            <h3 class="mb-4 text-lg font-semibold text-gray-900">
+              Need Help?
+            </h3>
             <p class="mb-4 text-sm text-gray-600">
               Not sure which provider is best for {{ countryName }}? Our experts can help.
             </p>
-            <NuxtLink to="/contact" class="btn-secondary block w-full text-center">
+            <NuxtLink
+              to="/contact"
+              class="btn-secondary block w-full text-center"
+            >
               Contact Support
             </NuxtLink>
           </div>
@@ -94,7 +121,7 @@
 
 <script setup lang="ts">
 // Meta
-const route = useRoute();
+const route = useRoute()
 useHead({
   title: `Send Money to ${useCountry(route.params.country as string)?.name || 'Country'} | Remit-Scout`,
   meta: [
@@ -103,23 +130,23 @@ useHead({
       content: `Compare money transfer providers for sending money to ${useCountry(route.params.country as string)?.name || 'this country'}. Get the best rates and fastest transfers.`,
     },
   ],
-});
+})
 
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
   { name: useCountry(route.params.country as string)?.name || 'Country', path: route.path },
-]);
+])
 
 // Data
-const toCountry = ref(route.params.country as string);
-const fromCountry = ref('US');
-const amount = ref(1000);
+const toCountry = ref(route.params.country as string)
+const fromCountry = ref('US')
+const amount = ref(1000)
 
 // Country data
-const countryInfo = await useCountry(route.params.country as string);
-const countryName = computed(() => countryInfo.value?.name || route.params.country);
+const countryInfo = await useCountry(route.params.country as string)
+const countryName = computed(() => countryInfo.value?.name || route.params.country)
 
 // Top providers
-const topProviders = await useProviders({ country: route.params.country });
+const topProviders = await useProviders({ country: route.params.country })
 </script>

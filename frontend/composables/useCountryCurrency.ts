@@ -1,10 +1,10 @@
 import { ref, computed, watch } from 'vue'
-import { 
-  COUNTRIES, 
-  getCountryByCode, 
+import {
+  COUNTRIES,
+  getCountryByCode,
   getAvailableCurrencies,
   getCurrencyDisplay,
-  getCountryDisplay
+  getCountryDisplay,
 } from '~/utils/countries-currencies'
 
 export function useCountryCurrency() {
@@ -13,20 +13,20 @@ export function useCountryCurrency() {
   const fromCurrency = ref('')
   const toCurrency = ref('')
 
-  const fromCountryData = computed(() => 
-    fromCountry.value ? getCountryByCode(fromCountry.value) : null
+  const fromCountryData = computed(() =>
+    fromCountry.value ? getCountryByCode(fromCountry.value) : null,
   )
 
-  const toCountryData = computed(() => 
-    toCountry.value ? getCountryByCode(toCountry.value) : null
+  const toCountryData = computed(() =>
+    toCountry.value ? getCountryByCode(toCountry.value) : null,
   )
 
-  const availableFromCurrencies = computed(() => 
-    fromCountry.value ? getAvailableCurrencies(fromCountry.value) : ['USD', 'GBP', 'EUR']
+  const availableFromCurrencies = computed(() =>
+    fromCountry.value ? getAvailableCurrencies(fromCountry.value) : ['USD', 'GBP', 'EUR'],
   )
 
-  const availableToCurrencies = computed(() => 
-    toCountry.value ? getAvailableCurrencies(toCountry.value) : []
+  const availableToCurrencies = computed(() =>
+    toCountry.value ? getAvailableCurrencies(toCountry.value) : [],
   )
 
   watch(fromCountry, (newCountry) => {
@@ -83,11 +83,11 @@ export function useCountryCurrency() {
   function initialize(from: string, to: string, fromCurr?: string, toCurr?: string) {
     fromCountry.value = from
     toCountry.value = to
-    
+
     if (fromCurr) {
       fromCurrency.value = fromCurr
     }
-    
+
     if (toCurr) {
       toCurrency.value = toCurr
     }
@@ -110,4 +110,3 @@ export function useCountryCurrency() {
     initialize,
   }
 }
-

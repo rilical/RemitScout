@@ -39,7 +39,7 @@ export type RecentSearch = {
   to: string
   amount: number
   method: Method
-  bestProvider?: { name: string; recipientGets: number }
+  bestProvider?: { name: string, recipientGets: number }
   createdAt: string // ISO
 }
 
@@ -58,16 +58,4 @@ export type RatingWeights = {
   reliability: number
   coverage: number
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

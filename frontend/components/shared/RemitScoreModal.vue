@@ -15,12 +15,22 @@
               Remit-Scout In-House Rating (Remit-Score)
             </h2>
             <button
-              @click="close"
               class="text-neutral-400 hover:text-neutral-600 transition-colors"
               aria-label="Close modal"
+              @click="close"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -45,20 +55,44 @@
               </h4>
               <ul class="space-y-2 text-sm text-neutral-700">
                 <li class="flex items-start">
-                  <svg class="w-5 h-5 text-brand-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  <svg
+                    class="w-5 h-5 text-brand-600 mr-2 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                   <span><strong>Scenario-specific:</strong> Scores computed per corridor, payout method, and amount. Not one generic number</span>
                 </li>
                 <li class="flex items-start">
-                  <svg class="w-5 h-5 text-brand-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  <svg
+                    class="w-5 h-5 text-brand-600 mr-2 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                   <span><strong>Outcome-based:</strong> Based on real executed transfers and live quotes, not just reviews</span>
                 </li>
                 <li class="flex items-start">
-                  <svg class="w-5 h-5 text-brand-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  <svg
+                    class="w-5 h-5 text-brand-600 mr-2 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                   <span><strong>Explainable:</strong> Every score shows what drove it with confidence bands based on data volume and recency</span>
                 </li>
@@ -81,7 +115,10 @@
                     Effective cost (FX spread + fees), how often provider is cheapest, and quote vs. actual delivery accuracy
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-brand-600 rounded-full" style="width: 40%" />
+                    <div
+                      class="h-full bg-brand-600 rounded-full"
+                      style="width: 40%"
+                    />
                   </div>
                 </div>
 
@@ -96,7 +133,10 @@
                     On-time delivery rate, failure rate, API uptime, and corridor coverage consistency
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-brand-600 rounded-full" style="width: 20%" />
+                    <div
+                      class="h-full bg-brand-600 rounded-full"
+                      style="width: 20%"
+                    />
                   </div>
                 </div>
 
@@ -111,7 +151,10 @@
                     KYC friction, time to first send, and delivery speed (P50/P95) for your scenario
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-brand-600 rounded-full" style="width: 15%" />
+                    <div
+                      class="h-full bg-brand-600 rounded-full"
+                      style="width: 15%"
+                    />
                   </div>
                 </div>
 
@@ -126,7 +169,10 @@
                     Refund processing time, dispute resolution SLA, post-resolution satisfaction, and chargeback rate
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-brand-600 rounded-full" style="width: 15%" />
+                    <div
+                      class="h-full bg-brand-600 rounded-full"
+                      style="width: 15%"
+                    />
                   </div>
                 </div>
 
@@ -141,7 +187,10 @@
                     Licensing verification, regulatory compliance, complaint rate, security certifications (SOC2/PCI)
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-brand-600 rounded-full" style="width: 10%" />
+                    <div
+                      class="h-full bg-brand-600 rounded-full"
+                      style="width: 10%"
+                    />
                   </div>
                 </div>
               </div>

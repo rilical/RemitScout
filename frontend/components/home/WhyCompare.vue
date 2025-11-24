@@ -24,8 +24,7 @@
               <div class="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 ring-2 ring-white" />
               <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 ring-2 ring-white" />
             </div>
-            <p class="text-sm font-medium text-slate-700">
-            </p>
+            <p class="text-sm font-medium text-slate-700" />
           </div>
           <div class="h-8 w-px bg-slate-200" />
           <div class="flex items-center gap-2">

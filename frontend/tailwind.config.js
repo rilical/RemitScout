@@ -11,11 +11,11 @@ module.exports = {
   theme: {
     extend: {
       screens: {
-        'xs': '360px',
-        'sm': '768px',
-        'md': '1024px',
-        'lg': '1280px',
-        'xl': '1536px',
+        xs: '360px',
+        sm: '768px',
+        md: '1024px',
+        lg: '1280px',
+        xl: '1536px',
       },
       colors: {
         brand: {
@@ -75,36 +75,36 @@ module.exports = {
         'scale-8': '3rem',
       },
       spacing: {
-        18: '4.5rem',
-        72: '18rem',
-        88: '22rem',
+        '18': '4.5rem',
+        '72': '18rem',
+        '88': '22rem',
         'section-desktop': '4.5rem',
         'section-mobile': '3.5rem',
       },
       maxWidth: {
-        '960': '960px',
-        '1200': '1200px',
+        960: '960px',
+        1200: '1200px',
       },
       height: {
         18: '4.5rem',
-        '520': '520px',
+        520: '520px',
       },
       minHeight: {
-        'btn': '44px',
+        btn: '44px',
       },
       borderRadius: {
-        'btn': '12px',
+        btn: '12px',
       },
       gridTemplateColumns: {
-        '12': 'repeat(12, minmax(0, 1fr))',
+        12: 'repeat(12, minmax(0, 1fr))',
       },
       gap: {
-        'gutter': '24px',
+        gutter: '24px',
       },
       ringOffsetWidth: {
-        '3': '2px',
+        3: '2px',
       },
     },
   },
   plugins: [],
-};
+}

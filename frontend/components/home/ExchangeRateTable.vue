@@ -2,14 +2,19 @@
   <div class="py-16 bg-gray-50">
     <div class="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold text-gray-900 mb-4">{{ displayTitle }}</h2>
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">
+          {{ displayTitle }}
+        </h2>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
           {{ displaySubtitle }}
         </p>
       </div>
 
       <!-- Table Card (960×520) -->
-      <div class="mx-auto w-full max-w-[960px] rounded-2xl bg-white p-6 shadow-lg" style="height: 520px">
+      <div
+        class="mx-auto w-full max-w-[960px] rounded-2xl bg-white p-6 shadow-lg"
+        style="height: 520px"
+      >
         <!-- Currency Chips Row -->
         <div class="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-200">
           <div
@@ -92,6 +97,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { NuxtLink } from '#components'
+
 const { timeAgo } = useFormat()
 
 interface Props {
@@ -111,8 +117,8 @@ interface Props {
 const props = defineProps<Props>()
 
 const DEFAULT_TITLE = 'Keep an eye on the exchange rates and set up smart alerts'
-const DEFAULT_SUBTITLE =
-  'Monitor live exchange rates for popular currency pairs and get notified when rates reach your target levels.'
+const DEFAULT_SUBTITLE
+  = 'Monitor live exchange rates for popular currency pairs and get notified when rates reach your target levels.'
 const DEFAULT_TABLE_CAPTION = 'Live exchange rates - rates are updated every 60 seconds'
 const DEFAULT_SOURCE_CAPTION = 'Source: Financial data providers'
 const DEFAULT_DISCLAIMER = 'Rates are indicative and may vary based on amount and payment method.'
@@ -128,7 +134,7 @@ const DEFAULT_RATES = [
   ['1.1178', '1.0278', '0.8889', '1.5023', '1.0000', '1.6267', '106.3456', '93.4567'],
   ['0.6865', '0.6312', '0.5467', '0.9234', '0.6145', '1.0000', '65.3456', '57.4567'],
   ['0.0105', '0.0097', '0.0084', '0.0141', '0.0094', '0.0153', '1.0000', '0.8789'],
-  ['0.0120', '0.0110', '0.0095', '0.0161', '0.0107', '0.0174', '1.1378', '1.0000']
+  ['0.0120', '0.0110', '0.0095', '0.0161', '0.0107', '0.0174', '1.1378', '1.0000'],
 ] as const
 
 const displayTitle = computed(() => props.title ?? DEFAULT_TITLE)
@@ -143,7 +149,7 @@ const displayColumnLabels = computed(() => props.columnLabels ?? DEFAULT_LABELS)
 const displayRowLabels = computed(() => props.rowLabels ?? DEFAULT_LABELS)
 const displayRates = computed(() => props.rates ?? DEFAULT_RATES)
 const displayUpdatedAt = computed(
-  () => props.updatedAt ?? new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  () => props.updatedAt ?? new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
 )
 const lastUpdatedLabel = computed(() => timeAgo(displayUpdatedAt.value))
 </script>

@@ -8,15 +8,15 @@
 </template>
 
 <script setup lang="ts">
-type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline';
+type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'
 
 interface Props {
-  variant?: BadgeVariant;
+  variant?: BadgeVariant
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
-});
+})
 
 const badgeClasses = computed(() => {
   const variants = {
@@ -26,7 +26,7 @@ const badgeClasses = computed(() => {
     warning: 'bg-yellow-100 text-yellow-800',
     danger: 'bg-red-100 text-red-800',
     outline: 'border border-gray-300 text-gray-700',
-  };
-  return variants[props.variant];
-});
+  }
+  return variants[props.variant]
+})
 </script>

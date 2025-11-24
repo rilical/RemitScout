@@ -1,5 +1,5 @@
-import { 
-  esimPlans, 
+import {
+  esimPlans,
   travelTools,
   atmFeeData,
   getEsimPlansByCountry,
@@ -7,7 +7,7 @@ import {
   getAtmFees,
   type EsimPlan,
   type TravelTool,
-  type AtmFeeData
+  type AtmFeeData,
 } from '~/utils/esim-data'
 
 export const useEsim = () => {
@@ -32,9 +32,9 @@ export const useEsim = () => {
     let results = [...esimPlans]
 
     if (params.country) {
-      results = results.filter(plan => 
-        plan.countryCode === params.country || 
-        plan.country.toLowerCase().includes(params.country.toLowerCase())
+      results = results.filter(plan =>
+        plan.countryCode === params.country
+        || plan.country.toLowerCase().includes(params.country.toLowerCase()),
       )
     }
 
@@ -56,16 +56,17 @@ export const useEsim = () => {
   const getPopularDestinations = (): Array<{ country: string, countryCode: string, planCount: number }> => {
     const destinations = new Map<string, { country: string, countryCode: string, count: number }>()
 
-    esimPlans.forEach(plan => {
+    esimPlans.forEach((plan) => {
       const key = plan.countryCode
       if (destinations.has(key)) {
         const dest = destinations.get(key)!
         dest.count++
-      } else {
+      }
+      else {
         destinations.set(key, {
           country: plan.country,
           countryCode: plan.countryCode,
-          count: 1
+          count: 1,
         })
       }
     })
@@ -91,7 +92,7 @@ export const useEsim = () => {
   }): { roamingCost: number, esimCost: number, savings: number, recommendedPlan?: EsimPlan } => {
     const roamingCost = params.carrierDailyRate * params.tripDays
     const cheapestPlan = getCheapestEsimPlan(params.countryCode, params.tripDays)
-    
+
     if (cheapestPlan) {
       const esimCost = cheapestPlan.price
       const savings = roamingCost - esimCost
@@ -99,14 +100,14 @@ export const useEsim = () => {
         roamingCost,
         esimCost,
         savings,
-        recommendedPlan: cheapestPlan
+        recommendedPlan: cheapestPlan,
       }
     }
 
     return {
       roamingCost,
       esimCost: 0,
-      savings: 0
+      savings: 0,
     }
   }
 
@@ -125,19 +126,7 @@ export const useEsim = () => {
     getTravelTools,
     getAtmFeeInfo,
     calculateRoamingVsEsim,
-    formatDataAmount
+    formatDataAmount,
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

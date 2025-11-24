@@ -17,7 +17,7 @@
       <!-- Tool Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- eSIM Comparison -->
-        <NuxtLink 
+        <NuxtLink
           to="/esim"
           class="bg-white rounded-2xl border border-neutral-200 p-8 hover:shadow-xl hover:border-brand-300 transition-all group"
         >
@@ -30,25 +30,55 @@
           <p class="text-neutral-600 mb-6 leading-relaxed text-base">
             Compare eSIM plans from top providers for 190+ countries. Stay connected without expensive roaming fees.
           </p>
-          
+
           <div class="flex items-center text-brand-600 font-semibold group-hover:gap-2 transition-all text-base mb-6">
             <span>Compare eSIMs</span>
-            <svg class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
 
           <div class="pt-4 border-t border-neutral-100">
             <div class="space-y-2 text-sm text-neutral-600">
               <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="h-4 w-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span>Instant activation</span>
               </div>
               <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="h-4 w-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span>No physical SIM needed</span>
               </div>
@@ -57,7 +87,7 @@
         </NuxtLink>
 
         <!-- Travelling & Living Abroad Guides -->
-        <NuxtLink 
+        <NuxtLink
           to="/learn"
           class="bg-white rounded-2xl border border-neutral-200 p-8 hover:shadow-xl hover:border-brand-300 transition-all group"
         >
@@ -70,25 +100,55 @@
           <p class="text-neutral-600 mb-6 leading-relaxed text-base">
             Expert guides on living abroad, working remotely, visa requirements, and navigating life as an expat.
           </p>
-          
+
           <div class="flex items-center text-brand-600 font-semibold group-hover:gap-2 transition-all text-base mb-6">
             <span>Read our guides</span>
-            <svg class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
 
           <div class="pt-4 border-t border-neutral-100">
             <div class="space-y-2 text-sm text-neutral-600">
               <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="h-4 w-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span>Country-specific tips</span>
               </div>
               <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="h-4 w-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span>Regular updates</span>
               </div>
@@ -97,7 +157,7 @@
         </NuxtLink>
 
         <!-- Best Travel Insurance -->
-        <NuxtLink 
+        <NuxtLink
           to="/learn/travel-insurance"
           class="bg-white rounded-2xl border border-neutral-200 p-8 hover:shadow-xl hover:border-brand-300 transition-all group"
         >
@@ -110,25 +170,55 @@
           <p class="text-neutral-600 mb-6 leading-relaxed text-base">
             Compare top-rated travel insurance providers for peace of mind wherever you go. Medical, trip cancellation, and more.
           </p>
-          
+
           <div class="flex items-center text-brand-600 font-semibold group-hover:gap-2 transition-all text-base mb-6">
             <span>Compare providers</span>
-            <svg class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
 
           <div class="pt-4 border-t border-neutral-100">
             <div class="space-y-2 text-sm text-neutral-600">
               <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="h-4 w-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span>Medical coverage</span>
               </div>
               <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="h-4 w-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span>Trip protection</span>
               </div>

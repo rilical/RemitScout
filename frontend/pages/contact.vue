@@ -13,7 +13,9 @@
             Have questions about money transfers or need help choosing the right provider? We're
             here to help.
           </p>
-          <p class="text-sm text-gray-500">Advertiser disclosure</p>
+          <p class="text-sm text-gray-500">
+            Advertiser disclosure
+          </p>
           <p class="mb-6 mt-4 text-gray-600">
             We are unfortunately not able to answer questions about your individual money transfers.
             Please refer to our frequently asked questions below or use the contact form for general
@@ -46,66 +48,79 @@
 
           <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <!-- Contact Form -->
-            <div>
-              <h2 class="mb-6 text-2xl font-bold text-gray-900">Get in Touch</h2>
+            <div class="text-gray-900">
+              <h2 class="mb-6 text-2xl font-bold text-gray-900">
+                Get in Touch
+              </h2>
 
               <form class="space-y-6">
                 <div>
-                  <label for="name" class="mb-2 block text-sm font-medium text-gray-700"
-                    >Name</label
-                  >
+                  <label
+                    for="name"
+                    class="mb-2 block text-sm font-medium text-gray-600"
+                  >Name</label>
                   <input
                     id="name"
                     type="text"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
                 </div>
 
                 <div>
-                  <label for="email" class="mb-2 block text-sm font-medium text-gray-700"
-                    >Email</label
-                  >
+                  <label
+                    for="email"
+                    class="mb-2 block text-sm font-medium text-gray-600"
+                  >Email</label>
                   <input
                     id="email"
                     type="email"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
                 </div>
 
                 <div>
-                  <label for="subject" class="mb-2 block text-sm font-medium text-gray-700"
-                    >Subject</label
-                  >
+                  <label
+                    for="subject"
+                    class="mb-2 block text-sm font-medium text-gray-600"
+                  >Subject</label>
                   <select
                     id="subject"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
-                    <option>General Question</option>
-                    <option>Provider Comparison</option>
-                    <option>Technical Support</option>
-                    <option>Partnership Inquiry</option>
-                    <option>Other</option>
+                    <option class="text-gray-900">General Question</option>
+                    <option class="text-gray-900">Provider Comparison</option>
+                    <option class="text-gray-900">Technical Support</option>
+                    <option class="text-gray-900">Partnership Inquiry</option>
+                    <option class="text-gray-900">Other</option>
                   </select>
                 </div>
 
                 <div>
-                  <label for="message" class="mb-2 block text-sm font-medium text-gray-700"
-                    >Message</label
-                  >
+                  <label
+                    for="message"
+                    class="mb-2 block text-sm font-medium text-gray-600"
+                  >Message</label>
                   <textarea
                     id="message"
                     rows="6"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
-                <button type="submit" class="btn-primary w-full">Send Message</button>
+                <button
+                  type="submit"
+                  class="w-full rounded-md bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
+                >
+                  Send Message
+                </button>
               </form>
             </div>
 
             <!-- Location & Resources -->
             <div>
-              <h2 class="mb-6 text-2xl font-bold text-gray-900">Location</h2>
+              <h2 class="mb-6 text-2xl font-bold text-gray-900">
+                Location
+              </h2>
 
               <div class="mb-8 space-y-6">
                 <div class="flex items-start">
@@ -121,13 +136,15 @@
                     />
                   </svg>
                   <div>
-                    <h3 class="font-semibold text-gray-900">Remit-Scout's Office</h3>
+                    <h3 class="font-semibold text-gray-900">
+                      Remit-Scout's Office
+                    </h3>
                     <p class="mt-1 text-gray-600">
                       Remit-Scout's team is based in the
                       <button
                         type="button"
-                        @click="handleExternalLink('https://www.cmu.edu/swartz-center-for-entrepreneurship/')"
                         class="font-medium text-primary-600 hover:text-primary-700 underline"
+                        @click="handleExternalLink('https://www.cmu.edu/swartz-center-for-entrepreneurship/')"
                       >
                         Swartz Center for Entrepreneurship
                       </button>
@@ -139,7 +156,9 @@
 
               <!-- Internal Links -->
               <div class="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
-                <h3 class="mb-5 text-xl font-bold text-gray-900">Explore Our Resources</h3>
+                <h3 class="mb-5 text-xl font-bold text-gray-900">
+                  Explore Our Resources
+                </h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <NuxtLink
                     to="/providers"
@@ -150,9 +169,7 @@
                         🏦
                       </div>
                       <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700"
-                          >Provider Reviews</span
-                        >
+                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">Provider Reviews</span>
                         <p class="mt-1 text-xs text-gray-600">Compare trusted money transfer services</p>
                       </div>
                     </div>
@@ -180,9 +197,7 @@
                         📚
                       </div>
                       <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700"
-                          >Learn Guides</span
-                        >
+                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">Learn Guides</span>
                         <p class="mt-1 text-xs text-gray-600">Expert guides and insights</p>
                       </div>
                     </div>
@@ -210,9 +225,7 @@
                         👤
                       </div>
                       <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700"
-                          >About Us</span
-                        >
+                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">About Us</span>
                         <p class="mt-1 text-xs text-gray-600">Our story and mission</p>
                       </div>
                     </div>
@@ -240,9 +253,7 @@
                         🧪
                       </div>
                       <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700"
-                          >Our Methodology</span
-                        >
+                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">Our Methodology</span>
                         <p class="mt-1 text-xs text-gray-600">How we compare providers</p>
                       </div>
                     </div>
@@ -268,7 +279,9 @@
 
         <!-- Mini FAQ Section -->
         <div class="mb-8 rounded-lg bg-white p-8 shadow-md">
-          <h2 class="mb-6 text-3xl font-bold text-gray-900">Frequently Asked Questions</h2>
+          <h2 class="mb-6 text-3xl font-bold text-gray-900">
+            Frequently Asked Questions
+          </h2>
           <FaqAccordion :faqs="contactFaqs" />
           <div class="mt-6 text-center">
             <NuxtLink
@@ -276,7 +289,12 @@
               class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-3 text-white font-semibold hover:bg-primary-700 transition-colors"
             >
               View All FAQs
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -304,12 +322,24 @@
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-start gap-3">
             <div class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
               </svg>
             </div>
             <div>
-              <h3 class="text-lg font-semibold text-slate-900">Leave Remit-Scout?</h3>
+              <h3 class="text-lg font-semibold text-slate-900">
+                Leave Remit-Scout?
+              </h3>
               <p class="text-sm text-slate-700 mt-1">
                 You're about to visit an external site. We vet links, but it will open in a new tab.
               </p>
@@ -318,15 +348,15 @@
           <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
-              @click="closeExternalLinkModal"
               class="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+              @click="closeExternalLinkModal"
             >
               Stay here
             </button>
             <button
               type="button"
-              @click="confirmExternalLink"
               class="w-full rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 sm:w-auto"
+              @click="confirmExternalLink"
             >
               Continue
             </button>
@@ -339,26 +369,52 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import FaqAccordion from '~/components/shared/FaqAccordion.vue';
-import WhyTrustUs from '~/components/home/WhyTrustUs.vue';
-
-// Meta
-useHead({
-  title: 'Contact Us | Get Help with Money Transfers | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'Contact Remit-Scout for help with money transfer questions, provider comparisons, or technical support. Based in Carnegie Mellon University\'s Swartz Center for Entrepreneurship.',
-    },
-  ],
-});
+import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import WhyTrustUs from '~/components/home/WhyTrustUs.vue'
+import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useSeo'
 
 // Breadcrumbs
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Contact', path: '/contact' },
-];
+]
+
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Contact Us | Get Help with Money Transfers | Remit-Scout',
+  description:
+    'Contact Remit-Scout for help with money transfer questions, provider comparisons, or technical support. Based in Carnegie Mellon University\'s Swartz Center for Entrepreneurship.',
+  canonical: `${siteUrl}/contact`,
+  ogImage: `${siteUrl}/images/og/contact.jpg`,
+})
+
+jsonLdBreadcrumb([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'Contact', url: `${siteUrl}/contact` },
+])
+
+jsonLdOrganization(siteUrl)
+
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        'name': 'Contact Remit-Scout',
+        'url': `${siteUrl}/contact`,
+        'description': 'Contact Remit-Scout for help with money transfer questions, provider comparisons, or technical support.',
+        'publisher': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+        },
+      }),
+    },
+  ],
+})
 
 const showExternalLinkModal = ref(false)
 const pendingExternalUrl = ref('')
@@ -407,5 +463,5 @@ const contactFaqs = [
     answer:
       'We thoroughly research and test providers before listing them. All providers on our platform are legitimate, regulated services. Read our <a href="/providers" class="font-semibold text-primary-600 hover:text-primary-700 underline">provider reviews</a> for detailed information about each service, including regulatory status and user feedback. <a href="/methodology" class="font-semibold text-primary-600 hover:text-primary-700 underline">Learn more about our vetting process</a>.',
   },
-];
+]
 </script>

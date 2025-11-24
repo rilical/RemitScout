@@ -1,6 +1,10 @@
 <template>
   <div class="space-y-4 break-words [text-wrap:pretty]">
-    <div v-for="(faq, index) in faqs" :key="index" class="rounded-lg border border-gray-200">
+    <div
+      v-for="(faq, index) in faqs"
+      :key="index"
+      class="rounded-lg border border-gray-200"
+    >
       <button
         class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50"
         @click="toggleFaq(index)"
@@ -21,8 +25,14 @@
           />
         </svg>
       </button>
-      <div v-if="openFaqs.includes(index)" class="px-6 pb-4 text-gray-600 prose prose-sm max-w-none break-words [text-wrap:pretty] mx-auto">
-        <div v-html="faq.answer" class="leading-relaxed"></div>
+      <div
+        v-if="openFaqs.includes(index)"
+        class="px-6 pb-4 text-gray-600 prose prose-sm max-w-none break-words [text-wrap:pretty] mx-auto"
+      >
+        <div
+          class="leading-relaxed"
+          v-html="faq.answer"
+        />
       </div>
     </div>
   </div>
@@ -30,22 +40,23 @@
 
 <script setup lang="ts">
 interface Faq {
-  question: string;
-  answer: string;
+  question: string
+  answer: string
 }
 
 defineProps<{
-  faqs: Faq[];
-}>();
+  faqs: Faq[]
+}>()
 
-const openFaqs = ref<number[]>([]);
+const openFaqs = ref<number[]>([])
 
 const toggleFaq = (index: number) => {
-  const faqIndex = openFaqs.value.indexOf(index);
+  const faqIndex = openFaqs.value.indexOf(index)
   if (faqIndex > -1) {
-    openFaqs.value.splice(faqIndex, 1);
-  } else {
-    openFaqs.value.push(index);
+    openFaqs.value.splice(faqIndex, 1)
   }
-};
+  else {
+    openFaqs.value.push(index)
+  }
+}
 </script>

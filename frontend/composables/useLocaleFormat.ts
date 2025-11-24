@@ -6,14 +6,14 @@ export function useLocaleFormat() {
       style: 'currency',
       currency,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(value)
   }
 
   const formatNumber = (value: number, decimals: number = 2): string => {
     return new Intl.NumberFormat(locale.value, {
       minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
+      maximumFractionDigits: decimals,
     }).format(value)
   }
 
@@ -21,13 +21,13 @@ export function useLocaleFormat() {
     return new Intl.NumberFormat(locale.value, {
       style: 'percent',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 1
+      maximumFractionDigits: 1,
     }).format(value / 100)
   }
 
   const formatDate = (date: Date | string, style: 'short' | 'long' = 'short'): string => {
     const dateObj = typeof date === 'string' ? new Date(date) : date
-    
+
     const options: Intl.DateTimeFormatOptions = style === 'long'
       ? { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
       : { year: 'numeric', month: 'short', day: 'numeric' }
@@ -39,20 +39,25 @@ export function useLocaleFormat() {
     const dateObj = typeof date === 'string' ? new Date(date) : date
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000)
-    
+
     const rtf = new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' })
-    
+
     if (diffInSeconds < 60) {
       return rtf.format(-diffInSeconds, 'second')
-    } else if (diffInSeconds < 3600) {
+    }
+    else if (diffInSeconds < 3600) {
       return rtf.format(-Math.floor(diffInSeconds / 60), 'minute')
-    } else if (diffInSeconds < 86400) {
+    }
+    else if (diffInSeconds < 86400) {
       return rtf.format(-Math.floor(diffInSeconds / 3600), 'hour')
-    } else if (diffInSeconds < 2592000) {
+    }
+    else if (diffInSeconds < 2592000) {
       return rtf.format(-Math.floor(diffInSeconds / 86400), 'day')
-    } else if (diffInSeconds < 31536000) {
+    }
+    else if (diffInSeconds < 31536000) {
       return rtf.format(-Math.floor(diffInSeconds / 2592000), 'month')
-    } else {
+    }
+    else {
       return rtf.format(-Math.floor(diffInSeconds / 31536000), 'year')
     }
   }
@@ -60,7 +65,7 @@ export function useLocaleFormat() {
   const formatCompactNumber = (value: number): string => {
     return new Intl.NumberFormat(locale.value, {
       notation: 'compact',
-      compactDisplay: 'short'
+      compactDisplay: 'short',
     }).format(value)
   }
 
@@ -70,7 +75,6 @@ export function useLocaleFormat() {
     formatPercent,
     formatDate,
     formatRelativeTime,
-    formatCompactNumber
+    formatCompactNumber,
   }
 }
-

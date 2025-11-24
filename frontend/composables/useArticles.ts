@@ -196,16 +196,16 @@ export const useArticles = () => {
           { slug: 'best-time-to-send-money', title: 'Best Time to Send Money Internationally', excerpt: 'Timing strategies that work.' },
         ],
       },
-    ];
+    ]
 
-    return articles;
-  });
-};
+    return articles
+  })
+}
 
 export const useArticle = (slug: string) => {
   return useLazyAsyncData(`article-${slug}`, async () => {
     // Mock article data
-    const articles = (await useArticles().data.value) || [];
-    return articles.find(a => a.slug === slug) || null;
-  });
-};
+    const articles = (await useArticles().data.value) || []
+    return articles.find(a => a.slug === slug) || null
+  })
+}

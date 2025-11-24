@@ -1,22 +1,22 @@
-import { CorridorPopularity } from '~/types/remit'
+import type { CorridorPopularity } from '~/types/remit'
 
 export default defineEventHandler(async (event) => {
   // Get recent searches from shared store
   const recentSearches = global.recentSearches || []
-  
+
   // Filter to last 24 hours
   const now = Date.now()
-  const last24h = recentSearches.filter(s => 
-    now - new Date(s.createdAt).getTime() < 24 * 3600 * 1000
+  const last24h = recentSearches.filter(s =>
+    now - new Date(s.createdAt).getTime() < 24 * 3600 * 1000,
   )
-  
+
   // Count corridors
   const corridorMap = new Map<string, number>()
-  last24h.forEach(search => {
+  last24h.forEach((search) => {
     const key = `${search.from}→${search.to}`
     corridorMap.set(key, (corridorMap.get(key) || 0) + 1)
   })
-  
+
   // Sort by popularity and add metadata
   const sorted: CorridorPopularity[] = Array.from(corridorMap.entries())
     .sort((a, b) => b[1] - a[1])
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
           bestFor: 'Cash pickup network',
         },
       }
-      
+
       return {
         route,
         count24h: count,
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
         }),
       }
     })
-  
+
   // Add default popular corridors if no data
   if (sorted.length === 0) {
     const defaults: CorridorPopularity[] = [
@@ -67,22 +67,10 @@ export default defineEventHandler(async (event) => {
     ]
     return { data: defaults, updatedAt: new Date().toISOString() }
   }
-  
+
   return {
     data: sorted,
     updatedAt: new Date().toISOString(),
   }
 })
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -29,7 +29,7 @@ function handleScroll() {
 function openSheet() {
   sheetOpen.value = true
   document.body.style.overflow = 'hidden'
-  
+
   setTimeout(() => {
     const firstInput = document.querySelector<HTMLElement>('#sheet-from-country')
     firstInput?.focus()
@@ -57,7 +57,8 @@ watch(() => form.value.from, (newCountry) => {
 watch(() => form.value.to, (newCountry) => {
   if (newCountry && !form.value.toCurrency) {
     form.value.toCurrency = resolveCurrency(newCountry)
-  } else if (!newCountry) {
+  }
+  else if (!newCountry) {
     form.value.toCurrency = ''
   }
 })
@@ -93,28 +94,51 @@ onBeforeUnmount(() => {
             <span v-if="form.from && form.to">
               {{ form.from }} → {{ form.to }}
             </span>
-            <span v-else class="text-slate-400">Select countries</span>
+            <span
+              v-else
+              class="text-slate-400"
+            >Select countries</span>
           </div>
-          
+
           <div class="flex items-center gap-3 flex-1 sm:flex-initial">
             <button
-              @click="openSheet"
               class="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              @click="openSheet"
             >
-              <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                class="h-4 w-4 sm:hidden"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
               </svg>
               <span>Compare Now</span>
             </button>
-            
+
             <NuxtLink
               v-if="form.from && form.to"
               :to="sendMoneyUrl"
               class="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2"
             >
               <span>View details</span>
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -135,8 +159,8 @@ onBeforeUnmount(() => {
       <div
         v-if="sheetOpen"
         class="fixed inset-0 z-50 bg-neutral-900/50 backdrop-blur-sm"
-        @click="closeSheet"
         aria-hidden="true"
+        @click="closeSheet"
       />
     </Transition>
 
@@ -156,22 +180,40 @@ onBeforeUnmount(() => {
         aria-label="Compare providers"
       >
         <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-3xl">
-          <h2 class="text-lg font-bold text-neutral-900">Compare Providers</h2>
+          <h2 class="text-lg font-bold text-neutral-900">
+            Compare Providers
+          </h2>
           <button
-            @click="closeSheet"
             class="rounded-full p-2 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Close"
+            @click="closeSheet"
           >
-            <svg class="h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              class="h-5 w-5 text-slate-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div class="px-6 py-6">
-          <form @submit.prevent="handleSheetSubmit" class="space-y-4">
+          <form
+            class="space-y-4"
+            @submit.prevent="handleSheetSubmit"
+          >
             <div>
-              <label for="sheet-from-country" class="block text-sm font-semibold text-neutral-700 mb-2">
+              <label
+                for="sheet-from-country"
+                class="block text-sm font-semibold text-neutral-700 mb-2"
+              >
                 <span class="mr-2">🛫</span>Sending from
               </label>
               <CountrySelect
@@ -183,7 +225,10 @@ onBeforeUnmount(() => {
             </div>
 
             <div>
-              <label for="sheet-to-country" class="block text-sm font-semibold text-neutral-700 mb-2">
+              <label
+                for="sheet-to-country"
+                class="block text-sm font-semibold text-neutral-700 mb-2"
+              >
                 <span class="mr-2">🛬</span>Receiving in
               </label>
               <CountrySelect
@@ -195,7 +240,10 @@ onBeforeUnmount(() => {
             </div>
 
             <div>
-              <label for="sheet-amount" class="block text-sm font-semibold text-neutral-700 mb-2">
+              <label
+                for="sheet-amount"
+                class="block text-sm font-semibold text-neutral-700 mb-2"
+              >
                 You send
               </label>
               <input
@@ -206,7 +254,7 @@ onBeforeUnmount(() => {
                 step="1"
                 class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 placeholder="500"
-              />
+              >
             </div>
 
             <div>
@@ -218,14 +266,14 @@ onBeforeUnmount(() => {
                   v-for="method in DELIVERY_METHODS"
                   :key="method.value"
                   type="button"
-                  @click="form.method = method.value"
                   :class="[
                     'flex-1 flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium rounded-lg border transition-all',
                     form.method === method.value
                       ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-slate-700 border-slate-300'
+                      : 'bg-white text-slate-700 border-slate-300',
                   ]"
                   :aria-pressed="form.method === method.value"
+                  @click="form.method = method.value"
                 >
                   <span class="text-xl">{{ method.icon }}</span>
                   <span>{{ method.label }}</span>
@@ -238,8 +286,18 @@ onBeforeUnmount(() => {
               class="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 text-base font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Compare 30+ providers
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </button>
           </form>
@@ -248,4 +306,3 @@ onBeforeUnmount(() => {
     </Transition>
   </Teleport>
 </template>
-

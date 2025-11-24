@@ -8,7 +8,7 @@
             <span class="text-4xl">💡</span>
             <span class="text-lg sm:text-xl font-semibold text-brand-700">The Story Behind Remit-Scout</span>
           </div>
-          
+
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-6">
             $30 Shouldn't Disappear Into <span class="whitespace-nowrap">Thin Air</span>
           </h2>
@@ -16,15 +16,15 @@
             <p>
               When <span class="font-semibold text-brand-600">Omar Ghabayen</span> moved from Jordan to study at <span class="font-semibold whitespace-nowrap">Carnegie Mellon University</span>, his family would send him pocket money to help with expenses.
             </p>
-            
+
             <p>
               Every single time, <span class="font-semibold text-brand-600">$30 vanished</span>. $15 disappeared at the sending bank in Jordan, another $15 at his receiving bank in the US. For a student living on a tight budget, that wasn't just pocket change it was <span class="font-semibold">two weeks of groceries</span>, or <span class="font-semibold">a textbook</span>, or <span class="font-semibold">a tank of gas</span>.
             </p>
-            
+
             <p>
               Back home in Jordan, $30 goes even further. It's <span class="font-semibold text-brand-600">a family's weekly groceries</span>, or <span class="font-semibold">three days of wages</span> for many workers. Omar realized: what seems like pocket change in one country can make a real difference in another.
             </p>
-            
+
             <p>
               That frustration led to building <span class="font-semibold text-brand-600">Remit-Scout</span>, a completely transparent comparison platform where <span class="font-semibold">providers can't pay to rank higher</span>. We just show you which option gets the most money to your recipient, because every dollar matters when you're sending money home.
             </p>
@@ -36,18 +36,26 @@
                 <span class="text-2xl">🎓</span>
               </div>
               <div>
-                <div class="text-sm text-neutral-600">Founded by</div>
-                <div class="font-semibold text-neutral-900">Carnegie Mellon Graduate</div>
+                <div class="text-sm text-neutral-600">
+                  Founded by
+                </div>
+                <div class="font-semibold text-neutral-900">
+                  Carnegie Mellon Graduate
+                </div>
               </div>
             </div>
-            
+
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center">
                 <span class="text-2xl">🌍</span>
               </div>
               <div>
-                <div class="text-sm text-neutral-600">Built for</div>
-                <div class="font-semibold text-neutral-900">Expats, by expats</div>
+                <div class="text-sm text-neutral-600">
+                  Built for
+                </div>
+                <div class="font-semibold text-neutral-900">
+                  Expats, by expats
+                </div>
               </div>
             </div>
           </div>
@@ -64,7 +72,9 @@
               <h3 class="text-2xl font-bold text-neutral-900 mb-2">
                 The $30 Problem
               </h3>
-              <p class="text-neutral-600">Hidden fees on every transfer</p>
+              <p class="text-neutral-600">
+                Hidden fees on every transfer
+              </p>
             </div>
 
             <!-- Before/After comparison -->
@@ -119,14 +129,18 @@
             </div>
 
             <div class="mt-6 text-center p-4 bg-brand-50 rounded-xl">
-              <div class="text-3xl font-bold text-brand-600 mb-1">$27 saved</div>
-              <div class="text-sm text-neutral-600">per transfer</div>
+              <div class="text-3xl font-bold text-brand-600 mb-1">
+                $27 saved
+              </div>
+              <div class="text-sm text-neutral-600">
+                per transfer
+              </div>
             </div>
           </div>
 
           <!-- Floating elements -->
-          <div class="absolute -top-6 -right-6 w-32 h-32 bg-brand-100 rounded-full blur-3xl opacity-50"></div>
-          <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-purple-100 rounded-full blur-3xl opacity-50"></div>
+          <div class="absolute -top-6 -right-6 w-32 h-32 bg-brand-100 rounded-full blur-3xl opacity-50" />
+          <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-purple-100 rounded-full blur-3xl opacity-50" />
         </div>
       </div>
     </div>
@@ -135,4 +149,3 @@
 
 <script setup lang="ts">
 </script>
-

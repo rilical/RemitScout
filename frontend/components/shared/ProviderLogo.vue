@@ -20,7 +20,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  alt: undefined
+  alt: undefined,
 })
 
 const handleImageError = (event: Event) => {

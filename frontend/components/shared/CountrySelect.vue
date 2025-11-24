@@ -4,17 +4,17 @@
       <input
         :id="id"
         v-model="searchQuery"
-        @input="handleSearch"
-        @focus="handleFocus"
-        @blur="handleBlur"
-        @click="handleFocus"
         type="text"
         class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pr-10 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
         :class="selectClass"
         :placeholder="placeholder"
         autocomplete="off"
         :disabled="disabled"
-      />
+        @input="handleSearch"
+        @focus="handleFocus"
+        @blur="handleBlur"
+        @click="handleFocus"
+      >
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <svg
           class="h-5 w-5 text-gray-400 transition-transform duration-200"
@@ -23,12 +23,20 @@
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </div>
     </div>
 
-    <Teleport to="body" v-if="isMounted">
+    <Teleport
+      v-if="isMounted"
+      to="body"
+    >
       <div
         v-show="isOpen && filteredCountries.length > 0"
         ref="dropdownRef"
@@ -36,16 +44,19 @@
         style="max-height: 400px;"
         :style="dropdownStyle"
       >
-        <div v-if="filteredCountries.length === 0" class="px-4 py-2 text-sm text-gray-500">
+        <div
+          v-if="filteredCountries.length === 0"
+          class="px-4 py-2 text-sm text-gray-500"
+        >
           No countries found
         </div>
         <button
           v-for="country in filteredCountries"
           :key="country.value"
           type="button"
+          class="w-full px-4 py-2.5 text-left text-sm text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none active:bg-primary-100 transition-colors"
           @mousedown.prevent="selectCountry(country)"
           @touchstart.prevent="selectCountry(country)"
-          class="w-full px-4 py-2.5 text-left text-sm text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none active:bg-primary-100 transition-colors"
         >
           {{ country.label }}
         </button>
@@ -53,7 +64,10 @@
     </Teleport>
 
     <slot name="error">
-      <div v-if="error" class="mt-1 text-sm text-red-500">
+      <div
+        v-if="error"
+        class="mt-1 text-sm text-red-500"
+      >
         {{ error }}
       </div>
     </slot>
@@ -81,7 +95,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   error: '',
   labelClass: '',
-  selectClass: ''
+  selectClass: '',
 })
 
 const emit = defineEmits<{
@@ -92,7 +106,7 @@ const emit = defineEmits<{
 const allCountries = COUNTRIES.map(country => ({
   value: country.code,
   label: `${country.flag} ${country.name}`,
-  currency: country.currency
+  currency: country.currency,
 }))
 
 const searchQuery = ref('')
@@ -105,10 +119,11 @@ const dropdownStyle = ref({})
 const filterCountries = () => {
   if (!searchQuery.value) {
     filteredCountries.value = allCountries
-  } else {
+  }
+  else {
     const query = searchQuery.value.toLowerCase()
     filteredCountries.value = allCountries.filter(country =>
-      country.label.toLowerCase().includes(query)
+      country.label.toLowerCase().includes(query),
     )
   }
 }
@@ -118,13 +133,13 @@ watch(searchQuery, filterCountries)
 const selectCountry = (country: typeof allCountries[0]) => {
   console.log('=== Select Country ===')
   console.log('Selected:', country.value, country.label)
-  
+
   emit('update:modelValue', country.value)
   emit('country-selected', country.value, country.currency)
   // Show the full label
   searchQuery.value = country.label
   isOpen.value = false
-  
+
   console.log('searchQuery set to:', searchQuery.value)
 }
 
@@ -140,17 +155,17 @@ const handleFocus = async () => {
   console.log('Current searchQuery:', searchQuery.value)
   console.log('Current modelValue:', props.modelValue)
   console.log('All countries count:', allCountries.length)
-  
+
   isOpen.value = true
-  
+
   // Clear and force update
   searchQuery.value = ''
   await nextTick()
   filteredCountries.value = [...allCountries]
-  
+
   console.log('After clear - searchQuery:', searchQuery.value)
   console.log('Filtered countries count:', filteredCountries.value.length)
-  
+
   updateDropdownPosition()
 }
 
@@ -168,7 +183,7 @@ const updateDropdownPosition = async () => {
     dropdownStyle.value = {
       top: `${rect.bottom + 4}px`,
       left: `${rect.left}px`,
-      width: `${rect.width}px`
+      width: `${rect.width}px`,
     }
     console.log('Dropdown position updated:', dropdownStyle.value, 'Total countries:', filteredCountries.value.length)
   }
@@ -180,7 +195,7 @@ watch(
     console.log('=== Country ModelValue Watch ===')
     console.log('Old:', oldValue, 'New:', newValue)
     console.log('isOpen:', isOpen.value)
-    
+
     if (newValue && !isOpen.value) {
       // Only update searchQuery when dropdown is closed
       const country = allCountries.find(c => c.value === newValue)
@@ -188,26 +203,28 @@ watch(
         console.log('Setting searchQuery to:', country.label)
         searchQuery.value = country.label
       }
-    } else if (!newValue) {
+    }
+    else if (!newValue) {
       console.log('Clearing searchQuery')
       searchQuery.value = ''
-    } else {
+    }
+    else {
       console.log('Skipping update because dropdown is open')
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 onMounted(() => {
   isMounted.value = true
-  
+
   if (props.modelValue) {
     const country = allCountries.find(c => c.value === props.modelValue)
     if (country) {
       searchQuery.value = country.label
     }
   }
-  
+
   window.addEventListener('scroll', updateDropdownPosition)
   window.addEventListener('resize', updateDropdownPosition)
 })

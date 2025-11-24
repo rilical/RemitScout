@@ -17,13 +17,32 @@
             </p>
           </div>
           <div class="rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 text-white p-6 w-full lg:w-80">
-            <p class="text-sm uppercase tracking-wide font-semibold mb-2">Need a quick pick?</p>
-            <p class="text-xl font-bold mb-3">Try our featured top 3</p>
-            <p class="text-sm text-brand-50 mb-4">Wise, Remitly, and WorldRemit updated hourly for rates, fees, and delivery speed.</p>
-            <NuxtLink to="/" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-brand-700 font-semibold shadow hover:shadow-md transition">
+            <p class="text-sm uppercase tracking-wide font-semibold mb-2">
+              Need a quick pick?
+            </p>
+            <p class="text-xl font-bold mb-3">
+              Try our featured top 3
+            </p>
+            <p class="text-sm text-brand-50 mb-4">
+              Wise, Remitly, and WorldRemit updated hourly for rates, fees, and delivery speed.
+            </p>
+            <NuxtLink
+              to="/"
+              class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-brand-700 font-semibold shadow hover:shadow-md transition"
+            >
               Compare now
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -38,8 +57,12 @@
         >
           <div class="flex items-center justify-between mb-3">
             <div>
-              <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold">{{ group.kicker }}</p>
-              <h2 class="text-xl font-bold text-neutral-900">{{ group.title }}</h2>
+              <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold">
+                {{ group.kicker }}
+              </p>
+              <h2 class="text-xl font-bold text-neutral-900">
+                {{ group.title }}
+              </h2>
             </div>
             <span class="text-2xl">{{ group.emoji }}</span>
           </div>
@@ -62,41 +85,92 @@
 
       <div class="mt-10 grid gap-6 lg:grid-cols-3">
         <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">Provider reviews</p>
-          <h3 class="text-lg font-bold text-neutral-900 mb-2">Trust the right app</h3>
+          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">
+            Provider reviews
+          </p>
+          <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            Trust the right app
+          </h3>
           <p class="text-sm text-neutral-600 mb-3">
             Deep dives on fees, FX spreads, limits, and payout coverage for top players.
           </p>
-          <NuxtLink to="/reviews" class="inline-flex items-center text-brand-600 font-semibold hover:text-brand-700">
+          <NuxtLink
+            to="/reviews"
+            class="inline-flex items-center text-brand-600 font-semibold hover:text-brand-700"
+          >
             Browse reviews
-            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="ml-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>
         <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">Guides</p>
-          <h3 class="text-lg font-bold text-neutral-900 mb-2">Beat hidden fees</h3>
+          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">
+            Guides
+          </p>
+          <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            Beat hidden fees
+          </h3>
           <p class="text-sm text-neutral-600 mb-3">
             Learn how exchange rates work, when to send, and which payout type is fastest.
           </p>
-          <NuxtLink to="/learn" class="inline-flex items-center text-brand-600 font-semibold hover:text-brand-700">
+          <NuxtLink
+            to="/learn"
+            class="inline-flex items-center text-brand-600 font-semibold hover:text-brand-700"
+          >
             Read guides
-            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="ml-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>
         <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">Exchange rates</p>
-          <h3 class="text-lg font-bold text-neutral-900 mb-2">Know the real FX</h3>
+          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">
+            Exchange rates
+          </p>
+          <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            Know the real FX
+          </h3>
           <p class="text-sm text-neutral-600 mb-3">
             We track USD, GBP, CAD, AED and more against popular receive currencies.
           </p>
-          <NuxtLink to="/exchange-rates" class="inline-flex items-center text-brand-600 font-semibold hover:text-brand-700">
+          <NuxtLink
+            to="/exchange-rates"
+            class="inline-flex items-center text-brand-600 font-semibold hover:text-brand-700"
+          >
             Check FX pairs
-            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="ml-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -171,5 +245,6 @@ setSeo({
   description:
     'Explore our most-searched money transfer corridors. Compare rates, fees, and speed for US, UK, Canada, UAE and more.',
   canonical: `${siteUrl}/send-money`,
+  ogImage: `${siteUrl}/images/og/send-money.jpg`,
 })
 </script>

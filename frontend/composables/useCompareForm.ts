@@ -30,17 +30,17 @@ export function useCompareForm() {
 
   const isValid = computed(() => {
     return (
-      !!form.value.from &&
-      !!form.value.to &&
-      !!form.value.fromCurrency &&
-      !!form.value.toCurrency &&
-      form.value.amount > 0
+      !!form.value.from
+      && !!form.value.to
+      && !!form.value.fromCurrency
+      && !!form.value.toCurrency
+      && form.value.amount > 0
     )
   })
 
   const compareUrl = computed(() => {
     const { from, to, amount, method, fromCurrency, toCurrency } = form.value
-    
+
     if (!isValid.value) {
       return '/#hero-dual-tab'
     }
@@ -59,7 +59,7 @@ export function useCompareForm() {
 
   const sendMoneyUrl = computed(() => {
     const { from, to, amount, method } = form.value
-    
+
     if (!from || !to) {
       return '/#hero-dual-tab'
     }
@@ -141,4 +141,3 @@ export function useCompareForm() {
     DELIVERY_METHODS,
   }
 }
-

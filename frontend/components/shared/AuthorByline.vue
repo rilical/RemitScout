@@ -4,7 +4,7 @@
       :src="authorImageUrl"
       :alt="author.name"
       class="w-8 h-8 rounded-full"
-    />
+    >
     <div class="text-sm">
       <NuxtLink
         :to="`/author/${author.id}`"
@@ -14,9 +14,18 @@
       </NuxtLink>
       <p class="text-xs text-neutral-600">
         {{ author.role }}
-        <span v-if="showDate" class="mx-1">·</span>
-        <time v-if="showDate" :datetime="date">{{ formattedDate }}</time>
-        <span v-if="readTime" class="mx-1">·</span>
+        <span
+          v-if="showDate"
+          class="mx-1"
+        >·</span>
+        <time
+          v-if="showDate"
+          :datetime="date"
+        >{{ formattedDate }}</time>
+        <span
+          v-if="readTime"
+          class="mx-1"
+        >·</span>
         <span v-if="readTime">{{ readTime }} min read</span>
       </p>
     </div>
@@ -36,7 +45,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  showDate: true
+  showDate: true,
 })
 
 const { getAuthorImageUrl } = useAuthors()
@@ -51,20 +60,8 @@ const formattedDate = computed(() => {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
   }).format(dateObj)
 })
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
 

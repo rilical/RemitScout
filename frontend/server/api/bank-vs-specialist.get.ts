@@ -1,4 +1,4 @@
-import { BankVsSpecialist } from '~/types/remit'
+import type { BankVsSpecialist } from '~/types/remit'
 
 const COUNTRY_CURRENCY: Record<string, string> = {
   US: 'USD',
@@ -47,17 +47,17 @@ export default defineEventHandler(async (event) => {
   const from = (query.from as string) || 'US'
   const to = (query.to as string) || 'PH'
   const amount = Number(query.amount) || 500
-  
+
   const sendCur = COUNTRY_CURRENCY[from] || 'USD'
   const recvCur = COUNTRY_CURRENCY[to] || 'PHP'
   const midRate = getMidRate(from, to)
-  
+
   // Wells Fargo data for US → Mexico (based on their Remittance Cost Estimator)
   let bankName = 'Your bank'
   let bankRate = midRate * 0.97 // 3% margin
   let bankFee = 15
   let bankDelivery = '1–2 days'
-  
+
   // Use Wells Fargo specific data for US → Mexico (as of today)
   if (from === 'US' && to === 'MX') {
     bankName = 'Wells Fargo'
@@ -65,14 +65,14 @@ export default defineEventHandler(async (event) => {
     bankFee = 5 // Wells Fargo fee for Mexico transfers
     bankDelivery = '1–3 days'
   }
-  
+
   const bankGets = Math.round((amount - bankFee) * bankRate)
-  
+
   // Remitly - our pick for today (real data from comparison)
   const topRate = 18.3700 // Remitly rate
   const topFee = 1.99 // Remitly fee
   const topGets = 9410 // Actual amount from Remitly
-  
+
   const data: BankVsSpecialist = {
     corridor: {
       from,
@@ -106,10 +106,6 @@ export default defineEventHandler(async (event) => {
     },
     updatedAt: new Date().toISOString(),
   }
-  
+
   return { data }
 })
-
-
-
-

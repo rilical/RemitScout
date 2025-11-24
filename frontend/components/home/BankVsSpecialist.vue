@@ -8,7 +8,9 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
         <div class="bg-white rounded-2xl border-2 border-neutral-200 p-6 shadow-sm">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-neutral-900">Your bank</h3>
+            <h3 class="text-xl font-bold text-neutral-900">
+              Your bank
+            </h3>
             <span class="text-2xl">🏦</span>
           </div>
 
@@ -24,15 +26,27 @@
             </div>
 
             <div class="bg-neutral-50 rounded-xl p-4 mt-4">
-              <div class="text-xs text-neutral-500 mb-1">Recipient gets</div>
+              <div class="text-xs text-neutral-500 mb-1">
+                Recipient gets
+              </div>
               <div class="text-3xl font-bold text-neutral-900">
                 PHP {{ formatNumber(data.bank.recipientGets) }}
               </div>
             </div>
 
             <div class="flex items-center gap-2 text-sm text-neutral-600 pt-2">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <span>{{ data.bank.delivery }}</span>
             </div>
@@ -45,7 +59,9 @@
           </div>
 
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-neutral-900">Top provider today</h3>
+            <h3 class="text-xl font-bold text-neutral-900">
+              Top provider today
+            </h3>
             <span class="text-2xl">✨</span>
           </div>
 
@@ -61,7 +77,9 @@
             </div>
 
             <div class="bg-brand-600 rounded-xl p-4 mt-4 text-white">
-              <div class="text-xs opacity-90 mb-1">Recipient gets</div>
+              <div class="text-xs opacity-90 mb-1">
+                Recipient gets
+              </div>
               <div class="text-3xl font-bold">
                 PHP {{ formatNumber(data.specialist.recipientGets) }}
               </div>
@@ -71,8 +89,18 @@
             </div>
 
             <div class="flex items-center gap-2 text-sm text-neutral-600 pt-2">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
               <span>{{ data.specialist.delivery }}</span>
             </div>
@@ -82,16 +110,29 @@
 
       <div class="mt-6 text-center">
         <button
-          @click="showTooltip = !showTooltip"
           class="inline-flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-600 rounded-lg px-3 py-1"
+          @click="showTooltip = !showTooltip"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           What is exchange margin?
         </button>
-        
-        <div v-if="showTooltip" class="mt-3 max-w-2xl mx-auto bg-neutral-100 rounded-lg p-4 text-sm text-neutral-700">
+
+        <div
+          v-if="showTooltip"
+          class="mt-3 max-w-2xl mx-auto bg-neutral-100 rounded-lg p-4 text-sm text-neutral-700"
+        >
           {{ STR.explainer.tooltip }}
         </div>
       </div>
@@ -104,14 +145,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { BANK_VS_SPECIALIST_DATA } from '~/utils/constants';
+import { ref } from 'vue'
+import { BANK_VS_SPECIALIST_DATA } from '~/utils/constants'
 
-const { STR } = useStrings();
-const { formatNumber } = useFormat();
+const { STR } = useStrings()
+const { formatNumber } = useFormat()
 
-const data = BANK_VS_SPECIALIST_DATA;
-const showTooltip = ref(false);
+const data = BANK_VS_SPECIALIST_DATA
+const showTooltip = ref(false)
 </script>
-
-

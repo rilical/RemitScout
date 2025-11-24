@@ -12,21 +12,21 @@ export const useAuthors = () => {
   const getAuthorForCorridor = (from: string, to: string): Author => {
     // Map corridors to regional expertise
     const corridorExpertise: Record<string, string> = {
-      'PH': 'Philippines',
-      'IN': 'India',
-      'VN': 'Vietnam',
-      'ID': 'Indonesia',
-      'MX': 'Mexico',
-      'CO': 'Colombia',
-      'BR': 'Brazil',
-      'NG': 'Nigeria',
-      'PK': 'Pakistan',
-      'BD': 'Bangladesh'
+      PH: 'Philippines',
+      IN: 'India',
+      VN: 'Vietnam',
+      ID: 'Indonesia',
+      MX: 'Mexico',
+      CO: 'Colombia',
+      BR: 'Brazil',
+      NG: 'Nigeria',
+      PK: 'Pakistan',
+      BD: 'Bangladesh',
     }
 
     const expertise = corridorExpertise[to] || 'Exchange Rates'
     const experts = getAuthorsByExpertise(expertise)
-    
+
     if (experts.length > 0) {
       return experts[0]
     }
@@ -40,7 +40,7 @@ export const useAuthors = () => {
       remittance: 'ana-reyes',
       esim: 'sarah-chen',
       fx: 'nadia-khan',
-      data: 'tom-okafor'
+      data: 'tom-okafor',
     }
 
     return authors[topicAuthorMap[topic]] || authors['tom-okafor']
@@ -62,19 +62,7 @@ export const useAuthors = () => {
     getAuthorForCorridor,
     getAuthorForTopic,
     formatAuthorCredentials,
-    getAuthorImageUrl
+    getAuthorImageUrl,
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

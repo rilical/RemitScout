@@ -10,4 +10,3 @@
 <script setup lang="ts">
 // Skip link for keyboard navigation accessibility
 </script>
-

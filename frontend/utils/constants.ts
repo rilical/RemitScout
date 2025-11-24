@@ -11,7 +11,7 @@ export const CORRIDOR_TILES = [
   { from: 'ES', to: 'MA', feeText: '€0–€2 fee', timeText: 'Cash pickup fast' },
   { from: 'IT', to: 'RO', feeText: '€0–€2 fee', timeText: 'Same day' },
   { from: 'AE', to: 'IN', feeText: 'AED 0–10 fee', timeText: '15–60 min' },
-];
+]
 
 export const SAMPLE_PROVIDERS = [
   {
@@ -25,7 +25,7 @@ export const SAMPLE_PROVIDERS = [
     delivery: 'Same day',
     methods: ['bank'],
     pros: ['Consistently strong rates', 'Transparent fees', 'Good mobile app'],
-    cons: ['ID verification for >$1,000', 'Limited weekend hours']
+    cons: ['ID verification for >$1,000', 'Limited weekend hours'],
   },
   {
     name: 'Remitly',
@@ -38,7 +38,7 @@ export const SAMPLE_PROVIDERS = [
     delivery: '15–30 min',
     methods: ['bank', 'cash', 'wallet'],
     pros: ['Fast cash pickup', 'Wide coverage', 'Promo for first transfer'],
-    cons: ['Higher fees on express', 'Rate varies by speed']
+    cons: ['Higher fees on express', 'Rate varies by speed'],
   },
   {
     name: 'WorldRemit',
@@ -51,7 +51,7 @@ export const SAMPLE_PROVIDERS = [
     delivery: 'Minutes–hours',
     methods: ['bank', 'cash', 'wallet'],
     pros: ['Great wallet support', 'Good coverage', 'Easy app'],
-    cons: ['Margin can be high', 'Verification delays']
+    cons: ['Margin can be high', 'Verification delays'],
   },
   {
     name: 'Xoom',
@@ -64,7 +64,7 @@ export const SAMPLE_PROVIDERS = [
     delivery: 'Minutes–same day',
     methods: ['bank', 'cash'],
     pros: ['PayPal integration', 'Large network', 'Reliable'],
-    cons: ['Higher exchange margin', 'Fees can add up']
+    cons: ['Higher exchange margin', 'Fees can add up'],
   },
   {
     name: 'Ria',
@@ -77,7 +77,7 @@ export const SAMPLE_PROVIDERS = [
     delivery: 'Minutes–1 day',
     methods: ['bank', 'cash'],
     pros: ['Many agent locations', 'Cash pickup reliable', 'Good support'],
-    cons: ['Higher fees', 'Rate not always best']
+    cons: ['Higher fees', 'Rate not always best'],
   },
   {
     name: 'Western Union',
@@ -90,30 +90,30 @@ export const SAMPLE_PROVIDERS = [
     delivery: 'Minutes–1 day',
     methods: ['bank', 'cash'],
     pros: ['Largest network', 'Trusted brand', 'Available everywhere'],
-    cons: ['Expensive', 'High margin', 'Better options exist']
+    cons: ['Expensive', 'High margin', 'Better options exist'],
   },
-];
+]
 
 export const TESTIMONIALS = [
   {
     name: 'Sarah DeAngelo',
     corridor: '🇺🇸 US → Italy 🇮🇹',
     useCase: 'Family Christmas treats',
-    quote: 'My parents got €120 more when I sent them holiday money last Christmas. I had no idea banks were charging that much in hidden fees until I compared here.'
+    quote: 'My parents got €120 more when I sent them holiday money last Christmas. I had no idea banks were charging that much in hidden fees until I compared here.',
   },
   {
     name: 'Mars Kapadia',
     corridor: '🇺🇸 US → India 🇮🇳',
     useCase: 'Student tuition',
-    quote: 'Saved almost $200 on my sister\'s tuition payment by switching from Western Union. That\'s huge for us. The side-by-side comparison made it so obvious which one to pick.'
+    quote: 'Saved almost $200 on my sister\'s tuition payment by switching from Western Union. That\'s huge for us. The side-by-side comparison made it so obvious which one to pick.',
   },
   {
     name: 'Kareem Jubair',
     corridor: '🇵🇱 Poland → Jordan 🇯🇴',
     useCase: 'Family support',
-    quote: 'I send money back home every month and was just using whatever app I knew. Turns out I was losing like 50-60 złoty each time. Been using the better option for 6 months now.'
-  }
-];
+    quote: 'I send money back home every month and was just using whatever app I knew. Turns out I was losing like 50-60 złoty each time. Been using the better option for 6 months now.',
+  },
+]
 
 export const GUIDE_CARDS = [
   {
@@ -124,7 +124,7 @@ export const GUIDE_CARDS = [
     slug: 'best-ways-send-money-philippines',
     emoji: '🇵🇭',
     gradient: 'from-blue-100 to-red-100',
-    category: 'Country Guide'
+    category: 'Country Guide',
   },
   {
     title: 'Wise vs Remitly vs WorldRemit for US→PH',
@@ -134,7 +134,7 @@ export const GUIDE_CARDS = [
     slug: 'wise-vs-remitly-vs-worldremit',
     emoji: '⚖️',
     gradient: 'from-purple-100 to-pink-100',
-    category: 'Comparison'
+    category: 'Comparison',
   },
   {
     title: 'Avoid hidden fees in international transfers',
@@ -144,7 +144,7 @@ export const GUIDE_CARDS = [
     slug: 'avoid-hidden-fees',
     emoji: '💰',
     gradient: 'from-emerald-100 to-teal-100',
-    category: 'Money Saving'
+    category: 'Money Saving',
   },
   {
     title: 'Cash pickup vs bank deposit: what\'s faster?',
@@ -154,7 +154,7 @@ export const GUIDE_CARDS = [
     slug: 'cash-pickup-vs-bank-deposit',
     emoji: '🏦',
     gradient: 'from-amber-100 to-orange-100',
-    category: 'How To'
+    category: 'How To',
   },
   {
     title: 'US → India corridor playbook',
@@ -164,7 +164,7 @@ export const GUIDE_CARDS = [
     slug: 'send-money-us-to-india-guide',
     emoji: '🇺🇸🇮🇳',
     gradient: 'from-indigo-100 to-sky-100',
-    category: 'Country Guide'
+    category: 'Country Guide',
   },
   {
     title: 'Full review: Wise vs Remitly vs Western Union',
@@ -174,7 +174,7 @@ export const GUIDE_CARDS = [
     slug: 'wise-remitly-western-union-review',
     emoji: '🧭',
     gradient: 'from-lime-100 to-emerald-100',
-    category: 'Comparison'
+    category: 'Comparison',
   },
   {
     title: 'Travel insurance for frequent senders',
@@ -184,7 +184,7 @@ export const GUIDE_CARDS = [
     slug: 'travel-insurance',
     emoji: '🛡️',
     gradient: 'from-cyan-100 to-blue-100',
-    category: 'Travel'
+    category: 'Travel',
   },
   {
     title: 'International eSIM setup checklist',
@@ -194,7 +194,7 @@ export const GUIDE_CARDS = [
     slug: 'international-esim-checklist',
     emoji: '📱',
     gradient: 'from-slate-100 to-gray-100',
-    category: 'Travel Tech'
+    category: 'Travel Tech',
   },
   {
     title: 'USD→PHP rate watch guide',
@@ -204,9 +204,9 @@ export const GUIDE_CARDS = [
     slug: 'usd-php-exchange-rate-guide',
     emoji: '⏱️',
     gradient: 'from-rose-100 to-orange-100',
-    category: 'Exchange Rates'
+    category: 'Exchange Rates',
   },
-];
+]
 
 export const COUNTRY_HIGHLIGHTS = [
   { code: 'IN', name: 'India', stat: 'Strong bank deposit rates' },
@@ -230,7 +230,7 @@ export const COUNTRY_HIGHLIGHTS = [
   { code: 'NG', name: 'Nigeria', stat: 'Mobile wallet options' },
   { code: 'GH', name: 'Ghana', stat: 'Mobile money popular' },
   { code: 'GB', name: 'United Kingdom', stat: 'Competitive rates' },
-];
+]
 
 export const FILTER_OPTIONS = [
   { value: 'fastest', label: 'Fastest' },
@@ -240,25 +240,25 @@ export const FILTER_OPTIONS = [
   { value: 'cash', label: 'Cash pickup' },
   { value: 'wallet', label: 'Mobile wallet' },
   { value: 'bank', label: 'Bank deposit' },
-];
+]
 
 export const SORT_OPTIONS = [
   { value: 'recipient-gets', label: 'Recipient gets' },
   { value: 'total-fee', label: 'Total fee' },
   { value: 'delivery-time', label: 'Delivery time' },
-];
+]
 
 export const BANK_VS_SPECIALIST_DATA = {
   bank: {
     rate: 55.10,
     fee: 15.00,
     delivery: '1–2 days',
-    recipientGets: 27550
+    recipientGets: 27550,
   },
   specialist: {
     rate: 56.40,
     fee: 2.99,
     delivery: '15–30 min (cash) • same day (bank)',
-    recipientGets: 28150
-  }
-};
+    recipientGets: 28150,
+  },
+}

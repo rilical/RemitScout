@@ -1,8 +1,14 @@
 <template>
-  <section class="bg-gray-50 py-12" aria-labelledby="providers-heading">
+  <section
+    class="bg-gray-50 py-12"
+    aria-labelledby="providers-heading"
+  >
     <div class="container mx-auto px-4">
       <div class="mb-8 text-center">
-        <h2 id="providers-heading" class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">
+        <h2
+          id="providers-heading"
+          class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl"
+        >
           Popular money transfer providers
         </h2>
         <p class="mx-auto max-w-2xl text-lg text-gray-600">
@@ -11,18 +17,24 @@
       </div>
 
       <!-- Loading state -->
-      <div v-if="loading" class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+      <div
+        v-if="loading"
+        class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6"
+      >
         <div
           v-for="i in 6"
           :key="i"
           class="flex h-20 animate-pulse items-center justify-center rounded-lg bg-white p-6"
         >
-          <div class="h-8 w-16 rounded bg-gray-200"></div>
+          <div class="h-8 w-16 rounded bg-gray-200" />
         </div>
       </div>
 
       <!-- Providers grid -->
-      <div v-else class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+      <div
+        v-else
+        class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6"
+      >
         <NuxtLink
           v-for="provider in providers"
           :key="provider.id"
@@ -55,9 +67,19 @@
       </div>
 
       <!-- Error state -->
-      <div v-if="error" class="mt-8 text-center">
-        <p class="mb-4 text-gray-600">Unable to load providers. Please try again later.</p>
-        <button class="btn-secondary" @click="retry">Retry</button>
+      <div
+        v-if="error"
+        class="mt-8 text-center"
+      >
+        <p class="mb-4 text-gray-600">
+          Unable to load providers. Please try again later.
+        </p>
+        <button
+          class="btn-secondary"
+          @click="retry"
+        >
+          Retry
+        </button>
       </div>
 
       <!-- View all link -->
@@ -67,7 +89,12 @@
           class="inline-flex items-center font-medium text-primary-600 transition-colors hover:text-primary-700"
         >
           Compare all providers
-          <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="ml-1 h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -87,67 +114,69 @@ import { NuxtImg } from '#components'
 import { useProviders } from '~/composables/useProviders'
 
 interface Provider {
-  id: string;
-  name: string;
-  slug: string;
-  rating?: number;
+  id: string
+  name: string
+  slug: string
+  rating?: number
 }
 
 // Props
 interface Props {
-  count?: number;
+  count?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   count: 6,
-});
+})
 
 // State
-const providers = ref<Provider[]>([]);
-const loading = ref(true);
-const error = ref(false);
+const providers = ref<Provider[]>([])
+const loading = ref(true)
+const error = ref(false)
 
 // Fetch providers
 const fetchProviders = async () => {
-  loading.value = true;
-  error.value = false;
+  loading.value = true
+  error.value = false
 
   try {
-    const { data } = await useProviders();
+    const { data } = await useProviders()
     if (data.value) {
-      providers.value = data.value.slice(0, props.count);
+      providers.value = data.value.slice(0, props.count)
     }
-  } catch (err) {
-    console.error('Failed to fetch providers:', err);
-    error.value = true;
-  } finally {
-    loading.value = false;
   }
-};
+  catch (err) {
+    console.error('Failed to fetch providers:', err)
+    error.value = true
+  }
+  finally {
+    loading.value = false
+  }
+}
 
 // Image error handler
 const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement;
-  target.style.display = 'none';
+  const target = event.target as HTMLImageElement
+  target.style.display = 'none'
 
   // Show fallback text
-  const fallback = document.createElement('div');
-  fallback.className = 'text-gray-400 text-sm font-medium';
-  fallback.textContent = target.alt?.replace(' logo', '') || 'Provider';
-  target.parentElement?.appendChild(fallback);
-};
+  const fallback = document.createElement('div')
+  fallback.className = 'text-gray-400 text-sm font-medium'
+  fallback.textContent = target.alt?.replace(' logo', '') || 'Provider'
+  target.parentElement?.appendChild(fallback)
+}
 
 // Retry function
 const retry = () => {
-  fetchProviders();
-};
+  fetchProviders()
+}
 
 // Initialize
-await fetchProviders();
+await fetchProviders()
 </script>
+
 <style scoped>
 .btn-secondary {
   @apply rounded-lg bg-gray-100 px-6 py-2 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
 }
 </style>
-

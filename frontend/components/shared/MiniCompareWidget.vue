@@ -2,8 +2,12 @@
   <div class="rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-6 shadow-xl">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div class="text-white max-w-xl">
-        <p class="text-sm font-semibold uppercase tracking-wide text-brand-50">Compare now</p>
-        <h3 class="text-2xl font-bold leading-tight">Find the cheapest way to send money</h3>
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-50">
+          Compare now
+        </p>
+        <h3 class="text-2xl font-bold leading-tight">
+          Find the cheapest way to send money
+        </h3>
         <p class="text-brand-50 text-sm mt-1">
           Live fees, FX markups, and delivery speed across bank, cash, and wallet payouts.
         </p>
@@ -39,7 +43,7 @@
                 min="1"
                 class="h-10 w-full bg-transparent text-gray-900 focus:outline-none"
                 placeholder="e.g. 500"
-              />
+              >
               <span class="text-sm font-semibold text-gray-600 ml-2">{{ fromCurrency }}</span>
             </div>
           </div>
@@ -55,11 +59,19 @@
         <div class="mt-3 grid gap-3 md:grid-cols-2">
           <div>
             <label class="text-xs font-semibold text-gray-700 mb-1 block">Send currency</label>
-            <CurrencySelect v-model="fromCurrency" label="Send currency" select-class="h-11" />
+            <CurrencySelect
+              v-model="fromCurrency"
+              label="Send currency"
+              select-class="h-11"
+            />
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-700 mb-1 block">Receive currency</label>
-            <CurrencySelect v-model="toCurrency" label="Receive currency" select-class="h-11" />
+            <CurrencySelect
+              v-model="toCurrency"
+              label="Receive currency"
+              select-class="h-11"
+            />
           </div>
         </div>
         <p class="mt-3 text-xs text-gray-500">

@@ -1,8 +1,14 @@
 <template>
-  <section class="bg-gray-50 py-12" aria-labelledby="benefits-heading">
+  <section
+    class="bg-gray-50 py-12"
+    aria-labelledby="benefits-heading"
+  >
     <div class="container mx-auto px-4">
       <div class="mb-8 text-center">
-        <h2 id="benefits-heading" class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">
+        <h2
+          id="benefits-heading"
+          class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl"
+        >
           Why choose Remit-Scout?
         </h2>
         <p class="mx-auto max-w-2xl text-lg text-gray-600">
@@ -31,7 +37,9 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">Independent & unbiased</h3>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+            Independent & unbiased
+          </h3>
           <p class="text-sm leading-relaxed text-gray-600">
             We don't favor any provider. Our recommendations are based purely on data and user
             reviews.
@@ -57,7 +65,9 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">Updated every 10 minutes</h3>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+            Updated every 10 minutes
+          </h3>
           <p class="text-sm leading-relaxed text-gray-600">
             Exchange rates and fees are refreshed continuously to ensure you get the most current
             data.
@@ -83,7 +93,9 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">30+ trusted providers</h3>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+            30+ trusted providers
+          </h3>
           <p class="text-sm leading-relaxed text-gray-600">
             Compare rates from all major money transfer companies, including Wise, Western Union,
             and Remitly.
@@ -109,7 +121,9 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">Mobile-first, fast</h3>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+            Mobile-first, fast
+          </h3>
           <p class="text-sm leading-relaxed text-gray-600">
             Optimized for all devices with lightning-fast loading and intuitive mobile experience.
           </p>
@@ -123,7 +137,12 @@
           class="inline-flex items-center font-medium text-primary-600 transition-colors hover:text-primary-700"
         >
           View all providers
-          <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="ml-1 h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"

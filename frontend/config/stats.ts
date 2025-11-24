@@ -10,35 +10,34 @@ export const SITE_STATS = {
     display: '$2.5M+',
     label: 'Saved in fees',
   },
-  
+
   // Total number of users who trust us
   users: {
     value: 80000,
     display: '80k+',
     label: 'Users trust us',
   },
-  
+
   // Number of providers we compare
   providers: {
     value: 30,
     display: '30+',
     label: 'Providers compared',
   },
-  
+
   // Number of corridors covered
   corridors: {
     value: 150,
     display: '150+',
     label: 'Corridors covered',
   },
-  
+
   // Licensed and regulated providers
   licensedProviders: {
     value: 30,
     display: '30+',
     label: 'All fully regulated & trusted',
   },
-} as const;
+} as const
 
-export type SiteStat = keyof typeof SITE_STATS;
-
+export type SiteStat = keyof typeof SITE_STATS

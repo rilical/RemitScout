@@ -2,7 +2,9 @@
   <div class="py-16 bg-white">
     <div class="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold text-gray-900 mb-4">{{ title }}</h2>
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">
+          {{ title }}
+        </h2>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
           {{ subtitle }}
         </p>
@@ -17,7 +19,10 @@
         >
           <!-- Provider Logo (96×32) -->
           <div class="mb-4">
-            <ProviderLogo :slug="provider.slug" :alt="provider.name" />
+            <ProviderLogo
+              :slug="provider.slug"
+              :alt="provider.name"
+            />
           </div>
 
           <!-- Score Badge (24px circle top-right) -->
@@ -27,10 +32,22 @@
 
           <!-- Metrics Bars -->
           <div class="mb-6 space-y-3">
-            <MetricBar label="Trust" :value="provider.metrics.trust" />
-            <MetricBar label="Service" :value="provider.metrics.service" />
-            <MetricBar label="Fees" :value="provider.metrics.fees" />
-            <MetricBar label="Satisfaction" :value="provider.metrics.satisfaction" />
+            <MetricBar
+              label="Trust"
+              :value="provider.metrics.trust"
+            />
+            <MetricBar
+              label="Service"
+              :value="provider.metrics.service"
+            />
+            <MetricBar
+              label="Fees"
+              :value="provider.metrics.fees"
+            />
+            <MetricBar
+              label="Satisfaction"
+              :value="provider.metrics.satisfaction"
+            />
           </div>
 
           <!-- CTA Buttons -->
@@ -93,7 +110,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: 'We compare and review top money transfer services',
   subtitle: 'Compare rates and services from the most popular and trusted money transfer companies worldwide.',
-  viewAllText: 'View All Providers'
+  viewAllText: 'View All Providers',
 })
 
 const DEFAULT_PROVIDERS: readonly Provider[] = [
@@ -101,32 +118,32 @@ const DEFAULT_PROVIDERS: readonly Provider[] = [
     slug: 'wise',
     name: 'Wise',
     score: 9.3,
-    metrics: { trust: 95, service: 92, fees: 88, satisfaction: 90 }
+    metrics: { trust: 95, service: 92, fees: 88, satisfaction: 90 },
   },
   {
     slug: 'remitly',
     name: 'Remitly',
     score: 9.1,
-    metrics: { trust: 88, service: 90, fees: 85, satisfaction: 92 }
+    metrics: { trust: 88, service: 90, fees: 85, satisfaction: 92 },
   },
   {
     slug: 'western-union',
     name: 'Western Union',
     score: 8.7,
-    metrics: { trust: 82, service: 85, fees: 75, satisfaction: 80 }
+    metrics: { trust: 82, service: 85, fees: 75, satisfaction: 80 },
   },
   {
     slug: 'xe',
     name: 'XE',
     score: 8.9,
-    metrics: { trust: 87, service: 88, fees: 82, satisfaction: 85 }
+    metrics: { trust: 87, service: 88, fees: 82, satisfaction: 85 },
   },
   {
     slug: 'ofx',
     name: 'OFX',
     score: 8.5,
-    metrics: { trust: 85, service: 83, fees: 80, satisfaction: 82 }
-  }
+    metrics: { trust: 85, service: 83, fees: 80, satisfaction: 82 },
+  },
 ] as const
 
 const displayProviders = computed<readonly Provider[]>(() => props.providers ?? DEFAULT_PROVIDERS)

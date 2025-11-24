@@ -10,7 +10,7 @@
 // Global app setup
 useHead({
   htmlAttrs: {
-    lang: 'en'
-  }
+    lang: 'en',
+  },
 })
 </script>

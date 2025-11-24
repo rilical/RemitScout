@@ -1,7 +1,7 @@
 <template>
   <section class="relative py-12 sm:py-16">
     <!-- Transitional Background -->
-    <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-blue-50/30 to-white"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-blue-50/30 to-white" />
 
     <!-- Content -->
     <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -16,7 +16,7 @@
 
       <!-- Country Slider/Carousel - 3 per slide -->
       <div class="relative overflow-hidden">
-        <div 
+        <div
           ref="sliderRef"
           class="flex gap-4 transition-transform duration-500 ease-in-out"
           :style="{ transform: `translateX(-${currentSlide * (100 / itemsPerSlide)}%)` }"
@@ -28,13 +28,23 @@
             :style="{ width: `calc((100% - 2rem) / ${itemsPerSlide})` }"
           >
             <button
-              @click="handleCorridorClick(corridor)"
               class="group w-full rounded-xl border-2 border-neutral-200 bg-white p-6 text-left transition-all hover:border-brand-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+              @click="handleCorridorClick(corridor)"
             >
               <div class="flex items-center gap-3 mb-4">
                 <span class="text-3xl">{{ getCountryFlag(corridor.from) }}</span>
-                <svg class="h-5 w-5 text-neutral-400 group-hover:text-brand-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <svg
+                  class="h-5 w-5 text-neutral-400 group-hover:text-brand-600 transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
                 </svg>
                 <span class="text-3xl">{{ getCountryFlag(corridor.to) }}</span>
               </div>
@@ -43,9 +53,22 @@
                 {{ corridor.from }} → {{ corridor.to }}
               </div>
 
-              <div v-if="corridor.count24h" class="flex items-center gap-2 text-sm text-neutral-600">
-                <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div
+                v-if="corridor.count24h"
+                class="flex items-center gap-2 text-sm text-neutral-600"
+              >
+                <svg
+                  class="h-4 w-4 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span>{{ corridor.count24h }} searches today</span>
               </div>
@@ -60,40 +83,60 @@
         <!-- Navigation controls -->
         <div class="flex items-center justify-center gap-4 mt-6">
           <button
-            @click="scrollLeft"
             :disabled="currentSlide === 0"
             class="p-2 rounded-full border border-neutral-300 hover:border-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous slide"
+            @click="scrollLeft"
           >
-            <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            <svg
+              class="w-5 h-5 text-neutral-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
-          
+
           <!-- Pagination dots -->
           <div class="flex items-center gap-2">
             <button
               v-for="slide in totalSlides"
               :key="slide"
-              @click="goToSlide(slide - 1)"
               :class="[
                 'h-2 rounded-full transition-all',
-                currentSlide === slide - 1 
-                  ? 'w-8 bg-brand-600' 
-                  : 'w-2 bg-neutral-300 hover:bg-neutral-400'
+                currentSlide === slide - 1
+                  ? 'w-8 bg-brand-600'
+                  : 'w-2 bg-neutral-300 hover:bg-neutral-400',
               ]"
               :aria-label="`Go to slide ${slide}`"
+              @click="goToSlide(slide - 1)"
             />
           </div>
-          
+
           <button
-            @click="scrollRight"
             :disabled="currentSlide >= totalSlides - 1"
             class="p-2 rounded-full border border-neutral-300 hover:border-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next slide"
+            @click="scrollRight"
           >
-            <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="w-5 h-5 text-neutral-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
@@ -112,7 +155,7 @@ const currentSlide = ref(0)
 const itemsPerSlide = 3
 
 const emit = defineEmits<{
-  'corridor-selected': [data: { from: string; to: string }]
+  'corridor-selected': [data: { from: string, to: string }]
 }>()
 
 const { data, pending } = await useRemittanceApi().usePopularCorridors()
@@ -138,7 +181,7 @@ const corridors = computed(() => {
   if (!apiData?.data || apiData.data.length === 0) {
     return defaultCorridors
   }
-  
+
   return apiData.data.map((c: any) => ({
     ...c,
     ...parseRoute(c.route),
@@ -173,9 +216,9 @@ const getCountryFlag = (code: string): string => {
   return countryFlags[code] || '🏳️'
 }
 
-const handleCorridorClick = (corridor: { from: string; to: string }) => {
+const handleCorridorClick = (corridor: { from: string, to: string }) => {
   emit('corridor-selected', { from: corridor.from, to: corridor.to })
-  
+
   // Navigate to comparison page
   router.push(`/send-money/${corridor.from.toLowerCase()}-to-${corridor.to.toLowerCase()}`)
 }

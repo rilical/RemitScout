@@ -29,32 +29,32 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: siteName || 'Remit-Scout',
-      url: siteUrl,
-      logo: `${siteUrl}/logo.png`,
-      description: 'Independent comparison service for international money transfers and travel connectivity',
-      sameAs: [
+      'name': siteName || 'Remit-Scout',
+      'url': siteUrl,
+      'logo': `${siteUrl}/logo.png`,
+      'description': 'Independent comparison service for international money transfers and travel connectivity',
+      'sameAs': [
         'https://twitter.com/Remit-Scout',
         'https://facebook.com/Remit-Scout',
-        'https://linkedin.com/company/Remit-Scout'
+        'https://linkedin.com/company/Remit-Scout',
       ],
-      contactPoint: {
+      'contactPoint': {
         '@type': 'ContactPoint',
-        contactType: 'customer service',
-        email: 'support@Remit-Scout.com',
-        availableLanguage: ['English', 'Spanish', 'French']
+        'contactType': 'customer service',
+        'email': 'support@Remit-Scout.com',
+        'availableLanguage': ['English', 'Spanish', 'French'],
       },
-      address: {
+      'address': {
         '@type': 'PostalAddress',
-        addressCountry: 'US'
-      }
+        'addressCountry': 'US',
+      },
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -63,23 +63,23 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: siteName || 'Remit-Scout',
-      url: siteUrl,
-      potentialAction: {
+      'name': siteName || 'Remit-Scout',
+      'url': siteUrl,
+      'potentialAction': {
         '@type': 'SearchAction',
-        target: {
+        'target': {
           '@type': 'EntryPoint',
-          urlTemplate: `${siteUrl}/search?q={search_term_string}`
+          'urlTemplate': `${siteUrl}/search?q={search_term_string}`,
         },
-        'query-input': 'required name=search_term_string'
-      }
+        'query-input': 'required name=search_term_string',
+      },
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -88,19 +88,19 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: items.map((item, index) => ({
+      'itemListElement': items.map((item, index) => ({
         '@type': 'ListItem',
-        position: index + 1,
-        name: item.name,
-        item: item.url
-      }))
+        'position': index + 1,
+        'name': item.name,
+        'item': item.url,
+      })),
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -109,21 +109,21 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: faqs.map(faq => ({
+      'mainEntity': faqs.map(faq => ({
         '@type': 'Question',
-        name: faq.question,
-        acceptedAnswer: {
+        'name': faq.question,
+        'acceptedAnswer': {
           '@type': 'Answer',
-          text: faq.answer
-        }
-      }))
+          'text': faq.answer,
+        },
+      })),
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -132,35 +132,35 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
-      name: listName,
-      itemListOrder: 'https://schema.org/ItemListOrderAscending',
-      numberOfItems: providers.length,
-      itemListElement: providers.map((provider, index) => ({
+      'name': listName,
+      'itemListOrder': 'https://schema.org/ItemListOrderAscending',
+      'numberOfItems': providers.length,
+      'itemListElement': providers.map((provider, index) => ({
         '@type': 'ListItem',
-        position: index + 1,
-        item: {
+        'position': index + 1,
+        'item': {
           '@type': 'Service',
-          name: provider.provider,
-          provider: {
+          'name': provider.provider,
+          'provider': {
             '@type': 'Organization',
-            name: provider.provider
+            'name': provider.provider,
           },
-          areaServed: provider.areaServed,
-          offers: {
+          'areaServed': provider.areaServed,
+          'offers': {
             '@type': 'Offer',
-            price: provider.price,
-            priceCurrency: provider.priceCurrency
+            'price': provider.price,
+            'priceCurrency': provider.priceCurrency,
           },
-          additionalType: 'https://schema.org/RemittanceService'
-        }
-      }))
+          'additionalType': 'https://schema.org/RemittanceService',
+        },
+      })),
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -177,36 +177,36 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: params.headline,
-      description: params.description,
-      author: {
+      'headline': params.headline,
+      'description': params.description,
+      'author': {
         '@type': 'Person',
-        name: params.author.name,
-        jobTitle: params.author.role,
-        url: `${siteUrl}/author/${params.author.id}`
+        'name': params.author.name,
+        'jobTitle': params.author.role,
+        'url': `${siteUrl}/author/${params.author.id}`,
       },
-      datePublished: params.datePublished,
-      dateModified: params.dateModified,
-      publisher: {
+      'datePublished': params.datePublished,
+      'dateModified': params.dateModified,
+      'publisher': {
         '@type': 'Organization',
-        name: siteName || 'Remit-Scout',
-        logo: {
+        'name': siteName || 'Remit-Scout',
+        'logo': {
           '@type': 'ImageObject',
-          url: `${siteUrl}/logo.png`
-        }
+          'url': `${siteUrl}/logo.png`,
+        },
       },
-      mainEntityOfPage: {
+      'mainEntityOfPage': {
         '@type': 'WebPage',
-        '@id': params.url
+        '@id': params.url,
       },
-      image: params.image || `${siteUrl}/og-image.jpg`
+      'image': params.image || `${siteUrl}/og-image.jpg`,
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -215,35 +215,35 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Product',
-      name: `${plan.provider} ${plan.country} eSIM - ${plan.dataAmount} for ${plan.duration} days`,
-      description: `Prepaid eSIM data plan for ${plan.country}. ${plan.features.join('. ')}`,
-      brand: {
+      'name': `${plan.provider} ${plan.country} eSIM - ${plan.dataAmount} for ${plan.duration} days`,
+      'description': `Prepaid eSIM data plan for ${plan.country}. ${plan.features.join('. ')}`,
+      'brand': {
         '@type': 'Brand',
-        name: plan.provider
+        'name': plan.provider,
       },
-      offers: {
+      'offers': {
         '@type': 'Offer',
-        price: plan.price,
-        priceCurrency: plan.currency,
-        availability: 'https://schema.org/InStock',
-        priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        seller: {
+        'price': plan.price,
+        'priceCurrency': plan.currency,
+        'availability': 'https://schema.org/InStock',
+        'priceValidUntil': new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        'seller': {
           '@type': 'Organization',
-          name: plan.provider
-        }
+          'name': plan.provider,
+        },
       },
-      aggregateRating: {
+      'aggregateRating': {
         '@type': 'AggregateRating',
-        ratingValue: 4.5,
-        reviewCount: Math.floor(Math.random() * 1000) + 100
-      }
+        'ratingValue': 4.5,
+        'reviewCount': Math.floor(Math.random() * 1000) + 100,
+      },
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -256,32 +256,32 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Product',
-      name: `${country} eSIM Data Plans`,
-      description: `Compare prepaid eSIM data plans for ${country}. Instant activation, no roaming fees.`,
-      offers: {
+      'name': `${country} eSIM Data Plans`,
+      'description': `Compare prepaid eSIM data plans for ${country}. Instant activation, no roaming fees.`,
+      'offers': {
         '@type': 'AggregateOffer',
-        lowPrice: minPrice,
-        highPrice: maxPrice,
-        priceCurrency: 'USD',
-        offerCount: plans.length,
-        offers: plans.map(plan => ({
+        'lowPrice': minPrice,
+        'highPrice': maxPrice,
+        'priceCurrency': 'USD',
+        'offerCount': plans.length,
+        'offers': plans.map(plan => ({
           '@type': 'Offer',
-          price: plan.price,
-          priceCurrency: plan.currency,
-          name: `${plan.dataAmount} for ${plan.duration} days`,
-          seller: {
+          'price': plan.price,
+          'priceCurrency': plan.currency,
+          'name': `${plan.dataAmount} for ${plan.duration} days`,
+          'seller': {
             '@type': 'Organization',
-            name: plan.provider
-          }
-        }))
-      }
+            'name': plan.provider,
+          },
+        })),
+      },
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -290,33 +290,33 @@ export const useStructuredData = () => {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Service',
-      name: 'International Money Transfer Comparison',
-      description: 'Compare live rates, fees and delivery speeds from 30+ licensed money transfer providers',
-      provider: {
+      'name': 'International Money Transfer Comparison',
+      'description': 'Compare live rates, fees and delivery speeds from 30+ licensed money transfer providers',
+      'provider': {
         '@type': 'Organization',
-        name: siteName || 'Remit-Scout'
+        'name': siteName || 'Remit-Scout',
       },
-      serviceType: 'Financial Comparison Service',
-      areaServed: {
+      'serviceType': 'Financial Comparison Service',
+      'areaServed': {
         '@type': 'GeoShape',
-        name: 'Worldwide'
+        'name': 'Worldwide',
       },
-      hasOfferCatalog: {
+      'hasOfferCatalog': {
         '@type': 'OfferCatalog',
-        name: 'Money Transfer Providers',
-        itemListElement: [
-          { '@type': 'Service', name: 'Bank Transfer' },
-          { '@type': 'Service', name: 'Cash Pickup' },
-          { '@type': 'Service', name: 'Mobile Wallet' }
-        ]
-      }
+        'name': 'Money Transfer Providers',
+        'itemListElement': [
+          { '@type': 'Service', 'name': 'Bank Transfer' },
+          { '@type': 'Service', 'name': 'Cash Pickup' },
+          { '@type': 'Service', 'name': 'Mobile Wallet' },
+        ],
+      },
     }
 
     useHead({
       script: [{
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(schema)
-      }]
+        innerHTML: JSON.stringify(schema),
+      }],
     })
   }
 
@@ -329,19 +329,7 @@ export const useStructuredData = () => {
     addArticleSchema,
     addEsimProductSchema,
     addEsimAggregateOfferSchema,
-    addRemittanceServiceSchema
+    addRemittanceServiceSchema,
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

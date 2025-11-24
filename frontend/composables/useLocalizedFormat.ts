@@ -9,7 +9,8 @@ export function useLocalizedFormat() {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(amount)
-    } catch (error) {
+    }
+    catch (error) {
       return `${currency} ${amount.toFixed(2)}`
     }
   }
@@ -29,8 +30,8 @@ export function useLocalizedFormat() {
   const formatDate = (date: Date | string, format: 'short' | 'long' = 'short'): string => {
     const dateObj = typeof date === 'string' ? new Date(date) : date
 
-    const options: Intl.DateTimeFormatOptions =
-      format === 'long'
+    const options: Intl.DateTimeFormatOptions
+      = format === 'long'
         ? {
             year: 'numeric',
             month: 'long',
@@ -68,17 +69,23 @@ export function useLocalizedFormat() {
 
     if (diffInSeconds < 60) {
       return rtf.format(-diffInSeconds, 'second')
-    } else if (diffInSeconds < 3600) {
+    }
+    else if (diffInSeconds < 3600) {
       return rtf.format(-Math.floor(diffInSeconds / 60), 'minute')
-    } else if (diffInSeconds < 86400) {
+    }
+    else if (diffInSeconds < 86400) {
       return rtf.format(-Math.floor(diffInSeconds / 3600), 'hour')
-    } else if (diffInSeconds < 604800) {
+    }
+    else if (diffInSeconds < 604800) {
       return rtf.format(-Math.floor(diffInSeconds / 86400), 'day')
-    } else if (diffInSeconds < 2592000) {
+    }
+    else if (diffInSeconds < 2592000) {
       return rtf.format(-Math.floor(diffInSeconds / 604800), 'week')
-    } else if (diffInSeconds < 31536000) {
+    }
+    else if (diffInSeconds < 31536000) {
       return rtf.format(-Math.floor(diffInSeconds / 2592000), 'month')
-    } else {
+    }
+    else {
       return rtf.format(-Math.floor(diffInSeconds / 31536000), 'year')
     }
   }
@@ -92,4 +99,3 @@ export function useLocalizedFormat() {
     formatRelativeTime,
   }
 }
-

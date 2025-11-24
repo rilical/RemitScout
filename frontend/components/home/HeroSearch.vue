@@ -11,40 +11,46 @@
           <span class="text-primary-200">and save</span>
         </h1>
         <p class="text-balance mt-4 text-lg text-white/90 md:text-xl">
-          Pinpoint the best exchange rates, delivery speeds, and hidden fees before you hit send. <br class="hidden md:block" />
+          Pinpoint the best exchange rates, delivery speeds, and hidden fees before you hit send. <br class="hidden md:block">
           Our data covers 30+ licensed providers across 200+ corridors.
         </p>
       </header>
 
       <form
         class="w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-lg"
-        @submit.prevent="handleSubmit"
         role="search"
         aria-label="Money transfer comparison form"
+        @submit.prevent="handleSubmit"
       >
         <!-- Country Selection Row -->
         <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label for="from-country" class="mb-2 block text-sm font-semibold text-gray-700">
+            <label
+              for="from-country"
+              class="mb-2 block text-sm font-semibold text-gray-700"
+            >
               <span class="mr-2">🛫</span>Sending from
             </label>
             <CountrySelect
+              id="from-country"
               v-model="from"
               label="Sending from"
-              id="from-country"
               :error="errors.from ? 'Select a country' : ''"
               :select-class="errors.from ? 'border-red-500' : 'border-gray-300'"
             />
           </div>
 
           <div>
-            <label for="to-country" class="mb-2 block text-sm font-semibold text-gray-700">
+            <label
+              for="to-country"
+              class="mb-2 block text-sm font-semibold text-gray-700"
+            >
               <span class="mr-2">🛬</span>Receiving in
             </label>
             <CountrySelect
+              id="to-country"
               v-model="to"
               label="Receiving in"
-              id="to-country"
               :error="errors.to ? 'Select a country' : ''"
               :select-class="errors.to ? 'border-red-500' : 'border-gray-300'"
             />
@@ -54,13 +60,16 @@
         <!-- Amount and Currency Row -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           <div>
-            <label for="amount" class="mb-2 block text-sm font-semibold text-gray-700">
+            <label
+              for="amount"
+              class="mb-2 block text-sm font-semibold text-gray-700"
+            >
               <span class="mr-2">💰</span>You send
             </label>
             <AmountInput
+              id="amount"
               v-model="amount"
               label="Amount"
-              id="amount"
               :from="from"
               :to="to"
               :error="errors.amount ? 'Enter amount' : ''"
@@ -69,22 +78,28 @@
           </div>
 
           <div>
-            <label for="from-currency" class="mb-2 block text-sm font-semibold text-gray-700">From</label>
+            <label
+              for="from-currency"
+              class="mb-2 block text-sm font-semibold text-gray-700"
+            >From</label>
             <CurrencySelect
+              id="from-currency"
               v-model="fromCurrency"
               label="From currency"
-              id="from-currency"
               :error="errors.fromCurrency ? 'Select currency' : ''"
               :select-class="errors.fromCurrency ? 'border-red-500' : 'border-gray-300'"
             />
           </div>
 
           <div>
-            <label for="to-currency" class="mb-2 block text-sm font-semibold text-gray-700">To</label>
+            <label
+              for="to-currency"
+              class="mb-2 block text-sm font-semibold text-gray-700"
+            >To</label>
             <CurrencySelect
+              id="to-currency"
               v-model="toCurrency"
               label="To currency"
-              id="to-currency"
               :error="errors.toCurrency ? 'Select currency' : ''"
               :select-class="errors.toCurrency ? 'border-red-500' : 'border-gray-300'"
             />
@@ -102,7 +117,12 @@
           </div>
         </div>
 
-        <p v-if="formError" class="mt-3 text-center text-sm text-red-500" role="status" aria-live="polite">
+        <p
+          v-if="formError"
+          class="mt-3 text-center text-sm text-red-500"
+          role="status"
+          aria-live="polite"
+        >
           {{ formError }}
         </p>
       </form>
@@ -145,7 +165,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   defaultFrom: 'US',
   defaultTo: 'IN',
-  defaultAmount: 1000
+  defaultAmount: 1000,
 })
 
 interface FormErrors {
@@ -171,7 +191,7 @@ const defaultCurrencyByCountry: Record<string, string> = {
   CN: 'CNY',
   PK: 'PKR',
   JP: 'JPY',
-  EU: 'EUR'
+  EU: 'EUR',
 }
 
 const resolveCurrency = (country?: string) => defaultCurrencyByCountry[country || ''] || currencyFallback
@@ -189,7 +209,7 @@ const errors = ref<FormErrors>({
   to: false,
   amount: false,
   fromCurrency: false,
-  toCurrency: false
+  toCurrency: false,
 })
 
 const updateFormError = () => {
@@ -205,29 +225,29 @@ const setError = (key: keyof FormErrors, value: boolean) => {
 
 watch(
   () => props.defaultFrom,
-  value => {
+  (value) => {
     if (value) {
       from.value = value
     }
-  }
+  },
 )
 
 watch(
   () => props.defaultTo,
-  value => {
+  (value) => {
     if (value) {
       to.value = value
     }
-  }
+  },
 )
 
 watch(
   () => props.defaultAmount,
-  value => {
+  (value) => {
     if (typeof value === 'number' && !Number.isNaN(value)) {
       amount.value = value
     }
-  }
+  },
 )
 
 watch(
@@ -245,7 +265,7 @@ watch(
     if (!fromCurrency.value || fromCurrency.value === previousDefaultCurrency) {
       fromCurrency.value = nextDefaultCurrency
     }
-  }
+  },
 )
 
 watch(
@@ -263,18 +283,18 @@ watch(
     if (!toCurrency.value || toCurrency.value === previousDefaultCurrency) {
       toCurrency.value = nextDefaultCurrency
     }
-  }
+  },
 )
 
-watch(amount, value => {
+watch(amount, (value) => {
   setError('amount', !value || value <= 0)
 })
 
-watch(fromCurrency, value => {
+watch(fromCurrency, (value) => {
   setError('fromCurrency', !value)
 })
 
-watch(toCurrency, value => {
+watch(toCurrency, (value) => {
   setError('toCurrency', !value)
 })
 
@@ -295,11 +315,13 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     await navigateTo(
-      `/send-money/${from.value.toLowerCase()}-to-${to.value.toLowerCase()}?amount=${amount.value}&fromCurrency=${fromCurrency.value}&toCurrency=${toCurrency.value}`
+      `/send-money/${from.value.toLowerCase()}-to-${to.value.toLowerCase()}?amount=${amount.value}&fromCurrency=${fromCurrency.value}&toCurrency=${toCurrency.value}`,
     )
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Navigation error:', error)
-  } finally {
+  }
+  finally {
     isSubmitting.value = false
   }
 }

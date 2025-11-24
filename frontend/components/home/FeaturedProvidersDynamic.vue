@@ -1,5 +1,9 @@
 <template>
-  <section id="providers" class="py-16 sm:py-20 bg-white" aria-live="polite">
+  <section
+    id="providers"
+    class="py-16 sm:py-20 bg-white"
+    aria-live="polite"
+  >
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Heading -->
       <div class="mb-12">
@@ -17,20 +21,30 @@
       </div>
 
       <!-- Loading state -->
-      <div v-if="pending" class="relative">
+      <div
+        v-if="pending"
+        class="relative"
+      >
         <div class="overflow-x-auto scrollbar-hide -mx-4 px-4">
           <div class="flex gap-6 pb-4">
-            <div v-for="i in 4" :key="i" class="flex-shrink-0 w-[280px] sm:w-[320px] animate-pulse">
-              <div class="h-[500px] bg-neutral-200 rounded-2xl"></div>
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="flex-shrink-0 w-[280px] sm:w-[320px] animate-pulse"
+            >
+              <div class="h-[500px] bg-neutral-200 rounded-2xl" />
             </div>
           </div>
         </div>
       </div>
 
       <!-- Provider cards horizontal scroll -->
-      <div v-else class="relative group/section">
+      <div
+        v-else
+        class="relative group/section"
+      >
         <!-- Scroll container -->
-        <div 
+        <div
           ref="scrollContainer"
           class="overflow-x-auto scrollbar-hide -mx-4 px-4 scroll-smooth snap-x snap-mandatory"
           @scroll="handleScroll"
@@ -66,7 +80,10 @@
                     />
                   </svg>
                   <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-xl font-bold" :class="getScoreTextClass(provider.score)">
+                    <span
+                      class="text-xl font-bold"
+                      :class="getScoreTextClass(provider.score)"
+                    >
                       {{ provider.score.toFixed(1) }}
                     </span>
                   </div>
@@ -75,13 +92,18 @@
 
               <!-- Provider Logo -->
               <div class="px-6 pb-6 text-center">
-                <img 
-                  v-if="provider.logoUrl" 
-                  :src="provider.logoUrl" 
+                <img
+                  v-if="provider.logoUrl"
+                  :src="provider.logoUrl"
                   :alt="provider.name"
                   class="h-10 mx-auto object-contain"
-                />
-                <h3 v-else class="text-lg font-bold text-neutral-900">{{ provider.name }}</h3>
+                >
+                <h3
+                  v-else
+                  class="text-lg font-bold text-neutral-900"
+                >
+                  {{ provider.name }}
+                </h3>
               </div>
 
               <!-- Find Out More Link -->
@@ -91,8 +113,18 @@
                   class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-md px-2 py-1"
                 >
                   <span>Find out more</span>
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
@@ -105,10 +137,10 @@
                     <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.trust || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
                       :style="{ width: `${(provider.scoreBreakdown?.trust || provider.reliability || 0.9) * 100}%` }"
-                    ></div>
+                    />
                   </div>
                 </div>
 
@@ -118,10 +150,10 @@
                     <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.service || 0.85) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
                       :style="{ width: `${(provider.scoreBreakdown?.service || 0.85) * 100}%` }"
-                    ></div>
+                    />
                   </div>
                 </div>
 
@@ -131,10 +163,10 @@
                     <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.fees || (1 - provider.marginPct / 10)) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
                       :style="{ width: `${(provider.scoreBreakdown?.fees || (1 - provider.marginPct / 10)) * 100}%` }"
-                    ></div>
+                    />
                   </div>
                 </div>
 
@@ -144,10 +176,10 @@
                     <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.satisfaction || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
                       :style="{ width: `${(provider.scoreBreakdown?.satisfaction || provider.reliability || 0.9) * 100}%` }"
-                    ></div>
+                    />
                   </div>
                 </div>
               </div>
@@ -179,29 +211,53 @@
         <!-- Navigation arrows (visible on hover on desktop) -->
         <button
           v-if="canScrollLeft"
-          @click="scrollLeft"
           class="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
           aria-label="Previous providers"
+          @click="scrollLeft"
         >
-          <svg class="h-5 w-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          <svg
+            class="h-5 w-5 text-neutral-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
-        
+
         <button
           v-if="canScrollRight"
-          @click="scrollRight"
           class="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
           aria-label="Next providers"
+          @click="scrollRight"
         >
-          <svg class="h-5 w-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          <svg
+            class="h-5 w-5 text-neutral-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
 
       <!-- Pagination Indicators (Mobile) -->
-      <div class="flex lg:hidden items-center justify-center gap-2 mt-6" role="navigation" aria-label="Provider carousel pagination">
+      <div
+        class="flex lg:hidden items-center justify-center gap-2 mt-6"
+        role="navigation"
+        aria-label="Provider carousel pagination"
+      >
         <span class="text-xs text-neutral-600 font-medium">
           {{ currentPage }}/{{ totalPages }}
         </span>
@@ -209,15 +265,15 @@
           <button
             v-for="(dot, index) in totalPages"
             :key="index"
-            @click="scrollToPage(index)"
             :aria-label="`Go to page ${index + 1}`"
             :aria-current="currentPage === index + 1 ? 'true' : 'false'"
             :class="[
               'w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
-              currentPage === index + 1 
-                ? 'bg-brand-600 w-6' 
-                : 'bg-neutral-300 hover:bg-neutral-400'
+              currentPage === index + 1
+                ? 'bg-brand-600 w-6'
+                : 'bg-neutral-300 hover:bg-neutral-400',
             ]"
+            @click="scrollToPage(index)"
           />
         </div>
       </div>
@@ -263,7 +319,7 @@ const ratedProviders = computed(() => {
 
 const sortedProviders = computed(() => {
   const providers = [...ratedProviders.value]
-  
+
   switch (sortBy.value) {
     case 'fee':
       return providers.sort((a, b) => a.fee - b.fee)
@@ -286,23 +342,23 @@ const sortedProviders = computed(() => {
 
 const handleScroll = () => {
   if (!scrollContainer.value) return
-  
+
   const container = scrollContainer.value
   canScrollLeft.value = container.scrollLeft > 0
   canScrollRight.value = container.scrollLeft < container.scrollWidth - container.clientWidth - 10
-  
+
   // Calculate current page for pagination
   const scrollPosition = container.scrollLeft
   const visibleWidth = container.clientWidth
   const totalScrollWidth = container.scrollWidth
-  
+
   // Calculate total pages based on visible width
   totalPages.value = Math.ceil(totalScrollWidth / visibleWidth)
-  
+
   // Calculate current page (add small buffer to handle snap scrolling)
   currentPage.value = Math.min(
     Math.round(scrollPosition / visibleWidth) + 1,
-    totalPages.value
+    totalPages.value,
   )
 }
 
@@ -323,10 +379,10 @@ const scrollToPage = (pageIndex: number) => {
   const container = scrollContainer.value
   const visibleWidth = container.clientWidth
   const maxScroll = container.scrollWidth - container.clientWidth
-  
+
   // Calculate target scroll position, clamped to max scroll
   const targetScroll = Math.min(pageIndex * visibleWidth, maxScroll)
-  
+
   container.scrollTo({ left: targetScroll, behavior: 'smooth' })
 }
 
@@ -352,7 +408,7 @@ const lastUpdated = computed(() => {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   })
 })
 
@@ -376,6 +432,3 @@ onUnmounted(() => {
   display: none;
 }
 </style>
-
-
-

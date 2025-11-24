@@ -13,8 +13,15 @@
           {{ $route.params.from?.toUpperCase() }} to {{ $route.params.to?.toUpperCase() }}.
         </p>
 
-        <CountrySelect v-model:from="fromCountry" v-model:to="toCountry" />
-        <AmountInput v-model="amount" :from="fromCountry" :to="toCountry" />
+        <CountrySelect
+          v-model:from="fromCountry"
+          v-model:to="toCountry"
+        />
+        <AmountInput
+          v-model="amount"
+          :from="fromCountry"
+          :to="toCountry"
+        />
       </div>
 
       <ComparisonTable :offers="offers" />
@@ -33,13 +40,13 @@ useHead({
       content: `Compare money transfer providers for sending money from ${useRoute().params.from?.toUpperCase()} to ${useRoute().params.to?.toUpperCase()}. Get the best rates and lowest fees.`,
     },
   ],
-});
+})
 
 // Data
-const route = useRoute();
-const fromCountry = ref(route.params.from || '');
-const toCountry = ref(route.params.to || '');
-const amount = ref(1000);
+const route = useRoute()
+const fromCountry = ref(route.params.from || '')
+const toCountry = ref(route.params.to || '')
+const amount = ref(1000)
 
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
@@ -49,7 +56,7 @@ const breadcrumbItems = computed(() => [
     name: `${fromCountry.value.toUpperCase()} to ${toCountry.value.toUpperCase()}`,
     path: route.path,
   },
-]);
+])
 
 // Offers
 const { data: offers } = await $fetch('/api/offers', {
@@ -58,5 +65,5 @@ const { data: offers } = await $fetch('/api/offers', {
     to: toCountry.value,
     amount: amount.value,
   },
-});
+})
 </script>
