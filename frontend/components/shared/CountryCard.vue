@@ -1,7 +1,7 @@
 <template>
   <div class="group rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md hover:border-slate-300 motion-safe:transition focus-within:ring-2 focus-within:ring-blue-500">
     <NuxtLink
-      :to="`/country/${country.code.toLowerCase()}`"
+      :to="countryPageUrl"
       class="flex items-center gap-3"
     >
       <span class="text-3xl" aria-hidden="true">{{ country.flag }}</span>
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Country } from '~/utils/countries-currencies'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 type RouteLink = {
   label: string
@@ -69,10 +70,17 @@ type CountryRoutes = {
 const props = defineProps<{
   country: Country
   routes?: CountryRoutes
+  userCountry?: string // User's default country code (from geolocation or settings)
 }>()
 
 const sourceLinks = computed(() => {
-  // Use inbound routes (routes TO this country) for "Send money to X from..."
   return props.routes?.inbound ?? props.routes?.sources ?? []
+})
+
+// Use user's country if provided, otherwise default to US
+const defaultFromCountry = computed(() => props.userCountry || 'US')
+
+const countryPageUrl = computed(() => {
+  return getCorridorUrl(defaultFromCountry.value, props.country.code)
 })
 </script>

@@ -5,7 +5,7 @@ export const NAV = {
       icon: 'arrows-right-left',
       title: 'Money transfers',
       subtitle: 'Send money between countries.',
-      href: '/compare/transfers',
+      href: '/send-money',
     },
     {
       id: 'banking',
@@ -78,7 +78,7 @@ export const NAV = {
       icon: 'map',
       title: 'Country playbooks',
       subtitle: 'Guides for 150+ destinations.',
-      href: '/expats/countries',
+      href: '/send-money',
     },
   ],
 }

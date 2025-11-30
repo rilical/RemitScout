@@ -1,4 +1,5 @@
 import { defineEventHandler, setHeader } from 'h3'
+import { getAllCorridorUrls } from '~/utils/country-slugs'
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -66,18 +67,8 @@ export default defineEventHandler((event) => {
     'remitly-vs-western-union',
   ].map(slug => `/compare/${slug}`)
 
-  const corridorPages = [
-    'us-to-in',
-    'us-to-ph',
-    'us-to-mx',
-    'us-to-ng',
-    'gb-to-ng',
-    'gb-to-pk',
-    'ca-to-in',
-    'ca-to-ph',
-    'ca-to-ng',
-    'ae-to-in',
-  ].map(slug => `/send-money/${slug}`)
+  // Use full-name corridor slugs for SEO
+  const corridorPages = getAllCorridorUrls()
 
   const countryPages = ['ph', 'in', 'mx', 'ng', 'pk'].map(slug => `/country/${slug}`)
 

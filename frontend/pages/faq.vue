@@ -641,7 +641,7 @@ const transferBasicsFaqs = [
 const bankingFaqs = [
   {
     question: 'Can I open a bank account abroad as a non-resident?',
-    answer: '<p>It depends on the country and bank. Traditional banks often require proof of local address, employment, or residency visa. However, <strong>digital banks (neobanks)</strong> like Wise, Revolut, and Monzo make it much easier:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Open accounts remotely</li><li>Multi-currency support</li><li>No minimum balance</li><li>Lower fees than traditional banks</li></ul>',
+    answer: '<p>It depends on the country and bank. Traditional banks often require proof of local address, employment, or residency visa. However, <strong>digital banks (neobanks)</strong> typically make it much easier:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Open accounts remotely</li><li>Multi-currency support</li><li>No minimum balance</li><li>Lower fees than traditional banks</li></ul>',
   },
   {
     question: 'What is a multi-currency account?',
@@ -652,12 +652,12 @@ const bankingFaqs = [
     answer: '<p><strong>No, and you shouldn\'t!</strong> Keep your home account for:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Receiving income (salary, investments)</li><li>Maintaining credit history</li><li>Paying bills back home</li><li>Emergency access to funds</li></ul><p class="mt-2">Use a neobank or local account for day-to-day expenses abroad.</p>',
   },
   {
-    question: 'What are the best banks for expats?',
-    answer: '<p>Best depends on your needs:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li><strong>Wise:</strong> Best rates, multi-currency, debit card</li><li><strong>Revolut:</strong> Crypto, stocks, travel insurance</li><li><strong>N26:</strong> Best for Europe</li><li><strong>Charles Schwab:</strong> US-based, no ATM fees worldwide</li></ul>',
+    question: 'What should I look for when choosing a bank as an expat?',
+    answer: '<p>Consider these factors when choosing a bank abroad:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li><strong>Multi-currency support:</strong> Hold and exchange multiple currencies without high fees</li><li><strong>Low fees:</strong> Minimal transaction fees and favorable exchange rates</li><li><strong>Global access:</strong> ATM access worldwide with low or no withdrawal fees</li><li><strong>Remote account opening:</strong> Ability to open accounts without local residency</li><li><strong>Digital features:</strong> Mobile banking, instant notifications, and online account management</li></ul>',
   },
   {
     question: 'How do I avoid foreign transaction fees?',
-    answer: '<p>Foreign transaction fees (1-3%) add up fast. Avoid them by:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Using a neobank debit card (Wise, Revolut)</li><li>Credit cards with no foreign fees (Chase Sapphire, Capital One)</li><li>Withdraw large amounts less frequently</li><li>Pay in local currency (not USD)</li></ul>',
+    answer: '<p>Foreign transaction fees (1-3%) add up fast. Avoid them by:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Using a neobank debit card with no foreign transaction fees</li><li>Credit cards with no foreign fees</li><li>Withdraw large amounts less frequently</li><li>Pay in local currency instead of your home currency</li></ul>',
   },
   {
     question: 'Can I get a mortgage or loan abroad?',

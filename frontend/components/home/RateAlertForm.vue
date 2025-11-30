@@ -459,7 +459,8 @@ const validateEmail = () => {
     errors.value.email = 'Email is required'
     return false
   }
-  const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
+  // Allow dots in domain part (e.g., user@mail.example.com, user@example.co.uk)
+  const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/
   if (!emailRegex.test(email.value)) {
     errors.value.email = 'Please enter a valid email'
     return false

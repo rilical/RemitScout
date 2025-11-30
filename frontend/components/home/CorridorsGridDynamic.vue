@@ -148,6 +148,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const router = useRouter()
 const sliderRef = ref<HTMLElement | null>(null)
@@ -219,8 +220,10 @@ const getCountryFlag = (code: string): string => {
 const handleCorridorClick = (corridor: { from: string, to: string }) => {
   emit('corridor-selected', { from: corridor.from, to: corridor.to })
 
-  // Navigate to comparison page
-  router.push(`/send-money/${corridor.from.toLowerCase()}-to-${corridor.to.toLowerCase()}`)
+  // Navigate to comparison page with full-name slugs
+  const fromCode = corridor.from.toUpperCase()
+  const toCode = corridor.to.toUpperCase()
+  router.push(getCorridorUrl(fromCode, toCode))
 }
 
 const scrollLeft = () => {

@@ -155,6 +155,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import AmountInput from '~/components/shared/AmountInput.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 interface Props {
   defaultFrom?: string
@@ -314,8 +315,9 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
+    const corridorUrl = getCorridorUrl(from.value, to.value)
     await navigateTo(
-      `/send-money/${from.value.toLowerCase()}-to-${to.value.toLowerCase()}?amount=${amount.value}&fromCurrency=${fromCurrency.value}&toCurrency=${toCurrency.value}`,
+      `${corridorUrl}?amount=${amount.value}&fromCurrency=${fromCurrency.value}&toCurrency=${toCurrency.value}`,
     )
   }
   catch (error) {

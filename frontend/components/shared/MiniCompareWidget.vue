@@ -83,6 +83,8 @@
 </template>
 
 <script setup lang="ts">
+import { getCorridorUrl } from '~/utils/country-slugs'
+
 const from = ref('US')
 const to = ref('IN')
 const amount = ref(500)
@@ -93,9 +95,8 @@ const router = useRouter()
 
 const handleCompare = () => {
   if (!from.value || !to.value) return
-  const slug = `${from.value.toLowerCase()}-to-${to.value.toLowerCase()}`
   router.push({
-    path: `/send-money/${slug}`,
+    path: getCorridorUrl(from.value, to.value),
     query: { amount: amount.value, fromCurrency: fromCurrency.value, toCurrency: toCurrency.value },
   })
 }

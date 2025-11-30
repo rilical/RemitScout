@@ -109,32 +109,39 @@
         </svg>
       </div>
 
-      <div class="container relative mx-auto max-w-7xl px-4">
+      <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
-        <div class="mt-10 space-y-8">
+        <div class="mt-10 grid gap-12 lg:grid-cols-2 lg:items-center">
+          <!-- Left Column: Content -->
+          <div class="space-y-8">
           <!-- Trust badges -->
           <div class="flex flex-wrap gap-3">
             <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
+                <span>🎯</span>
               100% Independent
             </div>
             <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-emerald-200/50">
+                <span>✅</span>
               Real Transfer Testing
             </div>
             <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
+                <span>🎓</span>
               CMU-Backed
             </div>
           </div>
 
-          <h1 class="text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl lg:text-6xl">
+            <div>
+              <h1 class="text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl">
             How We Compare Money Transfer Providers
           </h1>
 
-          <p class="max-w-3xl text-xl leading-relaxed text-neutral-600">
+              <p class="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-600">
             Transparent, data-driven methodology built by expats who got tired of losing money to hidden fees
           </p>
+            </div>
 
-          <!-- Stats without grid layout -->
+            <!-- Stats -->
           <div class="flex flex-wrap gap-4 pt-4">
             <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
               <div class="text-2xl font-bold text-blue-600">
@@ -160,14 +167,15 @@
               </div>
               <div class="text-sm text-neutral-600">
                 Saved by Users
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Compare form -->
-          <div class="max-w-2xl">
+          <!-- Right Column: Compare Form -->
+          <div>
             <div class="relative overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-2xl">
-              <div class="border-b border-blue-100 bg-gradient-to-r from-blue-600 to-emerald-600 px-6 py-4">
+              <div class="border-b border-blue-100 bg-brand-600 px-6 py-4 text-center">
                 <h3 class="text-lg font-bold text-white">
                   Find Your Best Rate Now
                 </h3>
@@ -1438,3 +1446,11 @@ const breadcrumbItems = [
   { name: 'Methodology', path: '/methodology' },
 ]
 </script>
+
+<style scoped>
+@keyframes drawPath {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+</style>

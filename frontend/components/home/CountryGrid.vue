@@ -48,7 +48,7 @@
 
       <div class="text-center">
         <NuxtLink
-          to="/countries"
+          to="/send-money"
           class="inline-flex items-center gap-2 text-neutral-900 font-semibold hover:text-brand-600 transition-colors"
         >
           <span>See all countries</span>

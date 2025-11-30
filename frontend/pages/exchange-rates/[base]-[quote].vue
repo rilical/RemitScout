@@ -130,6 +130,7 @@
 
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
+import { getCorridorUrl, getCanonicalSlug, SLUG_TO_CODE } from '~/utils/country-slugs'
 
 const route = useRoute()
 const { public: { siteUrl } } = useRuntimeConfig()
@@ -139,6 +140,10 @@ const quote = computed(() => (route.params.quote as string || '').toUpperCase())
 const pairLabel = computed(() => `${base.value} → ${quote.value}`)
 const exampleAmount = computed(() => `${base.value} 1,000`)
 const midMarketRate = computed(() => `${base.value} 1 = ${quote.value} ${mockMidMarket(quote.value)}`)
+
+// Get country codes from currency codes for corridor URL
+const baseCountryCode = computed(() => SLUG_TO_CODE[getCanonicalSlug(base.value)] || base.value)
+const quoteCountryCode = computed(() => SLUG_TO_CODE[getCanonicalSlug(quote.value)] || quote.value)
 
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
@@ -154,7 +159,7 @@ const providerPricing = computed(() => [
 ])
 
 const corridorLinks = computed(() => [
-  { label: `${pairLabel.value} money transfers`, href: `/send-money/${base.value.toLowerCase()}-to-${quote.value.toLowerCase()}` },
+  { label: `${pairLabel.value} money transfers`, href: getCorridorUrl(baseCountryCode.value, quoteCountryCode.value) },
   { label: 'Provider reviews', href: '/reviews' },
   { label: 'Hidden fees guide', href: '/learn/hidden-fees-money-transfers' },
   { label: 'FAQ', href: '/faq' },

@@ -133,9 +133,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const router = useRouter()
 
@@ -144,9 +145,9 @@ const toPlaceholder = '📍 Select Destination'
 const form = ref({
   from: 'US', // Default to US, can be replaced with geolocation
   to: '',
-  amount: 500, // Default amount
+  amount: 200, // Default $200 equivalent
   fromCurrency: 'USD',
-  toCurrency: 'USD', // Will be updated based on destination
+  toCurrency: '', // Will be updated based on destination
 })
 
 // Currency mapping for auto-detection
@@ -157,7 +158,19 @@ const defaultCurrencyByCountry: Record<string, string> = {
   ES: 'EUR', PT: 'EUR', BR: 'BRL', CN: 'CNY', JP: 'JPY',
   PK: 'PKR', BD: 'BDT', VN: 'VND', TH: 'THB', MY: 'MYR',
   ID: 'IDR', ZA: 'ZAR', EG: 'EGP', JO: 'JOD', AE: 'AED',
+  KW: 'KWD', SA: 'SAR', QA: 'QAR', BH: 'BHD', OM: 'OMR',
 }
+
+// Auto-set currencies when countries change
+watch(() => form.value.from, (newFrom) => {
+  form.value.fromCurrency = defaultCurrencyByCountry[newFrom] || 'USD'
+})
+
+watch(() => form.value.to, (newTo) => {
+  if (newTo) {
+    form.value.toCurrency = defaultCurrencyByCountry[newTo] || 'USD'
+  }
+})
 
 // Form validation
 const isValid = computed(() => {
@@ -170,19 +183,11 @@ const isValid = computed(() => {
 
 const handleCompare = () => {
   if (isValid.value) {
-    // Auto-detect destination currency
-    const toCurrency = defaultCurrencyByCountry[form.value.to] || 'USD'
-
-    // Redirect to send-money page with defaults
-    // They can adjust currency and amount on that page
-    router.push(`/send-money/${form.value.from.toLowerCase()}-to-${form.value.to.toLowerCase()}`)
+    // Redirect to send-money page with full-name slugs and default amount
+    const corridorUrl = getCorridorUrl(form.value.from, form.value.to)
+    router.push(`${corridorUrl}?amount=${form.value.amount}`)
   }
 }
-
-// TODO: Add geolocation detection for default 'from' country
-// onMounted(() => {
-//   // Detect user location and set form.from
-// })
 </script>
 
 <style scoped>

@@ -1,7 +1,41 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+    <div class="border-b border-neutral-200 bg-white">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+        <Breadcrumbs :items="breadcrumbItems" />
+        <form
+          class="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-2 shadow-sm"
+          role="search"
+          @submit.prevent="onSearch"
+        >
+          <svg class="h-4 w-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+          </svg>
+          <input
+            v-model="searchTerm"
+            type="search"
+            placeholder="Search guides"
+            class="w-40 bg-transparent text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none"
+          >
+          <button
+            type="submit"
+            class="rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-700"
+          >
+            Go
+          </button>
+        </form>
+      </div>
+    </div>
+
     <div class="container mx-auto px-4 py-8">
-      <Breadcrumbs :items="breadcrumbItems" />
+      <div v-if="article" class="mb-4">
+        <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-600">
+          Money Transfer Basics
+        </div>
+        <div class="text-neutral-600 text-sm">
+          Last updated {{ article.lastUpdated || '—' }} • {{ article.readTime || '5 min read' }}
+        </div>
+      </div>
 
       <article class="rounded-lg bg-white p-8 shadow-md">
         <header class="mb-8 border-b pb-8">
@@ -56,6 +90,16 @@
           </div>
         </header>
 
+        <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="font-semibold">Sponsored placement</p>
+              <p>Reserve a 300x250/336x280 display spot here. Keep links rel="sponsored"/nofollow and label as an ad.</p>
+            </div>
+            <span class="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-amber-700">Ad</span>
+          </div>
+        </div>
+
         <div class="prose prose-lg max-w-none">
           <div v-html="article?.content" />
         </div>
@@ -105,33 +149,50 @@
         </footer>
       </article>
 
-      <LastUpdated :date="article?.lastUpdated" />
+      <LastUpdated v-if="article" :date="article?.lastUpdated" />
+      <div v-else class="rounded-lg bg-white p-6 shadow">
+        <p class="text-neutral-700">Article not found.</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// Meta
+import { computed, ref, watchEffect } from 'vue'
+
 const route = useRoute()
-useHead({
-  title: `${useArticle(route.params.slug as string)?.title || 'Article'} | Remit-Scout`,
-  meta: [
-    {
-      name: 'description',
-      content:
-        useArticle(route.params.slug as string)?.excerpt
-        || 'Learn about international money transfers and best practices.',
-    },
-  ],
+const router = useRouter()
+
+const slugParam = computed(() => {
+  const raw = route.params.slug
+  return Array.isArray(raw) ? raw.join('/') : String(raw || '')
+})
+
+const { data: article } = await useArticle(slugParam.value)
+
+watchEffect(() => {
+  if (!article.value) return
+  useHead({
+    title: `${article.value.title} | Remit-Scout`,
+    meta: [
+      {
+        name: 'description',
+        content: article.value.excerpt || 'Learn about international money transfers and best practices.',
+      },
+    ],
+  })
 })
 
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
-  { name: useArticle(route.params.slug as string)?.title || 'Article', path: route.path },
+  { name: article.value?.title || 'Article', path: route.path },
 ])
 
-// Article data
-const { data: article } = await useArticle(route.params.slug as string)
+const searchTerm = ref('')
+const onSearch = () => {
+  if (!searchTerm.value) return
+  router.push(`/search?q=${encodeURIComponent(searchTerm.value)}`)
+}
 </script>

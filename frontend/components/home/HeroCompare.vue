@@ -173,6 +173,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { DELIVERY_METHODS } from '~/composables/useCompareForm'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const { STR } = useStrings()
 
@@ -257,8 +258,9 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
+    const corridorUrl = getCorridorUrl(from.value, to.value)
     await navigateTo(
-      `/send-money/${from.value.toLowerCase()}-to-${to.value.toLowerCase()}?amount=${amount.value}&method=${selectedMethod.value}`,
+      `${corridorUrl}?amount=${amount.value}&method=${selectedMethod.value}`,
     )
   }
   catch (error) {

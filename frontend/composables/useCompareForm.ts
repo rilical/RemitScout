@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 export interface CompareFormState {
   from: string
@@ -69,7 +70,7 @@ export function useCompareForm() {
       method,
     })
 
-    return `/send-money/${from}-to-${to}?${params.toString()}`
+    return `${getCorridorUrl(from, to)}?${params.toString()}`
   })
 
   function validate(): boolean {

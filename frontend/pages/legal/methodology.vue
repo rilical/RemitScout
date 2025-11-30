@@ -734,6 +734,7 @@ import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { SITE_STATS } from '~/config/stats'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const router = useRouter()
 
@@ -753,7 +754,7 @@ const isCompareValid = computed(() => {
 
 const handleCompare = () => {
   if (isCompareValid.value) {
-    router.push(`/send-money/${compareForm.value.from.toLowerCase()}-to-${compareForm.value.to.toLowerCase()}`)
+    router.push(getCorridorUrl(compareForm.value.from, compareForm.value.to))
   }
 }
 
