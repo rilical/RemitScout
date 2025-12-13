@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import MenuPanel from './MenuPanel.vue'
-import ComparePanel from './panels/ComparePanel.vue'
 import GuidesPanel from './panels/GuidesPanel.vue'
-import ExpatsPanel from './panels/ExpatsPanel.vue'
 import NavIcon from './NavIcon.vue'
 import { NAV } from '~/config/nav'
 import { useCompareForm } from '~/composables/useCompareForm'
@@ -119,24 +117,12 @@ watch(() => route.path, () => {
           aria-label="Primary navigation"
         >
           <!-- Compare -->
-          <div class="relative">
-            <button
-              data-menu-trigger
+          <NuxtLink
+            to="/send-money"
               class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              aria-haspopup="true"
-              :aria-expanded="openMenu==='compare'"
-              @click="toggle('compare')"
-            >
-              Compare
-            </button>
-            <MenuPanel
-              :open="openMenu==='compare'"
-              width-class="w-[min(92vw,900px)]"
-              @close="close"
-            >
-              <ComparePanel />
-            </MenuPanel>
-          </div>
+          >
+            Compare
+          </NuxtLink>
 
           <!-- Guides -->
           <div class="relative">
@@ -158,25 +144,13 @@ watch(() => route.path, () => {
             </MenuPanel>
           </div>
 
-          <!-- For Expats -->
-          <div class="relative">
-            <button
-              data-menu-trigger
+          <!-- Pulse -->
+          <NuxtLink
+            to="/pulse"
               class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              aria-haspopup="true"
-              :aria-expanded="openMenu==='expats'"
-              @click="toggle('expats')"
-            >
-              For Expats
-            </button>
-            <MenuPanel
-              :open="openMenu==='expats'"
-              width-class="w-[min(92vw,900px)]"
-              @close="close"
-            >
-              <ExpatsPanel />
-            </MenuPanel>
-          </div>
+          >
+            Pulse
+          </NuxtLink>
 
           <!-- Methodology -->
           <NuxtLink
@@ -256,10 +230,17 @@ watch(() => route.path, () => {
 
         <!-- Compare CTA -->
         <NuxtLink
+          to="/pro"
+          class="hidden sm:inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <span aria-hidden="true">⭐</span>
+          Get Alerts
+        </NuxtLink>
+        <NuxtLink
           :to="compareUrl"
           class="inline-flex items-center rounded-md bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
-          Compare providers
+          Providers
         </NuxtLink>
 
         <!-- Mobile menu button -->
@@ -362,30 +343,28 @@ watch(() => route.path, () => {
           </div>
 
           <div class="px-4 py-6 space-y-6">
-            <!-- Compare Section -->
-            <div>
-              <div class="text-xs uppercase tracking-wide text-slate-500 mb-3 font-semibold px-3">
-                Compare
-              </div>
               <div class="space-y-2">
                 <NuxtLink
-                  v-for="c in NAV.compareCards"
-                  :key="c.id"
-                  :to="c.href"
-                  class="flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-slate-50 motion-safe:transition"
+                to="/send-money"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
                 >
-                  <div class="text-xl flex-shrink-0">
-                    <NavIcon
-                      :name="c.icon"
-                      class="text-blue-600"
-                    />
-                  </div>
-                  <div>
-                    <div class="text-sm font-semibold">{{ c.title }}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">{{ c.subtitle }}</div>
-                  </div>
+                <span>Compare</span>
+                <span aria-hidden="true">→</span>
+              </NuxtLink>
+              <NuxtLink
+                to="/pulse"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              >
+                <span>Pulse</span>
+                <span aria-hidden="true">→</span>
+              </NuxtLink>
+              <NuxtLink
+                to="/methodology"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              >
+                <span>Methodology</span>
+                <span aria-hidden="true">→</span>
                 </NuxtLink>
-              </div>
             </div>
 
             <!-- Guides Section -->
@@ -413,7 +392,7 @@ watch(() => route.path, () => {
                 </NuxtLink>
                 <div class="my-2 h-px bg-slate-200 mx-3" />
                 <NuxtLink
-                  to="/guides"
+                  to="/learn"
                   class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 motion-safe:transition"
                 >
                   View all guides →
@@ -421,41 +400,13 @@ watch(() => route.path, () => {
               </div>
             </div>
 
-            <!-- For Expats Section -->
-            <div>
-              <div class="text-xs uppercase tracking-wide text-slate-500 mb-3 font-semibold px-3">
-                For Expats
-              </div>
-              <div class="space-y-2">
                 <NuxtLink
-                  v-for="p in NAV.expatPlaybooks"
-                  :key="p.href"
-                  :to="p.href"
-                  class="flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-slate-50 motion-safe:transition"
-                >
-                  <div class="text-xl flex-shrink-0">
-                    <NavIcon
-                      :name="p.icon"
-                      class="text-blue-600"
-                    />
-                  </div>
-                  <div>
-                    <div class="text-sm font-semibold">{{ p.title }}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">{{ p.subtitle }}</div>
-                  </div>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <!-- Methodology -->
-            <div>
-              <NuxtLink
-                to="/methodology"
-                class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 motion-safe:transition"
+              to="/pro"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
               >
-                Methodology
+              <span>Get Alerts</span>
+              <span aria-hidden="true">⭐</span>
               </NuxtLink>
-            </div>
           </div>
 
           <!-- Mobile Footer CTA -->

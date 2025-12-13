@@ -3,176 +3,126 @@
     id="hero-dual-tab"
     class="relative bg-white py-16 sm:py-20 lg:py-24 min-h-[700px]"
   >
-    <!-- World Map Background with Animated Transfer Arrows -->
     <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <!-- World Map - More Visible -->
-      <img
-        src="/world.svg"
-        alt="World map"
-        class="absolute inset-0 w-full h-full object-cover opacity-50"
-        style="filter: brightness(0.95) contrast(1.1);"
-      />
-    </div>
-    
-    <!-- Animated Transfer Lines - Curved arrows flying around like country-to-country transfers -->
-    <div class="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-transparent">
       <svg
-        class="absolute inset-0 w-full h-full"
+        class="absolute inset-0 h-full w-full hero-map"
         viewBox="0 0 2000 857"
-        preserveAspectRatio="xMidYMid slice"
+        :preserveAspectRatio="mapPreserveAspectRatio"
         xmlns="http://www.w3.org/2000/svg"
-        style="background: transparent;"
       >
-        <!-- 7 Curved Arrows in Different Sizes - Within content width -->
-        <!-- 1. Left to Right - Top area (Blue, thick) -->
-        <path
-          d="M400,200 Q1000,80 1600,220"
-          stroke="#2563EB"
-          stroke-width="4"
-          fill="none"
-          class="transfer-arrow transfer-arrow-large"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8s ease-in-out infinite;"
+        <defs>
+          <filter
+            id="route-glow"
+            x="-20%"
+            y="-20%"
+            width="140%"
+            height="140%"
+          >
+            <feGaussianBlur
+              stdDeviation="2.2"
+              result="blur"
+            />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.75 0"
+              result="glow"
+            />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <linearGradient
+            id="route-blue"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="0"
+          >
+            <stop
+              offset="0"
+              stop-color="#60a5fa"
+            />
+            <stop
+              offset="1"
+              stop-color="#2563eb"
+            />
+          </linearGradient>
+          <linearGradient
+            id="route-emerald"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="0"
+          >
+            <stop
+              offset="0"
+              stop-color="#34d399"
+            />
+            <stop
+              offset="1"
+              stop-color="#059669"
+            />
+          </linearGradient>
+          <linearGradient
+            id="route-violet"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="0"
+          >
+            <stop
+              offset="0"
+              stop-color="#a78bfa"
+            />
+            <stop
+              offset="1"
+              stop-color="#7c3aed"
+            />
+          </linearGradient>
+        </defs>
+
+        <image
+          href="/world.svg"
+          x="0"
+          y="0"
+          width="2000"
+          height="857"
+          class="hero-map__image"
+          preserveAspectRatio="xMidYMid slice"
         />
-        
-        <!-- 2. Right to Left - Middle area (Green, medium) -->
-        <path
-          d="M1520,200 Q1000,150 450,250"
-          stroke="#10b981"
-          stroke-width="2.8"
-          fill="none"
-          class="transfer-arrow transfer-arrow-medium"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7s ease-in-out infinite 4s;"
-        />
-        
-        <!-- 3. Left to Right - Middle (Blue, medium) -->
-        <path
-          d="M500,350 Q1050,280 1550,420"
-          stroke="#2563EB"
-          stroke-width="2.8"
-          fill="none"
-          class="transfer-arrow transfer-arrow-medium"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9s ease-in-out infinite 5s;"
-        />
-        
-        <!-- 4. Right to Left - Extended Downward and More Left (Blue, small) -->
-        <path
-          d="M1300,250 Q1050,340 500,400"
-          stroke="#2563EB"
-          stroke-width="2.4"
-          fill="none"
-          class="transfer-arrow transfer-arrow-small"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 3.5s;"
-        />
-        
-        <!-- 5. Left to Right - Lower area (Green, thick) -->
-        <path
-          d="M420,500 Q1000,420 1600,550"
-          stroke="#10b981"
-          stroke-width="4"
-          fill="none"
-          class="transfer-arrow transfer-arrow-large"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 1.5s;"
-        />
-        
-        <!-- 6. Right to Left - Bottom area (Green, small) -->
-        <path
-          d="M1570,600 Q1150,680 680,650"
-          stroke="#10b981"
-          stroke-width="2"
-          fill="none"
-          class="transfer-arrow transfer-arrow-small"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.5s ease-in-out infinite 2.5s;"
-        />
-        
-        <!-- 7. Left to Right - Mid-lower (Blue, small) -->
-        <path
-          d="M480,450 Q1000,520 1520,480"
-          stroke="#2563EB"
-          stroke-width="2.4"
-          fill="none"
-          class="transfer-arrow transfer-arrow-small"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 3s;"
-        />
-        
-        <!-- 8. Argentina to Australia - Long distance (Green, medium) -->
-        <path
-          d="M450,650 Q1000,200 1650,680"
-          stroke="#10b981"
-          stroke-width="2.8"
-          fill="none"
-          class="transfer-arrow transfer-arrow-medium"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 11s ease-in-out infinite 6s;"
-        />
-        
-        <!-- 9. US to Bangladesh - North America to South Asia (Blue, medium) -->
-        <path
-          d="M440,250 Q1000,180 1500,420"
-          stroke="#2563EB"
-          stroke-width="2.8"
-          fill="none"
-          class="transfer-arrow transfer-arrow-medium"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9.5s ease-in-out infinite 7s;"
-        />
-        
-        <!-- 10. US to Vietnam - North America to Southeast Asia (Green, small) -->
-        <path
-          d="M460,320 Q1080,240 1640,480"
-          stroke="#10b981"
-          stroke-width="2"
-          fill="none"
-          class="transfer-arrow transfer-arrow-small"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8.5s ease-in-out infinite 1.2s;"
-        />
-        
-        <!-- 11. Canada to India - North America to South Asia (Blue, thick) -->
-        <path
-          d="M420,200 Q920,120 1470,380"
-          stroke="#2563EB"
-          stroke-width="4"
-          fill="none"
-          class="transfer-arrow transfer-arrow-large"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10.5s ease-in-out infinite 2.3s;"
-        />
-        
-        <!-- 12. US to China - North America to East Asia (Green, medium) -->
-        <path
-          d="M480,290 Q1120,160 1700,360"
-          stroke="#10b981"
-          stroke-width="2.8"
-          fill="none"
-          class="transfer-arrow transfer-arrow-medium"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9.8s ease-in-out infinite 3.8s;"
-        />
-        
-        <!-- 13. US to Nigeria - North America to West Africa (Blue, small) -->
-        <path
-          d="M450,480 Q920,560 950,600"
-          stroke="#2563EB"
-          stroke-width="2"
-          fill="none"
-          class="transfer-arrow transfer-arrow-small"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.8s ease-in-out infinite 4.5s;"
-        />
-        
-        <!-- 14. US to Brazil - North America to South America (Green, small) -->
-        <path
-          d="M470,550 Q500,680 520,720"
-          stroke="#10b981"
-          stroke-width="2"
-          fill="none"
-          class="transfer-arrow transfer-arrow-small"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.2s ease-in-out infinite 5.2s;"
-        />
-        
-        <!-- 15. US to Pakistan - North America to South Asia (Blue, medium) -->
-        <path
-          d="M440,390 Q1020,280 1420,410"
-          stroke="#2563EB"
-          stroke-width="2.8"
-          fill="none"
-          class="transfer-arrow transfer-arrow-medium"
-          style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9.2s ease-in-out infinite 6.5s;"
-        />
+
+        <g filter="url(#route-glow)">
+          <path
+            v-for="route in displayRoutes"
+            :key="route.key"
+            :d="route.d"
+            pathLength="1"
+            :stroke="route.stroke"
+            :stroke-width="route.strokeWidth"
+            class="route-line"
+            :style="{
+              'opacity': route.opacity,
+              '--route-dur': route.dur,
+              '--route-delay': route.delay,
+            }"
+          />
+          <path
+            v-if="activePath"
+            :d="activePath.d"
+            pathLength="1"
+            stroke="url(#route-blue)"
+            stroke-width="2.4"
+            class="route-line route-line--active"
+            :style="{
+              'opacity': 0.32,
+              '--route-dur': activeRouteDur,
+              '--route-delay': '0s',
+            }"
+          />
+        </g>
       </svg>
     </div>
 
@@ -183,7 +133,7 @@
           <h1
             class="mb-4 text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl lg:text-6xl"
           >
-            Send more home,<br /><span class="text-brand-600">pay less</span> in fees.
+            Send more home,<br><span class="text-brand-600">pay less</span> in fees.
           </h1>
           <p class="mb-8 text-lg leading-relaxed text-neutral-600 sm:text-xl">
             Compare live rates, total fees, and delivery speed from 30+ licensed providers.
@@ -200,33 +150,33 @@
             >
               <!-- Mobile Stepper (visible on mobile only) -->
               <div class="mb-4 flex items-center justify-center gap-2 sm:hidden">
-                <div 
-                  v-for="step in 3" 
+                <div
+                  v-for="step in 3"
                   :key="step"
                   class="flex items-center"
                 >
-                  <div 
+                  <div
                     :class="[
                       'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all',
-                      currentMobileStep >= step 
-                        ? 'bg-brand-600 text-white' 
-                        : 'bg-neutral-200 text-neutral-600'
+                      currentMobileStep >= step
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-neutral-200 text-neutral-600',
                     ]"
                   >
                     {{ step }}
                   </div>
-                  <div 
+                  <div
                     v-if="step < 3"
                     :class="[
                       'mx-1 h-0.5 w-8 transition-all',
-                      currentMobileStep > step ? 'bg-brand-600' : 'bg-neutral-200'
+                      currentMobileStep > step ? 'bg-brand-600' : 'bg-neutral-200',
                     ]"
                   />
                 </div>
               </div>
 
               <!-- Step 1: Countries (always visible on desktop, conditional on mobile) -->
-              <div 
+              <div
                 class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
                 :class="{ 'hidden sm:grid': currentMobileStep !== 1 }"
               >
@@ -274,42 +224,42 @@
               </div>
 
               <!-- Step 2: Currencies (always visible on desktop, conditional on mobile) -->
-              <div 
+              <div
                 class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
                 :class="{ 'hidden sm:grid': currentMobileStep !== 2 }"
               >
-                    <div>
-                      <label
-                        for="from-currency"
-                        class="mb-2 block text-sm font-semibold text-neutral-700"
-                      >
-                        From currency
-                      </label>
-                      <CurrencySelect
-                        id="from-currency"
-                        v-model="moneyForm.fromCurrency"
-                        :country-code="moneyForm.from"
-                        placeholder="Choose currency"
-                      />
-                    </div>
+                <div>
+                  <label
+                    for="from-currency"
+                    class="mb-2 block text-sm font-semibold text-neutral-700"
+                  >
+                    From currency
+                  </label>
+                  <CurrencySelect
+                    id="from-currency"
+                    v-model="moneyForm.fromCurrency"
+                    :country-code="moneyForm.from"
+                    placeholder="Choose currency"
+                  />
+                </div>
 
-                    <div>
-                      <label
-                        for="to-currency"
-                        class="mb-2 block text-sm font-semibold text-neutral-700"
-                      >
-                        To currency
-                      </label>
-                      <CurrencySelect
-                        id="to-currency"
-                        v-model="moneyForm.toCurrency"
-                        :country-code="moneyForm.to"
-                        :placeholder="
-                          moneyForm.to ? 'Choose currency' : 'Select receiving country first'
-                        "
-                        :disabled="!moneyForm.to"
-                      />
-                    </div>
+                <div>
+                  <label
+                    for="to-currency"
+                    class="mb-2 block text-sm font-semibold text-neutral-700"
+                  >
+                    To currency
+                  </label>
+                  <CurrencySelect
+                    id="to-currency"
+                    v-model="moneyForm.toCurrency"
+                    :country-code="moneyForm.to"
+                    :placeholder="
+                      moneyForm.to ? 'Choose currency' : 'Select receiving country first'
+                    "
+                    :disabled="!moneyForm.to"
+                  />
+                </div>
 
                 <!-- Mobile Navigation for Step 2 -->
                 <div class="flex gap-2 sm:hidden">
@@ -332,7 +282,7 @@
               </div>
 
               <!-- Step 3: Amount (always visible on desktop, conditional on mobile) -->
-              <div 
+              <div
                 class="mb-6"
                 :class="{ 'hidden sm:block': currentMobileStep !== 3 }"
               >
@@ -347,7 +297,7 @@
                   step="1"
                   class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
                   placeholder="500"
-                />
+                >
 
                 <!-- Mobile Back Button for Step 3 -->
                 <div class="mt-4 sm:hidden">
@@ -429,52 +379,74 @@
           <div
             class="flex h-full flex-col rounded-3xl border border-neutral-200 bg-white p-8 shadow-lg"
           >
-            <h3 class="mb-6 text-2xl font-bold text-neutral-900">Why Remit-Scout?</h3>
+            <h3 class="mb-6 text-2xl font-bold text-neutral-900">
+              Why Remit-Scout?
+            </h3>
 
             <div class="flex-1 space-y-6">
               <!-- Money Saved -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">Total money saved for users</p>
-                <p class="text-4xl font-bold text-brand-600">{{ SITE_STATS.totalSaved.display }}</p>
-                <p class="mt-1 text-xs text-neutral-600">Since 2024</p>
+                <p class="mb-1 text-xs text-neutral-600">
+                  Total money saved for users
+                </p>
+                <p class="text-4xl font-bold text-brand-600">
+                  {{ SITE_STATS.totalSaved.display }}
+                </p>
+                <p class="mt-1 text-xs text-neutral-600">
+                  Since 2024
+                </p>
               </div>
 
               <!-- Providers Compared -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">Licensed providers compared</p>
-                <p class="text-3xl font-bold text-neutral-900">{{ SITE_STATS.providers.display }}</p>
-                <p class="mt-1 text-xs text-neutral-600">{{ SITE_STATS.licensedProviders.label }}</p>
+                <p class="mb-1 text-xs text-neutral-600">
+                  Licensed providers compared
+                </p>
+                <p class="text-3xl font-bold text-neutral-900">
+                  {{ SITE_STATS.providers.display }}
+                </p>
+                <p class="mt-1 text-xs text-neutral-600">
+                  {{ SITE_STATS.licensedProviders.label }}
+                </p>
               </div>
 
               <!-- Countries Covered -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">Countries & corridors</p>
-                <p class="text-3xl font-bold text-neutral-900">{{ SITE_STATS.corridors.display }}</p>
-                <p class="mt-1 text-xs text-neutral-600">Send money anywhere</p>
+                <p class="mb-1 text-xs text-neutral-600">
+                  Countries & corridors
+                </p>
+                <p class="text-3xl font-bold text-neutral-900">
+                  {{ SITE_STATS.corridors.display }}
+                </p>
+                <p class="mt-1 text-xs text-neutral-600">
+                  Send money anywhere
+                </p>
               </div>
 
               <!-- Average Savings -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">Average savings vs banks</p>
-                <p class="text-3xl font-bold text-brand-600">3–9%</p>
-                <p class="mt-1 text-xs text-neutral-600">On every transfer</p>
+                <p class="mb-1 text-xs text-neutral-600">
+                  Average savings vs banks
+                </p>
+                <p class="text-3xl font-bold text-brand-600">
+                  3–9%
+                </p>
+                <p class="mt-1 text-xs text-neutral-600">
+                  On every transfer
+                </p>
               </div>
 
-              <!-- Speed & Trust -->
+              <!-- Trust -->
               <div class="space-y-4">
-                <div class="flex items-center gap-3">
-                  <span class="text-2xl">⚡</span>
-                  <div>
-                    <p class="text-sm font-semibold text-neutral-900">Fast transfers</p>
-                    <p class="text-xs text-neutral-600">Most arrive within 24 hours</p>
-                  </div>
-                </div>
-
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">🛡️</span>
                   <div>
-                    <p class="text-sm font-semibold text-neutral-900">100% independent</p>
-                    <p class="text-xs text-neutral-600">No pay-to-rank, unbiased results</p>
+                    <p class="text-sm font-semibold text-neutral-900">
+                      100% independent
+                    </p>
+                    <p class="text-xs text-neutral-600">
+                      No pay-to-rank, unbiased results
+                    </p>
                   </div>
                 </div>
               </div>
@@ -485,7 +457,7 @@
     </div>
 
     <!-- Gradient at the Bottom -->
-    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-brand-600/10 via-brand-500/5 to-transparent"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-brand-600/10 via-brand-500/5 to-transparent" />
 
     <!-- SEO: WebSite structured data with search action -->
     <JsonLdWebSiteSearch />
@@ -493,34 +465,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import { useRemittanceApi } from '~/composables/useRemittanceApi';
-import { useCompareForm } from '~/composables/useCompareForm';
-import JsonLdWebSiteSearch from '~/components/seo/JsonLdWebSiteSearch.vue';
-import CurrencySelect from '~/components/shared/CurrencySelect.vue';
-import { SITE_STATS } from '~/config/stats';
-import { getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useCompareForm } from '~/composables/useCompareForm'
+import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import JsonLdWebSiteSearch from '~/components/seo/JsonLdWebSiteSearch.vue'
+import { SITE_STATS } from '~/config/stats'
+import { getAvailableCurrencies, getCountryByCode } from '~/utils/countries-currencies'
 
-const { form: moneyForm, validationError, submit: submitForm, DELIVERY_METHODS } = useCompareForm();
+type PrefillFormData = Partial<{
+  from: string
+  to: string
+  amount: number
+  method: 'bank' | 'cash' | 'wallet'
+  fromCurrency: string
+  toCurrency: string
+}>
+
+type LatLon = {
+  lat: number
+  lon: number
+}
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+
+const { form: moneyForm, submit: submitForm, validationError } = useCompareForm()
 
 const formError = validationError
 const formSuccess = ref<string>('')
 
 const currentMobileStep = ref(1)
 
-const { recordSearch, useRecentSearches } = useRemittanceApi();
+const { recordSearch, useRecentSearches } = useRemittanceApi()
 
-const familiesHelped = ref(1250);
+const familiesHelped = ref(1250)
 
 defineExpose({
-  prefillMoneyForm: (data: any) => {
-    Object.assign(moneyForm.value, data);
+  prefillMoneyForm: (data: PrefillFormData) => {
+    Object.assign(moneyForm.value, data)
   },
-});
+})
 
-const { data: recentData } = await useRecentSearches(100);
+const { data: recentData } = await useRecentSearches(100)
 
-const countryCoordinates: Record<string, { lat: number; lon: number }> = {
+const mapPreserveAspectRatio = ref('xMidYMid slice')
+
+const updateMapPreserveAspectRatio = () => {
+  if (typeof window === 'undefined') return
+  mapPreserveAspectRatio.value = window.matchMedia('(min-width: 640px)').matches
+    ? 'xMidYMid slice'
+    : 'xMidYMid meet'
+}
+
+const countryCoordinates: Record<string, LatLon> = {
   US: { lat: 37.1, lon: -95.7 },
   CA: { lat: 56.1, lon: -106.3 },
   MX: { lat: 23.6, lon: -102.5 },
@@ -535,12 +532,14 @@ const countryCoordinates: Record<string, { lat: number; lon: number }> = {
   NL: { lat: 52.1, lon: 5.3 },
   BE: { lat: 50.5, lon: 4.7 },
   CH: { lat: 46.8, lon: 8.2 },
+  TR: { lat: 39.1, lon: 35.2 },
+  RU: { lat: 61.5, lon: 105.3 },
   IN: { lat: 20.6, lon: 78.9 },
   PK: { lat: 30.4, lon: 69.3 },
   BD: { lat: 23.7, lon: 90.4 },
   LK: { lat: 7.9, lon: 80.7 },
   NP: { lat: 28.4, lon: 84.1 },
-  PH: { lat: 12.9, lon: 122.6 },
+  PH: { lat: 0.84, lon: 121.545 },
   MY: { lat: 4.2, lon: 101.9 },
   VN: { lat: 14.1, lon: 108.3 },
   TH: { lat: 15.8, lon: 101 },
@@ -572,122 +571,237 @@ const countryCoordinates: Record<string, { lat: number; lon: number }> = {
   CO: { lat: 4.6, lon: -74.3 },
   PE: { lat: -9.2, lon: -75 },
   VE: { lat: 6.4, lon: -66.6 },
-  AU: { lat: -25.3, lon: 133.8 },
+  AU: { lat: -51.97, lon: 128.907 },
   NZ: { lat: -40.9, lon: 174.9 },
-};
+}
 
 const projectCoord = (lat: number, lon: number) => ({
   x: ((lon + 180) / 360) * 2000,
   y: ((90 - lat) / 180) * 857,
-});
+})
 
-const buildArrowPath = (fromCode: string, toCode: string) => {
-  const from = countryCoordinates[fromCode];
-  const to = countryCoordinates[toCode];
-  if (!from || !to) return null;
+const buildArrowPath = (
+  fromCode: string,
+  toCode: string,
+  nudges?: {
+    start?: { x: number, y: number }
+    end?: { x: number, y: number }
+  },
+) => {
+  const from = countryCoordinates[fromCode]
+  const to = countryCoordinates[toCode]
+  if (!from || !to) return null
 
-  const start = projectCoord(from.lat, from.lon);
-  const end = projectCoord(to.lat, to.lon);
+  const inset = 92
 
-  const midX = (start.x + end.x) / 2;
-  const lift = Math.min(
-    220,
-    Math.max(80, Math.abs(end.x - start.x) * 0.15 + Math.abs(end.y - start.y) * 0.05)
-  );
-  const controlY = Math.min(start.y, end.y) - lift;
+  const rawStart = projectCoord(from.lat, from.lon)
+  const rawEnd = projectCoord(to.lat, to.lon)
+
+  const startShift = nudges?.start ?? { x: 0, y: 0 }
+  const endShift = nudges?.end ?? { x: 0, y: 0 }
+
+  const start = {
+    x: clamp(rawStart.x + startShift.x, inset, 2000 - inset),
+    y: clamp(rawStart.y + startShift.y, inset, 857 - inset),
+  }
+  const end = {
+    x: clamp(rawEnd.x + endShift.x, inset, 2000 - inset),
+    y: clamp(rawEnd.y + endShift.y, inset, 857 - inset),
+  }
+
+  const midX = (start.x + end.x) / 2
+  const midY = (start.y + end.y) / 2
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const distance = Math.hypot(dx, dy)
+
+  let lift = clamp(distance * 0.35, 52, 280)
+  let controlX = midX + clamp(dx * 0.12, -140, 140)
+  let controlY = midY - lift
+
+  const avoidBox = { x0: 640, x1: 1520, y0: 120, y1: 700 }
+  const inBox = midX >= avoidBox.x0 && midX <= avoidBox.x1 && midY >= avoidBox.y0 && midY <= avoidBox.y1
+  if (inBox) {
+    const avoidStrength = clamp((distance - 360) / 560, 0, 1)
+    if (avoidStrength > 0) {
+      lift = clamp(lift + 110 * avoidStrength, 52, 360)
+      controlX += (midX < 1080 ? -1 : 1) * 170 * avoidStrength
+      controlY = midY - lift
+    }
+  }
 
   return {
-    d: `M ${start.x.toFixed(1)},${start.y.toFixed(1)} Q ${midX.toFixed(1)},${controlY.toFixed(
-      1
-    )} ${end.x.toFixed(1)},${end.y.toFixed(1)}`,
+    d: `M ${start.x.toFixed(1)},${start.y.toFixed(1)} Q ${controlX.toFixed(1)},${controlY.toFixed(1)} ${end.x.toFixed(1)},${end.y.toFixed(1)}`,
     start,
     end,
-  };
-};
-
-const defaultArrow = buildArrowPath('US', 'PH');
-
-const arrowPath = computed(() => {
-  const fromCode = moneyForm.value.from?.toUpperCase();
-  const toCode = moneyForm.value.to?.toUpperCase();
-
-  if (fromCode && toCode) {
-    const path = buildArrowPath(fromCode, toCode);
-    if (path) return path;
   }
+}
 
-  return defaultArrow;
-});
+const getRouteDuration = (
+  start: { x: number, y: number },
+  end: { x: number, y: number },
+  options: { base: number, speed: number, min: number, max: number },
+  jitterSeconds = 0,
+) => {
+  const distance = Math.hypot(end.x - start.x, end.y - start.y)
+  const seconds = clamp(options.base + distance / options.speed + jitterSeconds, options.min, options.max)
+  return `${seconds.toFixed(1)}s`
+}
 
-// Geolocation detection
+type DisplayRoute = {
+  key: string
+  d: string
+  stroke: string
+  strokeWidth: number
+  opacity: number
+  dur: string
+  delay: string
+}
+
+const ROUTE_SPECS: Array<{
+  from: keyof typeof countryCoordinates
+  to: keyof typeof countryCoordinates
+  stroke: string
+  width: number
+}> = [
+  { from: 'US', to: 'PH', stroke: 'url(#route-blue)', width: 1.9 },
+  { from: 'CA', to: 'BR', stroke: 'url(#route-emerald)', width: 1.7 },
+  { from: 'MX', to: 'ES', stroke: 'url(#route-emerald)', width: 1.65 },
+  { from: 'AR', to: 'IT', stroke: 'url(#route-blue)', width: 1.65 },
+  { from: 'GB', to: 'IN', stroke: 'url(#route-blue)', width: 1.7 },
+  { from: 'DE', to: 'TR', stroke: 'url(#route-emerald)', width: 1.65 },
+  { from: 'FR', to: 'MA', stroke: 'url(#route-violet)', width: 1.55 },
+  { from: 'ZA', to: 'GB', stroke: 'url(#route-emerald)', width: 1.6 },
+  { from: 'NG', to: 'FR', stroke: 'url(#route-blue)', width: 1.55 },
+  { from: 'KE', to: 'GB', stroke: 'url(#route-violet)', width: 1.55 },
+  { from: 'EG', to: 'IT', stroke: 'url(#route-emerald)', width: 1.55 },
+  { from: 'AE', to: 'PK', stroke: 'url(#route-emerald)', width: 1.6 },
+  { from: 'IN', to: 'BD', stroke: 'url(#route-emerald)', width: 1.55 },
+  { from: 'CN', to: 'VN', stroke: 'url(#route-violet)', width: 1.55 },
+  { from: 'US', to: 'AU', stroke: 'url(#route-blue)', width: 1.7 },
+  { from: 'JP', to: 'PH', stroke: 'url(#route-blue)', width: 1.5 },
+]
+
+const endpointNudge = (
+  idx: number,
+  total: number,
+  radius: number,
+  phase = 0,
+): { x: number, y: number } => {
+  if (total <= 1) return { x: 0, y: 0 }
+  const a = phase + (idx / total) * Math.PI * 2
+  return { x: Math.cos(a) * radius, y: Math.sin(a) * radius }
+}
+
+const displayRoutes = computed<DisplayRoute[]>(() => {
+  const durationOptions = { base: 1.9, speed: 240, min: 2.2, max: 7.2 }
+  const delayStep = 0.38
+
+  const endpointTotals = new Map<string, number>()
+  for (const r of ROUTE_SPECS) {
+    endpointTotals.set(r.from, (endpointTotals.get(r.from) ?? 0) + 1)
+    endpointTotals.set(r.to, (endpointTotals.get(r.to) ?? 0) + 1)
+  }
+  const endpointSeen = new Map<string, number>()
+
+  return ROUTE_SPECS
+    .map((spec, i) => {
+      const fromSeen = endpointSeen.get(spec.from) ?? 0
+      endpointSeen.set(spec.from, fromSeen + 1)
+      const toSeen = endpointSeen.get(spec.to) ?? 0
+      endpointSeen.set(spec.to, toSeen + 1)
+
+      const fromTotal = endpointTotals.get(spec.from) ?? 1
+      const toTotal = endpointTotals.get(spec.to) ?? 1
+
+      const start = endpointNudge(fromSeen, fromTotal, 12, 0.2)
+      const end = endpointNudge(toSeen, toTotal, 12, 1.1)
+
+      const path = buildArrowPath(spec.from, spec.to, { start, end })
+      if (!path) return null
+
+      return {
+        key: `${spec.from}-${spec.to}-${i}`,
+        d: path.d,
+        stroke: spec.stroke,
+        strokeWidth: spec.width,
+        opacity: 0.28,
+        dur: getRouteDuration(path.start, path.end, durationOptions, (i % 4) * 0.25),
+        delay: `${(i * delayStep).toFixed(2)}s`,
+      }
+    })
+    .filter(Boolean) as DisplayRoute[]
+})
+
+const activePath = computed(() => {
+  const fromCode = moneyForm.value.from?.toUpperCase()
+  const toCode = moneyForm.value.to?.toUpperCase()
+
+  if (!fromCode || !toCode) return null
+  return buildArrowPath(fromCode, toCode)
+})
+
+const activeRouteDur = computed(() => {
+  const path = activePath.value
+  if (!path) return '6.8s'
+  return getRouteDuration(path.start, path.end, { base: 1.6, speed: 260, min: 2.0, max: 6.2 })
+})
+
 const detectUserLocation = async () => {
   try {
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
+    const response = await fetch('https://ipapi.co/json/')
+    const data = await response.json()
     if (data.country_code) {
-      const countryCode = data.country_code.toUpperCase();
-      const country = getCountryByCode(countryCode);
-      
+      const countryCode = data.country_code.toUpperCase()
+      const country = getCountryByCode(countryCode)
+
       if (country) {
-        moneyForm.value.from = country.code;
-        moneyForm.value.fromCurrency = country.currency;
-      } else {
-        moneyForm.value.from = 'US';
-        moneyForm.value.fromCurrency = 'USD';
+        moneyForm.value.from = country.code
+        moneyForm.value.fromCurrency = country.currency
       }
     }
-  } catch {
-    console.log('Could not detect location, defaulting to US');
-    moneyForm.value.from = 'US';
-    moneyForm.value.fromCurrency = 'USD';
   }
-};
+  catch {
+    moneyForm.value.from = 'US'
+    moneyForm.value.fromCurrency = 'USD'
+  }
+}
 
-// Currency filtering logic - now using universal system
-const availableFromCurrencies = computed(() => {
-  return getAvailableCurrencies(moneyForm.value.from);
-});
-
-const availableToCurrencies = computed(() => {
-  if (!moneyForm.value.to) return [];
-  return getAvailableCurrencies(moneyForm.value.to);
-});
-
-// Watchers for currency synchronization
 watch(
   () => moneyForm.value.from,
-  newCountry => {
+  (newCountry) => {
     if (newCountry) {
-      const country = getCountryByCode(newCountry);
-      if (!country) return;
-      
-      const available = getAvailableCurrencies(newCountry);
+      const country = getCountryByCode(newCountry)
+      if (!country) return
+
+      const available = getAvailableCurrencies(newCountry)
       if (!moneyForm.value.fromCurrency || !available.includes(moneyForm.value.fromCurrency)) {
-        moneyForm.value.fromCurrency = country.currency;
+        moneyForm.value.fromCurrency = country.currency
       }
     }
-  }
-);
+  },
+)
 
 watch(
   () => moneyForm.value.to,
-  newCountry => {
+  (newCountry) => {
     if (newCountry) {
-      const country = getCountryByCode(newCountry);
-      if (!country) return;
-      
-      const available = getAvailableCurrencies(newCountry);
+      const country = getCountryByCode(newCountry)
+      if (!country) return
+
+      const available = getAvailableCurrencies(newCountry)
       if (!moneyForm.value.toCurrency || !available.includes(moneyForm.value.toCurrency)) {
-        moneyForm.value.toCurrency = country.currency;
+        moneyForm.value.toCurrency = country.currency
       }
-    } else {
-      moneyForm.value.toCurrency = '';
     }
-  }
-);
+    else {
+      moneyForm.value.toCurrency = ''
+    }
+  },
+)
 
 const handleMoneySubmit = async () => {
-  const { from, to, amount, method } = moneyForm.value;
+  const { from, to, amount, method } = moneyForm.value
 
   formSuccess.value = ''
 
@@ -697,57 +811,79 @@ const handleMoneySubmit = async () => {
       to_country: to,
       amount,
       method,
-    } as any);
-  } catch {
+    })
+  }
+  catch {
     // Ignore recordSearch errors
   }
 
-  await submitForm();
-};
+  await submitForm()
+}
 
 // Update families helped based on recent searches
 const updateFamiliesHelped = () => {
-  const data = recentData.value as any;
+  const data = recentData.value as unknown as { data?: Array<{ createdAt: string }> } | null
   if (data?.data && Array.isArray(data.data)) {
-    const today = new Date().toDateString();
+    const today = new Date().toDateString()
     const todaySearches = data.data.filter(
-      (s: { createdAt: string }) => new Date(s.createdAt).toDateString() === today
-    );
-    familiesHelped.value = 1250 + todaySearches.length;
+      s => new Date(s.createdAt).toDateString() === today,
+    )
+    familiesHelped.value = 1250 + todaySearches.length
   }
-};
+}
 
 onMounted(() => {
-  detectUserLocation();
-  updateFamiliesHelped();
+  detectUserLocation()
+  updateFamiliesHelped()
+  updateMapPreserveAspectRatio()
+
+  const mediaQuery = window.matchMedia('(min-width: 640px)')
+  const onMediaQueryChange = () => updateMapPreserveAspectRatio()
+  mediaQuery.addEventListener('change', onMediaQueryChange)
 
   // Update counter periodically
   const interval = setInterval(() => {
-    familiesHelped.value += Math.floor(Math.random() * 3) + 1;
-    updateFamiliesHelped();
-  }, 30000);
+    familiesHelped.value += Math.floor(Math.random() * 3) + 1
+    updateFamiliesHelped()
+  }, 30000)
 
   onBeforeUnmount(() => {
-    clearInterval(interval);
-  });
-});
+    clearInterval(interval)
+    mediaQuery.removeEventListener('change', onMediaQueryChange)
+  })
+})
 </script>
 
 <style scoped>
-.transfer-arrow {
-  stroke-linecap: round;
+.hero-map__image {
+  opacity: 0.5;
+  filter: brightness(0.97) contrast(1.12);
 }
 
-/* Different opacity levels for depth perception */
-.transfer-arrow-large {
-  opacity: 0.20;
+.route-line {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+  stroke-dasharray: 0.28 0.72;
+  stroke-dashoffset: 0;
+  animation: routeFlow var(--route-dur, 14s) linear infinite;
+  animation-delay: var(--route-delay, 0s);
 }
 
-.transfer-arrow-medium {
-  opacity: 0.144;
+.route-line--active {
+  stroke-dasharray: 0.24 0.76;
 }
 
-.transfer-arrow-small {
-  opacity: 0.096;
+@keyframes routeFlow {
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-line {
+    animation: none;
+  }
 }
 </style>

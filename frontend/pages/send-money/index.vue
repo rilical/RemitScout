@@ -5,92 +5,9 @@
 
     <!-- Hero Section -->
     <section class="relative py-16 lg:py-20 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <!-- Flying Arrows Around Hero -->
-      <div class="pointer-events-none absolute inset-0">
-        <!-- Gradient orbs -->
-        <div class="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-gradient-to-br from-blue-400/25 via-blue-300/20 to-transparent blur-3xl animate-pulse" />
-        <div
-          class="absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-gradient-to-tr from-emerald-400/25 via-emerald-300/20 to-transparent blur-3xl animate-pulse"
-          style="animation-delay: 1.5s;"
-        />
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/15 via-blue-300/15 to-emerald-300/15 blur-3xl" />
-
-        <!-- Additional Flying Arrows - More Visible -->
-        <svg
-          class="absolute inset-0 w-full h-full opacity-30"
-          viewBox="0 0 1200 600"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <!-- Flying lines - Blue and Green only (no arrow heads) -->
-          <path
-            d="M0,200 Q200,100 400,200 T800,200"
-            stroke="#2563eb"
-            stroke-width="3"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7s ease-in-out infinite;"
-          />
-          <path
-            d="M1200,400 Q1000,300 800,400 T400,400"
-            stroke="#10b981"
-            stroke-width="3"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9s ease-in-out infinite 1.5s;"
-          />
-          <path
-            d="M0,500 Q300,400 600,500 T1200,500"
-            stroke="#2563eb"
-            stroke-width="2.5"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8s ease-in-out infinite 0.8s;"
-          />
-          <path
-            d="M1200,100 Q900,50 600,100 T0,100"
-            stroke="#2563eb"
-            stroke-width="2.5"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 6s ease-in-out infinite 2s;"
-          />
-          <path
-            d="M600,0 Q400,150 600,300"
-            stroke="#10b981"
-            stroke-width="2.5"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.5s ease-in-out infinite 1s;"
-          />
-          <path
-            d="M300,600 Q500,450 300,300"
-            stroke="#10b981"
-            stroke-width="2.5"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8.5s ease-in-out infinite 2.2s;"
-          />
-          <path
-            d="M900,600 Q1100,450 900,300"
-            stroke="#2563eb"
-            stroke-width="2.5"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 6.5s ease-in-out infinite 0.5s;"
-          />
-          <path
-            d="M200,300 Q500,200 800,300"
-            stroke="#10b981"
-            stroke-width="2"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.2s ease-in-out infinite 1.2s;"
-          />
-          <path
-            d="M1000,200 Q700,300 400,200"
-            stroke="#2563eb"
-            stroke-width="2"
-            fill="none"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8.2s ease-in-out infinite 0.3s;"
-          />
-        </svg>
-      </div>
-
       <div class="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
         <div class="text-center mb-12">
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-blue-600 mb-6">
             Stop Overpaying on International Transfers
           </h1>
           <p class="text-xl text-slate-600 max-w-3xl mx-auto mb-8">
@@ -98,8 +15,8 @@
           </p>
         </div>
 
-        <!-- Single Column Layout -->
-        <div class="space-y-8 mb-16">
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <!-- Article Section -->
           <article class="bg-white rounded-2xl shadow-lg p-8 lg:p-10 border border-slate-200">
             <h2 class="text-3xl font-bold text-slate-900 mb-6">
@@ -188,68 +105,6 @@
                 </div>
               </div>
             </article>
-
-            <!-- Trust & Independence Card -->
-            <div class="bg-brand-600 rounded-2xl shadow-xl p-8 lg:p-10 text-white relative overflow-hidden">
-              <!-- Decorative background element -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-              
-              <div class="relative z-10">
-                <!-- Icon and Title -->
-                <div class="flex items-center gap-4 mb-6">
-                  <div class="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <h3 class="text-2xl lg:text-3xl font-bold">Trust & Independence</h3>
-                </div>
-
-                <!-- Main Description -->
-                <p class="text-white/95 mb-8 leading-relaxed text-lg">
-                  <strong class="text-white font-bold">100% independent rankings</strong> — Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.
-                </p>
-
-                <!-- Key Features -->
-                <div class="space-y-4 mb-8">
-                  <div class="flex items-center gap-3">
-                    <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span class="text-white font-medium">No paid placements</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span class="text-white font-medium">Real-time rate updates</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span class="text-white font-medium">Transparent methodology</span>
-                  </div>
-                </div>
-
-                <!-- CTA Link -->
-                <NuxtLink
-                  to="/methodology"
-                  class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold transition-all hover:scale-105"
-                >
-                  <span>Learn about our methodology</span>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </NuxtLink>
-              </div>
-            </div>
 
             <!-- Extended Comparison Widget -->
             <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
@@ -438,6 +293,71 @@
                   </div>
                 </div>
               </form>
+            </div>
+
+            <!-- Trust & Independence Card - Spans both columns -->
+            <div class="lg:col-span-2 bg-brand-600 rounded-2xl shadow-xl p-6 lg:p-8 text-white relative overflow-hidden">
+              <div class="relative z-10">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                  <!-- Icon and Title -->
+                  <div class="flex items-center gap-4 flex-shrink-0">
+                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <h3 class="text-xl lg:text-2xl font-bold">Trust & Independence</h3>
+                  </div>
+
+                  <!-- Main Description -->
+                  <div class="flex-1">
+                    <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
+                      <strong class="text-white font-bold">100% independent rankings</strong> — Providers can't pay for better placement. We rank purely on total cost, speed, and reliability.
+                    </p>
+
+                    <!-- Key Features - Horizontal -->
+                    <div class="flex flex-wrap items-center gap-4 mb-4">
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span class="text-white text-sm font-medium">No paid placements</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span class="text-white text-sm font-medium">Real-time rate updates</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span class="text-white text-sm font-medium">Transparent methodology</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CTA Link -->
+                  <div class="flex-shrink-0">
+                    <NuxtLink
+                      to="/methodology"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
+                    >
+                      <span>Learn more</span>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </NuxtLink>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -753,8 +673,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { COUNTRIES, type Country } from '~/utils/countries-currencies'
+import { computed, watch } from 'vue'
+import { COUNTRIES, type Country, getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
 import WhyTrustUs from '~/components/home/WhyTrustUs.vue'
@@ -768,6 +688,41 @@ import { useRemittanceApi } from '~/composables/useRemittanceApi'
 const { form: moneyForm, validationError, submit: submitForm } = useCompareForm()
 const formError = validationError
 const { recordSearch } = useRemittanceApi()
+
+// Watch for country changes and reset currency if needed
+watch(() => moneyForm.value.to, (newCountry) => {
+  if (!newCountry) {
+    moneyForm.value.toCurrency = ''
+    return
+  }
+
+  const country = getCountryByCode(newCountry)
+  if (!country) return
+
+  const availableCurrencies = getAvailableCurrencies(newCountry)
+  
+  // If current currency is not available for the new country, reset to country's default currency
+  if (!moneyForm.value.toCurrency || !availableCurrencies.includes(moneyForm.value.toCurrency)) {
+    moneyForm.value.toCurrency = country.currency
+  }
+})
+
+watch(() => moneyForm.value.from, (newCountry) => {
+  if (!newCountry) {
+    moneyForm.value.fromCurrency = ''
+    return
+  }
+
+  const country = getCountryByCode(newCountry)
+  if (!country) return
+
+  const availableCurrencies = getAvailableCurrencies(newCountry)
+  
+  // If current currency is not available for the new country, reset to country's default currency
+  if (!moneyForm.value.fromCurrency || !availableCurrencies.includes(moneyForm.value.fromCurrency)) {
+    moneyForm.value.fromCurrency = country.currency
+  }
+})
 
 const isFormValid = computed(() => {
   return (
@@ -1097,35 +1052,5 @@ useSeoMeta({
 <style scoped>
 section {
   scroll-margin-top: 100px;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(5deg);
-  }
-}
-
-@keyframes drawPath {
-  0% {
-    stroke-dashoffset: 1000;
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    stroke-dashoffset: 0;
-    opacity: 0;
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
 }
 </style>

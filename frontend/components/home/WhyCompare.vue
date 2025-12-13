@@ -47,7 +47,7 @@
               Enterprise-Grade Analysis
             </h3>
             <p class="mt-3 text-base leading-relaxed text-slate-600">
-              Institutional-level benchmarking across 150+ corridors. We track every basis point in fees and FX spreads to deliver complete transparency.
+              Institutional-level benchmarking across 150+ countries. We track every basis point in fees and FX spreads to deliver complete transparency.
             </p>
             <div class="mt-6 flex items-center gap-2 text-sm font-medium text-indigo-600">
               <DocumentCheckIcon class="h-5 w-5" />

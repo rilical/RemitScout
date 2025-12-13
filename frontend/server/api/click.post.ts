@@ -1,12 +1,19 @@
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
+  const forwardedFor = getHeader(event, 'x-forwarded-for')
+  const ip =
+    forwardedFor?.split(',')[0]?.trim()
+    || getHeader(event, 'x-real-ip')
+    || event.node.req.socket.remoteAddress
+    || 'unknown'
+
   // Track affiliate click
   console.log('Affiliate click tracked:', {
-    providerId: body.providerId,
-    offerId: body.offerId,
+    providerId: body?.providerId,
+    offerId: body?.offerId,
     userAgent: getHeader(event, 'user-agent'),
-    ip: getClientIP(event),
+    ip,
     timestamp: new Date().toISOString(),
   })
 
@@ -19,6 +26,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     trackingId: `click_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    redirectUrl: `https://example.com/affiliate-link?tracking=${body.providerId}`,
+    redirectUrl: `https://example.com/affiliate-link?tracking=${body?.providerId ?? 'unknown'}`,
   }
 })

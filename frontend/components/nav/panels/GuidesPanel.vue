@@ -30,7 +30,7 @@ import { NAV } from '~/config/nav'
 
   <div class="mt-2 px-4 py-2 border-t border-slate-100">
     <NuxtLink
-      to="/guides"
+      to="/learn"
       class="text-xs text-slate-500 hover:text-slate-700 motion-safe:transition focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
       role="menuitem"
     >

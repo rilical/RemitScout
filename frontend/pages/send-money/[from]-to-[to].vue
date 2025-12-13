@@ -164,7 +164,7 @@
                   :key="change.label"
                   :class="[
                     'inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-bold',
-                    change.value.startsWith('-') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                    change.value.startsWith('-') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700',
                   ]"
                 >
                   {{ change.value }} SINCE {{ change.label.toUpperCase() }}
@@ -245,6 +245,208 @@
           </svg>
           Advertiser disclosure
         </NuxtLink>
+      </section>
+
+      <!-- Find Your Best Rate Now - Form Section -->
+      <section class="mb-8">
+        <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+          <div class="border-b border-slate-100 bg-gradient-to-r from-blue-600 to-emerald-600 px-8 py-8 lg:px-10 lg:py-10">
+            <h3 class="text-2xl lg:text-3xl font-bold text-white mb-3">
+              Find Your Best Rate Now
+            </h3>
+            <p class="text-base lg:text-lg text-white/90">
+              Compare live rates from 30+ providers
+            </p>
+          </div>
+
+          <form
+            class="p-6 space-y-4"
+            @submit.prevent="handleFormCompare"
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  for="from-country"
+                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                >
+                  Sending from
+                </label>
+                <CountrySelect
+                  id="from-country-form"
+                  v-model="compareForm.from"
+                  label="Sending from"
+                  placeholder="United States"
+                />
+                <p class="mt-2 text-xs text-slate-500">
+                  Select your sending country to see the best rates.
+                </p>
+              </div>
+
+              <div>
+                <label
+                  for="to-country-form"
+                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                >
+                  Receiving in
+                </label>
+                <CountrySelect
+                  id="to-country-form"
+                  v-model="compareForm.to"
+                  label="Receiving in"
+                  placeholder="Select country"
+                />
+                <p class="mt-2 text-xs text-slate-500">
+                  Choose where your recipient will receive the money.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  for="from-currency-form"
+                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                >
+                  From currency
+                </label>
+                <CurrencySelect
+                  id="from-currency-form"
+                  v-model="compareForm.fromCurrency"
+                  :country-code="compareForm.from"
+                  placeholder="USD"
+                />
+                <p class="mt-2 text-xs text-slate-500">
+                  Currency you'll be sending from.
+                </p>
+              </div>
+
+              <div>
+                <label
+                  for="to-currency-form"
+                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                >
+                  To currency
+                </label>
+                <CurrencySelect
+                  id="to-currency-form"
+                  v-model="compareForm.toCurrency"
+                  :country-code="compareForm.to"
+                  :placeholder="compareForm.to ? 'Select currency' : 'Select country first'"
+                  :disabled="!compareForm.to"
+                />
+                <p class="mt-2 text-xs text-slate-500">
+                  Currency your recipient will receive.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label
+                for="amount-form"
+                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              >
+                Amount to send
+              </label>
+              <input
+                id="amount-form"
+                v-model.number="compareForm.amount"
+                type="number"
+                min="1"
+                step="1"
+                class="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                placeholder="500"
+              >
+            </div>
+
+            <button
+              type="submit"
+              class="w-full h-12 rounded-lg bg-blue-600 px-6 text-base font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              Compare Rates
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Why Use Our Comparison Engine Section -->
+      <section class="mb-8">
+        <div class="grid gap-8 lg:grid-cols-2">
+          <div>
+            <h2 class="text-2xl font-bold text-neutral-900 mb-4">
+              Why Use Our Comparison Engine
+            </h2>
+            <div class="prose prose-neutral prose-sm max-w-none">
+              <p class="text-neutral-600 leading-relaxed">
+                With our model, the only losers are the expensive banks or providers you'll stop using!
+              </p>
+              <p class="text-neutral-600 leading-relaxed">
+                To ensure our independence, we always use <strong>transparent, objective and verifiable</strong> criteria in our comparison. No provider can buy their way to the top of our results.
+              </p>
+              <p class="text-neutral-600 leading-relaxed">
+                We include as many providers as possible in our comparison and have partnerships with almost all major and innovative providers.
+              </p>
+            </div>
+            <NuxtLink
+              to="/methodology"
+              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors"
+            >
+              Learn more about Remit-Scout
+            </NuxtLink>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
+              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p class="text-sm text-neutral-600">
+                You save money on your transfer by selecting the cheapest provider.
+              </p>
+            </div>
+            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
+              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <p class="text-sm text-neutral-600">
+                The best providers earn new customers without expensive marketing, helping keep their costs (and prices) low.
+              </p>
+            </div>
+            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
+              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <p class="text-sm text-neutral-600">
+                Remit-Scout receives a referral fee from the provider you selected. This enables us to offer our service to you for free.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Trust & Independence Section -->
+      <section class="mb-8">
+        <div class="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-white">
+          <h2 class="text-2xl font-bold mb-4">Trust & Independence</h2>
+          <p class="text-white/90 mb-6 leading-relaxed">
+            <strong>100% independent rankings</strong> — Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.
+          </p>
+          <div class="space-y-3">
+            <div class="text-sm">No paid placements</div>
+            <div class="text-sm">Real-time rate updates</div>
+            <div class="text-sm">Transparent methodology</div>
+          </div>
+          <NuxtLink
+            to="/methodology"
+            class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80 transition-colors"
+          >
+            Learn about our methodology
+          </NuxtLink>
+        </div>
       </section>
 
       <!-- Best Ways Summary (Monito-style green card) -->
@@ -423,7 +625,7 @@
             :key="row.provider"
             :class="[
               'rounded-xl border-2 p-5 transition-all hover:shadow-md',
-              index === 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-neutral-200 bg-white hover:border-brand-200'
+              index === 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-neutral-200 bg-white hover:border-brand-200',
             ]"
           >
             <!-- Badge Row -->
@@ -432,7 +634,7 @@
                 v-if="row.badge"
                 :class="[
                   'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold',
-                  index === 0 ? 'bg-emerald-500 text-white' : 'bg-brand-100 text-brand-700'
+                  index === 0 ? 'bg-emerald-500 text-white' : 'bg-brand-100 text-brand-700',
                 ]"
               >
                 {{ row.badge }}
@@ -485,7 +687,7 @@
                       'w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-colors',
                       index === 0
                         ? 'bg-brand-600 text-white hover:bg-brand-700'
-                        : 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50'
+                        : 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50',
                     ]"
                   >
                     Go to {{ row.provider.split(' ')[0] }} →
@@ -753,66 +955,6 @@
         </div>
       </section>
 
-      <!-- EEAT / Methodology Section -->
-      <section class="py-12 border-t border-neutral-200">
-        <div class="grid gap-8 lg:grid-cols-2">
-          <div>
-            <h2 class="text-2xl font-bold text-neutral-900 mb-4">
-              Everyone wins, except expensive solutions
-            </h2>
-            <div class="prose prose-neutral prose-sm max-w-none">
-              <p class="text-neutral-600 leading-relaxed">
-                With our model, the only losers are the expensive banks or providers you'll stop using!
-              </p>
-              <p class="text-neutral-600 leading-relaxed">
-                To ensure our independence, we always use <strong>transparent, objective and verifiable</strong> criteria in our comparison. No provider can buy their way to the top of our results.
-              </p>
-              <p class="text-neutral-600 leading-relaxed">
-                We include as many providers as possible in our comparison and have partnerships with almost all major and innovative providers.
-              </p>
-            </div>
-            <NuxtLink
-              to="/methodology"
-              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors"
-            >
-              Learn more about Remit-Scout
-            </NuxtLink>
-          </div>
-          <div class="space-y-4">
-            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
-              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p class="text-sm text-neutral-600">
-                You save money on your transfer by selecting the cheapest provider.
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
-              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <p class="text-sm text-neutral-600">
-                The best providers earn new customers without expensive marketing, helping keep their costs (and prices) low.
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
-              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <p class="text-sm text-neutral-600">
-                Remit-Scout receives a referral fee from the provider you selected. This enables us to offer our service to you for free.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- Disclosures -->
       <section class="py-8 border-t border-neutral-200">
         <div class="text-xs text-neutral-500 space-y-2">
@@ -954,45 +1096,16 @@
       </div>
     </section>
 
-    <!-- Trust & Independence (Reused Section) -->
-    <section class="py-12 sm:py-16 bg-brand-600">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-white mb-2">Trust & independence</h2>
-        </div>
-        <div class="grid gap-6 md:grid-cols-3">
-          <div class="bg-white/10 backdrop-blur rounded-xl p-6">
-            <span class="text-3xl mb-3 block">🎯</span>
-            <h3 class="font-bold text-white mb-2">100% independent rankings</h3>
-            <p class="text-sm text-white/80">Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.</p>
-          </div>
-          <div class="bg-white/10 backdrop-blur rounded-xl p-6">
-            <span class="text-3xl mb-3 block">🔬</span>
-            <h3 class="font-bold text-white mb-2">Real transfer testing</h3>
-            <p class="text-sm text-white/80">We don't just scrape data—we test transfers ourselves to verify fees, speeds, and actual recipient amounts across corridors.</p>
-          </div>
-          <div class="bg-white/10 backdrop-blur rounded-xl p-6">
-            <span class="text-3xl mb-3 block">✅</span>
-            <h3 class="font-bold text-white mb-2">Licensed providers only</h3>
-            <p class="text-sm text-white/80">Every provider we list is licensed and regulated (FCA, FinCEN, ASIC). We exclude unlicensed services for your protection.</p>
-          </div>
-        </div>
-        <div class="text-center mt-8">
-          <NuxtLink
-            to="/methodology"
-            class="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-brand-600 hover:bg-neutral-100 transition-colors"
-          >
-            Learn how we compare →
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
+import CountrySelect from '~/components/shared/CountrySelect.vue'
+import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import { useCompareForm } from '~/composables/useCompareForm'
+import { useRoutes } from '~/composables/useRoutes'
 
 type ProviderHighlight = {
   label: string
@@ -1071,8 +1184,9 @@ type CorridorContent = {
 }
 
 const route = useRoute()
-const { public: { siteUrl } } = useRuntimeConfig()
-const normalizedSiteUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const normalizedSiteUrl = siteUrl && typeof siteUrl === 'string' && siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : (siteUrl || 'https://Remit-Scout.com')
 
 import {
   getCanonicalSlug,
@@ -1322,6 +1436,13 @@ const displayReceiveCurrency = ref(content.value.toCode.toUpperCase())
 const amount = displayAmount
 const sendCurrency = displaySendCurrency
 const receiveCurrency = displayReceiveCurrency
+
+// Form for the "Find Your Best Rate Now" section
+const { form: compareForm, submit: submitCompareForm } = useCompareForm()
+
+const handleFormCompare = async () => {
+  await submitCompareForm()
+}
 
 // Available currencies based on corridor countries
 const availableSendCurrencies = computed(() => {

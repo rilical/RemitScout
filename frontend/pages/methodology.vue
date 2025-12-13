@@ -3,112 +3,7 @@
     <CompareWidget />
 
     <!-- Hero Section with improved design -->
-    <section class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-emerald-50/30 py-16 lg:py-20">
-      <!-- Flying Arrows Design -->
-      <div class="pointer-events-none absolute inset-0">
-        <!-- Gradient orbs in blue and green -->
-        <div class="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-gradient-to-br from-blue-400/25 via-blue-300/20 to-transparent blur-3xl animate-pulse" />
-        <div
-          class="absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-gradient-to-tr from-emerald-400/25 via-emerald-300/20 to-transparent blur-3xl animate-pulse"
-          style="animation-delay: 1.5s;"
-        />
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-gradient-to-r from-blue-300/15 via-blue-300/15 to-emerald-300/15 blur-3xl" />
-
-        <!-- Animated Flying Arrows (Multiple directions) -->
-        <svg
-          class="absolute inset-0 w-full h-full opacity-25"
-          viewBox="0 0 1200 600"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <defs>
-            <marker
-              id="arrow-blue"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3, 0 6"
-                fill="#2563EB"
-              />
-            </marker>
-            <marker
-              id="arrow-emerald"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3, 0 6"
-                fill="#10b981"
-              />
-            </marker>
-          </defs>
-
-          <!-- Flying arrows in various directions -->
-          <path
-            d="M150,150 Q300,100 450,150 T750,150"
-            stroke="#2563EB"
-            stroke-width="3"
-            fill="none"
-            marker-end="url(#arrow-blue)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 6s ease-in-out infinite;"
-          />
-          <path
-            d="M200,300 Q400,250 600,300 T1000,300"
-            stroke="#10b981"
-            stroke-width="3"
-            fill="none"
-            marker-end="url(#arrow-emerald)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8s ease-in-out infinite 1s;"
-          />
-          <path
-            d="M100,400 Q250,350 400,400 T700,400"
-            stroke="#2563EB"
-            stroke-width="2.5"
-            fill="none"
-            marker-end="url(#arrow-blue)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7s ease-in-out infinite 0.5s;"
-          />
-          <path
-            d="M800,100 Q950,50 1100,100"
-            stroke="#10b981"
-            stroke-width="2.5"
-            fill="none"
-            marker-end="url(#arrow-emerald)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 9s ease-in-out infinite 2s;"
-          />
-          <path
-            d="M50,250 Q200,200 350,250 T650,250"
-            stroke="#2563EB"
-            stroke-width="2"
-            fill="none"
-            marker-end="url(#arrow-blue)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 10s ease-in-out infinite 1.5s;"
-          />
-          <path
-            d="M900,450 Q1050,400 1150,450"
-            stroke="#10b981"
-            stroke-width="2.5"
-            fill="none"
-            marker-end="url(#arrow-emerald)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 7.5s ease-in-out infinite 0.8s;"
-          />
-          <path
-            d="M300,500 Q500,450 700,500 T1100,500"
-            stroke="#2563EB"
-            stroke-width="2"
-            fill="none"
-            marker-end="url(#arrow-blue)"
-            style="stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawPath 8.5s ease-in-out infinite 2.5s;"
-          />
-        </svg>
-      </div>
-
+    <section class="relative bg-white py-16 lg:py-20">
       <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
@@ -118,16 +13,16 @@
           <!-- Trust badges -->
           <div class="flex flex-wrap gap-3">
             <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
-                <span>🎯</span>
-              100% Independent
+                <span>🛡️</span>
+              No pay-to-rank
             </div>
             <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-emerald-200/50">
-                <span>✅</span>
-              Real Transfer Testing
+                <span>🧪</span>
+              Spot-check testing
             </div>
             <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
-                <span>🎓</span>
-              CMU-Backed
+                <span>📊</span>
+              Live pricing data
             </div>
           </div>
 
@@ -144,8 +39,9 @@
             <!-- Stats -->
           <div class="flex flex-wrap gap-4 pt-4">
             <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-              <div class="text-2xl font-bold text-blue-600">
-                {{ SITE_STATS.providers.display }}
+              <div class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                <span>🏦</span>
+                <span>{{ SITE_STATS.providers.display }}</span>
               </div>
               <div class="text-sm text-neutral-600">
                 Licensed Providers
@@ -153,8 +49,9 @@
             </div>
 
             <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
-              <div class="text-2xl font-bold text-emerald-600">
-                {{ SITE_STATS.corridors.display }}
+              <div class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
+                <span>🌍</span>
+                <span>{{ SITE_STATS.corridors.display }}</span>
               </div>
               <div class="text-sm text-neutral-600">
                 Money Corridors
@@ -162,8 +59,9 @@
             </div>
 
             <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-              <div class="text-2xl font-bold text-blue-600">
-                {{ SITE_STATS.totalSaved.display }}
+              <div class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                <span>💰</span>
+                <span>{{ SITE_STATS.totalSaved.display }}</span>
               </div>
               <div class="text-sm text-neutral-600">
                 Saved by Users
@@ -429,10 +327,10 @@
               <span class="text-3xl">✅</span>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
-              Reliability Scores
+              Availability & Quote Success
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              Based on thousands of real transfers, we track success rates, complaint resolution, and overall reliability for each provider.
+              We track quote success rate, data freshness, and pricing stability. Spot checks on selected corridors validate provider claims where feasible.
             </p>
             <NuxtLink
               to="/providers"
@@ -541,7 +439,7 @@
                     <span class="text-brand-600 font-bold text-lg">20%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    On-time delivery rate, failure rate, API uptime, and corridor coverage consistency
+                    Quote success rate, data freshness, pricing stability (where available)
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -559,7 +457,7 @@
                     <span class="text-brand-600 font-bold text-lg">15%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    KYC friction, time to first send, and delivery speed (P50/P95) for your scenario
+                    ETA where available, speed buckets, observed delivery times on selected corridors
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -595,7 +493,7 @@
                     <span class="text-brand-600 font-bold text-lg">10%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    Licensing verification, regulatory compliance, complaint rate, security certifications (SOC2/PCI)
+                    Public licensing checks where available, regulatory register verification
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -811,80 +709,35 @@
               How We Test & Verify Providers
             </h2>
             <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
-              Real transfers, real receipts, real results—our methodology is backed by actual money movements across <NuxtLink
-                to="/send-money"
-                class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-              >{{ SITE_STATS.corridors.display }} corridors</NuxtLink>
+              Spot-check validation on selected corridors and methods
             </p>
           </div>
 
-          <div class="grid gap-8 lg:grid-cols-2">
+          <div class="grid gap-8 lg:grid-cols-3">
             <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
               <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
-                <svg
-                  class="h-7 w-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
+                <span class="text-3xl">📊</span>
               </div>
               <h3 class="text-xl font-bold text-slate-900 mb-4">
-                Data Collection & Verification
+                Data Collection
               </h3>
-              <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                We start with live <NuxtLink
-                  to="/exchange-rates"
-                  class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                >exchange rates</NuxtLink> and fees from provider APIs, then cross-check them with real transfers we've completed.
-              </p>
+            <p class="text-sm text-slate-600 leading-relaxed mb-4">
+              We collect live <NuxtLink
+                to="/exchange-rates"
+                class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
+              >exchange rates</NuxtLink> and fees from provider APIs, then validate with spot-check transfers on selected corridors.
+            </p>
               <ul class="space-y-3 text-sm text-slate-600">
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-brand-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Verify licensing with FCA, FinCEN, ASIC</span>
+                <span>🧩</span>
+                <span>We check publicly available regulatory registers where applicable</span>
                 </li>
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-brand-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
+                  <span>🔄</span>
                   <span>Update rates multiple times daily</span>
                 </li>
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-brand-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
+                  <span>✅</span>
                   <span>Cross-reference with actual transfers</span>
                 </li>
               </ul>
@@ -892,186 +745,73 @@
 
             <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
               <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600 shadow-md">
-                <svg
-                  class="h-7 w-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <span class="text-3xl">🧪</span>
               </div>
               <h3 class="text-xl font-bold text-slate-900 mb-4">
-                Real Transfer Testing
+                Verification
               </h3>
-              <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                We put our own money on the line across popular corridors, different amounts, and various payout methods.
-              </p>
+            <p class="text-sm text-slate-600 leading-relaxed mb-4">
+              We run periodic test transfers on selected corridors to validate provider claims.
+            </p>
               <ul class="space-y-3 text-sm text-slate-600">
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-emerald-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Test bank, cash pickup, mobile wallet</span>
+                  <span>🌍</span>
+                  <span>Common corridors (US, UK, EU, CA, AU)</span>
                 </li>
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-emerald-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Track actual delivery times</span>
+                  <span>💵</span>
+                  <span>Multiple transfer amounts ($100–$10,000)</span>
                 </li>
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-emerald-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Test customer support response</span>
+                  <span>📱</span>
+                  <span>Different payout methods (Bank, Cash, Mobile Money)</span>
                 </li>
               </ul>
             </div>
 
             <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
-              <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-orange-600 shadow-md">
-                <svg
-                  class="h-7 w-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-4">
-                Total Cost Calculation
-              </h3>
-              <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                We compare the real "recipient gets" amount to the mid-market rate to expose hidden markups. <NuxtLink
-                  to="/learn/how-to-avoid-hidden-fees"
-                  class="font-semibold text-orange-600 hover:text-orange-700 underline decoration-orange-600/30"
-                >Learn more about hidden fees</NuxtLink>.
-              </p>
-              <div class="rounded-lg border border-orange-200 bg-orange-50 p-4 text-xs text-slate-700">
-                <strong class="text-orange-900">Example:</strong> If you send $1,000 USD and the mid-market rate is 83.00 INR but provider pays 81.50 INR, that's ₹1,500 gone in hidden fees. We show you this clearly.
-              </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
-              <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-purple-600 shadow-md">
-                <svg
-                  class="h-7 w-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+              <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-md">
+                <span class="text-3xl">📡</span>
               </div>
               <h3 class="text-xl font-bold text-slate-900 mb-4">
                 Ongoing Monitoring
               </h3>
               <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                Rates move, fees change, rules evolve. We keep our data fresh and accurate.
+                We continuously monitor provider rates and reliability to ensure data accuracy.
               </p>
               <ul class="space-y-3 text-sm text-slate-600">
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-purple-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Refresh data multiple times daily</span>
+                  <span>🚨</span>
+                  <span>Automated alerts for unusual rate changes</span>
                 </li>
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-purple-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Update Remit-Scores regularly</span>
+                  <span>⏱️</span>
+                  <span>Track delivery time anomalies</span>
                 </li>
                 <li class="flex items-start gap-3">
-                  <svg
-                    class="h-5 w-5 flex-shrink-0 text-purple-600 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span>Monitor user feedback continuously</span>
+                  <span>💬</span>
+                  <span>User feedback incorporated weekly</span>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-      </section>
+	    </section>
+	    </div>
+	    <!-- Trust Section - E-E-A-T Focused -->
+	    <section class="scroll-mt-20">
+	      <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-16 lg:py-20 text-white">
+	          <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+              <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+                Why Trust Remit-Scout
+              </h2>
+              <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
+                Experience, Expertise, Authoritativeness, and Trustworthiness verified through real transfers and transparent methodology
+              </p>
+            </div>
 
-      <!-- Trust Section - E-E-A-T Focused -->
-      <section class="scroll-mt-20">
-        <div class="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 lg:p-12 shadow-2xl text-white">
-          <div class="text-center mb-10">
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Why Trust Remit-Scout
-            </h2>
-            <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
-              Experience, Expertise, Authoritativeness, and Trustworthiness verified through real transfers and transparent methodology
-            </p>
-          </div>
-
-          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
             <!-- Experience -->
             <div class="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur">
               <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
@@ -1084,7 +824,7 @@
                 Built by expats who send money home regularly. <NuxtLink
                   to="/about"
                   class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >Learn about our founder</NuxtLink> and real-world testing across {{ SITE_STATS.corridors.display }} corridors.
+                >Learn about our founder</NuxtLink> and spot-check testing across selected corridors.
               </p>
               <div class="text-xs text-white/70">
                 {{ SITE_STATS.users.display }} users trust our comparisons
@@ -1100,10 +840,10 @@
                 Expertise
               </h3>
               <p class="text-sm text-white/90 leading-relaxed mb-3">
-                Backed by <strong>Carnegie Mellon's Swartz Entrepreneurship Program</strong>. Data-driven methodology verified through <NuxtLink
-                  to="/providers"
+                Developed at Carnegie Mellon (Swartz Center for Entrepreneurship). We run spot-check testing across <NuxtLink
+                  to="/about"
                   class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
+                >selected corridors</NuxtLink>. Not affiliated with or endorsed by Carnegie Mellon University.
               </p>
               <div class="text-xs text-white/70">
                 Academic rigor applied to every test
@@ -1119,10 +859,13 @@
                 Authoritativeness
               </h3>
               <p class="text-sm text-white/90 leading-relaxed mb-3">
-                Licensed provider verification (FCA, FinCEN, ASIC). Real transfer receipts. <NuxtLink
-                  to="/legal/methodology"
+                We check publicly available regulatory registers where applicable and label provider coverage accordingly. See our <NuxtLink
+                  to="/legal/disclosure"
                   class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >Transparent methodology</NuxtLink> reviewed against live data.
+                >affiliate disclosure</NuxtLink> and <NuxtLink
+                  to="/legal/privacy"
+                  class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
+                >privacy policy</NuxtLink>.
               </p>
               <div class="text-xs text-white/70">
                 Only regulated providers included
@@ -1138,7 +881,7 @@
                 Trustworthiness
               </h3>
               <p class="text-sm text-white/90 leading-relaxed mb-3">
-                100% independent rankings. <NuxtLink
+                No pay-to-rank. <NuxtLink
                   to="/how-we-make-money"
                   class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
                 >Revenue disclosure</NuxtLink> transparent. Affiliate commissions never influence rankings.
@@ -1147,74 +890,76 @@
                 {{ SITE_STATS.totalSaved.display }} saved by users
               </div>
             </div>
-          </div>
+            </div>
 
-          <div class="rounded-2xl border-2 border-white/20 bg-white/10 p-6 backdrop-blur mb-6">
-            <div class="flex items-start gap-4">
-              <svg
-                class="h-8 w-8 flex-shrink-0 text-white mt-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              <div>
-                <h3 class="text-xl font-bold mb-2">
-                  Transparency & Verification
-                </h3>
-                <p class="text-sm text-white/90 leading-relaxed mb-3">
-                  Every comparison is backed by real transfer data. Methodology reviewed by <NuxtLink
-                    to="/about"
-                    class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                  >Omar Ghabayen</NuxtLink> (CMU Swartz Entrepreneurship Program). See our <NuxtLink
-                    to="/legal/disclosure"
-                    class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                  >affiliate disclosure</NuxtLink> and <NuxtLink
-                    to="/legal/privacy"
-                    class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                  >privacy policy</NuxtLink>.
-                </p>
+            <div class="rounded-2xl border-2 border-white/20 bg-white/10 p-6 backdrop-blur mb-6 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+              <div class="flex items-start gap-4">
+                <svg
+                  class="h-8 w-8 flex-shrink-0 text-white mt-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+                <div>
+                  <h3 class="text-xl font-bold mb-2">
+                    Transparency & Verification
+                  </h3>
+                  <p class="text-sm text-white/90 leading-relaxed mb-3">
+                    Every comparison is backed by spot-check transfer data. Methodology reviewed by <NuxtLink
+                      to="/about"
+                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
+                    >Omar Ghabayen</NuxtLink>. See our <NuxtLink
+                      to="/legal/disclosure"
+                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
+                    >affiliate disclosure</NuxtLink> and <NuxtLink
+                      to="/legal/privacy"
+                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
+                    >privacy policy</NuxtLink>.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Internal Links for E-E-A-T -->
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-center">
-            <NuxtLink
-              to="/about"
-              class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-            >
-              About the Founder
-            </NuxtLink>
-            <NuxtLink
-              to="/how-we-make-money"
-              class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-            >
-              Revenue Model
-            </NuxtLink>
-            <NuxtLink
-              to="/providers"
-              class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-            >
-              Verified Providers
-            </NuxtLink>
-            <NuxtLink
-              to="/faq"
-              class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-            >
-              FAQs
-            </NuxtLink>
+            <!-- Internal Links for E-E-A-T -->
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-center mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+              <NuxtLink
+                to="/about"
+                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              >
+                About the Founder
+              </NuxtLink>
+              <NuxtLink
+                to="/how-we-make-money"
+                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              >
+                Revenue Model
+              </NuxtLink>
+              <NuxtLink
+                to="/providers"
+                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              >
+                Verified Providers
+              </NuxtLink>
+              <NuxtLink
+                to="/faq"
+                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              >
+                FAQs
+              </NuxtLink>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Guides Section -->
+    <!-- Guides Section -->
+    <div class="container mx-auto max-w-6xl px-4 py-20">
       <section class="scroll-mt-20">
         <div class="text-center mb-12">
           <div class="inline-flex items-center gap-2 rounded-full bg-blue-600/10 px-4 py-2 text-sm font-semibold text-blue-700 mb-4">
@@ -1361,15 +1106,17 @@
           </NuxtLink>
         </div>
       </section>
+    </div>
+  </div>
 
-      <!-- Final CTA -->
-      <section class="scroll-mt-20">
-        <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-r from-brand-600 via-blue-600 to-brand-700 p-8 lg:p-12 shadow-2xl text-white text-center">
-          <h2 class="text-3xl font-bold text-white mb-4 sm:text-4xl lg:text-5xl">
+  <!-- Final CTA -->
+  <section class="bg-gradient-to-r from-brand-600 via-blue-600 to-brand-700 py-16 lg:py-20">
+      <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-white">
+          <h2 class="text-3xl font-bold mb-4 sm:text-4xl lg:text-5xl">
             Ready to Save on Your Next Transfer?
           </h2>
           <p class="mx-auto mb-8 max-w-2xl text-lg text-white/95 leading-relaxed">
-            Compare live rates from {{ SITE_STATS.providers.display }} licensed providers in seconds. See exactly how much your recipient will get no hidden fees, no marketing fluff.
+            Compare live rates from {{ SITE_STATS.providers.display }} licensed providers in seconds. See exactly how much your recipient will get—no hidden fees, no marketing fluff.
           </p>
           <NuxtLink
             to="/"
@@ -1391,9 +1138,7 @@
             </svg>
           </NuxtLink>
         </div>
-      </section>
-    </div>
-  </div>
+    </section>
 </template>
 
 <script setup lang="ts">
