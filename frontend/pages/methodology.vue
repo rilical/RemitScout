@@ -10,61 +10,65 @@
         <div class="mt-10 grid gap-12 lg:grid-cols-2 lg:items-center">
           <!-- Left Column: Content -->
           <div class="space-y-8">
-          <!-- Trust badges -->
-          <div class="flex flex-wrap gap-3">
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
+            <!-- Trust badges -->
+            <div class="flex flex-wrap gap-3">
+              <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
                 <span>🛡️</span>
-              No pay-to-rank
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-emerald-200/50">
+                No pay-to-rank
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-emerald-200/50">
                 <span>🧪</span>
-              Spot-check testing
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
+                Spot-check testing
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
                 <span>📊</span>
-              Live pricing data
+                Live pricing data
+              </div>
             </div>
-          </div>
 
             <div>
               <h1 class="text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl">
-            How We Compare Money Transfer Providers
-          </h1>
+                How We Compare Money Transfer Providers
+              </h1>
 
               <p class="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-600">
-            Transparent, data-driven methodology built by expats who got tired of losing money to hidden fees
-          </p>
+                Transparent, data-driven methodology built by expats who got tired of losing money to hidden fees
+              </p>
+              <p class="mt-4 text-sm text-neutral-600">
+                Last updated:
+                <time :datetime="lastUpdatedIso">{{ lastUpdatedLabel }}</time>
+              </p>
             </div>
 
             <!-- Stats -->
-          <div class="flex flex-wrap gap-4 pt-4">
-            <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-              <div class="text-2xl font-bold text-blue-600 flex items-center gap-2">
-                <span>🏦</span>
-                <span>{{ SITE_STATS.providers.display }}</span>
+            <div class="flex flex-wrap gap-4 pt-4">
+              <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
+                <div class="flex items-center gap-2 text-2xl font-bold text-blue-600">
+                  <span>🏦</span>
+                  <span>{{ SITE_STATS.providers.display }}</span>
+                </div>
+                <div class="text-sm text-neutral-600">
+                  Licensed Providers
+                </div>
               </div>
-              <div class="text-sm text-neutral-600">
-                Licensed Providers
-              </div>
-            </div>
 
-            <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
-              <div class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
-                <span>🌍</span>
-                <span>{{ SITE_STATS.corridors.display }}</span>
+              <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
+                <div class="flex items-center gap-2 text-2xl font-bold text-emerald-600">
+                  <span>🌍</span>
+                  <span>{{ SITE_STATS.corridors.display }}</span>
+                </div>
+                <div class="text-sm text-neutral-600">
+                  Money Corridors
+                </div>
               </div>
-              <div class="text-sm text-neutral-600">
-                Money Corridors
-              </div>
-            </div>
 
-            <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-              <div class="text-2xl font-bold text-blue-600 flex items-center gap-2">
-                <span>💰</span>
-                <span>{{ SITE_STATS.totalSaved.display }}</span>
-              </div>
-              <div class="text-sm text-neutral-600">
-                Saved by Users
+              <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
+                <div class="flex items-center gap-2 text-2xl font-bold text-blue-600">
+                  <span>💰</span>
+                  <span>{{ SITE_STATS.totalSaved.display }}</span>
+                </div>
+                <div class="text-sm text-neutral-600">
+                  Saved by Users
                 </div>
               </div>
             </div>
@@ -190,14 +194,13 @@
       </div>
     </section>
 
-    <!-- Main content -->
-    <div class="container mx-auto max-w-6xl px-4 py-20 space-y-24">
-      <!-- Compare Providers Section -->
-      <section
-        id="providers"
-        class="scroll-mt-20"
-      >
-        <div class="text-center mb-16">
+    <!-- Compare Providers Section -->
+    <section
+      id="providers"
+      class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20"
+    >
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
           <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/10 px-4 py-2 text-sm font-semibold text-brand-700 mb-6">
             <svg
               class="h-4 w-4"
@@ -228,7 +231,7 @@
           </p>
         </div>
 
-        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           <div class="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100">
               <span class="text-3xl">📊</span>
@@ -293,37 +296,6 @@
 
           <div class="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100">
-              <span class="text-3xl">⚡</span>
-            </div>
-            <h3 class="text-xl font-bold text-neutral-900 mb-3">
-              Delivery Speeds
-            </h3>
-            <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We track actual delivery times from real transfers, not marketing promises. See how fast your money actually arrives.
-            </p>
-            <NuxtLink
-              to="/learn/fastest-way-to-send-money-internationally"
-              class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 mt-auto"
-            >
-              Fastest transfer methods
-              <svg
-                class="h-3 w-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </NuxtLink>
-          </div>
-
-          <div class="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1">
-            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100">
               <span class="text-3xl">✅</span>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
@@ -353,11 +325,13 @@
             </NuxtLink>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Remit Score Section -->
-      <section class="scroll-mt-20">
-        <div class="bg-gradient-to-r from-brand-50 to-blue-50 border border-brand-200 rounded-3xl p-8 lg:p-12">
+    <!-- Remit Score Section -->
+    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-r from-brand-50 to-blue-50 border-2 border-brand-200 rounded-3xl p-8 lg:p-12">
           <div class="mb-8">
             <div class="flex items-start gap-4 mb-6">
               <div class="flex-shrink-0">
@@ -501,59 +475,163 @@
                       style="width: 10%"
                     />
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+	                </div>
+	              </div>
+	            </div>
+	          </div>
+	        </div>
+	      </div>
+	    </section>
 
-      <!-- Why Compare Section -->
-      <section class="scroll-mt-20">
-        <div class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-10 lg:p-14 shadow-lg">
-          <div class="flex items-start gap-4 mb-8">
-            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-600 shadow-lg">
-              <svg
-                class="h-6 w-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900">
-              Why You Need to Compare Before Every Transfer
-            </h2>
-          </div>
-          <div class="space-y-6 text-base leading-relaxed text-neutral-700">
-            <p>
-              Just like you wouldn't book a flight or hotel without comparing prices, you shouldn't send money abroad without checking your options first. The difference between providers can be <strong class="font-bold text-brand-600">hundreds of dollars</strong> on a single transfer—money that could go to your family instead of fees and hidden markups.
-            </p>
-            <p>
-              Traditional banks and even some "low fee" providers hide their real costs in exchange rate markups. A provider might advertise "$0 fees" but charge you 3–5% more than the real exchange rate. That's why we show you the <strong class="font-bold text-neutral-900">actual amount your recipient will receive</strong>—the only number that actually matters.
-            </p>
-            <p>
-              Remit-Scout helps you find the best deal by comparing live rates, total costs, and delivery speeds from <NuxtLink
-                to="/providers"
-                class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-              >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>. We test, verify, and explain every option so you can send with confidence. Learn more about us on our <NuxtLink
-                to="/about"
-                class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-              >about page</NuxtLink>.
-            </p>
-          </div>
-        </div>
-      </section>
+	    <!-- Show Your Work Section -->
+	    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+	      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	        <div class="flex items-start gap-4 mb-12">
+	          <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-slate-900 shadow-lg">
+	            <span class="text-3xl text-white">🧾</span>
+	          </div>
+	          <div class="flex-1">
+	            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-2">
+	              Show your work
+	            </h2>
+	            <p class="text-base text-neutral-700 max-w-3xl leading-relaxed">
+	              We don’t ask you to trust a black box. Here’s what we measure, how we calculate “recipient gets,” how we handle freshness, and what can change at checkout.
+	            </p>
+	          </div>
+	        </div>
 
-      <!-- How It Works Section -->
-      <section class="scroll-mt-20">
-        <div class="text-center mb-16">
+	        <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
+	          <div class="space-y-6">
+	            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+	              <h3 class="text-lg font-bold text-neutral-900 mb-3">
+	                Editorial &amp; independence
+	              </h3>
+	              <ul class="space-y-2 text-sm text-neutral-800">
+	                <li class="flex items-start gap-2">
+	                  <span aria-hidden="true">✅</span>
+	                  <span>Providers cannot pay to rank higher.</span>
+	                </li>
+	                <li class="flex items-start gap-2">
+	                  <span aria-hidden="true">✅</span>
+	                  <span>We may earn affiliate commissions on referrals, but they never affect ranking or Remit-Score.</span>
+	                </li>
+	                <li class="flex items-start gap-2">
+	                  <span aria-hidden="true">✅</span>
+	                  <span>We do not hold or move money — transfers happen on provider websites/apps.</span>
+	                </li>
+	              </ul>
+	              <div class="mt-4 flex flex-col gap-2">
+	                <NuxtLink
+	                  to="/how-we-make-money"
+	                  class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+	                >
+	                  Revenue Model
+	                </NuxtLink>
+	                <NuxtLink
+	                  to="/affiliate-disclosure"
+	                  class="inline-flex items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
+	                >
+	                  Affiliate disclosure
+	                </NuxtLink>
+	              </div>
+	            </div>
+
+	            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+	              <h3 class="text-lg font-bold text-neutral-900 mb-3">
+	                Quick links
+	              </h3>
+	              <div class="grid gap-3">
+	                <NuxtLink
+	                  to="/pulse"
+	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
+	                >
+	                  Explore Pulse
+	                </NuxtLink>
+	                <NuxtLink
+	                  to="/providers"
+	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
+	                >
+	                  Verified Providers
+	                </NuxtLink>
+	                <NuxtLink
+	                  to="/about"
+	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
+	                >
+	                  About the Founder
+	                </NuxtLink>
+	                <NuxtLink
+	                  to="/contact"
+	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
+	                >
+	                  Report a problem
+	                </NuxtLink>
+	              </div>
+	            </div>
+	          </div>
+
+	          <div>
+	            <FaqAccordion :faqs="showYourWorkFaqs" />
+	          </div>
+	        </div>
+	      </div>
+	    </section>
+
+	    <!-- Why Compare Section -->
+	    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+	      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	        <div class="flex items-start gap-4 mb-8">
+	          <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-brand-600 shadow-lg">
+	            <svg
+	              class="h-7 w-7 text-white"
+	              fill="none"
+	              stroke="currentColor"
+	              viewBox="0 0 24 24"
+	            >
+	              <path
+	                stroke-linecap="round"
+	                stroke-linejoin="round"
+	                stroke-width="2"
+	                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+	              />
+	            </svg>
+	          </div>
+	          <div class="flex-1">
+	            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-6">
+	              Why You Need to Compare Before Every Transfer
+	            </h2>
+	            <div class="space-y-6 text-lg leading-relaxed text-neutral-700">
+	              <p>
+	                Just like you wouldn't book a flight or hotel without comparing prices, you shouldn't send money abroad without checking your options first. The difference between providers can be <strong class="font-bold text-brand-600">hundreds of dollars</strong> on a single transfer—money that could go to your family instead of fees and hidden markups.
+	              </p>
+	              <p>
+	                Traditional banks and even some "low fee" providers hide their real costs in exchange rate markups. A provider might advertise "$0 fees" but charge you 3–5% more than the real exchange rate. That's why we show you the <strong class="font-bold text-neutral-900">actual amount your recipient will receive</strong>—the only number that actually matters.
+	              </p>
+	              <p>
+	                Remit-Scout helps you find the best deal by comparing live rates, total costs, and delivery speeds from <NuxtLink
+	                  to="/providers"
+	                  class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
+	                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>. We test, verify, and explain every option so you can send with confidence. Learn more about us on our <NuxtLink
+	                  to="/about"
+	                  class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
+	                >about page</NuxtLink>.
+	              </p>
+	            </div>
+	          </div>
+	        </div>
+	      </div>
+	    </section>
+
+    <!-- Educational Example Section -->
+    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <BankVsSpecialistDynamic />
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
           <div class="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 px-4 py-2 text-sm font-semibold text-emerald-700 mb-6">
             <svg
               class="h-4 w-4"
@@ -578,143 +656,126 @@
           </p>
         </div>
 
-        <div class="space-y-8">
-          <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 shadow-lg transition-all hover:shadow-2xl">
-            <div class="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-brand-600/10 blur-2xl" />
-            <div class="relative flex items-start gap-8">
-              <div class="flex-shrink-0">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-                  <span class="text-3xl">📝</span>
-                </div>
+        <div class="grid gap-8 lg:grid-cols-3">
+          <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-all hover:shadow-2xl">
+            <div class="flex flex-col h-full">
+              <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
+                <span class="text-3xl">📝</span>
               </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                  <span class="whitespace-nowrap">1. Enter your</span> <span class="whitespace-nowrap">transfer details</span>
-                </h3>
-                <p class="text-neutral-700 leading-relaxed mb-3">
-                  Tell us where you're sending money from, where the money's going, and how much. We'll instantly show you live quotes from <NuxtLink
-                    to="/providers"
-                    class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                  >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
-                </p>
-                <p class="text-sm text-neutral-600">
-                  Our comparison engine fetches current rates and fees in real-time. <span class="whitespace-nowrap">Takes 30 seconds.</span>
-                </p>
-              </div>
+              <h3 class="text-xl font-bold text-neutral-900 mb-3">
+                1. Enter your transfer details
+              </h3>
+              <p class="text-neutral-700 leading-relaxed mb-3 flex-1">
+                Tell us where you're sending money from, where the money's going, and how much. We'll instantly show you live quotes from <NuxtLink
+                  to="/providers"
+                  class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
+                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
+              </p>
+              <p class="text-sm text-neutral-600">
+                Our comparison engine fetches current rates and fees in real-time. Takes 30 seconds.
+              </p>
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 shadow-lg transition-all hover:shadow-2xl">
-            <div class="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-emerald-600/10 blur-2xl" />
-            <div class="relative flex items-start gap-8">
-              <div class="flex-shrink-0">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-                  <span class="text-3xl">🔍</span>
-                </div>
+          <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-all hover:shadow-2xl">
+            <div class="flex flex-col h-full">
+              <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
+                <span class="text-3xl">🔍</span>
               </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                  <span class="whitespace-nowrap">2. Compare & choose the</span> <span class="whitespace-nowrap">best provider</span>
-                </h3>
-                <p class="text-neutral-700 leading-relaxed mb-4">
-                  Our comparison engine shows results organized by transfer type (bank account, cash pick-up, mobile wallet) and ranked from cheapest to most expensive based on what your recipient actually receives.
-                </p>
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-3">
-                    <span class="text-base">⚡</span>
-                    <span class="text-sm text-neutral-700"><strong class="font-semibold">Transfer speed</strong> – Minutes to days</span>
-                  </div>
-                  <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-3">
-                    <span class="text-base">💳</span>
-                    <span class="text-sm text-neutral-700"><strong class="font-semibold">Payment method</strong> – Bank, card, etc.</span>
-                  </div>
-                  <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-3">
-                    <span class="text-base">⭐</span>
-                    <span class="text-sm text-neutral-700"><strong class="font-semibold">Remit-Score</strong> – Independent rating</span>
-                  </div>
-                  <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-3">
-                    <span class="text-base">💰</span>
-                    <span class="text-sm text-neutral-700"><strong class="font-semibold">Total cost</strong> – Fees + markup</span>
-                  </div>
+              <h3 class="text-xl font-bold text-neutral-900 mb-3">
+                2. Compare & choose the best provider
+              </h3>
+              <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
+                Our comparison engine shows results organized by transfer type (bank account, cash pick-up, mobile wallet) and ranked from cheapest to most expensive based on what your recipient actually receives.
+              </p>
+              <div class="grid gap-2 sm:grid-cols-2">
+                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
+                  <span class="text-sm">⚡</span>
+                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Transfer speed</strong></span>
+                </div>
+                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
+                  <span class="text-sm">💳</span>
+                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Payment method</strong></span>
+                </div>
+                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
+                  <span class="text-sm">⭐</span>
+                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Remit-Score</strong></span>
+                </div>
+                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
+                  <span class="text-sm">💰</span>
+                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Total cost</strong></span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 shadow-lg transition-all hover:shadow-2xl">
-            <div class="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-orange-600/10 blur-2xl" />
-            <div class="relative flex items-start gap-8">
-              <div class="flex-shrink-0">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-                  <span class="text-3xl">✅</span>
-                </div>
+          <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-all hover:shadow-2xl">
+            <div class="flex flex-col h-full">
+              <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
+                <span class="text-3xl">✅</span>
               </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                  <span class="whitespace-nowrap">3. Send money and save</span>
-                </h3>
-                <p class="text-neutral-700 leading-relaxed mb-4">
-                  After selecting a provider, you'll be redirected to their website to sign up and validate your account before making the transfer. <span class="whitespace-nowrap">Takes 5–10 minutes</span> for first-time users.
-                </p>
-                <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
-                  <div class="flex items-start gap-3">
-                    <svg
-                      class="h-6 w-6 flex-shrink-0 text-brand-600 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                    <p class="text-sm text-neutral-700 leading-relaxed">
-                      <strong class="font-bold text-neutral-900"><span class="whitespace-nowrap">100% Independent</span> & Free:</strong> We earn a small commission when you use our links, but this never affects our rankings. <span class="whitespace-nowrap">We show you the best deal</span> based on total cost, speed, and reliability. Read more about <NuxtLink
-                        to="/how-we-make-money"
-                        class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                      >how we make money</NuxtLink>.
-                    </p>
-                  </div>
+              <h3 class="text-xl font-bold text-neutral-900 mb-3">
+                3. Send money and save
+              </h3>
+              <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
+                After selecting a provider, you'll be redirected to their website to sign up and validate your account before making the transfer. Takes 5–10 minutes for first-time users.
+              </p>
+              <div class="rounded-xl border border-brand-200 bg-brand-50 p-4">
+                <div class="flex items-start gap-2">
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-brand-600 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <p class="text-xs text-neutral-700 leading-relaxed">
+                    <strong class="font-bold text-neutral-900">100% Independent & Free:</strong> We earn a small commission when you use our links, but this never affects our rankings.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Testing Methodology -->
-      <section class="scroll-mt-20">
-        <div class="rounded-3xl border-2 border-slate-200 bg-white p-10 lg:p-16 shadow-xl">
-          <div class="text-center mb-14">
-            <div class="inline-flex items-center gap-2 rounded-full bg-purple-600/10 px-4 py-2 text-sm font-semibold text-purple-700 mb-6">
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-              Our Testing Process
-            </div>
-            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-              How We Test & Verify Providers
-            </h2>
-            <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
-              Spot-check validation on selected corridors and methods
-            </p>
+    <!-- Testing Methodology -->
+    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center gap-2 rounded-full bg-purple-600/10 px-4 py-2 text-sm font-semibold text-purple-700 mb-6">
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
+            </svg>
+            Our Testing Process
           </div>
+          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+            How We Test & Verify Providers
+          </h2>
+          <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
+            Spot-check validation on selected corridors and methods
+          </p>
+        </div>
 
-          <div class="grid gap-8 lg:grid-cols-3">
-            <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
+        <div class="grid gap-8 lg:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
                 <span class="text-3xl">📊</span>
               </div>
@@ -743,7 +804,7 @@
               </ul>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
+            <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600 shadow-md">
                 <span class="text-3xl">🧪</span>
               </div>
@@ -769,7 +830,7 @@
               </ul>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 hover:shadow-lg transition-shadow">
+            <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-md">
                 <span class="text-3xl">📡</span>
               </div>
@@ -795,13 +856,12 @@
               </ul>
             </div>
           </div>
-        </div>
-	    </section>
-	    </div>
-	    <!-- Trust Section - E-E-A-T Focused -->
-	    <section class="scroll-mt-20">
-	      <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-16 lg:py-20 text-white">
-	          <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      </div>
+    </section>
+
+    <!-- Trust Section - E-E-A-T Focused -->
+    <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-16 lg:py-20 text-white scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
               <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
                 Why Trust Remit-Scout
@@ -860,7 +920,7 @@
               </h3>
               <p class="text-sm text-white/90 leading-relaxed mb-3">
                 We check publicly available regulatory registers where applicable and label provider coverage accordingly. See our <NuxtLink
-                  to="/legal/disclosure"
+                  to="/affiliate-disclosure"
                   class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
                 >affiliate disclosure</NuxtLink> and <NuxtLink
                   to="/legal/privacy"
@@ -916,22 +976,31 @@
                       to="/about"
                       class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
                     >Omar Ghabayen</NuxtLink>. See our <NuxtLink
-                      to="/legal/disclosure"
+                      to="/affiliate-disclosure"
                       class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
                     >affiliate disclosure</NuxtLink> and <NuxtLink
                       to="/legal/privacy"
                       class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
                     >privacy policy</NuxtLink>.
                   </p>
+                  <p class="text-sm text-white/90 leading-relaxed">
+                    See something off? Review our <NuxtLink
+                      to="/corrections"
+                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
+                    >corrections policy</NuxtLink> or <NuxtLink
+                      to="/contact"
+                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
+                    >report an issue</NuxtLink>.
+                  </p>
                 </div>
               </div>
             </div>
 
             <!-- Internal Links for E-E-A-T -->
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-center mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-              <NuxtLink
-                to="/about"
-                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+	            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-center mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+	              <NuxtLink
+	                to="/about"
+	                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
               >
                 About the Founder
               </NuxtLink>
@@ -951,16 +1020,15 @@
                 to="/faq"
                 class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
               >
-                FAQs
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-      </section>
+	                FAQs
+	              </NuxtLink>
+	            </div>
+	      </div>
+	    </section>
 
     <!-- Guides Section -->
-    <div class="container mx-auto max-w-6xl px-4 py-20">
-      <section class="scroll-mt-20">
+    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
           <div class="inline-flex items-center gap-2 rounded-full bg-blue-600/10 px-4 py-2 text-sm font-semibold text-blue-700 mb-4">
             <svg
@@ -1105,9 +1173,8 @@
             </svg>
           </NuxtLink>
         </div>
-      </section>
-    </div>
-  </div>
+      </div>
+    </section>
 
   <!-- Final CTA -->
   <section class="bg-gradient-to-r from-brand-600 via-blue-600 to-brand-700 py-16 lg:py-20">
@@ -1137,16 +1204,19 @@
               />
             </svg>
           </NuxtLink>
-        </div>
-    </section>
-</template>
+	        </div>
+	    </section>
+	  </div>
+	</template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import BankVsSpecialistDynamic from '~/components/home/BankVsSpecialistDynamic.vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
@@ -1155,6 +1225,102 @@ import { SITE_STATS } from '~/config/stats'
 const { form: moneyForm, validationError, submit: submitForm } = useCompareForm()
 const formError = validationError
 const { recordSearch } = useRemittanceApi()
+
+const lastUpdatedIso = '2025-12-01'
+const lastUpdatedLabel = computed(() => {
+  return new Date(lastUpdatedIso).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+  })
+})
+
+const showYourWorkFaqs = [
+  {
+    question: '🧠 What we measure: the Quote Record',
+    answer: `
+      <p>Every comparison on Remit-Scout starts with a normalized snapshot we call a <strong>Quote Record</strong>.</p>
+      <p>A Quote Record captures what a real user would see at a specific moment for a specific scenario — for example: <strong>Send $500 from US → Albania</strong>, funded by debit card, delivered to a bank account.</p>
+      <p><strong>Key fields we store and compare:</strong></p>
+      <ul>
+        <li><strong>Timestamp (UTC):</strong> when the quote was captured</li>
+        <li><strong>Corridor:</strong> sending/receiving countries + currency pair</li>
+        <li><strong>Send amount:</strong> amount and benchmark bucket (e.g., $200, $500, $1,000)</li>
+        <li><strong>Funding + payout method:</strong> bank vs card; bank vs cash vs wallet</li>
+        <li><strong>Fees:</strong> fixed/variable where disclosed</li>
+        <li><strong>Implied FX rate:</strong> the rate implied by the provider’s quote</li>
+        <li><strong>Recipient gets:</strong> delivered amount after fees and FX effects (based on the quote at capture time)</li>
+        <li><strong>ETA:</strong> stated or observed delivery-time bucket (where available)</li>
+        <li><strong>Availability:</strong> whether the quote returned cleanly</li>
+        <li><strong>Provenance:</strong> API/partner/public flow/spot-check (when applicable)</li>
+      </ul>
+      <p><strong>Why it matters:</strong> once you have Quote Records over time, you can build Pulse (pricing movements), alerts, and corridor indices — not just a one-off screenshot.</p>
+      <p><a href="/pulse" class="text-brand-600 hover:text-brand-700 underline font-semibold">See how Pulse uses Quote Records →</a></p>
+    `,
+  },
+  {
+    question: '✅ How we calculate “recipient gets”',
+    answer: `
+      <p><strong>Recipient gets</strong> is the number most senders actually care about: the delivered amount your recipient should receive after fees and the exchange rate a provider applies (at the time we captured the quote).</p>
+      <p><strong>In plain English:</strong></p>
+      <p><code>recipient gets = (send amount − fees) × provider FX rate</code></p>
+      <p><strong>Worked example (simple):</strong></p>
+      <ul>
+        <li><strong>Send:</strong> $500</li>
+        <li><strong>Mid-market USD→MXN:</strong> 18.50 (reference at capture time)</li>
+        <li><strong>Provider A:</strong> $5 fee, 18.00 rate → (500 − 5) × 18.00 ≈ <strong>8,910 MXN</strong></li>
+        <li><strong>Provider B:</strong> $1.99 fee, 18.45 rate → (500 − 1.99) × 18.45 ≈ <strong>9,188 MXN</strong></li>
+      </ul>
+      <p>That’s about <strong>278 MXN</strong> more delivered on the same transfer, even if both providers advertise “low fees.”</p>
+      <p><strong>Important:</strong> final checkout amounts can vary due to promos, KYC steps, payment method rules, rounding, and provider-specific pricing. We show the quote captured at the timestamp shown; the provider checkout is always the final source of truth.</p>
+    `,
+  },
+  {
+    question: '🧾 How we estimate FX markup (vs mid-market)',
+    answer: `
+      <p>Many providers earn revenue by giving an exchange rate that’s worse than the mid-market reference rate. That gap is the <strong>FX markup</strong> (a hidden cost).</p>
+      <p>We estimate markup by comparing the provider’s implied FX rate at capture time to a mid-market reference rate at the <strong>same timestamp</strong>.</p>
+      <p><code>FX markup ≈ (mid-market rate − provider rate) ÷ mid-market rate</code></p>
+      <p><strong>Why timestamps matter:</strong> FX rates move intraday. Comparing a provider quote from 12:40 to a reference rate from 11:10 introduces noise. We align timing so the comparison is fair.</p>
+      <p>When timing, coverage, or the quote payload is uncertain, we reduce confidence and prioritize transparency rather than guessing.</p>
+    `,
+  },
+  {
+    question: '📊 Data freshness & confidence scoring',
+    answer: `
+      <p>A comparison site is only as useful as its freshness. That’s why we track quote timestamps, availability, and stability.</p>
+      <ul>
+        <li><strong>Quote timestamp:</strong> when the Quote Record was captured</li>
+        <li><strong>Refresh cadence:</strong> on high-traffic corridors we aim to refresh frequently (often within ~5–15 minutes); cadence varies by corridor and provider</li>
+        <li><strong>Quote success rate:</strong> how often a provider returns a usable quote</li>
+        <li><strong>Stability:</strong> how often checkout values drift from the quote in spot checks and reported cases</li>
+        <li><strong>Performance caching:</strong> some pages may be cached for a short window to keep the site fast; “last updated” helps you interpret the timestamped data you’re viewing</li>
+      </ul>
+      <p><strong>Provenance labels:</strong> we categorize data sources so users and partners understand reliability:</p>
+      <ul>
+        <li>🧩 Provider API / partner feed (highest consistency when available)</li>
+        <li>🌐 Public quote flow capture (structured capture from quote pages where applicable)</li>
+        <li>🧪 Spot-check transfers (real transfer tests on selected corridors and methods)</li>
+      </ul>
+      <p>Over time, the goal is to expand structured feeds so coverage becomes more durable and less dependent on public quote flows.</p>
+    `,
+  },
+  {
+    question: '⚠️ Limitations + corrections policy',
+    answer: `
+      <p>We’re transparent about what can change between quote and checkout:</p>
+      <ul>
+        <li><strong>Promotions:</strong> first-time user or limited-time offers may apply at checkout</li>
+        <li><strong>KYC & compliance:</strong> verification can affect eligibility, speed, and fees</li>
+        <li><strong>Bank fees outside provider control:</strong> outgoing/incoming fees may be charged by your bank</li>
+        <li><strong>Market movement:</strong> FX rates can change minute-to-minute</li>
+        <li><strong>Method differences:</strong> card vs bank pricing can vary significantly</li>
+      </ul>
+      <p><strong>Accuracy is the product.</strong> If you notice a mismatch, please include corridor, amount, timestamp, provider, and (if possible) a checkout screenshot.</p>
+      <p><a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report a pricing issue →</a></p>
+      <p><a href="/corrections" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our corrections policy →</a></p>
+    `,
+  },
+]
 
 const handleMoneySubmit = async () => {
   const { from, to, amount, method } = moneyForm.value

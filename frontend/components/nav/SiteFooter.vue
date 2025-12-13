@@ -94,14 +94,6 @@
             </li>
             <li>
               <NuxtLink
-                to="/esim"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
-              >
-                eSIM Cards
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
                 to="/providers"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
@@ -151,10 +143,18 @@
             </li>
             <li>
               <NuxtLink
-                to="/affiliate-partnerships"
+                to="/partnerships"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
                 Partnerships
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
+                to="/media-kit"
+                class="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Media Kit
               </NuxtLink>
             </li>
             <li>
@@ -196,6 +196,14 @@
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
                 Affiliate Disclosure
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
+                to="/corrections"
+                class="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Corrections
               </NuxtLink>
             </li>
             <li>

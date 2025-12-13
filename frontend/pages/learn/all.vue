@@ -186,16 +186,6 @@ const guides = [
     updated: '2024-11-15',
   },
   {
-    slug: 'international-esim-checklist',
-    title: 'International eSIM setup checklist',
-    excerpt: 'Stay connected abroad without roaming; best-value providers to try.',
-    categoryKey: 'staying-connected',
-    readTime: '4 min read',
-    level: 'Beginner',
-    tags: ['eSIM', 'Travel'],
-    updated: '2024-10-30',
-  },
-  {
     slug: 'travel-insurance',
     title: 'Travel insurance for frequent senders',
     excerpt: 'Cover trips while you visit family abroad—medical, baggage, and delay.',

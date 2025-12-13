@@ -3,53 +3,121 @@
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
-        <div class="mt-12">
-          <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
-            About <span class="text-brand-600">Remit-Scout</span>
-          </h1>
+        <div class="mt-12 grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div>
+            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
+              About <span class="text-brand-600">Remit-Scout</span>
+            </h1>
 
-          <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed max-w-4xl">
-            Built by <span class="font-semibold text-neutral-900">expats</span>. Designed for <span class="font-semibold text-brand-600">accuracy</span>.
-          </p>
+            <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
+              Built by <span class="font-semibold text-neutral-900">expats</span> for <span class="font-semibold text-brand-600">expats</span>.
+            </p>
 
-          <p class="text-lg text-neutral-700 leading-relaxed mb-4 max-w-4xl">
-            Remit-Scout is an <strong class="font-semibold text-neutral-900">independent comparison platform</strong> for international money transfers.
-            We focus on the number that matters most: <span class="font-semibold text-brand-600">what your recipient gets</span>
-            after fees and FX markup.
-          </p>
+            <p class="text-lg text-neutral-700 leading-relaxed mb-4 max-w-3xl">
+              Remit-Scout is an <strong class="font-semibold text-neutral-900">independent comparison platform</strong> for international money transfers.
+              We focus on the number that matters most: <span class="font-semibold text-brand-600">what your recipient gets</span>
+              after fees and FX markup.
+            </p>
 
-          <p class="text-base text-neutral-600 leading-relaxed mb-8 max-w-4xl">
-            Developed at <a
-              href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="font-medium text-brand-600 underline decoration-brand-600/30 hover:text-brand-700 hover:decoration-brand-700"
-            >Carnegie Mellon (Swartz Center for Entrepreneurship)</a>. Remit-Scout is an independent project and is not endorsed by Carnegie Mellon University.
-          </p>
+            <p class="text-base text-neutral-600 leading-relaxed mb-8 max-w-3xl">
+              Developed at <a
+                href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-brand-600 underline decoration-brand-600/30 hover:text-brand-700 hover:decoration-brand-700"
+              >Carnegie Mellon (Swartz Center for Entrepreneurship)</a>. Remit-Scout is an independent project and is not endorsed by Carnegie Mellon University.
+            </p>
 
-          <div class="flex flex-wrap items-center gap-4">
-            <NuxtLink
-              to="/send-money"
-              class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+            <div class="mt-8">
+              <p class="text-lg font-bold text-neutral-900 mb-3">
+                How we keep it clear
+              </p>
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <NuxtLink
+                  to="/methodology"
+                  class="text-sm font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
+                >
+                  📊 Methodology →
+                </NuxtLink>
+                <NuxtLink
+                  to="/how-we-make-money"
+                  class="text-sm font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
+                >
+                  💼 Revenue disclosure →
+                </NuxtLink>
+                <NuxtLink
+                  to="/contact"
+                  class="text-sm font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
+                >
+                  📝 Corrections & feedback →
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:pl-8">
+            <div class="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 p-8 shadow-lg">
+              <div class="relative pl-4 border-l-4 border-white/30">
+                <p class="text-lg sm:text-xl font-semibold text-white leading-relaxed italic mb-4">
+                  "You earned every dollar. Our job is to help more of it reach your family."
+                </p>
+                <p class="text-sm text-white/90">
+                  — Omar Ghabayen, Founder
+                </p>
+              </div>
+              <div class="mt-8 pt-8 border-t border-white/20">
+                <NuxtLink
+                  to="/send-money"
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-sm transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600"
+                >
+                  💸 Compare rates now
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Who We Are -->
+    <section class="py-16 lg:py-20 bg-neutral-50">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-5xl">
+              <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3">
+                <span class="text-2xl">👋</span>
+                Who We Are
+              </h2>
+              <p class="mt-4 mb-10 leading-relaxed text-neutral-700">
+                Remit-Scout is an independent comparison platform. We don't move or hold your money: transfers happen directly with the licensed provider you choose. We aim to earn trust by being transparent about how we collect data, how we rank, and how we make money.
+              </p>
+
+          <div class="grid gap-6 sm:grid-cols-2 mb-12">
+            <div
+              v-for="item in whoWeArePrinciples"
+              :key="item.title"
+              class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
             >
-              💸 Compare rates
-            </NuxtLink>
-            <NuxtLink
-              to="/methodology"
-              class="inline-flex min-h-btn items-center justify-center rounded-xl border-2 border-brand-600 bg-white px-8 py-3 text-base font-semibold text-brand-600 shadow-sm transition-colors hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              📊 Read methodology
-            </NuxtLink>
-            <NuxtLink
-              to="/contact"
-              class="inline-flex min-h-btn items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 text-sm font-semibold text-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              📧 Contact
-            </NuxtLink>
+              <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
+                  <span class="text-xl">{{ item.emoji }}</span>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-neutral-900">
+                    {{ item.title }}
+                  </h3>
+                  <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                    {{ item.body }}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -189,63 +257,6 @@
       </div>
     </section>
 
-    <!-- Who We Are -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-              <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3">
-                <span class="text-2xl">👋</span>
-                Who We Are
-              </h2>
-              <p class="mt-4 leading-relaxed text-neutral-700">
-                Remit-Scout is an independent comparison platform. We don’t move or hold your money:transfers happen directly with the licensed provider you choose. We aim to earn trust by being transparent about how we collect data, how we rank, and how we make money.
-              </p>
-
-          <div class="grid gap-6 sm:grid-cols-2 mb-8">
-            <div
-              v-for="item in whoWeArePrinciples"
-              :key="item.title"
-              class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-            >
-              <div class="flex items-start gap-3">
-                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
-                  <span class="text-xl">{{ item.emoji }}</span>
-                </div>
-                <div>
-                  <h3 class="text-base font-semibold text-neutral-900">
-                    {{ item.title }}
-                  </h3>
-                  <p class="mt-1 text-sm leading-relaxed text-neutral-600">
-                    {{ item.body }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap gap-3">
-            <NuxtLink
-              to="/methodology"
-              class="text-sm font-semibold text-brand-600 hover:text-brand-700"
-            >
-              Methodology →
-            </NuxtLink>
-            <NuxtLink
-              to="/how-we-make-money"
-              class="text-sm font-semibold text-brand-600 hover:text-brand-700"
-            >
-              Revenue disclosure →
-            </NuxtLink>
-            <NuxtLink
-              to="/contact"
-              class="text-sm font-semibold text-brand-600 hover:text-brand-700"
-            >
-              Corrections & feedback →
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- Our History -->
     <section class="py-16 lg:py-20 bg-white">
@@ -376,12 +387,6 @@
                 </div>
 
                 <div class="flex flex-wrap gap-3 mb-6">
-                  <a
-                    href="mailto:omar@remit-scout.com"
-                    class="inline-flex min-h-btn items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 text-sm font-semibold text-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-                  >
-                    📩 Email Omar
-                  </a>
                   <NuxtLink
                     to="/contact"
                     class="inline-flex min-h-btn items-center justify-center rounded-xl bg-neutral-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
@@ -397,12 +402,15 @@
             </div>
 
             <div>
-              <div class="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm">
-                <h3 class="text-sm font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+              <div class="rounded-3xl border border-brand-700 bg-brand-600 p-6 sm:p-8 shadow-sm">
+                <h3 class="text-lg sm:text-xl font-bold text-white mb-2 flex items-center gap-2">
                   <span>🔍</span>
                   How we keep it accurate
                 </h3>
-                <ul class="space-y-3 text-sm text-neutral-700 mb-6">
+                <p class="text-sm text-white/90 mb-5">
+                  The short version of our data checks and editorial standards.
+                </p>
+                <ul class="space-y-3 text-sm text-white/95 mb-6">
                   <li class="flex items-start gap-3">
                     <span class="mt-0.5 text-lg">🧪</span>
                     <span><strong class="font-semibold">Run spot-check transfers</strong> on selected corridors when feasible.</span>
@@ -421,12 +429,12 @@
                   </li>
                 </ul>
                 
-                <div class="mt-6 pt-6 border-t border-neutral-200">
-                  <h4 class="text-sm font-semibold text-neutral-900 mb-3">
+                <div class="mt-6 pt-6 border-t border-white/20">
+                  <h4 class="text-sm font-semibold text-white mb-3">
                     Our commitment
                   </h4>
-                  <p class="text-sm leading-relaxed text-neutral-600">
-                    We're committed to <strong class="font-semibold text-neutral-900">editorial independence</strong>. Providers cannot pay to rank higher, and if we earn affiliate commissions, they're <span class="font-semibold text-brand-600">fully disclosed</span> and never influence our rankings. Your trust is more valuable than any partnership.
+                  <p class="text-sm leading-relaxed text-white/90">
+                    We're committed to <strong class="font-semibold text-white">editorial independence</strong>. Providers cannot pay to rank higher, and if we earn affiliate commissions, they're <span class="font-semibold text-white">fully disclosed</span> and never influence our rankings. Your trust is more valuable than any partnership.
                   </p>
                 </div>
               </div>
@@ -444,34 +452,36 @@
             <span class="text-2xl">🧭</span>
             What We Do
           </h2>
-          <p class="leading-relaxed text-neutral-700 mb-4">
-            We combine <strong class="font-semibold text-neutral-900">live pricing signals</strong> with <span class="font-semibold text-brand-600">clear explanations</span>, so you can choose a provider based on <strong class="font-semibold text-neutral-900">cost, speed, and reliability</strong>.
-          </p>
-          
-          <p class="leading-relaxed text-neutral-600 mb-4">
-            Every money transfer comparison starts with a simple question: <strong class="font-semibold text-neutral-900">"How much will my recipient actually get?"</strong> But answering that question isn't always straightforward. Providers advertise different things: some highlight <span class="font-semibold text-brand-600">low fees</span>, others promote <strong class="font-semibold text-neutral-900">great exchange rates</strong>, and many use marketing language that makes direct comparison difficult.
-          </p>
-          
-          <p class="leading-relaxed text-neutral-600 mb-8">
-            That's where we come in. We pull <strong class="font-semibold text-neutral-900">live quotes</strong> from provider APIs and partner feeds, then normalize everything into a single, comparable metric: <span class="font-semibold text-brand-600">recipient amount</span>. We show you the total cost (fees + FX markup) upfront, explain what's driving price differences, and rank results by outcome, not marketing claims. Because when you're sending money to family, you deserve to know exactly what they'll receive.
-          </p>
+          <div class="space-y-4 mb-8">
+            <p class="text-lg leading-relaxed text-neutral-700">
+              We combine <strong class="font-semibold text-neutral-900">live pricing signals</strong> with <span class="font-semibold text-brand-600">clear explanations</span>, so you can choose a provider based on <strong class="font-semibold text-neutral-900">cost, speed, and reliability</strong>.
+            </p>
+            
+            <p class="text-base leading-relaxed text-neutral-600">
+              Every money transfer comparison starts with a simple question: <strong class="font-semibold text-neutral-900">"How much will my recipient actually get?"</strong> But answering that question isn't always straightforward. Providers advertise different things: some highlight <span class="font-semibold text-brand-600">low fees</span>, others promote <strong class="font-semibold text-neutral-900">great exchange rates</strong>, and many use marketing language that makes direct comparison difficult.
+            </p>
+            
+            <p class="text-base leading-relaxed text-neutral-600">
+              That's where we come in. We pull <strong class="font-semibold text-neutral-900">live quotes</strong> from provider APIs and partner feeds, then normalize everything into a single, comparable metric: <span class="font-semibold text-brand-600">recipient amount</span>. We show you the total cost (fees + FX markup) upfront, explain what's driving price differences, and rank results by outcome, not marketing claims. Because when you're sending money to family, you deserve to know exactly what they'll receive.
+            </p>
+          </div>
 
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-10">
                 <NuxtLink
                   v-for="card in whatWeDoCards"
                   :key="card.title"
                   :to="card.to"
-                  class="group rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:border-brand-300 hover:shadow-lg"
+                  class="group flex flex-col h-full min-h-[200px] rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:border-brand-300 hover:shadow-lg"
                 >
-                  <div class="flex items-start gap-3">
+                  <div class="flex items-start gap-3 flex-1">
                     <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
                       <span class="text-xl">{{ card.emoji }}</span>
                     </div>
-                    <div>
-                      <h3 class="text-base font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors">
+                    <div class="min-w-0 flex-1 flex flex-col">
+                      <h3 class="text-base font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2 leading-tight">
                         {{ card.title }}
                       </h3>
-                      <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                      <p class="text-sm leading-relaxed text-neutral-600 flex-1">
                         {{ card.body }}
                       </p>
                     </div>
@@ -520,7 +530,7 @@
                           3) Rank and explain
                         </p>
                         <p class="mt-1 text-sm leading-relaxed text-neutral-600">
-                          We rank results by outcome and explain what’s driving the difference:so you can choose based on your priorities.
+                          We rank results by outcome and explain what’s driving the difference: so you can choose based on your priorities.
                         </p>
                       </div>
                     </li>
@@ -528,27 +538,13 @@
                 </div>
 
                 <div class="lg:col-span-5">
-                  <div class="rounded-3xl border border-neutral-200 bg-neutral-50 p-6 sm:p-8">
-                    <h3 class="text-sm font-semibold text-neutral-900">
+                  <div class="rounded-3xl border border-brand-700 bg-brand-600 p-6 sm:p-8">
+                    <h3 class="text-base font-bold text-white">
                       Important note
                     </h3>
-                    <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                    <p class="mt-2 text-sm leading-relaxed text-white/90">
                       Rates can change between quote and checkout due to promos, KYC, payment method, and provider rules. Always confirm the final amount on the provider’s checkout screen.
                     </p>
-                    <div class="mt-6 flex flex-wrap gap-3">
-                      <NuxtLink
-                        to="/methodology"
-                        class="text-sm font-semibold text-brand-600 hover:text-brand-700"
-                      >
-                        Methodology →
-                      </NuxtLink>
-                      <NuxtLink
-                        to="/faq"
-                        class="text-sm font-semibold text-brand-600 hover:text-brand-700"
-                      >
-                        FAQs →
-                      </NuxtLink>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -641,70 +637,8 @@
       </div>
     </section>
 
-    <!-- Read More / Blogs -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <span class="text-2xl">📖</span>
-            Read More About Money Transfers
-          </h2>
-          <p class="leading-relaxed text-neutral-700 mb-4">
-            Browse our <strong class="font-semibold text-neutral-900">expert guides</strong> on money transfers, banking abroad, and financial tips for <span class="font-semibold text-brand-600">expats and international families</span>.
-          </p>
-          
-          <p class="leading-relaxed text-neutral-600 mb-4">
-            Moving abroad or sending money internationally comes with a steep learning curve. We've been there: navigating <strong class="font-semibold text-neutral-900">foreign banking systems</strong>, understanding <span class="font-semibold text-brand-600">FX rates and markups</span>, and figuring out the best ways to stay connected with family back home. That's why we write practical, no-nonsense guides that cut through the jargon.
-          </p>
-          
-          <p class="leading-relaxed text-neutral-600 mb-8">
-            Our guides cover everything from <strong class="font-semibold text-neutral-900">opening bank accounts overseas</strong> to <span class="font-semibold text-brand-600">choosing the right eSIM</span> for international travel. We explain complex topics in plain language, share real-world examples, and update content regularly as regulations and best practices change. Because financial literacy shouldn't be a luxury: it should be accessible to everyone, regardless of where you're from or where you're going.
-          </p>
-
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-            <NuxtLink
-              v-for="guide in featuredGuides"
-              :key="guide.slug"
-              :to="guide.to"
-              class="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
-            >
-              <div class="flex items-center gap-2 mb-3">
-                <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-                  {{ guide.category }}
-                </span>
-                <span class="text-xs text-neutral-500">
-                  {{ guide.readTime }}
-                </span>
-              </div>
-              <h3 class="text-lg font-bold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2">
-                {{ guide.title }}
-              </h3>
-              <p class="text-sm text-neutral-600 leading-relaxed flex-1">
-                {{ guide.excerpt }}
-              </p>
-              <div class="mt-4 flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
-                Read more
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
-            </NuxtLink>
-          </div>
-
-          <div class="text-center">
-            <NuxtLink
-              to="/learn"
-              class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              📚 View All Guides
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Coverage / stats -->
-    <section class="py-16 lg:py-20 bg-white">
+    <section class="py-16 lg:py-20 bg-neutral-50">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
@@ -792,6 +726,68 @@
       </div>
     </section>
 
+    <!-- Read More / Blogs -->
+    <section class="py-16 lg:py-20 bg-white">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-5xl">
+          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+            <span class="text-2xl">📖</span>
+            Read More About Money Transfers
+          </h2>
+          <p class="leading-relaxed text-neutral-700 mb-4">
+            Browse our <strong class="font-semibold text-neutral-900">expert guides</strong> on money transfers, banking abroad, and financial tips for <span class="font-semibold text-brand-600">expats and international families</span>.
+          </p>
+          
+          <p class="leading-relaxed text-neutral-600 mb-4">
+            Moving abroad or sending money internationally comes with a steep learning curve. We've been there: navigating <strong class="font-semibold text-neutral-900">foreign banking systems</strong>, understanding <span class="font-semibold text-brand-600">FX rates and markups</span>, and figuring out the best ways to stay connected with family back home. That's why we write practical, no-nonsense guides that cut through the jargon.
+          </p>
+          
+          <p class="leading-relaxed text-neutral-600 mb-8">
+            Our guides cover everything from <strong class="font-semibold text-neutral-900">opening bank accounts overseas</strong> to <span class="font-semibold text-brand-600">navigating international banking</span> and financial planning. We explain complex topics in plain language, share real-world examples, and update content regularly as regulations and best practices change. Because financial literacy shouldn't be a luxury: it should be accessible to everyone, regardless of where you're from or where you're going.
+          </p>
+
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            <NuxtLink
+              v-for="guide in featuredGuides"
+              :key="guide.slug"
+              :to="guide.to"
+              class="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            >
+              <div class="flex items-center gap-2 mb-3">
+                <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+                  {{ guide.category }}
+                </span>
+                <span class="text-xs text-neutral-500">
+                  {{ guide.readTime }}
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2">
+                {{ guide.title }}
+              </h3>
+              <p class="text-sm text-neutral-600 leading-relaxed flex-1">
+                {{ guide.excerpt }}
+              </p>
+              <div class="mt-4 flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
+                Read more
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </NuxtLink>
+          </div>
+
+          <div class="text-center">
+            <NuxtLink
+              to="/learn"
+              class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+            >
+              📚 View All Guides
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Partnership Section -->
     <section class="py-16 lg:py-20 bg-slate-900">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -817,8 +813,8 @@
               <span>Get in touch</span>
             </NuxtLink>
             <NuxtLink
-              to="/how-we-make-money"
-              class="inline-flex min-h-btn items-center justify-center gap-2 rounded-xl border-2 border-slate-600 bg-transparent px-8 py-3 text-base font-semibold text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 focus:ring-offset-slate-900"
+              to="/partnerships"
+              class="inline-flex min-h-btn items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-8 py-3 text-base font-semibold text-slate-900 transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900"
             >
               <span>💼</span>
               <span>Learn about our partnerships</span>
@@ -1007,25 +1003,25 @@ const historyTimeline = [
 const whatWeDoCards = [
   {
     emoji: '💸',
-    title: 'Live money transfer comparisons',
-    body: 'Compare fees, FX markup, payout method, and speed across providers.',
+    title: 'Transfer Comparison',
+    body: 'Compare fees, FX markup, payout methods, and speed across providers.',
     to: '/send-money',
   },
   {
     emoji: '⭐️',
-    title: 'Provider reviews',
+    title: 'Provider Reviews',
     body: 'Independent notes on coverage, payout options, and trust signals.',
     to: '/providers',
   },
   {
     emoji: '📈',
-    title: 'Exchange-rate tools',
+    title: 'Exchange Rate Tools',
     body: 'Track rates and learn what “mid-market” means in practice.',
     to: '/exchange-rates',
   },
   {
     emoji: '📚',
-    title: 'Guides for expats',
+    title: 'Expat Guides',
     body: 'Practical articles on saving money across borders.',
     to: '/learn',
   },
@@ -1046,9 +1042,9 @@ const deepDiveLinks = [
   },
   {
     emoji: '🤝',
-    title: 'Affiliate partnerships',
+    title: 'Partnerships',
     body: 'What partnerships mean and what they don’t.',
-    to: '/affiliate-partnerships',
+    to: '/partnerships',
   },
   {
     emoji: '❓',

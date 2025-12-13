@@ -10,82 +10,12 @@
           Not only do we cover international money transfers, but we're your complete resource for living, working, and traveling abroad.
         </p>
         <p class="text-base text-neutral-500 max-w-2xl mx-auto">
-          From finding the best eSIM plans and travel insurance to navigating expat life, <span class="whitespace-nowrap">we've got you covered.</span>
+          From finding the best travel insurance to navigating expat life, <span class="whitespace-nowrap">we've got you covered.</span>
         </p>
       </div>
 
       <!-- Tool Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- eSIM Comparison -->
-        <NuxtLink
-          to="/esim"
-          class="bg-white rounded-2xl border border-neutral-200 p-8 hover:shadow-xl hover:border-brand-300 transition-all group"
-        >
-          <div class="mb-5">
-            <span class="text-5xl">📱</span>
-          </div>
-          <h3 class="text-2xl font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
-            eSIM Comparison
-          </h3>
-          <p class="text-neutral-600 mb-6 leading-relaxed text-base">
-            Compare eSIM plans from top providers for 190+ countries. Stay connected without expensive roaming fees.
-          </p>
-
-          <div class="flex items-center text-brand-600 font-semibold group-hover:gap-2 transition-all text-base mb-6">
-            <span>Compare eSIMs</span>
-            <svg
-              class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-
-          <div class="pt-4 border-t border-neutral-100">
-            <div class="space-y-2 text-sm text-neutral-600">
-              <div class="flex items-center gap-2">
-                <svg
-                  class="h-4 w-4 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>Instant activation</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <svg
-                  class="h-4 w-4 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>No physical SIM needed</span>
-              </div>
-            </div>
-          </div>
-        </NuxtLink>
-
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Travelling & Living Abroad Guides -->
         <NuxtLink
           to="/learn"

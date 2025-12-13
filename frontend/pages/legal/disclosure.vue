@@ -243,12 +243,13 @@
 
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
-              <h3 class="mb-4 text-2xl font-bold text-gray-900">
-                Learn More About Remit-Scout
+              <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <span>📚</span>
+                <span>Learn More About Remit-Scout</span>
               </h3>
               <p class="mb-6 text-gray-700 leading-relaxed">
-                Transparency is at the heart of everything we do. Explore our methodology, learn about our team,
-                and understand how we help you find the best money transfer options.
+                <span>🛡️</span> Transparency is at the heart of everything we do. <span>🔍</span> Explore our methodology, learn about our team,
+                and understand how we help you find the best money transfer options. <span>✨</span>
               </p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <NuxtLink
@@ -362,7 +363,7 @@
                   </div>
                 </NuxtLink>
                 <NuxtLink
-                  to="/affiliate-partnerships"
+                  to="/partnerships"
                   class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
                 >
                   <svg

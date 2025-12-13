@@ -279,12 +279,13 @@
 
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
-              <h3 class="mb-4 text-2xl font-bold text-gray-900">
-                Learn More About Remit-Scout
+              <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <span>📚</span>
+                <span>Learn More About Remit-Scout</span>
               </h3>
               <p class="mb-6 text-gray-700 leading-relaxed">
-                Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
-                comparisons.
+                <span>🎯</span> Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
+                comparisons. <span>🛡️</span>
               </p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <NuxtLink

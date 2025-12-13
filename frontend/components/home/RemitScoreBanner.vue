@@ -26,8 +26,10 @@
                 How We Score Providers
               </h3>
               <p class="text-sm text-neutral-700 mb-3 max-w-3xl leading-relaxed">
-                Each provider gets a <span class="font-semibold">Remit-Score</span> (0-10 scale) based on real transfer data, not paid reviews.
-                Scores like <span class="font-bold text-brand-600">9.5</span>, <span class="font-bold text-brand-600">8.4</span>, or <span class="font-bold text-brand-600">7.2</span> reflect actual value, speed, reliability, and safety across thousands of transfers.
+                <span class="font-semibold">Remit‑Score</span> (0–10) is a standardized score designed to summarize value and usability in a single number. It prioritizes what matters most for senders: delivered value and transparency.
+              </p>
+              <p class="text-sm text-neutral-600 mb-3 max-w-3xl leading-relaxed">
+                Scores are computed from our quote dataset (fees, implied FX rate vs a mid‑market reference, delivered amount) and other measurable signals where available (e.g., stated ETA, method support, quote availability). Providers cannot pay to rank higher. Affiliate relationships do not influence score calculation.
               </p>
               <button
                 class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"

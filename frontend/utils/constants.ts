@@ -187,16 +187,6 @@ export const GUIDE_CARDS = [
     category: 'Travel',
   },
   {
-    title: 'International eSIM setup checklist',
-    blurb: 'Stay connected abroad without roaming; best-value providers to try.',
-    readTime: '4 min read',
-    updated: 'May 2025',
-    slug: 'international-esim-checklist',
-    emoji: '📱',
-    gradient: 'from-slate-100 to-gray-100',
-    category: 'Travel Tech',
-  },
-  {
     title: 'USD→PHP rate watch guide',
     blurb: 'Track live rates, avoid hidden margins, and time your transfers.',
     readTime: '5 min read',

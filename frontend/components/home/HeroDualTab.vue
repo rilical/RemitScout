@@ -128,8 +128,8 @@
 
     <div class="container-custom relative z-10 mx-auto max-w-7xl">
       <!-- Money Transfer Content -->
-      <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-5 lg:gap-12">
-        <div class="animate-fade-in-up delay-200 lg:col-span-3">
+      <div class="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-5 lg:gap-12">
+        <div class="animate-fade-in-up delay-200 lg:col-span-3 flex flex-col">
           <h1
             class="mb-4 text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl lg:text-6xl"
           >
@@ -141,11 +141,12 @@
           </p>
 
           <div
-            class="animate-scale-in relative rounded-3xl border border-neutral-200 bg-white p-4 sm:p-8 shadow-lg delay-300"
+            class="animate-scale-in relative flex-1 flex flex-col rounded-3xl border border-neutral-200 bg-white p-4 sm:p-8 shadow-lg delay-300"
           >
             <form
               role="search"
               aria-label="Money transfer comparison form"
+              class="flex-1 flex flex-col"
               @submit.prevent="handleMoneySubmit"
             >
               <!-- Mobile Stepper (visible on mobile only) -->
@@ -283,7 +284,7 @@
 
               <!-- Step 3: Amount (always visible on desktop, conditional on mobile) -->
               <div
-                class="mb-6"
+                class="mb-6 flex-1"
                 :class="{ 'hidden sm:block': currentMobileStep !== 3 }"
               >
                 <label for="amount" class="mb-2 block text-sm font-semibold text-neutral-700">
@@ -345,7 +346,7 @@
 
               <button
                 type="submit"
-                class="group min-h-btn w-full rounded-xl bg-brand-600 font-semibold text-white transition-all duration-200 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 flex items-center justify-center gap-2"
+                class="group min-h-btn w-full rounded-xl bg-brand-600 font-semibold text-white transition-all duration-200 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 flex items-center justify-center gap-2 mt-auto"
                 :class="{ 'hidden sm:flex': currentMobileStep !== 3 }"
                 aria-describedby="form-errors"
               >
@@ -571,6 +572,7 @@ const countryCoordinates: Record<string, LatLon> = {
   CO: { lat: 4.6, lon: -74.3 },
   PE: { lat: -9.2, lon: -75 },
   VE: { lat: 6.4, lon: -66.6 },
+  CU: { lat: 21.5, lon: -77.8 },
   AU: { lat: -51.97, lon: 128.907 },
   NZ: { lat: -40.9, lon: 174.9 },
 }
@@ -667,6 +669,11 @@ const ROUTE_SPECS: Array<{
   { from: 'US', to: 'PH', stroke: 'url(#route-blue)', width: 1.9 },
   { from: 'CA', to: 'BR', stroke: 'url(#route-emerald)', width: 1.7 },
   { from: 'MX', to: 'ES', stroke: 'url(#route-emerald)', width: 1.65 },
+  { from: 'MX', to: 'CL', stroke: 'url(#route-blue)', width: 1.6 },
+  { from: 'MX', to: 'AR', stroke: 'url(#route-violet)', width: 1.6 },
+  { from: 'CU', to: 'CO', stroke: 'url(#route-emerald)', width: 1.55 },
+  { from: 'CU', to: 'PE', stroke: 'url(#route-blue)', width: 1.55 },
+  { from: 'CU', to: 'BR', stroke: 'url(#route-violet)', width: 1.5 },
   { from: 'AR', to: 'IT', stroke: 'url(#route-blue)', width: 1.65 },
   { from: 'GB', to: 'IN', stroke: 'url(#route-blue)', width: 1.7 },
   { from: 'DE', to: 'TR', stroke: 'url(#route-emerald)', width: 1.65 },

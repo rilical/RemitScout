@@ -1,8 +1,5 @@
 <template>
   <div class="bg-gradient-to-b from-slate-50 to-white min-h-screen">
-    <!-- Sticky Comparison Navbar -->
-    <CompareWidget />
-
     <!-- Hero Section -->
     <section class="relative py-16 lg:py-20 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div class="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
@@ -679,7 +676,6 @@ import { getCorridorUrl } from '~/utils/country-slugs'
 import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
 import WhyTrustUs from '~/components/home/WhyTrustUs.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import { useCompareForm } from '~/composables/useCompareForm'

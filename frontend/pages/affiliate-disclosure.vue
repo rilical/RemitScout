@@ -1,5 +1,5 @@
 <script setup lang="ts">
-await navigateTo('/partnerships', { redirectCode: 301 })
+await navigateTo('/legal/disclosure', { redirectCode: 301 })
 </script>
 
 <template>

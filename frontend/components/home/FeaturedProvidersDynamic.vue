@@ -14,9 +14,40 @@
           <p class="text-base sm:text-lg text-neutral-600 max-w-4xl">
             We analyze real-time exchange rates, transfer fees, delivery speeds, and reliability scores across hundreds of providers. Our transparent rankings help you save money on every international transfer - no hidden agendas, just honest comparisons based on actual data.
           </p>
-          <p class="text-sm text-neutral-500 mt-2">
-            Last updated: {{ lastUpdated }}
-          </p>
+          <div class="flex flex-wrap items-center gap-4 mt-4">
+            <p class="text-sm text-neutral-500">
+              Last updated: {{ lastUpdated }}
+            </p>
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+              <NuxtLink
+                to="/methodology"
+                class="text-neutral-600 hover:text-neutral-900 font-medium"
+              >
+                Methodology
+              </NuxtLink>
+              <span class="text-neutral-300">•</span>
+              <NuxtLink
+                to="/how-we-make-money"
+                class="text-neutral-600 hover:text-neutral-900 font-medium"
+              >
+                How we make money
+              </NuxtLink>
+              <span class="text-neutral-300">•</span>
+              <NuxtLink
+                to="/contact"
+                class="text-neutral-600 hover:text-neutral-900 font-medium"
+              >
+                Report an issue
+              </NuxtLink>
+              <span class="text-neutral-300">•</span>
+              <NuxtLink
+                to="/contact"
+                class="text-neutral-600 hover:text-neutral-900 font-medium"
+              >
+                Contact
+              </NuxtLink>
+            </div>
+          </div>
         </div>
       </div>
 

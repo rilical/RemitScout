@@ -271,12 +271,13 @@
 
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
-              <h3 class="mb-4 text-2xl font-bold text-gray-900">
-                Learn More About Remit-Scout
+              <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <span>📚</span>
+                <span>Learn More About Remit-Scout</span>
               </h3>
               <p class="mb-6 text-gray-700 leading-relaxed">
-                Transparency and trust are at the heart of everything we do. Learn more about our mission, how we operate,
-                and our commitment to helping you make informed financial decisions.
+                <span>🛡️</span> Transparency and trust are at the heart of everything we do. <span>💡</span> Learn more about our mission, how we operate,
+                and our commitment to helping you make informed financial decisions. <span>✨</span>
               </p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <NuxtLink

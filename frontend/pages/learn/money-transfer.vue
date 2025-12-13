@@ -91,7 +91,7 @@
           >
             <span class="text-3xl mb-2 block">📡</span>
             <h3 class="font-bold text-neutral-900 mb-1 group-hover:text-brand-600">Staying connected</h3>
-            <p class="text-sm text-neutral-600">eSIMs & messaging</p>
+            <p class="text-sm text-neutral-600">Staying connected abroad</p>
           </NuxtLink>
           <NuxtLink
             to="/learn/health-insurance"

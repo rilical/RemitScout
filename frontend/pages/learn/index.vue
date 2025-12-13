@@ -470,7 +470,7 @@ const categories = [
   {
     key: 'staying-connected',
     name: 'Staying connected',
-    description: 'eSIMs, messaging, and keeping your login secure while traveling.',
+    description: 'Staying connected, messaging, and keeping your login secure while traveling.',
     icon: '📡',
   },
   {

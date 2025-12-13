@@ -1,5 +1,5 @@
 <template>
-  <section class="py-16 sm:py-20 bg-gradient-to-b from-white via-brand-50/30 to-white">
+  <section class="py-16 sm:py-20 bg-white">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Educational header -->
       <div class="text-center mb-12">
@@ -253,215 +253,212 @@
         </div>
       </div>
 
-      <!-- Educational breakdown section - 3 column landscape -->
-      <div class="max-w-7xl mx-auto mb-12">
-        <div class="bg-gradient-to-br from-neutral-50 to-white rounded-3xl border-2 border-neutral-200 p-10 sm:p-12">
-          <!-- Header -->
-          <div class="text-center mb-10">
-            <h3 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+    </div>
+  </section>
+
+  <!-- Understanding Hidden Costs Section - Full Width -->
+  <section class="w-screen py-20 sm:py-24 bg-slate-900 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+    <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+          <!-- Section Header -->
+          <div class="text-center mb-16">
+            <h3 class="text-4xl sm:text-5xl font-bold text-white mb-6">
               Understanding the hidden costs
             </h3>
-            <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
-              Banks don't just charge fees, they make most of their money through the exchange rate markup. Here's what you need to know.
+            <p class="text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
+              Banks don't just charge fees—they make most of their money through exchange rate markup. Here's how it works, step by step.
             </p>
           </div>
 
-          <!-- 3 Column Layout -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-            <!-- Column 1: The Hidden Markup -->
-            <div class="bg-white rounded-2xl border-2 border-neutral-200 p-7 hover:border-brand-300 transition-colors">
-              <div class="text-5xl mb-5">
-                🕵️
+          <!-- Horizontal Steps -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <!-- Step 1: The Problem -->
+            <div class="relative flex flex-col h-full">
+              <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500 text-white text-2xl font-bold mb-5 mx-auto shadow-lg">
+                1
               </div>
-
-              <h4 class="text-xl font-bold text-neutral-900 mb-3">
-                The Hidden Markup
-              </h4>
-
-              <p class="text-sm text-neutral-700 mb-4 leading-relaxed">
-                Traditional banks advertise "low fees" or even "no fees," but they hide their profit in the exchange rate itself. This markup can range from <span class="whitespace-nowrap">3-5%</span> above the real mid-market rate.
-              </p>
-
-              <div class="bg-danger-50 border border-danger-200 rounded-xl p-4 mb-4">
-                <p class="text-xs font-semibold text-danger-800 mb-1">
-                  Real Example:
-                </p>
-                <p class="text-sm text-neutral-700">
-                  If the real <span class="whitespace-nowrap">USD to MXN</span> rate is 18.50, a bank might offer you 18.00, pocketing the <span class="whitespace-nowrap">0.50 difference</span> on every dollar you send.
-                </p>
-              </div>
-
-              <p class="text-sm text-neutral-600 leading-relaxed">
-                On a <span class="whitespace-nowrap">$500 transfer,</span> that <span class="whitespace-nowrap">3% hidden markup</span> alone costs you <span class="whitespace-nowrap">$15, before</span> any stated fees. Most customers never notice this "hidden tax."
-              </p>
-            </div>
-
-            <!-- Column 2: Why Specialists Win -->
-            <div class="bg-white rounded-2xl border-2 border-neutral-200 p-7 hover:border-brand-300 transition-colors">
-              <div class="text-5xl mb-5">
-                🚀
-              </div>
-
-              <h4 class="text-xl font-bold text-neutral-900 mb-3">
-                Why Specialists Win
-              </h4>
-
-              <p class="text-sm text-neutral-700 mb-4 leading-relaxed">
-                Money transfer specialists like Remitly, Wise, and Instarem focus exclusively on international transfers. They've built modern technology that processes transfers faster and cheaper than banks.
-              </p>
-
-              <div class="space-y-3 mb-4">
-                <div class="flex items-start gap-2">
-                  <svg
-                    class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <p class="text-sm text-neutral-700">
-                    Near mid-market exchange rates <span class="whitespace-nowrap">(0.5-1% markup</span> vs <span class="whitespace-nowrap">3-5%</span> for banks)
-                  </p>
+              <div class="flex-1 bg-white rounded-2xl border-2 border-red-200 p-8 shadow-xl">
+                <div class="text-center mb-6">
+                  <span class="text-6xl">🕵️</span>
+                  <h4 class="text-2xl font-bold text-neutral-900 mt-4">
+                    The Hidden Markup
+                  </h4>
                 </div>
-
-                <div class="flex items-start gap-2">
-                  <svg
-                    class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <p class="text-sm text-neutral-700">
-                    Lower transfer fees <span class="whitespace-nowrap">($0-5</span> vs <span class="whitespace-nowrap">$15-45</span> for banks)
+                <p class="text-base text-neutral-700 mb-6 leading-relaxed">
+                  Traditional banks advertise "low fees" or even "no fees," but they hide their profit in the exchange rate itself. This markup can range from <strong class="text-red-700">3-5%</strong> above the real mid-market rate.
+                </p>
+                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-5">
+                  <p class="text-sm font-bold text-red-900 mb-3">
+                    Real Example:
                   </p>
-                </div>
-
-                <div class="flex items-start gap-2">
-                  <svg
-                    class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <p class="text-sm text-neutral-700">
-                    Faster delivery (minutes to hours vs days for banks)
+                  <p class="text-sm text-neutral-800 mb-3 leading-relaxed">
+                    If the real <strong>USD to MXN</strong> rate is <strong>18.50</strong>, a bank might offer you <strong>18.00</strong>, pocketing the <strong>0.50 difference</strong> on every dollar you send.
+                  </p>
+                  <p class="text-sm text-neutral-700 leading-relaxed">
+                    On a <strong>$500 transfer</strong>, that <strong>3% hidden markup</strong> alone costs you <strong>$15</strong>, before any stated fees.
                   </p>
                 </div>
               </div>
-
-              <p class="text-sm text-neutral-600 leading-relaxed">
-                They pass savings to customers because they compete on price and speed, not brand recognition.
-              </p>
             </div>
 
-            <!-- Column 3: Your Savings -->
-            <div class="bg-white rounded-2xl border-2 border-neutral-200 p-7 hover:border-brand-300 transition-colors">
-              <div class="text-5xl mb-5">
-                💰
+            <!-- Step 2: The Solution -->
+            <div class="relative flex flex-col h-full">
+              <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500 text-white text-2xl font-bold mb-5 mx-auto shadow-lg">
+                2
               </div>
-
-              <h4 class="text-xl font-bold text-neutral-900 mb-3">
-                Your Real Savings
-              </h4>
-
-              <p class="text-sm text-neutral-700 mb-4 leading-relaxed">
-                Using the example above with real data from today, here's what comparing actually saves you:
-              </p>
-
-              <div class="bg-success-50 border-2 border-success-300 rounded-xl p-5 mb-4">
-                <div class="text-center mb-3">
-                  <div class="text-3xl font-bold text-success-700 mb-1">
-                    <span class="whitespace-nowrap">MXN 214+</span>
+              <div class="flex-1 bg-white rounded-2xl border-2 border-emerald-200 p-8 shadow-xl">
+                <div class="text-center mb-6">
+                  <span class="text-6xl">🚀</span>
+                  <h4 class="text-2xl font-bold text-neutral-900 mt-4">
+                    Why Specialists Win
+                  </h4>
+                </div>
+                <p class="text-base text-neutral-700 mb-6 leading-relaxed">
+                  Money transfer specialists like Remitly, Wise, and Instarem focus exclusively on international transfers. They've built modern technology that processes transfers faster and cheaper than banks.
+                </p>
+                <div class="space-y-4 mb-4">
+                  <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                    <div class="flex items-start gap-3">
+                      <svg
+                        class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <div>
+                        <span class="text-sm font-bold text-emerald-900 block mb-1">Better Rates</span>
+                        <span class="text-sm text-neutral-700">0.5-1% vs 3-5% banks</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="text-xs text-success-600 font-medium">
-                    saved per <span class="whitespace-nowrap">$500 transfer</span>
+                  <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                    <div class="flex items-start gap-3">
+                      <svg
+                        class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <div>
+                        <span class="text-sm font-bold text-emerald-900 block mb-1">Lower Fees</span>
+                        <span class="text-sm text-neutral-700">$0-5 vs $15-45 banks</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                    <div class="flex items-start gap-3">
+                      <svg
+                        class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <div>
+                        <span class="text-sm font-bold text-emerald-900 block mb-1">Faster</span>
+                        <span class="text-sm text-neutral-700">Minutes vs days</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between text-neutral-700">
-                    <span>Wells Fargo delivers:</span>
-                    <span class="font-semibold whitespace-nowrap">MXN 9,196</span>
-                  </div>
-                  <div class="flex justify-between text-success-700">
-                    <span>Remitly delivers:</span>
-                    <span class="font-bold whitespace-nowrap">MXN 9,410</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-brand-50 rounded-xl p-4">
-                <p class="text-sm font-semibold text-brand-900 mb-2">
-                  Annual Impact:
-                </p>
-                <p class="text-sm text-neutral-700 leading-relaxed">
-                  If you send <span class="whitespace-nowrap">$500 monthly,</span> choosing the right provider saves you <span class="font-bold text-brand-700 whitespace-nowrap">over $140/year.</span> That's money that can support your family, not bank profits.
-                </p>
               </div>
             </div>
+
+            <!-- Step 3: The Result -->
+            <div class="relative flex flex-col h-full">
+              <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-600 text-white text-2xl font-bold mb-5 mx-auto shadow-lg">
+                3
+              </div>
+              <div class="flex-1 bg-white rounded-2xl border-2 border-brand-200 p-8 shadow-xl">
+                <div class="text-center mb-6">
+                  <span class="text-6xl">💰</span>
+                  <h4 class="text-2xl font-bold text-neutral-900 mt-4">
+                    Your Real Savings
+                  </h4>
+                </div>
+                <p class="text-base text-neutral-700 mb-6 leading-relaxed">
+                  Using the example above with real data from today, here's what comparing actually saves you:
+                </p>
+                <div class="bg-gradient-to-br from-emerald-50 to-brand-50 border-2 border-emerald-300 rounded-2xl p-5 mb-5">
+                  <div class="text-center mb-4">
+                    <div class="text-4xl font-bold text-emerald-700 mb-2">
+                      MXN 214+
+                    </div>
+                    <div class="text-sm text-emerald-600 font-semibold">
+                      saved per $500 transfer
+                    </div>
+                  </div>
+                  <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center bg-white/60 rounded-lg px-4 py-2.5">
+                      <span class="text-neutral-700">Wells Fargo:</span>
+                      <span class="font-bold text-neutral-900">MXN 9,196</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-emerald-100 rounded-lg px-4 py-2.5">
+                      <span class="text-emerald-900 font-medium">Remitly:</span>
+                      <span class="font-bold text-emerald-700 text-base">MXN 9,410</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-brand-50 rounded-xl p-5 border border-brand-200">
+                  <p class="text-sm font-bold text-brand-900 mb-2">
+                    Annual Impact:
+                  </p>
+                  <p class="text-base text-neutral-700 leading-relaxed">
+                    If you send <strong>$500 monthly</strong>, choosing the right provider saves you <strong class="text-brand-700">over $140/year</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Bottom Line Callout -->
-          <div class="bg-brand-600 rounded-2xl p-8 text-white">
-            <div class="flex items-start gap-5 max-w-4xl mx-auto">
-              <div class="flex-shrink-0 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
+          <!-- Bottom Line - Full Width -->
+          <div class="bg-gradient-to-r from-brand-600 to-brand-700 rounded-2xl p-10 text-white shadow-2xl">
+            <div class="flex items-center justify-center gap-6 max-w-5xl mx-auto">
+              <div class="flex-shrink-0 w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
+                <span class="text-5xl">💡</span>
               </div>
-              <div>
-                <h4 class="text-2xl font-bold mb-3">
-                  💡 The Bottom Line
+              <div class="flex-1 text-center lg:text-left">
+                <h4 class="text-3xl font-bold mb-3">
+                  The Bottom Line
                 </h4>
-                <p class="text-white/95 text-lg leading-relaxed">
-                  Banks count on customers not comparing. By taking <span class="whitespace-nowrap">5 minutes</span> to check rates on <span class="whitespace-nowrap">Remit-Scout,</span> you ensure more of your hard-earned money reaches your family.
-                  <span class="font-bold whitespace-nowrap">Every dollar counts.</span>
+                <p class="text-white/95 text-xl leading-relaxed">
+                  Banks count on customers not comparing. By taking <strong>5 minutes</strong> to check rates on <strong>Remit-Scout</strong>, you ensure more of your hard-earned money reaches your family. <strong>Every dollar counts.</strong>
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+	          </div>
+	        </div>
 
-      <!-- Footer disclaimer -->
-      <p class="text-center text-sm text-neutral-500 max-w-2xl mx-auto">
-        Example rates shown for ${{ amount }} transfer. Actual rates vary by amount and delivery method.
-        <span class="block mt-2 text-xs">
-          Updated {{ lastUpdated }}
-        </span>
-      </p>
-    </div>
-  </section>
+	      <!-- Footer disclaimer -->
+	      <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 mt-12">
+	        <p class="text-center text-sm text-slate-400 max-w-2xl mx-auto">
+          Example rates shown for ${{ amount }} transfer. Actual rates vary by amount and delivery method.
+          <span class="block mt-2 text-xs">
+            Updated {{ lastUpdated }}
+          </span>
+        </p>
+      </div>
+    </section>
 </template>
 
 <script setup lang="ts">
