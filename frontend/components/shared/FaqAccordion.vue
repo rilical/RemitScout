@@ -3,10 +3,11 @@
     <div
       v-for="(faq, index) in faqs"
       :key="index"
-      class="rounded-lg border border-gray-200"
+      class="rounded-lg border border-gray-200 overflow-hidden"
     >
       <button
-        class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50"
+        type="button"
+        class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
         @click="toggleFaq(index)"
       >
         <span class="flex-1 text-left font-medium leading-relaxed text-gray-900 [text-wrap:pretty]">{{ faq.question }}</span>

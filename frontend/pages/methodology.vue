@@ -381,6 +381,25 @@
             </div>
           </div>
 
+          <!-- Provider Slider -->
+          <div class="mb-10">
+            <div class="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white py-10 -mx-4 sm:-mx-6 lg:-mx-8">
+              <div class="flex gap-8 animate-scroll-left px-6">
+                <div
+                  v-for="(provider, index) in [...providers, ...providers, ...providers]"
+                  :key="`provider-${provider.name}-${index}`"
+                  class="flex-shrink-0 w-56 h-36 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
+                >
+                  <div class="text-center">
+                    <div class="text-3xl mb-3">{{ provider.emoji }}</div>
+                    <div class="text-base font-semibold text-neutral-900">{{ provider.name }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">{{ provider.type }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="max-w-4xl mx-auto">
             <div class="space-y-4">
               <h3 class="text-xl font-bold text-neutral-900 mb-4 text-center">
@@ -486,92 +505,128 @@
 	    <!-- Show Your Work Section -->
 	    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
 	      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-	        <div class="flex items-start gap-4 mb-12">
-	          <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-slate-900 shadow-lg">
-	            <span class="text-3xl text-white">🧾</span>
+	        <div class="text-center mb-16">
+	          <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 shadow-lg mb-6">
+	            <span class="text-4xl text-white">🧾</span>
 	          </div>
-	          <div class="flex-1">
-	            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-2">
-	              Show your work
-	            </h2>
-	            <p class="text-base text-neutral-700 max-w-3xl leading-relaxed">
-	              We don’t ask you to trust a black box. Here’s what we measure, how we calculate “recipient gets,” how we handle freshness, and what can change at checkout.
-	            </p>
+	          <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-6">
+	            Show Your Work
+	          </h2>
+          <p class="text-xl leading-relaxed text-neutral-700 max-w-4xl mx-auto [text-wrap:pretty]">
+            We don't ask you to trust a black box. Here's what we measure, how we calculate "recipient gets," how we handle freshness, and what can change at checkout.
+          </p>
+	        </div>
+
+	        <!-- Editorial & Independence -->
+	        <div class="mb-12">
+	          <div class="rounded-3xl border-2 border-emerald-200 bg-white p-10 lg:p-12 shadow-lg">
+	            <div class="flex items-start gap-6 mb-8">
+	              <div class="flex-shrink-0">
+	                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100">
+	                  <span class="text-3xl">🛡️</span>
+	                </div>
+	              </div>
+	              <div class="flex-1">
+	                <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-4">
+	                  Editorial &amp; Independence
+	                </h3>
+	                <p class="text-lg leading-relaxed text-neutral-700 mb-6">
+	                  Our comparison methodology is completely independent. Rankings are driven by data, not payments.
+	                </p>
+	                <div class="grid gap-4 sm:grid-cols-3 mb-8">
+	                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+	                    <div class="flex items-center gap-3 mb-2">
+	                      <span class="text-2xl">✅</span>
+	                      <h4 class="font-semibold text-neutral-900">No pay-to-rank</h4>
+	                    </div>
+	                    <p class="text-sm text-neutral-700 leading-relaxed">
+	                      Providers cannot pay to appear higher or improve Remit‑Score.
+	                    </p>
+	                  </div>
+	                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+	                    <div class="flex items-center gap-3 mb-2">
+	                      <span class="text-2xl">✅</span>
+	                      <h4 class="font-semibold text-neutral-900">Affiliate transparency</h4>
+	                    </div>
+	                    <p class="text-sm text-neutral-700 leading-relaxed">
+	                      We may earn commissions, but they never affect ranking or Remit-Score.
+	                    </p>
+	                  </div>
+	                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+	                    <div class="flex items-center gap-3 mb-2">
+	                      <span class="text-2xl">✅</span>
+	                      <h4 class="font-semibold text-neutral-900">We don't move money</h4>
+	                    </div>
+	                    <p class="text-sm text-neutral-700 leading-relaxed">
+	                      Transfers happen on provider websites/apps, not through us.
+	                    </p>
+	                  </div>
+	                </div>
+	                <div class="flex flex-wrap gap-4">
+                  <NuxtLink
+                    to="/how-we-make-money"
+                    class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-700"
+                  >
+                    💼 Revenue Model
+                  </NuxtLink>
+	                  <NuxtLink
+	                    to="/affiliate-disclosure"
+	                    class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-200 bg-white px-6 py-3 text-base font-semibold text-emerald-800 transition-colors hover:bg-emerald-50"
+	                  >
+	                    📋 Affiliate disclosure
+	                  </NuxtLink>
+	                </div>
+	              </div>
+	            </div>
 	          </div>
 	        </div>
 
-	        <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
-	          <div class="space-y-6">
-	            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-	              <h3 class="text-lg font-bold text-neutral-900 mb-3">
-	                Editorial &amp; independence
-	              </h3>
-	              <ul class="space-y-2 text-sm text-neutral-800">
-	                <li class="flex items-start gap-2">
-	                  <span aria-hidden="true">✅</span>
-	                  <span>Providers cannot pay to rank higher.</span>
-	                </li>
-	                <li class="flex items-start gap-2">
-	                  <span aria-hidden="true">✅</span>
-	                  <span>We may earn affiliate commissions on referrals, but they never affect ranking or Remit-Score.</span>
-	                </li>
-	                <li class="flex items-start gap-2">
-	                  <span aria-hidden="true">✅</span>
-	                  <span>We do not hold or move money — transfers happen on provider websites/apps.</span>
-	                </li>
-	              </ul>
-	              <div class="mt-4 flex flex-col gap-2">
-	                <NuxtLink
-	                  to="/how-we-make-money"
-	                  class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
-	                >
-	                  Revenue Model
-	                </NuxtLink>
-	                <NuxtLink
-	                  to="/affiliate-disclosure"
-	                  class="inline-flex items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
-	                >
-	                  Affiliate disclosure
-	                </NuxtLink>
-	              </div>
-	            </div>
-
-	            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-	              <h3 class="text-lg font-bold text-neutral-900 mb-3">
-	                Quick links
-	              </h3>
-	              <div class="grid gap-3">
-	                <NuxtLink
-	                  to="/pulse"
-	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
-	                >
-	                  Explore Pulse
-	                </NuxtLink>
-	                <NuxtLink
-	                  to="/providers"
-	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
-	                >
-	                  Verified Providers
-	                </NuxtLink>
-	                <NuxtLink
-	                  to="/about"
-	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
-	                >
-	                  About the Founder
-	                </NuxtLink>
-	                <NuxtLink
-	                  to="/contact"
-	                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
-	                >
-	                  Report a problem
-	                </NuxtLink>
-	              </div>
+	        <!-- FAQ Section -->
+	        <div class="mb-12">
+	          <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-lg">
+	            <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-8 text-center">
+	              Frequently Asked Questions
+	            </h3>
+	            <div class="relative z-10">
+	              <FaqAccordion :faqs="showYourWorkFaqs" />
 	            </div>
 	          </div>
+	        </div>
 
-	          <div>
-	            <FaqAccordion :faqs="showYourWorkFaqs" />
-	          </div>
+	        <!-- Quick Links -->
+	        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+	          <NuxtLink
+	            to="/pulse"
+	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+	          >
+	            <div class="text-3xl mb-3">📊</div>
+	            <h4 class="font-semibold text-neutral-900 mb-2">Explore Pulse</h4>
+	            <p class="text-sm text-neutral-600">Market trends and insights</p>
+	          </NuxtLink>
+	          <NuxtLink
+	            to="/providers"
+	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+	          >
+	            <div class="text-3xl mb-3">🏦</div>
+	            <h4 class="font-semibold text-neutral-900 mb-2">Verified Providers</h4>
+	            <p class="text-sm text-neutral-600">See all licensed providers</p>
+	          </NuxtLink>
+	          <NuxtLink
+	            to="/about"
+	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+	          >
+	            <div class="text-3xl mb-3">👤</div>
+	            <h4 class="font-semibold text-neutral-900 mb-2">About the Founder</h4>
+	            <p class="text-sm text-neutral-600">Our story and mission</p>
+	          </NuxtLink>
+	          <NuxtLink
+	            to="/contact"
+	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+	          >
+	            <div class="text-3xl mb-3">📧</div>
+	            <h4 class="font-semibold text-neutral-900 mb-2">Report a problem</h4>
+	            <p class="text-sm text-neutral-600">Help us improve accuracy</p>
+	          </NuxtLink>
 	        </div>
 	      </div>
 	    </section>
@@ -1234,6 +1289,17 @@ const lastUpdatedLabel = computed(() => {
   })
 })
 
+const providers = ref([
+  { name: 'Wise', type: 'Money Transfer', emoji: '💸' },
+  { name: 'Remitly', type: 'Money Transfer', emoji: '📱' },
+  { name: 'WorldRemit', type: 'Money Transfer', emoji: '🌍' },
+  { name: 'Western Union', type: 'Money Transfer', emoji: '🏦' },
+  { name: 'MoneyGram', type: 'Money Transfer', emoji: '💼' },
+  { name: 'Xoom', type: 'Money Transfer', emoji: '⚡' },
+  { name: 'SendWave', type: 'Money Transfer', emoji: '📲' },
+  { name: 'Azimo', type: 'Money Transfer', emoji: '🚀' },
+])
+
 const showYourWorkFaqs = [
   {
     question: '🧠 What we measure: the Quote Record',
@@ -1359,6 +1425,22 @@ const breadcrumbItems = [
 </script>
 
 <style scoped>
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-scroll-left {
+  animation: scroll-left 50s linear infinite;
+  width: fit-content;
+}
+.animate-scroll-left:hover {
+  animation-play-state: paused;
+}
+
 @keyframes drawPath {
   to {
     stroke-dashoffset: 0;

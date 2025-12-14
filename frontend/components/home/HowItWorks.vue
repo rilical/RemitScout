@@ -44,8 +44,8 @@
             <span class="text-4xl">✅</span>
           </div>
           <div class="text-center">
-            <h3 class="text-lg font-bold text-neutral-900 mb-2">
-              3. Transfer with your chosen provider
+            <h3 class="text-lg font-bold text-neutral-900 mb-2 leading-tight break-words">
+              3. Complete your transfer
             </h3>
             <p class="text-sm text-neutral-600">
               Click through to your preferred provider and complete your transfer. We never handle your money.
