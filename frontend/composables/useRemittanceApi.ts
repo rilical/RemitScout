@@ -6,7 +6,6 @@ export const useRemittanceApi = () => {
   const useRecentSearches = (limit = 12) => {
     return useFetch<{ data: RecentSearch[], updatedAt: string }>('/api/recent-searches', {
       query: { limit },
-      refresh: true,
       // Refresh every 15 seconds
       watch: false,
     })
@@ -15,7 +14,6 @@ export const useRemittanceApi = () => {
   // Popular corridors
   const usePopularCorridors = () => {
     return useFetch<{ data: CorridorPopularity[], updatedAt: string }>('/api/popular-corridors', {
-      refresh: true,
       // Refresh every 20 seconds
       watch: false,
     })

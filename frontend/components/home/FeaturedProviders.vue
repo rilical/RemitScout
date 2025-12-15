@@ -155,8 +155,10 @@ const fetchProviders = async () => {
 }
 
 // Image error handler
-const handleImageError = (event: Event) => {
+const handleImageError = (event: Event | string) => {
+  if (typeof event === 'string') return
   const target = event.target as HTMLImageElement
+  if (!target) return
   target.style.display = 'none'
 
   // Show fallback text

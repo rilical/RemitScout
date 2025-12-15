@@ -112,6 +112,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
+  'currency-selected': [value: string]
 }>()
 
 const searchQuery = ref('')

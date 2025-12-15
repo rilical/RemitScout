@@ -10,15 +10,16 @@
               Terms of Service
             </h1>
             <p class="text-gray-600">
-              Last updated: January 1, 2025
+              Last updated: December 14, 2025
             </p>
           </div>
 
           <div class="prose prose-lg max-w-none">
             <p class="mb-6 text-lg leading-relaxed">
-              These Terms of Service ("Terms") govern your access to and use of <strong class="text-blue-600">Remit-Scout's</strong>
-              website and services. By accessing or using our services, you agree to be bound by these Terms.
-              If you do not agree to these Terms, please do not use our services.
+              These Terms of Service ("Terms") govern your access to and use of the <strong class="text-blue-600">Remit-Scout</strong>
+              website and services (the "Service"), operated by <strong class="text-blue-600">Remit-Scout LLC</strong> ("Remit-Scout,"
+              "we," "our," or "us"). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to
+              these Terms, please do not use the Service.
             </p>
 
             <div class="my-8 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-6">
@@ -26,10 +27,12 @@
                 Important Information
               </h3>
               <p class="text-blue-800 leading-relaxed">
-                <strong class="text-blue-600">Remit-Scout</strong> is an independent comparison platform. We are not a money
-                transfer provider and do not process financial transactions. We provide comparison tools, reviews, and
-                educational content to help you make informed decisions. All money transfers are processed by licensed
-                third-party providers. Learn more about our
+                <strong class="text-blue-600">Remit-Scout</strong> is an independent comparison platform. We are not a money transfer
+                provider, bank, or payment processor, and we do not move money. We provide comparison tools, reviews, and
+                educational content to help you make informed decisions. Transfers are completed directly with licensed third-party
+                providers. The core comparison experience is available without creating an account; we also offer optional accounts
+                and a paid membership (<strong class="text-blue-600">Remit-Scout Plus</strong>) for additional features. Membership
+                does not change provider rankings or results. Learn more about our
                 <NuxtLink
                   to="/about"
                   class="font-semibold underline hover:text-blue-900"
@@ -47,8 +50,8 @@
                 to="/legal/privacy"
                 class="text-blue-600 hover:text-blue-700 underline font-semibold"
               >Privacy Policy</NuxtLink>.
-              If you do not agree to these Terms, please do not use our services. These Terms constitute a legally binding
-              agreement between you and Remit-Scout.
+              If you do not agree to these Terms, please do not use the Service. These Terms constitute a legally binding agreement
+              between you and Remit-Scout LLC.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -62,6 +65,7 @@
               <li><strong class="text-blue-600">Provider Reviews:</strong> Independent reviews and ratings of licensed money transfer providers</li>
               <li><strong class="text-blue-600">Educational Content:</strong> Guides, articles, and resources about international money transfers</li>
               <li><strong class="text-blue-600">Search Functionality:</strong> Tools to find and compare providers for specific corridors and amounts</li>
+              <li><strong class="text-blue-600">Account Features (optional):</strong> Features such as saving items, alerts, and enhanced history (availability may vary)</li>
             </ul>
             <p class="mb-6 leading-relaxed">
               <strong>Important:</strong> We are not a money transfer provider, financial institution, or payment processor.
@@ -103,6 +107,44 @@
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
+              Accounts
+            </h2>
+            <p class="mb-6 leading-relaxed">
+              Some features may require you to create an account. When creating an account, you agree to provide accurate and
+              up-to-date information and to keep your account credentials confidential. You are responsible for all activity that
+              occurs under your account. If you believe your account has been compromised, please notify us via our
+              <NuxtLink
+                to="/contact"
+                class="text-blue-600 hover:text-blue-700 underline font-semibold"
+              >contact page</NuxtLink>.
+            </p>
+
+            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+              Remit-Scout Plus (Paid Membership)
+            </h2>
+            <p class="mb-4 leading-relaxed">
+              <strong class="text-blue-600">Remit-Scout Plus</strong> is an optional paid membership that provides access to certain
+              additional features. The specific features available under Plus may evolve over time, but Plus does not affect provider
+              rankings, comparison results, or our methodology.
+            </p>
+            <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
+              <li><strong class="text-blue-600">Billing cycle:</strong> Monthly subscription</li>
+              <li><strong class="text-blue-600">Automatic renewal:</strong> Your subscription renews automatically unless you cancel</li>
+              <li><strong class="text-blue-600">Cancellation:</strong> If you cancel, access continues until the end of your current billing period</li>
+              <li><strong class="text-blue-600">No free trial:</strong> Unless we explicitly state otherwise at purchase</li>
+              <li><strong class="text-blue-600">No refunds:</strong> All fees are non-refundable unless required by law</li>
+            </ul>
+            <p class="mb-6 leading-relaxed">
+              Payments for Plus are processed by <strong class="text-blue-600">Stripe</strong>. By purchasing Plus, you agree to pay
+              the fees and applicable taxes, and you authorize us (through Stripe) to charge your selected payment method. We do not
+              store full payment card numbers.
+            </p>
+            <p class="mb-6 leading-relaxed">
+              We may change Plus pricing in the future. If pricing changes apply to existing subscribers, we will provide reasonable
+              notice and give you an opportunity to cancel before the new price takes effect.
+            </p>
+
+            <h2 class="mb-4 text-2xl font-bold text-gray-900">
               User Responsibilities
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -115,7 +157,10 @@
               <li><strong class="text-blue-600">Respect Intellectual Property:</strong> Respect our intellectual property rights and those of third parties</li>
               <li><strong class="text-blue-600">No Fraudulent Activity:</strong> Not use our services for any fraudulent, deceptive, or illegal purposes</li>
               <li><strong class="text-blue-600">No Interference:</strong> Not interfere with or disrupt the operation of our services or servers</li>
-              <li><strong class="text-blue-600">No Automated Access:</strong> Not use bots, scrapers, or other automated means to access our services without permission</li>
+              <li><strong class="text-blue-600">No Automated Access:</strong> Not use bots, scrapers, crawlers, or other automated means to access the Service without our permission</li>
+              <li><strong class="text-blue-600">No Reverse Engineering:</strong> Not reverse engineer, decompile, or attempt to discover source code or underlying methods used by the Service</li>
+              <li><strong class="text-blue-600">No Circumvention:</strong> Not bypass or circumvent access controls, rate limits, paywalls, or other protective measures</li>
+              <li><strong class="text-blue-600">No Resale:</strong> Not resell, license, or commercially exploit the Service or its outputs except as expressly permitted by us</li>
             </ul>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -127,6 +172,20 @@
               are owned by Remit-Scout or its licensors and are protected by copyright, trademark, patent, trade secret, and other
               intellectual property laws. You may not reproduce, distribute, modify, create derivative works of, publicly display,
               publicly perform, republish, download, store, or transmit any of our content without our prior written consent.
+            </p>
+
+            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+              User Content (Reviews)
+            </h2>
+            <p class="mb-4 leading-relaxed">
+              You may be able to submit content such as reviews, ratings, comments, or other materials ("User Content"). You retain
+              ownership of your User Content, but you grant Remit-Scout a non-exclusive, worldwide, royalty-free, transferable, and
+              sublicensable license to use, host, store, reproduce, modify, publish, display, and distribute your User Content in
+              connection with operating and improving the Service.
+            </p>
+            <p class="mb-6 leading-relaxed">
+              You represent and warrant that you have all rights necessary to grant this license and that your User Content does
+              not violate any law or any third-party rights. We may remove or restrict User Content at any time in our discretion.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -244,10 +303,21 @@
               Governing Law and Dispute Resolution
             </h2>
             <p class="mb-6 leading-relaxed">
-              These Terms are governed by the laws of the State of Delaware, without regard to conflict-of-law rules. Any dispute
-              arising from or related to these Terms or our services shall be resolved through binding arbitration in Delaware,
-              in accordance with applicable arbitration rules, unless prohibited by law. You agree to waive any right to a jury
-              trial and to participate in a class action lawsuit.
+              These Terms are governed by the laws of the State of Delaware, without regard to conflict-of-law rules.
+            </p>
+            <p class="mb-6 leading-relaxed">
+              <strong class="text-blue-600">Informal resolution:</strong> Before starting a formal dispute, you agree to contact us
+              via our <NuxtLink
+                to="/contact"
+                class="text-blue-600 hover:text-blue-700 underline font-semibold"
+              >contact page</NuxtLink>
+              and attempt to resolve the dispute informally.
+            </p>
+            <p class="mb-6 leading-relaxed">
+              <strong class="text-blue-600">Arbitration and class action waiver:</strong> To the extent permitted by law, any
+              dispute arising from or related to these Terms or the Service will be resolved through binding arbitration in
+              Delaware, and you waive any right to a jury trial and to participate in a class action lawsuit. This does not prevent
+              either party from bringing an individual claim in small claims court where permitted.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -280,12 +350,24 @@
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
               <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <span>📚</span>
+                <svg
+                  class="h-6 w-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                  />
+                </svg>
                 <span>Learn More About Remit-Scout</span>
               </h3>
               <p class="mb-6 text-gray-700 leading-relaxed">
-                <span>🎯</span> Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
-                comparisons. <span>🛡️</span>
+                Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
+                comparisons.
               </p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <NuxtLink
@@ -314,7 +396,19 @@
                   to="/methodology"
                   class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
                 >
-                  <span class="text-3xl">📊</span>
+                  <svg
+                    class="h-6 w-6 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 13l8 0 7 8 0-8 7 0-7-8-7 8-7 0z"
+                    />
+                  </svg>
                   <div>
                     <div class="font-semibold text-gray-900">Methodology</div>
                     <div class="text-sm text-gray-600">How we compare providers</div>
@@ -444,7 +538,7 @@ const { public: { siteUrl } } = useRuntimeConfig()
 setSeo({
   title: 'Terms of Service | Remit-Scout Legal Agreement',
   description:
-    'Read the Terms of Service for Remit-Scout. Understand the rules and conditions for using our money transfer comparison platform.',
+    'Read the Terms of Service for Remit-Scout. Understand rules for using our comparison platform, accounts, and Remit-Scout Plus membership.',
   canonical: `${siteUrl}/legal/terms`,
   ogImage: `${siteUrl}/images/og/terms.jpg`,
 })

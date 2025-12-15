@@ -1,4 +1,6 @@
-export default defineI18nConfig(() => ({
+// i18n is currently disabled - see FIXES_APPLIED.md
+// export default defineI18nConfig(() => ({
+export default () => ({
   legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
@@ -69,4 +71,5 @@ export default defineI18nConfig(() => ({
       },
     },
   },
-}))
+})
+// })

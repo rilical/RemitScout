@@ -1,36 +1,5 @@
 <template>
   <div class="min-h-screen bg-white pb-24 md:pb-0">
-    <style>
-      @keyframes scroll-left {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(-50%);
-        }
-      }
-      .animate-scroll-left {
-        animation: scroll-left 50s linear infinite;
-        width: fit-content;
-      }
-      .animate-scroll-left:hover {
-        animation-play-state: paused;
-      }
-      * {
-        -webkit-hyphens: none !important;
-        -moz-hyphens: none !important;
-        -ms-hyphens: none !important;
-        hyphens: none !important;
-        word-break: normal !important;
-        overflow-wrap: normal !important;
-      }
-      p, span, div, h1, h2, h3, h4, h5, h6, a, li, td, th {
-        -webkit-hyphens: none !important;
-        -moz-hyphens: none !important;
-        -ms-hyphens: none !important;
-        hyphens: none !important;
-      }
-    </style>
     <CompareWidget />
 
     <!-- Hero -->
@@ -45,15 +14,15 @@
             </h1>
 
             <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
-              Get discovered by expats and international families actively comparing money transfer options
+              Reach users who compare international transfer options before they send
             </p>
 
             <p class="text-lg text-neutral-700 leading-relaxed mb-4">
-              Remit-Scout is a comparison platform that helps people send money internationally. When users search for the best rates on corridors you serve, <strong class="font-semibold text-neutral-900">you appear in results</strong> — and when they click through and complete a transfer, <strong class="font-semibold text-brand-600">you get a new customer</strong>.
+              Remit-Scout is an independent comparison platform for international money transfers. When users search corridors you serve, <strong class="font-semibold text-neutral-900">you show up in results</strong>. If they choose you, they click through and complete the transfer on your checkout.
             </p>
 
             <p class="text-base text-neutral-600 leading-relaxed mb-8">
-              We rank providers by <strong class="font-semibold text-neutral-900">what recipients actually receive</strong> (after fees and exchange rate markups), not marketing claims. This means if your service offers competitive pricing, you rank higher — even if we don't have an affiliate relationship with you yet.
+              We rank providers by <strong class="font-semibold text-neutral-900">what the recipient should receive</strong> after fees and FX markup, not marketing claims. If your pricing is competitive, you rank higher, whether or not we have an affiliate relationship.
             </p>
 
             <div class="mb-6">
@@ -62,26 +31,66 @@
                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 mb-4"
               >
                 Discuss partnership
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </NuxtLink>
               <div class="flex flex-wrap gap-2">
                 <div class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700">
-                  <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                   No pay-to-rank
                 </div>
                 <div class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700">
-                  <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   Full disclosure
                 </div>
                 <div class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700">
-                  <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                   We don't move money
                 </div>
@@ -110,10 +119,10 @@
             </span>
           </div>
           <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-            Examples of providers you'll see in our comparison results. We compare many providers — some have affiliate or data partnerships with us; others do not. Regardless, rankings are based on pricing and performance data.
+            Examples of providers you’ll see in our comparison results. Some have affiliate or data partnerships with us; others don’t. Either way, rankings follow the same rules and are driven by pricing and performance data.
           </p>
           <p class="text-base text-neutral-600 leading-relaxed">
-            <strong class="font-semibold text-brand-600">We're still growing.</strong> Remit-Scout is a relatively new platform, and we're actively onboarding new partners. If you're a remittance provider interested in fair, transparent comparison, we'd love to hear from you.
+            <strong class="font-semibold text-brand-600">We’re still growing.</strong> If you’re a licensed provider and want accurate coverage, reach out. We onboard new partners continuously.
           </p>
         </div>
 
@@ -125,9 +134,15 @@
               class="flex-shrink-0 w-56 h-36 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
             >
               <div class="text-center">
-                <div class="text-3xl mb-3">{{ partner.emoji }}</div>
-                <div class="text-base font-semibold text-neutral-900">{{ partner.name }}</div>
-                <div class="text-xs text-neutral-500 mt-1">{{ partner.type }}</div>
+                <div class="text-3xl mb-3">
+                  {{ partner.emoji }}
+                </div>
+                <div class="text-base font-semibold text-neutral-900">
+                  {{ partner.name }}
+                </div>
+                <div class="text-xs text-neutral-500 mt-1">
+                  {{ partner.type }}
+                </div>
               </div>
             </div>
           </div>
@@ -142,8 +157,18 @@
             class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
           >
             Become a partner
-            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              class="ml-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -159,10 +184,10 @@
             Partnership opportunities at a glance
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-            We offer four distinct ways to partner with Remit-Scout, each designed to meet different business needs and goals. Whether you're a remittance provider looking to reach new customers, a media outlet seeking accurate comparison data, a platform building remittance features, or a brand interested in sponsoring independent research — we have a partnership model that fits.
+            We offer four ways to partner with Remit-Scout. Pick the model that fits what you’re building: provider onboarding, data and widgets, API access, or clearly labeled sponsorship.
           </p>
           <p class="text-base leading-relaxed text-neutral-600 mb-10">
-            All partnerships respect our editorial independence. Rankings, scores, and comparisons are never influenced by commercial relationships — they're determined by data, pricing, and performance metrics.
+            Partnerships never buy placement. Rankings, scores, and comparisons stay independent and are determined by data, pricing, and performance metrics.
           </p>
 
           <div class="space-y-6">
@@ -183,7 +208,7 @@
                       Does this affect rankings?
                     </p>
                     <p class="text-sm text-blue-800">
-                      No — rankings are based on data (recipient gets, cost, speed, trust).
+                      No. Rankings are based on comparison data (recipient gets, total cost, speed, and trust signals).
                     </p>
                   </div>
                   <NuxtLink
@@ -206,14 +231,14 @@
                     Data & Widgets
                   </h3>
                   <p class="text-base leading-relaxed text-neutral-700 mb-4">
-                    License our comparison data, market charts (Pulse), or embed our widgets on your site or app.
+                    License our comparison data, market charts (Pulse), or embed widgets on your site or app.
                   </p>
                   <div class="rounded-lg border border-emerald-100 bg-emerald-50 p-4 mb-4">
                     <p class="text-sm font-semibold text-emerald-900 mb-1">
                       Does this affect rankings?
                     </p>
                     <p class="text-sm text-emerald-800">
-                      No — data licensing is separate from scoring and rankings.
+                      No. Data licensing is separate from scoring and rankings.
                     </p>
                   </div>
                   <NuxtLink
@@ -236,14 +261,14 @@
                     API Access
                   </h3>
                   <p class="text-base leading-relaxed text-neutral-700 mb-4">
-                    Programmatic access to real-time comparison data for platforms building remittance features or conducting research.
+                    Programmatic access to comparison data for platforms building remittance features or conducting research.
                   </p>
                   <div class="rounded-lg border border-purple-100 bg-purple-50 p-4 mb-4">
                     <p class="text-sm font-semibold text-purple-900 mb-1">
                       Does this affect rankings?
                     </p>
                     <p class="text-sm text-purple-800">
-                      No — API partnerships don't influence comparison results.
+                      No. API partnerships don’t influence comparison results.
                     </p>
                   </div>
                   <NuxtLink
@@ -266,14 +291,14 @@
                     Sponsorship
                   </h3>
                   <p class="text-base leading-relaxed text-neutral-700 mb-4">
-                    Support independent research on remittance pricing and reach expats through clearly labeled sponsorships (e.g., "Pulse supported by..."). Brand-safe, clearly labeled.
+                    Support independent research on remittance pricing and reach expats through clearly labeled sponsorships (for example: “Pulse supported by…”). Brand-safe and clearly labeled.
                   </p>
                   <div class="rounded-lg border border-orange-100 bg-orange-50 p-4 mb-4">
                     <p class="text-sm font-semibold text-orange-900 mb-1">
                       Does this affect rankings?
                     </p>
                     <p class="text-sm text-orange-800">
-                      No — sponsorship never changes rankings, sorting, or Remit-Score.
+                      No. Sponsorship never changes rankings, sorting, or Remit-Score.
                     </p>
                   </div>
                   <NuxtLink
@@ -299,7 +324,7 @@
             What You Get as a Provider Partner
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-8">
-            Remit-Scout helps you reach customers who are actively searching for money transfer options. Here's exactly what partnering with us delivers:
+            Partnering with Remit-Scout helps you reach users who compare providers before they send, and it helps us keep coverage accurate as your product changes.
           </p>
 
           <!-- Remit-Score Visual -->
@@ -309,18 +334,26 @@
                 <div class="relative">
                   <div class="w-48 h-48 lg:w-64 lg:h-64 rounded-full border-4 border-brand-600 bg-white flex items-center justify-center shadow-xl">
                     <div class="text-center">
-                      <div class="text-5xl lg:text-7xl font-bold text-brand-600 mb-2">9.5</div>
-                      <div class="text-sm lg:text-base font-semibold text-neutral-700">Remit-Score</div>
+                      <div class="text-5xl lg:text-7xl font-bold text-brand-600 mb-2">
+                        9.5
+                      </div>
+                      <div class="text-sm lg:text-base font-semibold text-neutral-700">
+                        Remit-Score
+                      </div>
                     </div>
                   </div>
                   <div class="absolute -top-4 -right-4 w-20 h-20 lg:w-24 lg:h-24 rounded-full border-4 border-emerald-500 bg-white flex items-center justify-center shadow-lg">
                     <div class="text-center">
-                      <div class="text-2xl lg:text-3xl font-bold text-emerald-600">8.4</div>
+                      <div class="text-2xl lg:text-3xl font-bold text-emerald-600">
+                        8.4
+                      </div>
                     </div>
                   </div>
                   <div class="absolute -bottom-4 -left-4 w-16 h-16 lg:w-20 lg:h-20 rounded-full border-4 border-blue-500 bg-white flex items-center justify-center shadow-lg">
                     <div class="text-center">
-                      <div class="text-xl lg:text-2xl font-bold text-blue-600">7.2</div>
+                      <div class="text-xl lg:text-2xl font-bold text-blue-600">
+                        7.2
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -330,7 +363,7 @@
                   How Remit-Score Works
                 </h3>
                 <p class="text-base leading-relaxed text-neutral-700 mb-4">
-                  Each provider gets a <strong class="font-semibold text-neutral-900">Remit-Score</strong> (0-10 scale) based on real transfer data: what recipients receive, total cost, transfer speed, and reliability signals.
+                  Each provider gets a <strong class="font-semibold text-neutral-900">Remit-Score</strong> (0-10 scale) based on quote data and reliability signals, including delivered outcome, total cost, transfer speed, and coverage.
                 </p>
                 <p class="text-sm leading-relaxed text-neutral-600 mb-4">
                   Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-600 text-brand-600 font-bold text-sm mx-1">9.5</span>,
@@ -338,9 +371,49 @@
                   <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-blue-500 text-blue-600 font-bold text-sm mx-1">7.2</span>
                   represent the overall quality and value users can expect from each provider.
                 </p>
-                <p class="text-sm font-semibold text-neutral-900 whitespace-nowrap">
+                <p class="text-sm font-semibold text-neutral-900 mb-4">
                   If your pricing is competitive, your Remit-Score reflects that — regardless of commercial relationships.
                 </p>
+                <div class="flex flex-wrap gap-4">
+                  <NuxtLink
+                    to="/methodology"
+                    class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                  >
+                    Learn more about our methodology
+                    <svg
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </NuxtLink>
+                  <NuxtLink
+                    to="/providers"
+                    class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                  >
+                    See provider examples
+                    <svg
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </NuxtLink>
+                </div>
               </div>
             </div>
           </div>
@@ -354,10 +427,10 @@
                 Qualified Traffic & New Customers
               </h3>
               <p class="text-sm leading-relaxed text-neutral-700 mb-3">
-                When expats search for the best rates on corridors you serve, your service appears in results. These are <strong class="font-semibold text-neutral-900">high-intent users</strong> actively comparing and ready to transfer. They click through to complete their transfer — and you get a new customer.
+                When users compare corridors you serve, your listing appears alongside competitors. These are <strong class="font-semibold text-neutral-900">high-intent users</strong> actively comparing prices and payout options.
               </p>
               <p class="text-xs leading-relaxed text-neutral-600">
-                Unlike generic ads, Remit-Scout connects you with people <strong class="font-semibold text-neutral-900">already in the decision-making phase</strong>. They've compared rates and are ready to send.
+                Unlike generic ads, this is traffic from users already in a decision flow. If they choose you, they click through to complete checkout on your site.
               </p>
             </div>
 
@@ -394,7 +467,7 @@
                   Provider Reviews
                 </p>
                 <p class="text-xs leading-relaxed text-brand-800">
-                  We will write a comprehensive review about you. Detailed provider reviews help users understand your service, fee structures, transfer speeds, supported corridors, payment methods, and customer experience. These reviews improve trust, answer user questions before they click through, and ultimately increase conversion rates from qualified leads.
+                  We can publish detailed provider reviews that explain fees, payout methods, supported corridors, and key user considerations. Clear reviews reduce friction and help users understand what to expect before they click through.
                 </p>
               </div>
             </div>
@@ -407,7 +480,7 @@
                 Official Data Feed Badge
               </h3>
               <p class="text-sm leading-relaxed text-neutral-700 mb-3">
-                When you provide API access for real-time quotes, you receive an <strong class="font-semibold text-brand-600">"Official Data Feed" badge</strong> that appears next to your listings in comparison results. This badge signals to users that your pricing data is verified directly from your system and updated in real-time, not estimated or pulled from public websites. This trust signal significantly improves user confidence and can increase click-through rates by up to 20-30% compared to providers without the badge.
+                When you provide API access for real-time quotes, you receive an <strong class="font-semibold text-brand-600">"Official Data Feed" badge</strong> that appears next to your listings in comparison results. This badge signals that pricing comes directly from your systems and is updated in real time, not estimated or scraped. It can materially improve user confidence and, in some cases, click-through rates (up to 20–30%); results vary by corridor and audience.
               </p>
               <p class="text-xs leading-relaxed text-neutral-600 mb-3">
                 Users understand they're seeing accurate, up-to-date pricing that matches what they'll see at checkout — reducing frustration from pricing discrepancies and building trust in your brand. When we have direct API access, we can display your rates more accurately across all corridors and transfer amounts, minimize discrepancies that lead to user complaints, and ensure your competitive positioning reflects your actual pricing rather than outdated estimates.
@@ -433,8 +506,12 @@
                     1
                   </div>
                   <div>
-                    <p class="text-sm font-semibold text-white mb-1">Intro (15 min)</p>
-                    <p class="text-sm text-white/90">Confirm corridors, methods, and eligibility</p>
+                    <p class="text-sm font-semibold text-white mb-1">
+                      Intro (15 min)
+                    </p>
+                    <p class="text-sm text-white/90">
+                      Confirm corridors, methods, and eligibility
+                    </p>
                   </div>
                 </div>
                 <div class="flex gap-4">
@@ -442,8 +519,12 @@
                     2
                   </div>
                   <div>
-                    <p class="text-sm font-semibold text-white mb-1">Data connection</p>
-                    <p class="text-sm text-white/90">API/feed/public quote approach</p>
+                    <p class="text-sm font-semibold text-white mb-1">
+                      Data connection
+                    </p>
+                    <p class="text-sm text-white/90">
+                      API/feed/public quote approach
+                    </p>
                   </div>
                 </div>
                 <div class="flex gap-4">
@@ -451,8 +532,12 @@
                     3
                   </div>
                   <div>
-                    <p class="text-sm font-semibold text-white mb-1">QA & validation</p>
-                    <p class="text-sm text-white/90">We validate live quotes vs checkout and set escalation contact</p>
+                    <p class="text-sm font-semibold text-white mb-1">
+                      QA & validation
+                    </p>
+                    <p class="text-sm text-white/90">
+                      We validate live quotes vs checkout and set escalation contact
+                    </p>
                   </div>
                 </div>
                 <div class="flex gap-4">
@@ -460,15 +545,19 @@
                     4
                   </div>
                   <div>
-                    <p class="text-sm font-semibold text-white mb-1">Go live</p>
-                    <p class="text-sm text-white/90">Tracking (if affiliate), labels, and first reporting</p>
+                    <p class="text-sm font-semibold text-white mb-1">
+                      Go live
+                    </p>
+                    <p class="text-sm text-white/90">
+                      Tracking (if affiliate), labels, and first reporting
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             <p class="text-base text-white/95 leading-relaxed mb-6">
-              There's no upfront cost — we only earn if users complete transfers through your service. Most providers can get listed within 1-2 weeks.
+              There’s no listing fee. We may earn a commission when users complete transfers through your service. Most providers can be listed within 1–2 weeks once data access is set.
             </p>
             <div class="flex flex-wrap gap-3">
               <NuxtLink
@@ -498,7 +587,7 @@
             What We Need From You
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-8">
-            To list your service accurately and fairly, we need a few things. Most providers can get started in under a week:
+            To list your service accurately and keep it current, we need a few basics:
           </p>
 
           <div class="grid gap-6 md:grid-cols-2 mb-8">
@@ -596,7 +685,7 @@
             For Platforms, Publishers & Media
           </h2>
           <p class="text-lg leading-relaxed text-white/95 mb-10">
-            Integrate our comparison tools or data into your website, app, or content to help your users save on international transfers.
+            Integrate comparison tools or market data into your product or content to help users make better transfer decisions.
           </p>
 
           <div class="rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm p-8">
@@ -629,7 +718,7 @@
                 White-label Compare Module
               </p>
               <p class="text-sm text-white/90 leading-relaxed">
-                For apps and communities, we offer a white-label Compare module that lets your users compare providers without leaving your site. You can embed it as a widget or integrate via API, while we keep methodology and disclosure consistent.
+                For apps and communities, we offer a white-label Compare module that lets users compare providers without leaving your site. You can embed a widget or integrate via API while we keep methodology and disclosure consistent.
               </p>
             </div>
 
@@ -660,7 +749,7 @@
             Our independence rules
           </h2>
           <p class="text-lg leading-relaxed text-white/90 mb-10 max-w-3xl">
-            We built Remit-Scout because hidden fees are confusing and costly. Independence isn't a tagline — it's a set of rules we enforce. These rules protect users and ensure partners can't influence what we recommend.
+            Independence isn’t a tagline. It’s a set of rules we enforce so partners can’t influence what users see.
           </p>
 
           <div class="grid gap-6 md:grid-cols-2">
@@ -727,8 +816,18 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors"
             >
               Read full methodology
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -751,8 +850,18 @@
           <div class="grid gap-6 md:grid-cols-2">
             <div class="rounded-2xl border border-neutral-200 bg-white p-6">
               <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 ring-1 ring-blue-200 mb-4">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 We may earn a commission
               </div>
@@ -763,8 +872,18 @@
 
             <div class="rounded-2xl border border-neutral-200 bg-white p-6">
               <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200 mb-4">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
                 </svg>
                 Rankings are independent
               </div>
@@ -775,8 +894,18 @@
 
             <div class="rounded-2xl border border-neutral-200 bg-white p-6">
               <div class="inline-flex items-center gap-2 rounded-full bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800 ring-1 ring-purple-200 mb-4">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                  />
                 </svg>
                 Official Data Feed
               </div>
@@ -787,8 +916,18 @@
 
             <div class="rounded-2xl border border-neutral-200 bg-white p-6">
               <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-medium text-orange-800 ring-1 ring-orange-200 mb-4">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                  />
                 </svg>
                 Sponsored
               </div>
@@ -813,7 +952,7 @@
             How we collect and display comparison data
           </p>
           <p class="text-base leading-relaxed text-neutral-600 mb-8">
-            We get pricing data three ways: <strong class="font-semibold text-neutral-900">direct API access from providers</strong> (most accurate), <strong class="font-semibold text-neutral-900">partner data feeds</strong>, or <strong class="font-semibold text-neutral-900">public quote requests</strong> on provider websites. We normalize everything into a single comparable number: what the recipient receives. We update rates frequently on popular corridors (like US to Mexico, UK to India), and less often on less-traveled routes.
+            We get pricing data three ways: <strong class="font-semibold text-neutral-900">direct provider APIs</strong> (most consistent when available), <strong class="font-semibold text-neutral-900">partner feeds</strong>, or <strong class="font-semibold text-neutral-900">public quote requests</strong>. We normalize everything into one comparable number: what the recipient should receive. Refresh cadence varies by corridor and payment method.
           </p>
 
           <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
@@ -827,12 +966,12 @@
               </li>
               <li class="flex items-start gap-3">
                 <span class="text-neutral-400 font-bold mt-0.5">•</span>
-                <span><strong class="font-semibold text-neutral-900">We fix errors quickly.</strong> Every quote shows a timestamp. If you notice incorrect pricing, fees, or availability, use our corrections form. We investigate within 24 hours and update the site when we confirm the issue.</span>
+                <span><strong class="font-semibold text-neutral-900">We fix errors quickly.</strong> Every quote shows a timestamp. If you notice incorrect pricing, fees, or availability, use our corrections form. We investigate and resolve confirmed issues within 48 hours.</span>
               </li>
             </ul>
             <div class="mt-6 flex flex-wrap gap-3">
               <NuxtLink
-                to="/contact?type=issue"
+                to="/contact"
                 class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
               >
                 Report an issue
@@ -867,8 +1006,18 @@
               <details class="group">
                 <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
                   <span class="text-base">Can providers pay to rank higher on Remit-Scout?</span>
-                  <svg class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
@@ -881,8 +1030,18 @@
               <details class="group">
                 <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
                   <span class="text-base">How do affiliate partnerships work? Do I have to pay to be listed?</span>
-                  <svg class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
@@ -903,8 +1062,18 @@
               <details class="group">
                 <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
                   <span class="text-base">What's the benefit to me if I don't want an affiliate relationship?</span>
-                  <svg class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
@@ -928,8 +1097,18 @@
               <details class="group">
                 <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
                   <span class="text-base">Can I improve my ranking by paying more or having a stronger affiliate relationship?</span>
-                  <svg class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
@@ -947,13 +1126,23 @@
               <details class="group">
                 <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
                   <span class="text-base">What if my pricing changes or I notice an error in how I'm listed?</span>
-                  <svg class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
                   <p class="mb-3">
-                    <strong class="font-semibold text-neutral-900">We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate all provider reports within 24 hours and update the site immediately when we confirm the issue.
+                    <strong class="font-semibold text-neutral-900">We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate and resolve confirmed issues within 48 hours.
                   </p>
                   <p>
                     For pricing changes: If you have API access, updates are automatic. If we pull quotes manually, just let us know when pricing changes and we'll update our system. For new corridors, promotions, or service changes, keep your partnership contact updated and we'll reflect changes on the site.
@@ -966,8 +1155,18 @@
               <details class="group">
                 <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
                   <span class="text-base">How long does onboarding take? What's the process?</span>
-                  <svg class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
@@ -1117,18 +1316,18 @@ const hostname = (() => {
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Remit-Scout',
-  url: siteUrl,
-  logo: `${siteUrl}/logos/remit-scout.svg`,
-  contactPoint: [
+  'name': 'Remit-Scout',
+  'url': siteUrl,
+  'logo': `${siteUrl}/logos/remit-scout.svg`,
+  'contactPoint': [
     {
       '@type': 'ContactPoint',
-      contactType: 'customer support',
-      email: `support@${hostname}`,
-      url: `${siteUrl}/contact`,
+      'contactType': 'customer support',
+      'email': `support@${hostname}`,
+      'url': `${siteUrl}/contact`,
     },
   ],
-  sameAs: [
+  'sameAs': [
     'https://linkedin.com/company/Remit-Scout',
   ],
 }
@@ -1151,3 +1350,41 @@ const breadcrumbItems = [
   { name: 'Partnerships', path: '/partnerships' },
 ]
 </script>
+
+<style scoped>
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-left {
+  animation: scroll-left 50s linear infinite;
+  width: fit-content;
+}
+
+.animate-scroll-left:hover {
+  animation-play-state: paused;
+}
+</style>
+
+<style>
+* {
+  -webkit-hyphens: none !important;
+  -moz-hyphens: none !important;
+  -ms-hyphens: none !important;
+  hyphens: none !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+p, span, div, h1, h2, h3, h4, h5, h6, a, li, td, th {
+  -webkit-hyphens: none !important;
+  -moz-hyphens: none !important;
+  -ms-hyphens: none !important;
+  hyphens: none !important;
+}
+</style>

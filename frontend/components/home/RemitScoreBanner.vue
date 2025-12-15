@@ -31,9 +31,17 @@
               <p class="text-sm text-neutral-600 mb-3 max-w-3xl leading-relaxed">
                 Scores are computed from our quote dataset (fees, implied FX rate vs a mid‑market reference, delivered amount) and other measurable signals where available (e.g., stated ETA, method support, quote availability). Providers cannot pay to rank higher. Affiliate relationships do not influence score calculation.
               </p>
-              <button
+              <p class="text-sm text-neutral-600 mb-3 max-w-2xl">
+                <NuxtLink
+                  to="/providers"
+                  class="font-medium text-brand-600 hover:text-brand-700 transition-colors underline"
+                >
+                  See how top providers like Wise, Remitly, and Western Union score.
+                </NuxtLink>
+              </p>
+              <NuxtLink
+                to="/methodology"
                 class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
-                @click="showModal = true"
               >
                 Learn how we calculate Remit-Score
                 <svg
@@ -49,29 +57,21 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-              </button>
+              </NuxtLink>
             </div>
           </div>
-          <button
+          <NuxtLink
+            to="/methodology"
             class="hidden sm:flex flex-shrink-0 px-4 py-2 bg-white border border-brand-300 hover:border-brand-600 text-brand-600 font-medium rounded-lg transition-colors text-sm"
-            @click="showModal = true"
           >
             View Details
-          </button>
+          </NuxtLink>
         </div>
       </div>
     </div>
 
-    <RemitScoreModal
-      :is-open="showModal"
-      @update:is-open="showModal = $event"
-    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import RemitScoreModal from '~/components/shared/RemitScoreModal.vue'
-
-const showModal = ref(false)
 </script>

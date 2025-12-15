@@ -99,7 +99,7 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      children: JSON.stringify(reviewSchema),
+      innerHTML: JSON.stringify(reviewSchema),
     },
   ],
 })

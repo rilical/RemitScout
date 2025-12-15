@@ -31,23 +31,23 @@ export const useEsim = () => {
   }): EsimPlan[] => {
     let results = [...esimPlans]
 
-    if (params.country) {
+    if (params.country !== undefined) {
       results = results.filter(plan =>
-        plan.countryCode === params.country
-        || plan.country.toLowerCase().includes(params.country.toLowerCase()),
+        plan.countryCode === params.country!
+        || plan.country.toLowerCase().includes(params.country!.toLowerCase()),
       )
     }
 
-    if (params.minData) {
-      results = results.filter(plan => plan.dataGB >= params.minData)
+    if (params.minData !== undefined) {
+      results = results.filter(plan => plan.dataGB >= params.minData!)
     }
 
-    if (params.maxPrice) {
-      results = results.filter(plan => plan.price <= params.maxPrice)
+    if (params.maxPrice !== undefined) {
+      results = results.filter(plan => plan.price <= params.maxPrice!)
     }
 
-    if (params.minDays) {
-      results = results.filter(plan => plan.duration >= params.minDays)
+    if (params.minDays !== undefined) {
+      results = results.filter(plan => plan.duration >= params.minDays!)
     }
 
     return results.sort((a, b) => a.price - b.price)

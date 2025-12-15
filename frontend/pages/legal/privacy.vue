@@ -10,25 +10,26 @@
               Privacy Policy
             </h1>
             <p class="text-gray-600">
-              Last updated: November 22, 2025
+              Last updated: December 14, 2025
             </p>
           </div>
 
           <div class="prose prose-lg max-w-none">
             <p class="mb-6 text-lg leading-relaxed">
-              <strong class="text-blue-600">Remit-Scout</strong> ("we," "our," "us") is committed to protecting your privacy.
+              <strong class="text-blue-600">Remit-Scout LLC</strong> ("we," "our," "us") is committed to protecting your privacy.
               This Privacy Policy describes how we collect, use, and safeguard information when you use our money transfer
-              comparison tools.
+              comparison tools and related services. We are an independent comparison search engine — we do not provide money
+              transfer services or move funds on your behalf.
             </p>
 
             <div class="my-8 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-6">
               <h3 class="mb-2 text-lg font-semibold text-blue-900">
-                No Account Required
+                Accounts & Remit-Scout Plus
               </h3>
               <p class="text-blue-800 leading-relaxed">
-                We do <strong>not</strong> create user accounts, and we do <strong>not</strong> collect personally identifiable
-                information such as names, passwords, or payment details. Our service is designed to be simple and privacy-focused:
-                you can compare money transfer providers without signing up or logging in. Learn more about our
+                You can browse and compare providers without creating an account. If you choose to create an account or subscribe
+                to <strong>Remit-Scout Plus</strong>, we will collect limited personal information (like your name and email) so we
+                can provide and support those features. Learn more about our
                 <NuxtLink
                   to="/about"
                   class="font-semibold underline hover:text-blue-900"
@@ -44,16 +45,21 @@
               A. Information You Provide to Us
             </h3>
             <p class="mb-4 leading-relaxed">
-              Because <strong class="text-blue-600">Remit-Scout</strong> does not offer account creation, we only collect
-              information you voluntarily share when you contact us:
+              We collect information you provide when you create an account, subscribe to <strong class="text-blue-600">Remit-Scout
+                Plus</strong>, sign up for our newsletter, or contact support:
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Email address</strong> (if you contact us)</li>
-              <li><strong class="text-blue-600">Messages or inquiries</strong> you send to us</li>
-              <li><strong class="text-blue-600">Feedback or error reports</strong> you submit</li>
+              <li><strong class="text-blue-600">Name</strong></li>
+              <li><strong class="text-blue-600">Email address</strong></li>
+              <li><strong class="text-blue-600">Password</strong> (stored in hashed form)</li>
+              <li><strong class="text-blue-600">Newsletter signup details</strong> (name and email, if you opt in)</li>
+              <li><strong class="text-blue-600">Support communications</strong> (messages, feedback, and inquiries)</li>
             </ul>
             <p class="mb-6 leading-relaxed">
-              This information is used only to respond to you and is not used for marketing or shared with third parties.
+              If you subscribe to <strong class="text-blue-600">Remit-Scout Plus</strong>, payments are processed by
+              <strong>Stripe</strong>. We do not store full payment card numbers. Stripe may collect and process payment details,
+              and we may receive limited payment-related information (such as a Stripe customer ID, subscription status, and
+              receipts/invoices) to manage your subscription.
             </p>
 
             <h3 class="mb-3 text-xl font-semibold text-gray-900">
@@ -71,7 +77,7 @@
               <li><strong class="text-blue-600">Provider Selection:</strong> Which providers you clicked, visited, or compared</li>
               <li>
                 <strong class="text-blue-600">Device & Technical Information:</strong> IP address (used only to determine
-                approximate location/country), browser type, device type, operating system
+                approximate location/country and to help protect our service), browser type, device type, operating system
               </li>
               <li><strong class="text-blue-600">Usage Data:</strong> Pages visited, time spent, buttons clicked, referral URLs</li>
               <li>
@@ -80,8 +86,13 @@
               </li>
             </ul>
             <p class="mb-6 leading-relaxed">
-              Tracked data is used for analytics and to improve our comparison service. We do <strong>not</strong> profile you,
-              build personal datasets, or store your comparison history in a way that identifies you.
+              Tracked data is used for analytics, security, and to improve our comparison service. We do <strong>not</strong>
+              build personal profiles for advertising or sell personal data.
+            </p>
+            <p class="mb-6 leading-relaxed">
+              Separately, we maintain a historical database of provider rates and fees at specific points in time (internally
+              referred to as <strong class="text-blue-600">Pulse</strong>) to power comparisons and research. This dataset is not
+              tied to your account identity.
             </p>
 
             <h3 class="mb-3 text-xl font-semibold text-gray-900">
@@ -95,19 +106,17 @@
               <li>Understand how users interact with the comparison tool</li>
               <li>Improve performance and user experience</li>
               <li>Measure provider referral performance</li>
-              <li>Deliver relevant marketing (if applicable)</li>
             </ul>
             <p class="mb-4 leading-relaxed">
               Types of cookies used:
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
               <li><strong class="text-blue-600">Essential cookies:</strong> Required for the website to function properly</li>
-              <li><strong class="text-blue-600">Analytics cookies:</strong> Help us understand usage patterns (e.g., Google Analytics)</li>
-              <li><strong class="text-blue-600">Marketing/retargeting cookies:</strong> Used for advertising purposes (e.g., Meta, TikTok)</li>
+              <li><strong class="text-blue-600">Analytics cookies:</strong> Help us understand usage patterns and improve the service</li>
             </ul>
             <p class="mb-6 leading-relaxed">
-              You may control or delete cookies through your browser settings. Disabling certain cookies may limit your ability
-              to use some features of our website.
+              You may control or delete cookies through your browser settings. Where required, we will provide notice and choices
+              (such as a cookie banner) before placing non-essential cookies.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -118,6 +127,10 @@
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
               <li><strong class="text-blue-600">Generate accurate money transfer comparisons</strong> based on your search inputs</li>
+              <li><strong class="text-blue-600">Create and manage your account</strong> and provide customer support</li>
+              <li><strong class="text-blue-600">Manage Remit-Scout Plus</strong> subscriptions, renewals, and cancellations</li>
+              <li><strong class="text-blue-600">Send service communications</strong> related to your account or subscription</li>
+              <li><strong class="text-blue-600">Send newsletters</strong> if you opt in (you can unsubscribe anytime)</li>
               <li><strong class="text-blue-600">Track provider clicks</strong> for referral attribution and reporting</li>
               <li><strong class="text-blue-600">Improve algorithms, accuracy, and speed</strong> of our comparison tool</li>
               <li><strong class="text-blue-600">Detect errors and prevent misuse</strong> of our platform</li>
@@ -126,8 +139,7 @@
               <li><strong class="text-blue-600">Comply with legal obligations</strong> and respond to legal requests</li>
             </ul>
             <p class="mb-6 leading-relaxed">
-              We do <strong>not</strong> profile you, build personal datasets, or store your comparison history in a way that
-              identifies you as an individual.
+              We do <strong>not</strong> sell personal information.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -137,7 +149,7 @@
               We do <strong>not</strong> sell, rent, or trade your personal information.
             </p>
             <p class="mb-4 leading-relaxed">
-              We may share non-personal usage data with:
+              We may share information with:
             </p>
 
             <h3 class="mb-3 text-xl font-semibold text-gray-900">
@@ -147,10 +159,11 @@
               Trusted partners that help us operate the website, including:
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li>Analytics tools (e.g., Google Analytics)</li>
-              <li>Cloud hosting services</li>
-              <li>Anti-fraud/security tools</li>
-              <li>Email support software</li>
+              <li>Cloud hosting and infrastructure (e.g., AWS)</li>
+              <li>Payment processing (Stripe)</li>
+              <li>Email/newsletter delivery (Mailchimp)</li>
+              <li>Phone/SMS service providers (Quo, if used)</li>
+              <li>Analytics, performance monitoring, and error logging</li>
             </ul>
             <p class="mb-6 leading-relaxed">
               These providers can only use data for our purposes and must protect it in accordance with our agreements.
@@ -164,7 +177,7 @@
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
               <li>We <strong>do not</strong> send your personal data to providers</li>
-              <li>Providers may independently track referrals or performance</li>
+              <li>Providers (and/or affiliate networks) may receive referral parameters and click attribution data</li>
               <li>Their privacy policies apply once you leave <strong class="text-blue-600">Remit-Scout</strong></li>
             </ul>
 
@@ -185,16 +198,19 @@
               4. Data Retention
             </h2>
             <p class="mb-4 leading-relaxed">
-              Since we do not create accounts, we only retain:
+              We keep personal information only as long as needed for the purposes described in this Privacy Policy:
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Analytics data:</strong> Aggregated and anonymized usage statistics</li>
+              <li><strong class="text-blue-600">Account data:</strong> Kept while your account is active</li>
+              <li><strong class="text-blue-600">Subscription records:</strong> Kept as needed for billing, accounting, and compliance</li>
+              <li><strong class="text-blue-600">Newsletter data:</strong> Kept until you unsubscribe</li>
+              <li><strong class="text-blue-600">Operational logs:</strong> Typically retained for up to 30 days</li>
               <li><strong class="text-blue-600">Click-through/referral data:</strong> Needed for provider reporting and attribution</li>
-              <li><strong class="text-blue-600">Communication data:</strong> Any messages or inquiries you send to us</li>
+              <li><strong class="text-blue-600">Provider rate history (Pulse):</strong> Stored as historical rate/fee snapshots</li>
             </ul>
             <p class="mb-6 leading-relaxed">
-              We keep this data only for as long as necessary for operational, reporting, or legal purposes, then delete or
-              anonymize it. Most usage data is retained for up to 2 years, after which it is automatically deleted or anonymized.
+              If you request account deletion, we will delete or anonymize personal information where feasible. We may retain
+              limited records as necessary to comply with law, prevent fraud, resolve disputes, and enforce our agreements.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -221,11 +237,11 @@
               Depending on your location, you may have rights to:
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Request deletion</strong> of communication data you sent to us</li>
-              <li><strong class="text-blue-600">Opt out</strong> of analytics or marketing tracking</li>
+              <li><strong class="text-blue-600">Access, correct, or update</strong> your personal information</li>
+              <li><strong class="text-blue-600">Request deletion</strong> of your account and associated personal information</li>
+              <li><strong class="text-blue-600">Unsubscribe</strong> from marketing emails/newsletters</li>
               <li>
-                <strong class="text-blue-600">Request a copy</strong> of any personal information we hold (typically none,
-                since we don't create accounts)
+                <strong class="text-blue-600">Request a copy</strong> of the personal information we hold about you
               </li>
               <li><strong class="text-blue-600">Restrict or object</strong> to certain data uses</li>
               <li><strong class="text-blue-600">Data portability</strong> (where applicable)</li>
@@ -255,9 +271,9 @@
               8. International Data Transfers
             </h2>
             <p class="mb-6 leading-relaxed">
-              Your information may be transferred to and processed in countries other than your country of residence. These
-              countries may have data protection laws that differ from those in your country. We take appropriate safeguards to
-              ensure your information receives adequate protection in accordance with this Privacy Policy.
+              We are based in the United States (Dover, Delaware), and our service providers may process data in the United States
+              and other countries. Data protection laws in these locations may differ from those in your country. Where required,
+              we take appropriate measures designed to protect your information in accordance with this Privacy Policy.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -272,12 +288,24 @@
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
               <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <span>📚</span>
+                <svg
+                  class="h-6 w-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                  />
+                </svg>
                 <span>Learn More About Remit-Scout</span>
               </h3>
               <p class="mb-6 text-gray-700 leading-relaxed">
-                <span>🛡️</span> Transparency and trust are at the heart of everything we do. <span>💡</span> Learn more about our mission, how we operate,
-                and our commitment to helping you make informed financial decisions. <span>✨</span>
+                Transparency and trust are at the heart of everything we do. Learn more about our mission, how we operate,
+                and our commitment to helping you make informed financial decisions.
               </p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <NuxtLink
@@ -306,7 +334,19 @@
                   to="/methodology"
                   class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
                 >
-                  <span class="text-3xl">📊</span>
+                  <svg
+                    class="h-6 w-6 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 13l8 0 7 8 0-8 7 0-7-8-7 8-7 0z"
+                    />
+                  </svg>
                   <div>
                     <div class="font-semibold text-gray-900">Methodology</div>
                     <div class="text-sm text-gray-600">How we compare providers</div>
@@ -436,7 +476,7 @@ const { public: { siteUrl } } = useRuntimeConfig()
 setSeo({
   title: 'Privacy Policy | How We Protect Your Data | Remit-Scout',
   description:
-    'Read Remit-Scout\'s Privacy Policy. We don\'t require accounts or collect personal information. Learn how we protect your privacy while providing money transfer comparisons.',
+    'Read Remit-Scout\'s Privacy Policy. Learn how we handle account information, subscriptions, and usage data while providing money transfer comparisons.',
   canonical: `${siteUrl}/legal/privacy`,
   ogImage: `${siteUrl}/images/og/privacy.jpg`,
 })

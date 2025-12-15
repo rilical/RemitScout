@@ -1,5 +1,5 @@
 export function useLocalizedFormat() {
-  const { locale } = useI18n()
+  const locale = ref('en')
 
   const formatCurrency = (amount: number, currency: string = 'USD'): string => {
     try {

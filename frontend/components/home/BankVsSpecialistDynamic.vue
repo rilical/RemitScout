@@ -1,6 +1,6 @@
 <template>
-  <section class="py-16 sm:py-20 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-16 sm:py-20 bg-neutral-50">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-white rounded-3xl shadow-sm py-8 sm:py-12">
       <!-- Educational header -->
       <div class="text-center mb-12">
         <div class="inline-flex items-center gap-2 bg-brand-100 text-brand-700 text-sm font-semibold px-4 py-2 rounded-full mb-4">

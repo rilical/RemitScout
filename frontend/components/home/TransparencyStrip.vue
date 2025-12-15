@@ -11,7 +11,7 @@
               Focus on what matters
             </h3>
             <p class="text-xs text-slate-300 leading-relaxed">
-              We show <strong class="text-white">Recipient gets</strong> — the actual amount received after all fees and FX markup
+              We show <strong class="text-white">Recipient gets</strong> — the estimated amount received after fees and FX markup
             </p>
           </div>
         </div>
@@ -22,10 +22,10 @@
           </div>
           <div class="min-w-0">
             <h3 class="text-sm font-bold text-white mb-1">
-              Always fresh data
+              Timestamped quotes
             </h3>
             <p class="text-xs text-slate-300 leading-relaxed">
-              Every quote is timestamped. We refresh frequently and tag data provenance
+              Every quote includes a capture time and source. Refresh timing varies by provider and corridor
             </p>
           </div>
         </div>

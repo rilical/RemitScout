@@ -32,7 +32,7 @@
               </h1>
 
               <p class="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-600">
-                Transparent, data-driven methodology built by expats who got tired of losing money to hidden fees
+                A transparent methodology for comparing fees, FX markup, delivery options, and the outcome that matters: what your recipient should receive.
               </p>
               <p class="mt-4 text-sm text-neutral-600">
                 Last updated:
@@ -218,16 +218,24 @@
             Our Comparison Engine
           </div>
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-6">
-            Compare Money Transfer Providers.<br>Find the Best Deal in Seconds.
+            Our comparison engine
           </h2>
           <p class="text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed mb-6">
-            We analyze real-time exchange rates, transfer fees, delivery speeds, and reliability scores across <strong class="font-semibold text-neutral-900">{{ SITE_STATS.providers.display }} licensed providers</strong>. Our transparent rankings help you save money on every international transfer.
+            We collect live quotes, normalize total cost (fees + FX markup), and rank providers by the delivered outcome: <strong class="font-semibold text-neutral-900">recipient gets</strong>.
+            We cover <strong class="font-semibold text-neutral-900">{{ SITE_STATS.providers.display }}</strong> providers across <strong class="font-semibold text-neutral-900">{{ SITE_STATS.corridors.display }}</strong> corridors, with data freshness that varies by corridor and payment method.
           </p>
           <p class="text-base text-neutral-600 max-w-3xl mx-auto">
             <NuxtLink
               to="/send-money"
               class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30 hover:decoration-brand-700"
             >See all of our supported countries and their corridors</NuxtLink>
+          </p>
+        </div>
+
+        <div class="mx-auto max-w-5xl mt-10">
+          <p class="mt-4 mb-10 leading-relaxed text-neutral-700">
+            Remit-Scout is an independent comparison platform. We don’t move or hold your money. Transfers happen directly with the licensed provider you choose.
+            We earn trust by publishing how we source quotes, how we rank results, and how we handle corrections.
           </p>
         </div>
 
@@ -240,7 +248,7 @@
               Real-Time Exchange Rates
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We compare live rates across all providers to show you the best value for your money. Our engine updates constantly so you always see current rates.
+              We capture quotes frequently on top corridors, and less frequently on long-tail corridors. Every quote is timestamped so you can judge freshness.
             </p>
             <NuxtLink
               to="/learn/how-exchange-rates-work"
@@ -271,7 +279,7 @@
               Transfer Fees & Hidden Costs
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We show you the total cost—not just the headline fee, but also the hidden exchange rate markups that can cost you hundreds.
+              We show total cost, not just the headline fee. That includes FX markup, which can quietly outweigh a “low fee” claim.
             </p>
             <NuxtLink
               to="/learn/how-to-avoid-hidden-fees"
@@ -302,7 +310,7 @@
               Availability & Quote Success
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We track quote success rate, data freshness, and pricing stability. Spot checks on selected corridors validate provider claims where feasible.
+              We track quote success rate, data freshness, and pricing stability. When feasible, we run spot-check transfers on selected corridors to validate what we see in quotes.
             </p>
             <NuxtLink
               to="/providers"
@@ -356,7 +364,7 @@
                   How We Score Providers
                 </h2>
                 <p class="text-base text-neutral-700 mb-3 max-w-3xl leading-relaxed">
-                  Each provider gets a <span class="font-semibold">Remit-Score</span> (0-10 scale) based on real transfer data, not paid reviews.
+                  Each provider gets a <span class="font-semibold">Remit-Score</span> (0–10 scale) based on quote data and reliability signals, not paid reviews.
                   Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">9.5</span>,
                   <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">8.4</span>, or
                   <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">7.2</span>
@@ -381,25 +389,6 @@
             </div>
           </div>
 
-          <!-- Provider Slider -->
-          <div class="mb-10">
-            <div class="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white py-10 -mx-4 sm:-mx-6 lg:-mx-8">
-              <div class="flex gap-8 animate-scroll-left px-6">
-                <div
-                  v-for="(provider, index) in [...providers, ...providers, ...providers]"
-                  :key="`provider-${provider.name}-${index}`"
-                  class="flex-shrink-0 w-56 h-36 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
-                >
-                  <div class="text-center">
-                    <div class="text-3xl mb-3">{{ provider.emoji }}</div>
-                    <div class="text-base font-semibold text-neutral-900">{{ provider.name }}</div>
-                    <div class="text-xs text-neutral-500 mt-1">{{ provider.type }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="max-w-4xl mx-auto">
             <div class="space-y-4">
               <h3 class="text-xl font-bold text-neutral-900 mb-4 text-center">
@@ -414,7 +403,7 @@
                     <span class="text-brand-600 font-bold text-lg">40%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    Effective cost (FX spread + fees), how often provider is cheapest, and quote vs. actual delivery accuracy
+                    Total cost (fees + FX markup) and how often a provider delivers the best outcome for the scenario shown.
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -432,7 +421,7 @@
                     <span class="text-brand-600 font-bold text-lg">20%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    Quote success rate, data freshness, pricing stability (where available)
+                    Quote success rate, data freshness, and pricing stability (where available).
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -450,7 +439,7 @@
                     <span class="text-brand-600 font-bold text-lg">15%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    ETA where available, speed buckets, observed delivery times on selected corridors
+                    ETA where available, speed buckets, and observed delivery times on selected corridors (when tested).
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -468,7 +457,7 @@
                     <span class="text-brand-600 font-bold text-lg">15%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    Refund processing time, dispute resolution SLA, post-resolution satisfaction, and chargeback rate
+                    Published policies, support availability, and refund experience signals (where available).
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -486,7 +475,7 @@
                     <span class="text-brand-600 font-bold text-lg">10%</span>
                   </div>
                   <p class="text-sm text-neutral-600">
-                    Public licensing checks where available, regulatory register verification
+                    Public licensing checks where available and basic compliance and safety signals.
                   </p>
                   <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
@@ -494,187 +483,150 @@
                       style="width: 10%"
                     />
                   </div>
-	                </div>
-	              </div>
-	            </div>
-	          </div>
-	        </div>
-	      </div>
-	    </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-	    <!-- Show Your Work Section -->
-	    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
-	      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-	        <div class="text-center mb-16">
-	          <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 shadow-lg mb-6">
-	            <span class="text-4xl text-white">🧾</span>
-	          </div>
-	          <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-6">
-	            Show Your Work
-	          </h2>
+    <!-- Show Your Work Section -->
+    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 shadow-lg mb-6">
+            <span class="text-4xl text-white">🧾</span>
+          </div>
+          <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-6">
+            Show Your Work
+          </h2>
           <p class="text-xl leading-relaxed text-neutral-700 max-w-4xl mx-auto [text-wrap:pretty]">
-            We don't ask you to trust a black box. Here's what we measure, how we calculate "recipient gets," how we handle freshness, and what can change at checkout.
+            No black box. This is what we measure, how we calculate “recipient gets,” how we handle freshness, and what can change at checkout.
           </p>
-	        </div>
+        </div>
 
-	        <!-- Editorial & Independence -->
-	        <div class="mb-12">
-	          <div class="rounded-3xl border-2 border-emerald-200 bg-white p-10 lg:p-12 shadow-lg">
-	            <div class="flex items-start gap-6 mb-8">
-	              <div class="flex-shrink-0">
-	                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100">
-	                  <span class="text-3xl">🛡️</span>
-	                </div>
-	              </div>
-	              <div class="flex-1">
-	                <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-4">
-	                  Editorial &amp; Independence
-	                </h3>
-	                <p class="text-lg leading-relaxed text-neutral-700 mb-6">
-	                  Our comparison methodology is completely independent. Rankings are driven by data, not payments.
-	                </p>
-	                <div class="grid gap-4 sm:grid-cols-3 mb-8">
-	                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-	                    <div class="flex items-center gap-3 mb-2">
-	                      <span class="text-2xl">✅</span>
-	                      <h4 class="font-semibold text-neutral-900">No pay-to-rank</h4>
-	                    </div>
-	                    <p class="text-sm text-neutral-700 leading-relaxed">
-	                      Providers cannot pay to appear higher or improve Remit‑Score.
-	                    </p>
-	                  </div>
-	                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-	                    <div class="flex items-center gap-3 mb-2">
-	                      <span class="text-2xl">✅</span>
-	                      <h4 class="font-semibold text-neutral-900">Affiliate transparency</h4>
-	                    </div>
-	                    <p class="text-sm text-neutral-700 leading-relaxed">
-	                      We may earn commissions, but they never affect ranking or Remit-Score.
-	                    </p>
-	                  </div>
-	                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-	                    <div class="flex items-center gap-3 mb-2">
-	                      <span class="text-2xl">✅</span>
-	                      <h4 class="font-semibold text-neutral-900">We don't move money</h4>
-	                    </div>
-	                    <p class="text-sm text-neutral-700 leading-relaxed">
-	                      Transfers happen on provider websites/apps, not through us.
-	                    </p>
-	                  </div>
-	                </div>
-	                <div class="flex flex-wrap gap-4">
+        <!-- Editorial & Independence -->
+        <div class="mb-12">
+          <div class="rounded-3xl border-2 border-emerald-200 bg-white p-10 lg:p-12 shadow-lg">
+            <div class="flex items-start gap-6 mb-8">
+              <div class="flex-shrink-0">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100">
+                  <span class="text-3xl">🛡️</span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-4">
+                  Editorial &amp; Independence
+                </h3>
+                <p class="text-lg leading-relaxed text-neutral-700 mb-6">
+                  Rankings are driven by data, not payments. Providers can’t buy placement, and affiliate commissions never change ranking logic.
+                </p>
+                <div class="grid gap-4 sm:grid-cols-3 mb-8">
+                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                      <span class="text-2xl">✅</span>
+                      <h4 class="font-semibold text-neutral-900">
+                        No pay-to-rank
+                      </h4>
+                    </div>
+                    <p class="text-sm text-neutral-700 leading-relaxed">
+                      Providers cannot pay to appear higher or improve Remit‑Score.
+                    </p>
+                  </div>
+                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                      <span class="text-2xl">✅</span>
+                      <h4 class="font-semibold text-neutral-900">
+                        Affiliate transparency
+                      </h4>
+                    </div>
+                    <p class="text-sm text-neutral-700 leading-relaxed">
+                      We may earn commissions, but they never affect ranking or Remit-Score.
+                    </p>
+                  </div>
+                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                      <span class="text-2xl">✅</span>
+                      <h4 class="font-semibold text-neutral-900">
+                        We don't move money
+                      </h4>
+                    </div>
+                    <p class="text-sm text-neutral-700 leading-relaxed">
+                      Transfers happen on provider websites/apps, not through us.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-4">
                   <NuxtLink
                     to="/how-we-make-money"
                     class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-700"
                   >
-                    💼 Revenue Model
+                    <BanknotesIcon class="h-5 w-5" />
+                    How we make money
                   </NuxtLink>
-	                  <NuxtLink
-	                    to="/affiliate-disclosure"
-	                    class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-200 bg-white px-6 py-3 text-base font-semibold text-emerald-800 transition-colors hover:bg-emerald-50"
-	                  >
-	                    📋 Affiliate disclosure
-	                  </NuxtLink>
-	                </div>
-	              </div>
-	            </div>
-	          </div>
-	        </div>
+                  <NuxtLink
+                    to="/affiliate-disclosure"
+                    class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-200 bg-white px-6 py-3 text-base font-semibold text-emerald-800 transition-colors hover:bg-emerald-50"
+                  >
+                    <DocumentTextIcon class="h-5 w-5" />
+                    Affiliate disclosure
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-	        <!-- FAQ Section -->
-	        <div class="mb-12">
-	          <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-lg">
-	            <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-8 text-center">
-	              Frequently Asked Questions
-	            </h3>
-	            <div class="relative z-10">
-	              <FaqAccordion :faqs="showYourWorkFaqs" />
-	            </div>
-	          </div>
-	        </div>
+        <!-- FAQ Section -->
+        <div class="mb-12">
+          <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-lg">
+            <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-8 text-center">
+              Frequently Asked Questions
+            </h3>
+            <div class="relative z-10">
+              <FaqAccordion :faqs="showYourWorkFaqs" />
+            </div>
+          </div>
+        </div>
 
-	        <!-- Quick Links -->
-	        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-	          <NuxtLink
-	            to="/pulse"
-	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-	          >
-	            <div class="text-3xl mb-3">📊</div>
-	            <h4 class="font-semibold text-neutral-900 mb-2">Explore Pulse</h4>
-	            <p class="text-sm text-neutral-600">Market trends and insights</p>
-	          </NuxtLink>
-	          <NuxtLink
-	            to="/providers"
-	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-	          >
-	            <div class="text-3xl mb-3">🏦</div>
-	            <h4 class="font-semibold text-neutral-900 mb-2">Verified Providers</h4>
-	            <p class="text-sm text-neutral-600">See all licensed providers</p>
-	          </NuxtLink>
-	          <NuxtLink
-	            to="/about"
-	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-	          >
-	            <div class="text-3xl mb-3">👤</div>
-	            <h4 class="font-semibold text-neutral-900 mb-2">About the Founder</h4>
-	            <p class="text-sm text-neutral-600">Our story and mission</p>
-	          </NuxtLink>
-	          <NuxtLink
-	            to="/contact"
-	            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-	          >
-	            <div class="text-3xl mb-3">📧</div>
-	            <h4 class="font-semibold text-neutral-900 mb-2">Report a problem</h4>
-	            <p class="text-sm text-neutral-600">Help us improve accuracy</p>
-	          </NuxtLink>
-	        </div>
-	      </div>
-	    </section>
-
-	    <!-- Why Compare Section -->
-	    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
-	      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-	        <div class="flex items-start gap-4 mb-8">
-	          <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-brand-600 shadow-lg">
-	            <svg
-	              class="h-7 w-7 text-white"
-	              fill="none"
-	              stroke="currentColor"
-	              viewBox="0 0 24 24"
-	            >
-	              <path
-	                stroke-linecap="round"
-	                stroke-linejoin="round"
-	                stroke-width="2"
-	                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-	              />
-	            </svg>
-	          </div>
-	          <div class="flex-1">
-	            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-6">
-	              Why You Need to Compare Before Every Transfer
-	            </h2>
-	            <div class="space-y-6 text-lg leading-relaxed text-neutral-700">
-	              <p>
-	                Just like you wouldn't book a flight or hotel without comparing prices, you shouldn't send money abroad without checking your options first. The difference between providers can be <strong class="font-bold text-brand-600">hundreds of dollars</strong> on a single transfer—money that could go to your family instead of fees and hidden markups.
-	              </p>
-	              <p>
-	                Traditional banks and even some "low fee" providers hide their real costs in exchange rate markups. A provider might advertise "$0 fees" but charge you 3–5% more than the real exchange rate. That's why we show you the <strong class="font-bold text-neutral-900">actual amount your recipient will receive</strong>—the only number that actually matters.
-	              </p>
-	              <p>
-	                Remit-Scout helps you find the best deal by comparing live rates, total costs, and delivery speeds from <NuxtLink
-	                  to="/providers"
-	                  class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-	                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>. We test, verify, and explain every option so you can send with confidence. Learn more about us on our <NuxtLink
-	                  to="/about"
-	                  class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-	                >about page</NuxtLink>.
-	              </p>
-	            </div>
-	          </div>
-	        </div>
-	      </div>
-	    </section>
+        <!-- Quick Links -->
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <NuxtLink
+            to="/pulse"
+            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="text-3xl mb-3">📊</div>
+            <h4 class="font-semibold text-neutral-900 mb-2">Explore Pulse</h4>
+            <p class="text-sm text-neutral-600">Market trends and insights</p>
+          </NuxtLink>
+          <NuxtLink
+            to="/providers"
+            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="text-3xl mb-3">🏦</div>
+            <h4 class="font-semibold text-neutral-900 mb-2">Verified Providers</h4>
+            <p class="text-sm text-neutral-600">See all licensed providers</p>
+          </NuxtLink>
+          <NuxtLink
+            to="/about"
+            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="text-3xl mb-3">👤</div>
+            <h4 class="font-semibold text-neutral-900 mb-2">About the Founder</h4>
+            <p class="text-sm text-neutral-600">Our story and mission</p>
+          </NuxtLink>
+          <NuxtLink
+            to="/contact"
+            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="text-3xl mb-3">📧</div>
+            <h4 class="font-semibold text-neutral-900 mb-2">Report a problem</h4>
+            <p class="text-sm text-neutral-600">Help us improve accuracy</p>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
 
     <!-- Educational Example Section -->
     <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
@@ -707,7 +659,7 @@
             How Our Comparison Works
           </h2>
           <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-            Three simple steps to find the best deal for your international transfer
+            Three steps to compare a corridor
           </p>
         </div>
 
@@ -721,13 +673,13 @@
                 1. Enter your transfer details
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-3 flex-1">
-                Tell us where you're sending money from, where the money's going, and how much. We'll instantly show you live quotes from <NuxtLink
+                Tell us where you’re sending from, where you’re sending to, and how much. We’ll show the latest available quotes from <NuxtLink
                   to="/providers"
                   class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
                 >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
               </p>
               <p class="text-sm text-neutral-600">
-                Our comparison engine fetches current rates and fees in real-time. Takes 30 seconds.
+                Quote availability and freshness vary by corridor, provider, and payment method.
               </p>
             </div>
           </div>
@@ -738,10 +690,10 @@
                 <span class="text-3xl">🔍</span>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                2. Compare & choose the best provider
+                2. Compare and choose
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                Our comparison engine shows results organized by transfer type (bank account, cash pick-up, mobile wallet) and ranked from cheapest to most expensive based on what your recipient actually receives.
+                Results are grouped by payout method and ranked by delivered outcome (recipient gets), with context on fees, FX markup, speed, and reliability.
               </p>
               <div class="grid gap-2 sm:grid-cols-2">
                 <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
@@ -770,10 +722,10 @@
                 <span class="text-3xl">✅</span>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                3. Send money and save
+                3. Complete the transfer
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                After selecting a provider, you'll be redirected to their website to sign up and validate your account before making the transfer. Takes 5–10 minutes for first-time users.
+                You’ll be redirected to the provider to sign in, verify identity if required, and complete checkout. Always confirm the final amount on the provider’s checkout screen.
               </p>
               <div class="rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div class="flex items-start gap-2">
@@ -791,7 +743,7 @@
                     />
                   </svg>
                   <p class="text-xs text-neutral-700 leading-relaxed">
-                    <strong class="font-bold text-neutral-900">100% Independent & Free:</strong> We earn a small commission when you use our links, but this never affects our rankings.
+                    <strong class="font-bold text-neutral-900">Independent comparisons:</strong> we may earn a commission when you use our links, but it never affects rankings.
                   </p>
                 </div>
               </div>
@@ -830,256 +782,89 @@
         </div>
 
         <div class="grid gap-8 lg:grid-cols-3">
-            <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
-              <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
-                <span class="text-3xl">📊</span>
-              </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-4">
-                Data Collection
-              </h3>
+          <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
+              <span class="text-3xl">📊</span>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-4">
+              Data Collection
+            </h3>
             <p class="text-sm text-slate-600 leading-relaxed mb-4">
               We collect live <NuxtLink
                 to="/exchange-rates"
                 class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
               >exchange rates</NuxtLink> and fees from provider APIs, then validate with spot-check transfers on selected corridors.
             </p>
-              <ul class="space-y-3 text-sm text-slate-600">
-                <li class="flex items-start gap-3">
+            <ul class="space-y-3 text-sm text-slate-600">
+              <li class="flex items-start gap-3">
                 <span>🧩</span>
                 <span>We check publicly available regulatory registers where applicable</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span>🔄</span>
-                  <span>Update rates multiple times daily</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span>✅</span>
-                  <span>Cross-reference with actual transfers</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
-              <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600 shadow-md">
-                <span class="text-3xl">🧪</span>
-              </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-4">
-                Verification
-              </h3>
-            <p class="text-sm text-slate-600 leading-relaxed mb-4">
-              We run periodic test transfers on selected corridors to validate provider claims.
-            </p>
-              <ul class="space-y-3 text-sm text-slate-600">
-                <li class="flex items-start gap-3">
-                  <span>🌍</span>
-                  <span>Common corridors (US, UK, EU, CA, AU)</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span>💵</span>
-                  <span>Multiple transfer amounts ($100–$10,000)</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span>📱</span>
-                  <span>Different payout methods (Bank, Cash, Mobile Money)</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
-              <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-md">
-                <span class="text-3xl">📡</span>
-              </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-4">
-                Ongoing Monitoring
-              </h3>
-              <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                We continuously monitor provider rates and reliability to ensure data accuracy.
-              </p>
-              <ul class="space-y-3 text-sm text-slate-600">
-                <li class="flex items-start gap-3">
-                  <span>🚨</span>
-                  <span>Automated alerts for unusual rate changes</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span>⏱️</span>
-                  <span>Track delivery time anomalies</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span>💬</span>
-                  <span>User feedback incorporated weekly</span>
-                </li>
-              </ul>
-            </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <span>🔄</span>
+                <span>Refresh frequently on top corridors (cadence varies)</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span>✅</span>
+                <span>Spot-check on selected corridors when feasible</span>
+              </li>
+            </ul>
           </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600 shadow-md">
+              <span class="text-3xl">🧪</span>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-4">
+              Verification
+            </h3>
+            <p class="text-sm text-slate-600 leading-relaxed mb-4">
+              We run periodic spot-check transfers on selected corridors to validate provider claims when feasible.
+            </p>
+            <ul class="space-y-3 text-sm text-slate-600">
+              <li class="flex items-start gap-3">
+                <span>🌍</span>
+                <span>Selected corridors based on coverage and user demand</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span>💵</span>
+                <span>Multiple send amounts (where testable)</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span>📱</span>
+                <span>Different payout methods where supported</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-md">
+              <span class="text-3xl">📡</span>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-4">
+              Ongoing Monitoring
+            </h3>
+            <p class="text-sm text-slate-600 leading-relaxed mb-4">
+              We continuously monitor provider rates and reliability to ensure data accuracy.
+            </p>
+            <ul class="space-y-3 text-sm text-slate-600">
+              <li class="flex items-start gap-3">
+                <span>🚨</span>
+                <span>Automated alerts for unusual rate changes</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span>⏱️</span>
+                <span>Track delivery time anomalies</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span>💬</span>
+                <span>User feedback is reviewed and triaged continuously</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </section>
-
-    <!-- Trust Section - E-E-A-T Focused -->
-    <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-16 lg:py-20 text-white scroll-mt-20">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-10">
-              <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
-                Why Trust Remit-Scout
-              </h2>
-              <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
-                Experience, Expertise, Authoritativeness, and Trustworthiness verified through real transfers and transparent methodology
-              </p>
-            </div>
-
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
-            <!-- Experience -->
-            <div class="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur">
-              <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <span class="text-3xl">👥</span>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-2">
-                Experience
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed mb-3">
-                Built by expats who send money home regularly. <NuxtLink
-                  to="/about"
-                  class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >Learn about our founder</NuxtLink> and spot-check testing across selected corridors.
-              </p>
-              <div class="text-xs text-white/70">
-                {{ SITE_STATS.users.display }} users trust our comparisons
-              </div>
-            </div>
-
-            <!-- Expertise -->
-            <div class="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur">
-              <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <span class="text-3xl">🎓</span>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-2">
-                Expertise
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed mb-3">
-                Developed at Carnegie Mellon (Swartz Center for Entrepreneurship). We run spot-check testing across <NuxtLink
-                  to="/about"
-                  class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >selected corridors</NuxtLink>. Not affiliated with or endorsed by Carnegie Mellon University.
-              </p>
-              <div class="text-xs text-white/70">
-                Academic rigor applied to every test
-              </div>
-            </div>
-
-            <!-- Authoritativeness -->
-            <div class="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur">
-              <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <span class="text-3xl">✅</span>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-2">
-                Authoritativeness
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed mb-3">
-                We check publicly available regulatory registers where applicable and label provider coverage accordingly. See our <NuxtLink
-                  to="/affiliate-disclosure"
-                  class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >affiliate disclosure</NuxtLink> and <NuxtLink
-                  to="/legal/privacy"
-                  class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >privacy policy</NuxtLink>.
-              </p>
-              <div class="text-xs text-white/70">
-                Only regulated providers included
-              </div>
-            </div>
-
-            <!-- Trustworthiness -->
-            <div class="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur">
-              <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <span class="text-3xl">🔒</span>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-2">
-                Trustworthiness
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed mb-3">
-                No pay-to-rank. <NuxtLink
-                  to="/how-we-make-money"
-                  class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                >Revenue disclosure</NuxtLink> transparent. Affiliate commissions never influence rankings.
-              </p>
-              <div class="text-xs text-white/70">
-                {{ SITE_STATS.totalSaved.display }} saved by users
-              </div>
-            </div>
-            </div>
-
-            <div class="rounded-2xl border-2 border-white/20 bg-white/10 p-6 backdrop-blur mb-6 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-              <div class="flex items-start gap-4">
-                <svg
-                  class="h-8 w-8 flex-shrink-0 text-white mt-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                <div>
-                  <h3 class="text-xl font-bold mb-2">
-                    Transparency & Verification
-                  </h3>
-                  <p class="text-sm text-white/90 leading-relaxed mb-3">
-                    Every comparison is backed by spot-check transfer data. Methodology reviewed by <NuxtLink
-                      to="/about"
-                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                    >Omar Ghabayen</NuxtLink>. See our <NuxtLink
-                      to="/affiliate-disclosure"
-                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                    >affiliate disclosure</NuxtLink> and <NuxtLink
-                      to="/legal/privacy"
-                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                    >privacy policy</NuxtLink>.
-                  </p>
-                  <p class="text-sm text-white/90 leading-relaxed">
-                    See something off? Review our <NuxtLink
-                      to="/corrections"
-                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                    >corrections policy</NuxtLink> or <NuxtLink
-                      to="/contact"
-                      class="font-semibold text-white underline decoration-white/50 hover:decoration-white"
-                    >report an issue</NuxtLink>.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Internal Links for E-E-A-T -->
-	            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-center mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-	              <NuxtLink
-	                to="/about"
-	                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-                About the Founder
-              </NuxtLink>
-              <NuxtLink
-                to="/how-we-make-money"
-                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-                Revenue Model
-              </NuxtLink>
-              <NuxtLink
-                to="/providers"
-                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-                Verified Providers
-              </NuxtLink>
-              <NuxtLink
-                to="/faq"
-                class="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-	                FAQs
-	              </NuxtLink>
-	            </div>
-	      </div>
-	    </section>
 
     <!-- Guides Section -->
     <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
@@ -1231,41 +1016,45 @@
       </div>
     </section>
 
-  <!-- Final CTA -->
-  <section class="bg-gradient-to-r from-brand-600 via-blue-600 to-brand-700 py-16 lg:py-20">
+    <!-- Final CTA -->
+    <section class="bg-gradient-to-r from-brand-600 via-blue-600 to-brand-700 py-16 lg:py-20">
       <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-white">
-          <h2 class="text-3xl font-bold mb-4 sm:text-4xl lg:text-5xl">
-            Ready to Save on Your Next Transfer?
-          </h2>
-          <p class="mx-auto mb-8 max-w-2xl text-lg text-white/95 leading-relaxed">
-            Compare live rates from {{ SITE_STATS.providers.display }} licensed providers in seconds. See exactly how much your recipient will get—no hidden fees, no marketing fluff.
-          </p>
-          <NuxtLink
-            to="/"
-            class="inline-flex items-center gap-3 rounded-xl bg-white px-10 py-5 text-lg font-bold text-brand-600 transition-all hover:bg-slate-50 hover:scale-105 shadow-2xl"
+        <h2 class="text-3xl font-bold mb-4 sm:text-4xl lg:text-5xl">
+          Ready to Save on Your Next Transfer?
+        </h2>
+        <p class="mx-auto mb-8 max-w-2xl text-lg text-white/95 leading-relaxed">
+          Compare live quotes from {{ SITE_STATS.providers.display }} providers. See what your recipient should receive, then confirm the final amount at checkout.
+        </p>
+        <NuxtLink
+          to="/"
+          class="inline-flex items-center gap-3 rounded-xl bg-white px-10 py-5 text-lg font-bold text-brand-600 transition-all hover:bg-slate-50 hover:scale-105 shadow-2xl"
+        >
+          Start Comparing Rates Now
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            Start Comparing Rates Now
-            <svg
-              class="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2.5"
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </NuxtLink>
-	        </div>
-	    </section>
-	  </div>
-	</template>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M13 7l5 5m0 0l-5 5m5-5H6"
+            />
+          </svg>
+        </NuxtLink>
+      </div>
+    </section>
+  </div>
+</template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import {
+  BanknotesIcon,
+  DocumentTextIcon,
+} from '@heroicons/vue/24/outline'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
@@ -1277,28 +1066,17 @@ import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { SITE_STATS } from '~/config/stats'
 
-const { form: moneyForm, validationError, submit: submitForm } = useCompareForm()
-const formError = validationError
+const { form: moneyForm, submit: submitForm } = useCompareForm()
 const { recordSearch } = useRemittanceApi()
 
-const lastUpdatedIso = '2025-12-01'
+const lastUpdatedIso = '2025-12-14'
 const lastUpdatedLabel = computed(() => {
   return new Date(lastUpdatedIso).toLocaleDateString('en-US', {
+    day: 'numeric',
     year: 'numeric',
     month: 'long',
   })
 })
-
-const providers = ref([
-  { name: 'Wise', type: 'Money Transfer', emoji: '💸' },
-  { name: 'Remitly', type: 'Money Transfer', emoji: '📱' },
-  { name: 'WorldRemit', type: 'Money Transfer', emoji: '🌍' },
-  { name: 'Western Union', type: 'Money Transfer', emoji: '🏦' },
-  { name: 'MoneyGram', type: 'Money Transfer', emoji: '💼' },
-  { name: 'Xoom', type: 'Money Transfer', emoji: '⚡' },
-  { name: 'SendWave', type: 'Money Transfer', emoji: '📲' },
-  { name: 'Azimo', type: 'Money Transfer', emoji: '🚀' },
-])
 
 const showYourWorkFaqs = [
   {
@@ -1356,7 +1134,7 @@ const showYourWorkFaqs = [
       <p>A comparison site is only as useful as its freshness. That’s why we track quote timestamps, availability, and stability.</p>
       <ul>
         <li><strong>Quote timestamp:</strong> when the Quote Record was captured</li>
-        <li><strong>Refresh cadence:</strong> on high-traffic corridors we aim to refresh frequently (often within ~5–15 minutes); cadence varies by corridor and provider</li>
+        <li><strong>Refresh cadence:</strong> on high-traffic corridors we aim to refresh frequently; cadence varies by corridor and provider</li>
         <li><strong>Quote success rate:</strong> how often a provider returns a usable quote</li>
         <li><strong>Stability:</strong> how often checkout values drift from the quote in spot checks and reported cases</li>
         <li><strong>Performance caching:</strong> some pages may be cached for a short window to keep the site fast; “last updated” helps you interpret the timestamped data you’re viewing</li>
@@ -1382,6 +1160,7 @@ const showYourWorkFaqs = [
         <li><strong>Method differences:</strong> card vs bank pricing can vary significantly</li>
       </ul>
       <p><strong>Accuracy is the product.</strong> If you notice a mismatch, please include corridor, amount, timestamp, provider, and (if possible) a checkout screenshot.</p>
+      <p>When we confirm an issue, we typically update within 48 hours. If an issue isn’t reported within 48 hours of the relevant quote timestamp, we may not update historical records.</p>
       <p><a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report a pricing issue →</a></p>
       <p><a href="/corrections" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our corrections policy →</a></p>
     `,
@@ -1391,15 +1170,8 @@ const showYourWorkFaqs = [
 const handleMoneySubmit = async () => {
   const { from, to, amount, method } = moneyForm.value
 
-  try {
-    await recordSearch({
-      from_country: from,
-      to_country: to,
-      amount,
-      method,
-    } as any)
-  }
-  catch {
+  if (from && to && amount && amount > 0 && method) {
+    await recordSearch({ from, to, amount, method }).catch(() => undefined)
   }
 
   await submitForm()
@@ -1409,7 +1181,7 @@ const { public: { siteUrl } } = useRuntimeConfig()
 
 setSeo({
   title: 'Our Methodology | How We Compare Money Transfer Providers | Remit-Scout',
-  description: 'Learn how Remit-Scout compares money transfer providers. Our transparent methodology uses real transfers, verified data, and independent testing to help you find the best rates.',
+  description: 'Learn how Remit-Scout collects quotes, estimates fees and FX markup, and ranks money transfer providers by delivered outcome with an independent, transparent methodology.',
   canonical: `${siteUrl}/methodology`,
 })
 
@@ -1425,25 +1197,4 @@ const breadcrumbItems = [
 </script>
 
 <style scoped>
-@keyframes scroll-left {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-.animate-scroll-left {
-  animation: scroll-left 50s linear infinite;
-  width: fit-content;
-}
-.animate-scroll-left:hover {
-  animation-play-state: paused;
-}
-
-@keyframes drawPath {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
 </style>

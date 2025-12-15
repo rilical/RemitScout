@@ -9,10 +9,10 @@
       <div class="mb-12">
         <div class="mb-4">
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
-            Compare Money Transfer Providers. Find the Best Deal in Seconds.
+            Compare money transfer providers for your corridor
           </h2>
           <p class="text-base sm:text-lg text-neutral-600 max-w-4xl">
-            We analyze real-time exchange rates, transfer fees, delivery speeds, and reliability scores across hundreds of providers. Our transparent rankings help you save money on every international transfer - no hidden agendas, just honest comparisons based on actual data.
+            We collect quotes, standardize fees and FX markup into comparable numbers, and rank by delivered outcome. Every quote is timestamped, and refresh cadence varies by corridor and data source.
           </p>
           <div class="flex flex-wrap items-center gap-4 mt-4">
             <p class="text-sm text-neutral-500">
@@ -140,7 +140,7 @@
               <!-- Find Out More Link -->
               <div class="px-6 pb-6 text-center">
                 <NuxtLink
-                  :to="`/providers/${provider.slug || provider.name.toLowerCase().replace(/\s+/g, '-')}`"
+                  :to="`/providers/${provider.id || provider.name.toLowerCase().replace(/\s+/g, '-')}`"
                   class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-md px-2 py-1"
                 >
                   <span>Find out more</span>
@@ -165,12 +165,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Delivered Value</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.trust || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.reliability || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.trust || provider.reliability || 0.9) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.reliability || provider.reliability || 0.9) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -178,12 +178,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Reliability & Success</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.service || 0.85) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.coverage || 0.85) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.service || 0.85) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.coverage || 0.85) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -191,12 +191,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Friction & Speed</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.fees || (1 - provider.marginPct / 10)) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.cost || (1 - provider.marginPct / 10)) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.fees || (1 - provider.marginPct / 10)) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.cost || (1 - provider.marginPct / 10)) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -204,12 +204,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Support & Refunds</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.satisfaction || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.speed || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.satisfaction || provider.reliability || 0.9) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.speed || provider.reliability || 0.9) * 100}%` }"
                     />
                   </div>
                 </div>

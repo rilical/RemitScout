@@ -10,13 +10,14 @@
               Affiliate & Disclosure Policy
             </h1>
             <p class="text-gray-600">
-              Last updated: November 22, 2025
+              Last updated: December 14, 2025
             </p>
           </div>
 
           <div class="prose prose-lg max-w-none">
             <p class="mb-6 text-lg leading-relaxed">
-              At <strong class="text-blue-600">Remit-Scout</strong>, transparency is fundamental to our mission.
+              At <strong class="text-blue-600">Remit-Scout</strong> (operated by <strong class="text-blue-600">Remit-Scout LLC</strong>),
+              transparency is fundamental to our mission.
               This Disclosure Policy explains how we maintain our independence, how we may earn compensation,
               and our commitment to providing unbiased, accurate information about money transfer services.
             </p>
@@ -42,7 +43,7 @@
             <p class="mb-6 leading-relaxed">
               <strong class="text-blue-600">Remit-Scout</strong> operates independently and is not owned by,
               affiliated with, or controlled by any money transfer provider. Our recommendations, rankings,
-              and reviews are based on objective analysis of real-time data, actual transfer testing, and
+              and reviews are based on objective analysis of real-time data, periodic spot-check transfers, and
               comprehensive evaluation criteria. Learn more about our
               <NuxtLink
                 to="/methodology"
@@ -73,8 +74,13 @@
                 our rankings, reviews, or editorial content.
               </li>
               <li>
+                <strong class="text-blue-600">Remit-Scout Plus:</strong> We offer an optional paid membership that may provide
+                additional features and an ad-free experience. Membership does not affect our rankings, reviews, or comparison results.
+              </li>
+              <li>
                 <strong class="text-blue-600">Advertising Partnerships:</strong> We may display advertisements
-                from money transfer providers and related services. All ads are clearly marked.
+                from money transfer providers and related services. All ads are clearly marked. If you subscribe to
+                <strong class="text-blue-600">Remit-Scout Plus</strong>, we may remove certain advertising placements.
               </li>
               <li>
                 <strong class="text-blue-600">Sponsored Content:</strong> Occasionally, we may publish sponsored
@@ -129,6 +135,20 @@
                   </svg>
                   <span><strong class="text-blue-600">All affiliate relationships are disclosed.</strong> You'll see clear labels wherever affiliate links appear.</span>
                 </li>
+                <li class="flex items-start">
+                  <svg
+                    class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <span><strong class="text-blue-600">Plus does not change rankings.</strong> Subscribing may remove ads, but comparison results remain data-driven.</span>
+                </li>
               </ul>
             </div>
 
@@ -136,21 +156,24 @@
               Our Review Process
             </h2>
             <p class="mb-4 leading-relaxed">
-              Our evaluations are based on comprehensive, data-driven analysis. We test providers through
+              Our evaluations are based on data-driven analysis and a transparent methodology. We use a combination of provider
+              data, structured quote capture, and periodic spot-check transfers on selected corridors. Learn more in our
               <NuxtLink
                 to="/methodology"
                 class="text-blue-600 hover:text-blue-700 underline font-semibold"
-              >real transfer testing</NuxtLink>
-              and evaluate multiple factors:
+              >methodology</NuxtLink>.
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Exchange rates and fee structures:</strong> We compare actual rates and total costs, including hidden fees</li>
-              <li><strong class="text-blue-600">Transfer speed and reliability:</strong> We track delivery times and success rates</li>
-              <li><strong class="text-blue-600">Customer service quality:</strong> Based on user reviews and our own testing</li>
-              <li><strong class="text-blue-600">Security and regulatory compliance:</strong> We verify licensing and regulatory status</li>
-              <li><strong class="text-blue-600">Geographic coverage:</strong> We assess which corridors each provider serves best</li>
-              <li><strong class="text-blue-600">User experience:</strong> We evaluate ease of use, mobile apps, and customer support</li>
+              <li><strong class="text-blue-600">Delivered value:</strong> The amount received after fees and FX markup, using timestamped quotes</li>
+              <li><strong class="text-blue-600">Reliability & data quality:</strong> Quote availability, data freshness, and stability (where available)</li>
+              <li><strong class="text-blue-600">Friction & speed:</strong> Speed buckets and observed delivery performance on selected corridors (where available)</li>
+              <li><strong class="text-blue-600">Coverage:</strong> Corridor availability and payout methods</li>
+              <li><strong class="text-blue-600">User feedback:</strong> Community reviews and reported issues, moderated for authenticity</li>
             </ul>
+            <p class="mb-6 leading-relaxed">
+              Providers cannot pay to improve their position in our comparisons. Commercial relationships (affiliate links, ads, or
+              sponsorships) do not change our methodology or rankings.
+            </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
               Editorial Independence
@@ -188,20 +211,19 @@
               We collect data from multiple sources to ensure accuracy:
             </p>
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Provider APIs:</strong> Real-time exchange rates and fee information</li>
-              <li><strong class="text-blue-600">Real transfer testing:</strong> We conduct actual transfers to verify rates, fees, and delivery times</li>
-              <li><strong class="text-blue-600">Regulatory databases:</strong> Licensing and compliance information from official sources</li>
-              <li><strong class="text-blue-600">User submissions:</strong> Verified reviews and experiences from our community</li>
-              <li><strong class="text-blue-600">Market research:</strong> Industry reports and financial data</li>
+              <li><strong class="text-blue-600">Provider APIs / partner feeds:</strong> When available, structured data direct from providers</li>
+              <li><strong class="text-blue-600">Public quote flow capture:</strong> Structured capture from provider quote flows where applicable</li>
+              <li><strong class="text-blue-600">Spot-check transfers:</strong> Periodic real transfer tests on selected corridors and methods</li>
+              <li><strong class="text-blue-600">Regulatory registers:</strong> Public licensing/registration sources where applicable</li>
+              <li><strong class="text-blue-600">User submissions:</strong> Reviews and reported issues from our community</li>
             </ul>
             <p class="mb-6 leading-relaxed">
-              All data is verified for accuracy and updated regularly. However, rates and fees can change,
-              so we recommend verifying current information directly with providers before making transfers.
-              See our <NuxtLink
+              Rates and fees can change quickly. We show timestamped data captured at a specific moment, but the provider checkout
+              experience is always the final source of truth. See our <NuxtLink
                 to="/methodology"
                 class="text-blue-600 hover:text-blue-700 underline font-semibold"
               >methodology</NuxtLink>
-              for details on how we test and verify information.
+              for details on quote freshness, confidence scoring, and limitations.
             </p>
 
             <h2 class="mb-4 text-2xl font-bold text-gray-900">
@@ -244,12 +266,24 @@
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
               <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <span>📚</span>
+                <svg
+                  class="h-6 w-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                  />
+                </svg>
                 <span>Learn More About Remit-Scout</span>
               </h3>
               <p class="mb-6 text-gray-700 leading-relaxed">
-                <span>🛡️</span> Transparency is at the heart of everything we do. <span>🔍</span> Explore our methodology, learn about our team,
-                and understand how we help you find the best money transfer options. <span>✨</span>
+                Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
+                comparisons.
               </p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <NuxtLink
@@ -278,10 +312,22 @@
                   to="/methodology"
                   class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
                 >
-                  <span class="text-3xl">📊</span>
+                  <svg
+                    class="h-6 w-6 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 13l8 0 7 8 0-8 7 0-7-8-7 8-7 0z"
+                    />
+                  </svg>
                   <div>
                     <div class="font-semibold text-gray-900">Methodology</div>
-                    <div class="text-sm text-gray-600">How we test providers</div>
+                    <div class="text-sm text-gray-600">How we compare providers</div>
                   </div>
                 </NuxtLink>
                 <NuxtLink

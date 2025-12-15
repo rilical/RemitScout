@@ -23,9 +23,11 @@ const props = withDefaults(defineProps<Props>(), {
   alt: undefined,
 })
 
-const handleImageError = (event: Event) => {
+const handleImageError = (event: Event | string) => {
+  if (typeof event === 'string') return
   // Fallback to text-based logo if SVG fails to load
   const target = event.target as HTMLImageElement
+  if (!target) return
   const fallback = document.createElement('div')
   fallback.className = 'w-24 h-8 bg-gray-200 rounded flex items-center justify-center text-gray-600 font-medium text-sm'
   fallback.textContent = props.slug.charAt(0).toUpperCase()

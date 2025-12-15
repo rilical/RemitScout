@@ -94,18 +94,26 @@
             </li>
             <li>
               <NuxtLink
-                to="/providers"
+                to="/pulse"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
-                All Providers
+                Pulse
               </NuxtLink>
             </li>
             <li>
               <NuxtLink
-                to="/learn"
+                to="/providers"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
-                Learn
+                Provider Review
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
+                to="/media-kit"
+                class="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Media Kit
               </NuxtLink>
             </li>
           </ul>
@@ -147,14 +155,6 @@
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
                 Partnerships
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                to="/media-kit"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
-              >
-                Media Kit
               </NuxtLink>
             </li>
             <li>

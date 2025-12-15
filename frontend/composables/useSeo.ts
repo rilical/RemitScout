@@ -40,7 +40,7 @@ export const jsonLdWebSiteSearch = (siteUrl: string) => {
     script: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
           'name': 'Remit-Scout',
@@ -62,7 +62,7 @@ export const jsonLdOrganization = (siteUrl: string) => {
     script: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Organization',
           'name': 'Remit-Scout',
@@ -86,7 +86,7 @@ export const jsonLdSiteNavigation = (items: Array<{ name: string, url: string }>
     script: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'SiteNavigationElement',
           'name': 'Main Navigation',
@@ -106,7 +106,7 @@ export const jsonLdBreadcrumb = (items: Array<{ name: string, url: string }>) =>
     script: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           'itemListElement': items.map((item, index) => ({
@@ -126,7 +126,7 @@ export const jsonLdFaq = (items: Array<{ q: string, a: string }>) => {
     script: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
           'mainEntity': items.map(item => ({

@@ -12,10 +12,10 @@
             📰 Media Kit / Press
           </h1>
           <p class="mt-4 text-lg leading-relaxed text-neutral-700">
-            Remittance pricing trends — backed by a live dataset
+            Remittance pricing trends, backed by a living dataset
           </p>
           <p class="mt-3 text-base leading-relaxed text-neutral-600">
-            Remit-Scout publishes independent comparisons and time-series market indicators for cross-border money transfers.
+            Remit-Scout publishes independent comparisons and time-series indicators for cross-border money transfers, built from observed retail quotes.
           </p>
 
           <div class="mt-8 flex flex-wrap gap-3">
@@ -67,11 +67,11 @@
               📈 What is Pulse?
             </h2>
             <p class="text-sm leading-relaxed text-neutral-700">
-              Pulse is our time-series layer. While Compare shows the best options right now, Pulse shows how remittance outcomes change over time by corridor (and amount buckets where available). It helps readers understand whether today is unusually expensive/cheap, what moved, and how pricing volatility shifts.
+              Pulse is our time-series layer. Compare shows the best option at a moment in time; Pulse shows how outcomes change over time by corridor (and amount buckets where available). It helps readers see what moved, how volatile pricing has been, and whether today looks unusually expensive or unusually cheap.
             </p>
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <p class="text-sm font-semibold text-neutral-900">
-                Example framing:
+                Example angles:
               </p>
               <ul class="mt-3 space-y-2 text-sm text-neutral-700">
                 <li>“If you sent $200 from the US to Albania each day this month, how did the best delivered amount change?”</li>
@@ -86,20 +86,20 @@
               🧾 What we measure
             </h2>
             <p class="text-sm leading-relaxed text-neutral-700">
-              We focus on the user outcome:
+              We measure the sender’s outcome, not marketing claims:
             </p>
             <ul class="space-y-2 text-sm text-neutral-700">
-              <li><span class="font-semibold text-neutral-900">Recipient gets:</span> delivered amount after fees and FX markup (based on quote at capture time)</li>
-              <li><span class="font-semibold text-neutral-900">Total cost:</span> fee + implied FX markup vs a mid-market reference rate at the same timestamp</li>
-              <li><span class="font-semibold text-neutral-900">Speed (where available):</span> provider ETA ranges or observed buckets when feasible</li>
+              <li><span class="font-semibold text-neutral-900">Recipient gets:</span> estimated delivered amount after fees and FX markup (based on the quote at capture time)</li>
+              <li><span class="font-semibold text-neutral-900">Total cost:</span> fees plus implied FX markup versus a mid-market reference rate at the same timestamp</li>
+              <li><span class="font-semibold text-neutral-900">Speed (where available):</span> provider ETA ranges, and observed buckets when feasible</li>
             </ul>
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <p class="text-sm text-neutral-700">
                 Notes:
               </p>
               <ul class="mt-3 space-y-2 text-sm text-neutral-700">
-                <li>Rates can change at checkout due to payment method, promos, KYC, and provider rules.</li>
-                <li>We timestamp quotes and publish methodology.</li>
+                <li>Checkout can differ from what you see here due to payment method, promos, KYC, and provider-specific rules.</li>
+                <li>We timestamp quotes and publish our methodology so readers can understand how comparisons are built.</li>
               </ul>
               <div class="mt-5 flex flex-wrap gap-3">
                 <NuxtLink
@@ -128,7 +128,7 @@
                   Preferred citation line:
                 </p>
                 <p class="mt-2 text-sm text-neutral-700">
-                  “Source: Remit-Scout (remitscout.com), observed retail quotes, [corridor], $200 benchmark, retrieved [DATE].”
+                  “Source: Remit-Scout (remitscout.com), observed retail quotes, [CORRIDOR], $200 benchmark, retrieved [DATE].”
                 </p>
               </div>
               <div>
@@ -144,8 +144,8 @@
                   If using charts:
                 </p>
                 <ul class="mt-2 space-y-2 text-sm text-neutral-700">
-                  <li>Include “Source: Remit-Scout” and the retrieval date.</li>
-                  <li>Link to the specific Pulse corridor page if possible.</li>
+                  <li>Include “Source: Remit-Scout” plus a retrieval date.</li>
+                  <li>Link to the specific Pulse corridor page when possible.</li>
                 </ul>
               </div>
             </div>
@@ -157,10 +157,10 @@
             </h2>
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
               <p class="text-sm text-neutral-700">
-                Editorial use: You may quote small portions of text with attribution.
+                Editorial use: You can quote short excerpts with attribution.
               </p>
               <p class="text-sm text-neutral-700">
-                Charts/embeds/data: For republishing charts, widgets, or systematic data usage, please request a license.
+                Charts, embeds, and data: For republishing charts, embedding widgets, or systematic data use, please request a license.
               </p>
               <div class="flex flex-wrap gap-3 pt-2">
                 <NuxtLink
@@ -185,7 +185,7 @@
             </h2>
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
               <p class="text-sm text-neutral-700">
-                We offer embeddable charts for publishers and communities (availability depends on corridor coverage). Examples:
+                We offer embeddable charts for publishers and communities (availability depends on corridor coverage). Examples include:
               </p>
               <ul class="space-y-2 text-sm text-neutral-700">
                 <li>Remittance Cost Index (30D / 90D)</li>
@@ -193,7 +193,7 @@
                 <li>Top Movers (corridor changes this week)</li>
               </ul>
               <p class="text-sm text-neutral-700">
-                Embeds are currently in limited beta. Contact us for access.
+                Embeds are currently in limited beta. Contact us to request access.
               </p>
             </div>
           </section>
@@ -203,10 +203,10 @@
               🛡️ Independence &amp; disclosure
             </h2>
             <div class="space-y-2 text-sm leading-relaxed text-neutral-800">
-              <p>Remit-Scout maintains strict separation between monetization and rankings:</p>
+              <p>Remit-Scout keeps monetization separate from rankings.</p>
               <p>We may earn affiliate commissions on referrals.</p>
-              <p>Affiliate relationships do not affect sorting or scoring.</p>
-              <p>Sponsors (if any) are labeled and do not influence comparisons or methodology.</p>
+              <p>Affiliate relationships do not affect sorting, scoring, or Remit-Score calculations.</p>
+              <p>Sponsors (if any) are clearly labeled and do not influence comparisons or methodology.</p>
               <p>Remit-Scout does not hold or move funds.</p>
             </div>
             <div class="flex flex-wrap gap-3 pt-1">
@@ -239,7 +239,7 @@
               </ul>
               <div class="flex flex-wrap gap-3 pt-2">
                 <NuxtLink
-                  to="/contact?type=issue"
+                  to="/contact"
                   class="inline-flex items-center justify-center rounded-btn bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
                 >
                   Report an issue
@@ -294,7 +294,7 @@
                   Short description
                 </p>
                 <p class="text-sm text-neutral-700">
-                  Remit-Scout is an independent remittance comparison and market data product that measures recipient outcomes (fees + FX markup) across corridors.
+                  Remit-Scout is an independent remittance comparison and market-data product that measures recipient outcomes across corridors.
                 </p>
               </div>
 
@@ -303,7 +303,7 @@
                   Long description
                 </p>
                 <p class="text-sm text-neutral-700">
-                  Remit-Scout helps people compare cross-border money transfer providers by focusing on what the recipient gets after fees and FX markup. Our Pulse pages publish time-series trends to show how outcomes change over time by corridor. We maintain a strict no pay-to-rank policy and publish methodology and disclosures openly.
+                  Remit-Scout helps people compare cross-border money transfer providers by focusing on what the recipient is estimated to receive after fees and FX markup. Our Pulse pages publish time-series trends that show how outcomes change over time by corridor. We maintain a strict no pay-to-rank policy and publish our methodology and disclosures openly.
                 </p>
               </div>
             </div>
@@ -341,7 +341,7 @@
                 Press &amp; licensing
               </p>
               <p class="mt-2 text-sm leading-relaxed text-neutral-700">
-                Need a quote, chart permission, or embed access? Send details and deadlines.
+                Need a quote, chart permission, or embed access? Send the details and your deadline.
               </p>
               <div class="mt-4 flex flex-col gap-2">
                 <NuxtLink
@@ -415,7 +415,7 @@ const lastReviewedIso = '2025-12-01'
 
 setSeo({
   title: 'Media Kit / Press | Remit-Scout',
-  description: 'Remittance pricing trends backed by a live dataset. Learn how to cite Remit-Scout, request chart permissions, and understand Pulse.',
+  description: 'Remittance pricing trends backed by a living dataset. Learn how to cite Remit-Scout, request chart permissions, and understand Pulse.',
   canonical: canonicalUrl,
 })
 
@@ -439,24 +439,24 @@ const pressEmail = `press@${hostname}`
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Remit-Scout',
-  url: siteUrl,
-  logo: `${siteUrl}/logos/remit-scout.svg`,
-  contactPoint: [
+  'name': 'Remit-Scout',
+  'url': siteUrl,
+  'logo': `${siteUrl}/logos/remit-scout.svg`,
+  'contactPoint': [
     {
       '@type': 'ContactPoint',
-      contactType: 'press',
-      email: pressEmail,
-      url: `${siteUrl}/contact?type=press`,
+      'contactType': 'press',
+      'email': pressEmail,
+      'url': `${siteUrl}/contact?type=press`,
     },
     {
       '@type': 'ContactPoint',
-      contactType: 'customer support',
-      email: supportEmail,
-      url: `${siteUrl}/contact`,
+      'contactType': 'customer support',
+      'email': supportEmail,
+      'url': `${siteUrl}/contact`,
     },
   ],
-  sameAs: [
+  'sameAs': [
     'https://linkedin.com/company/Remit-Scout',
   ],
 }
@@ -464,24 +464,24 @@ const organizationSchema = {
 const articleSchema = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Media Kit / Press',
-  description: 'Remittance pricing trends — backed by a live dataset',
-  author: {
+  'headline': 'Media Kit / Press',
+  'description': 'Remittance pricing trends — backed by a live dataset',
+  'author': {
     '@type': 'Organization',
-    name: 'Remit-Scout',
-    url: siteUrl,
+    'name': 'Remit-Scout',
+    'url': siteUrl,
   },
-  datePublished: lastReviewedIso,
-  dateModified: lastReviewedIso,
-  publisher: {
+  'datePublished': lastReviewedIso,
+  'dateModified': lastReviewedIso,
+  'publisher': {
     '@type': 'Organization',
-    name: 'Remit-Scout',
-    logo: {
+    'name': 'Remit-Scout',
+    'logo': {
       '@type': 'ImageObject',
-      url: `${siteUrl}/logos/remit-scout.svg`,
+      'url': `${siteUrl}/logos/remit-scout.svg`,
     },
   },
-  mainEntityOfPage: {
+  'mainEntityOfPage': {
     '@type': 'WebPage',
     '@id': canonicalUrl,
   },

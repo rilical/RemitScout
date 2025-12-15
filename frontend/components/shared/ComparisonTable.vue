@@ -44,7 +44,8 @@
             <td class="whitespace-nowrap px-6 py-4">
               <div class="flex items-center">
                 <ProviderLogo
-                  :provider="provider"
+                  :slug="provider.slug"
+                  :alt="provider.name"
                   class="mr-3 h-8 w-8"
                 />
                 <div>
@@ -67,7 +68,7 @@
               </div>
             </td>
             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-              {{ provider.fees }}
+              {{ provider.fees || 'N/A' }}
             </td>
             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
               {{ provider.speed }}
@@ -94,7 +95,7 @@ interface Provider {
   slug: string
   rating: number
   countries: number
-  fees: string
+  fees?: string
   speed: string
 }
 

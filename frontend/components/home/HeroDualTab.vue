@@ -136,7 +136,7 @@
             Send more home,<br><span class="text-brand-600">pay less</span> in fees.
           </h1>
           <p class="mb-8 text-lg leading-relaxed text-neutral-600 sm:text-xl">
-            Compare live rates, total fees, and delivery speed from 30+ licensed providers.
+            Compare current quotes, total fees, and estimated delivery times across {{ SITE_STATS.providers.display }} licensed providers.
             <span class="whitespace-nowrap">Built for expats, by expats.</span>
           </p>
 
@@ -215,9 +215,9 @@
                 <div class="sm:hidden">
                   <button
                     type="button"
-                    @click="currentMobileStep = 2"
                     :disabled="!moneyForm.from || !moneyForm.to"
                     class="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click="currentMobileStep = 2"
                   >
                     Next →
                   </button>
@@ -266,16 +266,16 @@
                 <div class="flex gap-2 sm:hidden">
                   <button
                     type="button"
-                    @click="currentMobileStep = 1"
                     class="flex-1 rounded-lg border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                    @click="currentMobileStep = 1"
                   >
                     ← Back
                   </button>
                   <button
                     type="button"
-                    @click="currentMobileStep = 3"
                     :disabled="!moneyForm.fromCurrency || !moneyForm.toCurrency"
                     class="flex-1 rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click="currentMobileStep = 3"
                   >
                     Next →
                   </button>
@@ -287,7 +287,10 @@
                 class="mb-6 flex-1"
                 :class="{ 'hidden sm:block': currentMobileStep !== 3 }"
               >
-                <label for="amount" class="mb-2 block text-sm font-semibold text-neutral-700">
+                <label
+                  for="amount"
+                  class="mb-2 block text-sm font-semibold text-neutral-700"
+                >
                   You send
                 </label>
                 <input
@@ -304,8 +307,8 @@
                 <div class="mt-4 sm:hidden">
                   <button
                     type="button"
-                    @click="currentMobileStep = 2"
                     class="w-full rounded-lg border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                    @click="currentMobileStep = 2"
                   >
                     ← Back
                   </button>
@@ -325,8 +328,18 @@
                   class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800"
                 >
                   <div class="flex items-start gap-2">
-                    <svg class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="h-5 w-5 flex-shrink-0 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <span>{{ formError }}</span>
                   </div>
@@ -336,8 +349,18 @@
                   class="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800"
                 >
                   <div class="flex items-start gap-2">
-                    <svg class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    <svg
+                      class="h-5 w-5 flex-shrink-0 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span>{{ formSuccess }}</span>
                   </div>
@@ -420,7 +443,7 @@
                   {{ SITE_STATS.corridors.display }}
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
-                  Send money anywhere
+                  Coverage across major corridors
                 </p>
               </div>
 
@@ -433,7 +456,7 @@
                   3–9%
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
-                  On every transfer
+                  On many transfers
                 </p>
               </div>
 
@@ -443,10 +466,10 @@
                   <span class="text-2xl">🛡️</span>
                   <div>
                     <p class="text-sm font-semibold text-neutral-900">
-                      100% independent
+                      Independent rankings
                     </p>
                     <p class="text-xs text-neutral-600">
-                      No pay-to-rank, unbiased results
+                      No pay-to-rank. Results stay data-driven.
                     </p>
                   </div>
                 </div>
@@ -814,8 +837,8 @@ const handleMoneySubmit = async () => {
 
   try {
     await recordSearch({
-      from_country: from,
-      to_country: to,
+      from,
+      to,
       amount,
       method,
     })

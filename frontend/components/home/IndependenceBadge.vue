@@ -8,10 +8,10 @@
           </div>
           <div>
             <h2 class="text-xl font-bold text-white mb-2">
-              100% Independent Rankings
+              Independent rankings
             </h2>
             <p class="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              We may earn an affiliate commission when you click a provider link and complete a purchase. 
+              We may earn an affiliate commission when you click a provider link and complete a purchase.
               <strong class="text-white">Providers cannot pay to rank higher</strong>, and affiliate relationships do not affect Remit‑Score calculations.
             </p>
           </div>

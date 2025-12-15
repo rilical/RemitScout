@@ -6,7 +6,7 @@
           How It Works
         </h2>
         <p class="text-base text-slate-300 max-w-2xl mx-auto">
-          Three simple steps to finding the best money transfer for you
+          Three steps to comparing your options, clearly
         </p>
       </div>
 
@@ -20,7 +20,7 @@
               1. Enter your details
             </h3>
             <p class="text-sm text-neutral-600">
-              Tell us where you're sending from, where the money's going, and how much. Takes 30 seconds.
+              Tell us where you're sending from, where the money’s going, and how much you want to send. We handle the comparison.
             </p>
           </div>
         </div>
@@ -31,10 +31,10 @@
           </div>
           <div class="text-center">
             <h3 class="text-lg font-bold text-neutral-900 mb-2">
-              2. We fetch live rates
+              2. We pull current quotes
             </h3>
             <p class="text-sm text-neutral-600">
-              Our system checks 30+ providers in real-time for the best total cost, including all fees and exchange margins.
+              We gather quotes from 30+ providers, then normalize fees and FX so you can compare like for like. Quotes are timestamped and refreshed regularly (cadence varies).
             </p>
           </div>
         </div>
@@ -48,7 +48,7 @@
               3. Complete your transfer
             </h3>
             <p class="text-sm text-neutral-600">
-              Click through to your preferred provider and complete your transfer. We never handle your money.
+              Click through to your preferred provider and complete your transfer on their site. Remit-Scout never handles your money.
             </p>
           </div>
         </div>
@@ -73,10 +73,10 @@
           </div>
           <div class="flex-1">
             <h4 class="font-bold text-white mb-2">
-              100% Independent & Free
+              Independent and free to use
             </h4>
             <p class="text-white/90 text-sm leading-relaxed">
-              Remit-Scout is independent. Providers cannot pay to rank higher. We earn a small commission when you use our links, but this never affects our rankings.
+              Providers cannot pay to rank higher. We may earn a small commission when you use our links, but affiliate relationships do not affect rankings or Remit-Score calculations.
               <NuxtLink
                 to="/methodology"
                 class="text-white hover:text-white/80 font-semibold underline ml-1"

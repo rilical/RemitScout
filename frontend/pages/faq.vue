@@ -12,7 +12,7 @@
             Frequently Asked Questions
           </h1>
           <p class="text-lg sm:text-xl text-neutral-600 max-w-3xl mx-auto mb-8">
-            Everything you need to know about comparing money transfer providers on Remit‑Scout — how we collect pricing, how we rank providers, and what you get with Remit‑Scout Plus.
+            Answers about how Remit‑Scout works: how we collect quotes, how we rank providers, how to read results, and what you get with Remit‑Scout Plus.
           </p>
 
           <!-- Trust Note Banner -->
@@ -37,11 +37,11 @@
               We don't move money
             </div>
             <NuxtLink
-              to="/contact?type=issue"
+              to="/contact"
               class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50"
             >
               <span>📧</span>
-              Report a rate issue
+              Report an issue
             </NuxtLink>
           </div>
 
@@ -91,7 +91,7 @@
                   'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   activeCategory === category.id
                     ? 'bg-brand-50 text-brand-700'
-                    : 'text-neutral-700 hover:bg-neutral-50'
+                    : 'text-neutral-700 hover:bg-neutral-50',
                 ]"
                 @click="activeCategory = category.id"
               >
@@ -227,10 +227,10 @@
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
-                      100% independent rankings
+                      Independent rankings
                     </p>
                     <p class="text-white/90 leading-relaxed">
-                      Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.
+                      Providers can’t buy placement. Rankings reflect delivered outcome, total cost, and other signals shown on the page.
                     </p>
                   </div>
                 </div>
@@ -241,10 +241,10 @@
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
-                      Live rates, updated constantly
+                      Timestamped quotes
                     </p>
                     <p class="text-white/90 leading-relaxed">
-                      Our system checks rates around the clock, factoring in both transfer fees and exchange rate markups to show you the real cost.
+                      Quotes refresh regularly, with cadence that varies by corridor and data source. Every quote includes a timestamp so you can judge freshness.
                     </p>
                   </div>
                 </div>
@@ -255,10 +255,10 @@
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
-                      Your privacy protected
+                      Privacy-minded by design
                     </p>
                     <p class="text-white/90 leading-relaxed">
-                      We never sell or share your personal information. Compare rates anonymously, no account required.
+                      You can compare without creating an account. Accounts are used for features like watchlists, alerts, newsletters, and Remit‑Scout Plus.
                     </p>
                   </div>
                 </div>
@@ -272,7 +272,7 @@
                       Built for expats, by expats
                     </p>
                     <p class="text-white/90 leading-relaxed">
-                      We understand the importance of every dollar you send home. Our team has lived abroad and knows what matters when supporting family overseas.
+                      We’ve lived the “send money home” problem. The goal is simple: help more of your money reach the recipient, with fewer surprises at checkout.
                     </p>
                   </div>
                 </div>
@@ -326,7 +326,7 @@
                     </div>
                     <div class="flex-1">
                       <div class="font-semibold text-neutral-900">
-                        GDPR compliant
+                        Privacy requests supported
                       </div>
                     </div>
                   </div>
@@ -349,7 +349,7 @@
                     </div>
                     <div class="flex-1">
                       <div class="font-semibold text-neutral-900">
-                        ISO 27001 controls
+                        Security best practices
                       </div>
                     </div>
                   </div>
@@ -372,7 +372,7 @@
                     </div>
                     <div class="flex-1">
                       <div class="font-semibold text-neutral-900">
-                        PCI-aware handling
+                        No card storage
                       </div>
                     </div>
                   </div>
@@ -395,14 +395,14 @@
                     </div>
                     <div class="flex-1">
                       <div class="font-semibold text-neutral-900">
-                        Regulated providers
+                        Regulated providers (where applicable)
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <p class="mt-6 text-xs text-neutral-500">
-                  Regulation applies to providers. We don't handle your money.
+                  Regulation applies to providers. Remit‑Scout is a comparison and research product and does not handle funds.
                 </p>
               </div>
             </div>
@@ -427,7 +427,7 @@
               Contact support
             </NuxtLink>
             <NuxtLink
-              to="/contact?type=issue"
+              to="/contact"
               class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-8 py-4 text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-50"
             >
               Report a rate issue
@@ -454,13 +454,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { setSeo } from '~/composables/useSeo'
+
+type Faq = {
+  question: string
+  answer: string
+}
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
@@ -481,12 +486,12 @@ const categories = [
   { id: 'reporting', name: 'Reporting issues and support' },
 ]
 
-const filteredFaqs = (faqs: any[]) => {
+const filteredFaqs = (faqs: Faq[]) => {
   if (!searchQuery.value) return faqs
   const query = searchQuery.value.toLowerCase()
   return faqs.filter(faq =>
-    faq.question.toLowerCase().includes(query) ||
-    faq.answer.toLowerCase().includes(query)
+    faq.question.toLowerCase().includes(query)
+    || faq.answer.toLowerCase().includes(query),
   )
 }
 
@@ -494,7 +499,7 @@ const filteredFaqs = (faqs: any[]) => {
 const gettingStartedFaqs = [
   {
     question: 'What is Remit‑Scout?',
-    answer: '<p>Remit‑Scout helps you compare international money transfer providers based on what actually matters to senders: how much your recipient gets, the total cost (fees + exchange rate markup), delivery speed signals, and reliability signals where available. Instead of guessing based on "$0 fee" ads or brand names, you can see side‑by‑side quotes and choose the option that delivers the most value for your transfer.</p>',
+    answer: '<p>Remit‑Scout is an independent comparison platform for international money transfers. We collect quotes, standardize fees and FX markup into comparable numbers, and highlight the metric most people care about: <strong>what the recipient should receive</strong> for the scenario you entered.</p><p class="mt-2">You can compare providers side by side, then click through to the provider you choose to complete the transfer.</p>',
   },
   {
     question: 'Do you send money for me?',
@@ -502,11 +507,11 @@ const gettingStartedFaqs = [
   },
   {
     question: 'How do I compare providers on Remit‑Scout?',
-    answer: '<p>You enter your send country, receive country, currency, and amount. We fetch quotes from multiple providers and standardize the results into comparable numbers (especially Recipient gets). Then you pick a provider and click through to complete your transfer.</p>',
+    answer: '<p>Enter your send country, receive country, currency, amount, and (where available) payout method. We fetch quotes from multiple providers and standardize the results into comparable numbers, especially <strong>Recipient gets</strong>.</p><p class="mt-2">When you choose a provider, you click through to complete the transfer on that provider’s checkout.</p>',
   },
   {
     question: 'Why do results change when I change the amount or payout method?',
-    answer: '<p>Because remittance pricing isn\'t one flat price. A provider may offer great pricing at $200 and less competitive pricing at $2,000. Some providers also price differently depending on payment method (bank transfer vs card), payout method (bank deposit vs cash pickup), or speed options.</p><p class="mt-2">A comparison is only meaningful when it matches your real scenario — so Remit‑Scout recalculates results based on the specific inputs you choose.</p>',
+    answer: '<p>Remittance pricing isn’t one flat price. A provider may be strong at $200 and less competitive at $2,000. Pricing can also change by payment method (bank vs card), payout method (bank deposit vs cash pickup), and speed options.</p><p class="mt-2">A comparison only makes sense when it matches your real scenario, so Remit‑Scout recalculates results based on your inputs.</p>',
   },
 ]
 
@@ -514,27 +519,27 @@ const gettingStartedFaqs = [
 const pricingFaqs = [
   {
     question: 'What does "Recipient gets" mean?',
-    answer: '<p><strong>"Recipient gets"</strong> is the estimated amount your recipient receives after fees and exchange‑rate markup for the specific amount and corridor you entered. It\'s the most practical number for real-world comparison because it answers the only question that matters: <em>how much arrives for my family?</em></p><p class="mt-3"><strong>Example:</strong></p><div class="bg-neutral-50 rounded-lg p-4 my-3 border border-neutral-200"><p class="text-sm"><strong>Send:</strong> $500 USD</p><p class="text-sm"><strong>Provider A:</strong> $5 fee, 18.00 rate → <strong>8,910 MXN</strong> delivered</p><p class="text-sm"><strong>Provider B:</strong> $1.99 fee, 18.45 rate → <strong>9,188 MXN</strong> delivered</p><p class="text-sm mt-2 text-emerald-700 font-semibold">That\'s 278 MXN more delivered on the same transfer, even if both advertise low fees.</p></div><p class="mt-2">We calculate this as: <code class="bg-neutral-100 px-2 py-1 rounded text-sm">recipient gets = (send amount − fees) × provider FX rate</code></p>',
+    answer: '<p><strong>"Recipient gets"</strong> is our best estimate of what the recipient should receive after fees and FX markup for the specific scenario you entered.</p><p class="mt-2">It’s practical because it answers the question most senders actually care about: <em>what should arrive?</em></p><p class="mt-3"><strong>Example:</strong></p><div class="bg-neutral-50 rounded-lg p-4 my-3 border border-neutral-200"><p class="text-sm"><strong>Send:</strong> $500 USD</p><p class="text-sm"><strong>Provider A:</strong> $5 fee, 18.00 rate → <strong>8,910 MXN</strong></p><p class="text-sm"><strong>Provider B:</strong> $1.99 fee, 18.45 rate → <strong>9,188 MXN</strong></p><p class="text-sm mt-2 text-emerald-700 font-semibold">That’s 278 MXN more delivered on the same transfer, even if both advertise “low fees”.</p></div><p class="mt-2">We calculate this as: <code class="bg-neutral-100 px-2 py-1 rounded text-sm">recipient gets = (send amount − fees) × provider FX rate</code></p>',
   },
   {
     question: 'What does "Total cost" include?',
-    answer: '<p><strong>Total cost</strong> includes everything that reduces what your recipient receives:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Stated transfer fee:</strong> The upfront charge you see (e.g., $5.99 flat fee or 1% of amount)</li><li><strong>Exchange rate markup:</strong> The hidden cost in the rate they offer vs. the real "mid-market" rate</li></ul><div class="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4"><p class="text-sm font-semibold text-amber-900 mb-2">⚠️ The Hidden Markup Problem</p><p class="text-sm text-amber-800">For example: Real USD→MXN rate is 18.50, but a provider offers you 18.00. That 0.50 difference is a <strong>2.7% markup</strong> — on a $500 transfer, that\'s $13.50 hidden cost, before any stated fees.</p></div><p class="mt-2">Some providers advertise "$0 fees" but charge 3–5% more through the exchange rate. <strong>Total cost exposes that hidden markup</strong> so you can compare apples to apples.</p>',
+    answer: '<p><strong>Total cost</strong> includes everything that reduces what your recipient should receive:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Stated transfer fee:</strong> the upfront charge you see</li><li><strong>FX markup:</strong> the difference between a provider’s rate and a reference mid-market rate at the same time</li></ul><div class="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4"><p class="text-sm font-semibold text-amber-900 mb-2">⚠️ The hidden markup problem</p><p class="text-sm text-amber-800">Example: if the reference USD→MXN rate is 18.50 but a provider offers 18.00, that’s roughly a <strong>2.7% markup</strong>. On a $500 transfer, that’s meaningful — even before any stated fee.</p></div><p class="mt-2">Some providers advertise “$0 fees” but price through the exchange rate. Total cost helps you compare apples to apples.</p>',
   },
   {
     question: 'Why might the provider checkout show a different price than Remit‑Scout?',
-    answer: '<p>This happens sometimes, and it doesn\'t mean anyone is "lying." <strong>Pricing can change due to:</strong></p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Payment method:</strong> Bank transfer vs debit card pricing can vary significantly (cards often cost more)</li><li><strong>Promotions:</strong> First-time user discounts, corridor-specific promos, or limited-time boosts that apply at checkout</li><li><strong>KYC status:</strong> New vs verified customers may see different rates or fees</li><li><strong>Local rules:</strong> Recipient banking requirements or regional regulations</li><li><strong>Rate movement:</strong> FX rates change minute-to-minute; there\'s a delay between our quote capture and your checkout</li></ul><div class="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4"><p class="text-sm"><strong>💡 What to check:</strong></p><ul class="text-sm space-y-1 mt-2 list-disc pl-5"><li>Confirm your checkout settings match what you compared (payment method, payout method, amount)</li><li>Look for any promotional codes or discounts applied automatically</li><li>Check the timestamp on our quote — rates move constantly</li></ul></div><p class="mt-2">Remit‑Scout shows a timestamp for quotes and refreshes frequently, but <strong>the provider\'s checkout is always the final source of truth</strong>. If you spot a mismatch that looks wrong or systematic, you can <a href="/contact?type=issue" class="text-brand-600 hover:text-brand-700 underline font-semibold">report it</a> — and we investigate.</p>',
+    answer: '<p>Checkout can differ from a captured quote. Common reasons include:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Payment method:</strong> bank vs card pricing can differ</li><li><strong>Promotions:</strong> offers that depend on user status, codes, or targeted eligibility</li><li><strong>KYC:</strong> verification steps can change eligibility, speed, or fees</li><li><strong>Local rules:</strong> corridor-specific requirements or payout constraints</li><li><strong>FX movement:</strong> rates can move between the time a quote is captured and the time you checkout</li></ul><div class="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4"><p class="text-sm"><strong>💡 Quick checklist</strong></p><ul class="text-sm space-y-1 mt-2 list-disc pl-5"><li>Match payment method, payout method, and amount</li><li>Check for promotions or codes</li><li>Check the quote timestamp</li></ul></div><p class="mt-2"><strong>The provider checkout is always the final source of truth.</strong> If you see a mismatch that looks systematic, <a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">report it</a> with corridor, amount, time, and a screenshot if possible.</p>',
   },
   {
     question: 'How often do you update rates?',
-    answer: '<p>We refresh quotes frequently, especially for popular corridors. Update frequency can vary by corridor and by the data source (direct provider API vs public quote capture). Every quote is timestamped so you can judge freshness.</p>',
+    answer: '<p>We refresh quotes regularly, especially on popular corridors. Update frequency varies by corridor, payment method, and data source. Every quote is timestamped so you can judge freshness.</p>',
   },
   {
     question: 'Where do you get your pricing data?',
-    answer: '<p>We typically collect pricing via:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Direct provider API access (most accurate when available)</li><li>Partner data feeds (structured exports)</li><li>Public quote capture from provider websites/apps (useful coverage, but can be less consistent)</li></ul><p class="mt-2">We normalize this data into a standardized comparison so you can evaluate providers fairly. <a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our methodology</a> for more details.</p>',
+    answer: '<p>We typically collect pricing via:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Direct provider API access (most consistent when available)</li><li>Partner data feeds (structured exports)</li><li>Public quote capture from provider quote flows (coverage varies)</li></ul><p class="mt-2">We normalize that data into a standardized comparison. <a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our methodology</a> for details.</p>',
   },
   {
     question: 'Do you include promo codes and discounts?',
-    answer: '<p>If a provider applies an automatic promotion to a publicly quoted flow, you may see it reflected. However, many promo discounts require account state (new user / returning user), a code entry, or targeted offers — which can\'t always be captured universally. That\'s why we emphasize Recipient gets as a best estimate, and why we recommend verifying final checkout amounts.</p>',
+    answer: '<p>Sometimes. If a provider applies an automatic promotion in the quote flow we capture, you may see it reflected. Many promotions depend on account status, a code, or targeted eligibility, so they can’t always be captured universally.</p><p class="mt-2">That’s why we emphasize Recipient gets as a best estimate and recommend verifying the final checkout amount.</p>',
   },
 ]
 
@@ -542,11 +547,11 @@ const pricingFaqs = [
 const rankingsFaqs = [
   {
     question: 'How are providers ranked?',
-    answer: '<p>By default, we emphasize sender value: what your recipient receives, the total cost, plus usability and reliability signals where available. The goal is to sort options based on what a real sender would likely want — not marketing claims.</p>',
+    answer: '<p>We rank providers by delivered outcome and total cost for the scenario you entered, then surface additional signals like payout method availability, speed, and reliability where available.</p><p class="mt-2">The goal is simple: show the options that should deliver the best outcome, not the best marketing.</p>',
   },
   {
     question: 'What is Remit‑Score?',
-    answer: '<p><strong>Remit‑Score</strong> is our standardized 0–10 score designed to summarize overall value and usability in a single number. It\'s computed using measurable signals weighted by importance:</p><div class="bg-neutral-50 rounded-lg p-4 my-4 border border-neutral-200"><ul class="space-y-2 text-sm"><li><strong>Delivered Value (40%):</strong> Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy</li><li><strong>Reliability & Success (20%):</strong> Quote success rate, data freshness, pricing stability</li><li><strong>Friction & Speed (15%):</strong> ETA where available, speed buckets, observed delivery times</li><li><strong>Support & Refunds (15%):</strong> Refund processing time, dispute resolution, satisfaction</li><li><strong>Trust & Safety (10%):</strong> Public licensing checks, regulatory register verification</li></ul></div><p class="mt-2">Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">9.5</span>, <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">8.4</span>, or <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">7.2</span> represent the overall quality and value you can expect.</p><p class="mt-2"><strong>Remit‑Score is not "who paid more" or "who has the best brand."</strong> It\'s an evidence-based shorthand that helps you compare faster. <a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">See our full methodology</a> for details.</p>',
+    answer: '<p><strong>Remit‑Score</strong> is a 0–10 score designed to summarize overall value and usability in one number. It’s built from measurable signals, weighted by importance:</p><div class="bg-neutral-50 rounded-lg p-4 my-4 border border-neutral-200"><ul class="space-y-2 text-sm"><li><strong>Delivered Value (40%):</strong> fees + FX markup and delivered outcome for the scenario shown</li><li><strong>Reliability & Success (20%):</strong> quote success rate and data freshness signals</li><li><strong>Friction & Speed (15%):</strong> ETA and speed buckets where available</li><li><strong>Support & Refunds (15%):</strong> policy and support signals where available</li><li><strong>Trust & Safety (10%):</strong> licensing and safety signals where available</li></ul></div><p class="mt-2">Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">9.5</span>, <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">8.4</span>, or <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">7.2</span> are shorthand — not pay-to-play.</p><p class="mt-2"><a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">See our full methodology</a> for details.</p>',
   },
   {
     question: 'Can providers pay to rank higher?',
@@ -566,7 +571,7 @@ const rankingsFaqs = [
 const providersFaqs = [
   {
     question: 'Do you only list licensed or regulated providers?',
-    answer: '<p>We focus on established, regulated providers where possible and aim to label provider coverage and availability transparently. Regulations vary by country and by corridor, so the "right" license type also varies. Where we can verify public licensing information or registry entries, we incorporate it into our trust and labeling approach.</p>',
+    answer: '<p>We aim to cover established providers and to label coverage and availability transparently. Regulation varies by country, corridor, and product type, so the “right” license can differ across markets.</p><p class="mt-2">Where public licensing information or registry entries are available, we use them as part of our trust and labeling approach.</p>',
   },
   {
     question: 'Why don\'t I see the same providers for every corridor?',
@@ -582,7 +587,7 @@ const providersFaqs = [
 const plusFaqs = [
   {
     question: 'What is Remit‑Scout Plus?',
-    answer: '<p>Remit‑Scout Plus is an optional upgrade for people who send money regularly and want more control over timing and tracking. Plus gives you tools that help you monitor rates over time, stay organized across corridors, and keep your experience clean.</p>',
+    answer: '<p>Remit‑Scout Plus is an optional upgrade for people who send money regularly and want tools for tracking and timing. Plus adds alerts, watchlists, and deeper history so you can monitor corridors over time instead of re-checking manually.</p><p class="mt-2">Plus requires an account (email + password) so we can save your settings.</p>',
   },
   {
     question: 'What\'s included in Remit‑Scout Plus?',
@@ -606,7 +611,7 @@ const plusFaqs = [
   },
   {
     question: 'Can I cancel Plus anytime?',
-    answer: '<p>Yes. Plus should be easy to cancel. If you cancel, your plan remains active until the end of your billing period, and you won\'t be charged again afterward. (Exact cancellation flow should match your billing provider.)</p>',
+    answer: '<p>Yes. You can cancel anytime. If you cancel, your plan stays active until the end of your current billing period and you won’t be charged again.</p><p class="mt-2">Billing is handled by Stripe. Cancellation and renewal are managed in your account. We don’t currently offer free trials and we don’t offer refunds for partial periods.</p>',
   },
 ]
 
@@ -614,7 +619,7 @@ const plusFaqs = [
 const partnershipsFaqs = [
   {
     question: 'How does Remit‑Scout make money?',
-    answer: '<p>Remit‑Scout may earn revenue in a few ways, always with clear separation from rankings:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Affiliate commissions when a user clicks a provider link and completes a transfer (where programs exist)</li><li>Data licensing / widgets for publishers and platforms that want to embed market charts or comparisons</li><li>API / exports for platforms or researchers who need programmatic access</li></ul><p class="mt-2">These commercial relationships never override the ranking methodology. <a href="/partnerships" class="text-brand-600 hover:text-brand-700 underline font-semibold">Learn more about partnerships</a>.</p>',
+    answer: '<p>Remit‑Scout may earn revenue in a few ways, with clear separation from rankings:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Affiliate commissions when a user clicks a provider link and completes a transfer (where programs exist)</li><li>Remit‑Scout Plus subscriptions</li><li>Data licensing and widgets for publishers and platforms</li><li>API access or exports for platforms and researchers</li></ul><p class="mt-2">Commercial relationships never override the ranking methodology. <a href="/partnerships" class="text-brand-600 hover:text-brand-700 underline font-semibold">Learn more about partnerships</a>.</p>',
   },
   {
     question: 'What does "We may earn a commission" mean?',
@@ -638,7 +643,7 @@ const privacyFaqs = [
   },
   {
     question: 'Do you sell my personal data?',
-    answer: '<p>We use data to improve the product, not to sell personal profiles. If you do any advertising-related tracking, we disclose it clearly and give users control where required. <a href="/legal/privacy" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our privacy policy</a> for full details.</p>',
+    answer: '<p>No. We use data to operate and improve the product, not to sell personal profiles. If we use cookies or other tracking, we disclose it and provide choices where required.</p><p class="mt-2"><a href="/legal/privacy" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our privacy policy</a> for details.</p>',
   },
   {
     question: 'Do you store bank details, ID documents, or transfer credentials?',
@@ -650,11 +655,11 @@ const privacyFaqs = [
 const reportingFaqs = [
   {
     question: 'I saw a different amount at checkout. What should I do?',
-    answer: '<p>First, confirm that your checkout settings match what you compared (payment method, payout method, amount, and promotions). If it still looks inconsistent, please report it using our <a href="/contact?type=issue" class="text-brand-600 hover:text-brand-700 underline font-semibold">"Report a rate issue"</a> flow and include:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Corridor (from/to)</li><li>Amount</li><li>Payment method and payout method</li><li>Provider name</li><li>The time you compared</li><li>A screenshot of checkout if possible</li></ul><p class="mt-2">We use these reports to investigate and improve our data pipeline. When we confirm an issue, we correct the listing and refresh the data.</p>',
+    answer: '<p>First, confirm that your checkout settings match what you compared (payment method, payout method, amount, and promotions). If it still looks inconsistent, please report it using our <a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">contact form</a> and include:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Corridor (from/to)</li><li>Amount</li><li>Payment method and payout method</li><li>Provider name</li><li>The time you compared</li><li>A screenshot of checkout if possible</li></ul><p class="mt-2">We use these reports to investigate and improve our data pipeline. When we confirm an issue, we correct the listing and refresh the data.</p>',
   },
   {
     question: 'How quickly do you fix errors?',
-    answer: '<p>We treat data accuracy seriously. We investigate reports promptly and update the site when we confirm an issue. Some mismatches are caused by normal checkout variables, but if we find a systematic capture error or stale quote behavior, we fix it.</p>',
+    answer: '<p>If we confirm an issue, we typically update within 48 hours. Some mismatches are normal checkout variables, but if we find a systematic capture error or stale quote behavior, we correct it and adjust our pipeline.</p><p class="mt-2">If an issue isn’t reported within 48 hours of the relevant quote timestamp, we may not update historical records.</p>',
   },
   {
     question: 'I still need help — how do I contact you?',

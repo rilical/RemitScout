@@ -124,16 +124,17 @@ watch(() => route.path, () => {
             Compare
           </NuxtLink>
 
-          <!-- Guides -->
+          <!-- Learn -->
           <div class="relative">
             <button
               data-menu-trigger
+              type="button"
               class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-haspopup="true"
               :aria-expanded="openMenu==='guides'"
-              @click="toggle('guides')"
+              @click.stop="toggle('guides')"
             >
-              Guides
+              Learn
             </button>
             <MenuPanel
               :open="openMenu==='guides'"
@@ -237,7 +238,7 @@ watch(() => route.path, () => {
           Get Alerts
         </NuxtLink>
         <NuxtLink
-          :to="compareUrl"
+          to="/providers"
           class="inline-flex items-center rounded-md bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           Providers

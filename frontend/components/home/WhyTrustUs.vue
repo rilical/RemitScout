@@ -47,7 +47,7 @@
                   Your privacy protected
                 </p>
                 <p class="text-white/90 leading-relaxed">
-                  We never sell or share your personal information. Compare rates anonymously, no account required.
+                  We never sell your personal information. Compare rates anonymously, no account required.
                 </p>
               </div>
             </div>

@@ -83,23 +83,23 @@ const toggleFaq = (index: number) => {
 const faqs = [
   {
     question: 'How does Remit-Scout compare money transfer providers?',
-    answer: 'Remit-Scout pulls <span class="text-brand-600 font-semibold">real-time rates</span> directly from providers to compare exchange rates, fees, and delivery times. We present everything in an <span class="text-brand-600 font-semibold">easy-to-understand format</span> so you can quickly identify the <span class="text-brand-600 font-semibold">best option</span> for your specific transfer needs.',
+    answer: 'Remit‑Scout collects provider quotes and standardizes them so you can compare <span class="text-brand-600 font-semibold">exchange rates</span>, <span class="text-brand-600 font-semibold">fees</span>, and <span class="text-brand-600 font-semibold">estimated delivery times</span> on the same basis. We highlight <span class="text-brand-600 font-semibold">Recipient gets</span> so you can see the delivered amount after fees and FX markup.',
   },
   {
     question: 'Why do you show more providers than other comparison sites?',
-    answer: 'We\'ve built partnerships with a wide range of money transfer providers to give you <span class="text-brand-600 font-semibold">more options</span>. More choice means <span class="text-brand-600 font-semibold">better rates and services</span> for different types of transfers. We continuously expand our network to include new and innovative providers.',
+    answer: 'We focus on coverage. If a provider serves a corridor and we can capture <span class="text-brand-600 font-semibold">consistent, comparable quotes</span>, we include it, even when it’s not a household name. That usually means you see more options, including specialists and bank alternatives.',
   },
   {
     question: 'How accurate are your exchange rates and fees?',
-    answer: 'Our rates are sourced directly from providers and <span class="text-brand-600 font-semibold">updated in real-time</span>. However, exchange rates can fluctuate quickly, so the final rate you receive may vary slightly from what you see on our site. We always recommend <span class="text-brand-600 font-semibold">checking the final rate</span> with the provider before confirming your transfer.',
+    answer: 'Quotes are captured at <span class="text-brand-600 font-semibold">specific timestamps</span> and refreshed regularly (cadence varies by provider and corridor). Rates can move quickly, so what you see may differ slightly from what you get at checkout. The provider’s checkout is the <span class="text-brand-600 font-semibold">final source of truth</span> before you confirm a transfer.',
   },
   {
     question: 'How can you offer this service for free?',
-    answer: 'We earn a small commission from providers when you complete a transfer through our platform. This <span class="text-brand-600 font-semibold">doesn\'t affect the rates or fees you pay</span>, it\'s built into the provider\'s standard pricing. Our commission model allows us to offer our comparison service <span class="text-brand-600 font-semibold">completely free to users</span>.',
+    answer: 'We may earn a commission if you click a <span class="text-brand-600 font-semibold">disclosed</span> provider link and complete a transfer. You don’t pay extra because of that commission, and providers cannot pay for better placement. Comparisons stay <span class="text-brand-600 font-semibold">free to use</span>.',
   },
   {
     question: 'Do you share my information with providers?',
-    answer: 'We only share the information necessary to provide you with accurate quotes and to facilitate your transfer if you choose to proceed with a provider. We <span class="text-brand-600 font-semibold">never sell your personal information</span> to third parties. Please review our privacy policy for detailed information about how we handle your data.',
+    answer: 'We don’t sell your personal information. If you click through to a provider, you complete your transfer on their site and they collect whatever details they need directly from you. For the full breakdown of how we handle data, see our <span class="text-brand-600 font-semibold">privacy policy</span>.',
   },
 ]
 
@@ -127,7 +127,7 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      children: JSON.stringify(faqSchema),
+      innerHTML: JSON.stringify(faqSchema),
     },
   ],
 })

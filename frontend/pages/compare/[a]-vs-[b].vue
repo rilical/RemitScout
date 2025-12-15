@@ -4,11 +4,11 @@
       <Breadcrumbs :items="breadcrumbItems" />
 
       <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
-        <h1 class="mb-4 text-4xl font-bold text-gray-900">
-          {{ providerA?.name }} vs {{ providerB?.name }}
+          <h1 class="mb-4 text-4xl font-bold text-gray-900">
+          {{ providerA?.name || 'Provider A' }} vs {{ providerB?.name || 'Provider B' }}
         </h1>
         <p class="mb-6 text-xl text-gray-600">
-          Compare {{ providerA?.name }} and {{ providerB?.name }} side by side to find the best
+          Compare {{ providerA?.name || 'Provider A' }} and {{ providerB?.name || 'Provider B' }} side by side to find the best
           money transfer provider for your needs.
         </p>
 
@@ -31,7 +31,22 @@
       </div>
 
       <ComparisonTable
-        :providers="[providerA, providerB]"
+        v-if="providerA && providerB"
+        :providers="[{
+          id: providerA.id,
+          name: providerA.name,
+          slug: providerA.slug,
+          rating: providerA.rating,
+          countries: providerA.countries,
+          speed: providerA.speed,
+        }, {
+          id: providerB.id,
+          name: providerB.name,
+          slug: providerB.slug,
+          rating: providerB.rating,
+          countries: providerB.countries,
+          speed: providerB.speed,
+        }]"
         :comparison="true"
       />
 
@@ -50,7 +65,7 @@
             </div>
             <div class="flex items-center justify-between border-b py-2">
               <span class="text-gray-600">Transfer Speed</span>
-              <span class="text-gray-900">{{ providerA?.transferSpeed }}</span>
+              <span class="text-gray-900">{{ providerA?.speed }}</span>
             </div>
             <div class="flex items-center justify-between border-b py-2">
               <span class="text-gray-600">Countries</span>
@@ -58,7 +73,7 @@
             </div>
             <div class="flex items-center justify-between border-b py-2">
               <span class="text-gray-600">Trust Score</span>
-              <span class="text-gray-900">{{ providerA?.trustScore }}%</span>
+              <span class="text-gray-900">{{ providerA?.score }}</span>
             </div>
           </div>
         </div>
@@ -77,7 +92,7 @@
             </div>
             <div class="flex items-center justify-between border-b py-2">
               <span class="text-gray-600">Transfer Speed</span>
-              <span class="text-gray-900">{{ providerB?.transferSpeed }}</span>
+              <span class="text-gray-900">{{ providerB?.speed }}</span>
             </div>
             <div class="flex items-center justify-between border-b py-2">
               <span class="text-gray-600">Countries</span>
@@ -85,7 +100,7 @@
             </div>
             <div class="flex items-center justify-between border-b py-2">
               <span class="text-gray-600">Trust Score</span>
-              <span class="text-gray-900">{{ providerB?.trustScore }}%</span>
+              <span class="text-gray-900">{{ providerB?.score }}</span>
             </div>
           </div>
         </div>
@@ -102,7 +117,7 @@
             </h3>
             <ul class="list-inside list-disc space-y-1 text-gray-600">
               <li
-                v-for="reason in providerA?.bestFor"
+                v-for="reason in (providerA?.features || [])"
                 :key="reason"
               >
                 {{ reason }}
@@ -115,7 +130,7 @@
             </h3>
             <ul class="list-inside list-disc space-y-1 text-gray-600">
               <li
-                v-for="reason in providerB?.bestFor"
+                v-for="reason in (providerB?.features || [])"
                 :key="reason"
               >
                 {{ reason }}
@@ -131,12 +146,15 @@
 <script setup lang="ts">
 // Meta
 const route = useRoute()
+const { data: providerAForMeta } = await useProvider(route.params.a as string)
+const { data: providerBForMeta } = await useProvider(route.params.b as string)
+
 useHead({
-  title: `${useProvider(route.params.a as string)?.name || 'Provider A'} vs ${useProvider(route.params.b as string)?.name || 'Provider B'} | Remit-Scout`,
+  title: `${providerAForMeta.value?.name || 'Provider A'} vs ${providerBForMeta.value?.name || 'Provider B'} | Remit-Scout`,
   meta: [
     {
       name: 'description',
-      content: `Compare ${useProvider(route.params.a as string)?.name || 'Provider A'} vs ${useProvider(route.params.b as string)?.name || 'Provider B'}. Side-by-side comparison of fees, rates, speed, and user reviews.`,
+      content: `Compare ${providerAForMeta.value?.name || 'Provider A'} vs ${providerBForMeta.value?.name || 'Provider B'}. Side-by-side comparison of fees, rates, speed, and user reviews.`,
     },
   ],
 })
@@ -149,6 +167,6 @@ const breadcrumbItems = computed(() => [
 ])
 
 // Provider data
-const providerA = await useProvider(route.params.a as string)
-const providerB = await useProvider(route.params.b as string)
+const { data: providerA } = await useProvider(route.params.a as string)
+const { data: providerB } = await useProvider(route.params.b as string)
 </script>

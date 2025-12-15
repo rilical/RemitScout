@@ -83,11 +83,16 @@
               Quick Transfer
             </h3>
             <CountrySelect
-              v-model:from="fromCountry"
-              v-model:to="toCountry"
+              v-model="fromCountry"
+              label="From"
+            />
+            <CountrySelect
+              v-model="toCountry"
+              label="To"
             />
             <AmountInput
               v-model="amount"
+              label="Amount"
               :from="fromCountry"
               :to="toCountry"
             />
@@ -120,14 +125,23 @@
 </template>
 
 <script setup lang="ts">
-// Meta
+// Data
 const route = useRoute()
+const toCountry = ref(route.params.country as string)
+const fromCountry = ref('US')
+const amount = ref(1000)
+
+// Country data
+const { data: countryInfo } = await useCountry(route.params.country as string)
+const countryName = computed(() => countryInfo.value?.name || route.params.country)
+
+// Meta
 useHead({
-  title: `Send Money to ${useCountry(route.params.country as string)?.name || 'Country'} | Remit-Scout`,
+  title: `Send Money to ${countryName.value} | Remit-Scout`,
   meta: [
     {
       name: 'description',
-      content: `Compare money transfer providers for sending money to ${useCountry(route.params.country as string)?.name || 'this country'}. Get the best rates and fastest transfers.`,
+      content: `Compare money transfer providers for sending money to ${countryName.value}. Get the best rates and fastest transfers.`,
     },
   ],
 })
@@ -135,18 +149,9 @@ useHead({
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
-  { name: useCountry(route.params.country as string)?.name || 'Country', path: route.path },
+  { name: countryName.value, path: route.path },
 ])
 
-// Data
-const toCountry = ref(route.params.country as string)
-const fromCountry = ref('US')
-const amount = ref(1000)
-
-// Country data
-const countryInfo = await useCountry(route.params.country as string)
-const countryName = computed(() => countryInfo.value?.name || route.params.country)
-
 // Top providers
-const topProviders = await useProviders({ country: route.params.country })
+const { data: topProviders } = await useProviders()
 </script>

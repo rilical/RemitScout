@@ -87,6 +87,11 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
+    output: {
+      dir: '.output',
+      serverDir: '.output/server',
+      publicDir: '.output/public',
+    },
   },
 
   // Vite Configuration
