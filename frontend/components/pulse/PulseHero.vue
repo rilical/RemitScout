@@ -28,6 +28,7 @@
         </label>
         <CountrySelect
           v-model="form.from"
+          label="Sending from"
           placeholder="Select country"
         />
       </div>
@@ -38,6 +39,7 @@
         </label>
         <CountrySelect
           v-model="form.to"
+          label="Receiving in"
           placeholder="Select country"
         />
       </div>
@@ -95,26 +97,24 @@
       </div>
     </div>
 
-    <div class="mt-6 flex gap-3">
+    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <button
         class="rounded-lg bg-primary-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-primary-700"
         @click="applyFilters"
       >
         View corridor pulse
       </button>
-      <button
-        class="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
-        @click="createAlert"
-      >
-        Create alert
-        <span class="ml-1 text-xs text-primary-600">Plus</span>
-      </button>
+      <SaveAlertButtons
+        :target="watchTarget"
+        :label="watchLabel"
+        source="pulse"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const emit = defineEmits<{
   'filter-change': [filters: {
@@ -142,12 +142,16 @@ const applyFilters = () => {
   emit('filter-change', form.value)
 }
 
-const createAlert = () => {
-  console.log('Create alert clicked')
-}
+const watchTarget = computed(() => ({
+  type: 'corridor' as const,
+  from: form.value.from,
+  to: form.value.to,
+  method: form.value.method,
+}))
+
+const watchLabel = computed(() => `${form.value.from}→${form.value.to} • ${form.value.method}`)
 
 watch(form, () => {
   applyFilters()
 }, { deep: true })
 </script>
-

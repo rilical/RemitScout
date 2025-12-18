@@ -36,11 +36,17 @@
     <!-- EEAT: Why prices vary (user education) -->
     <WhyPricesVary />
 
+    <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
+    <PulseMiniTiles />
+
     <!-- 10. Exchange-rate history + Rate alerts (together) -->
     <RateAlertForm />
 
     <!-- EEAT: Safety Notice -->
     <SafetyNotice />
+
+    <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
+    <PlusTeaser />
 
     <!-- 11. Testimonials (3 short, real quotes) -->
     <TestimonialsCarousel />
@@ -89,6 +95,8 @@ import WhyPricesVary from '~/components/home/WhyPricesVary.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
 import SafetyNotice from '~/components/home/SafetyNotice.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
+import PulseMiniTiles from '~/components/home/PulseMiniTiles.vue'
+import PlusTeaser from '~/components/home/PlusTeaser.vue'
 import { setSeo, jsonLdSiteNavigation } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 

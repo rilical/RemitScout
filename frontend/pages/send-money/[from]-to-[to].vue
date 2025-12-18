@@ -71,6 +71,14 @@
                 {{ chip }}
               </span>
             </div>
+
+            <div class="mt-6">
+              <SaveAlertButtons
+                :target="corridorWatchTarget"
+                :label="corridorWatchLabel"
+                source="compare"
+              />
+            </div>
           </div>
 
           <!-- Right: Rate Chart -->
@@ -1159,6 +1167,7 @@ const normalizedSiteUrl = siteUrl && typeof siteUrl === 'string' && siteUrl.ends
 
 import {
   getCanonicalSlug,
+  getCodeFromSlug,
   getCountryFromSlug,
   getCanonicalCorridorUrl,
   needsCanonicalRedirect,
@@ -1412,6 +1421,15 @@ const { form: compareForm, submit: submitCompareForm } = useCompareForm()
 const handleFormCompare = async () => {
   await submitCompareForm()
 }
+
+const corridorWatchTarget = computed(() => ({
+  type: 'corridor' as const,
+  from: getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase(),
+  to: getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase(),
+  method: compareForm.value.method,
+}))
+
+const corridorWatchLabel = computed(() => `${content.value.from}→${content.value.to} • ${compareForm.value.method}`)
 
 // Available currencies based on corridor countries
 const availableSendCurrencies = computed(() => {

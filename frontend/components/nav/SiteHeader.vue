@@ -1,13 +1,51 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useAuth } from '~/composables/useAuth'
+import { useEntitlements } from '~/composables/useEntitlements'
 
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
 
 const { compareUrl } = useCompareForm()
-const { isAuthenticated, isPlus, watchlistCount, alertsCount } = useAuth()
+const { isAuthenticated, signIn, signOut } = useAuth()
+const { isPlus, plan, setPlan } = useEntitlements()
+
+const runtimeConfig = useRuntimeConfig()
+type PublicDevConfig = { devControls?: boolean }
+const devControlsEnabled = computed(() => import.meta.dev || Boolean((runtimeConfig.public as unknown as PublicDevConfig).devControls))
+
+const devStatusLabel = computed(() => {
+  if (!isAuthenticated.value) return 'Logged out'
+  return plan.value === 'plus' ? 'Plus' : 'Free'
+})
+
+const devStatusNextLabel = computed(() => {
+  if (!isAuthenticated.value) return 'Sign in (Free)'
+  if (plan.value === 'free') return 'Upgrade to Plus'
+  return 'Sign out'
+})
+
+function cycleDevStatus() {
+  if (!isAuthenticated.value) {
+    signIn('dev@remitscout.test')
+    setPlan('free')
+    return
+  }
+
+  if (plan.value === 'free') {
+    setPlan('plus')
+    return
+  }
+
+  signOut()
+  setPlan('free')
+}
+
+function handleDevCycleFromMenu() {
+  cycleDevStatus()
+  closeMobileMenu()
+}
 
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value
@@ -80,6 +118,14 @@ watch(() => route.path, () => {
           class="hidden md:flex items-center gap-2"
           aria-label="Primary navigation"
         >
+          <!-- Dashboard -->
+          <NuxtLink
+            to="/dashboard"
+            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            Dashboard
+          </NuxtLink>
+
           <!-- Compare -->
           <NuxtLink
             to="/send-money"
@@ -116,6 +162,16 @@ watch(() => route.path, () => {
 
       <!-- Right: Identity + Plan -->
       <div class="flex items-center gap-3">
+        <button
+          v-if="devControlsEnabled"
+          type="button"
+          class="hidden sm:inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          :title="`Dev: ${devStatusLabel} → ${devStatusNextLabel}`"
+          @click="cycleDevStatus"
+        >
+          DEV: {{ devStatusLabel }}
+        </button>
+
         <!-- Logged out state -->
         <template v-if="!isAuthenticated">
           <NuxtLink
@@ -126,7 +182,7 @@ watch(() => route.path, () => {
           </NuxtLink>
           <NuxtLink
             to="/plus"
-            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Get Plus
           </NuxtLink>
@@ -134,38 +190,18 @@ watch(() => route.path, () => {
 
         <!-- Logged in state -->
         <template v-else>
-          <!-- Watchlist -->
           <NuxtLink
-            to="/watchlist"
-            class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 relative"
+            to="/dashboard"
+            class="md:hidden inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span class="sr-only">Watchlist</span>
-            <span
-              v-if="watchlistCount > 0"
-              class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center"
-            >
-              {{ watchlistCount > 9 ? '9+' : watchlistCount }}
-            </span>
+            Dashboard
           </NuxtLink>
-
-          <!-- Alerts -->
           <NuxtLink
-            to="/alerts"
-            class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 relative"
+            v-if="!isPlus"
+            to="/plus"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <span class="sr-only">Alerts</span>
-            <span
-              v-if="alertsCount > 0"
-              class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center"
-            >
-              {{ alertsCount > 9 ? '9+' : alertsCount }}
-            </span>
+            Get Plus
           </NuxtLink>
 
           <!-- Plus pill (if Plus member) -->
@@ -173,8 +209,18 @@ watch(() => route.path, () => {
             v-if="isPlus"
             class="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
           >
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <svg
+              class="h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
             Plus
           </span>
@@ -284,6 +330,14 @@ watch(() => route.path, () => {
 
           <div class="px-4 py-6 space-y-2">
             <NuxtLink
+              to="/dashboard"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+            >
+              <span>Dashboard</span>
+              <span aria-hidden="true">→</span>
+            </NuxtLink>
+
+            <NuxtLink
               to="/send-money"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
             >
@@ -315,6 +369,17 @@ watch(() => route.path, () => {
               <span aria-hidden="true">→</span>
             </NuxtLink>
 
+            <button
+              v-if="devControlsEnabled"
+              type="button"
+              class="w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-amber-900 bg-amber-50 border border-amber-200 hover:bg-amber-100 motion-safe:transition"
+              :title="`Dev: ${devStatusLabel} → ${devStatusNextLabel}`"
+              @click="handleDevCycleFromMenu"
+            >
+              <span>DEV: {{ devStatusLabel }}</span>
+              <span aria-hidden="true">↻</span>
+            </button>
+
             <template v-if="!isAuthenticated">
               <NuxtLink
                 to="/sign-in"
@@ -334,33 +399,11 @@ watch(() => route.path, () => {
 
             <template v-else>
               <NuxtLink
-                to="/watchlist"
+                v-if="!isPlus"
+                to="/plus"
                 class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
               >
-                <div class="flex items-center gap-2">
-                  <span>Watchlist</span>
-                  <span
-                    v-if="watchlistCount > 0"
-                    class="rounded-full bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 min-w-[1.25rem] text-center"
-                  >
-                    {{ watchlistCount > 9 ? '9+' : watchlistCount }}
-                  </span>
-                </div>
-                <span aria-hidden="true">→</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/alerts"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
-              >
-                <div class="flex items-center gap-2">
-                  <span>Alerts</span>
-                  <span
-                    v-if="alertsCount > 0"
-                    class="rounded-full bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 min-w-[1.25rem] text-center"
-                  >
-                    {{ alertsCount > 9 ? '9+' : alertsCount }}
-                  </span>
-                </div>
+                <span>Get Plus</span>
                 <span aria-hidden="true">→</span>
               </NuxtLink>
             </template>

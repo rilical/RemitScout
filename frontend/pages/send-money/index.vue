@@ -1,115 +1,195 @@
 <template>
   <div class="bg-gradient-to-b from-slate-50 to-white min-h-screen">
     <!-- Hero Section -->
-    <section class="relative py-16 lg:py-20 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <section class="relative py-10 lg:py-12 overflow-hidden bg-slate-50">
       <div class="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
-        <div class="text-center mb-12">
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-blue-600 mb-6">
+        <div class="text-center mb-8">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-blue-600 mb-4">
             Stop Overpaying on International Transfers
           </h1>
-          <p class="text-xl text-slate-600 max-w-3xl mx-auto mb-8">
-            Every year, millions lose billions to hidden fees and poor exchange rates. We show you exactly what each provider charges, no surprises, no paid rankings, just transparent comparisons that put more money in your recipient's pocket.
+          <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+            Compare rates from 30+ providers. No hidden fees, no paid rankings, just transparent comparisons.
           </p>
         </div>
 
         <!-- Two Column Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Article Section -->
-          <article class="bg-white rounded-2xl shadow-lg p-8 lg:p-10 border border-slate-200">
-            <h2 class="text-3xl font-bold text-slate-900 mb-6">
+          <article class="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4">
               Your Complete Money Transfer Comparison Engine
             </h2>
             
-            <div class="prose prose-lg prose-slate max-w-none">
-              <p class="text-lg text-slate-700 mb-6">
-                Welcome to Remit-Scout's comprehensive <NuxtLink to="/send-money" class="text-blue-600 hover:text-blue-700 font-medium">money transfer comparison platform</NuxtLink>. 
-                As expats ourselves, we understand the frustration of hidden fees, poor exchange rates, and the time-consuming process of comparing multiple providers.
+            <div class="space-y-5">
+              <p class="text-base text-slate-700 leading-relaxed">
+                Compare rates from <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">30+ licensed providers</NuxtLink> including
+                <NuxtLink to="/learn/providers/wise" class="text-blue-600 hover:text-blue-700 font-medium">Wise</NuxtLink>,
+                <NuxtLink to="/learn/providers/remitly" class="text-blue-600 hover:text-blue-700 font-medium">Remitly</NuxtLink>,
+                <NuxtLink to="/learn/providers/western-union" class="text-blue-600 hover:text-blue-700 font-medium">Western Union</NuxtLink>,
+                <NuxtLink to="/learn/providers/xe" class="text-blue-600 hover:text-blue-700 font-medium">XE</NuxtLink>, and many more.
+                All providers are fully licensed and regulated in their respective jurisdictions.
               </p>
 
-                <p class="text-slate-700 mb-6">
-                  💡 Our intelligent search engine does the heavy lifting for you. Simply select your sending and receiving countries, enter your amount, 
-                  and we'll instantly compare rates from <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">30+ licensed providers</NuxtLink> including
-                  <NuxtLink to="/learn/providers/wise" class="text-blue-600 hover:text-blue-700 font-medium">Wise</NuxtLink>,
-                  <NuxtLink to="/learn/providers/remitly" class="text-blue-600 hover:text-blue-700 font-medium">Remitly</NuxtLink>, and
-                  <NuxtLink to="/learn/providers/western-union" class="text-blue-600 hover:text-blue-700 font-medium">Western Union</NuxtLink>.
-                  See our complete <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">provider comparison</NuxtLink> for detailed reviews and ratings.
-                </p>
-
-                <div class="bg-blue-50 border-l-4 border-blue-600 p-6 my-8 rounded-r-xl">
-                  <p class="text-sm text-blue-900 font-medium mb-2">💡 Pro Tip</p>
-                  <p class="text-sm text-blue-800">
-                    The "best" provider often changes based on corridor, amount, and delivery method. Our comparison engine updates in real-time to ensure you always get the most accurate rates. 
-                    Learn more about <NuxtLink to="/methodology" class="text-blue-700 hover:text-blue-900 underline font-medium">how we compare providers</NuxtLink> and our transparent <NuxtLink to="/methodology" class="text-blue-700 hover:text-blue-900 underline font-medium">methodology</NuxtLink>.
-                  </p>
-                </div>
-
-                <h3 class="text-2xl font-bold text-slate-900 mt-8 mb-4">
-                  Why Use Our Comparison Engine?
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  How Our Comparison Works
                 </h3>
-                
-                <ul class="space-y-4 mb-8">
-                  <li class="flex items-start">
-                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="text-slate-700"><strong>Save Time & Money:</strong> Compare 30+ providers in seconds instead of visiting each website individually. <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">Compare all providers</NuxtLink> side-by-side.</span>
-                  </li>
-                  <li class="flex items-start">
-                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="text-slate-700"><strong>Real Exchange Rates:</strong> See live mid-market rates with transparent fees—no hidden charges. Our <NuxtLink to="/methodology" class="text-blue-600 hover:text-blue-700 font-medium">methodology</NuxtLink> ensures accuracy.</span>
-                  </li>
-                  <li class="flex items-start">
-                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="text-slate-700"><strong>Trusted & Regulated:</strong> All providers are licensed and regulated in their operating countries. <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium">Read our FAQ</NuxtLink> for more on safety and security.</span>
-                  </li>
-                  <li class="flex items-start">
-                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="text-slate-700"><strong>Expert Reviews:</strong> Read detailed <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 underline font-medium">guides and comparisons</NuxtLink> written by expats who've used these services. <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 font-medium">Learn more</NuxtLink> with our comprehensive guides.</span>
-                  </li>
-                </ul>
-
-                <p class="text-slate-700 mb-6">
-                  Whether you're sending money to family abroad, paying international invoices, or managing property overseas, 
-                  our platform helps you make informed decisions. Browse our 
-                  <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 font-medium">expert guides</NuxtLink> to learn more about international money transfers, 
-                  check out our <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium">FAQ section</NuxtLink> for common questions, or 
-                  <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">compare providers</NuxtLink> to find the best option for your needs.
+                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                  We pull live exchange rates and fees directly from provider APIs every few minutes. When you enter your transfer details, we calculate the exact amount your recipient will receive after all fees and exchange rate markups. The best provider changes based on your specific corridor, amount, and transfer method.
+                </p>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  Our rankings are 100% independent. Providers cannot pay for better placement. We rank purely on total cost (fees plus exchange rate markup), transfer speed, and reliability based on real user experiences.
                 </p>
               </div>
 
-              <div class="mt-8 pt-8 border-t border-slate-200">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  Why Use Our Comparison?
+                </h3>
+                
+                <div class="space-y-3">
+                  <div class="flex items-start gap-3">
+                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <span class="text-sm text-slate-700 font-semibold">Save Time & Money</span>
+                      <p class="text-xs text-slate-600 mt-0.5">Compare 30+ providers instantly instead of visiting each website individually. Find the best rate in seconds.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <span class="text-sm text-slate-700 font-semibold">Real Rates, No Hidden Fees</span>
+                      <p class="text-xs text-slate-600 mt-0.5">We show live mid-market rates and calculate the true total cost including all fees. No surprises when you transfer.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <span class="text-sm text-slate-700 font-semibold">100% Independent Rankings</span>
+                      <p class="text-xs text-slate-600 mt-0.5">All providers are licensed and regulated. We rank purely on data, never on payments or partnerships.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <span class="text-sm text-slate-700 font-semibold">Expert Reviews & Guides</span>
+                      <p class="text-xs text-slate-600 mt-0.5">Detailed guides written by expats who've actually used these services. Real experiences, not marketing copy.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  What Makes a Good Money Transfer Provider?
+                </h3>
+                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                  The best provider for you depends on several factors: the countries you're sending between, the amount you're transferring, how quickly you need it to arrive, and your preferred payment method.
+                </p>
+                <ul class="space-y-2 text-sm text-slate-700">
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span><strong>Total Cost:</strong> Look at the final amount your recipient receives, not just the exchange rate. Some providers have low fees but poor rates, others have higher fees but better rates.</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span><strong>Transfer Speed:</strong> Need it today? Choose a provider offering instant or same-day transfers. Can wait a few days? You might get better rates.</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span><strong>Reliability:</strong> Check user reviews and our provider guides. Some providers are great for certain corridors but struggle with others.</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span><strong>Payment Methods:</strong> Can you pay by bank transfer, card, or cash? Different methods have different fees and speeds.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  Understanding Fees and Exchange Rates
+                </h3>
+                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                  Money transfer providers make money in two ways: upfront transfer fees and exchange rate markups. The transfer fee is easy to see (e.g., "$5.99 fee"), but the exchange rate markup is hidden in the rate they offer you versus the real mid-market rate.
+                </p>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  For example, if the mid-market rate is 1 USD = 0.85 EUR, a provider might offer you 0.83 EUR per USD. That 0.02 difference is their markup. Always compare the "Total Received" amount to see the true cost. Our comparison shows you exactly how much your recipient will get after all fees and markups.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  Transfer Speed Options
+                </h3>
+                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                  Different providers offer different delivery speeds. Instant transfers (0-30 minutes) are available for some corridors using debit cards to mobile wallets. Same-day transfers typically arrive within 24 hours for bank deposits. Standard transfers take 1-3 business days, while traditional bank transfers can take 3-5 business days.
+                </p>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  Faster transfers usually cost more. If you can wait a day or two, you'll often get better exchange rates. Our comparison shows you the speed for each provider so you can choose based on your urgency and budget.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  Payment and Receipt Methods
+                </h3>
+                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                  You can typically pay for your transfer using bank transfer, debit card, credit card, or cash (at agent locations). Bank transfers usually have the lowest fees but take longer to process. Cards are faster but may have higher fees.
+                </p>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  Recipients can receive money via bank deposit, mobile wallet, cash pickup, or home delivery (in some countries). Bank deposits are usually cheapest, while cash pickup is convenient but may have additional fees. Our comparison shows all available options for your specific corridor.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  Safety and Security
+                </h3>
+                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                  All providers we compare are fully licensed and regulated by financial authorities in their operating countries. This means they must follow strict security protocols, keep your money in segregated accounts, and provide consumer protection.
+                </p>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  Before sending large amounts, verify the provider's license status and check their security measures. Look for providers that use encryption, two-factor authentication, and have clear policies on what happens if something goes wrong. We only include providers that meet these standards.
+                </p>
+              </div>
+
+              <div class="pt-4 border-t border-slate-200">
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <p class="text-sm text-slate-700">
-                      <strong>Written by the RemitScout team</strong> • Updated November 2024
+                    <p class="text-xs text-slate-700">
+                      <strong>Written by RemitScout team</strong> • Updated Nov 2024
                     </p>
-                    <p class="text-xs text-slate-500 mt-1">
-                      <NuxtLink to="/about" class="hover:text-blue-600">Learn about our mission</NuxtLink> • 
-                      <NuxtLink to="/methodology" class="hover:text-blue-600 ml-2">How we compare</NuxtLink>
+                    <p class="text-xs text-slate-500">
+                      <NuxtLink to="/about" class="hover:text-blue-600">About us</NuxtLink> • 
+                      <NuxtLink to="/methodology" class="hover:text-blue-600 ml-2">Methodology</NuxtLink>
                     </p>
                   </div>
                 </div>
               </div>
-            </article>
+            </div>
+          </article>
 
             <!-- Extended Comparison Widget -->
             <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-              <div class="border-b border-slate-100 bg-gradient-to-r from-brand-600 to-blue-700 px-8 py-8 lg:px-10 lg:py-10">
-                <h3 class="text-2xl lg:text-3xl font-bold text-white mb-3">
+              <div class="border-b border-slate-100 bg-blue-600 px-6 py-5">
+                <h3 class="text-xl font-bold text-white mb-1">
                   Find Your Best Rate Now
                 </h3>
-                <p class="text-base lg:text-lg text-white/90">
+                <p class="text-sm text-white/90">
                   Compare live rates from 30+ providers
                 </p>
               </div>
@@ -156,11 +236,11 @@
                   </div>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label
                       for="from-currency"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       From currency
                     </label>
@@ -170,15 +250,12 @@
                       :country-code="moneyForm.from"
                       placeholder="USD"
                     />
-                    <p class="mt-2 text-xs text-slate-500">
-                      Currency you'll be sending from.
-                    </p>
                   </div>
 
                   <div>
                     <label
                       for="to-currency"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       To currency
                     </label>
@@ -189,16 +266,13 @@
                       :placeholder="moneyForm.to ? 'Select currency' : 'Select country first'"
                       :disabled="!moneyForm.to"
                     />
-                    <p class="mt-2 text-xs text-slate-500">
-                      Currency your recipient will receive.
-                    </p>
                   </div>
                 </div>
 
                 <div>
                   <label
                     for="amount"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                    class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
                   >
                     Amount to send
                   </label>
@@ -208,58 +282,43 @@
                     type="number"
                     min="1"
                     step="1"
-                    class="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    class="h-10 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                     placeholder="500"
                   />
-                  <p class="mt-2 text-xs text-slate-500">
-                    Enter the amount you want to send. The best provider can vary significantly based on the amount—some offer better rates for larger transfers, while others are more cost-effective for smaller amounts. We'll show you which option gives your recipient the most money.
-                  </p>
                 </div>
 
-                <div class="rounded-lg bg-blue-50 border border-blue-200 p-5">
+                <div class="rounded-lg bg-blue-50 border border-blue-200 p-4">
                   <div class="flex items-start gap-3">
                     <div class="flex-shrink-0">
-                      <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div class="text-sm text-blue-900">
-                      <p class="font-semibold mb-2 text-base">Live Rate Comparison</p>
-                      <p class="text-blue-700 mb-3">
-                        We compare live FX rates and transparent fees from 30+ licensed providers including Wise, Remitly, Western Union, and more. Our rankings update in real-time every 5 minutes to ensure you always see the most current rates.
+                      <p class="font-semibold mb-1.5">Live Rate Comparison</p>
+                      <p class="text-blue-700 text-xs mb-2">
+                        We compare live rates from 30+ providers including Wise, Remitly, Western Union, and more.
                       </p>
-                      <ul class="space-y-1.5 text-blue-700 text-xs">
+                      <ul class="space-y-1 text-blue-700 text-xs">
                         <li class="flex items-center gap-2">
-                          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                           </svg>
-                          <span>No hidden fees—we show total cost including exchange rate markups</span>
+                          <span>No hidden fees—total cost shown</span>
                         </li>
                         <li class="flex items-center gap-2">
-                          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                           </svg>
-                          <span>100% independent—providers cannot pay for better placement</span>
+                          <span>100% independent rankings</span>
                         </li>
                         <li class="flex items-center gap-2">
-                          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                           </svg>
-                          <span>See exactly how much your recipient will receive</span>
+                          <span>Exact recipient amounts shown</span>
                         </li>
                       </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4">
-                  <div class="flex items-start gap-3">
-                    <div class="text-xl flex-shrink-0">💡</div>
-                    <div class="text-sm text-emerald-900">
-                      <p class="font-semibold mb-1">Pro Tip</p>
-                      <p class="text-emerald-800">
-                        The "best" provider often changes based on your specific corridor, amount, and delivery method. Our comparison engine accounts for all these factors to show you which option truly gets the most money to your recipient.
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -267,7 +326,7 @@
                 <button
                   type="submit"
                   :disabled="!isFormValid"
-                  class="w-full h-14 rounded-lg bg-blue-600 px-6 text-base font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
+                  class="w-full h-11 rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                 >
                   <span>Compare 30+ Providers</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,11 +344,11 @@
                     </NuxtLink>
                     <span class="text-slate-300">•</span>
                     <NuxtLink to="/faq" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                      ❓ FAQ
+                      FAQ
                     </NuxtLink>
                     <span class="text-slate-300">•</span>
                     <NuxtLink to="/learn/providers" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                      🏢 All Providers
+                      All Providers
                     </NuxtLink>
                   </div>
                 </div>

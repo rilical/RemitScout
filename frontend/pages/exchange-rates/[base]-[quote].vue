@@ -26,6 +26,13 @@
             <p class="text-xs text-neutral-500">
               Updated hourly • For illustration
             </p>
+            <div class="mt-4">
+              <SaveAlertButtons
+                :target="watchTarget"
+                :label="`${base}/${quote} FX`"
+                source="exchange_rates"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -140,6 +147,7 @@ const quote = computed(() => (route.params.quote as string || '').toUpperCase())
 const pairLabel = computed(() => `${base.value} → ${quote.value}`)
 const exampleAmount = computed(() => `${base.value} 1,000`)
 const midMarketRate = computed(() => `${base.value} 1 = ${quote.value} ${mockMidMarket(quote.value)}`)
+const watchTarget = computed(() => ({ type: 'fxPair' as const, base: base.value, quote: quote.value }))
 
 // Get country codes from currency codes for corridor URL
 const baseCountryCode = computed(() => SLUG_TO_CODE[getCanonicalSlug(base.value)] || base.value)

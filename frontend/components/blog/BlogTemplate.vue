@@ -113,6 +113,21 @@
           <!-- Sidebar -->
           <aside class="lg:col-span-4">
             <div class="space-y-8 lg:sticky lg:top-20">
+              <!-- Save + Alert (Guide CTA) -->
+              <div class="rounded-2xl border border-neutral-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                  Save this & get alerts
+                </h3>
+                <p class="text-sm text-neutral-700 mb-4">
+                  Save a corridor and set an alert—Remit‑Scout will remember it for your next transfer.
+                </p>
+                <SaveAlertButtons
+                  :target="guideAlertTarget"
+                  :label="guideAlertLabel"
+                  source="guide"
+                />
+              </div>
+
               <!-- Why Trust Us (Compact) -->
               <div class="rounded-2xl border border-neutral-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-neutral-900 mb-4">
@@ -251,6 +266,16 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const titleWords = computed(() => props.title.split(' '))
-</script>
 
+const { form } = useCompareForm()
+
+const guideAlertTarget = computed(() => ({
+  type: 'corridor' as const,
+  from: form.value.from || 'US',
+  to: form.value.to || 'PH',
+  method: form.value.method || 'bank',
+}))
+
+const guideAlertLabel = computed(() => `${guideAlertTarget.value.from}→${guideAlertTarget.value.to} • ${guideAlertTarget.value.method}`)
+</script>
 

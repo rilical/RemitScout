@@ -109,6 +109,17 @@ export function useCompareForm() {
       return false
     }
 
+    if (import.meta.client) {
+      const history = useCompareHistory()
+      history.record({
+        from: form.value.from,
+        to: form.value.to,
+        method: form.value.method,
+        amount: form.value.amount,
+        path: sendMoneyUrl.value,
+      })
+    }
+
     await navigateTo(sendMoneyUrl.value)
     return true
   }

@@ -17,6 +17,8 @@
       :is-open="footerModalOpen"
       @update:is-open="footerModalOpen = $event"
     />
+
+    <SaveAlertModal />
   </div>
 </template>
 
@@ -26,6 +28,7 @@ import SkipToContent from '~/components/shared/SkipToContent.vue'
 import NavSiteHeader from '~/components/nav/SiteHeader.vue'
 import NavSiteFooter from '~/components/nav/SiteFooter.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
+import SaveAlertModal from '~/components/shared/SaveAlertModal.vue'
 
 const footerModalOpen = ref(false)
 </script>

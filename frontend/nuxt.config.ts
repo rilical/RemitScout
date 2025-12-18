@@ -60,6 +60,7 @@ export default defineNuxtConfig({
       siteUrl: process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com',
       apiBase: process.env.PUBLIC_API_BASE || '/api',
       imageBase: process.env.PUBLIC_IMAGE_BASE || 'https://images.Remit-Scout.com',
+      devControls: process.env.PUBLIC_DEV_CONTROLS === '1',
     },
   },
 

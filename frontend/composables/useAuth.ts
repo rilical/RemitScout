@@ -1,44 +1,26 @@
+import { createId } from '~/utils/id'
+
 export interface User {
   id: string
   email: string
   name: string
   avatar?: string
-  isPlus: boolean
 }
 
 export const useAuth = () => {
-  const user = ref<User | null>(null)
-  const watchlistCount = ref(0)
-  const alertsCount = ref(0)
+  const { state: user, hydrated } = usePersistedState<User | null>('auth:user', () => null)
 
-  const isAuthenticated = computed(() => user.value !== null)
-  const isPlus = computed(() => user.value?.isPlus ?? false)
+  const isLoggedIn = computed(() => user.value !== null)
 
   function setUser(newUser: User | null) {
     user.value = newUser
-    if (newUser) {
-      watchlistCount.value = 5
-      alertsCount.value = 3
-    } else {
-      watchlistCount.value = 0
-      alertsCount.value = 0
-    }
   }
 
-  function setWatchlistCount(count: number) {
-    watchlistCount.value = count
-  }
-
-  function setAlertsCount(count: number) {
-    alertsCount.value = count
-  }
-
-  function signIn(email: string, password: string) {
+  function signIn(email: string, _password?: string) {
     setUser({
-      id: '1',
+      id: createId('user'),
       email,
-      name: email.split('@')[0],
-      isPlus: false,
+      name: email.split('@')[0] || 'User',
     })
   }
 
@@ -47,15 +29,13 @@ export const useAuth = () => {
   }
 
   return {
-    user: readonly(user),
-    isAuthenticated,
-    isPlus,
-    watchlistCount: readonly(watchlistCount),
-    alertsCount: readonly(alertsCount),
-    setUser,
-    setWatchlistCount,
-    setAlertsCount,
+    user,
+    hydrated,
+    isLoggedIn,
+    // Back-compat for existing components
+    isAuthenticated: isLoggedIn,
     signIn,
     signOut,
+    setUser,
   }
 }

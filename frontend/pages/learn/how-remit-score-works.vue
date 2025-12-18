@@ -35,69 +35,69 @@
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
           <!-- Categories & Weights -->
-          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-8 lg:p-12">
-            <h2 class="text-2xl font-bold text-neutral-900 mb-6">
+          <div class="mb-12 rounded-3xl border-2 border-blue-600 bg-blue-600 p-8 lg:p-12">
+            <h2 class="text-2xl font-bold text-white mb-6">
               Rating Categories & Weights
             </h2>
             <div class="space-y-4">
-              <div class="rounded-xl border border-brand-200 bg-white p-5">
+              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
                 <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-neutral-900">Delivered Value (40%)</h3>
-                  <span class="text-brand-600 font-bold text-lg">40%</span>
+                  <h3 class="font-bold text-white">Delivered Value (40%)</h3>
+                  <span class="text-white font-bold text-lg">40%</span>
                 </div>
-                <p class="text-sm text-neutral-700">
+                <p class="text-sm text-white/90">
                   Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
                 </p>
-                <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-brand-600 rounded-full" style="width: 40%"></div>
+                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div class="h-full bg-white rounded-full" style="width: 40%"></div>
                 </div>
               </div>
-              <div class="rounded-xl border border-brand-200 bg-white p-5">
+              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
                 <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-neutral-900">Reliability & Success (20%)</h3>
-                  <span class="text-brand-600 font-bold text-lg">20%</span>
+                  <h3 class="font-bold text-white">Reliability & Success (20%)</h3>
+                  <span class="text-white font-bold text-lg">20%</span>
                 </div>
-                <p class="text-sm text-neutral-700">
+                <p class="text-sm text-white/90">
                   Quote success rate, data freshness, pricing stability (where available)
                 </p>
-                <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-brand-600 rounded-full" style="width: 20%"></div>
+                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div class="h-full bg-white rounded-full" style="width: 20%"></div>
                 </div>
               </div>
-              <div class="rounded-xl border border-brand-200 bg-white p-5">
+              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
                 <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-neutral-900">Friction & Speed (15%)</h3>
-                  <span class="text-brand-600 font-bold text-lg">15%</span>
+                  <h3 class="font-bold text-white">Friction & Speed (15%)</h3>
+                  <span class="text-white font-bold text-lg">15%</span>
                 </div>
-                <p class="text-sm text-neutral-700">
+                <p class="text-sm text-white/90">
                   ETA where available, speed buckets, observed delivery times on selected corridors
                 </p>
-                <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-brand-600 rounded-full" style="width: 15%"></div>
+                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div class="h-full bg-white rounded-full" style="width: 15%"></div>
                 </div>
               </div>
-              <div class="rounded-xl border border-brand-200 bg-white p-5">
+              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
                 <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-neutral-900">Support & Refunds (15%)</h3>
-                  <span class="text-brand-600 font-bold text-lg">15%</span>
+                  <h3 class="font-bold text-white">Support & Refunds (15%)</h3>
+                  <span class="text-white font-bold text-lg">15%</span>
                 </div>
-                <p class="text-sm text-neutral-700">
+                <p class="text-sm text-white/90">
                   Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
                 </p>
-                <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-brand-600 rounded-full" style="width: 15%"></div>
+                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div class="h-full bg-white rounded-full" style="width: 15%"></div>
                 </div>
               </div>
-              <div class="rounded-xl border border-brand-200 bg-white p-5">
+              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
                 <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-neutral-900">Trust & Safety (10%)</h3>
-                  <span class="text-brand-600 font-bold text-lg">10%</span>
+                  <h3 class="font-bold text-white">Trust & Safety (10%)</h3>
+                  <span class="text-white font-bold text-lg">10%</span>
                 </div>
-                <p class="text-sm text-neutral-700">
+                <p class="text-sm text-white/90">
                   Public licensing checks where available, regulatory register verification
                 </p>
-                <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-brand-600 rounded-full" style="width: 10%"></div>
+                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div class="h-full bg-white rounded-full" style="width: 10%"></div>
                 </div>
               </div>
             </div>
