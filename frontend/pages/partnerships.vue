@@ -9,8 +9,11 @@
 
         <div class="mt-12">
           <div>
-            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6 leading-tight">
-              🤝 Partner with <span class="text-brand-600">Remit-Scout</span>
+            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6 leading-tight flex items-center gap-3">
+              <svg class="w-10 h-10 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Partner with <span class="text-brand-600">Remit-Scout</span>
             </h1>
 
             <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
@@ -111,7 +114,9 @@
         <div class="mb-8">
           <div class="flex items-center gap-4 mb-4">
             <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3">
-              <span class="text-2xl">🏢</span>
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
               Providers We Compare
             </h2>
             <span class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -134,8 +139,8 @@
               class="flex-shrink-0 w-56 h-36 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
             >
               <div class="text-center">
-                <div class="text-3xl mb-3">
-                  {{ partner.emoji }}
+                <div class="mb-3 flex justify-center">
+                  <component :is="getIconForPartnerEmoji(partner.emoji)" class="w-8 h-8 text-brand-600" />
                 </div>
                 <div class="text-base font-semibold text-neutral-900">
                   {{ partner.name }}
@@ -180,7 +185,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 mb-4 flex items-center gap-3">
-            <span class="text-2xl">🤝</span>
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
             Partnership opportunities at a glance
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-4">
@@ -194,7 +201,9 @@
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100">
-                  <span class="text-3xl">🔗</span>
+                  <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
                 </div>
                 <div class="flex-1">
                   <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
@@ -224,7 +233,9 @@
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
-                  <span class="text-3xl">📊</span>
+                  <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                 </div>
                 <div class="flex-1">
                   <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
@@ -254,7 +265,9 @@
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-purple-100">
-                  <span class="text-3xl">🔌</span>
+                  <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
                 <div class="flex-1">
                   <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
@@ -284,7 +297,9 @@
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-orange-100">
-                  <span class="text-3xl">🧾</span>
+                  <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                 </div>
                 <div class="flex-1">
                   <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
@@ -320,7 +335,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-4">
-            <span class="text-2xl">💼</span>
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
             What You Get as a Provider Partner
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-8">
@@ -421,7 +438,9 @@
           <div class="grid gap-6 md:grid-cols-2 mb-10">
             <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 mb-4">
-                <span class="text-2xl">🚀</span>
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 Qualified Traffic & New Customers
@@ -436,7 +455,9 @@
 
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 mb-4">
-                <span class="text-2xl">📊</span>
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 Fair, Transparent Comparison
@@ -451,7 +472,9 @@
 
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 mb-4">
-                <span class="text-2xl">🎯</span>
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 Brand Visibility & Trust
@@ -474,7 +497,9 @@
 
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 mb-4">
-                <span class="text-2xl">⚡</span>
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 Official Data Feed Badge
@@ -583,7 +608,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <span class="text-2xl">📋</span>
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
             What We Need From You
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-8">
@@ -593,7 +620,9 @@
           <div class="grid gap-6 md:grid-cols-2 mb-8">
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 mb-4">
-                <span class="text-2xl">📡</span>
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                </svg>
               </div>
               <h3 class="text-xl font-semibold text-neutral-900 mb-3">
                 Rate Data Access (Choose One)
@@ -632,7 +661,9 @@
 
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 mb-4">
-                <span class="text-2xl">👤</span>
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </div>
               <h3 class="text-xl font-semibold text-neutral-900 mb-3">
                 Partnership Contact
@@ -644,7 +675,9 @@
 
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 mb-4">
-                <span class="text-2xl">🔗</span>
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
               </div>
               <h3 class="text-xl font-semibold text-neutral-900 mb-3">
                 Affiliate Tracking (Optional)
@@ -681,7 +714,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
-            <span class="text-2xl">📱</span>
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
             For Platforms, Publishers & Media
           </h2>
           <p class="text-lg leading-relaxed text-white/95 mb-10">
@@ -695,19 +730,27 @@
               </p>
               <ul class="space-y-3 text-sm text-white/95">
                 <li class="flex items-start gap-2">
-                  <span class="text-white font-bold mt-0.5">✓</span>
+                  <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span><strong class="font-semibold text-white">Embed our comparison widget</strong> on your site (can be white-labeled)</span>
                 </li>
                 <li class="flex items-start gap-2">
-                  <span class="text-white font-bold mt-0.5">✓</span>
+                  <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span><strong class="font-semibold text-white">Use our rate charts and market trends</strong> in articles or reports</span>
                 </li>
                 <li class="flex items-start gap-2">
-                  <span class="text-white font-bold mt-0.5">✓</span>
+                  <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span><strong class="font-semibold text-white">Collaborate on research</strong> or co-create educational content</span>
                 </li>
                 <li class="flex items-start gap-2">
-                  <span class="text-white font-bold mt-0.5">✓</span>
+                  <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span><strong class="font-semibold text-white">Access our API</strong> for programmatic comparison data</span>
                 </li>
               </ul>
@@ -756,7 +799,9 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6">
               <div class="flex items-start gap-3 mb-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 flex-shrink-0">
-                  <span class="text-2xl">🛡️</span>
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
                 <h3 class="text-xl font-semibold text-white">
                   Rule 1: No pay-to-rank
@@ -770,7 +815,9 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6">
               <div class="flex items-start gap-3 mb-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 flex-shrink-0">
-                  <span class="text-2xl">📐</span>
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                 </div>
                 <h3 class="text-xl font-semibold text-white">
                   Rule 2: Consistent scoring
@@ -784,7 +831,9 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6">
               <div class="flex items-start gap-3 mb-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 flex-shrink-0">
-                  <span class="text-2xl">🔒</span>
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                 </div>
                 <h3 class="text-xl font-semibold text-white">
                   Rule 3: Commercial separation
@@ -798,7 +847,9 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6">
               <div class="flex items-start gap-3 mb-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 flex-shrink-0">
-                  <span class="text-2xl">🏷️</span>
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
                 </div>
                 <h3 class="text-xl font-semibold text-white">
                   Rule 4: Clear labeling
@@ -840,7 +891,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <span class="text-2xl">🏷️</span>
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
             How We Label Partnerships on Remit-Scout
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-10">
@@ -945,7 +998,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <span class="text-2xl">🧪</span>
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
             Data Sourcing & Accuracy
           </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-4">
@@ -1272,10 +1327,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, h } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+
+const getIconForPartnerEmoji = (emoji: string) => {
+  const iconMap: Record<string, any> = {
+    '💸': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ]),
+    '📱': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' })
+    ]),
+    '🌍': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ]),
+    '🏦': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' })
+    ]),
+    '💼': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' })
+    ]),
+    '⚡': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M13 10V3L4 14h7v7l9-11h-7z' })
+    ]),
+    '📲': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' })
+    ]),
+    '🚀': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M13 10V3L4 14h7v7l9-11h-7z' })
+    ]),
+  }
+  return iconMap[emoji] || (() => h('span', { class: 'text-3xl' }, emoji))
+}
 
 const partners = ref([
   { name: 'Wise', type: 'Money Transfer', emoji: '💸' },

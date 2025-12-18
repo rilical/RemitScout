@@ -13,15 +13,21 @@
             <!-- Trust badges -->
             <div class="flex flex-wrap gap-3">
               <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
-                <span>🛡️</span>
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
                 No pay-to-rank
               </div>
               <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-emerald-200/50">
-                <span>🧪</span>
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
                 Spot-check testing
               </div>
               <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
-                <span>📊</span>
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
                 Live pricing data
               </div>
             </div>
@@ -44,7 +50,9 @@
             <div class="flex flex-wrap gap-4 pt-4">
               <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center gap-2 text-2xl font-bold text-blue-600">
-                  <span>🏦</span>
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                   <span>{{ SITE_STATS.providers.display }}</span>
                 </div>
                 <div class="text-sm text-neutral-600">
@@ -54,7 +62,9 @@
 
               <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center gap-2 text-2xl font-bold text-emerald-600">
-                  <span>🌍</span>
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   <span>{{ SITE_STATS.corridors.display }}</span>
                 </div>
                 <div class="text-sm text-neutral-600">
@@ -64,7 +74,9 @@
 
               <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center gap-2 text-2xl font-bold text-blue-600">
-                  <span>💰</span>
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                   <span>{{ SITE_STATS.totalSaved.display }}</span>
                 </div>
                 <div class="text-sm text-neutral-600">
@@ -242,7 +254,9 @@
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           <div class="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100">
-              <span class="text-3xl">📊</span>
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
               Real-Time Exchange Rates
@@ -273,7 +287,9 @@
 
           <div class="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100">
-              <span class="text-3xl">💸</span>
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
               Transfer Fees & Hidden Costs
@@ -304,7 +320,9 @@
 
           <div class="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100">
-              <span class="text-3xl">✅</span>
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
               Availability & Quote Success
@@ -496,7 +514,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 shadow-lg mb-6">
-            <span class="text-4xl text-white">🧾</span>
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </div>
           <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-6">
             Show Your Work
@@ -512,7 +532,9 @@
             <div class="flex items-start gap-6 mb-8">
               <div class="flex-shrink-0">
                 <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100">
-                  <span class="text-3xl">🛡️</span>
+                  <svg class="w-9 h-9 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
               </div>
               <div class="flex-1">
@@ -525,7 +547,9 @@
                 <div class="grid gap-4 sm:grid-cols-3 mb-8">
                   <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
                     <div class="flex items-center gap-3 mb-2">
-                      <span class="text-2xl">✅</span>
+                      <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       <h4 class="font-semibold text-neutral-900">
                         No pay-to-rank
                       </h4>
@@ -536,7 +560,9 @@
                   </div>
                   <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
                     <div class="flex items-center gap-3 mb-2">
-                      <span class="text-2xl">✅</span>
+                      <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       <h4 class="font-semibold text-neutral-900">
                         Affiliate transparency
                       </h4>
@@ -547,7 +573,9 @@
                   </div>
                   <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
                     <div class="flex items-center gap-3 mb-2">
-                      <span class="text-2xl">✅</span>
+                      <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       <h4 class="font-semibold text-neutral-900">
                         We don't move money
                       </h4>
@@ -596,7 +624,11 @@
             to="/pulse"
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div class="text-3xl mb-3">📊</div>
+            <div class="mb-3">
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
             <h4 class="font-semibold text-neutral-900 mb-2">Explore Pulse</h4>
             <p class="text-sm text-neutral-600">Market trends and insights</p>
           </NuxtLink>
@@ -604,7 +636,11 @@
             to="/providers"
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div class="text-3xl mb-3">🏦</div>
+            <div class="mb-3">
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
             <h4 class="font-semibold text-neutral-900 mb-2">Verified Providers</h4>
             <p class="text-sm text-neutral-600">See all licensed providers</p>
           </NuxtLink>
@@ -612,7 +648,11 @@
             to="/about"
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div class="text-3xl mb-3">👤</div>
+            <div class="mb-3">
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
             <h4 class="font-semibold text-neutral-900 mb-2">About the Founder</h4>
             <p class="text-sm text-neutral-600">Our story and mission</p>
           </NuxtLink>
@@ -620,7 +660,11 @@
             to="/contact"
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div class="text-3xl mb-3">📧</div>
+            <div class="mb-3">
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
             <h4 class="font-semibold text-neutral-900 mb-2">Report a problem</h4>
             <p class="text-sm text-neutral-600">Help us improve accuracy</p>
           </NuxtLink>
@@ -667,7 +711,9 @@
           <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-all hover:shadow-2xl">
             <div class="flex flex-col h-full">
               <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-                <span class="text-3xl">📝</span>
+                <svg class="w-9 h-9 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 1. Enter your transfer details
@@ -687,7 +733,9 @@
           <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-all hover:shadow-2xl">
             <div class="flex flex-col h-full">
               <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-                <span class="text-3xl">🔍</span>
+                <svg class="w-9 h-9 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 2. Compare and choose
@@ -697,19 +745,27 @@
               </p>
               <div class="grid gap-2 sm:grid-cols-2">
                 <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <span class="text-sm">⚡</span>
+                  <svg class="w-4 h-4 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                   <span class="text-xs text-neutral-700"><strong class="font-semibold">Transfer speed</strong></span>
                 </div>
                 <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <span class="text-sm">💳</span>
+                  <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
                   <span class="text-xs text-neutral-700"><strong class="font-semibold">Payment method</strong></span>
                 </div>
                 <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <span class="text-sm">⭐</span>
+                  <svg class="w-4 h-4 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
                   <span class="text-xs text-neutral-700"><strong class="font-semibold">Remit-Score</strong></span>
                 </div>
                 <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <span class="text-sm">💰</span>
+                  <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                   <span class="text-xs text-neutral-700"><strong class="font-semibold">Total cost</strong></span>
                 </div>
               </div>
@@ -719,7 +775,9 @@
           <div class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-all hover:shadow-2xl">
             <div class="flex flex-col h-full">
               <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-                <span class="text-3xl">✅</span>
+                <svg class="w-9 h-9 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
                 3. Complete the transfer
@@ -784,7 +842,9 @@
         <div class="grid gap-8 lg:grid-cols-3">
           <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
-              <span class="text-3xl">📊</span>
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
             </div>
             <h3 class="text-xl font-bold text-slate-900 mb-4">
               Data Collection
@@ -797,15 +857,21 @@
             </p>
             <ul class="space-y-3 text-sm text-slate-600">
               <li class="flex items-start gap-3">
-                <span>🧩</span>
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
                 <span>We check publicly available regulatory registers where applicable</span>
               </li>
               <li class="flex items-start gap-3">
-                <span>🔄</span>
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 <span>Refresh frequently on top corridors (cadence varies)</span>
               </li>
               <li class="flex items-start gap-3">
-                <span>✅</span>
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <span>Spot-check on selected corridors when feasible</span>
               </li>
             </ul>
@@ -813,7 +879,9 @@
 
           <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600 shadow-md">
-              <span class="text-3xl">🧪</span>
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
             </div>
             <h3 class="text-xl font-bold text-slate-900 mb-4">
               Verification
@@ -823,15 +891,21 @@
             </p>
             <ul class="space-y-3 text-sm text-slate-600">
               <li class="flex items-start gap-3">
-                <span>🌍</span>
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <span>Selected corridors based on coverage and user demand</span>
               </li>
               <li class="flex items-start gap-3">
-                <span>💵</span>
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <span>Multiple send amounts (where testable)</span>
               </li>
               <li class="flex items-start gap-3">
-                <span>📱</span>
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
                 <span>Different payout methods where supported</span>
               </li>
             </ul>
@@ -839,7 +913,9 @@
 
           <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-md">
-              <span class="text-3xl">📡</span>
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+              </svg>
             </div>
             <h3 class="text-xl font-bold text-slate-900 mb-4">
               Ongoing Monitoring
@@ -849,15 +925,21 @@
             </p>
             <ul class="space-y-3 text-sm text-slate-600">
               <li class="flex items-start gap-3">
-                <span>🚨</span>
+                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <span>Automated alerts for unusual rate changes</span>
               </li>
               <li class="flex items-start gap-3">
-                <span>⏱️</span>
+                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <span>Track delivery time anomalies</span>
               </li>
               <li class="flex items-start gap-3">
-                <span>💬</span>
+                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-9 3.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
                 <span>User feedback is reviewed and triaged continuously</span>
               </li>
             </ul>
@@ -1080,7 +1162,7 @@ const lastUpdatedLabel = computed(() => {
 
 const showYourWorkFaqs = [
   {
-    question: '🧠 What we measure: the Quote Record',
+    question: 'What we measure: the Quote Record',
     answer: `
       <p>Every comparison on Remit-Scout starts with a normalized snapshot we call a <strong>Quote Record</strong>.</p>
       <p>A Quote Record captures what a real user would see at a specific moment for a specific scenario — for example: <strong>Send $500 from US → Albania</strong>, funded by debit card, delivered to a bank account.</p>
@@ -1119,7 +1201,7 @@ const showYourWorkFaqs = [
     `,
   },
   {
-    question: '🧾 How we estimate FX markup (vs mid-market)',
+    question: 'How we estimate FX markup (vs mid-market)',
     answer: `
       <p>Many providers earn revenue by giving an exchange rate that’s worse than the mid-market reference rate. That gap is the <strong>FX markup</strong> (a hidden cost).</p>
       <p>We estimate markup by comparing the provider’s implied FX rate at capture time to a mid-market reference rate at the <strong>same timestamp</strong>.</p>
@@ -1129,7 +1211,7 @@ const showYourWorkFaqs = [
     `,
   },
   {
-    question: '📊 Data freshness & confidence scoring',
+    question: 'Data freshness & confidence scoring',
     answer: `
       <p>A comparison site is only as useful as its freshness. That’s why we track quote timestamps, availability, and stability.</p>
       <ul>
@@ -1143,13 +1225,13 @@ const showYourWorkFaqs = [
       <ul>
         <li>🧩 Provider API / partner feed (highest consistency when available)</li>
         <li>🌐 Public quote flow capture (structured capture from quote pages where applicable)</li>
-        <li>🧪 Spot-check transfers (real transfer tests on selected corridors and methods)</li>
+        <li>Spot-check transfers (real transfer tests on selected corridors and methods)</li>
       </ul>
       <p>Over time, the goal is to expand structured feeds so coverage becomes more durable and less dependent on public quote flows.</p>
     `,
   },
   {
-    question: '⚠️ Limitations + corrections policy',
+    question: 'Limitations + corrections policy',
     answer: `
       <p>We’re transparent about what can change between quote and checkout:</p>
       <ul>

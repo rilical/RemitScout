@@ -278,7 +278,11 @@
               </div>
               <div class="flex-1 bg-white rounded-2xl border-2 border-red-200 p-8 shadow-xl">
                 <div class="text-center mb-6">
-                  <span class="text-6xl">🕵️</span>
+                  <div class="flex justify-center mb-4">
+                    <svg class="w-16 h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                   <h4 class="text-2xl font-bold text-neutral-900 mt-4">
                     The Hidden Markup
                   </h4>
@@ -307,7 +311,11 @@
               </div>
               <div class="flex-1 bg-white rounded-2xl border-2 border-emerald-200 p-8 shadow-xl">
                 <div class="text-center mb-6">
-                  <span class="text-6xl">🚀</span>
+                  <div class="flex justify-center mb-4">
+                    <svg class="w-16 h-16 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
                   <h4 class="text-2xl font-bold text-neutral-900 mt-4">
                     Why Specialists Win
                   </h4>
@@ -390,7 +398,11 @@
               </div>
               <div class="flex-1 bg-white rounded-2xl border-2 border-brand-200 p-8 shadow-xl">
                 <div class="text-center mb-6">
-                  <span class="text-6xl">💰</span>
+                  <div class="flex justify-center mb-4">
+                    <svg class="w-16 h-16 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <h4 class="text-2xl font-bold text-neutral-900 mt-4">
                     Your Real Savings
                   </h4>
@@ -435,7 +447,9 @@
           <div class="bg-gradient-to-r from-brand-600 to-brand-700 rounded-2xl p-10 text-white shadow-2xl">
             <div class="flex items-center justify-center gap-6 max-w-5xl mx-auto">
               <div class="flex-shrink-0 w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
-                <span class="text-5xl">💡</span>
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
               </div>
               <div class="flex-1 text-center lg:text-left">
                 <h4 class="text-3xl font-bold mb-3">

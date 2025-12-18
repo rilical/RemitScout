@@ -170,7 +170,12 @@
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1 flex flex-col cursor-pointer text-left w-full"
             @click="scrollToSection(cat.key)"
           >
-            <div class="text-5xl mb-4 text-center">{{ cat.icon }}</div>
+            <div class="mx-auto mb-4 w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center"
+              :class="`from-${cat.color}-50 to-${cat.color}-100`">
+              <svg class="w-8 h-8" :class="`text-${cat.color}-600`" :fill="cat.icon === 'star' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(cat.icon)" />
+              </svg>
+            </div>
             <h3 class="text-lg font-bold text-neutral-900 mb-2 text-center">
               {{ cat.name }}
             </h3>
@@ -196,7 +201,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">💸</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Money Transfer Basics
@@ -259,7 +268,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">💰</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
             <div>
               <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/10 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
                 Pricing 101
@@ -325,7 +338,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">⭐</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Provider Reviews
@@ -449,7 +466,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">⚖️</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Head-to-Head Comparisons
@@ -512,7 +533,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">🌍</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Corridor Playbooks
@@ -575,7 +600,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">⚡</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Speed & Delivery
@@ -638,7 +667,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">📈</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Exchange Rates & Timing
@@ -723,7 +756,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="text-5xl">🛡️</div>
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
             <div>
               <h2 class="text-3xl font-bold text-neutral-900">
                 Safety, Scams & Compliance
@@ -908,44 +945,66 @@ const categories = [
   {
     key: 'money-transfer-basics',
     name: 'Money Transfer Basics',
-    icon: '💸',
+    icon: 'currency',
+    color: 'emerald',
   },
   {
     key: 'fees-hidden-costs',
     name: 'Fees & Hidden Costs',
-    icon: '💰',
+    icon: 'banknotes',
+    color: 'amber',
   },
   {
     key: 'provider-reviews',
     name: 'Provider Reviews',
-    icon: '⭐',
+    icon: 'star',
+    color: 'yellow',
   },
   {
     key: 'comparisons',
     name: 'Comparisons',
-    icon: '⚖️',
+    icon: 'scale',
+    color: 'purple',
   },
   {
     key: 'corridor-playbooks',
     name: 'Corridor Playbooks',
-    icon: '🌍',
+    icon: 'globe',
+    color: 'blue',
   },
   {
     key: 'speed-delivery',
     name: 'Speed & Delivery',
-    icon: '⚡',
+    icon: 'lightning',
+    color: 'orange',
   },
   {
     key: 'exchange-rates-timing',
     name: 'Exchange Rates & Timing',
-    icon: '📈',
+    icon: 'chart',
+    color: 'green',
   },
   {
     key: 'safety-scams',
     name: 'Safety & Scams',
-    icon: '🛡️',
+    icon: 'shield',
+    color: 'red',
   },
 ]
+
+const getCategoryIcon = (iconName: string) => {
+  const icons: Record<string, string> = {
+    currency: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    banknotes: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+    star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+    scale: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3',
+    globe: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    lightning: 'M13 10V3L4 14h7v7l9-11h-7z',
+    chart: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+    shield: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+  }
+  return icons[iconName] || icons.currency
+}
 
 const allGuides = computed(() => {
   const markdownArticles = articles.value || []

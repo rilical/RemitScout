@@ -22,7 +22,7 @@
           <!-- Left: Title & Info -->
           <div>
             <p class="text-sm font-medium text-white/80 mb-2 uppercase tracking-wide">
-              Money Transfer Details 💸
+              Money Transfer Details
             </p>
             <div class="flex items-center gap-6 mb-4">
               <div class="flex items-center gap-3">
@@ -398,7 +398,11 @@
       <section v-else class="rounded-2xl bg-gradient-to-br from-brand-50 via-white to-blue-50 border border-brand-200 p-8 lg:p-12 mb-8">
         <div class="max-w-3xl mx-auto">
           <div class="text-center mb-8">
-            <span class="text-5xl mb-4 block">🚀</span>
+            <div class="flex justify-center mb-4">
+              <svg class="w-12 h-12 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
             <h2 class="text-2xl font-bold text-neutral-900 mb-3">
               {{ content.from }} to {{ content.to }} Comparison Coming Soon
             </h2>
@@ -410,32 +414,43 @@
           <!-- EEAT Content -->
           <div class="bg-white rounded-xl border border-neutral-200 p-6 mb-8">
             <h3 class="font-bold text-neutral-900 mb-4 flex items-center gap-2">
-              <span>📊</span> What to Expect When We Launch
+              <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              What to Expect When We Launch
             </h3>
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="flex gap-3">
-                <span class="text-xl">💰</span>
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <div>
                   <p class="font-semibold text-neutral-900">Live Exchange Rates</p>
                   <p class="text-sm text-neutral-600">Real-time mid-market rates compared against each provider's offered rate, showing you exactly how much markup they add.</p>
                 </div>
               </div>
               <div class="flex gap-3">
-                <span class="text-xl">🏆</span>
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
                 <div>
                   <p class="font-semibold text-neutral-900">Provider Rankings</p>
                   <p class="text-sm text-neutral-600">Unbiased rankings based on total cost (fees + FX markup), transfer speed, and user reviews. Providers cannot pay for placement.</p>
                 </div>
               </div>
               <div class="flex gap-3">
-                <span class="text-xl">⚡</span>
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
                 <div>
                   <p class="font-semibold text-neutral-900">Speed Comparisons</p>
                   <p class="text-sm text-neutral-600">See which providers offer instant transfers, same-day delivery, or bank deposit options for {{ content.to }}.</p>
                 </div>
               </div>
               <div class="flex gap-3">
-                <span class="text-xl">🛡️</span>
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
                 <div>
                   <p class="font-semibold text-neutral-900">Licensed Providers Only</p>
                   <p class="text-sm text-neutral-600">Every provider we list is regulated by financial authorities (FCA, FinCEN, ASIC) for your protection.</p>
@@ -890,29 +905,50 @@
     <section class="py-12 sm:py-16 bg-brand-600">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-white mb-2">Our Impact So Far 🚀</h2>
+          <h2 class="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Our Impact So Far
+          </h2>
           <p class="text-white/80 max-w-2xl mx-auto">
             Built by an expat who got tired of watching money disappear to bank fees. We track 30+ providers across 150+ countries in real time. Providers cannot pay to rank higher, we just show you the truth.
           </p>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <span class="text-3xl mb-2 block">🌍</span>
+            <div class="flex justify-center mb-2">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
             <p class="text-3xl font-bold text-white">250K+</p>
             <p class="text-sm text-white/70">Users helped</p>
           </div>
           <div class="text-center">
-            <span class="text-3xl mb-2 block">🔬</span>
+            <div class="flex justify-center mb-2">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
             <p class="text-3xl font-bold text-white">30+</p>
             <p class="text-sm text-white/70">Providers compared</p>
           </div>
           <div class="text-center">
-            <span class="text-3xl mb-2 block">🗺️</span>
+            <div class="flex justify-center mb-2">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             <p class="text-3xl font-bold text-white">150+</p>
             <p class="text-sm text-white/70">Countries covered</p>
           </div>
           <div class="text-center">
-            <span class="text-3xl mb-2 block">💰</span>
+            <div class="flex justify-center mb-2">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             <p class="text-3xl font-bold text-white">$2.5M+</p>
             <p class="text-sm text-white/70">Saved in fees</p>
           </div>
@@ -931,7 +967,9 @@
           <div class="grid gap-6 md:grid-cols-3">
             <div class="flex gap-4">
               <div class="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <span class="text-2xl">🕵️</span>
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
               <div>
                 <h3 class="font-bold text-neutral-900 mb-1">The Hidden Markup</h3>
@@ -940,7 +978,9 @@
             </div>
             <div class="flex gap-4">
               <div class="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <span class="text-2xl">📊</span>
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
               <div>
                 <h3 class="font-bold text-neutral-900 mb-1">Mid-Market Rate</h3>
@@ -949,7 +989,9 @@
             </div>
             <div class="flex gap-4">
               <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <span class="text-2xl">💡</span>
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
               </div>
               <div>
                 <h3 class="font-bold text-neutral-900 mb-1">Total Cost Matters</h3>
@@ -965,7 +1007,12 @@
     <section class="py-12 sm:py-16 bg-neutral-50">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-neutral-900 mb-2">📚 Read Our Guides</h2>
+          <h2 class="text-2xl font-bold text-neutral-900 mb-2 flex items-center gap-2">
+            <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Read Our Guides
+          </h2>
           <p class="text-neutral-600">Everything you need to know about international money transfers</p>
         </div>
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

@@ -1,32 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
+import { useAuth } from '~/composables/useAuth'
 
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
-const languageMenuOpen = ref(false)
 
 const { compareUrl } = useCompareForm()
-
-const currentLocale = ref('en')
-const locales = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-]
-
-function toggleLanguageMenu() {
-  languageMenuOpen.value = !languageMenuOpen.value
-}
-
-function selectLanguage(locale: string) {
-  currentLocale.value = locale
-  languageMenuOpen.value = false
-  // TODO: Implement actual language switching logic
-}
-
-function closeLanguageMenu() {
-  languageMenuOpen.value = false
-}
+const { isAuthenticated, isPlus, watchlistCount, alertsCount } = useAuth()
 
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value
@@ -47,10 +28,8 @@ function onScroll() {
   scrolled.value = window.scrollY > 2
 }
 
-function handleClickOutside(e: MouseEvent) {
-  if (languageMenuOpen.value && !(e.target as HTMLElement).closest('.language-selector')) {
-    closeLanguageMenu()
-  }
+function handleClickOutside() {
+  // Reserved for future use
 }
 
 onMounted(() => {
@@ -67,7 +46,6 @@ onBeforeUnmount(() => {
 const route = useRoute()
 watch(() => route.path, () => {
   closeMobileMenu()
-  closeLanguageMenu()
 })
 </script>
 
@@ -105,111 +83,105 @@ watch(() => route.path, () => {
           <!-- Compare -->
           <NuxtLink
             to="/send-money"
-              class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Compare
           </NuxtLink>
 
-          <!-- Learn -->
+          <!-- Providers -->
           <NuxtLink
-            to="/learn"
+            to="/learn/providers"
             class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            Learn
+            Providers
           </NuxtLink>
 
           <!-- Pulse -->
           <NuxtLink
             to="/pulse"
-              class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Pulse
           </NuxtLink>
 
-          <!-- Methodology -->
+          <!-- Guides -->
           <NuxtLink
-            to="/methodology"
+            to="/learn"
             class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            Methodology
+            Guides
           </NuxtLink>
         </nav>
       </div>
 
-      <!-- Right: Utility -->
-      <div class="flex items-center gap-2">
-        <!-- Language Selector (Desktop) -->
-        <div class="relative hidden lg:block language-selector">
-          <button
-            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 rounded-md border border-slate-200 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            aria-label="Select language"
-            aria-haspopup="true"
-            :aria-expanded="languageMenuOpen"
-            @click.stop="toggleLanguageMenu"
+      <!-- Right: Identity + Plan -->
+      <div class="flex items-center gap-3">
+        <!-- Logged out state -->
+        <template v-if="!isAuthenticated">
+          <NuxtLink
+            to="/sign-in"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <span class="text-base">{{ locales.find(l => l.code === currentLocale)?.flag || '🌐' }}</span>
-            <span class="text-xs font-medium">{{ currentLocale.toUpperCase() }}</span>
-            <svg
-              class="h-3 w-3 transition-transform"
-              :class="{ 'rotate-180': languageMenuOpen }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-              />
+            Sign in
+          </NuxtLink>
+          <NuxtLink
+            to="/plus"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            Get Plus
+          </NuxtLink>
+        </template>
+
+        <!-- Logged in state -->
+        <template v-else>
+          <!-- Watchlist -->
+          <NuxtLink
+            to="/watchlist"
+            class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 relative"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-          </button>
-
-          <!-- Language Dropdown -->
-          <div
-            v-if="languageMenuOpen"
-            class="absolute right-0 mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg z-50 py-1"
-            @click.stop
-          >
-            <button
-              v-for="locale in locales"
-              :key="locale.code"
-              class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-              :class="{ 'bg-blue-50 text-blue-700': currentLocale === locale.code }"
-              @click="selectLanguage(locale.code)"
+            <span class="sr-only">Watchlist</span>
+            <span
+              v-if="watchlistCount > 0"
+              class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center"
             >
-              <span class="text-lg">{{ locale.flag }}</span>
-              <span class="flex-1 text-left">{{ locale.name }}</span>
-              <span
-                v-if="currentLocale === locale.code"
-                class="text-blue-600"
-              >
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </span>
-            </button>
-          </div>
-        </div>
+              {{ watchlistCount > 9 ? '9+' : watchlistCount }}
+            </span>
+          </NuxtLink>
 
-        <!-- Compare CTA -->
-        <NuxtLink
-          to="/pro"
-          class="hidden sm:inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <span aria-hidden="true">⭐</span>
-          Get Alerts
-        </NuxtLink>
+          <!-- Alerts -->
+          <NuxtLink
+            to="/alerts"
+            class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 relative"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span class="sr-only">Alerts</span>
+            <span
+              v-if="alertsCount > 0"
+              class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center"
+            >
+              {{ alertsCount > 9 ? '9+' : alertsCount }}
+            </span>
+          </NuxtLink>
+
+          <!-- Plus pill (if Plus member) -->
+          <span
+            v-if="isPlus"
+            class="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
+          >
+            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Plus
+          </span>
+
+          <!-- User Menu -->
+          <UserMenu />
+        </template>
 
         <!-- Mobile menu button -->
         <button
@@ -318,15 +290,15 @@ watch(() => route.path, () => {
               <span>Compare</span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
-            
+
             <NuxtLink
-              to="/learn"
+              to="/learn/providers"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
             >
-              <span>Learn</span>
+              <span>Providers</span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
-            
+
             <NuxtLink
               to="/pulse"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
@@ -334,22 +306,64 @@ watch(() => route.path, () => {
               <span>Pulse</span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
-            
+
             <NuxtLink
-              to="/methodology"
+              to="/learn"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
             >
-              <span>Methodology</span>
+              <span>Guides</span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
 
-            <NuxtLink
-              to="/pro"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
-            >
-              <span>Get Alerts</span>
-              <span aria-hidden="true">⭐</span>
-            </NuxtLink>
+            <template v-if="!isAuthenticated">
+              <NuxtLink
+                to="/sign-in"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              >
+                <span>Sign in</span>
+                <span aria-hidden="true">→</span>
+              </NuxtLink>
+              <NuxtLink
+                to="/plus"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              >
+                <span>Get Plus</span>
+                <span aria-hidden="true">→</span>
+              </NuxtLink>
+            </template>
+
+            <template v-else>
+              <NuxtLink
+                to="/watchlist"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              >
+                <div class="flex items-center gap-2">
+                  <span>Watchlist</span>
+                  <span
+                    v-if="watchlistCount > 0"
+                    class="rounded-full bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 min-w-[1.25rem] text-center"
+                  >
+                    {{ watchlistCount > 9 ? '9+' : watchlistCount }}
+                  </span>
+                </div>
+                <span aria-hidden="true">→</span>
+              </NuxtLink>
+              <NuxtLink
+                to="/alerts"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              >
+                <div class="flex items-center gap-2">
+                  <span>Alerts</span>
+                  <span
+                    v-if="alertsCount > 0"
+                    class="rounded-full bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 min-w-[1.25rem] text-center"
+                  >
+                    {{ alertsCount > 9 ? '9+' : alertsCount }}
+                  </span>
+                </div>
+                <span aria-hidden="true">→</span>
+              </NuxtLink>
+            </template>
           </div>
 
           <!-- Mobile Footer CTA -->

@@ -52,25 +52,25 @@
                     <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-slate-700"><strong>💰 Save Time & Money:</strong> Compare 30+ providers in seconds instead of visiting each website individually. <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">Compare all providers</NuxtLink> side-by-side.</span>
+                    <span class="text-slate-700"><strong>Save Time & Money:</strong> Compare 30+ providers in seconds instead of visiting each website individually. <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">Compare all providers</NuxtLink> side-by-side.</span>
                   </li>
                   <li class="flex items-start">
                     <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-slate-700"><strong>📊 Real Exchange Rates:</strong> See live mid-market rates with transparent fees—no hidden charges. Our <NuxtLink to="/methodology" class="text-blue-600 hover:text-blue-700 font-medium">methodology</NuxtLink> ensures accuracy.</span>
+                    <span class="text-slate-700"><strong>Real Exchange Rates:</strong> See live mid-market rates with transparent fees—no hidden charges. Our <NuxtLink to="/methodology" class="text-blue-600 hover:text-blue-700 font-medium">methodology</NuxtLink> ensures accuracy.</span>
                   </li>
                   <li class="flex items-start">
                     <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-slate-700"><strong>🛡️ Trusted & Regulated:</strong> All providers are licensed and regulated in their operating countries. <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium">Read our FAQ</NuxtLink> for more on safety and security.</span>
+                    <span class="text-slate-700"><strong>Trusted & Regulated:</strong> All providers are licensed and regulated in their operating countries. <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium">Read our FAQ</NuxtLink> for more on safety and security.</span>
                   </li>
                   <li class="flex items-start">
                     <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-slate-700"><strong>📚 Expert Reviews:</strong> Read detailed <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 underline font-medium">guides and comparisons</NuxtLink> written by expats who've used these services. <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 font-medium">Learn more</NuxtLink> with our comprehensive guides.</span>
+                    <span class="text-slate-700"><strong>Expert Reviews:</strong> Read detailed <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 underline font-medium">guides and comparisons</NuxtLink> written by expats who've used these services. <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 font-medium">Learn more</NuxtLink> with our comprehensive guides.</span>
                   </li>
                 </ul>
 
@@ -218,7 +218,11 @@
 
                 <div class="rounded-lg bg-blue-50 border border-blue-200 p-5">
                   <div class="flex items-start gap-3">
-                    <div class="text-2xl flex-shrink-0">⚡</div>
+                    <div class="flex-shrink-0">
+                      <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
                     <div class="text-sm text-blue-900">
                       <p class="font-semibold mb-2 text-base">Live Rate Comparison</p>
                       <p class="text-blue-700 mb-3">
@@ -265,7 +269,7 @@
                   :disabled="!isFormValid"
                   class="w-full h-14 rounded-lg bg-blue-600 px-6 text-base font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                 >
-                  <span>🔍 Compare 30+ Providers</span>
+                  <span>Compare 30+ Providers</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -277,7 +281,7 @@
                   </p>
                   <div class="flex justify-center gap-4 flex-wrap">
                     <NuxtLink to="/methodology" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                      📊 How we compare
+                      How we compare
                     </NuxtLink>
                     <span class="text-slate-300">•</span>
                     <NuxtLink to="/faq" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
