@@ -33,7 +33,7 @@
               </p>
               <p class="text-sm text-neutral-600 mb-3 max-w-2xl">
                 <NuxtLink
-                  to="/providers"
+                  to="/learn/providers"
                   class="font-medium text-brand-600 hover:text-brand-700 transition-colors underline"
                 >
                   See how top providers like Wise, Remitly, and Western Union score.

@@ -187,7 +187,8 @@ useHead({
 // Breadcrumbs
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
-  { name: isReviewPath.value ? 'Reviews' : 'Providers', path: isReviewPath.value ? '/reviews' : '/providers' },
+  { name: 'Learn', path: '/learn' },
+  { name: isReviewPath.value ? 'Reviews' : 'Providers', path: isReviewPath.value ? '/reviews' : '/learn/providers' },
   { name: useProvider(route.params.slug as string)?.name || 'Provider', path: route.path },
 ])
 

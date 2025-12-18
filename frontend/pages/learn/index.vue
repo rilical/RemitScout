@@ -344,6 +344,61 @@
           </p>
         </div>
 
+        <!-- View All Providers CTA -->
+        <div class="mb-10">
+          <NuxtLink
+            to="/learn/providers"
+            class="group relative block overflow-hidden rounded-3xl border-2 border-neutral-200 bg-gradient-to-br from-white via-white to-brand-50 p-8 shadow-lg transition-all hover:shadow-2xl hover:border-brand-300 hover:-translate-y-1"
+          >
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-4">
+                <div class="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-md">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Full Provider Directory
+                </div>
+                <svg class="h-8 w-8 text-brand-600 transform transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+              
+              <h3 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">
+                View All Providers & Read Full Reviews
+              </h3>
+              
+              <p class="text-base text-neutral-600 mb-6 leading-relaxed max-w-3xl">
+                Browse our complete directory of money transfer providers. Compare fees, exchange rates, transfer speeds, supported corridors, and read in-depth editorial reviews to find the best service for your needs.
+              </p>
+              
+              <div class="flex flex-wrap gap-4 text-sm">
+                <div class="flex items-center gap-2 text-neutral-700">
+                  <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="font-semibold">50+ providers reviewed</span>
+                </div>
+                <div class="flex items-center gap-2 text-neutral-700">
+                  <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="font-semibold">Detailed fee breakdowns</span>
+                </div>
+                <div class="flex items-center gap-2 text-neutral-700">
+                  <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="font-semibold">Pros, cons & best for</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Decorative Background Elements -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-brand-200 rounded-full opacity-20 blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-blue-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+          </NuxtLink>
+        </div>
+
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in getArticlesByCategory('provider-reviews')"

@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import MenuPanel from './MenuPanel.vue'
-import GuidesPanel from './panels/GuidesPanel.vue'
-import NavIcon from './NavIcon.vue'
-import { NAV } from '~/config/nav'
 import { useCompareForm } from '~/composables/useCompareForm'
 
-const openMenu = ref<string | null>(null)
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
 const languageMenuOpen = ref(false)
@@ -31,14 +26,6 @@ function selectLanguage(locale: string) {
 
 function closeLanguageMenu() {
   languageMenuOpen.value = false
-}
-
-function toggle(menuId: string) {
-  openMenu.value = openMenu.value === menuId ? null : menuId
-}
-
-function close() {
-  openMenu.value = null
 }
 
 function toggleMobileMenu() {
@@ -80,7 +67,6 @@ onBeforeUnmount(() => {
 const route = useRoute()
 watch(() => route.path, () => {
   closeMobileMenu()
-  close()
   closeLanguageMenu()
 })
 </script>
@@ -125,25 +111,12 @@ watch(() => route.path, () => {
           </NuxtLink>
 
           <!-- Learn -->
-          <div class="relative">
-            <button
-              data-menu-trigger
-              type="button"
-              class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              aria-haspopup="true"
-              :aria-expanded="openMenu==='guides'"
-              @click.stop="toggle('guides')"
-            >
-              Learn
-            </button>
-            <MenuPanel
-              :open="openMenu==='guides'"
-              width-class="w-[min(92vw,900px)]"
-              @close="close"
-            >
-              <GuidesPanel />
-            </MenuPanel>
-          </div>
+          <NuxtLink
+            to="/learn"
+            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            Learn
+          </NuxtLink>
 
           <!-- Pulse -->
           <NuxtLink
@@ -236,12 +209,6 @@ watch(() => route.path, () => {
         >
           <span aria-hidden="true">⭐</span>
           Get Alerts
-        </NuxtLink>
-        <NuxtLink
-          to="/providers"
-          class="inline-flex items-center rounded-md bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-        >
-          Providers
         </NuxtLink>
 
         <!-- Mobile menu button -->
@@ -343,71 +310,46 @@ watch(() => route.path, () => {
             </button>
           </div>
 
-          <div class="px-4 py-6 space-y-6">
-              <div class="space-y-2">
-                <NuxtLink
-                to="/send-money"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
-                >
-                <span>Compare</span>
-                <span aria-hidden="true">→</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/pulse"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
-              >
-                <span>Pulse</span>
-                <span aria-hidden="true">→</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/methodology"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
-              >
-                <span>Methodology</span>
-                <span aria-hidden="true">→</span>
-                </NuxtLink>
-            </div>
+          <div class="px-4 py-6 space-y-2">
+            <NuxtLink
+              to="/send-money"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+            >
+              <span>Compare</span>
+              <span aria-hidden="true">→</span>
+            </NuxtLink>
+            
+            <NuxtLink
+              to="/learn"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+            >
+              <span>Learn</span>
+              <span aria-hidden="true">→</span>
+            </NuxtLink>
+            
+            <NuxtLink
+              to="/pulse"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+            >
+              <span>Pulse</span>
+              <span aria-hidden="true">→</span>
+            </NuxtLink>
+            
+            <NuxtLink
+              to="/methodology"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+            >
+              <span>Methodology</span>
+              <span aria-hidden="true">→</span>
+            </NuxtLink>
 
-            <!-- Guides Section -->
-            <div>
-              <div class="text-xs uppercase tracking-wide text-slate-500 mb-3 font-semibold px-3">
-                Guides
-              </div>
-              <div class="space-y-2">
-                <NuxtLink
-                  v-for="g in NAV.guides"
-                  :key="g.href"
-                  :to="g.href"
-                  class="flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-slate-50 motion-safe:transition"
-                >
-                  <div class="text-xl flex-shrink-0">
-                    <NavIcon
-                      :name="g.icon"
-                      class="text-blue-600"
-                    />
-                  </div>
-                  <div>
-                    <div class="text-sm font-semibold">{{ g.title }}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">{{ g.subtitle }}</div>
-                  </div>
-                </NuxtLink>
-                <div class="my-2 h-px bg-slate-200 mx-3" />
-                <NuxtLink
-                  to="/learn"
-                  class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 motion-safe:transition"
-                >
-                  View all guides →
-                </NuxtLink>
-              </div>
-            </div>
-
-                <NuxtLink
+            <NuxtLink
               to="/pro"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
-              >
+            >
               <span>Get Alerts</span>
               <span aria-hidden="true">⭐</span>
-              </NuxtLink>
+            </NuxtLink>
           </div>
 
           <!-- Mobile Footer CTA -->

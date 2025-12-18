@@ -102,7 +102,7 @@
             </li>
             <li>
               <NuxtLink
-                to="/providers"
+                to="/learn/providers"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >
                 Provider Review

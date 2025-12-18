@@ -28,11 +28,11 @@
 
                 <p class="text-slate-700 mb-6">
                   💡 Our intelligent search engine does the heavy lifting for you. Simply select your sending and receiving countries, enter your amount, 
-                  and we'll instantly compare rates from <NuxtLink to="/providers" class="text-blue-600 hover:text-blue-700 font-medium">30+ licensed providers</NuxtLink> including 
-                  <NuxtLink to="/providers/wise" class="text-blue-600 hover:text-blue-700 font-medium">Wise</NuxtLink>, 
-                  <NuxtLink to="/providers/remitly" class="text-blue-600 hover:text-blue-700 font-medium">Remitly</NuxtLink>, and 
-                  <NuxtLink to="/providers/western-union" class="text-blue-600 hover:text-blue-700 font-medium">Western Union</NuxtLink>. 
-                  See our complete <NuxtLink to="/providers" class="text-blue-600 hover:text-blue-700 font-medium">provider comparison</NuxtLink> for detailed reviews and ratings.
+                  and we'll instantly compare rates from <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">30+ licensed providers</NuxtLink> including
+                  <NuxtLink to="/learn/providers/wise" class="text-blue-600 hover:text-blue-700 font-medium">Wise</NuxtLink>,
+                  <NuxtLink to="/learn/providers/remitly" class="text-blue-600 hover:text-blue-700 font-medium">Remitly</NuxtLink>, and
+                  <NuxtLink to="/learn/providers/western-union" class="text-blue-600 hover:text-blue-700 font-medium">Western Union</NuxtLink>.
+                  See our complete <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">provider comparison</NuxtLink> for detailed reviews and ratings.
                 </p>
 
                 <div class="bg-blue-50 border-l-4 border-blue-600 p-6 my-8 rounded-r-xl">
@@ -52,7 +52,7 @@
                     <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-slate-700"><strong>💰 Save Time & Money:</strong> Compare 30+ providers in seconds instead of visiting each website individually. <NuxtLink to="/providers" class="text-blue-600 hover:text-blue-700 font-medium">Compare all providers</NuxtLink> side-by-side.</span>
+                    <span class="text-slate-700"><strong>💰 Save Time & Money:</strong> Compare 30+ providers in seconds instead of visiting each website individually. <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">Compare all providers</NuxtLink> side-by-side.</span>
                   </li>
                   <li class="flex items-start">
                     <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@
                   our platform helps you make informed decisions. Browse our 
                   <NuxtLink to="/learn" class="text-blue-600 hover:text-blue-700 font-medium">expert guides</NuxtLink> to learn more about international money transfers, 
                   check out our <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium">FAQ section</NuxtLink> for common questions, or 
-                  <NuxtLink to="/providers" class="text-blue-600 hover:text-blue-700 font-medium">compare providers</NuxtLink> to find the best option for your needs.
+                  <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">compare providers</NuxtLink> to find the best option for your needs.
                 </p>
               </div>
 
@@ -284,7 +284,7 @@
                       ❓ FAQ
                     </NuxtLink>
                     <span class="text-slate-300">•</span>
-                    <NuxtLink to="/providers" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                    <NuxtLink to="/learn/providers" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
                       🏢 All Providers
                     </NuxtLink>
                   </div>

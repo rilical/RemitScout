@@ -395,7 +395,7 @@
                     </svg>
                   </NuxtLink>
                   <NuxtLink
-                    to="/providers"
+                    to="/learn/providers"
                     class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
                   >
                     See provider examples

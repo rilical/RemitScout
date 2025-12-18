@@ -217,7 +217,7 @@
               Compare providers with Remit-Scores on our providers page. Each score reflects real value, not marketing promises.
             </p>
             <NuxtLink
-              to="/providers"
+              to="/learn/providers"
               class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-md hover:bg-brand-700 transition-all"
             >
               View Provider Scores
@@ -302,4 +302,5 @@ jsonLdBreadcrumb([
   { name: 'Remit-Score', url: `${siteUrl}/learn/how-remit-score-works` },
 ])
 </script>
+
 

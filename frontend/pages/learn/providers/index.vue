@@ -282,7 +282,8 @@ definePageMeta({
 // Breadcrumbs
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Providers', path: '/providers' },
+  { name: 'Learn', path: '/learn' },
+  { name: 'Providers', path: '/learn/providers' },
 ]
 
 const runtimeConfig = useRuntimeConfig()
@@ -292,18 +293,19 @@ setSeo({
   title: 'Supported Money Transfer Providers | Remit-Scout Scores & Reviews | Remit-Scout',
   description:
     'Compare trusted money transfer providers with Remit-Scout scores and user reviews. Find the best service for your transfer needs with independent, data-driven ratings.',
-  canonical: `${siteUrl}/providers`,
+  canonical: `${siteUrl}/learn/providers`,
   ogImage: `${siteUrl}/images/og/providers.jpg`,
 })
 
 jsonLdBreadcrumb([
   { name: 'Home', url: `${siteUrl}/` },
-  { name: 'Providers', url: `${siteUrl}/providers` },
+  { name: 'Learn', url: `${siteUrl}/learn` },
+  { name: 'Providers', url: `${siteUrl}/learn/providers` },
 ])
 
 jsonLdSiteNavigation([
   { name: 'Send Money', url: `${siteUrl}/send-money` },
-  { name: 'Providers', url: `${siteUrl}/providers` },
+  { name: 'Providers', url: `${siteUrl}/learn/providers` },
   { name: 'Exchange Rates', url: `${siteUrl}/exchange-rates` },
   { name: 'Guides', url: `${siteUrl}/learn` },
   { name: 'FAQ', url: `${siteUrl}/faq` },

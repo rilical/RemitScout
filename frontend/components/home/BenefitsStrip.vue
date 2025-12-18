@@ -133,7 +133,7 @@
       <!-- Call to action -->
       <div class="mt-8 text-center">
         <NuxtLink
-          to="/providers"
+          to="/learn/providers"
           class="inline-flex items-center font-medium text-primary-600 transition-colors hover:text-primary-700"
         >
           View all providers

@@ -53,7 +53,7 @@
           <!-- CTA Buttons -->
           <div class="space-y-2">
             <NuxtLink
-              :to="`/providers/${provider.slug}`"
+              :to="`/learn/providers/${provider.slug}`"
               class="block w-full rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
             >
               Read review
@@ -68,7 +68,7 @@
       <!-- View All CTA -->
       <div class="text-center mt-12">
         <NuxtLink
-          to="/providers"
+          to="/learn/providers"
           class="inline-flex items-center rounded-lg border border-transparent bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
         >
           {{ viewAllText }}

@@ -140,7 +140,7 @@
               <!-- Find Out More Link -->
               <div class="px-6 pb-6 text-center">
                 <NuxtLink
-                  :to="`/providers/${provider.id || provider.name.toLowerCase().replace(/\s+/g, '-')}`"
+                  :to="`/learn/providers/${provider.id || provider.name.toLowerCase().replace(/\s+/g, '-')}`"
                   class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-md px-2 py-1"
                 >
                   <span>Find out more</span>
@@ -229,7 +229,7 @@
                   We may earn a commission. Rankings are independent.
                 </p>
                 <NuxtLink
-                  :to="`/providers/${provider.id}`"
+                  :to="`/learn/providers/${provider.id}`"
                   class="block w-full text-sm font-medium text-brand-600 hover:text-brand-700 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded"
                 >
                   Read the full review

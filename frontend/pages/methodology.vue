@@ -313,7 +313,7 @@
               We track quote success rate, data freshness, and pricing stability. When feasible, we run spot-check transfers on selected corridors to validate what we see in quotes.
             </p>
             <NuxtLink
-              to="/providers"
+              to="/learn/providers"
               class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 mt-auto"
             >
               Browse all providers
@@ -373,15 +373,15 @@
                 <p class="text-sm text-neutral-600 max-w-2xl">
                   See how top providers like
                   <NuxtLink
-                    to="/providers/wise"
+                    to="/learn/providers/wise"
                     class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
                   >Wise</NuxtLink>,
                   <NuxtLink
-                    to="/providers/remitly"
+                    to="/learn/providers/remitly"
                     class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
                   >Remitly</NuxtLink>, and
                   <NuxtLink
-                    to="/providers/western-union"
+                    to="/learn/providers/western-union"
                     class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
                   >Western Union</NuxtLink> score.
                 </p>
@@ -674,7 +674,7 @@
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-3 flex-1">
                 Tell us where you’re sending from, where you’re sending to, and how much. We’ll show the latest available quotes from <NuxtLink
-                  to="/providers"
+                  to="/learn/providers"
                   class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
                 >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
               </p>

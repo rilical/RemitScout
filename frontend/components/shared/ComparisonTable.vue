@@ -75,7 +75,7 @@
             </td>
             <td class="whitespace-nowrap px-6 py-4">
               <NuxtLink
-                :to="`/providers/${provider.slug}`"
+                :to="`/learn/providers/${provider.slug}`"
                 class="font-medium text-primary-600 hover:text-primary-900"
               >
                 View Details

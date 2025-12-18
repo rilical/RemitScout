@@ -211,3 +211,4 @@ const setAlert = (card: typeof feedCards.value[0]) => {
   console.log('Set alert for', card.title)
 }
 </script>
+

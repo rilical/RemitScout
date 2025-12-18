@@ -58,7 +58,7 @@
       <!-- Actions -->
       <div class="flex gap-3">
         <NuxtLink
-          :to="`/providers/${provider?.slug}`"
+          :to="`/learn/providers/${provider?.slug}`"
           class="flex-1 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-md transition-all hover:bg-brand-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           Read Review

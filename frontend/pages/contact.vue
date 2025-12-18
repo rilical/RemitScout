@@ -161,7 +161,7 @@
                 </h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <NuxtLink
-                    to="/providers"
+                    to="/learn/providers"
                     class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
                   >
                     <div class="mb-2 flex items-center gap-3">

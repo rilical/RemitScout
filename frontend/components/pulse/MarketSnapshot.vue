@@ -165,3 +165,4 @@ const openModal = (metric: typeof metrics.value[0]) => {
   console.log('Open modal for', metric.id)
 }
 </script>
+

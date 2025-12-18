@@ -38,7 +38,7 @@
         <NuxtLink
           v-for="provider in providers"
           :key="provider.id"
-          :to="`/providers/${provider.slug}`"
+          :to="`/learn/providers/${provider.slug}`"
           class="group flex items-center justify-center rounded-lg bg-white p-6 transition-all duration-200 hover:shadow-lg"
           :aria-label="`View ${provider.name} reviews and rates`"
         >
@@ -85,7 +85,7 @@
       <!-- View all link -->
       <div class="mt-8 text-center">
         <NuxtLink
-          to="/providers"
+          to="/learn/providers"
           class="inline-flex items-center font-medium text-primary-600 transition-colors hover:text-primary-700"
         >
           Compare all providers
