@@ -5,7 +5,7 @@
         :id="id"
         v-model="searchQuery"
         type="text"
-        class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pr-10 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
         :class="selectClass"
         :placeholder="placeholder"
         autocomplete="off"
@@ -54,7 +54,7 @@
           v-for="country in filteredCountries"
           :key="country.value"
           type="button"
-          class="w-full px-4 py-2.5 text-left text-sm text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none active:bg-primary-100 transition-colors"
+          class="w-full px-4 py-2.5 text-left text-sm text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none active:bg-primary-100 transition-colors"
           @mousedown.prevent="selectCountry(country)"
           @touchstart.prevent="selectCountry(country)"
         >

@@ -1,6 +1,7 @@
 <template>
-  <section class="py-6 bg-white">
-    <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+  <section class="relative py-6">
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-blue-50/30 to-white" />
+    <div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
       <div class="flex items-start gap-4 bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm">
         <div class="flex-shrink-0">
           <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

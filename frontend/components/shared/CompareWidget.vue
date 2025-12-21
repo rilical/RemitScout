@@ -43,7 +43,7 @@
         <button
           type="submit"
           :disabled="!isValid"
-          class="h-12 flex items-center justify-center gap-2 rounded-lg bg-white px-8 text-sm font-bold text-blue-700 hover:bg-blue-50 hover:shadow-lg shadow-md transition-all disabled:bg-white/40 disabled:text-blue-300 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
+          class="h-12 flex items-center justify-center gap-2 rounded-lg bg-white px-8 text-sm font-bold text-black hover:bg-blue-50 hover:shadow-lg shadow-md transition-all disabled:bg-white/40 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
         >
           <span>Compare Rates</span>
           <svg

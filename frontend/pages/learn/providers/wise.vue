@@ -44,7 +44,7 @@
             </div>
 
             <p class="text-lg text-white/90 leading-relaxed mb-8">
-              A data-driven review based on real transfer outcomes—not paid endorsements. We evaluate what matters most: <strong class="text-white">how much money actually arrives</strong>.
+              A data-driven review based on real transfer outcomes - not paid endorsements. We evaluate what matters most: <strong class="text-white">how much money actually arrives</strong>.
             </p>
 
             <div class="flex flex-wrap gap-4">
@@ -60,7 +60,8 @@
               </NuxtLink>
               <a
                 href="#review"
-                class="inline-flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur px-6 py-3 text-base font-semibold text-white hover:bg-white/20 transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold text-white transition-all"
+                style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +91,7 @@
                     />
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-slate-900">9.3</span>
+                    <span class="text-5xl font-bold text-black">9.3</span>
                     <span class="text-sm text-slate-500">/10</span>
                   </div>
                 </div>
@@ -196,7 +197,7 @@
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
-                  This score is not a sponsorship badge. It's the output of our rubric that prioritizes <strong class="text-brand-600 font-bold">Delivered Value (40%)</strong>—because the most important question is: <em class="text-slate-900">how much money actually arrives</em>, after fees + FX spread + any quote-to-delivered drift?
+                  This score is not a sponsorship badge. It's the output of our rubric that prioritizes <strong class="text-brand-600 font-bold">Delivered Value (40%)</strong> - because the most important question is: <em class="text-slate-900">how much money actually arrives</em>, after fees + FX spread + any quote-to-delivered drift?
                 </p>
               </div>
 
@@ -207,14 +208,14 @@
                 </h2>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
-                    Wise earns a <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-base">9.3/10</span> because it is elite on Delivered Value—transparent fees, typically tight spreads, and strong "money that arrives." It stays strong on reliability with stable quoting and low "surprise delta" risk, and it performs well on speed in many corridors—while acknowledging the real-world limitation that bank rails aren't always instant.
+                    Wise earns a <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-base">9.3/10</span> because it is elite on Delivered Value - transparent fees, typically tight spreads, and strong "money that arrives." It stays strong on reliability with stable quoting and low "surprise delta" risk, and it performs well on speed in many corridors - while acknowledging the real-world limitation that bank rails aren't always instant.
                   </p>
                   <p>
                     Support is good, not always premium in edge disputes, and trust signals are strong based on licensing/registration footprint where available.
                   </p>
                   <div class="mt-6 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
                     <p class="m-0">
-                      <strong class="text-slate-900">Who should use it:</strong> most people who want predictable, data-first value—especially when minimizing hidden FX cost matters more than chasing the occasional absolute cheapest deal.
+                      <strong class="text-slate-900">Who should use it:</strong> most people who want predictable, data-first value - especially when minimizing hidden FX cost matters more than chasing the occasional absolute cheapest deal.
                     </p>
                   </div>
                 </div>
@@ -234,35 +235,71 @@
                 </p>
               </div>
 
-              <div class="not-prose my-8 rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <div class="flex items-center gap-3 mb-4">
-                  <span class="text-3xl font-bold text-brand-600">Wise — 9.3</span>
-                </div>
-                <div class="grid sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div class="font-semibold text-slate-900 mb-1">Delivered Value (40%):</div>
-                    <div class="text-slate-700">Elite — transparent pricing model; tends to keep spreads tight and fees explicit, which strongly boosts "money that arrives."</div>
+              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
+                <div class="flex items-center gap-4 mb-6">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                    9.3
                   </div>
                   <div>
-                    <div class="font-semibold text-slate-900 mb-1">Reliability (20%):</div>
-                    <div class="text-slate-700">Strong — stable quoting and low "surprise delta" risk relative to many competitors.</div>
-                  </div>
-                  <div>
-                    <div class="font-semibold text-slate-900 mb-1">Friction & Speed (15%):</div>
-                    <div class="text-slate-700">Strong — fast on many corridors, but speed can depend on bank rails (not always "instant").</div>
-                  </div>
-                  <div>
-                    <div class="font-semibold text-slate-900 mb-1">Support & Refunds (15%):</div>
-                    <div class="text-slate-700">Good — generally solid, but not always the best-in-class "white glove" in edge disputes.</div>
-                  </div>
-                  <div class="sm:col-span-2">
-                    <div class="font-semibold text-slate-900 mb-1">Trust & Safety (10%):</div>
-                    <div class="text-slate-700">Strong — typically checks well on registration/licensing footprint where available.</div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+                      <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
+                      Wise
+                    </h3>
+                    <p class="text-sm text-black">remit-score</p>
                   </div>
                 </div>
-                <div class="mt-4 pt-4 border-t border-brand-200">
-                  <div class="font-semibold text-slate-900 mb-1">Why 9.3 (not 9.8–10):</div>
-                  <div class="text-slate-700">bank-rail dependency for speed + not always the absolute cheapest on every corridor/payment method.</div>
+                <div class="grid sm:grid-cols-2 gap-4 mb-6">
+                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
+                      <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">Elite</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mb-2">40% weight</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Transparent pricing model; tends to keep spreads tight and fees explicit, which strongly boosts "money that arrives."</div>
+                  </div>
+                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold text-slate-900 text-sm">Reliability</div>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mb-2">20% weight</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Stable quoting and low "surprise delta" risk relative to many competitors.</div>
+                  </div>
+                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Fast on many corridors, but speed can depend on bank rails (not always "instant").</div>
+                  </div>
+                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
+                      <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Good</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Generally solid, but not always the best-in-class "white glove" in edge disputes.</div>
+                  </div>
+                  <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mb-2">10% weight</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Typically checks well on registration/licensing footprint where available.</div>
+                  </div>
+                </div>
+                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
+                  <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="flex-1">
+                      <div class="font-semibold text-slate-900 mb-1.5">Why 9.3 (not 9.8-10):</div>
+                      <div class="text-sm text-slate-700 leading-relaxed">Bank-rail dependency for speed + not always the absolute cheapest on every corridor/payment method.</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -270,7 +307,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
@@ -313,14 +350,14 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
-                    Reliability is about whether the transfer behaves the way the quote implies—consistently.
+                    Reliability is about whether the transfer behaves the way the quote implies - consistently.
                   </p>
                   <p>
                     Wise is "Strong" here because quoting is stable, and the risk of a large "surprise delta" (a meaningful gap between what you expected and what arrives) is low relative to many competitors. The "data freshness" signal in practice is that quotes tend to remain dependable rather than shifting abruptly at execution.
@@ -335,7 +372,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
@@ -347,25 +384,25 @@
                   <p>
                     Wise is "Strong" on friction & speed: it's fast on many corridors, but speed can be bank-rail dependent, meaning it's not always "instant."
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border border-slate-200">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Practical speed buckets (behavioral, not promises):
                     </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         <span>Fast/near-real-time in some setups and corridors</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         <span>Same-day to next-day in many common cases</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         <span>Longer when bank rails introduce delays (weekends/holidays, cutoffs, intermediary bank handling, or payout method constraints)</span>
@@ -380,7 +417,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
@@ -402,7 +439,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
@@ -412,13 +449,13 @@
                     We keep this category narrow and careful: it's about public checks and risk posture signals, not blanket claims.
                   </p>
                   <p>
-                    Wise is "Strong" here because it typically checks well on registration/licensing footprint—where available. It's also a publicly traded company on the London Stock Exchange, which adds a layer of transparency through regulatory filings.
+                    Wise is "Strong" here because it typically checks well on registration/licensing footprint - where available. It's also a publicly traded company on the London Stock Exchange, which adds a layer of transparency through regulatory filings.
                   </p>
                 </div>
               </div>
               <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <p class="text-sm text-amber-800 m-0">
-                  <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. Treat this as a "do the basics check out?" signal—not a guarantee for every use case.
+                  <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. Treat this as a "do the basics check out?" signal - not a guarantee for every use case.
                 </p>
               </div>
 
@@ -572,39 +609,39 @@
                 <p class="text-lg text-slate-600 mb-6">
                   Use this checklist to maximize delivered value without guessing:
                 </p>
-                <div class="space-y-4">
-                  <div class="flex gap-4 p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm">1</div>
+                <div class="space-y-3">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1">Compare funding methods:</strong>
-                      <span class="text-slate-700">bank transfer vs card (card can add cost; your best option depends on your setup).</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
+                      <span class="text-slate-700">Bank transfer vs card (card can add cost; your best option depends on your setup).</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm">2</div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1">Watch the FX spread vs fees:</strong>
-                      <span class="text-slate-700">don't focus only on the upfront fee—optimize for what arrives.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Watch the FX spread vs fees:</strong>
+                      <span class="text-slate-700">don't focus only on the upfront fee - optimize for what arrives.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm">3</div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1">Confirm the payout method</strong>
-                      <span class="text-slate-700">(and any bank-rail constraints): speed can change depending on rails.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Confirm the payout method</strong>
+                      <span class="text-slate-700">(and any bank-rail constraints): Speed can change depending on rails.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm">4</div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1">Double-check recipient details</strong>
-                      <span class="text-slate-700">before sending: it reduces post-issue friction if anything bounces.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Double-check recipient details</strong>
+                      <span class="text-slate-700">Before sending: it reduces post-issue friction if anything bounces.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm">5</div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1">Price-compare for your exact corridor + amount:</strong>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Price-compare for your exact corridor + amount:</strong>
                       <span class="text-slate-700">Wise is often strong, but not universally cheapest.</span>
                     </div>
                   </div>
@@ -621,7 +658,7 @@
                   Two Alternatives (and When They Can Beat Wise)
                 </h2>
                 <p class="text-lg text-slate-600 mb-8">
-                  Because Wise isn't always cheapest on every corridor/payment method—and speed depends on rails—these are two common "check alongside it" options:
+                  Because Wise isn't always cheapest on every corridor/payment method-and speed depends on rails-these are two common "check alongside it" options:
                 </p>
 
                 <div class="space-y-6">
@@ -653,7 +690,7 @@
                 </div>
 
                 <p class="mt-6 text-sm text-slate-500 italic p-4 rounded-lg bg-slate-50 border border-slate-200">
-                  (We frame alternatives this way because the audit explicitly calls out that Wise isn't always the cheapest everywhere, and speed depends on rails—so the best alternatives are the ones that sometimes win on corridor-specific pricing or delivery method fit.)
+                  (We frame alternatives this way because the audit explicitly calls out that Wise isn't always the cheapest everywhere, and speed depends on rails - so the best alternatives are the ones that sometimes win on corridor-specific pricing or delivery method fit.)
                 </p>
               </div>
 
@@ -671,13 +708,8 @@
                     Wise earns its <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-base">9.3/10 Remit-Score</span> by excelling where it matters most: getting more money to your recipient through transparent pricing and tight spreads. It's reliable, fast on many corridors, and backed by strong trust signals.
                   </p>
                   <p>
-                    It's not perfect—speed depends on bank rails, it's not always the cheapest option, and support could be better for complex disputes. But for most senders who want predictable, data-first value without chasing daily promos, Wise is one of the best choices in the market.
+                    It's not perfect - speed depends on bank rails, it's not always the cheapest option, and support could be better for complex disputes. But for most senders who want predictable, data-first value without chasing daily promos, Wise is one of the best choices in the market.
                   </p>
-                  <div class="mt-8 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="m-0 text-slate-800 font-medium">
-                      <strong class="text-slate-900">Ready to see how it compares for your specific transfer?</strong> Use our comparison tool to get real-time quotes from Wise and 30+ other providers.
-                    </p>
-                  </div>
                 </div>
               </div>
             </article>
@@ -685,7 +717,7 @@
 
           <!-- Sidebar -->
           <div class="lg:col-span-1">
-            <div class="sticky top-24 space-y-6">
+            <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
@@ -739,7 +771,7 @@
                     <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
-                    <span>100% independent—providers can't pay to rank higher</span>
+                    <span>100% independent - providers can't pay to rank higher</span>
                   </li>
                   <li class="flex items-start gap-2">
                     <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -812,7 +844,7 @@
         <NuxtLink
           to="/send-money"
           class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-lg font-semibold shadow-lg transition-all"
-          style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
+          style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -830,7 +862,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Wise Review 2024 — Remit-Score 9.3/10 | Remit-Scout',
+  title: 'Wise Review 2024 - Remit-Score 9.3/10 | Remit-Scout',
   meta: [
     {
       name: 'description',
