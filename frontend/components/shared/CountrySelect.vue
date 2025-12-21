@@ -172,6 +172,15 @@ const handleFocus = async () => {
 const handleBlur = () => {
   setTimeout(() => {
     isOpen.value = false
+    // Restore to previous selection if no country was selected
+    if (props.modelValue) {
+      const country = allCountries.find(c => c.value === props.modelValue)
+      if (country) {
+        searchQuery.value = country.label
+      }
+    } else {
+      searchQuery.value = ''
+    }
   }, 200)
 }
 

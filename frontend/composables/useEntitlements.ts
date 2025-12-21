@@ -10,9 +10,9 @@ export type PlanLimits = {
 }
 
 const FREE_LIMITS: PlanLimits = {
-  watchlistItems: 1,
+  watchlistItems: 3,
   alerts: 1,
-  historyDays: 7,
+  historyDays: 30,
   exports: false,
 }
 

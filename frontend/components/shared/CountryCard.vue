@@ -1,15 +1,15 @@
 <template>
-  <div class="group rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md hover:border-slate-300 motion-safe:transition focus-within:ring-2 focus-within:ring-blue-500">
+  <div class="group rounded-xl border border-slate-200 bg-white p-5 hover:shadow-lg hover:border-brand-300 motion-safe:transition focus-within:ring-2 focus-within:ring-brand-600">
     <NuxtLink
       :to="countryPageUrl"
-      class="flex items-center gap-3"
+      class="flex items-center gap-4 mb-4"
     >
-      <span class="text-3xl" aria-hidden="true">{{ country.flag }}</span>
+      <span class="text-4xl" aria-hidden="true">{{ country.flag }}</span>
       <div class="flex-1 min-w-0">
-        <p class="text-xs text-slate-500 mb-1">Best ways to send money</p>
-        <p class="text-base font-semibold text-slate-900 group-hover:text-brand-600 transition-colors truncate">
+        <p class="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
           {{ country.name }}
         </p>
+        <p class="text-xs text-slate-500 mt-0.5">Best ways to send money</p>
       </div>
       <svg
         class="h-5 w-5 text-slate-400 group-hover:text-brand-600 group-hover:translate-x-1 transition-all flex-shrink-0"
@@ -26,25 +26,22 @@
       </svg>
     </NuxtLink>
 
-    <div class="mt-3 space-y-3">
-      <!-- Most Common Corridors Header -->
-      <div v-if="sourceLinks.length" class="pt-2 border-t border-slate-200">
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-600 mb-2">
-          Most Common Corridors for this country
-        </p>
-        <p class="text-sm text-slate-600 mb-3">
-          Send money to {{ country.name }} from…
-        </p>
-        <div class="space-y-1">
-          <NuxtLink
-            v-for="link in sourceLinks"
-            :key="link.to"
-            :to="link.to"
-            class="block rounded-md px-2 py-1.5 text-sm text-slate-800 hover:bg-brand-50 hover:text-brand-700 transition-colors"
-          >
-            {{ link.label }}
-          </NuxtLink>
-        </div>
+    <div v-if="sourceLinks.length" class="pt-4 border-t border-slate-200">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+        Most Common Corridors
+      </p>
+      <p class="text-sm font-medium text-brand-700 mb-3">
+        Send money to {{ country.name }} from…
+      </p>
+      <div class="space-y-1.5">
+        <NuxtLink
+          v-for="link in sourceLinks"
+          :key="link.to"
+          :to="link.to"
+          class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border border-transparent hover:border-brand-200"
+        >
+          {{ link.label }}
+        </NuxtLink>
       </div>
     </div>
   </div>

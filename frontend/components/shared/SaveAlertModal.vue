@@ -11,7 +11,7 @@
       >
         <div
           ref="modalContent"
-          class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 sm:p-8"
+          class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8"
           tabindex="-1"
           @keydown.esc="close"
         >
@@ -29,55 +29,67 @@
             id="save-alert-title"
             class="text-2xl font-bold text-neutral-900"
           >
-            Set an alert
+            {{ isEditing ? 'Edit alert' : 'Set an alert' }}
           </h2>
-          <p class="mt-2 text-sm text-neutral-600">
-            {{ contextLabel }}
-            <span class="text-neutral-400">•</span>
+          <p class="mt-2 text-sm text-blue-600">
             This also saves the item to your watchlist.
           </p>
 
           <div class="mt-6 space-y-4">
+            <!-- Corridor Selector -->
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                Corridor
+              </label>
+              <div class="flex items-center gap-2">
+                <div class="flex-1">
+                  <UniversalDropdown
+                    v-model="corridorFrom"
+                    :options="fromDropdownOptions"
+                    placeholder="Select country"
+                  />
+                </div>
+                <div class="flex items-center text-slate-400">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <UniversalDropdown
+                    v-model="corridorTo"
+                    :options="toDropdownOptions"
+                    placeholder="Select country"
+                  />
+                </div>
+              </div>
+              <!-- Current Rate Preview -->
+              <div class="mt-2 flex items-center justify-between text-sm">
+                <span class="text-blue-600">Current rate:</span>
+                <span class="font-medium text-blue-700">1 {{ corridorFrom }} = {{ currentRate }} {{ corridorTo }}</span>
+              </div>
+            </div>
+
             <div>
               <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
                 Metric
               </label>
-              <select
+              <UniversalDropdown
                 v-model="metric"
-                class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-              >
-                <option
-                  v-for="opt in metricOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </option>
-              </select>
+                :options="metricOptions"
+                placeholder="Select metric"
+              />
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
               <div>
                 <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
                   Condition
                 </label>
-                <select
+                <UniversalDropdown
                   v-model="comparator"
-                  class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                >
-                  <option value="gte">
-                    ≥
-                  </option>
-                  <option value="lte">
-                    ≤
-                  </option>
-                  <option value="gt">
-                    &gt;
-                  </option>
-                  <option value="lt">
-                    &lt;
-                  </option>
-                </select>
+                  :options="comparatorOptions"
+                  placeholder="Select condition"
+                />
               </div>
 
               <div class="sm:col-span-2">
@@ -91,26 +103,28 @@
                   class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                 >
               </div>
+
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                  Currency
+                </label>
+                <UniversalDropdown
+                  v-model="currency"
+                  :options="currencyOptions"
+                  placeholder="Select currency"
+                />
+              </div>
             </div>
 
             <div>
               <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
                 Frequency
               </label>
-              <select
+              <UniversalDropdown
                 v-model="frequency"
-                class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-              >
-                <option value="daily">
-                  Daily
-                </option>
-                <option value="hourly">
-                  Hourly
-                </option>
-                <option value="realtime">
-                  Real-time
-                </option>
-              </select>
+                :options="frequencyOptions"
+                placeholder="Select frequency"
+              />
               <p class="mt-2 text-xs text-slate-500">
                 Frequency gating (Plus) can be enforced later via entitlements.
               </p>
@@ -135,9 +149,9 @@
             <button
               type="button"
               class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              @click="create"
+              @click="save"
             >
-              Create alert
+              {{ isEditing ? 'Update alert' : 'Create alert' }}
             </button>
           </div>
         </div>
@@ -149,6 +163,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import type { AlertComparator, AlertFrequency, AlertRule, WatchTarget } from '~/types/tracking'
+import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 
 const { isOpen, context, close: closeModal } = useSaveAlertModal()
 const alerts = useAlerts()
@@ -168,45 +183,156 @@ const metric = ref<AlertRule['metric']>('rate')
 const comparator = ref<AlertComparator>('gte')
 const value = ref<number>(0)
 const frequency = ref<AlertFrequency>('daily')
+const currency = ref<string>('')
 
-const target = computed<WatchTarget | null>(() => context.value?.target ?? null)
-const contextLabel = computed(() => context.value?.label ?? 'Alert settings')
+// Corridor selection
+const corridorFrom = ref('US')
+const corridorTo = ref('PH')
+
+const fromCountries = [
+  { code: 'US', name: 'US Dollar', flag: '🇺🇸' },
+  { code: 'GB', name: 'British Pound', flag: '🇬🇧' },
+  { code: 'EU', name: 'Euro', flag: '🇪🇺' },
+  { code: 'CA', name: 'Canadian Dollar', flag: '🇨🇦' },
+  { code: 'AU', name: 'Australian Dollar', flag: '🇦🇺' },
+  { code: 'AE', name: 'UAE Dirham', flag: '🇦🇪' },
+  { code: 'SG', name: 'Singapore Dollar', flag: '🇸🇬' },
+]
+
+const toCountries = [
+  { code: 'PH', name: 'Philippine Peso', flag: '🇵🇭' },
+  { code: 'MX', name: 'Mexican Peso', flag: '🇲🇽' },
+  { code: 'IN', name: 'Indian Rupee', flag: '🇮🇳' },
+  { code: 'PK', name: 'Pakistani Rupee', flag: '🇵🇰' },
+  { code: 'BD', name: 'Bangladeshi Taka', flag: '🇧🇩' },
+  { code: 'NG', name: 'Nigerian Naira', flag: '🇳🇬' },
+  { code: 'VN', name: 'Vietnamese Dong', flag: '🇻🇳' },
+  { code: 'ID', name: 'Indonesian Rupiah', flag: '🇮🇩' },
+]
+
+const rateMap: Record<string, string> = {
+  'US-PH': '56.82',
+  'US-MX': '17.24',
+  'US-IN': '83.12',
+  'US-PK': '278.50',
+  'US-BD': '109.75',
+  'US-NG': '1550.00',
+  'US-VN': '24850.00',
+  'US-ID': '15750.00',
+  'GB-PH': '72.15',
+  'GB-IN': '105.42',
+  'GB-PK': '354.21',
+  'EU-PH': '61.45',
+  'CA-PH': '41.23',
+  'AU-PH': '37.15',
+  'AE-PH': '15.48',
+  'SG-PH': '42.35',
+}
+
+const currentRate = computed(() => {
+  const key = `${corridorFrom.value}-${corridorTo.value}`
+  return rateMap[key] || '1.00'
+})
+
+// Build target from corridor selection
+const target = computed<WatchTarget>(() => ({
+  type: 'corridor',
+  from: corridorFrom.value,
+  to: corridorTo.value,
+  method: 'bank',
+}))
+
+const contextLabel = computed(() => `${corridorFrom.value} → ${corridorTo.value}`)
+
+const fromDropdownOptions = computed(() => {
+  return fromCountries.map(c => ({
+    label: `${c.flag} ${c.code} - ${c.name}`,
+    value: c.code,
+  }))
+})
+
+const toDropdownOptions = computed(() => {
+  return toCountries.map(c => ({
+    label: `${c.flag} ${c.code} - ${c.name}`,
+    value: c.code,
+  }))
+})
 
 const metricOptions = computed(() => {
+  const options = []
   switch (target.value?.type) {
     case 'corridor':
-      return [
+      options.push(
         { value: 'recipientGets' as const, label: 'Recipient gets' },
         { value: 'totalCost' as const, label: 'Total cost' },
         { value: 'fee' as const, label: 'Fee' },
-      ]
+      )
+      break
     case 'fxPair':
-      return [{ value: 'rate' as const, label: 'FX rate' }]
+      options.push({ value: 'rate' as const, label: 'FX rate' })
+      break
     case 'pulseChart':
-      return [{ value: 'index' as const, label: 'Index' }]
+      options.push({ value: 'index' as const, label: 'Index' })
+      break
     case 'guide':
-      return [{ value: 'index' as const, label: 'Index' }]
+      options.push({ value: 'index' as const, label: 'Index' })
+      break
     default:
-      return [{ value: 'rate' as const, label: 'Rate' }]
+      options.push({ value: 'rate' as const, label: 'Rate' })
   }
+  return options
 })
+
+const comparatorOptions = computed(() => [
+  { value: 'gte' as const, label: '≥' },
+  { value: 'lte' as const, label: '≤' },
+  { value: 'gt' as const, label: '>' },
+  { value: 'lt' as const, label: '<' },
+])
+
+const currencyOptions = computed(() => [
+  { value: corridorFrom.value, label: corridorFrom.value },
+  { value: corridorTo.value, label: corridorTo.value },
+])
+
+const frequencyOptions = computed(() => [
+  { value: 'daily' as const, label: 'Daily' },
+  { value: 'hourly' as const, label: 'Hourly' },
+  { value: 'realtime' as const, label: 'Real-time' },
+])
 
 function close() {
   closeModal()
 }
 
-async function create() {
+const isEditing = computed(() => !!context.value?.alertId)
+
+async function save() {
   error.value = ''
-  if (!target.value) return
+
+  if (isEditing.value && context.value?.alertId) {
+    alerts.update(context.value.alertId, {
+      frequency: frequency.value,
+      rule: {
+        metric: metric.value,
+        comparator: comparator.value,
+        value: value.value,
+        currency: currency.value || undefined,
+      },
+    })
+    close()
+    return
+  }
 
   const res = alerts.createForTarget(target.value, {
-    label: context.value?.label,
+    label: contextLabel.value,
     frequency: frequency.value,
     enabled: true,
     rule: {
       metric: metric.value,
       comparator: comparator.value,
       value: value.value,
+      currency: currency.value || undefined,
     },
   })
 
@@ -227,18 +353,46 @@ watch(
       return
     }
 
-    // Don't create anything on open — just set reasonable defaults for the form.
-    // Metric defaults are based on target type.
-    metric.value = metricOptions.value[0]?.value ?? 'rate'
-    comparator.value = 'gte'
-    value.value = 0
-    frequency.value = 'daily'
+    // Set corridor from context if available
+    if (context.value?.target?.type === 'corridor') {
+      corridorFrom.value = context.value.target.from
+      corridorTo.value = context.value.target.to
+    }
+
+    // If editing, populate form with existing alert data
+    if (context.value?.alertId) {
+      const existingAlert = alerts.findById(context.value.alertId)
+      if (existingAlert) {
+        metric.value = existingAlert.rule.metric
+        comparator.value = existingAlert.rule.comparator
+        value.value = existingAlert.rule.value
+        frequency.value = existingAlert.frequency
+        currency.value = existingAlert.rule.currency || corridorTo.value
+      }
+    } else {
+      // Set reasonable defaults for new alerts
+      metric.value = metricOptions.value[0]?.value ?? 'rate'
+      comparator.value = 'gte'
+      value.value = parseFloat(currentRate.value) || 0
+      frequency.value = 'daily'
+      currency.value = corridorTo.value
+    }
 
     await nextTick()
     modalContent.value?.focus()
     document.body.style.overflow = 'hidden'
   },
 )
+
+// Update currency when corridor changes
+watch(corridorTo, (newTo) => {
+  currency.value = newTo
+})
+
+// Update suggested value when corridor changes
+watch([corridorFrom, corridorTo], () => {
+  value.value = parseFloat(currentRate.value) || 0
+})
 </script>
 
 <style scoped>

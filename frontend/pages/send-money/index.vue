@@ -4,23 +4,23 @@
     <section class="relative py-10 lg:py-12 overflow-hidden bg-slate-50">
       <div class="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
         <div class="text-center mb-8">
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-blue-600 mb-4">
-            Stop Overpaying on International Transfers
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+            Stop <span class="text-brand-600">Overpaying</span> on International Transfers
           </h1>
-          <p class="text-lg text-slate-600 max-w-3xl mx-auto">
-            Compare rates from 30+ providers. No hidden fees, no paid rankings, just transparent comparisons.
+          <p class="text-lg text-slate-600 max-w-3xl mx-auto break-words">
+            Get the best rates for your international money transfer and see exactly how much your recipient will receive.
           </p>
         </div>
 
         <!-- Two Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Article Section -->
-          <article class="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+          <article class="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 flex flex-col">
             <h2 class="text-2xl font-bold text-slate-900 mb-4">
-              Your Complete Money Transfer Comparison Engine
+              Your Money Transfer Comparison Engine
             </h2>
             
-            <div class="space-y-5">
+            <div class="space-y-5 flex-1 flex flex-col">
               <p class="text-base text-slate-700 leading-relaxed">
                 Compare rates from <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">30+ licensed providers</NuxtLink> including
                 <NuxtLink to="/learn/providers/wise" class="text-blue-600 hover:text-blue-700 font-medium">Wise</NuxtLink>,
@@ -44,141 +44,23 @@
 
               <div>
                 <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  Why Use Our Comparison?
+                  Why Rates Change
                 </h3>
-                
-                <div class="space-y-3">
-                  <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <div>
-                      <span class="text-sm text-slate-700 font-semibold">Save Time & Money</span>
-                      <p class="text-xs text-slate-600 mt-0.5">Compare 30+ providers instantly instead of visiting each website individually. Find the best rate in seconds.</p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <div>
-                      <span class="text-sm text-slate-700 font-semibold">Real Rates, No Hidden Fees</span>
-                      <p class="text-xs text-slate-600 mt-0.5">We show live mid-market rates and calculate the true total cost including all fees. No surprises when you transfer.</p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <div>
-                      <span class="text-sm text-slate-700 font-semibold">100% Independent Rankings</span>
-                      <p class="text-xs text-slate-600 mt-0.5">All providers are licensed and regulated. We rank purely on data, never on payments or partnerships.</p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <div>
-                      <span class="text-sm text-slate-700 font-semibold">Expert Reviews & Guides</span>
-                      <p class="text-xs text-slate-600 mt-0.5">Detailed guides written by expats who've actually used these services. Real experiences, not marketing copy.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  What Makes a Good Money Transfer Provider?
-                </h3>
-                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
-                  The best provider for you depends on several factors: the countries you're sending between, the amount you're transferring, how quickly you need it to arrive, and your preferred payment method.
-                </p>
-                <ul class="space-y-2 text-sm text-slate-700">
-                  <li class="flex items-start gap-2">
-                    <span class="text-blue-600 font-bold">•</span>
-                    <span><strong>Total Cost:</strong> Look at the final amount your recipient receives, not just the exchange rate. Some providers have low fees but poor rates, others have higher fees but better rates.</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <span class="text-blue-600 font-bold">•</span>
-                    <span><strong>Transfer Speed:</strong> Need it today? Choose a provider offering instant or same-day transfers. Can wait a few days? You might get better rates.</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <span class="text-blue-600 font-bold">•</span>
-                    <span><strong>Reliability:</strong> Check user reviews and our provider guides. Some providers are great for certain corridors but struggle with others.</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <span class="text-blue-600 font-bold">•</span>
-                    <span><strong>Payment Methods:</strong> Can you pay by bank transfer, card, or cash? Different methods have different fees and speeds.</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  Understanding Fees and Exchange Rates
-                </h3>
-                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
-                  Money transfer providers make money in two ways: upfront transfer fees and exchange rate markups. The transfer fee is easy to see (e.g., "$5.99 fee"), but the exchange rate markup is hidden in the rate they offer you versus the real mid-market rate.
-                </p>
                 <p class="text-sm text-slate-700 leading-relaxed">
-                  For example, if the mid-market rate is 1 USD = 0.85 EUR, a provider might offer you 0.83 EUR per USD. That 0.02 difference is their markup. Always compare the "Total Received" amount to see the true cost. Our comparison shows you exactly how much your recipient will get after all fees and markups.
+                  Exchange rates fluctuate throughout the day based on global currency markets. Different providers update their rates at different intervals, and some may offer better rates for specific corridors or transfer amounts. That's why comparing multiple providers in real-time ensures you always get the best deal available at that moment.
                 </p>
               </div>
 
-              <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  Transfer Speed Options
-                </h3>
-                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
-                  Different providers offer different delivery speeds. Instant transfers (0-30 minutes) are available for some corridors using debit cards to mobile wallets. Same-day transfers typically arrive within 24 hours for bank deposits. Standard transfers take 1-3 business days, while traditional bank transfers can take 3-5 business days.
-                </p>
-                <p class="text-sm text-slate-700 leading-relaxed">
-                  Faster transfers usually cost more. If you can wait a day or two, you'll often get better exchange rates. Our comparison shows you the speed for each provider so you can choose based on your urgency and budget.
-                </p>
-              </div>
-
-              <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  Payment and Receipt Methods
-                </h3>
-                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
-                  You can typically pay for your transfer using bank transfer, debit card, credit card, or cash (at agent locations). Bank transfers usually have the lowest fees but take longer to process. Cards are faster but may have higher fees.
-                </p>
-                <p class="text-sm text-slate-700 leading-relaxed">
-                  Recipients can receive money via bank deposit, mobile wallet, cash pickup, or home delivery (in some countries). Bank deposits are usually cheapest, while cash pickup is convenient but may have additional fees. Our comparison shows all available options for your specific corridor.
-                </p>
-              </div>
-
-              <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  Safety and Security
-                </h3>
-                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
-                  All providers we compare are fully licensed and regulated by financial authorities in their operating countries. This means they must follow strict security protocols, keep your money in segregated accounts, and provide consumer protection.
-                </p>
-                <p class="text-sm text-slate-700 leading-relaxed">
-                  Before sending large amounts, verify the provider's license status and check their security measures. Look for providers that use encryption, two-factor authentication, and have clear policies on what happens if something goes wrong. We only include providers that meet these standards.
-                </p>
-              </div>
-
-              <div class="pt-4 border-t border-slate-200">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-xs text-slate-700">
-                      <strong>Written by RemitScout team</strong> • Updated Nov 2024
-                    </p>
-                    <p class="text-xs text-slate-500">
-                      <NuxtLink to="/about" class="hover:text-blue-600">About us</NuxtLink> • 
-                      <NuxtLink to="/methodology" class="hover:text-blue-600 ml-2">Methodology</NuxtLink>
-                    </p>
-                  </div>
-                </div>
+              <div class="mt-auto pt-6 border-t border-slate-200">
+                <NuxtLink
+                  to="/learn"
+                  class="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-6 py-3 transition-all shadow-md hover:shadow-lg"
+                >
+                  <span>Read More Money Transfer Guides on Our Blog</span>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </NuxtLink>
               </div>
             </div>
           </article>
@@ -297,14 +179,14 @@
                     <div class="text-sm text-blue-900">
                       <p class="font-semibold mb-1.5">Live Rate Comparison</p>
                       <p class="text-blue-700 text-xs mb-2">
-                        We compare live rates from 30+ providers including Wise, Remitly, Western Union, and more.
+                        Rates are updated in real-time directly from provider APIs. See the exact amount your recipient will receive before you send.
                       </p>
                       <ul class="space-y-1 text-blue-700 text-xs">
                         <li class="flex items-center gap-2">
                           <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                           </svg>
-                          <span>No hidden fees—total cost shown</span>
+                          <span>No hidden fees, total cost shown</span>
                         </li>
                         <li class="flex items-center gap-2">
                           <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,7 +210,7 @@
                   :disabled="!isFormValid"
                   class="w-full h-11 rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                 >
-                  <span>Compare 30+ Providers</span>
+                  <span>Compare Providers</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -372,7 +254,10 @@
                   <!-- Main Description -->
                   <div class="flex-1">
                     <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
-                      <strong class="text-white font-bold">100% independent rankings</strong> — Providers can't pay for better placement. We rank purely on total cost, speed, and reliability.
+                      <strong class="text-white font-bold">100% independent rankings.</strong> Providers can't pay for better placement.
+                    </p>
+                    <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
+                      Our methodology is fully transparent and publicly available. We update our data continuously to ensure accuracy.
                     </p>
 
                     <!-- Key Features - Horizontal -->
@@ -439,7 +324,7 @@
         <div class="space-y-20">
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money To South-Eastern Asia
+            Send Money To <span class="text-brand-600">South-Eastern Asia</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -453,7 +338,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money Abroad to the Middle East
+            Send Money to the <span class="text-brand-600">Middle East</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -467,7 +352,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to East Asia
+            Send Money to <span class="text-brand-600">East Asia</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -481,7 +366,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to South Asia
+            Send Money to <span class="text-brand-600">South Asia</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -495,7 +380,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to Western Europe
+            Send Money to <span class="text-brand-600">Western Europe</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -509,7 +394,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to Southern Europe
+            Send Money to <span class="text-brand-600">Southern Europe</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -523,7 +408,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to Eastern Europe
+            Send Money to <span class="text-brand-600">Eastern Europe</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -537,7 +422,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to Northern Europe
+            Send Money to <span class="text-brand-600">Northern Europe</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -551,7 +436,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to North America
+            Send Money to <span class="text-brand-600">North America</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -565,7 +450,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to Central America & Caribbean
+            Send Money to <span class="text-brand-600">Central America & Caribbean</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -579,7 +464,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to South America
+            Send Money to <span class="text-brand-600">South America</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -593,7 +478,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to Africa
+            Send Money to <span class="text-brand-600">Africa</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard
@@ -607,7 +492,7 @@
 
         <section>
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Overseas Money Transfers to Oceania
+            Overseas Money Transfers to <span class="text-brand-600">Oceania</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <CountryCard

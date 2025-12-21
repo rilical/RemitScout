@@ -10,17 +10,17 @@
               alt="RemitScout"
               class="h-8 w-auto mb-3"
             >
-            <p class="text-sm text-gray-400 font-medium mb-4">
+            <p class="text-sm text-white/90 font-medium mb-4">
               For expats, by expats.
             </p>
-            <p class="text-sm text-gray-400 leading-relaxed max-w-xs">
+            <p class="text-sm text-white/70 leading-relaxed max-w-xs">
               Independent comparison platform helping you find the best rates and lowest fees for international money transfers. Compare 30+ licensed providers in seconds.
             </p>
           </div>
           <div class="flex space-x-5">
             <a
               href="#"
-              class="text-gray-400 hover:text-white transition-colors"
+              class="text-white/60 hover:text-white transition-colors"
               aria-label="Facebook"
             >
               <svg
@@ -35,7 +35,7 @@
             </a>
             <a
               href="#"
-              class="text-gray-400 hover:text-white transition-colors"
+              class="text-white/60 hover:text-white transition-colors"
               aria-label="Twitter"
             >
               <svg
@@ -50,7 +50,7 @@
             </a>
             <a
               href="#"
-              class="text-gray-400 hover:text-white transition-colors"
+              class="text-white/60 hover:text-white transition-colors"
               aria-label="Instagram"
             >
               <svg
@@ -218,13 +218,13 @@
         </div>
       </div>
 
-      <div class="pt-8 border-t border-gray-800">
-        <p class="text-xs text-gray-500 leading-relaxed mb-6 max-w-3xl">
+      <div class="pt-8 border-t border-white/20">
+        <p class="text-xs text-white/60 leading-relaxed mb-6 max-w-3xl">
           Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up. Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.
         </p>
 
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-white/70">
             © {{ new Date().getFullYear() }} Remit-Scout. All rights reserved.
           </p>
         </div>

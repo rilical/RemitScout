@@ -4,6 +4,7 @@ export type SaveAlertModalContext = {
   target: WatchTarget
   label?: string
   source?: 'compare' | 'exchange_rates' | 'pulse' | 'guide' | 'other'
+  alertId?: string
 }
 
 let clearContextTimeout: ReturnType<typeof setTimeout> | null = null

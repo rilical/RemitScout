@@ -35,69 +35,94 @@
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
           <!-- Categories & Weights -->
-          <div class="mb-12 rounded-3xl border-2 border-blue-600 bg-blue-600 p-8 lg:p-12">
-            <h2 class="text-2xl font-bold text-white mb-6">
+          <div class="mb-12">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8 text-center">
               Rating Categories & Weights
             </h2>
-            <div class="space-y-4">
-              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-white">Delivered Value (40%)</h3>
-                  <span class="text-white font-bold text-lg">40%</span>
+            
+            <div class="space-y-4 w-full">
+              <!-- Delivered Value - 40% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-gradient-to-r from-green-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="text-4xl">💰</div>
                 </div>
-                <p class="text-sm text-white/90">
-                  Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
-                </p>
-                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-white rounded-full" style="width: 40%"></div>
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Delivered Value</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
+                  </p>
                 </div>
-              </div>
-              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-white">Reliability & Success (20%)</h3>
-                  <span class="text-white font-bold text-lg">20%</span>
-                </div>
-                <p class="text-sm text-white/90">
-                  Quote success rate, data freshness, pricing stability (where available)
-                </p>
-                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-white rounded-full" style="width: 20%"></div>
+                <div class="bg-green-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">40%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
                 </div>
               </div>
-              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-white">Friction & Speed (15%)</h3>
-                  <span class="text-white font-bold text-lg">15%</span>
+
+              <!-- Reliability & Success - 20% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-gradient-to-r from-blue-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="text-4xl">🛡️</div>
                 </div>
-                <p class="text-sm text-white/90">
-                  ETA where available, speed buckets, observed delivery times on selected corridors
-                </p>
-                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-white rounded-full" style="width: 15%"></div>
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Reliability & Success</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Quote success rate, data freshness, pricing stability (where available)
+                  </p>
                 </div>
-              </div>
-              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-white">Support & Refunds (15%)</h3>
-                  <span class="text-white font-bold text-lg">15%</span>
-                </div>
-                <p class="text-sm text-white/90">
-                  Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
-                </p>
-                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-white rounded-full" style="width: 15%"></div>
+                <div class="bg-blue-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">20%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
                 </div>
               </div>
-              <div class="rounded-xl border border-white/30 bg-white/10 p-5">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-bold text-white">Trust & Safety (10%)</h3>
-                  <span class="text-white font-bold text-lg">10%</span>
+
+              <!-- Friction & Speed - 15% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-gradient-to-r from-purple-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="text-4xl">⚡</div>
                 </div>
-                <p class="text-sm text-white/90">
-                  Public licensing checks where available, regulatory register verification
-                </p>
-                <div class="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-white rounded-full" style="width: 10%"></div>
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Friction & Speed</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    ETA where available, speed buckets, observed delivery times on selected corridors
+                  </p>
+                </div>
+                <div class="bg-purple-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">15%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                </div>
+              </div>
+
+              <!-- Support & Refunds - 15% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-gradient-to-r from-orange-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="text-4xl">🎯</div>
+                </div>
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Support & Refunds</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
+                  </p>
+                </div>
+                <div class="bg-orange-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">15%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                </div>
+              </div>
+
+              <!-- Trust & Safety - 10% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-gradient-to-r from-slate-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="text-4xl">🔒</div>
+                </div>
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Trust & Safety</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Public licensing checks where available, regulatory register verification
+                  </p>
+                </div>
+                <div class="bg-slate-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">10%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
                 </div>
               </div>
             </div>
@@ -302,5 +327,8 @@ jsonLdBreadcrumb([
   { name: 'Remit-Score', url: `${siteUrl}/learn/how-remit-score-works` },
 ])
 </script>
+
+
+
 
 

@@ -3,397 +3,376 @@
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-gradient-to-b from-blue-600 to-blue-700 py-16 lg:py-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" class="[&_a]:text-blue-100 [&_span]:text-white/60" />
 
         <div class="mt-10 max-w-3xl">
-          <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl">
-            📰 Media Kit / Press
+          <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            Media Kit
           </h1>
-          <p class="mt-4 text-lg leading-relaxed text-neutral-700">
-            Remittance pricing trends, backed by a living dataset
-          </p>
-          <p class="mt-3 text-base leading-relaxed text-neutral-600">
-            Remit-Scout publishes independent comparisons and time-series indicators for cross-border money transfers, built from observed retail quotes.
+          <p class="mt-4 text-xl leading-relaxed text-blue-100">
+            Everything journalists, researchers, and partners need to cover RemitScout
           </p>
 
           <div class="mt-8 flex flex-wrap gap-3">
+            <a
+              :href="pressKitUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download Press Kit
+            </a>
             <NuxtLink
               to="/contact?type=press"
-              class="inline-flex items-center justify-center rounded-btn bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-transparent px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
             >
-              Press inquiries
-            </NuxtLink>
-            <NuxtLink
-              to="/pulse"
-              class="inline-flex items-center justify-center rounded-btn border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-            >
-              View Pulse
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Press Inquiries
             </NuxtLink>
           </div>
-
-          <div class="mt-8 flex flex-wrap gap-3">
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-slate-200">
-              <span aria-hidden="true">📊</span>
-              Data-driven
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-slate-200">
-              <span aria-hidden="true">🛡️</span>
-              No pay-to-rank
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-slate-200">
-              <span aria-hidden="true">🕒</span>
-              Timestamped updates
-            </div>
-          </div>
-
-          <p class="mt-4 text-sm text-neutral-600">
-            Last updated: December 2025
-          </p>
         </div>
       </div>
     </section>
 
-    <!-- Main -->
-    <main
-      id="main-content"
-      class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 lg:py-18"
-    >
-      <div class="grid gap-10 lg:grid-cols-12">
-        <div class="space-y-16 lg:col-span-8">
-          <section class="space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              📈 What is Pulse?
-            </h2>
-            <p class="text-sm leading-relaxed text-neutral-700">
-              Pulse is our time-series layer. Compare shows the best option at a moment in time; Pulse shows how outcomes change over time by corridor (and amount buckets where available). It helps readers see what moved, how volatile pricing has been, and whether today looks unusually expensive or unusually cheap.
-            </p>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p class="text-sm font-semibold text-neutral-900">
-                Example angles:
-              </p>
-              <ul class="mt-3 space-y-2 text-sm text-neutral-700">
-                <li>“If you sent $200 from the US to Albania each day this month, how did the best delivered amount change?”</li>
-                <li>“Which corridors became more expensive this week?”</li>
-                <li>“Did provider pricing shift, or was it FX movement?”</li>
-              </ul>
-            </div>
-          </section>
+    <!-- Quick Stats -->
+    <section class="py-12 bg-slate-50 border-b border-slate-200">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600">50+</div>
+            <div class="text-sm text-slate-600 mt-1">Providers Compared</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600">100+</div>
+            <div class="text-sm text-slate-600 mt-1">Corridors Tracked</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600">Daily</div>
+            <div class="text-sm text-slate-600 mt-1">Quote Updates</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600">100%</div>
+            <div class="text-sm text-slate-600 mt-1">Independent</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-          <section class="space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              🧾 What we measure
+    <!-- Main Content -->
+    <main id="main-content" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <div class="grid gap-12 lg:grid-cols-3">
+        <!-- Main Column -->
+        <div class="lg:col-span-2 space-y-12">
+          <!-- About RemitScout -->
+          <section>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              About RemitScout
             </h2>
-            <p class="text-sm leading-relaxed text-neutral-700">
-              We measure the sender’s outcome, not marketing claims:
-            </p>
-            <ul class="space-y-2 text-sm text-neutral-700">
-              <li><span class="font-semibold text-neutral-900">Recipient gets:</span> estimated delivered amount after fees and FX markup (based on the quote at capture time)</li>
-              <li><span class="font-semibold text-neutral-900">Total cost:</span> fees plus implied FX markup versus a mid-market reference rate at the same timestamp</li>
-              <li><span class="font-semibold text-neutral-900">Speed (where available):</span> provider ETA ranges, and observed buckets when feasible</li>
-            </ul>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p class="text-sm text-neutral-700">
-                Notes:
+            <div class="prose prose-slate max-w-none">
+              <p class="text-slate-700 leading-relaxed">
+                RemitScout is an independent comparison platform for international money transfers. We help migrants, expats, and international families find the best rates by focusing on what matters most: <strong>what the recipient actually receives</strong> after fees and FX markup.
               </p>
-              <ul class="mt-3 space-y-2 text-sm text-neutral-700">
-                <li>Checkout can differ from what you see here due to payment method, promos, KYC, and provider-specific rules.</li>
-                <li>We timestamp quotes and publish our methodology so readers can understand how comparisons are built.</li>
-              </ul>
-              <div class="mt-5 flex flex-wrap gap-3">
-                <NuxtLink
-                  to="/methodology"
-                  class="inline-flex items-center justify-center rounded-btn bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  Methodology
-                </NuxtLink>
-                <NuxtLink
-                  to="/how-we-make-money"
-                  class="inline-flex items-center justify-center rounded-btn border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  How we make money
-                </NuxtLink>
-              </div>
-            </div>
-          </section>
-
-          <section class="space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              🔖 How to cite
-            </h2>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-              <div>
-                <p class="text-sm font-semibold text-neutral-900">
-                  Preferred citation line:
-                </p>
-                <p class="mt-2 text-sm text-neutral-700">
-                  “Source: Remit-Scout (remitscout.com), observed retail quotes, [CORRIDOR], $200 benchmark, retrieved [DATE].”
-                </p>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-neutral-900">
-                  If referencing an index:
-                </p>
-                <p class="mt-2 text-sm text-neutral-700">
-                  “Source: Remit-Scout Cost Index (fees + FX markup), retrieved [DATE].”
-                </p>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-neutral-900">
-                  If using charts:
-                </p>
-                <ul class="mt-2 space-y-2 text-sm text-neutral-700">
-                  <li>Include “Source: Remit-Scout” plus a retrieval date.</li>
-                  <li>Link to the specific Pulse corridor page when possible.</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <section class="space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              📦 Usage &amp; licensing
-            </h2>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-              <p class="text-sm text-neutral-700">
-                Editorial use: You can quote short excerpts with attribution.
-              </p>
-              <p class="text-sm text-neutral-700">
-                Charts, embeds, and data: For republishing charts, embedding widgets, or systematic data use, please request a license.
-              </p>
-              <div class="flex flex-wrap gap-3 pt-2">
-                <NuxtLink
-                  to="/contact?type=license"
-                  class="inline-flex items-center justify-center rounded-btn bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  Request chart license
-                </NuxtLink>
-                <NuxtLink
-                  to="/contact?type=embed"
-                  class="inline-flex items-center justify-center rounded-btn border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  Request embed
-                </NuxtLink>
-              </div>
-            </div>
-          </section>
-
-          <section class="space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              🧩 Embeddable widgets (Pulse)
-            </h2>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-              <p class="text-sm text-neutral-700">
-                We offer embeddable charts for publishers and communities (availability depends on corridor coverage). Examples include:
-              </p>
-              <ul class="space-y-2 text-sm text-neutral-700">
-                <li>Remittance Cost Index (30D / 90D)</li>
-                <li>FX Markup Watch</li>
-                <li>Top Movers (corridor changes this week)</li>
-              </ul>
-              <p class="text-sm text-neutral-700">
-                Embeds are currently in limited beta. Contact us to request access.
+              <p class="text-slate-700 leading-relaxed">
+                Built at Carnegie Mellon's Swartz Center for Entrepreneurship, we maintain a strict no pay-to-rank policy and publish our methodology openly.
               </p>
             </div>
-          </section>
-
-          <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-7 shadow-sm space-y-4">
-            <h2 class="text-xl font-bold text-neutral-900">
-              🛡️ Independence &amp; disclosure
-            </h2>
-            <div class="space-y-2 text-sm leading-relaxed text-neutral-800">
-              <p>Remit-Scout keeps monetization separate from rankings.</p>
-              <p>We may earn affiliate commissions on referrals.</p>
-              <p>Affiliate relationships do not affect sorting, scoring, or Remit-Score calculations.</p>
-              <p>Sponsors (if any) are clearly labeled and do not influence comparisons or methodology.</p>
-              <p>Remit-Scout does not hold or move funds.</p>
-            </div>
-            <div class="flex flex-wrap gap-3 pt-1">
-              <NuxtLink
-                to="/affiliate-disclosure"
-                class="inline-flex items-center justify-center rounded-btn border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            <div class="mt-6 flex flex-wrap gap-3">
+              <a
+                :href="companyFactSheetUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
               >
-                Affiliate disclosure
-              </NuxtLink>
-              <NuxtLink
-                to="/methodology"
-                class="inline-flex items-center justify-center rounded-btn border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
-              >
-                Methodology
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Company Fact Sheet
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+              <NuxtLink to="/about" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                About Page →
               </NuxtLink>
             </div>
           </section>
 
-          <section class="space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              ✅ Corrections
-            </h2>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-              <p class="text-sm text-neutral-700">
-                We take accuracy seriously. If you spot an issue:
-              </p>
-              <ul class="space-y-2 text-sm text-neutral-700">
-                <li>Provide corridor, timestamp, and (if possible) a screenshot of the provider checkout screen.</li>
-                <li>We investigate and publish corrections when needed.</li>
-              </ul>
-              <div class="flex flex-wrap gap-3 pt-2">
-                <NuxtLink
-                  to="/contact"
-                  class="inline-flex items-center justify-center rounded-btn bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  Report an issue
-                </NuxtLink>
-                <NuxtLink
-                  to="/corrections"
-                  class="inline-flex items-center justify-center rounded-btn border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  Corrections policy
-                </NuxtLink>
+          <!-- Brand Assets -->
+          <section>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
               </div>
-            </div>
-          </section>
-
-          <section class="space-y-6">
-            <h2 class="text-2xl font-bold text-neutral-900">
-              🎨 Brand assets
+              Brand Assets
             </h2>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-              <div class="space-y-2">
-                <p class="text-sm font-semibold text-neutral-900">
-                  Logo
-                </p>
-                <div class="flex flex-wrap items-center gap-3">
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <!-- Logo Preview -->
+              <div class="p-8 bg-slate-50 border-b border-slate-200">
+                <div class="flex items-center justify-center gap-12">
+                  <div class="text-center">
+                    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-3">
+                      <img src="/logos/remit-scout.svg" alt="RemitScout Logo" class="h-10" />
+                    </div>
+                    <span class="text-xs text-slate-500">Light background</span>
+                  </div>
+                  <div class="text-center">
+                    <div class="bg-slate-900 rounded-xl p-6 shadow-sm mb-3">
+                      <img src="/logos/remit-scout.svg" alt="RemitScout Logo" class="h-10 brightness-0 invert" />
+                    </div>
+                    <span class="text-xs text-slate-500">Dark background</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Downloads -->
+              <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold text-slate-900">Logo Files</p>
+                    <p class="text-sm text-slate-500">SVG, PNG (all sizes)</p>
+                  </div>
                   <a
-                    href="/logos/remit-scout.svg"
-                    class="inline-flex items-center justify-center rounded-btn border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+                    :href="brandAssetsUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
                   >
-                    Download SVG
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download
                   </a>
                 </div>
-              </div>
-
-              <div class="space-y-2">
-                <p class="text-sm font-semibold text-neutral-900">
-                  Brand colors
-                </p>
-                <div class="flex flex-wrap gap-3">
-                  <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-neutral-700">
-                    <span class="h-3 w-3 rounded-full bg-brand-600" />
-                    <span>Brand blue: #2563EB</span>
-                  </div>
-                  <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-neutral-700">
-                    <span class="h-3 w-3 rounded-full bg-brand-700" />
-                    <span>Dark blue: #1D4ED8</span>
+                <div class="border-t border-slate-100 pt-4">
+                  <p class="text-sm font-semibold text-slate-900 mb-3">Brand Colors</p>
+                  <div class="flex flex-wrap gap-3">
+                    <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+                      <span class="h-4 w-4 rounded-full bg-blue-600" />
+                      <span class="text-slate-700">Primary Blue</span>
+                      <span class="text-slate-400">#2563EB</span>
+                    </div>
+                    <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+                      <span class="h-4 w-4 rounded-full bg-blue-700" />
+                      <span class="text-slate-700">Dark Blue</span>
+                      <span class="text-slate-400">#1D4ED8</span>
+                    </div>
+                    <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+                      <span class="h-4 w-4 rounded-full bg-slate-900" />
+                      <span class="text-slate-700">Text</span>
+                      <span class="text-slate-400">#0F172A</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="space-y-2">
-                <p class="text-sm font-semibold text-neutral-900">
-                  Short description
-                </p>
-                <p class="text-sm text-neutral-700">
-                  Remit-Scout is an independent remittance comparison and market-data product that measures recipient outcomes across corridors.
-                </p>
-              </div>
-
-              <div class="space-y-2">
-                <p class="text-sm font-semibold text-neutral-900">
-                  Long description
-                </p>
-                <p class="text-sm text-neutral-700">
-                  Remit-Scout helps people compare cross-border money transfer providers by focusing on what the recipient is estimated to receive after fees and FX markup. Our Pulse pages publish time-series trends that show how outcomes change over time by corridor. We maintain a strict no pay-to-rank policy and publish our methodology and disclosures openly.
-                </p>
               </div>
             </div>
           </section>
 
-          <section class="rounded-3xl bg-brand-600 px-7 py-10 text-white shadow-sm">
+          <!-- Boilerplate -->
+          <section>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              Company Boilerplate
+            </h2>
             <div class="space-y-4">
-              <p class="text-sm text-white/90">
-                Press contact: {{ pressEmail }}<br>
-                General: {{ supportEmail }}
-              </p>
-              <div class="flex flex-wrap gap-3">
+              <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <p class="text-sm font-semibold text-slate-900 mb-2">Short (1 line)</p>
+                <p class="text-slate-700">RemitScout is an independent comparison platform that helps people find the best international money transfer rates.</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <p class="text-sm font-semibold text-slate-900 mb-2">Standard (2-3 lines)</p>
+                <p class="text-slate-700">RemitScout is an independent comparison platform for international money transfers. We help migrants, expats, and international families find the best rates by showing what the recipient actually receives after fees and FX markup. We maintain a strict no pay-to-rank policy.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- How to Cite -->
+          <section>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+              </div>
+              How to Cite
+            </h2>
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+              <div>
+                <p class="text-sm font-semibold text-slate-900 mb-2">Data Citation</p>
+                <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
+                  Source: RemitScout (remitscout.com), observed retail quotes, [CORRIDOR], $200 benchmark, retrieved [DATE].
+                </code>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-900 mb-2">Chart/Visual Citation</p>
+                <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
+                  Source: RemitScout. Data retrieved [DATE]. Link: [URL]
+                </code>
+              </div>
+              <p class="text-sm text-slate-500">Please include retrieval date as our data updates daily.</p>
+            </div>
+          </section>
+
+          <!-- Data & Licensing -->
+          <section>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              Data & Licensing
+            </h2>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+              <div class="p-6">
+                <p class="font-semibold text-slate-900 mb-2">Editorial Use</p>
+                <p class="text-sm text-slate-600">Quote short excerpts with attribution. Link back when possible.</p>
+              </div>
+              <div class="p-6">
+                <p class="font-semibold text-slate-900 mb-2">Chart Republishing</p>
+                <p class="text-sm text-slate-600 mb-3">For republishing charts or embedding widgets, please request permission.</p>
                 <NuxtLink
-                  to="/contact?type=press"
-                  class="inline-flex items-center justify-center rounded-btn bg-white px-5 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-600"
+                  to="/contact?type=license"
+                  class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
                 >
-                  Press inquiries
+                  Request License →
                 </NuxtLink>
+              </div>
+              <div class="p-6">
+                <p class="font-semibold text-slate-900 mb-2">Data API / Bulk Access</p>
+                <p class="text-sm text-slate-600 mb-3">For systematic data access, API integration, or research partnerships.</p>
                 <NuxtLink
-                  to="/partnerships"
-                  class="inline-flex items-center justify-center rounded-btn border border-white/30 bg-transparent px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-600"
+                  to="/contact?type=data"
+                  class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
                 >
-                  Partnerships
+                  Contact Us →
                 </NuxtLink>
               </div>
             </div>
           </section>
         </div>
 
-        <!-- Sticky rail (desktop) -->
-        <aside class="hidden lg:block lg:col-span-4">
-          <div class="lg:sticky lg:top-24 space-y-4">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p class="text-sm font-semibold text-neutral-900">
-                Press &amp; licensing
-              </p>
-              <p class="mt-2 text-sm leading-relaxed text-neutral-700">
-                Need a quote, chart permission, or embed access? Send the details and your deadline.
-              </p>
-              <div class="mt-4 flex flex-col gap-2">
-                <NuxtLink
-                  to="/contact?type=press"
-                  class="inline-flex items-center justify-center rounded-btn bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+        <!-- Sidebar -->
+        <aside class="lg:col-span-1">
+          <div class="lg:sticky lg:top-24 space-y-6">
+            <!-- Press Contact -->
+            <div class="bg-blue-600 rounded-2xl p-6 text-white">
+              <h3 class="font-semibold text-lg mb-3">Press Contact</h3>
+              <p class="text-blue-100 text-sm mb-4">For media inquiries, interviews, or expert commentary.</p>
+              <a :href="`mailto:${pressEmail}`" class="block text-white font-medium hover:text-blue-100 mb-4">
+                {{ pressEmail }}
+              </a>
+              <NuxtLink
+                to="/contact?type=press"
+                class="block w-full text-center rounded-xl bg-white py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                Press Inquiry Form
+              </NuxtLink>
+            </div>
+
+            <!-- Quick Downloads -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6">
+              <h3 class="font-semibold text-slate-900 mb-4">Quick Downloads</h3>
+              <div class="space-y-3">
+                <a
+                  :href="pressKitUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
                 >
-                  Press inquiries
+                  <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900 text-sm">Press Kit</p>
+                    <p class="text-xs text-slate-500">Logos, bios, fact sheet</p>
+                  </div>
+                </a>
+                <a
+                  :href="brandAssetsUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900 text-sm">Brand Assets</p>
+                    <p class="text-xs text-slate-500">Logos in all formats</p>
+                  </div>
+                </a>
+                <a
+                  :href="companyFactSheetUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900 text-sm">Fact Sheet</p>
+                    <p class="text-xs text-slate-500">Key stats & info</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- Key Links -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6">
+              <h3 class="font-semibold text-slate-900 mb-4">Key Links</h3>
+              <div class="space-y-2">
+                <NuxtLink to="/about" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  About Us →
                 </NuxtLink>
-                <NuxtLink
-                  to="/contact?type=license"
-                  class="inline-flex items-center justify-center rounded-btn border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                >
-                  Data/licensing inquiry
+                <NuxtLink to="/methodology" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  Methodology →
+                </NuxtLink>
+                <NuxtLink to="/pulse" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  Pulse (Market Data) →
+                </NuxtLink>
+                <NuxtLink to="/how-we-make-money" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  How We Make Money →
+                </NuxtLink>
+                <NuxtLink to="/affiliate-disclosure" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  Affiliate Disclosure →
                 </NuxtLink>
               </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p class="text-sm font-semibold text-neutral-900">
-                Key links
-              </p>
-              <div class="mt-3 space-y-2 text-sm">
-                <NuxtLink
-                  to="/pulse"
-                  class="block text-brand-600 hover:text-brand-700 underline decoration-brand-600/30 hover:decoration-brand-700"
-                >
-                  Pulse
-                </NuxtLink>
-                <NuxtLink
-                  to="/methodology"
-                  class="block text-brand-600 hover:text-brand-700 underline decoration-brand-600/30 hover:decoration-brand-700"
-                >
-                  Methodology
-                </NuxtLink>
-                <NuxtLink
-                  to="/affiliate-disclosure"
-                  class="block text-brand-600 hover:text-brand-700 underline decoration-brand-600/30 hover:decoration-brand-700"
-                >
-                  Affiliate disclosure
-                </NuxtLink>
-                <NuxtLink
-                  to="/corrections"
-                  class="block text-brand-600 hover:text-brand-700 underline decoration-brand-600/30 hover:decoration-brand-700"
-                >
-                  Corrections policy
-                </NuxtLink>
-                <NuxtLink
-                  to="/contact"
-                  class="block text-brand-600 hover:text-brand-700 underline decoration-brand-600/30 hover:decoration-brand-700"
-                >
-                  Contact
-                </NuxtLink>
+            <!-- Independence Notice -->
+            <div class="bg-emerald-50 rounded-2xl border border-emerald-200 p-6">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-emerald-900 text-sm">Independence</p>
+                  <p class="text-xs text-emerald-700 mt-1">Rankings are never influenced by affiliate relationships or sponsorships.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -409,13 +388,13 @@ import CompareWidget from '~/components/shared/CompareWidget.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remitscout.com'
 const canonicalUrl = `${siteUrl}/media-kit`
-const lastReviewedIso = '2025-12-01'
+const lastReviewedIso = '2025-12-20'
 
 setSeo({
-  title: 'Media Kit / Press | Remit-Scout',
-  description: 'Remittance pricing trends backed by a living dataset. Learn how to cite Remit-Scout, request chart permissions, and understand Pulse.',
+  title: 'Media Kit | RemitScout',
+  description: 'Press resources, brand assets, and company information for journalists and partners covering RemitScout.',
   canonical: canonicalUrl,
 })
 
@@ -429,17 +408,20 @@ const hostname = (() => {
     return new URL(siteUrl).hostname
   }
   catch {
-    return 'Remit-Scout.com'
+    return 'remitscout.com'
   }
 })()
 
-const supportEmail = `support@${hostname}`
 const pressEmail = `press@${hostname}`
+
+const pressKitUrl = 'https://docs.google.com/document/d/YOUR_PRESS_KIT_DOC_ID/edit?usp=sharing'
+const brandAssetsUrl = 'https://drive.google.com/drive/folders/YOUR_BRAND_ASSETS_FOLDER_ID?usp=sharing'
+const companyFactSheetUrl = 'https://docs.google.com/document/d/YOUR_FACT_SHEET_DOC_ID/edit?usp=sharing'
 
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  'name': 'Remit-Scout',
+  'name': 'RemitScout',
   'url': siteUrl,
   'logo': `${siteUrl}/logos/remit-scout.svg`,
   'contactPoint': [
@@ -449,57 +431,18 @@ const organizationSchema = {
       'email': pressEmail,
       'url': `${siteUrl}/contact?type=press`,
     },
-    {
-      '@type': 'ContactPoint',
-      'contactType': 'customer support',
-      'email': supportEmail,
-      'url': `${siteUrl}/contact`,
-    },
   ],
-  'sameAs': [
-    'https://linkedin.com/company/Remit-Scout',
-  ],
-}
-
-const articleSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  'headline': 'Media Kit / Press',
-  'description': 'Remittance pricing trends — backed by a live dataset',
-  'author': {
-    '@type': 'Organization',
-    'name': 'Remit-Scout',
-    'url': siteUrl,
-  },
-  'datePublished': lastReviewedIso,
-  'dateModified': lastReviewedIso,
-  'publisher': {
-    '@type': 'Organization',
-    'name': 'Remit-Scout',
-    'logo': {
-      '@type': 'ImageObject',
-      'url': `${siteUrl}/logos/remit-scout.svg`,
-    },
-  },
-  'mainEntityOfPage': {
-    '@type': 'WebPage',
-    '@id': canonicalUrl,
-  },
 }
 
 useHead({
   meta: [
-    { name: 'author', content: 'Remit-Scout' },
+    { name: 'author', content: 'RemitScout' },
     { property: 'article:modified_time', content: lastReviewedIso },
   ],
   script: [
     {
       type: 'application/ld+json',
       innerHTML: JSON.stringify(organizationSchema),
-    },
-    {
-      type: 'application/ld+json',
-      innerHTML: JSON.stringify(articleSchema),
     },
   ],
 })

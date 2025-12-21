@@ -202,7 +202,7 @@
     <WhyTrustUs v-if="showWhyTrustUs" />
     <TrustMetricsStrip
       v-if="showImpact"
-      bg-class="bg-neutral-50"
+      bg-class="bg-slate-900"
     />
     <FounderStory v-if="showOurStory" />
   </div>
@@ -278,4 +278,7 @@ const guideAlertTarget = computed(() => ({
 
 const guideAlertLabel = computed(() => `${guideAlertTarget.value.from}→${guideAlertTarget.value.to} • ${guideAlertTarget.value.method}`)
 </script>
+
+
+
 

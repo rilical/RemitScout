@@ -28,10 +28,10 @@
       </button>
       <div
         v-if="openFaqs.includes(index)"
-        class="px-6 pb-4 text-gray-600 prose prose-sm max-w-none break-words [text-wrap:pretty] mx-auto"
+        class="px-6 pb-6 pt-2 border-t border-gray-100"
       >
         <div
-          class="leading-relaxed"
+          class="prose prose-sm max-w-none text-slate-700 leading-relaxed"
           v-html="faq.answer"
         />
       </div>

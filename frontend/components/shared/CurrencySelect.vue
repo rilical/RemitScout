@@ -244,6 +244,12 @@ const handleFocus = async () => {
 const handleBlur = () => {
   setTimeout(() => {
     isOpen.value = false
+    // Restore to previous selection if no currency was selected
+    if (props.modelValue) {
+      searchQuery.value = props.modelValue
+    } else {
+      searchQuery.value = ''
+    }
   }, 200)
 }
 

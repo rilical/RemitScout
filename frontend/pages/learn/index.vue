@@ -1040,14 +1040,14 @@
     <!-- Safety, Scams & Compliance Section -->
     <section
       id="safety-scams"
-      class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20"
+      class="py-16 lg:py-20 bg-gray-900 scroll-mt-20"
     >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-red-600"
+                class="w-8 h-8 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1061,21 +1061,21 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
+              <h2 class="text-3xl font-bold text-white">
                 Safety, Scams & Compliance
               </h2>
-              <p class="text-neutral-600 mt-1">
+              <p class="text-white/90 mt-1">
                 Reduce user anxiety and support load: KYC explained, scam red flags, what "regulated provider" means, and how to verify providers.
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
+          <div class="h-1 w-24 bg-white/30 rounded-full" />
         </div>
 
-        <div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-6 mb-8">
+        <div class="rounded-2xl border-2 border-white/30 bg-white/10 backdrop-blur-sm p-6 mb-8">
           <div class="flex items-center gap-3">
             <svg
-              class="h-6 w-6 text-emerald-600 flex-shrink-0"
+              class="h-6 w-6 text-white flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1087,7 +1087,7 @@
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </svg>
-            <p class="text-sm font-semibold text-emerald-900">
+            <p class="text-sm font-semibold text-white">
               Safety first: Always verify providers and be aware of common scams. See our safety guidelines for more information.
             </p>
           </div>
@@ -1146,10 +1146,10 @@
     </section>
 
     <!-- Updated Recently Section -->
-    <section class="py-16 lg:py-20 bg-white">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 px-4 py-2 text-sm font-semibold text-emerald-700 mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-white mb-6">
             <svg
               class="h-4 w-4"
               fill="none"
@@ -1165,10 +1165,10 @@
             </svg>
             Updated in the last 30 days
           </div>
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
             Recently Updated
           </h2>
-          <p class="text-lg text-neutral-600 max-w-2xl">
+          <p class="text-lg text-white/90 max-w-2xl">
             International transfer info gets stale fast. Here are guides we've updated recently to ensure accuracy.
           </p>
         </div>
@@ -1226,18 +1226,18 @@
     </section>
 
     <!-- View All Guides CTA -->
-    <section class="py-16 lg:py-20 bg-gradient-to-br from-brand-600 via-brand-600 to-blue-600">
+    <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Explore All {{ filteredGuides.length }}+ Guides
           </h2>
-          <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p class="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
             Browse our complete library of expert guides covering money transfers, fees, reviews, comparisons, and more.
           </p>
           <NuxtLink
             to="/learn/all"
-            class="inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 text-lg font-bold text-brand-600 shadow-xl hover:bg-neutral-50 transition-all"
+            class="inline-flex items-center gap-3 rounded-xl bg-brand-600 px-8 py-4 text-lg font-bold text-white shadow-xl hover:bg-brand-700 transition-all"
           >
             View All Articles
             <svg

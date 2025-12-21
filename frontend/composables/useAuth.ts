@@ -28,14 +28,28 @@ export const useAuth = () => {
     setUser(null)
   }
 
+  function updateProfile(updates: Partial<Pick<User, 'name' | 'avatar'>>) {
+    if (user.value) {
+      user.value = { ...user.value, ...updates }
+    }
+  }
+
+  function updateAvatar(avatarUrl: string | undefined) {
+    updateProfile({ avatar: avatarUrl })
+  }
+
   return {
     user,
     hydrated,
     isLoggedIn,
-    // Back-compat for existing components
     isAuthenticated: isLoggedIn,
     signIn,
     signOut,
     setUser,
+    updateProfile,
+    updateAvatar,
   }
 }
+
+
+

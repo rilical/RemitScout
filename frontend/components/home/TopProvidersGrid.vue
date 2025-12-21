@@ -129,13 +129,13 @@ const DEFAULT_PROVIDERS: readonly Provider[] = [
   {
     slug: 'western-union',
     name: 'Western Union',
-    score: 8.7,
+    score: 8.2,
     metrics: { trust: 82, service: 85, fees: 75, satisfaction: 80 },
   },
   {
     slug: 'xe',
     name: 'XE',
-    score: 8.9,
+    score: 8.7,
     metrics: { trust: 87, service: 88, fees: 82, satisfaction: 85 },
   },
   {

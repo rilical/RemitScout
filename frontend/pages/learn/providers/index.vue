@@ -51,118 +51,115 @@
               </div>
             </div>
 
-            <!-- Rating Categories & Weights (Burger Stack Layout) -->
+            <!-- Rating Categories & Weights -->
             <div class="mb-10">
               <h3 class="text-2xl font-bold text-neutral-900 mb-8 text-center">
                 Rating Categories & Weights
               </h3>
               
-              <!-- Horizontal Scroll Container for Mobile -->
-              <div class="overflow-x-auto pb-6 -mx-4 px-4">
-                <div class="flex gap-6 min-w-max lg:grid lg:grid-cols-5 lg:min-w-0">
-                  <!-- Delivered Value - 40% -->
-                  <div class="flex-shrink-0 w-80 lg:w-auto flex flex-col border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-white p-8 flex-grow">
-                      <div class="flex items-center justify-center mb-6">
-                        <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
-                          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <h4 class="font-bold text-neutral-900 text-lg text-center mb-4">Delivered Value</h4>
-                      <p class="text-sm text-neutral-600 text-center leading-relaxed mb-6">
-                        Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
-                      </p>
-                    </div>
-                    <div class="bg-blue-600 p-6 text-center">
-                      <div class="text-4xl font-bold text-white mb-1">40%</div>
-                      <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+              <div class="space-y-4 w-full">
+                <!-- Delivered Value - 40% -->
+                <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                    <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
                   </div>
+                  <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                    <h4 class="font-bold text-neutral-900 text-lg mb-2">Delivered Value</h4>
+                    <p class="text-sm text-neutral-600 leading-relaxed">
+                      Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
+                    </p>
+                  </div>
+                  <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                    <div class="text-4xl font-bold text-white mb-1">40%</div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  </div>
+                </div>
 
-                  <!-- Reliability & Success - 20% -->
-                  <div class="flex-shrink-0 w-80 lg:w-auto flex flex-col border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-white p-8 flex-grow">
-                      <div class="flex items-center justify-center mb-6">
-                        <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
-                          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <h4 class="font-bold text-neutral-900 text-lg text-center mb-4">Reliability & Success</h4>
-                      <p class="text-sm text-neutral-600 text-center leading-relaxed mb-6">
-                        Quote success rate, data freshness, pricing stability (where available)
-                      </p>
-                    </div>
-                    <div class="bg-blue-600 p-6 text-center">
-                      <div class="text-4xl font-bold text-white mb-1">20%</div>
-                      <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                <!-- Reliability & Success - 20% -->
+                <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                    <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
                     </div>
                   </div>
+                  <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                    <h4 class="font-bold text-neutral-900 text-lg mb-2">Reliability & Success</h4>
+                    <p class="text-sm text-neutral-600 leading-relaxed">
+                      Quote success rate, data freshness, pricing stability (where available)
+                    </p>
+                  </div>
+                  <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                    <div class="text-4xl font-bold text-white mb-1">20%</div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  </div>
+                </div>
 
-                  <!-- Friction & Speed - 15% -->
-                  <div class="flex-shrink-0 w-80 lg:w-auto flex flex-col border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-white p-8 flex-grow">
-                      <div class="flex items-center justify-center mb-6">
-                        <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
-                          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <h4 class="font-bold text-neutral-900 text-lg text-center mb-4">Friction & Speed</h4>
-                      <p class="text-sm text-neutral-600 text-center leading-relaxed mb-6">
-                        ETA where available, speed buckets, observed delivery times on selected corridors
-                      </p>
-                    </div>
-                    <div class="bg-blue-600 p-6 text-center">
-                      <div class="text-4xl font-bold text-white mb-1">15%</div>
-                      <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                <!-- Friction & Speed - 15% -->
+                <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                    <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
                     </div>
                   </div>
+                  <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                    <h4 class="font-bold text-neutral-900 text-lg mb-2">Friction & Speed</h4>
+                    <p class="text-sm text-neutral-600 leading-relaxed">
+                      ETA where available, speed buckets, observed delivery times on selected corridors
+                    </p>
+                  </div>
+                  <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                    <div class="text-4xl font-bold text-white mb-1">15%</div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  </div>
+                </div>
 
-                  <!-- Support & Refunds - 15% -->
-                  <div class="flex-shrink-0 w-80 lg:w-auto flex flex-col border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-white p-8 flex-grow">
-                      <div class="flex items-center justify-center mb-6">
-                        <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
-                          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <h4 class="font-bold text-neutral-900 text-lg text-center mb-4">Support & Refunds</h4>
-                      <p class="text-sm text-neutral-600 text-center leading-relaxed mb-6">
-                        Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
-                      </p>
-                    </div>
-                    <div class="bg-blue-600 p-6 text-center">
-                      <div class="text-4xl font-bold text-white mb-1">15%</div>
-                      <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                <!-- Support & Refunds - 15% -->
+                <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                    <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
                     </div>
                   </div>
+                  <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                    <h4 class="font-bold text-neutral-900 text-lg mb-2">Support & Refunds</h4>
+                    <p class="text-sm text-neutral-600 leading-relaxed">
+                      Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
+                    </p>
+                  </div>
+                  <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                    <div class="text-4xl font-bold text-white mb-1">15%</div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  </div>
+                </div>
 
-                  <!-- Trust & Safety - 10% -->
-                  <div class="flex-shrink-0 w-80 lg:w-auto flex flex-col border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-white p-8 flex-grow">
-                      <div class="flex items-center justify-center mb-6">
-                        <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
-                          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <h4 class="font-bold text-neutral-900 text-lg text-center mb-4">Trust & Safety</h4>
-                      <p class="text-sm text-neutral-600 text-center leading-relaxed mb-6">
-                        Public licensing checks where available, regulatory register verification
-                      </p>
+                <!-- Trust & Safety - 10% -->
+                <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                    <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
                     </div>
-                    <div class="bg-blue-600 p-6 text-center">
-                      <div class="text-4xl font-bold text-white mb-1">10%</div>
-                      <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
-                    </div>
+                  </div>
+                  <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                    <h4 class="font-bold text-neutral-900 text-lg mb-2">Trust & Safety</h4>
+                    <p class="text-sm text-neutral-600 leading-relaxed">
+                      Public licensing checks where available, regulatory register verification
+                    </p>
+                  </div>
+                  <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                    <div class="text-4xl font-bold text-white mb-1">10%</div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
                   </div>
                 </div>
               </div>

@@ -21,6 +21,9 @@
     <!-- EEAT: Independence Badge -->
     <IndependenceBadge />
 
+    <!-- EEAT: Safety Notice -->
+    <SafetyNotice />
+
     <!-- 6. Popular corridor chips -->
     <CorridorsGridDynamic @corridor-selected="handleCorridorSelected" />
 
@@ -38,12 +41,6 @@
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
     <PulseMiniTiles />
-
-    <!-- 10. Exchange-rate history + Rate alerts (together) -->
-    <RateAlertForm />
-
-    <!-- EEAT: Safety Notice -->
-    <SafetyNotice />
 
     <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
     <PlusTeaser />
@@ -109,7 +106,6 @@ import TestimonialsCarousel from '~/components/home/TestimonialsCarousel.vue'
 
 // Below-fold components: can stay async for code-splitting
 const BankVsSpecialistDynamic = defineAsyncComponent(() => import('~/components/home/BankVsSpecialistDynamic.vue'))
-const RateAlertForm = defineAsyncComponent(() => import('~/components/home/RateAlertForm.vue'))
 const TravelToolsSection = defineAsyncComponent(() => import('~/components/home/TravelToolsSection.vue'))
 const LatestGuides = defineAsyncComponent(() => import('~/components/home/LatestGuides.vue'))
 const CtaBanner = defineAsyncComponent(() => import('~/components/home/CtaBanner.vue'))

@@ -10,21 +10,20 @@
           <span class="text-sm font-semibold text-blue-400">Remit-Scout Plus</span>
         </div>
         <h2 class="text-4xl sm:text-5xl font-bold text-white mb-4">
-          Track Rates Automatically
+          Get More Out of Remit-Scout
         </h2>
-        <p class="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-          Plus tracks your corridors 24/7, alerts you when rates improve, 
-          and keeps your complete transfer history. Never check rates manually again.
+        <p class="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed break-words">
+          Unlock advanced features like unlimited alerts, extended history tracking, data exports, and an ad-free experience. Perfect for frequent senders who want deeper insights and better control.
         </p>
       </div>
 
       <!-- What Plus Does -->
       <div class="bg-slate-800 rounded-2xl border-2 border-slate-700 p-8 sm:p-10 mb-10 shadow-lg">
-        <h3 class="text-2xl font-bold text-white mb-6 text-center">
+        <h2 class="text-3xl font-bold text-white mb-6 text-center">
           What is Plus?
-        </h3>
-        <p class="text-lg text-slate-300 mb-8 text-center max-w-3xl mx-auto">
-          For people who send money repeatedly. Plus monitors the market 24/7 and notifies you when rates improve.
+        </h2>
+        <p class="text-lg text-slate-300 mb-8 text-center max-w-3xl mx-auto leading-relaxed break-words">
+          For people who send money repeatedly. Plus monitors the market 24/7 and notifies you when rates improve, giving you deeper insights and unlimited tracking capabilities.
         </p>
         
         <!-- Free vs Plus Comparison -->
@@ -248,10 +247,8 @@
           </svg>
           <h4 class="text-lg font-bold text-white">How Plus Fits Our Independence</h4>
         </div>
-        <p class="text-base text-slate-300 leading-relaxed max-w-3xl mx-auto">
-          Plus helps fund RemitScout without pay-to-rank sponsorships. 
-          Plus users see fewer ads, but <strong>scoring and rankings remain identical for everyone.</strong> 
-          Whether free or Plus, you see the same data-driven comparisons.
+        <p class="text-base text-slate-300 leading-relaxed max-w-3xl mx-auto break-words">
+          Plus helps fund RemitScout without pay-to-rank sponsorships. Plus users see fewer ads, but <strong>scoring and rankings remain identical for everyone.</strong> Whether free or Plus, you see the same data-driven comparisons.
         </p>
       </div>
 
@@ -276,4 +273,7 @@
 
 <script setup lang="ts">
 </script>
+
+
+
 

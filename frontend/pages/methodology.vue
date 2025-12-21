@@ -60,8 +60,8 @@
                 </div>
               </div>
 
-              <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-2 text-2xl font-bold text-emerald-600">
+              <div class="rounded-2xl border border-brand-200 bg-white p-5 shadow-sm">
+                <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
                   <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -513,7 +513,7 @@
     <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 shadow-lg mb-6">
+          <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-brand-600 shadow-lg mb-6">
             <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -528,11 +528,11 @@
 
         <!-- Editorial & Independence -->
         <div class="mb-12">
-          <div class="rounded-3xl border-2 border-emerald-200 bg-white p-10 lg:p-12 shadow-lg">
+          <div class="rounded-3xl border-2 border-brand-200 bg-white p-10 lg:p-12 shadow-lg">
             <div class="flex items-start gap-6 mb-8">
               <div class="flex-shrink-0">
-                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100">
-                  <svg class="w-9 h-9 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-100">
+                  <svg class="w-9 h-9 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
@@ -545,9 +545,9 @@
                   Rankings are driven by data, not payments. Providers can’t buy placement, and affiliate commissions never change ranking logic.
                 </p>
                 <div class="grid gap-4 sm:grid-cols-3 mb-8">
-                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                  <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
                     <div class="flex items-center gap-3 mb-2">
-                      <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <h4 class="font-semibold text-neutral-900">
@@ -558,9 +558,9 @@
                       Providers cannot pay to appear higher or improve Remit‑Score.
                     </p>
                   </div>
-                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                  <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
                     <div class="flex items-center gap-3 mb-2">
-                      <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <h4 class="font-semibold text-neutral-900">
@@ -571,9 +571,9 @@
                       We may earn commissions, but they never affect ranking or Remit-Score.
                     </p>
                   </div>
-                  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                  <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
                     <div class="flex items-center gap-3 mb-2">
-                      <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <h4 class="font-semibold text-neutral-900">
@@ -595,7 +595,7 @@
                   </NuxtLink>
                   <NuxtLink
                     to="/affiliate-disclosure"
-                    class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-200 bg-white px-6 py-3 text-base font-semibold text-emerald-800 transition-colors hover:bg-emerald-50"
+                    class="inline-flex items-center gap-2 rounded-xl border-2 border-brand-200 bg-white px-6 py-3 text-base font-semibold text-brand-700 transition-colors hover:bg-brand-50"
                   >
                     <DocumentTextIcon class="h-5 w-5" />
                     Affiliate disclosure
@@ -1162,89 +1162,83 @@ const lastUpdatedLabel = computed(() => {
 
 const showYourWorkFaqs = [
   {
-    question: 'What we measure: the Quote Record',
+    question: 'What we measure',
     answer: `
-      <p>Every comparison on Remit-Scout starts with a normalized snapshot we call a <strong>Quote Record</strong>.</p>
-      <p>A Quote Record captures what a real user would see at a specific moment for a specific scenario — for example: <strong>Send $500 from US → Albania</strong>, funded by debit card, delivered to a bank account.</p>
-      <p><strong>Key fields we store and compare:</strong></p>
+      <p>We capture standardized snapshots of provider quotes called <strong>Quote Records</strong>. Each record represents what a provider would offer at a specific moment for a given transfer scenario.</p>
+      <p>For example: sending $500 USD from the United States to Albania, funded via debit card, delivered to a bank account.</p>
+      <p><strong>Data points we capture:</strong></p>
       <ul>
-        <li><strong>Timestamp (UTC):</strong> when the quote was captured</li>
-        <li><strong>Corridor:</strong> sending/receiving countries + currency pair</li>
-        <li><strong>Send amount:</strong> amount and benchmark bucket (e.g., $200, $500, $1,000)</li>
-        <li><strong>Funding + payout method:</strong> bank vs card; bank vs cash vs wallet</li>
-        <li><strong>Fees:</strong> fixed/variable where disclosed</li>
-        <li><strong>Implied FX rate:</strong> the rate implied by the provider’s quote</li>
-        <li><strong>Recipient gets:</strong> delivered amount after fees and FX effects (based on the quote at capture time)</li>
-        <li><strong>ETA:</strong> stated or observed delivery-time bucket (where available)</li>
-        <li><strong>Availability:</strong> whether the quote returned cleanly</li>
-        <li><strong>Provenance:</strong> API/partner/public flow/spot-check (when applicable)</li>
+        <li>Timestamp of capture (UTC)</li>
+        <li>Transfer corridor (sending and receiving countries, currency pair)</li>
+        <li>Transfer amount</li>
+        <li>Payment method (card, bank transfer) and delivery method (bank account, cash pickup, mobile wallet)</li>
+        <li>Provider fees (fixed and variable)</li>
+        <li>Exchange rate offered</li>
+        <li>Final amount recipient receives</li>
+        <li>Estimated delivery time</li>
       </ul>
-      <p><strong>Why it matters:</strong> once you have Quote Records over time, you can build Pulse (pricing movements), alerts, and corridor indices — not just a one-off screenshot.</p>
-      <p><a href="/pulse" class="text-brand-600 hover:text-brand-700 underline font-semibold">See how Pulse uses Quote Records →</a></p>
+      <p>These records enable us to track pricing trends over time and power features like <a href="/pulse" class="text-brand-600 hover:text-brand-700 underline font-semibold">Pulse</a>, which shows rate movements and helps you time your transfers.</p>
     `,
   },
   {
-    question: '✅ How we calculate “recipient gets”',
+    question: 'How we calculate "recipient gets"',
     answer: `
-      <p><strong>Recipient gets</strong> is the number most senders actually care about: the delivered amount your recipient should receive after fees and the exchange rate a provider applies (at the time we captured the quote).</p>
-      <p><strong>In plain English:</strong></p>
-      <p><code>recipient gets = (send amount − fees) × provider FX rate</code></p>
-      <p><strong>Worked example (simple):</strong></p>
+      <p>The "recipient gets" amount represents the actual funds your recipient will receive after all fees and exchange rate adjustments are applied.</p>
+      <p><strong>Calculation formula:</strong></p>
+      <p><code class="bg-slate-100 px-2 py-1 rounded">(send amount - fees) × provider exchange rate</code></p>
+      <p><strong>Example calculation:</strong></p>
       <ul>
-        <li><strong>Send:</strong> $500</li>
-        <li><strong>Mid-market USD→MXN:</strong> 18.50 (reference at capture time)</li>
-        <li><strong>Provider A:</strong> $5 fee, 18.00 rate → (500 − 5) × 18.00 ≈ <strong>8,910 MXN</strong></li>
-        <li><strong>Provider B:</strong> $1.99 fee, 18.45 rate → (500 − 1.99) × 18.45 ≈ <strong>9,188 MXN</strong></li>
+        <li>Send amount: $500 USD</li>
+        <li>Mid-market rate: 18.50 MXN per USD</li>
+        <li>Provider A: $5.00 fee, 18.00 rate → recipient receives <strong>8,910 MXN</strong></li>
+        <li>Provider B: $1.99 fee, 18.45 rate → recipient receives <strong>9,188 MXN</strong></li>
       </ul>
-      <p>That’s about <strong>278 MXN</strong> more delivered on the same transfer, even if both providers advertise “low fees.”</p>
-      <p><strong>Important:</strong> final checkout amounts can vary due to promos, KYC steps, payment method rules, rounding, and provider-specific pricing. We show the quote captured at the timestamp shown; the provider checkout is always the final source of truth.</p>
+      <p>Provider B delivers <strong>278 MXN more</strong> despite both providers advertising low fees. The exchange rate difference accounts for the variation.</p>
+      <p><strong>Important note:</strong> Final checkout amounts may differ from our quotes due to promotional offers, identity verification requirements, payment method variations, or exchange rate movements between quote capture and transaction completion.</p>
     `,
   },
   {
-    question: 'How we estimate FX markup (vs mid-market)',
+    question: 'How we estimate FX markup',
     answer: `
-      <p>Many providers earn revenue by giving an exchange rate that’s worse than the mid-market reference rate. That gap is the <strong>FX markup</strong> (a hidden cost).</p>
-      <p>We estimate markup by comparing the provider’s implied FX rate at capture time to a mid-market reference rate at the <strong>same timestamp</strong>.</p>
-      <p><code>FX markup ≈ (mid-market rate − provider rate) ÷ mid-market rate</code></p>
-      <p><strong>Why timestamps matter:</strong> FX rates move intraday. Comparing a provider quote from 12:40 to a reference rate from 11:10 introduces noise. We align timing so the comparison is fair.</p>
-      <p>When timing, coverage, or the quote payload is uncertain, we reduce confidence and prioritize transparency rather than guessing.</p>
+      <p>Many providers generate revenue by offering exchange rates below the mid-market rate. This difference, known as <strong>FX markup</strong>, represents a hidden cost to consumers.</p>
+      <p>We calculate markup by comparing the provider's quoted rate to the mid-market reference rate at the <strong>exact same timestamp</strong>. Exchange rates fluctuate throughout the day, so accurate timing is essential for fair comparison.</p>
+      <p><strong>Calculation formula:</strong></p>
+      <p><code class="bg-slate-100 px-2 py-1 rounded">FX markup = (mid-market rate - provider rate) ÷ mid-market rate</code></p>
+      <p>When reliable timestamp alignment or data quality cannot be confirmed, we prioritize transparency and clearly indicate reduced confidence levels rather than making assumptions.</p>
     `,
   },
   {
-    question: 'Data freshness & confidence scoring',
+    question: 'Data freshness and reliability',
     answer: `
-      <p>A comparison site is only as useful as its freshness. That’s why we track quote timestamps, availability, and stability.</p>
+      <p>We update provider quotes regularly, with update frequency varying by transfer corridor and provider availability. High-volume routes receive more frequent updates.</p>
+      <p><strong>Quality metrics we monitor:</strong></p>
       <ul>
-        <li><strong>Quote timestamp:</strong> when the Quote Record was captured</li>
-        <li><strong>Refresh cadence:</strong> on high-traffic corridors we aim to refresh frequently; cadence varies by corridor and provider</li>
-        <li><strong>Quote success rate:</strong> how often a provider returns a usable quote</li>
-        <li><strong>Stability:</strong> how often checkout values drift from the quote in spot checks and reported cases</li>
-        <li><strong>Performance caching:</strong> some pages may be cached for a short window to keep the site fast; “last updated” helps you interpret the timestamped data you’re viewing</li>
+        <li>Quote capture timestamps</li>
+        <li>Provider quote success rates</li>
+        <li>Accuracy of quotes versus actual checkout amounts</li>
       </ul>
-      <p><strong>Provenance labels:</strong> we categorize data sources so users and partners understand reliability:</p>
+      <p><strong>Data sources (in order of reliability):</strong></p>
       <ul>
-        <li>🧩 Provider API / partner feed (highest consistency when available)</li>
-        <li>🌐 Public quote flow capture (structured capture from quote pages where applicable)</li>
-        <li>Spot-check transfers (real transfer tests on selected corridors and methods)</li>
+        <li>Provider APIs and partner feeds (highest accuracy)</li>
+        <li>Public quote page captures</li>
+        <li>Real transfer tests on selected corridors</li>
       </ul>
-      <p>Over time, the goal is to expand structured feeds so coverage becomes more durable and less dependent on public quote flows.</p>
+      <p>We continuously work to expand direct API integrations to improve data freshness and reliability across all corridors.</p>
     `,
   },
   {
-    question: 'Limitations + corrections policy',
+    question: 'What can change at checkout?',
     answer: `
-      <p>We’re transparent about what can change between quote and checkout:</p>
+      <p>Several factors may cause the final checkout amount to differ from our quoted amount:</p>
       <ul>
-        <li><strong>Promotions:</strong> first-time user or limited-time offers may apply at checkout</li>
-        <li><strong>KYC & compliance:</strong> verification can affect eligibility, speed, and fees</li>
-        <li><strong>Bank fees outside provider control:</strong> outgoing/incoming fees may be charged by your bank</li>
-        <li><strong>Market movement:</strong> FX rates can change minute-to-minute</li>
-        <li><strong>Method differences:</strong> card vs bank pricing can vary significantly</li>
+        <li><strong>Promotional offers:</strong> First-time user bonuses or limited-time promotions</li>
+        <li><strong>Identity verification:</strong> KYC requirements may affect transfer speed and applicable fees</li>
+        <li><strong>Bank fees:</strong> Intermediary banks may charge separate fees not included in provider quotes</li>
+        <li><strong>Exchange rate movements:</strong> Rates fluctuate continuously throughout trading hours</li>
+        <li><strong>Payment method differences:</strong> Card-based transfers typically incur higher fees than bank transfers</li>
       </ul>
-      <p><strong>Accuracy is the product.</strong> If you notice a mismatch, please include corridor, amount, timestamp, provider, and (if possible) a checkout screenshot.</p>
-      <p>When we confirm an issue, we typically update within 48 hours. If an issue isn’t reported within 48 hours of the relevant quote timestamp, we may not update historical records.</p>
-      <p><a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report a pricing issue →</a></p>
-      <p><a href="/corrections" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our corrections policy →</a></p>
+      <p>If you notice a discrepancy between our quote and the provider's checkout amount, please report it with the following details: transfer corridor, amount, quote timestamp, provider name, and a screenshot if available. We address confirmed issues within 48 hours.</p>
+      <p><a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report an issue</a> | <a href="/corrections" class="text-brand-600 hover:text-brand-700 underline font-semibold">View corrections policy</a></p>
     `,
   },
 ]

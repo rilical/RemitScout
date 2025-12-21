@@ -41,8 +41,23 @@ onBeforeUnmount(() => {
       class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       @click.stop="toggleUserMenu"
     >
-      <span>
-        Account
+      <!-- Profile Picture or Initial -->
+      <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+        <img
+          v-if="user?.avatar"
+          :src="user.avatar"
+          :alt="user?.name || 'Profile'"
+          class="w-full h-full object-cover"
+        />
+        <div
+          v-else
+          class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-semibold"
+        >
+          {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+        </div>
+      </div>
+      <span class="hidden sm:inline">
+        {{ user?.name || 'Account' }}
       </span>
       <svg
         class="h-4 w-4 text-slate-600 transition-transform"
@@ -74,15 +89,33 @@ onBeforeUnmount(() => {
         @click.stop
       >
         <div class="px-4 py-3 border-b border-slate-100">
-          <div class="text-sm font-semibold text-slate-900">
-            {{ user?.name }}
-          </div>
-          <div class="text-xs text-slate-500 truncate">
-            {{ user?.email }}
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <img
+                v-if="user?.avatar"
+                :src="user.avatar"
+                :alt="user?.name || 'Profile'"
+                class="w-full h-full object-cover"
+              />
+              <div
+                v-else
+                class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-semibold"
+              >
+                {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-slate-900 truncate">
+                {{ user?.name }}
+              </div>
+              <div class="text-xs text-slate-500 truncate">
+                {{ user?.email }}
+              </div>
+            </div>
           </div>
           <div
             v-if="isPlus"
-            class="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
+            class="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
           >
             <svg
               class="h-3 w-3"
@@ -124,7 +157,7 @@ onBeforeUnmount(() => {
           </NuxtLink>
 
           <NuxtLink
-            to="/settings"
+            to="/dashboard?tab=account"
             class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
             @click="closeUserMenu"
           >
@@ -176,3 +209,6 @@ onBeforeUnmount(() => {
     </Transition>
   </div>
 </template>
+
+
+

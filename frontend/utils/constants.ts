@@ -17,7 +17,7 @@ export const SAMPLE_PROVIDERS = [
   {
     name: 'Wise',
     slug: 'wise',
-    score: 8.9,
+    score: 9.3,
     bestFor: 'Highest payout on bank transfers',
     recipientGets: 28150,
     fee: 2.99,
@@ -30,7 +30,7 @@ export const SAMPLE_PROVIDERS = [
   {
     name: 'Remitly',
     slug: 'remitly',
-    score: 8.7,
+    score: 9.1,
     bestFor: 'Fast cash pickup',
     recipientGets: 27980,
     fee: 3.99,
@@ -56,7 +56,7 @@ export const SAMPLE_PROVIDERS = [
   {
     name: 'Xoom',
     slug: 'xoom',
-    score: 8.3,
+    score: 8.5,
     bestFor: 'Wide cash network',
     recipientGets: 27750,
     fee: 3.99,
@@ -69,7 +69,7 @@ export const SAMPLE_PROVIDERS = [
   {
     name: 'Ria',
     slug: 'ria',
-    score: 8.1,
+    score: 8.0,
     bestFor: 'Agent locations',
     recipientGets: 27780,
     fee: 5.0,
@@ -82,7 +82,7 @@ export const SAMPLE_PROVIDERS = [
   {
     name: 'Western Union',
     slug: 'western-union',
-    score: 7.8,
+    score: 8.2,
     bestFor: 'Global reach',
     recipientGets: 27620,
     fee: 7.99,

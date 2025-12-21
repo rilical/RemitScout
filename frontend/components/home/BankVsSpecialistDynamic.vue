@@ -265,7 +265,7 @@
               Understanding the hidden costs
             </h3>
             <p class="text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-              Banks don't just charge fees—they make most of their money through exchange rate markup. Here's how it works, step by step.
+              Banks don't just charge fees. They make most of their money through exchange rate markup. Here's how it works, step by step.
             </p>
           </div>
 
@@ -444,19 +444,21 @@
           </div>
 
           <!-- Bottom Line - Full Width -->
-          <div class="bg-gradient-to-r from-brand-600 to-brand-700 rounded-2xl p-10 text-white shadow-2xl">
-            <div class="flex items-center justify-center gap-6 max-w-5xl mx-auto">
-              <div class="flex-shrink-0 w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
-                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white rounded-3xl p-12 shadow-2xl relative overflow-hidden border-2 border-neutral-200">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-brand-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-brand-50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+            <div class="relative flex flex-col lg:flex-row items-center justify-center gap-8 max-w-5xl mx-auto">
+              <div class="flex-shrink-0 w-24 h-24 bg-brand-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
               <div class="flex-1 text-center lg:text-left">
-                <h4 class="text-3xl font-bold mb-3">
+                <h4 class="text-3xl lg:text-4xl font-bold mb-4 text-neutral-900">
                   The Bottom Line
                 </h4>
-                <p class="text-white/95 text-xl leading-relaxed">
-                  Banks count on customers not comparing. By taking <strong>5 minutes</strong> to check rates on <strong>Remit-Scout</strong>, you ensure more of your hard-earned money reaches your family. <strong>Every dollar counts.</strong>
+                <p class="text-neutral-700 text-lg lg:text-xl leading-relaxed">
+                  Banks count on customers not comparing. By taking <strong class="text-neutral-900 font-bold">5 minutes</strong> to check rates on <strong class="text-brand-600 font-bold">Remit-Scout</strong>, you ensure more of your hard-earned money reaches your family. <strong class="text-neutral-900 font-bold">Every dollar counts.</strong>
                 </p>
               </div>
             </div>
