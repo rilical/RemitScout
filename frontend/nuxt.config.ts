@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   // Development
 
   // Modules
-  modules: ['@nuxtjs/tailwindcss', '@nuxt/image', '@nuxtjs/robots'],
+  modules: ['@nuxtjs/tailwindcss', '@nuxt/image', '@nuxtjs/robots', '@pinia/nuxt'],
 
   components: {
     dirs: [
@@ -10,6 +10,7 @@ export default defineNuxtConfig({
       '~/components/shared',
       '~/components/home',
       '~/components/nav',
+      '~/components/pulse',
     ],
   },
   devtools: { enabled: true },
@@ -66,7 +67,7 @@ export default defineNuxtConfig({
 
   // Build Configuration
   build: {
-    transpile: ['@nuxtjs/tailwindcss'],
+    transpile: ['@nuxtjs/tailwindcss', 'echarts', 'vue-echarts', 'resize-detector'],
   },
 
   // Route Rules (ISR)
@@ -75,6 +76,9 @@ export default defineNuxtConfig({
     '/providers/**': { isr: 1800 }, // 30 minutes
     '/compare/**': { isr: 86400 }, // 24 hours
     '/learn/**': { isr: 604800 }, // 7 days
+    '/pulse': { isr: 300 }, // 5 minutes - main pulse dashboard
+    '/pulse/charts/**': { isr: 300 }, // 5 minutes - chart detail pages
+    '/embed/pulse/**': { isr: 60 }, // 1 minute - embeds refresh faster
     '/legal/methodology': { redirect: '/methodology' },
   },
 

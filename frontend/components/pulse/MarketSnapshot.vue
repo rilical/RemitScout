@@ -1,28 +1,77 @@
 <template>
   <div>
-    <h2 class="mb-4 text-xl font-bold text-gray-900">
-      Market Snapshot
-    </h2>
+    <div class="mb-6 flex items-center justify-between">
+      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+        <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        Market Snapshot
+      </h2>
+      <div class="flex items-center gap-2 text-sm text-slate-400">
+        <span class="relative flex h-2 w-2">
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
+        Live
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <div
         v-for="metric in metrics"
         :key="metric.id"
-        class="group relative cursor-pointer rounded-lg border border-gray-200 bg-white p-6 transition-all hover:border-primary-300 hover:shadow-md"
+        class="group relative cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 p-6 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-black/20 hover:scale-[1.02]"
         @click="openModal(metric)"
       >
-        <div class="mb-2 flex items-start justify-between">
-          <div
-            class="rounded-lg p-2"
-            :class="metric.color"
-          >
-            <component
-              :is="metric.icon"
-              class="h-5 w-5"
-            />
+        <div 
+          class="absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          :class="metric.glowClass"
+        />
+        
+        <div class="relative">
+          <div class="mb-4 flex items-start justify-between">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl"
+              :class="metric.iconBgClass"
+            >
+              <component
+                :is="metric.icon"
+                class="h-6 w-6"
+                :class="metric.iconColor"
+              />
+            </div>
+            <button
+              class="text-slate-500 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:text-slate-300"
+              title="Learn more"
+            >
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
           </div>
-          <button
-            class="text-gray-400 opacity-0 transition-opacity group-hover:opacity-100"
-            title="Learn more"
+
+          <div class="mb-1 text-sm font-medium text-slate-400">
+            {{ metric.label }}
+          </div>
+
+          <div class="mb-3 text-2xl font-bold text-white">
+            {{ metric.value }}
+          </div>
+
+          <div
+            v-if="metric.change"
+            class="flex items-center gap-1 text-sm font-medium"
+            :class="metric.changeType === 'positive' ? 'text-emerald-400' : 'text-red-400'"
           >
             <svg
               class="h-4 w-4"
@@ -31,57 +80,29 @@
               viewBox="0 0 24 24"
             >
               <path
+                v-if="metric.changeType === 'positive'"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+              <path
+                v-else
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
               />
             </svg>
-          </button>
-        </div>
+            {{ metric.change }}
+          </div>
 
-        <div class="mb-1 text-sm font-medium text-gray-600">
-          {{ metric.label }}
-        </div>
-
-        <div class="mb-2 text-2xl font-bold text-gray-900">
-          {{ metric.value }}
-        </div>
-
-        <div
-          v-if="metric.change"
-          class="flex items-center text-sm"
-          :class="metric.changeType === 'positive' ? 'text-green-600' : 'text-red-600'"
-        >
-          <svg
-            class="mr-1 h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <div
+            v-if="metric.subtitle"
+            class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-500"
           >
-            <path
-              v-if="metric.changeType === 'positive'"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-            />
-            <path
-              v-else
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-            />
-          </svg>
-          {{ metric.change }}
-        </div>
-
-        <div
-          v-if="metric.subtitle"
-          class="mt-2 text-xs text-gray-500"
-        >
-          {{ metric.subtitle }}
+            {{ metric.subtitle }}
+          </div>
         </div>
       </div>
     </div>
@@ -100,7 +121,7 @@ interface Props {
   }
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const TrophyIcon = () => h('svg', { class: 'h-full w-full', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' })
@@ -126,37 +147,45 @@ const metrics = computed(() => [
     change: '+₱42 vs #2',
     changeType: 'positive' as const,
     subtitle: 'Recipient gets ₱56,234',
-    color: 'bg-green-100 text-green-600',
+    iconBgClass: 'bg-emerald-500/20',
+    iconColor: 'text-emerald-400',
+    glowClass: 'bg-gradient-to-br from-emerald-500/10 to-transparent',
     icon: TrophyIcon,
   },
   {
     id: 'savings',
     label: 'Typical savings vs banks',
-    value: '3.2% - 5.8%',
+    value: '3.2% – 5.8%',
     change: 'Avg: 4.5%',
     changeType: 'positive' as const,
     subtitle: 'Based on 847 quotes',
-    color: 'bg-blue-100 text-blue-600',
+    iconBgClass: 'bg-blue-500/20',
+    iconColor: 'text-blue-400',
+    glowClass: 'bg-gradient-to-br from-blue-500/10 to-transparent',
     icon: BankIcon,
   },
   {
     id: 'fastest',
-    label: 'Fastest observed delivery',
+    label: 'Fastest delivery',
     value: '12 minutes',
     change: null,
     changeType: null,
     subtitle: 'Remitly Express',
-    color: 'bg-purple-100 text-purple-600',
+    iconBgClass: 'bg-purple-500/20',
+    iconColor: 'text-purple-400',
+    glowClass: 'bg-gradient-to-br from-purple-500/10 to-transparent',
     icon: ClockIcon,
   },
   {
     id: 'reliability',
-    label: 'Reliability signal',
+    label: 'Quote success rate',
     value: '98.4%',
     change: '+0.3% vs 7d avg',
     changeType: 'positive' as const,
-    subtitle: 'Quote success rate',
-    color: 'bg-amber-100 text-amber-600',
+    subtitle: 'Reliability signal',
+    iconBgClass: 'bg-amber-500/20',
+    iconColor: 'text-amber-400',
+    glowClass: 'bg-gradient-to-br from-amber-500/10 to-transparent',
     icon: CheckIcon,
   },
 ])
@@ -165,7 +194,4 @@ const openModal = (metric: typeof metrics.value[0]) => {
   console.log('Open modal for', metric.id)
 }
 </script>
-
-
-
 

@@ -7,9 +7,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
-        <div class="mt-10">
-          <h1 class="text-4xl font-bold leading-tight text-brand-600 sm:text-5xl mb-4">
-            Supported Money Transfer Providers
+        <div class="mt-10 text-center">
+          <h1 class="text-4xl font-bold leading-tight sm:text-5xl mb-4">
+            <span class="text-neutral-900">Supported</span>
+            <span class="text-brand-600"> Money Transfer </span>
+            <span class="text-neutral-900">Providers</span>
           </h1>
           <p class="text-xl leading-relaxed text-neutral-600 mb-8">
             Compare trusted money transfer providers with Remit-Scout scores to find the best service for your needs. 
