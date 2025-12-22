@@ -59,11 +59,11 @@
             </div>
           </td>
           <td class="py-4 px-4 text-center">
-            <span class="inline-flex items-center gap-1 rounded-full bg-brand-600/10 px-3 py-1 text-xs font-medium text-brand-600">
-              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="inline-flex items-center justify-center gap-1 rounded-full bg-brand-600/10 px-3 py-1 text-xs font-medium text-brand-600 min-w-[110px]">
+              <svg class="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {{ row.speed }}
+              <span>{{ row.speed }}</span>
             </span>
           </td>
         </tr>

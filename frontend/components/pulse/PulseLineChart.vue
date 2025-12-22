@@ -323,6 +323,11 @@ function formatValue(value: number): string {
       return `${Math.round(value)} bps`
     case 'currency':
       return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    case 'minutes':
+      return `${Math.round(value)} min`
+    case 'count':
+    case 'index':
+      return `${Math.round(value)}`
     default:
       return value.toFixed(2)
   }

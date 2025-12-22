@@ -22,6 +22,14 @@
       </svg>
     </button>
 
+    <div class="flex flex-wrap items-center gap-2 px-6 pb-4 text-xs text-neutral-400">
+      <span>Updated every 15 min</span>
+      <span class="text-neutral-600">|</span>
+      <span>All-in cost = fee + FX markup</span>
+      <span class="text-neutral-600">|</span>
+      <span>Provenance tags: Verified/Observed/Estimated</span>
+    </div>
+
     <!-- Collapsible Content -->
     <div
       v-show="isOpen"
@@ -54,6 +62,22 @@
             <h4 class="font-medium text-white">What we normalize</h4>
             <p class="mt-1 text-sm text-neutral-400">
               All comparisons use the same send amount, payment method, and payout method. We capture quotes at regular intervals throughout the day and use the same mid-market rate benchmark for FX markup calculations.
+            </p>
+          </div>
+        </div>
+
+        <!-- Key Definitions -->
+        <div class="flex gap-3">
+          <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand-600/20 text-brand-600">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="font-medium text-white">Key definitions</h4>
+            <p class="mt-1 text-sm text-neutral-400">
+              <strong class="text-white">Markup (bps)</strong> = (mid-market - provider rate) / mid-market.
+              <strong class="text-white"> All-in cost</strong> = upfront fee + FX markup cost on the selected amount.
             </p>
           </div>
         </div>

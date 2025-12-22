@@ -1258,6 +1258,117 @@
       </div>
     </section>
 
+    <!-- Research & Intelligence Section (Institutional) -->
+    <section class="py-16 lg:py-20 bg-slate-900">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-12">
+          <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">
+            For Research & Compliance Teams
+          </p>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Research & Intelligence
+          </h2>
+          <p class="text-lg text-slate-400 max-w-3xl">
+            Access institutional-grade research, market indices, and compliance documentation. Built for analysts, treasury teams, and regulatory professionals.
+          </p>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <NuxtLink
+            to="/pulse"
+            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-800"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Remit-Pulse Index</h3>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              Real-time corridor pricing indices, volatility metrics, and market timing signals across 150+ global corridors.
+            </p>
+            <div class="flex items-center gap-2 text-sm text-blue-400 font-medium group-hover:gap-3 transition-all">
+              <span>View live data</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </NuxtLink>
+
+          <NuxtLink
+            to="/methodology"
+            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-800"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/20">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Data Methodology</h3>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              Comprehensive documentation of our data collection, verification processes, and synthetic validation methodology.
+            </p>
+            <div class="flex items-center gap-2 text-sm text-emerald-400 font-medium group-hover:gap-3 transition-all">
+              <span>Read documentation</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </NuxtLink>
+
+          <NuxtLink
+            to="/enterprise"
+            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-800"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600/20">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">API & Data Feeds</h3>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              RESTful API access to historical and real-time pricing data. Designed for integration with compliance and trading systems.
+            </p>
+            <div class="flex items-center gap-2 text-sm text-purple-400 font-medium group-hover:gap-3 transition-all">
+              <span>Explore API</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </NuxtLink>
+        </div>
+
+        <div class="mt-10 pt-8 border-t border-slate-700">
+          <div class="flex flex-wrap items-center gap-6 text-sm text-slate-500">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Synthetically verified data</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Timestamped & auditable</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Compliance-ready exports</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Trust Metrics Strip -->
     <TrustMetricsStrip />
   </div>

@@ -285,6 +285,139 @@
               from time to time to stay informed about how we protect your information.
             </p>
 
+            <!-- Enterprise Data Governance Section -->
+            <div class="my-12 rounded-xl border border-slate-700 bg-slate-900 p-8">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20">
+                  <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide">For Compliance Teams</p>
+                  <h3 class="text-xl font-bold text-white">Enterprise Data Governance</h3>
+                </div>
+              </div>
+              
+              <p class="text-slate-300 leading-relaxed mb-6">
+                For enterprise customers and compliance teams conducting due diligence, this section provides technical detail 
+                on how we protect data and ensure privacy compliance at scale.
+              </p>
+
+              <div class="space-y-6">
+                <div class="border-l-2 border-blue-500 pl-4">
+                  <h4 class="text-base font-semibold text-white mb-2">Data Anonymization</h4>
+                  <p class="text-sm text-slate-400 leading-relaxed mb-3">
+                    All corridor analytics and market data are derived from anonymized, aggregated datasets. Individual user 
+                    behavior is never exposed in any reporting or API output.
+                  </p>
+                  <ul class="text-sm text-slate-400 space-y-1">
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>IP addresses are hashed and truncated before storage</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Session identifiers are rotated and non-persistent</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>User agents are generalized to browser family only</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="border-l-2 border-emerald-500 pl-4">
+                  <h4 class="text-base font-semibold text-white mb-2">k-Anonymity Guarantees</h4>
+                  <p class="text-sm text-slate-400 leading-relaxed mb-3">
+                    We apply k-anonymity principles to ensure no individual can be re-identified from aggregate data outputs.
+                  </p>
+                  <ul class="text-sm text-slate-400 space-y-1">
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span><strong class="text-white">Minimum k=5:</strong> No corridor data published unless ≥5 unique users</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span><strong class="text-white">Generalization:</strong> Low-volume corridors are grouped into regional aggregates</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span><strong class="text-white">Suppression:</strong> Outlier data points are excluded from public datasets</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="border-l-2 border-purple-500 pl-4">
+                  <h4 class="text-base font-semibold text-white mb-2">Aggregation Thresholds</h4>
+                  <p class="text-sm text-slate-400 leading-relaxed mb-3">
+                    Market data and analytics are subject to minimum aggregation thresholds before publication or API delivery.
+                  </p>
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="rounded-lg bg-slate-800 p-3">
+                      <p class="text-xs text-slate-500 mb-1">Corridor Analytics</p>
+                      <p class="text-sm text-white font-semibold">≥100 data points / 24h</p>
+                    </div>
+                    <div class="rounded-lg bg-slate-800 p-3">
+                      <p class="text-xs text-slate-500 mb-1">Provider Metrics</p>
+                      <p class="text-sm text-white font-semibold">≥50 quotes / corridor</p>
+                    </div>
+                    <div class="rounded-lg bg-slate-800 p-3">
+                      <p class="text-xs text-slate-500 mb-1">Trend Reports</p>
+                      <p class="text-sm text-white font-semibold">≥7 days lookback</p>
+                    </div>
+                    <div class="rounded-lg bg-slate-800 p-3">
+                      <p class="text-xs text-slate-500 mb-1">Geographic Data</p>
+                      <p class="text-sm text-white font-semibold">Country-level only</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border-l-2 border-amber-500 pl-4">
+                  <h4 class="text-base font-semibold text-white mb-2">Compliance Certifications</h4>
+                  <ul class="text-sm text-slate-400 space-y-1">
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>GDPR compliant for EU user data</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>CCPA compliant for California residents</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>SOC 2 Type II certification (in progress)</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="mt-6 pt-6 border-t border-slate-700">
+                <p class="text-xs text-slate-500">
+                  For enterprise data processing agreements (DPA) or custom compliance documentation, contact 
+                  <a href="mailto:compliance@remitscout.com" class="text-blue-400 hover:text-blue-300">compliance@remitscout.com</a>
+                </p>
+              </div>
+            </div>
+
             <!-- CTA Section -->
             <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
               <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">

@@ -784,6 +784,217 @@
       </div>
     </section>
 
+    <!-- Enterprise Data & API Partnerships (Institutional) -->
+    <section class="py-16 lg:py-20 bg-slate-900">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-12">
+          <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">
+            For Banks, MTOs & Research Teams
+          </p>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Enterprise Data & API Partnerships
+          </h2>
+          <p class="text-lg text-slate-400 max-w-3xl">
+            Access institutional-grade pricing intelligence, market analytics, and compliance-ready data feeds for treasury operations, competitive analysis, and regulatory reporting.
+          </p>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-3 mb-12">
+          <!-- Pricing Intelligence -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Pricing Intelligence</h3>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              Real-time and historical corridor pricing across 33+ licensed providers. Benchmark your spreads against market averages and identify optimization opportunities.
+            </p>
+            <ul class="space-y-2 text-sm text-slate-300">
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Spread optimization analysis</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Competitor rate benchmarking</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Market insight reports</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Execution & Latency -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/20">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Execution & Latency</h3>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              Monitor operational reliability across providers. Track execution signals, latency metrics, and availability to optimize routing decisions.
+            </p>
+            <ul class="space-y-2 text-sm text-slate-300">
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Execution signal feeds</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Latency matrix by corridor</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Operational reliability scores</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Compliance & Audit -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600/20">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Compliance & Audit</h3>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              Audit-ready data exports with full provenance. Timestamped records, compliance logs, and regulatory documentation for best execution requirements.
+            </p>
+            <ul class="space-y-2 text-sm text-slate-300">
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Compliance log exports</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>SHA-256 data provenance</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Best execution documentation</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- API Access Details -->
+        <div class="rounded-xl border border-slate-700 bg-slate-800/30 p-8">
+          <div class="grid gap-8 lg:grid-cols-2">
+            <div>
+              <h3 class="text-xl font-semibold text-white mb-4">API Integration Options</h3>
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded bg-blue-600/20 flex items-center justify-center text-sm font-bold text-blue-400">1</div>
+                  <div>
+                    <p class="text-sm font-medium text-white">REST API</p>
+                    <p class="text-xs text-slate-500">Real-time quote endpoints, historical data, corridor metadata</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded bg-blue-600/20 flex items-center justify-center text-sm font-bold text-blue-400">2</div>
+                  <div>
+                    <p class="text-sm font-medium text-white">Webhooks</p>
+                    <p class="text-xs text-slate-500">Price alerts, corridor changes, provider status updates</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded bg-blue-600/20 flex items-center justify-center text-sm font-bold text-blue-400">3</div>
+                  <div>
+                    <p class="text-sm font-medium text-white">Batch Exports</p>
+                    <p class="text-xs text-slate-500">Scheduled CSV/JSON delivery for compliance and analytics</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-xl font-semibold text-white mb-4">Enterprise SLA</h3>
+              <div class="grid gap-3 grid-cols-2">
+                <div class="rounded-lg bg-slate-900 p-3">
+                  <p class="text-xs text-slate-500">Uptime</p>
+                  <p class="text-lg font-bold text-white">99.9%</p>
+                </div>
+                <div class="rounded-lg bg-slate-900 p-3">
+                  <p class="text-xs text-slate-500">Latency</p>
+                  <p class="text-lg font-bold text-white">&lt;100ms</p>
+                </div>
+                <div class="rounded-lg bg-slate-900 p-3">
+                  <p class="text-xs text-slate-500">Support</p>
+                  <p class="text-lg font-bold text-white">24/7</p>
+                </div>
+                <div class="rounded-lg bg-slate-900 p-3">
+                  <p class="text-xs text-slate-500">Data Retention</p>
+                  <p class="text-lg font-bold text-white">365+ days</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-slate-700 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4 text-sm text-slate-500">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Synthetically verified</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>GDPR compliant</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Custom DPA available</span>
+              </div>
+            </div>
+
+            <NuxtLink
+              to="/contact?type=enterprise&topic=api"
+              class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            >
+              Request API access
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Independence Rules (Dark Trust Band) -->
     <section class="py-16 lg:py-20 bg-gradient-to-br from-slate-900 to-slate-800">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

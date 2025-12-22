@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">Provider Heatmap</h2>
-        <p class="text-sm text-neutral-400">Which provider was cheapest each day</p>
+        <h2 class="text-lg font-bold text-white">Winner Timeline</h2>
+        <p class="text-sm text-neutral-400">Who led on delivered amount each day</p>
       </div>
       <div class="flex items-center gap-4">
         <div
@@ -18,6 +18,11 @@
           />
           <span class="text-sm text-neutral-400">{{ provider }}</span>
           <span class="text-sm font-semibold text-white">{{ stats.percentage }}%</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-neutral-400">
+          <span class="h-2.5 w-2.5 rounded-full bg-neutral-600" />
+          <span>Leader changes</span>
+          <span class="text-sm font-semibold text-white">{{ leaderChangeCount }}</span>
         </div>
       </div>
     </div>
@@ -73,10 +78,10 @@
                 :style="{ backgroundColor: hoveredDay.winnerColor }"
               />
               <span class="text-sm text-neutral-300">{{ hoveredDay.winner }}</span>
-              <span class="text-sm font-semibold text-brand-600">was cheapest</span>
+              <span class="text-sm font-semibold text-brand-600">was leader</span>
             </div>
             <div class="mt-1 text-xs text-neutral-500">
-              Saved ~${{ hoveredDay.savings.toFixed(2) }} vs #2
+              Edge ~${{ hoveredDay.savings.toFixed(2) }} vs #2
             </div>
           </div>
         </div>
@@ -87,26 +92,6 @@
           <span>Today</span>
         </div>
 
-        <!-- Provider Pattern Insights -->
-        <div v-if="store.viewMode === 'analyst'" class="mt-4 space-y-2">
-          <div class="text-sm font-medium text-neutral-300">Pattern Insights</div>
-          <div class="grid grid-cols-2 gap-3">
-            <div
-              v-for="insight in insights"
-              :key="insight.provider"
-              class="rounded-lg border border-neutral-700 bg-neutral-900 p-3"
-            >
-              <div class="flex items-center gap-2 mb-1">
-                <span
-                  class="h-2 w-2 rounded-full"
-                  :style="{ backgroundColor: getProviderColor(insight.provider) }"
-                />
-                <span class="text-sm font-medium text-white">{{ insight.provider }}</span>
-              </div>
-              <p class="text-xs text-neutral-400">{{ insight.pattern }}</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -157,27 +142,15 @@ const visibleDays = computed(() => {
   return data.value.days.slice(-maxVisible)
 })
 
-const insights = computed(() => {
-  if (!data.value) return []
-  
-  return [
-    {
-      provider: 'Wise',
-      pattern: 'Often cheapest on weekday mornings. Best on Tuesdays.',
-    },
-    {
-      provider: 'Remitly',
-      pattern: 'Frequently wins on weekends. Runs promos every Tuesday.',
-    },
-    {
-      provider: 'XE',
-      pattern: 'Consistent mid-tier pricing. Rarely cheapest but reliable.',
-    },
-    {
-      provider: 'Xoom',
-      pattern: 'Competitive during PayPal promotions (monthly).',
-    },
-  ]
+const leaderChangeCount = computed(() => {
+  if (!data.value || data.value.days.length === 0) return 0
+  let changes = 0
+  for (let i = 1; i < data.value.days.length; i += 1) {
+    if (data.value.days[i].winner !== data.value.days[i - 1].winner) {
+      changes += 1
+    }
+  }
+  return changes
 })
 
 function getProviderColor(provider: string): string {

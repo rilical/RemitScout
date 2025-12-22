@@ -948,6 +948,250 @@
       </div>
     </section>
 
+    <!-- Technical Appendix (Institutional) -->
+    <section class="py-16 lg:py-20 bg-slate-900 scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-12">
+          <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">
+            For Compliance & Research Teams
+          </p>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Technical Appendix
+          </h2>
+          <p class="text-lg text-slate-400 max-w-3xl">
+            Detailed technical documentation for enterprise audits, compliance reviews, and integration planning.
+          </p>
+        </div>
+
+        <div class="grid gap-8 lg:grid-cols-2">
+          <!-- Synthetic Verification Process -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/20">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Synthetic Verification Process</h3>
+            </div>
+            
+            <p class="text-sm text-slate-400 mb-4">
+              We validate pricing data through automated transaction simulations on selected corridors.
+            </p>
+
+            <div class="space-y-4">
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">1</div>
+                <div>
+                  <p class="text-sm font-medium text-white">Quote Capture</p>
+                  <p class="text-xs text-slate-500">Automated bots capture quotes from provider APIs and public interfaces</p>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">2</div>
+                <div>
+                  <p class="text-sm font-medium text-white">Transaction Simulation</p>
+                  <p class="text-xs text-slate-500">Synthetic transfers initiated to checkout (not completed) to verify pricing</p>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">3</div>
+                <div>
+                  <p class="text-sm font-medium text-white">Delta Analysis</p>
+                  <p class="text-xs text-slate-500">Quote vs. checkout amounts compared; deviations &gt;2% flagged for review</p>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">4</div>
+                <div>
+                  <p class="text-sm font-medium text-white">Live Validation</p>
+                  <p class="text-xs text-slate-500">Periodic real transfers on selected corridors to confirm end-to-end accuracy</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-700">
+              <div class="flex items-center gap-2 text-xs text-emerald-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Current validation coverage: 85% of top 50 corridors</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Pipeline Architecture -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600/20">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Data Pipeline Architecture</h3>
+            </div>
+            
+            <p class="text-sm text-slate-400 mb-4">
+              Our data collection and processing infrastructure ensures accuracy and auditability.
+            </p>
+
+            <div class="space-y-3">
+              <div class="rounded-lg bg-slate-900 p-3">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-white">Data Sources</span>
+                  <span class="text-xs text-slate-500">33+ providers</span>
+                </div>
+                <p class="text-xs text-slate-500">Provider APIs, public quote pages, affiliate feeds</p>
+              </div>
+              <div class="rounded-lg bg-slate-900 p-3">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-white">Collection Frequency</span>
+                  <span class="text-xs text-slate-500">Variable</span>
+                </div>
+                <p class="text-xs text-slate-500">5-min (top corridors) to 24h (long-tail)</p>
+              </div>
+              <div class="rounded-lg bg-slate-900 p-3">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-white">Mid-Market Benchmark</span>
+                  <span class="text-xs text-slate-500">XE, ECB</span>
+                </div>
+                <p class="text-xs text-slate-500">Timestamped reference rates for markup calculation</p>
+              </div>
+              <div class="rounded-lg bg-slate-900 p-3">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-white">Storage & Retention</span>
+                  <span class="text-xs text-slate-500">365+ days</span>
+                </div>
+                <p class="text-xs text-slate-500">Immutable quote records with cryptographic hashes</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audit Trail & Provenance -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-600/20">
+                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Audit Trail & Provenance</h3>
+            </div>
+            
+            <p class="text-sm text-slate-400 mb-4">
+              Every data point is traceable from source to publication with cryptographic verification.
+            </p>
+
+            <div class="space-y-3 text-sm">
+              <div class="flex items-start gap-2 text-slate-300">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong class="text-white">SHA-256 hashes</strong> for all quote records</span>
+              </div>
+              <div class="flex items-start gap-2 text-slate-300">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong class="text-white">UTC timestamps</strong> with millisecond precision</span>
+              </div>
+              <div class="flex items-start gap-2 text-slate-300">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong class="text-white">Source attribution</strong> for every data point</span>
+              </div>
+              <div class="flex items-start gap-2 text-slate-300">
+                <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong class="text-white">Immutable logs</strong> for compliance exports</span>
+              </div>
+            </div>
+
+            <div class="mt-4 p-3 rounded-lg bg-slate-900 border border-slate-700">
+              <p class="text-xs text-slate-500 font-mono">
+                Example hash: <span class="text-slate-400">a3f2c8e1...</span>
+              </p>
+              <p class="text-xs text-slate-500 font-mono">
+                Timestamp: <span class="text-slate-400">2024-12-21T14:32:15.847Z</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- API & Integration -->
+          <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">API & Integration</h3>
+            </div>
+            
+            <p class="text-sm text-slate-400 mb-4">
+              Enterprise API access for programmatic data retrieval and system integration.
+            </p>
+
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900">
+                <span class="text-sm text-white">REST API</span>
+                <span class="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">Available</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900">
+                <span class="text-sm text-white">GraphQL</span>
+                <span class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">Coming Q2</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900">
+                <span class="text-sm text-white">Webhooks</span>
+                <span class="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">Available</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900">
+                <span class="text-sm text-white">Bulk Export (CSV/JSON)</span>
+                <span class="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">Available</span>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-700">
+              <NuxtLink
+                to="/enterprise"
+                class="inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                <span>Request API access</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 pt-8 border-t border-slate-700">
+          <div class="flex flex-wrap items-center gap-6 text-sm text-slate-500">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Synthetically verified v2.4.1</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Last audit: December 2024</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Compliance documentation available on request</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Guides Section -->
     <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

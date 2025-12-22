@@ -9,8 +9,8 @@
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">Market Depth</h2>
-          <p class="text-sm text-neutral-400">Provider rate distribution</p>
+          <h2 class="text-lg font-bold text-white">Market Spread</h2>
+          <p class="text-sm text-neutral-400">Best-to-worst pricing dispersion</p>
         </div>
       </div>
       <div class="text-right">
@@ -41,7 +41,7 @@
                 <span class="text-xs font-bold text-white">1</span>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">Best Rate</div>
+                <div class="text-sm font-semibold text-white">Best Price</div>
                 <div class="text-xs text-neutral-400">{{ data?.bestProvider }}</div>
               </div>
             </div>
@@ -57,7 +57,7 @@
                 <span class="text-xs font-bold text-white">2</span>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">2nd Best</div>
+                <div class="text-sm font-semibold text-white">Runner-up</div>
                 <div class="text-xs text-neutral-400">{{ data?.secondBestProvider }}</div>
               </div>
             </div>
@@ -70,7 +70,7 @@
           <div class="flex items-center justify-between rounded-lg bg-neutral-700/30 px-4 py-2">
             <div class="flex items-center gap-3">
               <div class="flex h-6 w-6 items-center justify-center">
-                <span class="text-xs text-neutral-500">—</span>
+                <span class="text-xs text-neutral-500">-</span>
               </div>
               <div class="text-sm text-neutral-400">Median Rate</div>
             </div>
@@ -88,7 +88,7 @@
                 </svg>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">Worst Rate</div>
+                <div class="text-sm font-semibold text-white">Worst Price</div>
                 <div class="text-xs text-neutral-400">{{ data?.worstProvider }}</div>
               </div>
             </div>
@@ -125,7 +125,7 @@
         </div>
 
         <!-- Analyst Insight -->
-        <div v-if="store.viewMode === 'analyst'" class="rounded-lg border border-neutral-700 bg-neutral-900/50 p-4">
+        <div class="rounded-lg border border-neutral-700 bg-neutral-900/50 p-4">
           <div class="flex items-start gap-3">
             <svg class="h-5 w-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -146,7 +146,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { MarketDepth } from '~/types/remit'
-import { buildMarketDepth } from '~/lib/trueCostCalculator'
+import { getMarketDepthData } from '~/lib/pulseMockApi'
 
 const store = usePulseStore()
 
@@ -159,33 +159,20 @@ const analystInsight = computed(() => {
   
   const spread = data.value.spreadRangeBps
   if (spread < 50) {
-    return 'Market is tightly priced. Provider rates are competitive—good time for price-sensitive transfers.'
+    return 'Market is tightly priced. Competitive pressure is high and spreads are compressed.'
   } else if (spread < 150) {
-    return 'Normal market conditions. Shop around as there\'s meaningful variation between providers.'
+    return 'Normal dispersion. Leader advantage is meaningful but not extreme.'
   } else if (spread < 300) {
-    return 'Wide spread detected. Some providers are significantly overcharging—compare carefully.'
+    return 'Wide dispersion. Pricing variance creates clear winner/loser positioning.'
   } else {
-    return 'Extreme spread! Banks are charging 3x+ what specialists charge. Avoid traditional banking for this corridor.'
+    return 'Extreme dispersion detected. Expect aggressive leader shifts and higher price sensitivity.'
   }
 })
 
 async function loadData() {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    const baseMidRate = 56.25
-    const providers = [
-      { name: 'Wise', rate: baseMidRate * 0.996 },
-      { name: 'Remitly', rate: baseMidRate * 0.994 },
-      { name: 'XE', rate: baseMidRate * 0.990 },
-      { name: 'Xoom', rate: baseMidRate * 0.988 },
-      { name: 'WorldRemit', rate: baseMidRate * 0.985 },
-      { name: 'Western Union', rate: baseMidRate * 0.975 },
-      { name: 'Bank', rate: baseMidRate * 0.944 },
-    ]
-    
-    data.value = buildMarketDepth(providers)
+    data.value = await getMarketDepthData(store.corridor)
     lastUpdated.value = new Date().toISOString()
   } catch (e) {
     console.error('Failed to load market depth:', e)

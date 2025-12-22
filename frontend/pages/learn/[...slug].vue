@@ -28,16 +28,19 @@
     </div>
 
     <div class="container mx-auto px-4 py-8">
-      <div v-if="article" class="mb-4">
-        <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-600">
-          Money Transfer Basics
-        </div>
-        <div class="text-neutral-600 text-sm">
-          Last updated {{ article.lastUpdated || '—' }} • {{ article.readTime || '5 min read' }}
-        </div>
-      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Main Content Column -->
+        <div class="lg:col-span-8">
+          <div v-if="article" class="mb-4">
+            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-600">
+              Money Transfer Basics
+            </div>
+            <div class="text-neutral-600 text-sm">
+              Last updated {{ article.lastUpdated || '—' }} • {{ article.readTime || '5 min read' }}
+            </div>
+          </div>
 
-      <article class="rounded-lg bg-white p-8 shadow-md">
+          <article class="rounded-lg bg-white p-8 shadow-md">
         <header class="mb-8 border-b pb-8">
           <div class="mb-4 flex items-center">
             <Badge variant="secondary">
@@ -149,9 +152,114 @@
         </footer>
       </article>
 
-      <LastUpdated v-if="article" :date="article?.lastUpdated" />
-      <div v-else class="rounded-lg bg-white p-6 shadow">
-        <p class="text-neutral-700">Article not found.</p>
+          <LastUpdated v-if="article" :date="article?.lastUpdated" />
+
+          <div v-if="!article" class="rounded-lg bg-white p-6 shadow">
+            <p class="text-neutral-700">Article not found.</p>
+          </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <aside class="lg:col-span-4 space-y-6">
+          <!-- Data Sources & Methodology Box -->
+          <div class="rounded-lg bg-slate-900 border border-slate-800 p-5 sticky top-4">
+            <div class="flex items-center gap-2 mb-4">
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <h3 class="text-base font-semibold text-white">Data Sources & Methodology</h3>
+            </div>
+            
+            <div class="space-y-4 text-sm">
+              <div>
+                <p class="text-slate-400 mb-2">This article uses data from:</p>
+                <ul class="space-y-2">
+                  <li class="flex items-start gap-2 text-slate-300">
+                    <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>33+ licensed money transfer providers</span>
+                  </li>
+                  <li class="flex items-start gap-2 text-slate-300">
+                    <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>XE mid-market rate benchmarks</span>
+                  </li>
+                  <li class="flex items-start gap-2 text-slate-300">
+                    <svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Regulatory filings (FCA, FinCEN, ASIC)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="pt-3 border-t border-slate-700">
+                <p class="text-slate-400 mb-2">Verification:</p>
+                <div class="flex items-center gap-2 text-slate-300">
+                  <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Synthetically Verified
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">
+                  Data validated through automated transaction simulations
+                </p>
+              </div>
+
+              <div class="pt-3 border-t border-slate-700">
+                <NuxtLink
+                  to="/methodology"
+                  class="inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <span>View full methodology</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+
+          <!-- Editorial Independence Box -->
+          <div class="rounded-lg bg-white border border-neutral-200 p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h4 class="text-sm font-semibold text-neutral-900">Editorial Independence</h4>
+            </div>
+            <p class="text-xs text-neutral-600 leading-relaxed mb-3">
+              Rankings are determined by our proprietary scoring system. Providers cannot pay for placement or influence scores.
+            </p>
+            <NuxtLink
+              to="/how-we-make-money"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700"
+            >
+              How we make money →
+            </NuxtLink>
+          </div>
+
+          <!-- Compare Now CTA -->
+          <div class="rounded-lg bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white">
+            <h4 class="font-semibold mb-2">Ready to send money?</h4>
+            <p class="text-sm text-white/90 mb-4">
+              Compare real-time rates from 30+ providers and find the best deal.
+            </p>
+            <NuxtLink
+              to="/send-money"
+              class="inline-flex items-center gap-2 w-full justify-center py-2.5 px-4 bg-white text-brand-600 rounded-lg text-sm font-semibold hover:bg-brand-50 transition-colors"
+            >
+              Compare Rates
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </NuxtLink>
+          </div>
+        </aside>
       </div>
     </div>
   </div>

@@ -1,10 +1,9 @@
 <template>
   <div class="min-h-screen bg-white">
-    <!-- Full-Width Hero Section with Chart -->
+    <!-- Corridor Decision Header -->
     <section class="bg-gradient-to-b from-brand-600 to-brand-700 text-white">
-      <div class="mx-auto max-w-6xl px-4 py-8">
-        <!-- Breadcrumbs (light) -->
-        <nav class="mb-6 text-sm">
+      <div class="mx-auto max-w-6xl px-4 py-6">
+        <nav class="mb-4 text-sm">
           <ol class="flex flex-wrap items-center gap-2">
             <li>
               <NuxtLink to="/" class="text-white/70 hover:text-white">Home</NuxtLink>
@@ -18,12 +17,8 @@
           </ol>
         </nav>
 
-        <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
-          <!-- Left: Title & Info -->
+        <div class="grid gap-6 lg:grid-cols-2 lg:items-center">
           <div>
-            <p class="text-sm font-medium text-white/80 mb-2 uppercase tracking-wide">
-              Money Transfer Details
-            </p>
             <div class="flex items-center gap-6 mb-4">
               <div class="flex items-center gap-3">
                 <span class="text-4xl leading-none">{{ flagFrom }}</span>
@@ -32,11 +27,9 @@
                   <span class="text-lg font-semibold">{{ content.from }}</span>
                 </div>
               </div>
-              <div class="flex items-center justify-center h-10 w-10">
-                <svg class="h-6 w-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
+              <svg class="h-6 w-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
               <div class="flex items-center gap-3">
                 <span class="text-4xl leading-none">{{ flagTo }}</span>
                 <div>
@@ -46,20 +39,14 @@
               </div>
             </div>
 
-            <div class="flex items-baseline gap-4 mb-6">
-              <div>
-                <p class="text-4xl font-bold">{{ amount.toLocaleString() }}.00 {{ content.fromCode.toUpperCase() }}</p>
-              </div>
-              <svg class="h-5 w-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              <div>
-                <p class="text-4xl font-bold">{{ estimatedReceive }} {{ content.toCode.toUpperCase() }}</p>
-              </div>
+            <div class="mb-4">
+              <p class="text-xs text-white/70 mb-1">Recipient gets (on ${{ displayAmount.toLocaleString() }})</p>
+              <p class="text-3xl font-bold">
+                {{ recipientRange.min }} – {{ recipientRange.max }} {{ content.toCode.toUpperCase() }}
+              </p>
             </div>
 
-            <!-- Trust Chips -->
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2 mb-4">
               <span
                 v-for="chip in content.hero.chips"
                 :key="chip"
@@ -72,21 +59,35 @@
               </span>
             </div>
 
-            <div class="mt-6">
-              <SaveAlertButtons
-                :target="corridorWatchTarget"
-                :label="corridorWatchLabel"
-                source="compare"
-              />
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg bg-white/20 backdrop-blur px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/30 transition-colors"
+                @click="handleSave"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                Save corridor
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-white/90 transition-colors"
+                @click="handleAlert"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Set rate alert
+              </button>
             </div>
           </div>
 
-          <!-- Right: Rate Chart -->
-          <div class="rounded-2xl bg-white p-5 shadow-xl">
-            <div class="flex items-center justify-between mb-4">
+          <div class="rounded-2xl bg-white p-4 shadow-xl">
+            <div class="flex items-center justify-between mb-2">
               <div>
-                <p class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Current Mid-Market Rate</p>
-                <p class="text-2xl font-bold text-brand-600">{{ content.rateWidget.midMarket }}</p>
+                <p class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Mid-Market Rate</p>
+                <p class="text-xl font-bold text-brand-600">{{ content.rateWidget.midMarket }}</p>
               </div>
               <div class="flex gap-1">
                 <span
@@ -97,1035 +98,465 @@
                     change.value.startsWith('-') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700',
                   ]"
                 >
-                  {{ change.value }} SINCE {{ change.label.toUpperCase() }}
+                  {{ change.value }} {{ change.label }}
                 </span>
               </div>
             </div>
-
-            <!-- Simple Chart Visualization -->
-            <div class="h-32 relative mb-4">
-              <svg class="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
-                <!-- Grid lines -->
-                <line x1="0" y1="25" x2="400" y2="25" stroke="#e5e7eb" stroke-width="1" />
-                <line x1="0" y1="50" x2="400" y2="50" stroke="#e5e7eb" stroke-width="1" />
-                <line x1="0" y1="75" x2="400" y2="75" stroke="#e5e7eb" stroke-width="1" />
-
-                <!-- Rate line (sample data visualization) -->
+            <div class="h-16 relative mb-2">
+              <svg class="w-full h-full" viewBox="0 0 200 50" preserveAspectRatio="none">
                 <path
-                  d="M0,60 Q50,55 100,58 T200,45 T300,50 T400,40"
+                  d="M0,35 Q25,30 50,33 T100,25 T150,28 T200,20"
                   fill="none"
                   stroke="#2563eb"
                   stroke-width="2"
                 />
-                <!-- Area fill -->
                 <path
-                  d="M0,60 Q50,55 100,58 T200,45 T300,50 T400,40 L400,100 L0,100 Z"
-                  fill="url(#chartGradient)"
+                  d="M0,35 Q25,30 50,33 T100,25 T150,28 T200,20 L200,50 L0,50 Z"
+                  fill="url(#heroChartGradient)"
                 />
                 <defs>
-                  <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <linearGradient id="heroChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stop-color="#2563eb" stop-opacity="0.2" />
                     <stop offset="100%" stop-color="#2563eb" stop-opacity="0" />
                   </linearGradient>
                 </defs>
-                <!-- Current point -->
-                <circle cx="400" cy="40" r="4" fill="#2563eb" />
+                <circle cx="200" cy="20" r="3" fill="#2563eb" />
               </svg>
-
-              <!-- X-axis labels -->
-              <div class="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-neutral-400">
-                <span>60D</span>
-                <span>45D</span>
+              <div class="absolute bottom-0 left-0 right-0 flex justify-between text-[9px] text-neutral-400">
                 <span>30D</span>
-                <span>15D</span>
                 <span>Now</span>
               </div>
             </div>
-
-            <div class="border-t border-neutral-200 pt-4">
-              <p class="text-xs text-neutral-500 mb-2">
-                <strong class="text-neutral-700">About this rate:</strong>
-                This is the mid-market exchange rate between {{ content.fromCode.toUpperCase() }} and {{ content.toCode.toUpperCase() }} over the past 30 days. The mid-market rate is the rate banks trade at between themselves.
-              </p>
-              <p class="text-[10px] text-neutral-400">
-                Last updated: {{ content.rateWidget.asOf }} · Source: {{ content.rateWidget.source }}
-              </p>
+            <div class="text-xs text-neutral-500 flex items-center justify-between">
+              <span>{{ content.rateWidget.asOf }}</span>
+              <span>Source: {{ content.rateWidget.source }}</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Main Content Section - Single Column Focus -->
-    <div class="mx-auto max-w-5xl px-4 py-8">
-      <!-- Intro Text -->
-      <section class="mb-8">
-        <h1 class="text-3xl font-bold text-neutral-900 leading-tight mb-4">
-          Send money from {{ content.from }} to {{ content.to }}
-        </h1>
-        <p class="text-lg text-neutral-600 leading-relaxed mb-4">
-          {{ content.hero.subhead }}
-        </p>
-        <NuxtLink
-          to="/how-we-make-money"
-          class="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand-600 transition-colors"
-        >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Advertiser disclosure
-        </NuxtLink>
-      </section>
+    <!-- Anchor Mini Nav -->
+    <CorridorMiniNav :last-updated="content.lastUpdated" />
 
-      <!-- Find Your Best Rate Now - Form Section -->
-      <section class="mb-8">
-        <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-          <div class="border-b border-slate-100 bg-gradient-to-r from-blue-600 to-emerald-600 px-8 py-8 lg:px-10 lg:py-10">
-            <h3 class="text-2xl lg:text-3xl font-bold text-white mb-3">
-              Find Your Best Rate Now
-            </h3>
-            <p class="text-base lg:text-lg text-white/90">
-              Compare live rates from 30+ providers
-            </p>
-          </div>
+    <!-- ZONE A: Compare -->
+    <section id="compare" class="bg-slate-50 border-b border-slate-200">
+      <div class="mx-auto max-w-6xl px-4 py-6">
+        <CorridorStickyBar
+          :amount="displayAmount"
+          :payout-method="payoutMethod"
+          :sort-by="sortBy"
+          :currency="displayCurrency"
+          @update="handleBarUpdate"
+          @sort="handleSort"
+          @save="handleSave"
+          @alert="handleAlert"
+          @share="handleShare"
+        />
 
-          <form
-            class="p-6 space-y-4"
-            @submit.prevent="handleFormCompare"
-          >
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  for="from-country"
-                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                >
-                  Sending from
-                </label>
-                <CountrySelect
-                  id="from-country-form"
-                  v-model="compareForm.from"
-                  label="Sending from"
-                  placeholder="United States"
-                />
-                <p class="mt-2 text-xs text-slate-500">
-                  Select your sending country to see the best rates.
-                </p>
-              </div>
-
-              <div>
-                <label
-                  for="to-country-form"
-                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                >
-                  Receiving in
-                </label>
-                <CountrySelect
-                  id="to-country-form"
-                  v-model="compareForm.to"
-                  label="Receiving in"
-                  placeholder="Select country"
-                />
-                <p class="mt-2 text-xs text-slate-500">
-                  Choose where your recipient will receive the money.
-                </p>
-              </div>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  for="from-currency-form"
-                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                >
-                  From currency
-                </label>
-                <CurrencySelect
-                  id="from-currency-form"
-                  v-model="compareForm.fromCurrency"
-                  :country-code="compareForm.from"
-                  placeholder="USD"
-                />
-                <p class="mt-2 text-xs text-slate-500">
-                  Currency you'll be sending from.
-                </p>
-              </div>
-
-              <div>
-                <label
-                  for="to-currency-form"
-                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                >
-                  To currency
-                </label>
-                <CurrencySelect
-                  id="to-currency-form"
-                  v-model="compareForm.toCurrency"
-                  :country-code="compareForm.to"
-                  :placeholder="compareForm.to ? 'Select currency' : 'Select country first'"
-                  :disabled="!compareForm.to"
-                />
-                <p class="mt-2 text-xs text-slate-500">
-                  Currency your recipient will receive.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <label
-                for="amount-form"
-                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-              >
-                Amount to send
-              </label>
-              <input
-                id="amount-form"
-                v-model.number="compareForm.amount"
-                type="number"
-                min="1"
-                step="1"
-                class="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                placeholder="500"
-              >
-            </div>
-
-            <button
-              type="submit"
-              class="w-full h-12 rounded-lg bg-blue-600 px-6 text-base font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg flex items-center justify-center gap-2"
-            >
-              Compare Rates
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <!-- Why Use Our Comparison Engine Section -->
-      <section class="mb-8">
-        <div class="grid gap-8 lg:grid-cols-2">
-          <div>
-            <h2 class="text-2xl font-bold text-neutral-900 mb-4">
-              Why Use Our Comparison Engine
-            </h2>
-            <div class="prose prose-neutral prose-sm max-w-none">
-              <p class="text-neutral-600 leading-relaxed">
-                With our model, the only losers are the expensive banks or providers you'll stop using!
-              </p>
-              <p class="text-neutral-600 leading-relaxed">
-                To ensure our independence, we always use <strong>transparent, objective and verifiable</strong> criteria in our comparison. No provider can buy their way to the top of our results.
-              </p>
-              <p class="text-neutral-600 leading-relaxed">
-                We include as many providers as possible in our comparison and have partnerships with almost all major and innovative providers.
-              </p>
-            </div>
-            <NuxtLink
-              to="/methodology"
-              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors"
-            >
-              Learn more about Remit-Scout
-            </NuxtLink>
-          </div>
-          <div class="space-y-4">
-            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
-              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p class="text-sm text-neutral-600">
-                You save money on your transfer by selecting the cheapest provider.
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
-              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <p class="text-sm text-neutral-600">
-                The best providers earn new customers without expensive marketing, helping keep their costs (and prices) low.
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-xl border border-neutral-200 p-4">
-              <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <p class="text-sm text-neutral-600">
-                Remit-Scout receives a referral fee from the provider you selected. This enables us to offer our service to you for free.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Trust & Independence Section -->
-      <section class="mb-8">
-        <div class="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-white">
-          <h2 class="text-2xl font-bold mb-4">Trust & Independence</h2>
-          <p class="text-white/90 mb-6 leading-relaxed">
-            <strong>100% independent rankings</strong> — Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.
-          </p>
-          <div class="space-y-3">
-            <div class="text-sm">No paid placements</div>
-            <div class="text-sm">Real-time rate updates</div>
-            <div class="text-sm">Transparent methodology</div>
-          </div>
-          <NuxtLink
-            to="/methodology"
-            class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80 transition-colors"
-          >
-            Learn about our methodology
-          </NuxtLink>
-        </div>
-      </section>
-
-      <!-- Best Ways Summary (Monito-style green card) -->
-      <section v-if="content.providerHighlights.length" class="rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 p-6 mb-8">
-        <div class="flex items-start gap-4">
-          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white flex-shrink-0">
-            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-neutral-900 mb-3">
-              Best Ways to Send Money from {{ content.from }} to {{ content.to }}
-            </h2>
-            <ul class="space-y-2 text-sm text-neutral-700">
-              <li v-for="highlight in content.providerHighlights" :key="highlight.label" class="flex items-center gap-2">
-                <span class="font-medium text-neutral-500">{{ highlight.label }}:</span>
-                <span class="font-bold text-brand-600">{{ highlight.provider }}</span>
-                <span class="text-neutral-400">({{ highlight.score }}/10)</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <!-- Coming Soon Placeholder (when no providers) -->
-      <section v-else class="rounded-2xl bg-gradient-to-br from-brand-50 via-white to-blue-50 border border-brand-200 p-8 lg:p-12 mb-8">
-        <div class="max-w-3xl mx-auto">
-          <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-              <svg class="w-12 h-12 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h2 class="text-2xl font-bold text-neutral-900 mb-3">
-              {{ content.from }} to {{ content.to }} Comparison Coming Soon
-            </h2>
-            <p class="text-lg text-neutral-600 mb-4">
-              We're currently gathering real-time data from licensed money transfer providers for this corridor.
-            </p>
-          </div>
-
-          <!-- EEAT Content -->
-          <div class="bg-white rounded-xl border border-neutral-200 p-6 mb-8">
-            <h3 class="font-bold text-neutral-900 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              What to Expect When We Launch
-            </h3>
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div class="flex gap-3">
-                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <p class="font-semibold text-neutral-900">Live Exchange Rates</p>
-                  <p class="text-sm text-neutral-600">Real-time mid-market rates compared against each provider's offered rate, showing you exactly how much markup they add.</p>
-                </div>
-              </div>
-              <div class="flex gap-3">
-                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-                <div>
-                  <p class="font-semibold text-neutral-900">Provider Rankings</p>
-                  <p class="text-sm text-neutral-600">Unbiased rankings based on total cost (fees + FX markup), transfer speed, and user reviews. Providers cannot pay for placement.</p>
-                </div>
-              </div>
-              <div class="flex gap-3">
-                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <div>
-                  <p class="font-semibold text-neutral-900">Speed Comparisons</p>
-                  <p class="text-sm text-neutral-600">See which providers offer instant transfers, same-day delivery, or bank deposit options for {{ content.to }}.</p>
-                </div>
-              </div>
-              <div class="flex gap-3">
-                <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <div>
-                  <p class="font-semibold text-neutral-900">Licensed Providers Only</p>
-                  <p class="text-sm text-neutral-600">Every provider we list is regulated by financial authorities (FCA, FinCEN, ASIC) for your protection.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Why We're Different -->
-          <div class="bg-slate-50 rounded-xl p-6 mb-8">
-            <h3 class="font-bold text-neutral-900 mb-3">Why Remit-Scout?</h3>
-            <p class="text-neutral-600 mb-4">
-              Founded by expats who were tired of losing money to hidden bank fees, Remit-Scout is an independent comparison platform. We test transfers ourselves, verify licensing, and never let providers pay for better rankings. Our goal is simple: help you keep more money in your pocket.
-            </p>
-            <div class="flex flex-wrap gap-4 text-sm">
-              <span class="flex items-center gap-1.5 text-neutral-700">
-                <span class="text-green-600">✓</span> 30+ providers compared
-              </span>
-              <span class="flex items-center gap-1.5 text-neutral-700">
-                <span class="text-green-600">✓</span> 150+ countries covered
-              </span>
-              <span class="flex items-center gap-1.5 text-neutral-700">
-                <span class="text-green-600">✓</span> Updated every 5 minutes
-              </span>
-            </div>
-          </div>
-
-          <!-- Email Signup -->
-          <div class="text-center">
-            <p class="text-neutral-700 font-medium mb-4">
-              Get notified when {{ content.from }} → {{ content.to }} comparisons go live:
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                class="flex-1 rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              >
-              <button
-                type="button"
-                class="rounded-lg bg-brand-600 px-6 py-3 text-sm font-bold text-white hover:bg-brand-700 transition-colors whitespace-nowrap"
-              >
-                🔔 Notify Me
-              </button>
-            </div>
-            <p class="text-xs text-neutral-500 mt-4">
-              In the meantime, explore our <NuxtLink to="/send-money" class="text-brand-600 hover:underline font-medium">comparison tool</NuxtLink> for other popular corridors, or read our <NuxtLink to="/learn" class="text-brand-600 hover:underline font-medium">money transfer guides</NuxtLink>.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Mid-Market Rate Card -->
-      <section v-if="content.rateWidget.midMarket" class="rounded-xl border border-neutral-200 bg-white p-6 mb-8">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div>
-            <p class="text-sm font-medium text-neutral-500 mb-1">Mid-market exchange rate</p>
-            <p class="text-2xl font-bold text-neutral-900">{{ content.rateWidget.midMarket }}</p>
-            <p class="text-xs text-neutral-500 mt-1">{{ content.rateWidget.asOf }} · Source: {{ content.rateWidget.source }}</p>
-          </div>
-          <div class="flex gap-2">
-            <span
-              v-for="change in content.rateWidget.changes"
-              :key="change.label"
-              class="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1.5 text-xs font-medium"
-            >
-              <span class="text-neutral-500">{{ change.label }}</span>
-              <span :class="change.value.startsWith('-') ? 'text-rose-600' : 'text-emerald-600'">
-                {{ change.value }}
-              </span>
-            </span>
-          </div>
-        </div>
-        <p class="text-sm text-neutral-600 leading-relaxed">
-          To calculate the total cost of your transfer, we compare the exchange rate every provider applies to your transactions with the latest mid-market rate data from
-          <span class="font-semibold">{{ content.rateWidget.source }}</span>.
-        </p>
-      </section>
-
-      <!-- Compare Providers Section -->
-      <section v-if="content.table.rows.length" class="mb-8">
-        <!-- Understanding the Comparison -->
-        <div class="rounded-xl border border-blue-200 bg-blue-50 p-6 mb-6">
-          <div class="flex items-start gap-4">
-            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-600">
-              <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h3 class="text-base font-bold text-blue-900 mb-2">How to read this comparison</h3>
-              <div class="space-y-2 text-sm text-blue-800">
-                <div class="flex items-start gap-2">
-                  <span class="font-semibold min-w-fit">True Cost:</span>
-                  <span>Shows the <strong>total cost</strong> including upfront fees + hidden exchange rate markup (calculated vs mid-market rate).</span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="inline-flex items-center gap-1 font-semibold min-w-fit">
-                    <span class="text-blue-900">Δ</span> Delta:
-                  </span>
-                  <span>The delta symbol (Δ) shows how much <strong>more</strong> this provider costs vs the cheapest option. Lower is better.</span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="font-semibold min-w-fit">Visual bar:</span>
-                  <span>Blue = upfront fee (visible), Red/Amber = hidden markup (invisible to most users).</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="text-xl font-bold text-neutral-900">
               Compare {{ content.table.rows.length }} providers
             </h2>
             <p class="text-sm text-neutral-500">
-              Sorted by amount received
+              Sorted by {{ sortLabels[sortBy] }}
             </p>
           </div>
-          <div class="flex items-center gap-3">
-            <NuxtLink
-              to="/how-we-make-money"
-              class="text-xs text-neutral-500 hover:text-brand-600"
-            >
-              Advertiser disclosure
+          <div class="flex items-center gap-3 text-xs">
+            <span class="text-neutral-400">Rankings are independent</span>
+            <NuxtLink to="/how-we-make-money" class="text-neutral-500 hover:text-brand-600">
+              Disclosure
             </NuxtLink>
-            <span class="text-neutral-300">|</span>
-            <button type="button" class="text-xs text-neutral-500 hover:text-brand-600">
-              Report a problem
-            </button>
           </div>
         </div>
 
-        <!-- Provider Cards -->
-        <div class="space-y-6">
-          <div
-            v-for="(row, index) in content.table.rows"
-            :key="row.provider"
-            :class="[
-              'rounded-2xl border-2 p-6 transition-all',
-              index === 0 
-                ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-white shadow-lg shadow-emerald-100/50' 
-                : 'border-neutral-200 bg-white hover:border-brand-300 hover:shadow-lg',
-            ]"
-          >
-            <!-- Badge Row -->
-            <div v-if="row.badge || row.warning" class="mb-3">
-              <span
-                v-if="row.badge"
-                :class="[
-                  'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold',
-                  index === 0 ? 'bg-emerald-500 text-white' : 'bg-brand-100 text-brand-700',
-                ]"
-              >
-                {{ row.badge }}
-              </span>
-              <span v-if="row.warning" class="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
-                ⚠️ {{ row.warning }}
-              </span>
-            </div>
-
-            <!-- Top Row: Provider Info + Quick Stats -->
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-              <!-- Provider Info -->
-              <div class="flex items-center gap-4">
-                <div class="relative">
-                  <div class="h-16 w-16 rounded-xl bg-neutral-100 flex items-center justify-center text-2xl font-bold text-neutral-600">
-                    {{ row.provider.charAt(0) }}
-                  </div>
-                  <div class="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white ring-2 ring-white">
-                    {{ row.score }}
-                  </div>
-                </div>
-                <div>
-                  <p class="text-xl font-bold text-neutral-900">{{ row.provider }}</p>
-                  <p class="text-sm text-neutral-500">Remit-Scout Score: {{ row.score }}/10</p>
-                </div>
-              </div>
-
-              <!-- Quick Stats -->
-              <div class="text-right">
-                <p class="text-xs font-medium text-neutral-500 mb-1">Recipient gets</p>
-                <p class="text-3xl font-bold text-neutral-900 mb-2">{{ row.recipientGets }}</p>
-                <ProviderDeltaBadge
-                  :delta="getProviderTrueCost(row, index).deltaFromBest"
-                  :is-best="index === 0"
-                  :amount="displayAmount"
-                />
-              </div>
-            </div>
-
-            <!-- Cost Breakdown Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              <!-- True Cost Breakdown -->
-              <div class="lg:col-span-2">
-                <TrueCostCard
-                  :upfront-fee="getProviderTrueCost(row, index).upfrontFee"
-                  :hidden-markup="getProviderTrueCost(row, index).hiddenMarkup"
-                  :total-cost="getProviderTrueCost(row, index).totalCost"
-                  :total-cost-percent="getProviderTrueCost(row, index).totalCostPercent"
-                  :spread-bps="getProviderTrueCost(row, index).spreadBps"
-                  :amount="displayAmount"
-                  compact
-                />
-              </div>
-
-              <!-- Transfer Details -->
-              <div class="space-y-4">
-                <div>
-                  <p class="text-xs font-medium text-neutral-500 mb-1">Transfer time</p>
-                  <p class="text-base font-semibold text-neutral-900">{{ row.speed }}</p>
-                  <p class="text-xs text-neutral-500">{{ row.speedNote }}</p>
-                </div>
-                <button
-                  type="button"
-                  :class="[
-                    'w-full rounded-lg px-6 py-3 text-sm font-bold transition-all hover:shadow-lg',
-                    index === 0
-                      ? 'bg-brand-600 text-white hover:bg-brand-700'
-                      : 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50',
-                  ]"
-                >
-                  Go to {{ row.provider.split(' ')[0] }} →
-                </button>
-              </div>
-            </div>
-
-            <!-- Extra Info -->
-            <div v-if="row.notes" class="pt-4 border-t border-neutral-200 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-600">
-              <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                <span><span class="font-medium">Pay-in:</span> {{ row.payIn }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span><span class="font-medium">Payout:</span> {{ row.payOut }}</span>
-              </div>
-              <div class="flex items-center gap-2 text-neutral-500">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{{ row.notes }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <p class="mt-4 text-xs text-neutral-500 leading-relaxed">
-          We source transfer fees, rates and other data from money transfer providers in different ways. We constantly monitor the quality of our comparison data, but we cannot guarantee its accuracy. Last updated {{ content.lastUpdated }}.
-        </p>
-      </section>
-
-      <!-- AD SLOT 1: In-content (between sections) -->
-      <section class="rounded-xl border border-dashed border-amber-300 bg-amber-50/50 p-4 mb-8">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-200 px-2 py-0.5 rounded">Ad</span>
-        </div>
-        <div class="text-center py-6 text-sm text-amber-700">
-          <p class="mb-2">Advertisement placeholder</p>
-          <code class="text-[10px] bg-amber-100 px-2 py-1 rounded">ins.adsbygoogle data-ad-slot="XXXX"</code>
-        </div>
-      </section>
-
-      <!-- About This Corridor -->
-      <section class="mb-8">
-        <h2 class="text-xl font-bold text-neutral-900 mb-4">
-          About Money Transfers from {{ content.from }} to {{ content.to }}
-        </h2>
-        <div class="prose prose-neutral prose-sm max-w-none">
-          <p class="text-neutral-600 leading-relaxed mb-4">
-            When it comes to sending money from {{ content.from }} to {{ content.to }}, there are several options to consider. Comparing your options carefully can save you a significant amount, and our experts at Remit-Scout are here to help.
-          </p>
-
-          <!-- Stats Grid -->
-          <div v-if="content.statsBar.length" class="grid grid-cols-2 gap-4 my-6 not-prose">
+        <div v-if="content.table.rows.length" class="space-y-4">
+          <template v-for="(row, index) in sortedProviders" :key="row.provider">
             <div
-              v-for="stat in content.statsBar"
-              :key="stat.label"
-              class="rounded-lg border border-neutral-200 bg-neutral-50 p-4"
+              :id="`provider-${row.provider.toLowerCase().replace(/\s+/g, '-')}`"
+              :class="[
+                'rounded-xl border-2 p-5 transition-all bg-white',
+                index === 0 
+                  ? 'border-emerald-400 shadow-lg shadow-emerald-100/50' 
+                  : 'border-slate-200 hover:border-brand-300 hover:shadow-md',
+              ]"
             >
-              <p class="text-xs font-medium text-neutral-500 mb-1">{{ stat.label }}</p>
-              <p class="text-lg font-bold text-neutral-900">{{ stat.value }}</p>
-              <p class="text-xs text-neutral-500">{{ stat.helper }}</p>
+              <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                  <div class="relative">
+                    <div class="h-14 w-14 rounded-xl bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-600">
+                      {{ row.provider.charAt(0) }}
+                    </div>
+                    <div class="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white ring-2 ring-white">
+                      {{ row.score }}
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <p class="text-lg font-bold text-neutral-900">{{ row.provider }}</p>
+                      <span v-if="row.badge" :class="[
+                        'rounded px-2 py-0.5 text-xs font-bold',
+                        index === 0 ? 'bg-emerald-500 text-white' : 'bg-brand-100 text-brand-700'
+                      ]">
+                        {{ row.badge }}
+                      </span>
+                      <span v-if="row.warning" class="rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                        {{ row.warning }}
+                      </span>
+                    </div>
+                    <p class="text-sm text-neutral-500">{{ row.speed }} · {{ row.speedNote }}</p>
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <p class="text-xs font-medium text-neutral-500 mb-1">Recipient gets</p>
+                  <p class="text-2xl font-bold text-neutral-900">{{ row.recipientGets }}</p>
+                  <ProviderDeltaBadge
+                    :delta="getProviderTrueCost(row, index).deltaFromBest"
+                    :is-best="index === 0"
+                    :amount="displayAmount"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-100">
+                <div class="lg:col-span-2">
+                  <TrueCostCard
+                    :upfront-fee="getProviderTrueCost(row, index).upfrontFee"
+                    :hidden-markup="getProviderTrueCost(row, index).hiddenMarkup"
+                    :total-cost="getProviderTrueCost(row, index).totalCost"
+                    :total-cost-percent="getProviderTrueCost(row, index).totalCostPercent"
+                    :spread-bps="getProviderTrueCost(row, index).spreadBps"
+                    :amount="displayAmount"
+                    compact
+                  />
+                </div>
+                <div class="flex flex-col justify-between">
+                  <div class="mb-3">
+                    <div class="flex flex-wrap gap-1.5 mb-2">
+                      <span v-if="row.payIn?.includes('ACH') || row.payIn?.includes('Bank')" class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                        Bank
+                      </span>
+                      <span v-if="row.payIn?.includes('card') || row.payIn?.includes('Card')" class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                        Card
+                      </span>
+                      <span v-if="row.payOut?.includes('Cash')" class="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Cash pickup
+                      </span>
+                      <span v-if="row.payOut?.includes('Bank')" class="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
+                        Bank deposit
+                      </span>
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <button
+                      type="button"
+                      :class="[
+                        'w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-all',
+                        index === 0
+                          ? 'bg-brand-600 text-white hover:bg-brand-700'
+                          : 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50',
+                      ]"
+                    >
+                      Go to {{ row.provider.split(' ')[0] }} →
+                    </button>
+                    <p v-if="row.isAffiliate !== false" class="text-center text-[10px] text-slate-400 flex items-center justify-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      We may earn a commission
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <p class="text-neutral-600 leading-relaxed mb-4">
-            You'll need to consider which option best meets your needs, whether that's via traditional bank transfers, cash pickups, or online money transfers. In general, money transfer services are the best way to send money abroad—not only because they're the cheapest, but also because they're usually the fastest and easiest to use.
-          </p>
+            <div
+              v-if="!isPlus && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
+              class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4"
+            >
+              <div class="flex items-center justify-center gap-2 text-xs text-slate-500">
+                <span class="font-semibold uppercase tracking-wider">Advertisement</span>
+              </div>
+              <div class="text-center py-4 text-sm text-slate-400">
+                <p>Ad placeholder (728×90 or responsive)</p>
+              </div>
+              <div class="text-center">
+                <NuxtLink to="/plus" class="text-xs text-brand-600 hover:underline">
+                  Remove ads with Plus →
+                </NuxtLink>
+              </div>
+            </div>
+          </template>
         </div>
-      </section>
 
-      <!-- How to Send Section -->
-      <section v-if="content.steps.length" class="mb-8">
-        <h2 class="text-xl font-bold text-neutral-900 mb-4">
-          How to Send Money to {{ content.to }} From {{ content.from }}
-        </h2>
-        <ol class="space-y-3">
-          <li
-            v-for="(step, index) in content.steps"
-            :key="step"
-            class="flex gap-4"
-          >
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white flex-shrink-0">
-              {{ index + 1 }}
-            </span>
-            <p class="text-sm text-neutral-700 pt-0.5">{{ step }}</p>
-          </li>
-        </ol>
-      </section>
+        <div v-else class="rounded-xl border-2 border-dashed border-slate-300 p-8 text-center">
+          <p class="text-lg font-semibold text-neutral-700 mb-2">Coming Soon</p>
+          <p class="text-sm text-neutral-500">We're gathering live data for this corridor.</p>
+        </div>
 
-      <!-- Insights Grid -->
-      <section v-if="content.insights.length" class="mb-8">
-        <h2 class="text-xl font-bold text-neutral-900 mb-4">
-          Corridor Insights
-        </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <p class="mt-4 text-xs text-neutral-500">
+          Last updated {{ content.lastUpdated }}. We source data from providers and cannot guarantee accuracy.
+        </p>
+      </div>
+    </section>
+
+    <!-- ZONE B: Insights -->
+    <section id="insights" class="bg-white border-b border-slate-200">
+      <div class="mx-auto max-w-6xl px-4 py-10">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-neutral-900">Corridor Market Insights</h2>
+            <p class="text-sm text-neutral-500">{{ content.from }} → {{ content.to }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select
+              v-model="insightTimeframe"
+              class="h-9 px-3 pr-8 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none appearance-none bg-white"
+            >
+              <option value="7d">7 days</option>
+              <option value="30d" :disabled="!isPlus">30 days {{ !isPlus ? '(Plus)' : '' }}</option>
+              <option value="90d" :disabled="!isPlus">90 days {{ !isPlus ? '(Plus)' : '' }}</option>
+              <option value="365d" :disabled="!isPlus">1 year {{ !isPlus ? '(Plus)' : '' }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <div
             v-for="insight in content.insights"
             :key="insight.label"
-            class="rounded-lg border border-neutral-200 p-4"
+            class="rounded-lg border border-slate-200 bg-slate-50 p-4"
           >
             <p class="text-xs font-medium text-neutral-500 mb-1">{{ insight.label }}</p>
             <p class="text-lg font-bold text-neutral-900">{{ insight.value }}</p>
             <p class="text-xs text-neutral-500">{{ insight.helper }}</p>
           </div>
         </div>
-      </section>
 
-      <!-- Mini Guides -->
-      <section v-if="content.miniGuides && content.miniGuides.length" class="mb-8">
-        <h2 class="text-xl font-bold text-neutral-900 mb-4">
-          In-Depth Money Transfer Guides
-        </h2>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <NuxtLink
-            v-for="guide in content.miniGuides"
-            :key="guide.title"
-            :to="guide.link"
-            class="group rounded-xl border border-neutral-200 p-5 hover:border-brand-300 hover:shadow-sm transition-all"
-          >
-            <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-brand-600 transition-colors">
-              {{ guide.title }}
-            </h3>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-3">
-              {{ guide.excerpt }}
-            </p>
-            <span class="text-sm font-semibold text-brand-600 group-hover:underline">
-              Read more →
-            </span>
-          </NuxtLink>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-semibold text-slate-900">True Cost vs Mid-Market</h3>
+              <span class="text-xs text-slate-500">On ${{ displayAmount.toLocaleString() }}</span>
+            </div>
+            <div class="space-y-3">
+              <div v-for="(row, index) in content.table.rows.slice(0, 4)" :key="row.provider" class="flex items-center gap-3">
+                <span class="w-24 text-sm font-medium text-slate-700 truncate">{{ row.provider }}</span>
+                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full"
+                    :class="index === 0 ? 'bg-emerald-500' : 'bg-brand-500'"
+                    :style="{ width: `${Math.min(100, getProviderTrueCost(row, index).totalCostPercent * 10)}%` }"
+                  />
+                </div>
+                <span class="w-16 text-right text-sm font-semibold" :class="index === 0 ? 'text-emerald-600' : 'text-slate-700'">
+                  {{ getProviderTrueCost(row, index).totalCostPercent.toFixed(2) }}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-semibold text-slate-900">Provider Availability</h3>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Bank Transfer</span>
+                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('Bank')).length }} providers</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Cash Pickup</span>
+                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('Cash')).length }} providers</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Mobile Wallet</span>
+                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('wallet')).length }} providers</span>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!isPlus" class="lg:col-span-2 rounded-xl border-2 border-blue-600/30 bg-slate-900 p-6 relative overflow-hidden">
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-white">Advanced Analytics</h3>
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-600/20 text-blue-400 text-xs font-semibold rounded">
+                  Plus
+                </span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+                <div>
+                  <span class="text-sm text-slate-400">Avg Spread</span>
+                  <p class="text-lg font-bold text-white blur-sm select-none">45 bps</p>
+                </div>
+                <div>
+                  <span class="text-sm text-slate-400">Volatility Index</span>
+                  <p class="text-lg font-bold text-white blur-sm select-none">2.1%</p>
+                </div>
+                <div>
+                  <span class="text-sm text-slate-400">Provider Uptime</span>
+                  <p class="text-lg font-bold text-white blur-sm select-none">99.2%</p>
+                </div>
+                <div>
+                  <span class="text-sm text-slate-400">Best Window</span>
+                  <p class="text-lg font-bold text-white blur-sm select-none">8-11AM</p>
+                </div>
+              </div>
+              <NuxtLink to="/plus" class="inline-flex items-center gap-2 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-semibold transition-all">
+                Unlock with Plus
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent pointer-events-none" />
+          </div>
+
+          <div v-else class="lg:col-span-2 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 to-slate-800 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-semibold text-white">Advanced Analytics</h3>
+              <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Plus Active
+              </span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <span class="text-sm text-slate-400">Avg Spread</span>
+                <p class="text-lg font-bold text-white">45 bps</p>
+              </div>
+              <div>
+                <span class="text-sm text-slate-400">Volatility Index</span>
+                <p class="text-lg font-bold text-white">2.1%</p>
+              </div>
+              <div>
+                <span class="text-sm text-slate-400">Provider Uptime</span>
+                <p class="text-lg font-bold text-emerald-400">99.2%</p>
+              </div>
+              <div>
+                <span class="text-sm text-slate-400">Best Window</span>
+                <p class="text-lg font-bold text-white">8-11AM EST</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- FAQ Section -->
-      <section v-if="content.faqs.length" class="mb-8">
-        <h2 class="text-xl font-bold text-neutral-900 mb-4">
-          FAQ About Sending Money From {{ content.from }} to {{ content.to }}
+    <!-- ZONE C: Learn (SEO) -->
+    <section id="how-to-send" class="bg-slate-50">
+      <div class="mx-auto max-w-6xl px-4 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-8">
+            <div>
+              <h2 class="text-2xl font-bold text-neutral-900 mb-4">
+                About Transfers from {{ content.from }} to {{ content.to }}
+              </h2>
+              <div class="prose prose-neutral prose-sm max-w-none">
+                <p class="text-neutral-600 leading-relaxed">
+                  {{ content.hero.subhead }}
+                </p>
+                <p class="text-neutral-600 leading-relaxed">
+                  Money transfer services are typically the best way to send money abroad—cheaper, faster, and easier than traditional banks.
+                </p>
+              </div>
+            </div>
+
+            <div v-if="content.steps.length">
+              <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                How to Send Money to {{ content.to }}
+              </h3>
+              <ol class="space-y-3">
+                <li
+                  v-for="(step, index) in content.steps"
+                  :key="step"
+                  class="flex gap-4"
+                >
+                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white flex-shrink-0">
+                    {{ index + 1 }}
+                  </span>
+                  <p class="text-sm text-neutral-700 pt-0.5">{{ step }}</p>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div v-if="!isPlus" class="rounded-xl border border-dashed border-slate-300 bg-white p-5">
+              <div class="text-center mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Advertisement</span>
+              </div>
+              <div class="h-48 flex items-center justify-center text-sm text-slate-400">
+                Ad placeholder (300×250)
+              </div>
+              <div class="text-center mt-3">
+                <NuxtLink to="/plus" class="text-xs text-brand-600 hover:underline">
+                  Remove ads with Plus →
+                </NuxtLink>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
+              <h3 class="font-bold text-brand-900 mb-2 text-sm">Save to Watchlist</h3>
+              <p class="text-xs text-brand-700 mb-3">Track this corridor and get notified when rates change.</p>
+              <button
+                type="button"
+                class="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors"
+                @click="handleSave"
+              >
+                Add to Watchlist
+              </button>
+              <p class="text-xs text-center text-brand-600 mt-2">
+                Free accounts: 3 corridors · Plus: Unlimited
+              </p>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-white p-5">
+              <h3 class="font-bold text-neutral-900 mb-3 text-sm">Corridor Stats</h3>
+              <div class="space-y-3">
+                <div v-for="stat in content.statsBar" :key="stat.label" class="flex items-center justify-between text-sm">
+                  <span class="text-neutral-600">{{ stat.label }}</span>
+                  <span class="font-semibold text-neutral-900">{{ stat.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQs -->
+    <section id="faqs" class="bg-gradient-to-b from-brand-50 to-white border-t border-brand-100">
+      <div class="mx-auto max-w-4xl px-4 py-10">
+        <h2 class="text-2xl font-bold text-brand-900 text-center mb-6">
+          Frequently Asked Questions
         </h2>
-        <div class="divide-y divide-neutral-200 border border-neutral-200 rounded-xl overflow-hidden">
+        <div class="divide-y divide-brand-100 border border-brand-200 rounded-xl overflow-hidden bg-white">
           <details
-            v-for="item in content.faqs"
-            :key="item.q"
-            class="group bg-white"
+            v-for="faq in corridorFaqs"
+            :key="faq.q"
+            class="group"
           >
-            <summary class="flex items-center justify-between cursor-pointer px-5 py-4 text-sm font-semibold text-neutral-900 hover:bg-neutral-50">
-              {{ item.q }}
-              <svg class="h-5 w-5 text-neutral-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <summary class="flex items-center justify-between cursor-pointer px-5 py-4 text-sm font-semibold text-brand-900 hover:bg-brand-50">
+              {{ faq.q }}
+              <svg class="h-5 w-5 text-brand-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </summary>
             <div class="px-5 pb-4 text-sm text-neutral-600 leading-relaxed">
-              {{ item.a }}
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <!-- Rate Alert Section - Inline (only show if currencies are different) -->
-      <section
-        v-if="displaySendCurrency !== displayReceiveCurrency"
-        class="rounded-xl border border-amber-200 bg-amber-50 p-6 mb-8"
-      >
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-              <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <div>
-              <p class="font-bold text-neutral-900">🔔 Get Rate Alerts</p>
-              <p class="text-sm text-neutral-600">We'll notify you when {{ displaySendCurrency }}/{{ displayReceiveCurrency }} rates improve</p>
-            </div>
-          </div>
-          <div class="flex gap-2 sm:flex-shrink-0">
-            <input
-              type="email"
-              placeholder="you@example.com"
-              class="flex-1 sm:w-64 rounded-lg border border-neutral-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            >
-            <button
-              type="button"
-              class="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors whitespace-nowrap"
-            >
-              Create Alert
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- AD SLOT: Inline Banner -->
-      <section class="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 mb-8">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded mb-2 inline-block">Advertisement</span>
-        <div class="text-center py-6 text-sm text-neutral-500">
-          Inline ad banner (728×90 or responsive)
-        </div>
-      </section>
-
-      <!-- Best Rated Providers Section (Full Width) -->
-      <section class="py-12 border-t border-neutral-200 mt-12">
-        <h2 class="text-2xl font-bold text-neutral-900 text-center mb-8">
-          Best Rated Providers to Send Money from {{ content.from }} to {{ content.to }}
-        </h2>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div
-            v-for="highlight in content.providerHighlights"
-            :key="highlight.provider"
-            class="rounded-xl border border-neutral-200 bg-white p-5 text-center hover:shadow-lg transition-shadow"
-          >
-            <!-- Score Badge -->
-            <div class="relative inline-block mb-4">
-              <div class="h-16 w-16 rounded-full border-4 border-emerald-500 flex items-center justify-center mx-auto">
-                <span class="text-xl font-bold text-emerald-600">{{ highlight.score }}</span>
-              </div>
-            </div>
-
-            <!-- Provider Logo Placeholder -->
-            <div class="h-12 w-24 mx-auto mb-4 bg-neutral-100 rounded flex items-center justify-center text-lg font-bold text-neutral-400">
-              {{ highlight.provider.substring(0, 2).toUpperCase() }}
-            </div>
-
-            <!-- Score Breakdown -->
-            <div class="space-y-2 text-left mb-4">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-neutral-500">Trust & Credibility</span>
-                <div class="flex items-center gap-2">
-                  <div class="h-1.5 w-20 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-500 rounded-full" style="width: 95%;" />
-                  </div>
-                  <span class="font-semibold text-neutral-700">9.5</span>
-                </div>
-              </div>
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-neutral-500">Service & Quality</span>
-                <div class="flex items-center gap-2">
-                  <div class="h-1.5 w-20 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-500 rounded-full" style="width: 87%;" />
-                  </div>
-                  <span class="font-semibold text-neutral-700">8.7</span>
-                </div>
-              </div>
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-neutral-500">Fees & Rates</span>
-                <div class="flex items-center gap-2">
-                  <div class="h-1.5 w-20 bg-neutral-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-500 rounded-full" style="width: 92%;" />
-                  </div>
-                  <span class="font-semibold text-neutral-700">9.2</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              class="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors"
-            >
-              Go to {{ highlight.provider }}
-            </button>
-            <NuxtLink to="#" class="block mt-2 text-xs text-brand-600 hover:underline">
-              Read the full review
-            </NuxtLink>
-          </div>
-        </div>
-      </section>
-
-      <!-- AD SLOT 3: Before Footer (Full Width) -->
-      <section class="py-8 border-t border-neutral-200">
-        <div class="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-center">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded mb-2 inline-block">Advertisement</span>
-          <div class="py-8 text-sm text-neutral-500">
-            Full-width ad banner (728×90 or responsive)
-          </div>
-        </div>
-      </section>
-
-      <!-- Disclosures -->
-      <section class="py-8 border-t border-neutral-200">
-        <div class="text-xs text-neutral-500 space-y-2">
-          <p><strong>Affiliate disclosure:</strong> {{ content.disclosures.advert }}</p>
-          <p><strong>Data accuracy:</strong> {{ content.disclosures.data }}</p>
-        </div>
-      </section>
-    </div>
-
-    <!-- Trust Metrics Strip (Reused Component Style) -->
-    <section class="py-12 sm:py-16 bg-brand-600">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Our Impact So Far
-          </h2>
-          <p class="text-white/80 max-w-2xl mx-auto">
-            Built by an expat who got tired of watching money disappear to bank fees. We track 30+ providers across 150+ countries in real time. Providers cannot pay to rank higher, we just show you the truth.
-          </p>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div class="text-center">
-            <div class="flex justify-center mb-2">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <p class="text-3xl font-bold text-white">250K+</p>
-            <p class="text-sm text-white/70">Users helped</p>
-          </div>
-          <div class="text-center">
-            <div class="flex justify-center mb-2">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
-            <p class="text-3xl font-bold text-white">30+</p>
-            <p class="text-sm text-white/70">Providers compared</p>
-          </div>
-          <div class="text-center">
-            <div class="flex justify-center mb-2">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p class="text-3xl font-bold text-white">150+</p>
-            <p class="text-sm text-white/70">Countries covered</p>
-          </div>
-          <div class="text-center">
-            <div class="flex justify-center mb-2">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p class="text-3xl font-bold text-white">$2.5M+</p>
-            <p class="text-sm text-white/70">Saved in fees</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Understanding Hidden Costs (Reused Section) -->
-    <section class="py-12 sm:py-16 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="bg-gradient-to-br from-neutral-50 to-white rounded-3xl border-2 border-neutral-200 p-10 sm:p-12">
-          <h2 class="text-2xl font-bold text-neutral-900 mb-6">Understanding the hidden costs</h2>
-          <p class="text-neutral-600 mb-8">
-            Banks don't just charge fees, they make most of their money through the exchange rate markup. Here's what you need to know.
-          </p>
-          <div class="grid gap-6 md:grid-cols-3">
-            <div class="flex gap-4">
-              <div class="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-neutral-900 mb-1">The Hidden Markup</h3>
-                <p class="text-sm text-neutral-600">Traditional banks add 3-5% to exchange rates. On $1,000, that's $30-50 lost before fees.</p>
-              </div>
-            </div>
-            <div class="flex gap-4">
-              <div class="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-neutral-900 mb-1">Mid-Market Rate</h3>
-                <p class="text-sm text-neutral-600">We compare every provider against the real mid-market rate from XE—the rate banks use between themselves.</p>
-              </div>
-            </div>
-            <div class="flex gap-4">
-              <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-neutral-900 mb-1">Total Cost Matters</h3>
-                <p class="text-sm text-neutral-600">Low fees mean nothing if the rate is bad. We show total cost: fee + FX markup combined.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Read Our Guides (Corridor-Specific) -->
-    <section class="py-12 sm:py-16 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-neutral-900 mb-2 flex items-center gap-2">
-            <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            Read Our Guides
-          </h2>
-          <p class="text-neutral-600">Everything you need to know about international money transfers</p>
-        </div>
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <NuxtLink
-            v-for="guide in corridorGuides"
-            :key="guide.title"
-            :to="guide.link"
-            class="group rounded-xl border border-neutral-200 bg-white p-5 hover:shadow-lg hover:border-brand-300 transition-all flex flex-col h-full"
-          >
-            <span class="text-3xl mb-3 block">{{ guide.emoji }}</span>
-            <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-brand-600 transition-colors">
-              {{ guide.title }}
-            </h3>
-            <p class="text-sm text-neutral-600 mb-4 flex-1">{{ guide.excerpt }}</p>
-            <span class="text-sm font-semibold text-brand-600 group-hover:underline mt-auto">Read →</span>
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- Corridor-Specific FAQ -->
-    <section class="py-12 sm:py-16 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-neutral-900 mb-2">Frequently Asked Questions</h2>
-          <p class="text-neutral-600">Common questions about {{ content.from }} to {{ content.to }} transfers</p>
-        </div>
-        <div class="max-w-3xl mx-auto divide-y divide-neutral-200 border border-neutral-200 rounded-xl overflow-hidden">
-          <details
-            v-for="faq in corridorFaqs"
-            :key="faq.q"
-            class="group bg-white"
-          >
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-base font-semibold text-neutral-900 hover:bg-neutral-50">
-              {{ faq.q }}
-              <svg class="h-5 w-5 text-neutral-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div class="px-6 pb-5 text-neutral-600 leading-relaxed">
               {{ faq.a }}
             </div>
           </details>
         </div>
-        <div class="text-center mt-6">
+        <div class="text-center mt-4">
           <NuxtLink to="/faq" class="text-sm font-semibold text-brand-600 hover:underline">
             View all FAQs →
           </NuxtLink>
@@ -1133,20 +564,83 @@
       </div>
     </section>
 
+    <!-- Related Guides -->
+    <section v-if="content.miniGuides && content.miniGuides.length" class="bg-white border-t border-slate-200">
+      <div class="mx-auto max-w-6xl px-4 py-10">
+        <h2 class="text-2xl font-bold text-neutral-900 mb-6 text-center">Related Guides</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <NuxtLink
+            v-for="guide in content.miniGuides"
+            :key="guide.title"
+            :to="guide.link"
+            class="group rounded-xl border border-slate-200 bg-slate-50 p-5 hover:border-brand-300 hover:shadow-md transition-all"
+          >
+            <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-brand-600 transition-colors">
+              {{ guide.title }}
+            </h3>
+            <p class="text-sm text-neutral-600 leading-relaxed">
+              {{ guide.excerpt }}
+            </p>
+            <span class="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-brand-600">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- Our Impact -->
+    <TrustMetricsStrip bg-class="bg-brand-600" />
+
+    <!-- Methodology Footer -->
+    <section class="bg-slate-900 text-white">
+      <div class="mx-auto max-w-6xl px-4 py-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p class="text-sm text-slate-300">
+              See an issue with this data? <a href="mailto:support@remit-scout.com" class="text-white hover:underline">Let us know</a>
+            </p>
+          </div>
+          <div class="flex items-center gap-6">
+            <NuxtLink to="/methodology" class="text-sm font-semibold text-white hover:text-slate-300 transition-colors">
+              Read our methodology →
+            </NuxtLink>
+            <NuxtLink to="/how-we-make-money" class="text-sm text-slate-400 hover:text-white transition-colors">
+              How we make money
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Disclosures -->
+    <section class="bg-slate-50 border-t border-slate-200">
+      <div class="mx-auto max-w-4xl px-4 py-6">
+        <div class="text-xs text-neutral-500 space-y-2">
+          <p><strong>Affiliate disclosure:</strong> {{ content.disclosures.advert }}</p>
+          <p><strong>Data accuracy:</strong> {{ content.disclosures.data }}</p>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
-import CountrySelect from '~/components/shared/CountrySelect.vue'
-import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import TrueCostCard from '~/components/shared/TrueCostCard.vue'
 import ProviderDeltaBadge from '~/components/shared/ProviderDeltaBadge.vue'
-import { useCompareForm } from '~/composables/useCompareForm'
-import { useRoutes } from '~/composables/useRoutes'
+import CorridorMiniNav from '~/components/corridor/CorridorMiniNav.vue'
+import CorridorStickyBar from '~/components/corridor/CorridorStickyBar.vue'
+import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
-import type { TrueCostBreakdown } from '~/types/remit'
+import type { TrueCostBreakdown, Method } from '~/types/remit'
+import { useEntitlements } from '~/composables/useEntitlements'
+
+const { isPlus } = useEntitlements()
 
 type ProviderHighlight = {
   label: string
@@ -1173,6 +667,7 @@ type TableRow = {
   notes: string
   badge?: string
   warning?: string
+  isAffiliate?: boolean
 }
 
 type Insight = {
@@ -1222,6 +717,7 @@ type CorridorContent = {
     advert: string
     data: string
   }
+  stats?: { providerCount?: string }
 }
 
 const route = useRoute()
@@ -1263,7 +759,6 @@ const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${ca
 const flagFrom = computed(() => resolveFlag(canonicalFrom.value))
 const flagTo = computed(() => resolveFlag(canonicalTo.value))
 
-// Redirect to canonical URL if needed (e.g., /us-to-jo -> /united-states-to-jordan)
 if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) {
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
@@ -1283,7 +778,7 @@ const corridorContent: Record<string, CorridorContent> = {
       chips: ['Fact-checked', 'Neutral rankings', 'Licensed providers only'],
     },
     statsBar: [
-      { label: 'Number of providers', value: '10', helper: 'USD → JOD coverage' },
+      { label: 'Providers', value: '10', helper: 'USD → JOD' },
       { label: 'Most often cheapest', value: 'Remitly', helper: 'Past 30 days' },
       { label: 'Pay-in options', value: 'Card, Bank, ACH', helper: 'Multiple methods' },
       { label: 'Most transferred', value: '$1,000 USD', helper: 'Common amount' },
@@ -1303,11 +798,11 @@ const corridorContent: Record<string, CorridorContent> = {
       title: 'Compare providers',
       amountExample: '$1,000 USD',
       rows: [
-        { provider: 'Remitly', score: '9.0', recipientGets: '709 JOD', delta: '0.4% off mid-market', fee: '$0 (promo)', rate: '1 USD = 0.7090 JOD', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'ACH, debit card', payOut: 'Bank account', notes: 'Cheapest in most checks', badge: 'Best Deal' },
-        { provider: 'Wise', score: '9.4', recipientGets: '708 JOD', delta: '0.5% off mid-market', fee: '$5.49', rate: '1 USD = 0.7105 JOD', speed: '1-2 days', speedNote: 'Bank deposit', payIn: 'Bank transfer', payOut: 'Bank account', notes: 'Best transparency', badge: 'Top Rated' },
-        { provider: 'MoneyGram', score: '8.6', recipientGets: '704 JOD', delta: '0.9% off mid-market', fee: '$4.99', rate: '1 USD = 0.7030 JOD', speed: 'Minutes', speedNote: 'Cash pickup', payIn: 'Debit, credit card', payOut: 'Cash pickup', notes: 'Fastest for cash' },
-        { provider: 'XE', score: '8.7', recipientGets: '703 JOD', delta: '1.1% off mid-market', fee: '$0', rate: '1 USD = 0.7040 JOD', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'Bank, card', payOut: 'Bank account', notes: 'Good for large amounts' },
-        { provider: 'Major US Bank', score: '6.0', recipientGets: '670 JOD', delta: '5.6% off mid-market', fee: '$30+', rate: '1 USD = 0.6700 JOD', speed: '2-5 days', speedNote: 'SWIFT', payIn: 'Bank account', payOut: 'Bank account', notes: 'High fees, slow', warning: 'Not recommended' },
+        { provider: 'Remitly', score: '9.0', recipientGets: '709 JOD', delta: '0.4% off mid-market', fee: '$0 (promo)', rate: '1 USD = 0.7090 JOD', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'ACH, debit card', payOut: 'Bank account', notes: 'Cheapest in most checks', badge: 'Best Deal', isAffiliate: true },
+        { provider: 'Wise', score: '9.4', recipientGets: '708 JOD', delta: '0.5% off mid-market', fee: '$5.49', rate: '1 USD = 0.7105 JOD', speed: '1-2 days', speedNote: 'Bank deposit', payIn: 'Bank transfer', payOut: 'Bank account', notes: 'Best transparency', badge: 'Top Rated', isAffiliate: true },
+        { provider: 'MoneyGram', score: '8.6', recipientGets: '704 JOD', delta: '0.9% off mid-market', fee: '$4.99', rate: '1 USD = 0.7030 JOD', speed: 'Minutes', speedNote: 'Cash pickup', payIn: 'Debit, credit card', payOut: 'Cash pickup', notes: 'Fastest for cash', isAffiliate: true },
+        { provider: 'XE', score: '8.7', recipientGets: '703 JOD', delta: '1.1% off mid-market', fee: '$0', rate: '1 USD = 0.7040 JOD', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'Bank, card', payOut: 'Bank account', notes: 'Good for large amounts', isAffiliate: true },
+        { provider: 'Major US Bank', score: '6.0', recipientGets: '670 JOD', delta: '5.6% off mid-market', fee: '$30+', rate: '1 USD = 0.6700 JOD', speed: '2-5 days', speedNote: 'SWIFT', payIn: 'Bank account', payOut: 'Bank account', notes: 'High fees, slow', warning: 'Not recommended', isAffiliate: false },
       ],
     },
     insights: [
@@ -1334,8 +829,6 @@ const corridorContent: Record<string, CorridorContent> = {
     miniGuides: [
       { title: 'Understanding USD/JOD Exchange Rates', excerpt: 'Learn how the mid-market rate works, what FX markup means, and how to spot hidden fees when sending USD to Jordan.', link: '/learn/how-exchange-rates-work' },
       { title: 'Bank Deposit vs Cash Pickup in Jordan', excerpt: 'Bank deposits are usually cheapest. Cash pickup is fastest but costs more. Compare total costs for both methods.', link: '/learn/cash-pickup-vs-bank-deposit' },
-      { title: 'Best Time to Send Money to Jordan', excerpt: 'JOD is pegged to USD, but provider rates vary. Learn about cut-off times and how to use rate alerts.', link: '/learn/best-time-to-send-money' },
-      { title: 'Avoiding Hidden Fees: US to Jordan', excerpt: 'Many banks apply 3-5% FX markup. We show you how to calculate true total cost and choose transparent services.', link: '/learn/hidden-fees-money-transfers' },
     ],
     disclosures: {
       advert: 'Some links are affiliate links. Our rankings stay neutral: cheapest total cost ranks first, even without an affiliate payout.',
@@ -1356,7 +849,7 @@ const corridorContent: Record<string, CorridorContent> = {
       chips: ['Fact-checked', 'Neutral rankings', 'Licensed providers only'],
     },
     statsBar: [
-      { label: 'Providers checked', value: '9', helper: 'USD → BND' },
+      { label: 'Providers', value: '9', helper: 'USD → BND' },
       { label: 'Most often cheapest', value: 'Remitly', helper: 'Past 30 days' },
       { label: 'Popular payout', value: 'Bank deposit', helper: 'Low cost' },
       { label: 'Fastest', value: 'Minutes', helper: 'Cash pickup' },
@@ -1376,11 +869,11 @@ const corridorContent: Record<string, CorridorContent> = {
       title: 'Compare providers',
       amountExample: '$1,000 USD',
       rows: [
-        { provider: 'Remitly', score: '9.1', recipientGets: '1,355 BND', delta: '0.4% off mid-market', fee: '$0 (promo)', rate: '1 USD = 1.3550 BND', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'ACH, debit card', payOut: 'Bank account', notes: 'Cheapest in most checks', badge: 'Best Deal' },
-        { provider: 'Wise', score: '9.5', recipientGets: '1,351 BND', delta: '0.7% off mid-market', fee: '$4.99', rate: '1 USD = 1.3592 BND', speed: '1-2 days', speedNote: 'Bank deposit', payIn: 'Bank transfer', payOut: 'Bank account', notes: 'Best transparency', badge: 'Top Rated' },
-        { provider: 'WorldRemit', score: '8.9', recipientGets: '1,342 BND', delta: '1.3% off mid-market', fee: '$3.99', rate: '1 USD = 1.3470 BND', speed: 'Minutes', speedNote: 'Cash pickup', payIn: 'Debit, credit card', payOut: 'Cash pickup', notes: 'Fastest for cash' },
-        { provider: 'XE', score: '8.7', recipientGets: '1,340 BND', delta: '1.5% off mid-market', fee: '$0', rate: '1 USD = 1.3490 BND', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'Bank, card', payOut: 'Bank account', notes: 'Good for large amounts' },
-        { provider: 'Major US Bank', score: '6.0', recipientGets: '1,270 BND', delta: '6.6% off mid-market', fee: '$30+', rate: '1 USD = 1.3100 BND', speed: '2-5 days', speedNote: 'SWIFT', payIn: 'Bank account', payOut: 'Bank account', notes: 'High fees, slow', warning: 'Not recommended' },
+        { provider: 'Remitly', score: '9.1', recipientGets: '1,355 BND', delta: '0.4% off mid-market', fee: '$0 (promo)', rate: '1 USD = 1.3550 BND', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'ACH, debit card', payOut: 'Bank account', notes: 'Cheapest in most checks', badge: 'Best Deal', isAffiliate: true },
+        { provider: 'Wise', score: '9.5', recipientGets: '1,351 BND', delta: '0.7% off mid-market', fee: '$4.99', rate: '1 USD = 1.3592 BND', speed: '1-2 days', speedNote: 'Bank deposit', payIn: 'Bank transfer', payOut: 'Bank account', notes: 'Best transparency', badge: 'Top Rated', isAffiliate: true },
+        { provider: 'WorldRemit', score: '8.9', recipientGets: '1,342 BND', delta: '1.3% off mid-market', fee: '$3.99', rate: '1 USD = 1.3470 BND', speed: 'Minutes', speedNote: 'Cash pickup', payIn: 'Debit, credit card', payOut: 'Cash pickup', notes: 'Fastest for cash', isAffiliate: true },
+        { provider: 'XE', score: '8.7', recipientGets: '1,340 BND', delta: '1.5% off mid-market', fee: '$0', rate: '1 USD = 1.3490 BND', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'Bank, card', payOut: 'Bank account', notes: 'Good for large amounts', isAffiliate: true },
+        { provider: 'Major US Bank', score: '6.0', recipientGets: '1,270 BND', delta: '6.6% off mid-market', fee: '$30+', rate: '1 USD = 1.3100 BND', speed: '2-5 days', speedNote: 'SWIFT', payIn: 'Bank account', payOut: 'Bank account', notes: 'High fees, slow', warning: 'Not recommended', isAffiliate: false },
       ],
     },
     insights: [
@@ -1460,75 +953,64 @@ if (content.value.faqs.length) {
   jsonLdFaq(content.value.faqs)
 }
 
-// ========================================
-// FORM STATE (user input - changes as they type)
-// ========================================
-const formAmount = ref(200) // Default $200 equivalent
-const formSendCurrency = ref(content.value.fromCode.toUpperCase())
-const formReceiveCurrency = ref(content.value.toCode.toUpperCase())
+const displayAmount = ref(1000)
+const displayCurrency = ref('USD')
+const payoutMethod = ref<Method>('bank')
+const sortBy = ref('recipient')
+const insightTimeframe = ref('7d')
 
-// ========================================
-// DISPLAY STATE (only updates when Compare is clicked)
-// ========================================
-const displayAmount = ref(200)
-const displaySendCurrency = ref(content.value.fromCode.toUpperCase())
-const displayReceiveCurrency = ref(content.value.toCode.toUpperCase())
-
-// Aliases for backward compatibility in template
-const amount = displayAmount
-const sendCurrency = displaySendCurrency
-const receiveCurrency = displayReceiveCurrency
-
-// Form for the "Find Your Best Rate Now" section
-const { form: compareForm, submit: submitCompareForm } = useCompareForm()
-
-const handleFormCompare = async () => {
-  await submitCompareForm()
+const sortLabels: Record<string, string> = {
+  recipient: 'recipient gets',
+  cost: 'lowest cost',
+  speed: 'fastest',
+  score: 'best rated',
 }
+
+const sortedProviders = computed(() => {
+  const rows = [...content.value.table.rows]
+  if (sortBy.value === 'speed') {
+    return rows.sort((a, b) => {
+      const speedOrder = ['Minutes', 'Same day', '1-2 days', '2-5 days']
+      return speedOrder.indexOf(a.speed) - speedOrder.indexOf(b.speed)
+    })
+  }
+  if (sortBy.value === 'score') {
+    return rows.sort((a, b) => parseFloat(b.score) - parseFloat(a.score))
+  }
+  return rows
+})
+
+const recipientRange = computed(() => {
+  const rows = content.value.table.rows
+  if (!rows.length) return { min: '0', max: '0' }
+  const amounts = rows.map(r => parseFloat(r.recipientGets.replace(/[^0-9.]/g, '')))
+  return {
+    min: Math.min(...amounts).toLocaleString(),
+    max: Math.max(...amounts).toLocaleString(),
+  }
+})
 
 const corridorWatchTarget = computed(() => ({
   type: 'corridor' as const,
   from: getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase(),
   to: getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase(),
-  method: compareForm.value.method,
+  method: payoutMethod.value,
 }))
 
-const corridorWatchLabel = computed(() => `${content.value.from}→${content.value.to} • ${compareForm.value.method}`)
+const corridorWatchLabel = computed(() => `${content.value.from}→${content.value.to} • ${payoutMethod.value}`)
 
-// Available currencies based on corridor countries
-const availableSendCurrencies = computed(() => {
-  const fromCountry = getCountryFromSlug(canonicalFrom.value)
-  const currencies = ['USD', 'EUR', 'GBP']
-  if (fromCountry?.currency && !currencies.includes(fromCountry.currency)) {
-    currencies.unshift(fromCountry.currency)
-  }
-  return currencies
-})
-
-const availableReceiveCurrencies = computed(() => {
-  const toCountry = getCountryFromSlug(canonicalTo.value)
-  const currencies = ['USD', 'EUR', 'GBP']
-  if (toCountry?.currency && !currencies.includes(toCountry.currency)) {
-    currencies.unshift(toCountry.currency)
-  }
-  return currencies
-})
-
-// Sample exchange rates (will come from API)
 const exchangeRates: Record<string, Record<string, number>> = {
   USD: { JOD: 0.71, BND: 1.36, EUR: 0.92, GBP: 0.79, USD: 1 },
   EUR: { JOD: 0.77, BND: 1.48, USD: 1.09, GBP: 0.86, EUR: 1 },
   GBP: { JOD: 0.90, BND: 1.72, USD: 1.27, EUR: 1.16, GBP: 1 },
 }
 
-// Mid-market rate for True Cost calculation
 const midMarketRate = computed(() => {
-  const fromCurr = displaySendCurrency.value.toUpperCase()
-  const toCurr = displayReceiveCurrency.value.toUpperCase()
+  const fromCurr = content.value.fromCode.toUpperCase()
+  const toCurr = content.value.toCode.toUpperCase()
   return exchangeRates[fromCurr]?.[toCurr] || 1
 })
 
-// Mock provider rate data (simulates provider markups)
 const providerMarkups: Record<string, { feePercent: number; spreadBps: number }> = {
   'Remitly': { feePercent: 0, spreadBps: 40 },
   'Wise': { feePercent: 0.55, spreadBps: 50 },
@@ -1538,13 +1020,11 @@ const providerMarkups: Record<string, { feePercent: number; spreadBps: number }>
   'Major US Bank': { feePercent: 3, spreadBps: 560 },
 }
 
-// Calculate True Cost for a provider row
 function getProviderTrueCost(row: TableRow, index: number): TrueCostBreakdown {
   const markup = providerMarkups[row.provider] || { feePercent: 0.5, spreadBps: 100 }
   const upfrontFee = (displayAmount.value * markup.feePercent) / 100
   const providerRate = midMarketRate.value * (1 - markup.spreadBps / 10000)
-  
-  // Get best total cost for delta calculation
+
   const bestMarkup = providerMarkups['Remitly'] || { feePercent: 0, spreadBps: 40 }
   const bestUpfrontFee = (displayAmount.value * bestMarkup.feePercent) / 100
   const bestProviderRate = midMarketRate.value * (1 - bestMarkup.spreadBps / 10000)
@@ -1560,58 +1040,28 @@ function getProviderTrueCost(row: TableRow, index: number): TrueCostBreakdown {
   )
 }
 
-// Calculate estimated receive amount based on DISPLAY currencies (not form)
-const estimatedReceive = computed(() => {
-  const fromCurr = displaySendCurrency.value
-  const toCurr = displayReceiveCurrency.value
-  const rate = exchangeRates[fromCurr]?.[toCurr] || 1
-  return (displayAmount.value * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-})
-
-// Form estimated receive (for sidebar preview)
-const formEstimatedReceive = computed(() => {
-  const fromCurr = formSendCurrency.value
-  const toCurr = formReceiveCurrency.value
-  const rate = exchangeRates[fromCurr]?.[toCurr] || 1
-  return (formAmount.value * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-})
-
-// Handle Compare button click - updates display values
-const handleCompare = () => {
-  displayAmount.value = formAmount.value
-  displaySendCurrency.value = formSendCurrency.value
-  displayReceiveCurrency.value = formReceiveCurrency.value
+function handleBarUpdate(data: { amount: number; payoutMethod: string; currency: string }) {
+  displayAmount.value = data.amount
+  payoutMethod.value = data.payoutMethod as Method
+  displayCurrency.value = data.currency
 }
 
-// Corridor-specific guides - only show one main guide about the corridor
-const corridorGuides = computed(() => [
-  {
-    emoji: flagTo.value,
-    title: `Best ways to send money to ${content.value.to}`,
-    excerpt: `Compare fees, exchange rates and delivery speed for ${content.value.from} to ${content.value.to} transfers.`,
-    link: '/learn/best-money-transfer-services',
-  },
-  {
-    emoji: '💰',
-    title: 'Understanding hidden fees',
-    excerpt: 'Banks and some providers hide costs in the exchange rate. Learn how to spot them.',
-    link: '/learn/hidden-fees-money-transfers',
-  },
-  {
-    emoji: '📊',
-    title: 'How we compare providers',
-    excerpt: 'Our methodology for ranking and testing money transfer services.',
-    link: '/methodology',
-  },
-  {
-    emoji: '❓',
-    title: 'Common questions answered',
-    excerpt: 'Everything you need to know about international money transfers.',
-    link: '/faq',
-  },
-])
+function handleSort(newSort: string) {
+  sortBy.value = newSort
+}
 
-// Corridor-specific FAQs (generic answers that work for any corridor)
+function handleSave() {
+  console.log('Save corridor')
+}
+
+function handleAlert() {
+  console.log('Set alert')
+}
+
+function handleShare() {
+  console.log('Share corridor')
+}
+
 const corridorFaqs = computed(() => [
   {
     q: `What is the best way to send money from ${content.value.from} to ${content.value.to}?`,
@@ -1628,10 +1078,6 @@ const corridorFaqs = computed(() => [
   {
     q: `Is it safe to use online money transfer services?`,
     a: `Yes, all providers we list are licensed and regulated by financial authorities (FinCEN in the US, FCA in the UK, ASIC in Australia). We exclude unlicensed services. Look for the licensing badges on each provider card above.`,
-  },
-  {
-    q: `Can I send money to a bank account or for cash pickup?`,
-    a: `Most providers offer both options. Bank deposits are usually cheaper but slower. Cash pickup is faster but may cost more. Some providers also offer mobile wallet deposits. Use the filters above to see options for your preferred payout method.`,
   },
   {
     q: `How do you rank the providers?`,

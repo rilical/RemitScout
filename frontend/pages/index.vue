@@ -27,20 +27,23 @@
     <!-- 6. Popular corridor chips -->
     <CorridorsGridDynamic @corridor-selected="handleCorridorSelected" />
 
+    <!-- Educational comparison: Bank vs Specialist -->
+    <BankVsSpecialistDynamic />
+
     <!-- 7. How it works (3 steps) -->
     <HowItWorks />
 
     <!-- 8. The story behind Remit-Scout (Omar's story) -->
     <FounderStory />
 
-    <!-- 9. Why comparing saves you money (mini explainer) -->
-    <BankVsSpecialistDynamic />
-
     <!-- EEAT: Why prices vary (user education) -->
     <WhyPricesVary />
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
     <PulseMiniTiles />
+
+    <!-- 9c. Institutional teaser (subtle B2B signal) -->
+    <InstitutionalTeaser />
 
     <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
     <PlusTeaser />
@@ -93,6 +96,7 @@ import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
 import SafetyNotice from '~/components/home/SafetyNotice.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
 import PulseMiniTiles from '~/components/home/PulseMiniTiles.vue'
+import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
 import PlusTeaser from '~/components/home/PlusTeaser.vue'
 import { setSeo, jsonLdSiteNavigation } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
@@ -100,12 +104,12 @@ import { useStructuredData } from '~/composables/useStructuredData'
 // SEO-critical components: import directly for SSR
 import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
 import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
+import BankVsSpecialistDynamic from '~/components/home/BankVsSpecialistDynamic.vue'
 import CountryGrid from '~/components/home/CountryGrid.vue'
 import HomeFaq from '~/components/home/HomeFaq.vue'
 import TestimonialsCarousel from '~/components/home/TestimonialsCarousel.vue'
 
 // Below-fold components: can stay async for code-splitting
-const BankVsSpecialistDynamic = defineAsyncComponent(() => import('~/components/home/BankVsSpecialistDynamic.vue'))
 const TravelToolsSection = defineAsyncComponent(() => import('~/components/home/TravelToolsSection.vue'))
 const LatestGuides = defineAsyncComponent(() => import('~/components/home/LatestGuides.vue'))
 const CtaBanner = defineAsyncComponent(() => import('~/components/home/CtaBanner.vue'))

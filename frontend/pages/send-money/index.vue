@@ -32,6 +32,15 @@
 
               <div>
                 <h3 class="text-lg font-bold text-slate-900 mb-3">
+                  What Makes Our Comparison Different
+                </h3>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  We refresh our data every few minutes by directly querying provider APIs, showing you current and accurate rates—not outdated estimates. Unlike other comparison sites that may show cached or estimated rates, we calculate the true total cost by comparing every provider's rate against the mid-market rate, revealing both visible fees and hidden exchange rate markups. Our rankings are 100% independent, ranking purely on total cost, transfer speed, and reliability based on real user experiences.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">
                   How Our Comparison Works
                 </h3>
                 <p class="text-sm text-slate-700 mb-3 leading-relaxed">
@@ -65,7 +74,8 @@
             </div>
           </article>
 
-            <!-- Extended Comparison Widget -->
+          <!-- Extended Comparison Widget -->
+          <div class="space-y-6">
             <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
               <div class="border-b border-slate-100 bg-blue-600 px-6 py-5">
                 <h3 class="text-xl font-bold text-white mb-1">
@@ -237,75 +247,85 @@
               </form>
             </div>
 
-            <!-- Trust & Independence Card - Spans both columns -->
-            <div class="lg:col-span-2 bg-brand-600 rounded-2xl shadow-xl p-6 lg:p-8 text-white relative overflow-hidden">
-              <div class="relative z-10">
-                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                  <!-- Icon and Title -->
-                  <div class="flex items-center gap-4 flex-shrink-0">
-                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
+            
+            <!-- Market Snapshot Box -->
+            <PulseSnapshotBox
+              title="Market Snapshot"
+              description="Track live market trends and pricing intelligence across global corridors with Remit-Pulse."
+              link="/pulse"
+              link-text="View Market Data"
+            />
+          </div>
+
+          <!-- Trust & Independence Card - Spans both columns -->
+          <div class="lg:col-span-2 bg-brand-600 rounded-2xl shadow-xl p-6 lg:p-8 text-white relative overflow-hidden">
+            <div class="relative z-10">
+              <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                <!-- Icon and Title -->
+                <div class="flex items-center gap-4 flex-shrink-0">
+                  <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <h3 class="text-xl lg:text-2xl font-bold">Trust & Independence</h3>
+                </div>
+
+                <!-- Main Description -->
+                <div class="flex-1">
+                  <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
+                    <strong class="text-white font-bold">100% independent rankings.</strong> Providers can't pay for better placement.
+                  </p>
+                  <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
+                    Our methodology is fully transparent and publicly available. We update our data continuously to ensure accuracy.
+                  </p>
+
+                  <!-- Key Features - Horizontal -->
+                  <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span class="text-white text-sm font-medium">No paid placements</span>
                     </div>
-                    <h3 class="text-xl lg:text-2xl font-bold">Trust & Independence</h3>
-                  </div>
-
-                  <!-- Main Description -->
-                  <div class="flex-1">
-                    <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
-                      <strong class="text-white font-bold">100% independent rankings.</strong> Providers can't pay for better placement.
-                    </p>
-                    <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
-                      Our methodology is fully transparent and publicly available. We update our data continuously to ensure accuracy.
-                    </p>
-
-                    <!-- Key Features - Horizontal -->
-                    <div class="flex flex-wrap items-center gap-4 mb-4">
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span class="text-white text-sm font-medium">No paid placements</span>
+                    <div class="flex items-center gap-2">
+                      <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span class="text-white text-sm font-medium">Real-time rate updates</span>
+                      <span class="text-white text-sm font-medium">Real-time rate updates</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span class="text-white text-sm font-medium">Transparent methodology</span>
-                      </div>
+                      <span class="text-white text-sm font-medium">Transparent methodology</span>
                     </div>
                   </div>
+                </div>
 
-                  <!-- CTA Link -->
-                  <div class="flex-shrink-0">
-                    <NuxtLink
-                      to="/methodology"
-                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
-                    >
-                      <span>Learn more</span>
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </NuxtLink>
-                  </div>
+                <!-- CTA Link -->
+                <div class="flex-shrink-0">
+                  <NuxtLink
+                    to="/methodology"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
+                  >
+                    <span>Learn more</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </NuxtLink>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </section>
 
     <!-- Countries by Region -->

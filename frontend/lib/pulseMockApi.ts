@@ -10,6 +10,10 @@ import type {
   MethodCoverageRow,
   CorridorOption,
   TimeRange,
+  PulseSnapshotSummary,
+  PulseCoverageSummary,
+  PulseProviderBenchmarkRow,
+  PulseEventItem,
 } from '~/types/pulse'
 import { getChartById, PROVIDER_COLORS } from './pulseChartRegistry'
 import type { PulseTimeframe, PulseCorridor } from '~/stores/pulse'
@@ -161,7 +165,23 @@ export async function getPulseOverview(filters: PulseFilters): Promise<PulseOver
 
   return {
     tiles,
-    charts: ['all-in-cost', 'fx-markup', 'recipient-gets', 'provider-winner', 'volatility-pulse', 'quote-anomalies', 'quote-success', 'method-coverage'],
+    charts: [
+      'all-in-cost',
+      'fx-markup',
+      'fee-vs-markup',
+      'spread-distribution',
+      'provider-winner',
+      'leader-change-frequency',
+      'leader-edge',
+      'pass-through-latency',
+      'volatility-pulse',
+      'quote-anomalies',
+      'spread-volatility',
+      'quote-success',
+      'provider-availability',
+      'data-freshness',
+      'corridor-liquidity',
+    ],
     lastUpdated: new Date().toISOString(),
     corridorName: corridorInfo?.label,
   }
@@ -203,16 +223,57 @@ export async function getChartData(chartId: string, filters: PulseFilters, range
       break
     }
 
-    case 'recipient-gets': {
-      const baseAmount = filters.amount === 1000 ? 56000 : filters.amount === 500 ? 28000 : filters.amount === 200 ? 11200 : 5600
-      const values = generateTrendingData(baseAmount, baseAmount * 0.005, days, 10)
-      series = [{
-        id: 'best',
-        label: 'Best Provider',
-        color: PROVIDER_COLORS.best,
-        points: timestamps.map((t, i) => ({ t, v: values[i] })),
-      }]
-      insight = 'Recipients get +₱142 more than last week'
+    case 'fee-vs-markup': {
+      const feeValues = generateTrendingData(35, 5, days)
+      const markupValues = generateTrendingData(110, 12, days)
+      series = [
+        {
+          id: 'fee',
+          label: 'Fee (bps)',
+          color: '#38bdf8',
+          points: timestamps.map((t, i) => ({ t, v: feeValues[i] })),
+        },
+        {
+          id: 'markup',
+          label: 'Markup (bps)',
+          color: '#f97316',
+          points: timestamps.map((t, i) => ({ t, v: markupValues[i] })),
+        },
+      ]
+      const lastFee = feeValues[feeValues.length - 1] ?? 0
+      const lastMarkup = markupValues[markupValues.length - 1] ?? 0
+      const share = lastFee + lastMarkup > 0 ? Math.round((lastMarkup / (lastFee + lastMarkup)) * 100) : 0
+      insight = `Markup accounts for ${share}% of total cost`
+      break
+    }
+
+    case 'spread-distribution': {
+      const medianValues = generateTrendingData(90, 8, days)
+      const p25Values = medianValues.map(value => Math.max(5, value - randomInRange(15, 30)))
+      const p75Values = medianValues.map(value => value + randomInRange(15, 30))
+      series = [
+        {
+          id: 'p25',
+          label: 'p25',
+          color: '#94a3b8',
+          points: timestamps.map((t, i) => ({ t, v: p25Values[i] })),
+        },
+        {
+          id: 'p50',
+          label: 'p50',
+          color: '#2563eb',
+          points: timestamps.map((t, i) => ({ t, v: medianValues[i] })),
+        },
+        {
+          id: 'p75',
+          label: 'p75',
+          color: '#f97316',
+          points: timestamps.map((t, i) => ({ t, v: p75Values[i] })),
+        },
+      ]
+      const lastMedian = medianValues[medianValues.length - 1] ?? 0
+      const lastSpread = (p75Values[p75Values.length - 1] ?? 0) - (p25Values[p25Values.length - 1] ?? 0)
+      insight = `Median spread is ${Math.round(lastMedian)} bps; IQR ${Math.round(lastSpread)} bps`
       break
     }
 
@@ -231,6 +292,45 @@ export async function getChartData(chartId: string, filters: PulseFilters, range
       break
     }
 
+    case 'leader-change-frequency': {
+      const values = Array.from({ length: days }, () => Math.max(0, Math.round(randomInRange(0, 3))))
+      series = [{
+        id: 'leader-flips',
+        label: 'Leader flips',
+        color: '#2563eb',
+        points: timestamps.map((t, i) => ({ t, v: values[i] })),
+      }]
+      const total = values.reduce((sum, v) => sum + v, 0)
+      insight = `${total} leader flips in last ${days} days`
+      break
+    }
+
+    case 'leader-edge': {
+      const values = generateTrendingData(45, 8, days)
+      series = [{
+        id: 'leader-edge',
+        label: 'Leader edge (bps)',
+        color: '#22c55e',
+        points: timestamps.map((t, i) => ({ t, v: values[i] })),
+      }]
+      const lastValue = values[values.length - 1] ?? 0
+      insight = `Leader edge is ${Math.round(lastValue)} bps vs #2`
+      break
+    }
+
+    case 'pass-through-latency': {
+      const values = generateTrendingData(18, 4, days)
+      series = [{
+        id: 'latency',
+        label: 'Latency (min)',
+        color: '#f59e0b',
+        points: timestamps.map((t, i) => ({ t, v: values[i] })),
+      }]
+      const lastValue = values[values.length - 1] ?? 0
+      insight = `Median pass-through latency ${Math.round(lastValue)} min`
+      break
+    }
+
     case 'volatility-pulse': {
       const values = Array.from({ length: days }, () => randomInRange(0.1, 2.5))
       series = [{
@@ -239,7 +339,7 @@ export async function getChartData(chartId: string, filters: PulseFilters, range
         color: '#f59e0b',
         points: timestamps.map((t, i) => ({ t, v: values[i] })),
       }]
-      insight = 'Volatility is Medium — good time to transfer'
+      insight = 'Volatility is Medium - monitor pricing windows'
       break
     }
 
@@ -253,7 +353,20 @@ export async function getChartData(chartId: string, filters: PulseFilters, range
           v: randomInRange(-3, 3),
         })),
       }))
-      insight = '2 anomalies detected in the last 7 days'
+      insight = '2 anomalies flagged in the last 7 days'
+      break
+    }
+
+    case 'spread-volatility': {
+      const values = generateTrendingData(80, 12, days)
+      series = [{
+        id: 'spread-volatility',
+        label: 'Spread volatility (bps)',
+        color: '#ef4444',
+        points: timestamps.map((t, i) => ({ t, v: values[i] })),
+      }]
+      const lastValue = values[values.length - 1] ?? 0
+      insight = `Spread volatility ${Math.round(lastValue)} bps`
       break
     }
 
@@ -264,9 +377,52 @@ export async function getChartData(chartId: string, filters: PulseFilters, range
       break
     }
 
-    case 'method-coverage': {
-      series = []
-      insight = '5 providers support bank transfer for this corridor'
+    case 'provider-availability': {
+      const maxProviders = PROVIDERS.length
+      const values = Array.from({ length: days }, () => Math.max(1, Math.min(maxProviders, Math.round(randomInRange(maxProviders - 2, maxProviders)))))
+      series = [{
+        id: 'availability',
+        label: 'Providers available',
+        color: '#2563eb',
+        points: timestamps.map((t, i) => ({ t, v: values[i] })),
+      }]
+      const avg = values.reduce((sum, v) => sum + v, 0) / values.length
+      insight = `Average availability ${avg.toFixed(1)} providers`
+      break
+    }
+
+    case 'data-freshness': {
+      const p50Values = generateTrendingData(2.5, 0.6, days)
+      const p95Values = generateTrendingData(9, 1.5, days)
+      series = [
+        {
+          id: 'p50',
+          label: 'p50 age (min)',
+          color: '#38bdf8',
+          points: timestamps.map((t, i) => ({ t, v: p50Values[i] })),
+        },
+        {
+          id: 'p95',
+          label: 'p95 age (min)',
+          color: '#f97316',
+          points: timestamps.map((t, i) => ({ t, v: p95Values[i] })),
+        },
+      ]
+      const lastP95 = p95Values[p95Values.length - 1] ?? 0
+      insight = `p95 freshness ${Math.round(lastP95)} min`
+      break
+    }
+
+    case 'corridor-liquidity': {
+      const values = generateTrendingData(70, 6, days)
+      series = [{
+        id: 'liquidity',
+        label: 'Liquidity index',
+        color: '#22c55e',
+        points: timestamps.map((t, i) => ({ t, v: values[i] })),
+      }]
+      const lastValue = values[values.length - 1] ?? 0
+      insight = `Liquidity index ${Math.round(lastValue)}`
       break
     }
   }
@@ -282,11 +438,11 @@ export async function getMethodCoverage(filters: PulseFilters): Promise<MethodCo
   await new Promise(resolve => setTimeout(resolve, 100))
 
   return [
-    { provider: 'Wise', bank: true, cash: false, wallet: false, card: true, speed: 'Minutes–2d' },
-    { provider: 'Remitly', bank: true, cash: true, wallet: true, card: true, speed: '15min–2d' },
-    { provider: 'XE', bank: true, cash: false, wallet: false, card: true, speed: '1–4 days' },
-    { provider: 'Xoom', bank: true, cash: true, wallet: false, card: true, speed: 'Min–days' },
-    { provider: 'WorldRemit', bank: true, cash: true, wallet: true, card: true, speed: 'Min–days' },
+    { provider: 'Wise', bank: true, cash: false, wallet: false, card: true, speed: 'Minutes-2d' },
+    { provider: 'Remitly', bank: true, cash: true, wallet: true, card: true, speed: '15min-2d' },
+    { provider: 'XE', bank: true, cash: false, wallet: false, card: true, speed: '1-4 days' },
+    { provider: 'Xoom', bank: true, cash: true, wallet: false, card: true, speed: 'Min-days' },
+    { provider: 'WorldRemit', bank: true, cash: true, wallet: true, card: true, speed: 'Min-days' },
     { provider: 'Sendwave', bank: false, cash: false, wallet: true, card: false, speed: 'Minutes' },
   ]
 }
@@ -463,6 +619,211 @@ export async function getHeroChartData(
     currency: toCurrency,
     lastUpdated: new Date().toISOString(),
   }
+}
+
+export async function getPulseCoverageSummary(
+  corridor: PulseCorridor,
+  timeframe: PulseTimeframe
+): Promise<PulseCoverageSummary> {
+  await new Promise(resolve => setTimeout(resolve, 60))
+
+  const hours = getHoursForTimeframe(timeframe)
+  const providerCount = PROVIDERS.length
+  const density = 10 + Math.floor(Math.random() * 6)
+  const quotesInRange = providerCount * hours * density
+
+  const coverageRows = await getMethodCoverage({
+    corridor: corridor.slug,
+    amount: 1000,
+    fundingMethod: 'bank',
+    payoutMethod: 'bank',
+  })
+
+  const methodsIncluded = ['bank', 'cash', 'wallet', 'card'].filter(method =>
+    coverageRows.some(row => row[method as keyof MethodCoverageRow])
+  )
+
+  return {
+    quotesInRange,
+    providersIncluded: providerCount,
+    methodsIncluded,
+    lastUpdated: new Date().toISOString(),
+  }
+}
+
+export async function getPulseSnapshotSummary(
+  corridor: PulseCorridor,
+  timeframe: PulseTimeframe,
+  amount: number = 1000
+): Promise<PulseSnapshotSummary> {
+  const [hero, depth, snapshot, coverage, quoteSuccess] = await Promise.all([
+    getHeroChartData(corridor, timeframe, amount),
+    getMarketDepthData(corridor),
+    getMarketSnapshot(corridor, amount),
+    getPulseCoverageSummary(corridor, timeframe),
+    getChartData('quote-success', {
+      corridor: corridor.slug,
+      amount: 1000,
+      fundingMethod: 'bank',
+      payoutMethod: 'bank',
+    }),
+  ])
+
+  const avgFee = snapshot.quotes.reduce((sum, q) => sum + q.fee, 0) / snapshot.quotes.length
+  const feeBps = Math.round((avgFee / amount) * 10000)
+  const spreadBps = Math.round(hero.currentSpreadPercent * 100)
+  const allInCostBps = spreadBps + feeBps
+
+  const best = snapshot.quotes[0]
+  const runnerUp = snapshot.quotes[1]
+  const leaderEdgeBps = runnerUp ? Math.max(0, runnerUp.markupBps - best.markupBps) : 0
+
+  const rates = hero.points.map(p => p.bestProviderRate)
+  const mean = rates.reduce((sum, v) => sum + v, 0) / rates.length
+  const variance = rates.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / rates.length
+  const volatilityPct = (Math.sqrt(variance) / mean) * 100
+  const volatilityLevel = volatilityPct > 0.35 ? 'High' : volatilityPct > 0.2 ? 'Medium' : 'Low'
+
+  const quoteSuccessValues = quoteSuccess?.series.map(s => s.points[s.points.length - 1]?.v || 0) || []
+  const quoteSuccessRate = quoteSuccessValues.length
+    ? quoteSuccessValues.reduce((sum, v) => sum + v, 0) / quoteSuccessValues.length
+    : 98.2
+
+  const bpsDelta = Math.round((Math.random() - 0.5) * 12)
+  const spreadDelta = Math.round((Math.random() - 0.5) * 20)
+  const winDelta = Math.round((Math.random() - 0.5) * 6)
+  const volatilityDelta = Math.round((Math.random() - 0.5) * 5)
+  const successDelta = Math.round((Math.random() - 0.5) * 5) / 10
+
+  return {
+    kpis: [
+      {
+        id: 'all-in-cost',
+        label: 'All-in Cost (bps)',
+        value: `${allInCostBps} bps`,
+        delta: `${bpsDelta >= 0 ? '+' : ''}${bpsDelta} bps vs 7D avg`,
+        deltaType: bpsDelta <= 0 ? 'positive' : 'negative',
+        tooltip: 'All-in cost = fees + FX markup, expressed in basis points.',
+      },
+      {
+        id: 'market-spread',
+        label: 'Market Spread',
+        value: `${depth.spreadRangeBps} bps`,
+        delta: `${spreadDelta >= 0 ? '+' : ''}${spreadDelta} bps vs 7D avg`,
+        deltaType: spreadDelta <= 0 ? 'positive' : 'negative',
+        tooltip: 'Difference between best and worst provider pricing in the corridor.',
+      },
+      {
+        id: 'leader',
+        label: 'Leader Today',
+        value: `${best.provider} (+${leaderEdgeBps} bps edge)`,
+        delta: `Win share ${winDelta >= 0 ? '+' : ''}${winDelta}% vs 7D avg`,
+        deltaType: winDelta >= 0 ? 'positive' : 'negative',
+        tooltip: 'Provider with the highest delivered amount right now.',
+      },
+      {
+        id: 'volatility',
+        label: 'Volatility (7D)',
+        value: volatilityLevel,
+        delta: `${volatilityDelta >= 0 ? '+' : ''}${volatilityDelta}% vs 7D avg`,
+        deltaType: volatilityDelta <= 0 ? 'positive' : 'negative',
+        tooltip: 'Price variability of best provider rates in this corridor.',
+      },
+      {
+        id: 'quote-success',
+        label: 'Quote Success',
+        value: `${quoteSuccessRate.toFixed(1)}%`,
+        delta: `${successDelta >= 0 ? '+' : ''}${successDelta.toFixed(1)}% vs 7D avg`,
+        deltaType: successDelta >= 0 ? 'positive' : 'negative',
+        tooltip: 'Percentage of successful provider quote fetches.',
+      },
+    ],
+    quotesInRange: coverage.quotesInRange,
+    providersIncluded: coverage.providersIncluded,
+    methodsIncluded: coverage.methodsIncluded,
+    leader: best.provider,
+    lastUpdated: new Date().toISOString(),
+  }
+}
+
+export async function getProviderBenchmarkingData(
+  corridor: PulseCorridor,
+  timeframe: PulseTimeframe,
+  amount: number = 1000
+): Promise<PulseProviderBenchmarkRow[]> {
+  const [quotes, heatmap] = await Promise.all([
+    getTrueCostBreakdown(corridor, amount),
+    getProviderHeatmapData(corridor, timeframe),
+  ])
+
+  const reliabilityBase: Record<string, number> = {
+    Wise: 99,
+    Remitly: 98,
+    XE: 97,
+    Xoom: 96,
+    WorldRemit: 95,
+    Bank: 92,
+  }
+
+  const rows = quotes
+    .filter(quote => quote.provider !== 'Bank')
+    .map((quote) => {
+      const winRate = heatmap.providerStats[quote.provider]?.percentage || Math.round(20 + Math.random() * 30)
+      const reliability = Math.min(99.5, Math.max(90, (reliabilityBase[quote.provider] || 94) + (Math.random() - 0.5)))
+      const totalCostBps = Math.round((quote.trueCost.totalCost / amount) * 10000)
+
+      return {
+        provider: quote.provider,
+      deliveredAmount: quote.recipientGets,
+      totalCost: quote.trueCost.totalCost,
+      totalCostBps,
+      fee: quote.trueCost.upfrontFee,
+      markupBps: quote.trueCost.spreadBps,
+      speed: quote.speed,
+      winRate,
+      reliability,
+      }
+    })
+
+  return rows.sort((a, b) => b.deliveredAmount - a.deliveredAmount)
+}
+
+export async function getPulseEventFeed(
+  corridor: PulseCorridor,
+  timeframe: PulseTimeframe
+): Promise<PulseEventItem[]> {
+  await new Promise(resolve => setTimeout(resolve, 80))
+
+  const now = Date.now()
+  const hours = getHoursForTimeframe(timeframe)
+  const corridorLabel = corridor.label
+
+  return [
+    {
+      id: `evt-${now}-leader`,
+      timestamp: new Date(now - hours * 5 * 60 * 1000).toISOString(),
+      severity: 'high',
+      title: 'Leader Flip Detected',
+      description: `${corridorLabel} shifted from Wise to Remitly after a 12 bps spread change.`,
+      chartId: 'provider-winner',
+    },
+    {
+      id: `evt-${now}-outage`,
+      timestamp: new Date(now - hours * 2 * 60 * 1000).toISOString(),
+      severity: 'medium',
+      title: 'Quote Failures Spike',
+      description: 'Xoom success rate dipped to 92% in the last 3 hours.',
+      chartId: 'quote-success',
+    },
+    {
+      id: `evt-${now}-markup`,
+      timestamp: new Date(now - hours * 60 * 1000).toISOString(),
+      severity: 'low',
+      title: 'Markup Compression',
+      description: 'Median markup tightened by 8 bps vs 7D average.',
+      chartId: 'fx-markup',
+    },
+  ]
 }
 
 export interface ProviderHeatmapDay {

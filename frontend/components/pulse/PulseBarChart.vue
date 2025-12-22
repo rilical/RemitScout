@@ -236,6 +236,11 @@ function formatValue(value: number): string {
       return `${value.toFixed(1)}%`
     case 'bps':
       return `${Math.round(value)} bps`
+    case 'minutes':
+      return `${Math.round(value)} min`
+    case 'count':
+    case 'index':
+      return `${Math.round(value)}`
     default:
       return value.toFixed(2)
   }

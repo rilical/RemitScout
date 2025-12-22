@@ -104,13 +104,13 @@ function getCategoryIconColor(): string {
 function getCategoryDescription(category: ChartCategory): string {
   switch (category) {
     case 'cost-markup':
-      return 'Track fees and exchange rate markups over time'
+      return 'All-in cost, FX markup, and fee/markup decomposition'
     case 'delivered-amount':
-      return 'See how much your recipient gets'
+      return 'Leader shifts, edge vs #2, and pass-through response'
     case 'volatility':
-      return 'Understand rate stability and timing'
+      return 'Dispersion, anomalies, and spread volatility'
     case 'availability':
-      return 'Provider reliability and coverage'
+      return 'Quote success, freshness, and liquidity signals'
     default:
       return ''
   }

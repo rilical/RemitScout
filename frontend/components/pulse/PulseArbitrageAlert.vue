@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-xl border overflow-hidden"
+    class="rounded-xl border overflow-hidden flex flex-col h-full"
     :class="hasOpportunity ? 'border-brand-600/50 bg-gradient-to-br from-brand-600/10 to-neutral-800' : 'border-neutral-700 bg-neutral-800'"
   >
     <!-- Header -->
@@ -24,8 +24,8 @@
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">Arbitrage Alert</h2>
-          <p class="text-sm text-neutral-400">Unusual spread detection</p>
+          <h2 class="text-lg font-bold text-white">Spread Anomaly Signal</h2>
+          <p class="text-sm text-neutral-400">Detects abnormal pricing dispersion</p>
         </div>
       </div>
       <div v-if="hasOpportunity" class="flex items-center gap-2">
@@ -38,7 +38,7 @@
     </div>
 
     <!-- Content -->
-    <div class="p-6">
+    <div class="p-6 flex flex-col h-full">
       <div v-if="loading" class="flex h-32 items-center justify-center">
         <div class="flex items-center gap-3 text-neutral-400">
           <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -49,19 +49,19 @@
         </div>
       </div>
 
-      <div v-else-if="hasOpportunity && data">
+      <div v-else-if="hasOpportunity && data" class="flex-1 flex flex-col">
         <!-- Opportunity Detected -->
         <div class="text-center mb-6">
           <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/20 border border-brand-600/30 px-4 py-2 mb-4">
             <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="text-sm font-bold text-brand-600">OPPORTUNITY DETECTED</span>
+            <span class="text-sm font-bold text-brand-600">ANOMALY DETECTED</span>
           </div>
           <h3 class="text-2xl font-bold text-white mb-2">
-            {{ data.provider }} is {{ data.savingsPercent.toFixed(1) }}% cheaper
+            {{ data.provider }} is {{ data.savingsPercent.toFixed(1) }}% under market
           </h3>
-          <p class="text-sm text-neutral-400">than the market average right now</p>
+          <p class="text-sm text-neutral-400">relative to the corridor average</p>
         </div>
 
         <!-- Stats -->
@@ -99,40 +99,49 @@
         </div>
 
         <!-- Recommendation -->
-        <div class="rounded-lg bg-brand-600/10 border border-brand-600/30 p-4">
-          <p class="text-sm text-neutral-300">{{ data.recommendation }}</p>
-        </div>
+          <div class="rounded-lg bg-brand-600/10 border border-brand-600/30 p-4">
+            <p class="text-sm text-neutral-300">{{ data.recommendation }}</p>
+          </div>
 
-        <!-- CTA -->
-        <div class="mt-6">
-          <button
-            type="button"
-            class="flex items-center justify-center gap-2 w-full rounded-lg bg-brand-600 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand-700 hover:shadow-lg"
-          >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Act Now — Lock This Rate</span>
-          </button>
-        </div>
+          <div class="mt-auto pt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-700"
+            >
+              Create Monitor
+            </button>
+            <button
+              type="button"
+              class="flex items-center justify-center gap-2 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-neutral-700"
+            >
+              View Details
+            </button>
+          </div>
       </div>
 
-      <div v-else>
+      <div v-else class="flex flex-col h-full min-h-[400px]">
         <!-- No Opportunity -->
-        <div class="text-center py-6">
-          <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-neutral-700 mb-4">
-            <svg class="h-8 w-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex-1 flex flex-col items-center justify-center text-center py-8">
+          <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-neutral-700 mb-6">
+            <svg class="h-10 w-10 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Market is Normal</h3>
-          <p class="text-sm text-neutral-400 max-w-xs mx-auto">
-            No unusual pricing detected. Provider rates are within normal ranges for this corridor.
+          <h3 class="text-xl font-semibold text-white mb-3">No Anomalies Detected</h3>
+          <p class="text-sm text-neutral-400 max-w-xs mx-auto mb-6">
+            Pricing dispersion is within normal corridor ranges.
           </p>
+          
+          <div class="mt-auto w-full max-w-xs">
+            <div class="rounded-lg bg-neutral-900 p-4 mb-6">
+              <div class="text-xs text-neutral-500 mb-2">Current Spread Status</div>
+              <div class="text-lg font-bold text-white mb-1">Normal Range</div>
+              <div class="text-xs text-neutral-400">Market conditions are stable</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Set Alert CTA -->
-        <div class="mt-6">
+        <div class="mt-auto pt-4">
           <button
             type="button"
             class="flex items-center justify-center gap-2 w-full rounded-lg border border-neutral-600 bg-neutral-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-600"
@@ -140,7 +149,7 @@
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span>Alert Me When Opportunity Arises</span>
+            <span>Create Monitor</span>
           </button>
         </div>
       </div>
@@ -152,6 +161,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { ArbitrageOpportunity } from '~/types/remit'
+import { getArbitrageOpportunities } from '~/lib/pulseMockApi'
 
 const store = usePulseStore()
 
@@ -165,31 +175,17 @@ const hasOpportunity = computed(() => {
 async function loadData() {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 150))
-    
-    const baseMidRate = 56.25
-    const random = Math.random()
-    
-    if (random > 0.4) {
-      const currentRate = baseMidRate * (0.996 + Math.random() * 0.002)
-      const averageRate = baseMidRate * 0.992
-      const savingsPercent = ((currentRate - averageRate) / averageRate) * 100
-      const percentile = 75 + Math.random() * 20
-      
+    const opportunity = await getArbitrageOpportunities(store.corridor)
+    if (opportunity) {
       data.value = {
-        provider: 'Wise',
-        currentRate,
-        averageRate,
-        savingsPercent,
-        percentile: Math.round(percentile),
-        isSignificant: savingsPercent > 0.3,
-        recommendation: `This rate is in the top ${Math.round(100 - percentile)}% of rates we've seen in the last 30 days. Consider sending now to lock in this favorable rate.`,
+        ...opportunity,
+        recommendation: 'Potential action: tighten spreads by 5-10 bps to defend share (based on percentile position).',
       }
     } else {
       data.value = {
         provider: '',
-        currentRate: baseMidRate * 0.992,
-        averageRate: baseMidRate * 0.992,
+        currentRate: 0,
+        averageRate: 0,
         savingsPercent: 0,
         percentile: 50,
         isSignificant: false,

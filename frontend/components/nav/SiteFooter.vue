@@ -218,6 +218,49 @@
         </div>
       </div>
 
+      <!-- Institutional Section -->
+      <div class="border-t border-white/10 pt-8 mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10">
+              <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-white">For Enterprise</h3>
+              <p class="text-xs text-white/60">Data products for enterprise & research</p>
+            </div>
+          </div>
+          <nav class="flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="Institutional links">
+            <NuxtLink
+              to="/institutions/data-products"
+              class="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Data Products
+            </NuxtLink>
+            <NuxtLink
+              to="/institutions/api"
+              class="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              API
+            </NuxtLink>
+            <NuxtLink
+              to="/institutions/compliance"
+              class="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Compliance
+            </NuxtLink>
+            <NuxtLink
+              to="/methodology"
+              class="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Provenance
+            </NuxtLink>
+          </nav>
+        </div>
+      </div>
+
       <div class="pt-8 border-t border-white/20">
         <p class="text-xs text-white/60 leading-relaxed mb-6 max-w-3xl">
           Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up. Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.

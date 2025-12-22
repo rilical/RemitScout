@@ -17,8 +17,11 @@
       >
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <svg
-          class="h-5 w-5 text-gray-400 transition-transform duration-200"
-          :class="{ 'rotate-180': isOpen }"
+          :class="[
+            'h-5 w-5 transition-transform duration-200',
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-400',
+            { 'rotate-180': isOpen }
+          ]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -40,13 +43,21 @@
       <div
         v-show="isOpen && filteredCountries.length > 0"
         ref="dropdownRef"
-        class="fixed z-[9999] overflow-y-auto rounded-lg border-2 border-gray-300 bg-white py-1 shadow-2xl"
+        :class="[
+          'fixed z-[9999] overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
+          props.theme === 'dark'
+            ? 'border-neutral-700 bg-neutral-800'
+            : 'border-gray-300 bg-white'
+        ]"
         style="max-height: 400px;"
         :style="dropdownStyle"
       >
         <div
           v-if="filteredCountries.length === 0"
-          class="px-4 py-2 text-sm text-gray-500"
+          :class="[
+            'px-4 py-2 text-sm',
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'
+          ]"
         >
           No countries found
         </div>
@@ -54,7 +65,12 @@
           v-for="country in filteredCountries"
           :key="country.value"
           type="button"
-          class="w-full px-4 py-2.5 text-left text-sm text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 focus:outline-none active:bg-primary-100 transition-colors"
+          :class="[
+            'w-full px-4 py-2.5 text-left text-sm transition-colors focus:outline-none',
+            props.theme === 'dark'
+              ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
+              : 'text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100'
+          ]"
           @mousedown.prevent="selectCountry(country)"
           @touchstart.prevent="selectCountry(country)"
         >
@@ -87,6 +103,7 @@ interface Props {
   error?: string
   labelClass?: string
   selectClass?: string
+  theme?: 'light' | 'dark'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -96,6 +113,7 @@ const props = withDefaults(defineProps<Props>(), {
   error: '',
   labelClass: '',
   selectClass: '',
+  theme: 'light',
 })
 
 const emit = defineEmits<{

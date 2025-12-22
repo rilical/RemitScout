@@ -157,6 +157,14 @@ watch(() => route.path, () => {
           >
             Guides
           </NuxtLink>
+
+          <!-- Enterprise -->
+          <NuxtLink
+            to="/institutions"
+            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            Enterprise
+          </NuxtLink>
         </nav>
       </div>
 
@@ -368,6 +376,16 @@ watch(() => route.path, () => {
               <span>Guides</span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
+
+            <NuxtLink
+              to="/institutions"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+            >
+              <span>Enterprise</span>
+              <span aria-hidden="true">→</span>
+            </NuxtLink>
+
+            <div class="my-3 border-t border-slate-200" />
 
             <button
               v-if="devControlsEnabled"

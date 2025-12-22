@@ -3,31 +3,27 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">True Cost vs. Mid-Market</h2>
-        <p class="text-sm text-neutral-400">See what you're really paying for your transfer</p>
+        <h2 class="text-lg font-bold text-white">{{ chartTitle }}</h2>
+        <p class="text-sm text-neutral-400">{{ chartSubtitle }}</p>
       </div>
       <div class="flex items-center gap-4">
         <!-- Spread Indicator -->
         <div class="text-right">
-          <div class="text-sm text-neutral-400">Current Spread</div>
-          <div class="text-xl font-bold text-brand-600">
-            {{ data?.currentSpreadPercent.toFixed(2) }}%
-          </div>
+          <div class="text-sm text-neutral-400">Current Markup</div>
+          <div class="text-xl font-bold text-brand-600">{{ currentSpreadBps }} bps</div>
         </div>
         <div class="h-10 w-px bg-neutral-700" />
         <!-- Loss Indicator -->
         <div class="text-right">
-          <div class="text-sm text-neutral-400">You lose on ${{ store.amount.toLocaleString() }}</div>
-          <div class="text-xl font-bold text-danger-600">
-            ${{ data?.lossOn1000.toFixed(2) }}
-          </div>
+          <div class="text-sm text-neutral-400">Markup cost on ${{ store.amount.toLocaleString() }}</div>
+          <div class="text-xl font-bold text-danger-600">${{ data?.lossOn1000.toFixed(2) }}</div>
         </div>
       </div>
     </div>
 
     <!-- Chart -->
     <div class="relative p-4">
-      <div v-if="loading" class="flex h-80 items-center justify-center">
+      <div v-if="loading" class="flex h-[500px] items-center justify-center">
         <div class="flex items-center gap-3 text-neutral-400">
           <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -36,9 +32,8 @@
           Loading chart data...
         </div>
       </div>
-      <div v-else class="h-80">
+      <div v-else class="h-[500px]">
         <v-chart
-          ref="chartRef"
           class="h-full w-full"
           :option="chartOption"
           autoresize
@@ -57,7 +52,7 @@
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-neutral-500" />
-              <span class="text-sm text-neutral-300">Mid-Market</span>
+              <span class="text-sm text-neutral-300">{{ midLabel }}</span>
             </div>
             <span class="text-sm font-semibold text-white">{{ tooltipData.midMarket }}</span>
           </div>
@@ -78,7 +73,7 @@
         </div>
         <div class="mt-2 border-t border-neutral-700 pt-2">
           <div class="text-xs text-neutral-500">
-            Spread: <span class="text-white">{{ tooltipData.spread }}</span>
+            Markup: <span class="text-white">{{ tooltipData.spread }}</span>
           </div>
         </div>
       </div>
@@ -88,19 +83,15 @@
     <div class="flex items-center justify-center gap-6 border-t border-neutral-700 px-6 py-3">
       <div class="flex items-center gap-2">
         <span class="h-0.5 w-6 border-t-2 border-dashed border-neutral-400" />
-        <span class="text-sm text-neutral-400">Mid-Market Rate</span>
+        <span class="text-sm text-neutral-400">{{ midLabel }}</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="h-0.5 w-6 bg-brand-600" />
-        <span class="text-sm text-neutral-400">Best Provider</span>
+        <span class="text-sm text-neutral-400">{{ leaderLabel }}</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="h-0.5 w-6 bg-danger-600" />
-        <span class="text-sm text-neutral-400">Bank Average</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="h-4 w-6 rounded bg-brand-600/20" />
-        <span class="text-sm text-neutral-400">Your Savings</span>
+        <span class="text-sm text-neutral-400">{{ bankLabel }}</span>
       </div>
     </div>
 
@@ -110,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, shallowRef } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
@@ -135,9 +126,15 @@ use([
   DataZoomComponent,
 ])
 
-const store = usePulseStore()
-const chartRef = ref<InstanceType<typeof VChart> | null>(null)
+interface Props {
+  metric?: 'rate' | 'markup'
+}
 
+const props = withDefaults(defineProps<Props>(), {
+  metric: 'rate',
+})
+
+const store = usePulseStore()
 const loading = ref(true)
 const data = ref<HeroChartData | null>(null)
 
@@ -152,6 +149,26 @@ const tooltipData = ref<{
 
 const tooltipPosition = ref({ x: 0, y: 0 })
 
+const currentSpreadBps = computed(() => {
+  if (!data.value) return 0
+  return Math.round(data.value.currentSpreadPercent * 100)
+})
+
+const midLabel = computed(() => (props.metric === 'markup' ? 'Baseline (0 bps)' : 'Mid-Market Rate'))
+const leaderLabel = computed(() => (props.metric === 'markup' ? 'Leader Markup' : 'Market Leader'))
+const bankLabel = computed(() => (props.metric === 'markup' ? 'Bank Markup' : 'Bank Average'))
+
+const chartTitle = computed(() => {
+  return props.metric === 'markup' ? 'FX Markup vs Mid-Market' : 'Effective Rate vs Mid-Market'
+})
+
+const chartSubtitle = computed(() => {
+  if (props.metric === 'markup') {
+    return `Markup dispersion for ${store.corridor.label} - ${store.amount.toLocaleString()} ${store.corridor.fromCode}`
+  }
+  return `Mid-market vs leader vs bank benchmark - ${store.corridor.label}`
+})
+
 const chartOption = computed(() => {
   if (!data.value) return {}
 
@@ -161,6 +178,85 @@ const chartOption = computed(() => {
     day: 'numeric',
     hour: 'numeric',
   }))
+
+  if (props.metric === 'markup') {
+    const bestMarkup = points.map(p => ((p.midMarketRate - p.bestProviderRate) / p.midMarketRate) * 10000)
+    const bankMarkup = points.map(p => ((p.midMarketRate - p.bankAverageRate) / p.midMarketRate) * 10000)
+    const baseline = points.map(() => 0)
+
+    const maxMarkup = Math.max(...bankMarkup, 50)
+
+    return {
+      backgroundColor: 'transparent',
+      grid: {
+        left: 60,
+        right: 20,
+        top: 20,
+        bottom: 40,
+      },
+      xAxis: {
+        type: 'category',
+        data: times,
+        axisLine: { lineStyle: { color: '#404040' } },
+        axisLabel: { color: '#9ca3af', fontSize: 11 },
+        splitLine: { show: false },
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: maxMarkup * 1.1,
+        axisLine: { show: false },
+        axisLabel: {
+          color: '#9ca3af',
+          fontSize: 11,
+          formatter: (value: number) => `${Math.round(value)} bps`,
+        },
+        splitLine: { lineStyle: { color: '#404040', type: 'dashed' } },
+      },
+      tooltip: {
+        trigger: 'none',
+      },
+      series: [
+        {
+          name: 'Baseline',
+          type: 'line',
+          data: baseline,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: {
+            color: '#9ca3af',
+            width: 2,
+            type: 'dashed',
+          },
+          z: 1,
+        },
+        {
+          name: 'Market Leader',
+          type: 'line',
+          data: bestMarkup,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: {
+            color: '#2563EB',
+            width: 3,
+          },
+          z: 2,
+        },
+        {
+          name: 'Bank Average',
+          type: 'line',
+          data: bankMarkup,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: {
+            color: '#DC2626',
+            width: 2,
+          },
+          z: 1,
+        },
+      ],
+    }
+  }
 
   const midMarketData = points.map(p => p.midMarketRate)
   const bestProviderData = points.map(p => p.bestProviderRate)
@@ -212,18 +308,6 @@ const chartOption = computed(() => {
           type: 'dashed',
         },
         z: 1,
-      },
-      {
-        name: 'Spread Area',
-        type: 'line',
-        data: midMarketData,
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { width: 0 },
-        areaStyle: {
-          color: 'transparent',
-        },
-        z: 0,
       },
       {
         name: 'Best Provider',
@@ -286,11 +370,15 @@ function handleMouseMove(params: { event?: { offsetX?: number; offsetY?: number 
       hour: 'numeric',
       minute: '2-digit',
     }),
-    midMarket: point.midMarketRate.toFixed(4),
-    bestRate: point.bestProviderRate.toFixed(4),
+    midMarket: props.metric === 'markup' ? '0 bps' : point.midMarketRate.toFixed(4),
+    bestRate: props.metric === 'markup'
+      ? `${Math.round(((point.midMarketRate - point.bestProviderRate) / point.midMarketRate) * 10000)} bps`
+      : point.bestProviderRate.toFixed(4),
     bestProvider: point.bestProvider,
-    bankRate: point.bankAverageRate.toFixed(4),
-    spread: `${point.spreadPercent.toFixed(2)}%`,
+    bankRate: props.metric === 'markup'
+      ? `${Math.round(((point.midMarketRate - point.bankAverageRate) / point.midMarketRate) * 10000)} bps`
+      : point.bankAverageRate.toFixed(4),
+    spread: `${Math.round(point.spreadPercent * 100)} bps`,
   }
 
   tooltipPosition.value = {

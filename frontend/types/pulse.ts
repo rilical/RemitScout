@@ -133,3 +133,51 @@ export interface CorridorOption {
   fromCode: string
   toCode: string
 }
+
+export type PulseDeltaType = 'positive' | 'negative' | 'neutral'
+
+export interface PulseSnapshotKpi {
+  id: string
+  label: string
+  value: string
+  delta: string
+  deltaType: PulseDeltaType
+  tooltip: string
+}
+
+export interface PulseSnapshotSummary {
+  kpis: PulseSnapshotKpi[]
+  quotesInRange: number
+  providersIncluded: number
+  methodsIncluded: string[]
+  leader: string
+  lastUpdated: string
+}
+
+export interface PulseCoverageSummary {
+  quotesInRange: number
+  providersIncluded: number
+  methodsIncluded: string[]
+  lastUpdated: string
+}
+
+export interface PulseProviderBenchmarkRow {
+  provider: string
+  deliveredAmount: number
+  totalCost: number
+  totalCostBps: number
+  fee: number
+  markupBps: number
+  speed: string
+  winRate: number
+  reliability: number
+}
+
+export interface PulseEventItem {
+  id: string
+  timestamp: string
+  severity: 'low' | 'medium' | 'high'
+  title: string
+  description: string
+  chartId?: string
+}

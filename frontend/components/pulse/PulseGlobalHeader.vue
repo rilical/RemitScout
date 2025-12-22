@@ -105,45 +105,24 @@
           </button>
         </div>
 
-        <!-- Right: Mode Toggle + Status -->
-        <div class="flex items-center gap-4">
-          <!-- View Mode Toggle -->
-          <div class="flex items-center gap-1 rounded-lg bg-neutral-800 p-1">
-            <button
-              class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-              :class="store.viewMode === 'sender'
-                ? 'bg-brand-600 text-white'
-                : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
-              @click="store.setViewMode('sender')"
-            >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Sender
-            </button>
-            <button
-              class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-              :class="store.viewMode === 'analyst'
-                ? 'bg-brand-600 text-white'
-                : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
-              @click="store.setViewMode('analyst')"
-            >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Analyst
-            </button>
-          </div>
-
-          <!-- Live Status -->
-          <div class="flex items-center gap-2 text-sm text-neutral-400">
-            <span class="relative flex h-2 w-2">
-              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
-              <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
-            </span>
-            <span>{{ store.lastUpdatedRelative }}</span>
-          </div>
+        <!-- Right: Live Status -->
+        <div class="flex items-center gap-2 text-sm text-neutral-400">
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
+          </span>
+          <span>Updated {{ store.lastUpdatedRelative }}</span>
         </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pb-4 text-[11px] text-neutral-400">
+        <span>{{ summary ? `${formatNumber(summary.quotesInRange)} quotes in range` : 'Loading coverage...' }}</span>
+        <span class="text-neutral-600">|</span>
+        <span>{{ summary ? `${summary.providersIncluded} providers included` : '-' }}</span>
+        <span class="text-neutral-600">|</span>
+        <span>{{ summary ? `Methods: ${formatMethods(summary.methodsIncluded)}` : 'Methods: Bank' }}</span>
+        <span class="text-neutral-600">|</span>
+        <span>As of {{ summary ? formatTimestamp(summary.lastUpdated) : '-' }} UTC</span>
       </div>
     </div>
 
@@ -157,8 +136,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { usePulseStore, POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
+import { getPulseCoverageSummary } from '~/lib/pulseMockApi'
+import type { PulseCoverageSummary } from '~/types/pulse'
 
 const store = usePulseStore()
 
@@ -167,6 +148,8 @@ const showCorridorDropdown = ref(false)
 const corridors = POPULAR_CORRIDORS
 
 const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
+
+const summary = ref<PulseCoverageSummary | null>(null)
 
 function selectCorridor(corridor: PulseCorridor) {
   store.setCorridor(corridor)
@@ -184,11 +167,38 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
+function formatNumber(value: number): string {
+  return value.toLocaleString('en-US')
+}
+
+function formatTimestamp(value: string): string {
+  return new Date(value).toISOString().replace('T', ' ').slice(0, 16)
+}
+
+function formatMethods(methods: string[]): string {
+  return methods.map(method => method.charAt(0).toUpperCase() + method.slice(1)).join(', ')
+}
+
+async function loadSummary() {
+  try {
+    summary.value = await getPulseCoverageSummary(store.corridor, store.timeframe)
+  } catch (e) {
+    console.error('Failed to load coverage summary:', e)
+  }
+}
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown)
+  loadSummary()
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown)
 })
+
+watch(
+  () => [store.corridor, store.timeframe, store.amount],
+  () => loadSummary(),
+  { deep: true }
+)
 </script>
