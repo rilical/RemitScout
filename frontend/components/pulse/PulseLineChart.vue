@@ -352,3 +352,4 @@ function getAreaPath(points: { x: number; y: number }[]): string {
   return `${start} ${line} ${end}`
 }
 </script>
+

@@ -117,6 +117,7 @@ const sortOptions = [
   { label: 'Lowest cost', value: 'cost' },
   { label: 'Fastest', value: 'speed' },
   { label: 'Best rated', value: 'score' },
+  { label: 'Remit Score', value: 'remit-score' },
 ]
 
 watch(() => props.amount, (val) => { localAmount.value = val })
@@ -132,3 +133,4 @@ function emitUpdate() {
   })
 }
 </script>
+

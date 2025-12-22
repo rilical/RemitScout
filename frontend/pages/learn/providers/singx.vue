@@ -12,7 +12,7 @@
           <span class="text-white/50">›</span>
           <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
           <span class="text-white/50">›</span>
-          <span class="font-medium text-white">TransferGo Review</span>
+          <span class="font-medium text-white">SingX Review</span>
         </nav>
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
@@ -20,8 +20,8 @@
           <div>
             <div class="flex items-center gap-4 mb-6">
               <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-purple-500 flex items-center justify-center text-white text-xl font-bold">
-                  TG
+                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+                  SX
                 </div>
               </div>
               <div>
@@ -32,7 +32,7 @@
                   Provider Review
                 </div>
                 <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
-                  TransferGo Review
+                  SingX Review
                 </h1>
                 <p class="text-xl text-slate-300">
                   Independent Remit-Scout Analysis
@@ -46,14 +46,14 @@
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink
-                to="/send-money?provider=transfergo"
+                to="/send-money?provider=singx"
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Compare TransferGo Now
+                Compare SingX Now
               </NuxtLink>
               <a
                 href="#review"
@@ -84,11 +84,11 @@
                       stroke="#3b82f6"
                       stroke-width="12"
                       stroke-linecap="round"
-                      :stroke-dasharray="`${86 * 4.4} 440`"
+                      :stroke-dasharray="`${82 * 4.4} 440`"
                     />
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">8.6</span>
+                    <span class="text-5xl font-bold text-black">8.2</span>
                     <span class="text-sm text-slate-500">/10</span>
                   </div>
                 </div>
@@ -99,10 +99,10 @@
                 <div>
                   <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
                     <span class="text-black">Delivered Value</span>
-                    <span class="font-semibold text-black">Strong (Core)</span>
+                    <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 85%" />
+                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
                   </div>
                 </div>
                 <div>
@@ -117,10 +117,10 @@
                 <div>
                   <div class="flex justify-between text-sm mb-1">
                     <span class="text-black">Speed</span>
-                    <span class="font-semibold text-black">Strong</span>
+                    <span class="font-semibold text-black">Moderate</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
+                    <div class="h-full bg-amber-400 rounded-full" style="width: 70%" />
                   </div>
                 </div>
                 <div>
@@ -129,16 +129,16 @@
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 80%" />
+                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
                   </div>
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-1">
                     <span class="text-black">Trust & Safety</span>
-                    <span class="font-semibold text-black">Strong</span>
+                    <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
+                    <div class="h-full bg-blue-400 rounded-full" style="width: 82%" />
                   </div>
                 </div>
               </div>
@@ -160,20 +160,20 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Europe</div>
-            <div class="text-sm text-slate-600">Origin Only</div>
+            <div class="text-3xl font-bold text-slate-900">Singapore</div>
+            <div class="text-sm text-slate-600">Primary Market</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">30 Min</div>
-            <div class="text-sm text-slate-600">Fastest Option</div>
+            <div class="text-3xl font-bold text-slate-900">Bank Transfer</div>
+            <div class="text-sm text-slate-600">Core Model</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Multiple</div>
-            <div class="text-sm text-slate-600">Speed Tiers</div>
+            <div class="text-3xl font-bold text-blue-600">MAS Licensed</div>
+            <div class="text-sm text-slate-600">Regulatory Status</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Fixed</div>
-            <div class="text-sm text-slate-600">Rate on Booking</div>
+            <div class="text-3xl font-bold text-slate-900">3 Markets</div>
+            <div class="text-sm text-slate-600">Send From</div>
           </div>
         </div>
       </div>
@@ -194,7 +194,7 @@
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
-                  This is a data-first, non-sponsored review using Remit-Scout's weighted rubric. Because Delivered Value is 40% of the score, we anchor the 8.6/10 there first: what you pay in practice is fees + FX spread, and TransferGo can be very competitive in its core Europe-led corridors, but it's less dominant globally because its supported sending footprint is Europe-centric.
+                  SingX earns its 8.2/10 primarily on Delivered Value (40%): it's built around bank-transfer rails and tends to price in a "transparent fee + (often) strong FX rate" style that can be competitive versus providers that embed more cost in the exchange rate. The ceiling on the score comes from what you'd expect in this model: speed is usually "bank-timed" rather than instant, and availability/breadth depends a lot on where you're sending from and the specific corridor.
                 </p>
               </div>
 
@@ -205,7 +205,7 @@
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
                   <p class="text-lg text-slate-800 leading-relaxed italic m-0">
-                    "TransferGo (8.6): European strength; good speed tiers; value strong in-core; less dominant globally."
+                    "SingX (8.2): Good bank-transfer value; moderate speed; narrower breadth vs global leaders."
                   </p>
                 </div>
               </div>
@@ -220,19 +220,19 @@
                   Score Breakdown
                 </h2>
                 <p class="text-lg text-slate-600 mb-6">
-                  Here's how TransferGo performs across each category in our rubric:
+                  Here's how SingX performs across each category in our rubric:
                 </p>
               </div>
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
                   <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
-                    8.6
+                    8.2
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
                       <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
-                      TransferGo
+                      SingX
                     </h3>
                     <p class="text-sm text-black">remit-score</p>
                   </div>
@@ -241,10 +241,10 @@
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong (Core)</span>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Value strong in-core (Europe-led corridors). Small FX mark-up on mid-market rate, no hidden fees. Funding method matters (card costs more than bank transfer).</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Clear fee framing with transparent pricing. Fees/spreads can vary by currency pair and FX mark-up may apply in some cases.</div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
@@ -252,15 +252,15 @@
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Solid in supported routes with clear status cues. Constrained by Europe-only sending footprint (not available from US, Canada, etc.).</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Clear "funding → processing" logic with pre-funded transactions processing at confirmed rate. Limited send-from markets constrain breadth.</div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Moderate</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Clear speed buckets: 30 minutes, same-day, next working day by noon, 1 working day. Payout options vary by destination.</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Bank-driven funding and delivery typically "hours to next business day" rather than instant. Processing depends on bank cutoffs.</div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
@@ -268,15 +268,15 @@
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Straightforward refund guidance when funds haven't been transferred. Formal complaints process (email/phone/chat).</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Email, live chat, and hotline support available. Refunds net of fees and third-party charges. Formal dispute resolution in Australia.</div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Authorised electronic money institution by UK Financial Conduct Authority (FCA). Verifiable on FCA register.</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">MAS Major Payment Institution (Singapore), Money Service Operator license (Hong Kong), AFSL (Australia). Not a bank - deposit insurance doesn't apply.</div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
@@ -285,8 +285,8 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.6 (not 9.0+):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">Less dominant globally because sending is Europe-only and payout methods vary by destination. Best pricing depends on funding method (card vs bank transfer) and corridor.</div>
+                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.2 (not 9.0+):</div>
+                      <div class="text-sm text-slate-700 leading-relaxed">SingX earns its score on Delivered Value with transparent, fee-led pricing that can be competitive for bank-to-bank transfers. The score is held back by moderate speed (bank-timed processing), narrower breadth versus global leaders (limited send-from markets: Singapore/Australia/Hong Kong), and variability in fees/spreads depending on currency pair.</div>
                     </div>
                   </div>
                 </div>
@@ -302,77 +302,60 @@
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
-                  Effective cost = fees + FX spread
+                  Remit-Scout's scoring starts with what you actually pay, not just the headline fee. A widely used framework (including the World Bank's Remittance Prices Worldwide work) is that total remittance cost is typically the transfer fee + exchange-rate margin (spread) + any recipient-side fees where they exist.
                 </p>
                 <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
                   <p class="font-semibold text-slate-900 mb-3 text-base">
-                    For remittance pricing, the "real" cost is almost always:
+                    Effective cost: fees + FX spread (what matters most)
                   </p>
                   <p class="text-slate-700 mb-3">
-                    <strong class="text-slate-900">Effective cost = upfront fee(s) + FX spread (rate markup)</strong>
+                    SingX's consumer messaging is built around explicit fees rather than hiding cost entirely in the exchange rate. The Singapore-facing FAQ describes a small fee (roughly 0.25%–1%) applied against the mid-market rate, with stable currencies closer to ~0.5%.
                   </p>
                   <p class="text-slate-700 mb-3">
-                    TransferGo's help center is fairly explicit about its model:
+                    Where this gets more nuanced (and why the score isn't higher): SingX's Australia disclosure docs are explicit that:
                   </p>
-                  <ul class="space-y-2 text-slate-700">
-                    <li>• It says it applies a small FX mark-up on the mid-market rate and emphasizes "no hidden fees."</li>
-                    <li>• It also explains why card payments cost more (percentage-based fees and other costs), and contrasts that with bank transfers using a fixed-fee structure that can enable better exchange rates and lower costs.</li>
+                  <ul class="space-y-3 text-slate-700">
+                    <li class="flex items-start gap-3">
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                      <span><strong class="text-slate-900">Transaction fees can be materially higher for less-traded currencies</strong> (up to 5% is cited in the Australia materials).</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                      <span><strong class="text-slate-900">An FX spread/mark-up can apply in some instances</strong>, and they note they won't usually be able to tell you what that spread is—so comparison shopping remains important.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+                      <span><strong class="text-slate-900">Third-party bank/intermediary fees can be deducted</strong> in some cases, which can reduce the delivered amount (even if SingX itself isn't charging those fees).</span>
+                    </li>
                   </ul>
-                  <p class="text-slate-700 mt-4 mb-0">
-                    What that means in practice: if you're trying to minimize total cost, you should treat the exchange rate you're offered as part of the "fee," and you should expect the best-value outcomes more often when you can fund via bank transfer/Open Banking versus card (all else equal).
-                  </p>
                 </div>
 
                 <div class="p-6 rounded-xl border-2 border-emerald-200">
                   <p class="font-semibold text-slate-900 mb-3">"How often is it cheapest?"</p>
                   <p class="text-slate-800 leading-relaxed mb-4">
-                    We don't invent "% cheapest" statistics. The best data-aligned statement is the auditor's: "value strong in-core; less dominant globally."
+                    We don't claim SingX is "always cheapest" (that would be corridor- and timing-dependent). The practical takeaway from the available disclosures is:
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">A practical interpretation is:</p>
                   <ul class="space-y-2 text-slate-700">
                     <li class="flex items-start gap-2">
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span><strong class="text-slate-900">In-core (Europe-led corridors):</strong> TransferGo can be very competitive because it's designed around Europe-origin transfers.</span>
+                      <span>It can be very competitive in bank-to-bank lanes where competitors rely heavily on FX spread.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
-                      <span><strong class="text-slate-900">Outside core:</strong> you may find better deals elsewhere, or TransferGo may not be available at all (Europe-only sending constraint).</span>
+                      <span>It can lose when (a) the currency pair attracts a higher fee, (b) an FX mark-up is applied, or (c) intermediary/receiving bank fees hit the transaction.</span>
                     </li>
                   </ul>
                 </div>
+              </div>
 
-                <div class="mt-6 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
-                    Quote vs delivered accuracy
-                  </p>
-                  <p class="text-slate-800 leading-relaxed mb-3">
-                    TransferGo makes a few strong "quote integrity" claims:
-                  </p>
-                  <ul class="space-y-2.5 text-slate-700">
-                    <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>"Pay the exact amount entered" and "No currency fluctuations—once booked, the transfer amount remains fixed."</span>
-                    </li>
-                  </ul>
-                  <p class="text-slate-700 mt-4 mb-0">
-                    That's valuable for consumers because it reduces "surprise" outcomes between the quote screen and delivery.
-                  </p>
-                  <p class="text-slate-700 mt-3 mb-0 text-sm">
-                    One important caveat (also documented): you must choose a currency the recipient account can accept—TransferGo warns that sending the wrong currency to an incompatible account can result in a bank rejection.
-                  </p>
-                </div>
-                <div class="mt-6 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                  <p class="font-semibold text-slate-900 mb-2">Delivered Value takeaway:</p>
-                  <p class="text-slate-800 mb-0">
-                    TransferGo earns most of its 8.6/10 here—strong value in its European core, with clearer fee/rate signaling than many banks—while losing points because "best" pricing is not universal and depends materially on payment method and corridor.
-                  </p>
-                </div>
+              <div class="not-prose my-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-800 m-0">
+                  <strong>Quote vs delivered accuracy:</strong> SingX's Terms describe an important mechanic: If you pre-fund, payments process at the exchange rate confirmed when you create the transaction. If you don't pre-fund, the transaction can queue until funds arrive—and if it's not funded in time it can lapse as "Validity Expired." They also note that if a transaction is cancelled/fails, refunds are net of fees and certain charges.
+                </p>
               </div>
 
               <div class="mb-10">
@@ -383,35 +366,56 @@
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+                  <p>
+                    This category is about whether the provider can consistently produce a usable quote and then successfully complete the transfer — without surprises like sudden unavailability, frequent recalculations, or failed deliveries.
+                  </p>
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Quote success / availability
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      Reliability starts with "can you even use it for your route?" TransferGo states it only supports transfers from Europe (then onward to destinations listed in its supported-countries table). That's good clarity, but it's also a real constraint versus global providers that let you send from the U.S., Canada, etc.
-                    </p>
+                    <p class="text-slate-700 mb-3">SingX's consumer FAQ indicates availability depends on residency/origin market (e.g., Singapore residents can sign up, and transfers are offered from Singapore/Australia/Hong Kong).</p>
+                    <p class="text-slate-700 mb-0">That constraint matters: even if payout coverage is broad, your ability to get a quote and execute a transfer is limited if you can't use the service from your country.</p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Pricing stability signals
+                      Pricing stability & "data freshness" signals
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      A reliability-positive detail: TransferGo says once booked, the amount remains fixed (no currency fluctuations). This supports consistent "quote → outcome" behavior.
-                    </p>
+                    <p class="text-slate-700 mb-3">A positive reliability signal is that SingX publishes operational detail like:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>The pre-funding vs queued execution flow (and expiry behavior) in Terms of Use.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Transfer cut-offs and processing windows by destination.</span>
+                      </li>
+                    </ul>
+                    <p class="text-slate-700 mt-3 mb-0">A cautionary signal is that the Australia disclosures explicitly acknowledge variability (fee variability, occasional FX mark-up, and unpredictable third-party deductions).</p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Data freshness signals
+                      Failure modes you should expect (and plan around)
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      TransferGo's help content describes operational updates like: it emails you when it receives your deposit, and bank transfers can take time to arrive (timing guidance is given by region).
-                    </p>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Reliability takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      Solid in supported routes with clear status cues, but constrained by Europe-only sending footprint.
-                    </p>
+                    <p class="text-slate-700 mb-3">From the Terms:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Compliance checks can delay or cancel a transaction; SingX can withhold credits until AML/CTF checks complete.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>If a transaction is cancelled/fails, the refund can be net of fees and other costs.</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -424,66 +428,62 @@
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
+                  <p>
+                    This measures how quickly funds arrive in practice and how much effort is required (setup, verification, payment steps, payout complexity).
+                  </p>
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      ETA / speed buckets
+                      Friction (setup + paying)
                     </p>
-                    <p class="text-slate-700 mb-3">
-                      TransferGo publishes four speed options in its help center:
-                    </p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• 30 minutes</li>
-                      <li>• Same-day (end of day)</li>
-                      <li>• Next working day (by noon)</li>
-                      <li>• 1 working day</li>
+                    <p class="text-slate-700 mb-3">On the Singapore flow, SingX describes two common "pay-in" paths:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span><strong class="text-slate-900">Wallet</strong> (top up first; then transfers can be deducted from wallet balance)</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <span><strong class="text-slate-900">Bank transfer</strong> (send the amount + SingX fee from your bank account)</span>
+                      </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
-                      That's a "good speed tiers" signal (matching the audit note), because you can choose a delivery time instead of guessing.
+                    <p class="text-slate-700 mt-3 mb-0">Wallet details: Wallet top-ups are described as via PayNow or online bank transfer, with a SGD 5,000 wallet cap in the FAQ page we reviewed, and top-ups can take 1–4 hours.</p>
+                  </div>
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Speed buckets (what delivery tends to look like)
                     </p>
+                    <p class="text-slate-700 mb-3">SingX publishes destination-level processing guidance. Typical patterns:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Within a few hours / 1–2 hours for some local-rail/wallet options and when sent before cutoffs</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Same day if created and funded before the stated cutoff time</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Next business day or 1–2 business days depending on the country/rail and cutoffs</span>
+                      </li>
+                    </ul>
+                    <p class="text-slate-700 mt-3 mb-0">And it explicitly notes the caveat most users eventually hit: turnaround depends on the banks involved (and SingX can't fully control intermediary/receiver-bank timing).</p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods
                     </p>
-                    <p class="text-slate-700 mb-3">TransferGo supports multiple "delivery options," including:</p>
-                    <ul class="space-y-2.5 text-slate-700">
-                      <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><strong class="text-slate-900">Bank account / IBAN-style delivery</strong> (implied across its help center and supported-countries guidance)</span>
-                      </li>
-                      <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><strong class="text-slate-900">Debit/credit card delivery</strong> (help article explains card-based receiving using receiver name + card info)</span>
-                      </li>
-                      <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><strong class="text-slate-900">Cash pickup in some corridors</strong> (e.g., a dedicated help article describes cash pickup for Morocco, while another destination page notes cash pickup isn't available in Ukraine)</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Typical delivery behavior
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      Two practical patterns show up in TransferGo's own guidance:
-                    </p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• Your end-to-end time depends on the speed option you choose.</li>
-                      <li>• If you fund via bank transfer, there's an additional "time-to-receipt" step: TransferGo notes local deposits can take up to an hour (UK) or up to 24–36 hours (some European contexts) to reach them.</li>
-                    </ul>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Friction & Speed takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      Fast options exist and are clearly enumerated, but your funding method can add real-world delay before the "delivery speed" clock really starts.
-                    </p>
+                    <p class="text-slate-700 mb-0">SingX supports bank payouts as the baseline, and its Terms also describe cash payouts for certain countries (with ID/PIN requirements and pickup-window rules).</p>
                   </div>
                 </div>
               </div>
@@ -496,44 +496,56 @@
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                  <p>
+                    This category is about what happens after something goes wrong: refunds, cancellations, dispute handling, and how hard it is to reach a human.
+                  </p>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Refund experience
+                      Support access (how you'll actually get help)
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      TransferGo states that if you change your mind and the money hasn't been transferred yet, you can request a refund, and it may take up to 3 business days for your bank to process the refund back into your account. That's fairly standard "bank-timed" refund behavior, and it's useful that the expectation is documented.
-                    </p>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Disputes and post-issue friction
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      TransferGo offers guidance on what to do if the receiver hasn't gotten funds after the provider says it sent the deposit (submit a request after 24 hours), which is a practical escalation path.
-                    </p>
-                    <p class="text-slate-700 mb-0">
-                      They also document troubleshooting topics like rejected transfers and correcting receiver details (a common post-issue friction point).
-                    </p>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
-                      How to contact them / complaints
-                    </p>
-                    <p class="text-slate-700 mb-3">TransferGo publishes a formal complaints process with:</p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• Complaints email</li>
-                      <li>• Phone numbers (UK and EU)</li>
-                      <li>• In-app chat route</li>
+                    <p class="text-slate-700 mb-3">SingX's Singapore FAQ lists:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span>Email support (help@singx.co)</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span>Live chat</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span>Hotline (+65-3158-4669) during 9am–6pm, Monday–Friday, with offline messages outside hours</span>
+                      </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
-                      And it publishes general customer support hours for English support (weekday + weekend coverage).
-                    </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Support & Refunds takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      Clear documented pathways exist, but refunds and some fixes can still be "process-heavy" once funds are already moving (common to bank/card rails).
+                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Refunds & post-issue friction
                     </p>
+                    <p class="text-slate-700 mb-3">The key refund-related terms to understand upfront:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>If a transaction is cancelled or fails, refunded funds are credited back net of SingX fees, third-party charges, bank fees, and any FX losses incurred.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>For cash payouts: if cash isn't picked up within 28 business days, the transaction is reversed and refunded after SingX recovers funds from the payout partner and deducts relevant charges.</span>
+                      </li>
+                    </ul>
+                    <p class="text-slate-700 mt-3 mb-0">If you're in Australia, the Financial Services Guide also outlines a formal dispute path: Internal dispute resolution aiming to resolve within 7 days (or longer if needed), with escalation to AFCA if unresolved.</p>
+                    <p class="text-slate-700 mt-3 mb-0"><strong class="text-slate-900">Practical implication:</strong> support is present and the processes are defined, but refund outcomes are not "free of friction"—fees and third-party costs can be deducted, and some cases can take time.</p>
                   </div>
                 </div>
               </div>
@@ -547,26 +559,41 @@
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
-                    We only reference public regulatory checks where available, and we avoid implying uniform regulation in every country.
+                    We keep this conservative: verifiable, "where available," and without implying universal regulation in every jurisdiction.
                   </p>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Public licensing / regulatory checks (where available)
+                      Licensing / regulatory checks (where available)
                     </p>
-                    <p class="text-slate-700 mb-3">
-                      TransferGo states in its terms that it is an authorised electronic money institution authorised by the UK Financial Conduct Authority (FCA) under the Electronic Money Regulations and Payment Services Regulations (with a published FCA firm reference number).
-                    </p>
-                    <p class="text-slate-700 mb-0">
-                      The FCA register also lists a TransferGo entity as an Authorised Electronic Money Institution (you can verify directly on the FCA register).
-                    </p>
+                    <p class="text-slate-700 mb-3">SingX's public documentation and regulator listings show:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span><strong class="text-slate-900">In Singapore,</strong> SingX Singapore Pte. Ltd. is listed in MAS's Financial Institutions Directory as a Major Payment Institution, with payment services such as cross-border money transfer listed on the entry.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span>SingX's Terms of Use also list license numbers across Singapore (MAS), Hong Kong (Money Service Operator license), and Australia (AFSL).</span>
+                      </li>
+                    </ul>
+                    <p class="text-slate-700 mt-3 mb-0">If you're evaluating trust: it's reasonable to cross-check license claims in public regulator registers (like MAS's directory) where those registers exist and are searchable.</p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Trust & Safety takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      "Trust strong" matches the presence of UK FCA authorisation disclosures and a verifiable register entry, while users outside the UK should still check the relevant legal entity and regulator for their region.
+                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Safety caveat to keep in mind
                     </p>
+                    <p class="text-slate-700 mb-0">SingX explicitly notes in its Terms that it's not a bank and deposit insurance schemes that cover bank accounts do not apply. That's normal for payment/remittance providers, but it's worth being clear-eyed about what protections do and don't apply.</p>
                   </div>
                 </div>
+              </div>
+              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p class="text-sm text-amber-800 m-0">
+                  <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
+                </p>
               </div>
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
@@ -589,15 +616,15 @@
                   <ul class="space-y-2 text-slate-700 text-base">
                     <li class="flex items-start gap-2">
                       <span class="text-emerald-600 font-bold">+</span>
-                      Delivered Value: TransferGo states it applies a small FX mark‑up on the mid‑market rate and that there are no hidden fees; once booked, the transfer amount remains fixed.
+                      <span><strong>Delivered Value:</strong> Clear fee framing (e.g., SingX's Singapore FAQ states ~0.25%–1% of the mid-market rate, with stable currencies closer to ~0.5%).</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-emerald-600 font-bold">+</span>
-                      Friction & Speed: Clear speed buckets are published (30 minutes / same-day / next working day by noon / 1 working day).
+                      <span><strong>Reliability & Success:</strong> Clear "funding → processing" logic (pre-funded transactions process at the confirmed rate; unfunded ones can queue and later expire).</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-emerald-600 font-bold">+</span>
-                      Support & Refunds: Straightforward refund guidance exists when funds haven't been transferred yet, plus a formal complaints process (email/phone/chat).
+                      <span><strong>Trust & Safety:</strong> The Singapore entity is listed by MAS as a Major Payment Institution (with regulated payment services listed in the MAS directory entry).</span>
                     </li>
                   </ul>
                 </div>
@@ -611,15 +638,15 @@
                   <ul class="space-y-2 text-slate-700 text-base">
                     <li class="flex items-start gap-2">
                       <span class="text-amber-600 font-bold">−</span>
-                      Delivered Value: Funding method matters: TransferGo explains card payments cost more (percentage-based costs + exchange-rate constraints), while bank transfers use a fixed fee structure that can be cheaper.
+                      <span><strong>Delivered Value:</strong> Fees/spreads can still vary—SingX's Australian disclosures describe transaction fees that can be higher for less-traded currencies, and note that an FX spread/mark-up may apply in some instances.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-amber-600 font-bold">−</span>
-                      Reliability & Success: Coverage isn't "global from anywhere"—TransferGo states sending is from Europe only, which affects quote availability and corridor breadth.
+                      <span><strong>Friction & Speed:</strong> Funding is fundamentally bank-driven (wallet top-ups via PayNow/bank transfer where available; bank transfer funding otherwise), and delivery is commonly "hours to next business day," not universal instant.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-amber-600 font-bold">−</span>
-                      Friction & Speed: Payout options are destination-dependent (e.g., cash pickup in Morocco is described, while Ukraine explicitly notes no cash pickup).
+                      <span><strong>Reliability & Success / Breadth:</strong> SingX's own FAQ positions transfers from Singapore/Australia/Hong Kong—if you're outside these origins, it may not be an option at all (which caps corridor breadth vs global leaders).</span>
                     </li>
                   </ul>
                 </div>
@@ -640,19 +667,19 @@
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>Sending from Europe to supported destinations, especially if you want Europe-focused coverage and pricing.</span>
+                      <span>Bank-transfer senders who prefer a clearly stated fee and are okay with bank cut-offs and "hours to next-day" delivery patterns.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>People who want explicit speed tiers (including a 30‑minute option in the help-center speed menu).</span>
+                      <span>Senders in SingX's supported origin markets (notably Singapore/Australia/Hong Kong) who want a repeatable workflow (including wallet funding where available).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>Senders who can use bank transfer / Open Banking-style funding when available, to minimize card-related pricing friction.</span>
+                      <span>Bank account (and some wallet) payouts where published processing windows are available and you can plan around them.</span>
                     </li>
                   </ul>
                 </div>
@@ -669,19 +696,19 @@
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Non‑Europe senders, since TransferGo states it "only support[s] transfers from Europe" (this is a hard availability constraint).</span>
+                      <span>Anyone who needs broad "send-from anywhere" coverage (SingX's own FAQ describes transfers from Singapore, Australia, and Hong Kong).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Anyone who needs a provider that's consistently cheapest globally without comparing—TransferGo's own materials describe an FX markup model and differing cost structures by payment method.</span>
+                      <span>Recipients who need cash pickup or instant mobile money as the default (SingX does support cash payouts in some countries, but it's not the core experience).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Corridors that require specific payout methods that aren't offered in that destination (e.g., cash pickup is available in some places but not others).</span>
+                      <span>Users who need guaranteed instant delivery—processing is explicitly dependent on banks/intermediaries in many lanes.</span>
                     </li>
                   </ul>
                 </div>
@@ -694,45 +721,44 @@
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
-                  How to Get the Best Rate with TransferGo
+                  How to Get the Best Rate with SingX
                 </h2>
                 <p class="text-lg text-slate-600 mb-6">
-                  Use this checklist as a quick "don't overpay" routine:
+                  A short, practical checklist:
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
-                      <span class="text-slate-700">TransferGo explains card payments can cost more, while bank transfers use a fixed-fee structure that can improve total cost.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Compare the total cost, not just the headline FX rate:</strong>
+                      <span class="text-slate-700">look at the explicit SingX fee and any spread/mark-up that may apply.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Treat the exchange rate as part of the fee:</strong>
-                      <span class="text-slate-700">TransferGo states it applies an FX mark-up on the mid-market rate—check the actual rate you're offered at checkout.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Watch for third-party deductions:</strong>
+                      <span class="text-slate-700">(intermediary/receiving bank fees) if you need the recipient to receive an exact amount.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Pick the slowest speed you can tolerate:</strong>
-                      <span class="text-slate-700">Speed tiers range up to 30 minutes; faster isn't free in most remittance models.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Use wallet funding strategically (where available):</strong>
+                      <span class="text-slate-700">topping up ahead of time can reduce "queue time," but note wallet limits and top-up timing.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Verify payout method availability by destination:</strong>
-                      <span class="text-slate-700">Bank vs card vs cash pickup varies.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Send before cutoffs when you care about same-day processing.</strong>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Match currency to the recipient account:</strong>
-                      <span class="text-slate-700">TransferGo warns banks can reject transfers if the account can't accept that currency.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Double-check recipient details:</strong>
+                      <span class="text-slate-700">Terms indicate you're responsible for accuracy and recovery may involve fees and isn't guaranteed.</span>
                     </div>
                   </div>
                 </div>
@@ -745,39 +771,33 @@
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  Two Alternatives (and When They Beat TransferGo)
+                  Two Alternatives (and When They Beat SingX)
                 </h2>
 
                 <div class="space-y-6">
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600"></span>
-                      1) XE Money (8.7)
+                      XE Money (8.7)
                     </h3>
                     <p class="text-slate-700 mb-3">
-                      XE beats TransferGo when you want a broader global footprint and you're comfortable with bank‑timed delivery. XE states transfers typically take 1–4 business days after they receive your payment (currency/destination dependent).
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      Also, XE explicitly explains a similar "send rate vs mid-market rate" model (margin varies by transfer size/currencies/conditions), which can be useful if you want a consistent quoting framework across more routes.
+                      <strong class="text-slate-900">When it can beat SingX:</strong> Pick XE Money when you want a broader all-rounder footprint—XE markets sending to 190+ countries, which can matter if SingX isn't available from your location.
                     </p>
                     <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose XE over TransferGo when:</strong> You need coverage outside Europe-origin sending, or you're optimizing for a general-purpose international transfer provider and don't need 30‑minute tiers.
+                      <strong class="text-slate-900">Choose XE Money over SingX when:</strong> XE can beat SingX when the corridor you need is outside SingX's practical "send-from" reach, or when you prefer a more globally positioned provider (with the tradeoff that value may be competitive but not always the cheapest).
                     </p>
                   </div>
 
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600"></span>
-                      2) Remitly (9.1)
+                      Remitly (9.1)
                     </h3>
                     <p class="text-slate-700 mb-3">
-                      Remitly beats TransferGo when you need more corridor breadth (Remitly markets transfers to 170+ countries/territories) and remittance-first payout options for those destinations.
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      Remitly also commonly frames speed as Express vs Economy, where Express is usually faster but more expensive (useful if you want a speed-versus-cost tradeoff on a remittance-first platform).
+                      <strong class="text-slate-900">When it can beat SingX:</strong> Pick Remitly when speed and payout options are the priority—Remitly markets Express vs Economy speed choices and offers cash pickup in supported corridors.
                     </p>
                     <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose Remitly over TransferGo when:</strong> You're sending to remittance-heavy corridors outside TransferGo's Europe core, or you need a provider designed around global corridor breadth and "Express vs Economy" choices.
+                      <strong class="text-slate-900">Choose Remitly over SingX when:</strong> Remitly can beat SingX when the recipient needs cash pickup/mobile-style delivery or when you need a more "remittance-first" experience—while keeping in mind that Express convenience can cost more.
                     </p>
                   </div>
                 </div>
@@ -794,15 +814,15 @@
                 </h2>
                 <div class="space-y-5 text-lg leading-relaxed text-slate-700">
                   <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">Who should use TransferGo?</p>
+                    <p class="font-semibold text-slate-900 mb-3">Who should use SingX?</p>
                     <p class="text-slate-800 mb-0">
-                      TransferGo's 8.6/10 is justified because Delivered Value (40%) is strong in-core (European-origin transfers with a clear "rate/amount fixed once booked" posture), and because it offers good speed tiers that are unusually explicit for a consumer remittance product.
+                      SingX is a strong choice for bank-transfer remittances when you're in its supported origin markets and you value transparent, fee-led pricing. That's the core reason it earns an 8.2/10: the delivered value is often solid for bank-to-bank lanes, and SingX publishes meaningful operational detail (fees, cutoffs, and the funding/expiry workflow) that supports predictability.
                     </p>
                   </div>
                   <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">Why the 8.6/10 is justified:</p>
+                    <p class="font-semibold text-slate-900 mb-3">Why the 8.2/10 is justified:</p>
                     <p class="text-slate-800 mb-0">
-                      Who should use it: people sending from Europe who value a clear speed menu and predictable "quoted vs delivered" behavior, and who will choose funding and speed options thoughtfully. Why it's not higher: it's less dominant globally because sending is Europe-only and payout methods vary by destination—so outside its core, you'll often find a better fit (or broader availability) with alternatives like XE or Remitly.
+                      SingX earns its score on Delivered Value with transparent, fee-led pricing that can be competitive for bank-to-bank transfers. The score is held back by exactly what the auditor notes say: moderate speed (bank-timed) and narrower breadth versus global leaders—plus the real-world caveat that spreads/third-party fees can still show up depending on currency pair and route.
                     </p>
                   </div>
                 </div>
@@ -817,7 +837,7 @@
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
                 <p class="text-sm text-slate-600 mb-4">
-                  See how TransferGo stacks up for your specific corridor and amount.
+                  See how SingX stacks up for your specific corridor and amount.
                 </p>
                 <NuxtLink
                   to="/send-money"
@@ -832,28 +852,24 @@
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Origin</dt>
-                    <dd class="font-semibold text-slate-900">Europe Only</dd>
+                    <dt class="text-slate-600">Primary Markets</dt>
+                    <dd class="font-semibold text-slate-900">Singapore, Australia, Hong Kong</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Platform</dt>
-                    <dd class="font-semibold text-slate-900">Web & App</dd>
+                    <dt class="text-slate-600">Core Model</dt>
+                    <dd class="font-semibold text-slate-900">Bank Transfer</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Fastest Speed</dt>
-                    <dd class="font-semibold text-slate-900">30 Minutes</dd>
+                    <dt class="text-slate-600">Singapore License</dt>
+                    <dd class="font-semibold text-slate-900">MAS Major Payment Institution</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Speed Tiers</dt>
-                    <dd class="font-semibold text-slate-900">4 Options</dd>
+                    <dt class="text-slate-600">Typical Speed</dt>
+                    <dd class="font-semibold text-slate-900">Hours to Next Day</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Rate Lock</dt>
-                    <dd class="font-semibold text-slate-900">On Booking</dd>
-                  </div>
-                  <div class="flex justify-between">
-                    <dt class="text-slate-600">Regulation</dt>
-                    <dd class="font-semibold text-slate-900">UK FCA</dd>
+                    <dt class="text-slate-600">Support</dt>
+                    <dd class="font-semibold text-slate-900">Email, Chat, Hotline</dd>
                   </div>
                 </dl>
               </div>
@@ -897,6 +913,12 @@
                 <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
                 <ul class="space-y-3">
                   <li>
+                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                      <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
+                      <span>Wise Review</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
                     <NuxtLink to="/learn/providers/xe-money" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
                       <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
                       <span>XE Money Review</span>
@@ -906,12 +928,6 @@
                     <NuxtLink to="/learn/providers/remitly" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
                       <span>Remitly Review</span>
-                    </NuxtLink>
-                  </li>
-                  <li>
-                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
-                      <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
-                      <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
@@ -931,10 +947,10 @@
     <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
-          Ready to See How TransferGo Compares?
+          Ready to See How SingX Compares?
         </h2>
         <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
-          Enter your transfer details to see real-time rates from TransferGo and 30+ other providers.
+          Enter your transfer details to see real-time rates from SingX and 30+ other providers.
         </p>
         <NuxtLink
           to="/send-money"
@@ -953,15 +969,15 @@
 
 <script setup lang="ts">
 definePageMeta({
-  alias: ['/reviews/transfergo'],
+  alias: ['/reviews/singx'],
 })
 
 useHead({
-  title: 'TransferGo Review 2024 - Remit-Score 8.6/10 | Remit-Scout',
+  title: 'SingX Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
   meta: [
     {
       name: 'description',
-      content: 'Independent TransferGo review with Remit-Score 8.6/10. European strength, good speed tiers, strong value in-core. Detailed breakdown of fees, speed, and delivered value.',
+      content: 'Independent SingX review with Remit-Score 8.2/10. Good bank-transfer value; moderate speed; narrower breadth vs global leaders. Detailed breakdown of fees, speed, and delivered value.',
     },
   ],
 })
@@ -970,7 +986,6 @@ const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
   { name: 'Providers', path: '/learn/providers' },
-  { name: 'TransferGo Review', path: '/learn/providers/transfergo' },
+  { name: 'SingX Review', path: '/learn/providers/singx' },
 ]
 </script>
-

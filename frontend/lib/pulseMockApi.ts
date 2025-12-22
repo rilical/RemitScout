@@ -1201,3 +1201,4 @@ export async function getCostTrendData(
     }
   })
 }
+

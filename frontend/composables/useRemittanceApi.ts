@@ -1,4 +1,5 @@
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
+import { getProviderScore } from '~/lib/providerScores'
 
 // API composables for dynamic data fetching
 export const useRemittanceApi = () => {
@@ -93,26 +94,31 @@ export const useRemittanceApi = () => {
     const speedMax = Math.max(...quotes.map(q => etaToHours(q.delivery)))
 
     return quotes.map((q) => {
-      // Cost score (higher recipient amount is better)
-      const costScore = recMax === recMin ? 1 : (q.recipientGets - recMin) / (recMax - recMin)
+      const providerScoreData = getProviderScore(q.id)
+      
+      if (providerScoreData && providerScoreData.scoreBreakdown) {
+        return {
+          ...q,
+          score: providerScoreData.remitScore,
+          scoreBreakdown: {
+            cost: providerScoreData.scoreBreakdown.deliveredValue,
+            speed: providerScoreData.scoreBreakdown.frictionSpeed,
+            reliability: providerScoreData.scoreBreakdown.reliability,
+            coverage: providerScoreData.scoreBreakdown.supportRefunds,
+          },
+        }
+      }
 
-      // Speed score (faster is better)
+      // Fallback to calculated scores if no review score exists
+      const costScore = recMax === recMin ? 1 : (q.recipientGets - recMin) / (recMax - recMin)
       const speedHrs = etaToHours(q.delivery)
       const speedScore = speedMax === speedMin ? 1 : (speedMax - speedHrs) / (speedMax - speedMin)
-
-      // Reliability score
       const relScore = q.reliability
-
-      // Coverage score (more methods is better)
       const coverageScore = q.methods.length / 3
-
-      // Calculate weighted score
       const raw = weights.cost * costScore
         + weights.speed * speedScore
         + weights.reliability * relScore
         + weights.coverage * coverageScore
-
-      // Scale to 6.0–10.0 range
       const score = Math.round((6 + raw * 4) * 10) / 10
 
       return {

@@ -12,7 +12,7 @@
           <span class="text-white/50">›</span>
           <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
           <span class="text-white/50">›</span>
-          <span class="font-medium text-white">TransferGo Review</span>
+          <span class="font-medium text-white">Ria Review</span>
         </nav>
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
@@ -20,8 +20,8 @@
           <div>
             <div class="flex items-center gap-4 mb-6">
               <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-purple-500 flex items-center justify-center text-white text-xl font-bold">
-                  TG
+                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+                  RIA
                 </div>
               </div>
               <div>
@@ -32,7 +32,7 @@
                   Provider Review
                 </div>
                 <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
-                  TransferGo Review
+                  Ria Review
                 </h1>
                 <p class="text-xl text-slate-300">
                   Independent Remit-Scout Analysis
@@ -46,14 +46,14 @@
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink
-                to="/send-money?provider=transfergo"
+                to="/send-money?provider=ria"
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Compare TransferGo Now
+                Compare Ria Now
               </NuxtLink>
               <a
                 href="#review"
@@ -84,11 +84,11 @@
                       stroke="#3b82f6"
                       stroke-width="12"
                       stroke-linecap="round"
-                      :stroke-dasharray="`${86 * 4.4} 440`"
+                      :stroke-dasharray="`${80 * 4.4} 440`"
                     />
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">8.6</span>
+                    <span class="text-5xl font-bold text-black">8.0</span>
                     <span class="text-sm text-slate-500">/10</span>
                   </div>
                 </div>
@@ -99,10 +99,10 @@
                 <div>
                   <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
                     <span class="text-black">Delivered Value</span>
-                    <span class="font-semibold text-black">Strong (Core)</span>
+                    <span class="font-semibold text-black">Moderate</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 85%" />
+                    <div class="h-full bg-amber-400 rounded-full" style="width: 75%" />
                   </div>
                 </div>
                 <div>
@@ -111,34 +111,34 @@
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 80%" />
+                    <div class="h-full bg-blue-400 rounded-full" style="width: 81%" />
                   </div>
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-1">
                     <span class="text-black">Speed</span>
-                    <span class="font-semibold text-black">Strong</span>
+                    <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
+                    <div class="h-full bg-blue-400 rounded-full" style="width: 77%" />
                   </div>
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-1">
                     <span class="text-black">Support</span>
-                    <span class="font-semibold text-black">Good</span>
+                    <span class="font-semibold text-black">Moderate</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 80%" />
+                    <div class="h-full bg-amber-400 rounded-full" style="width: 76%" />
                   </div>
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-1">
                     <span class="text-black">Trust & Safety</span>
-                    <span class="font-semibold text-black">Strong</span>
+                    <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
+                    <div class="h-full bg-blue-400 rounded-full" style="width: 79%" />
                   </div>
                 </div>
               </div>
@@ -160,20 +160,20 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Europe</div>
-            <div class="text-sm text-slate-600">Origin Only</div>
+            <div class="text-3xl font-bold text-slate-900">500k+</div>
+            <div class="text-sm text-slate-600">Cash Locations</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">30 Min</div>
-            <div class="text-sm text-slate-600">Fastest Option</div>
+            <div class="text-3xl font-bold text-slate-900">160+</div>
+            <div class="text-sm text-slate-600">Countries</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Multiple</div>
-            <div class="text-sm text-slate-600">Speed Tiers</div>
+            <div class="text-3xl font-bold text-emerald-600">Minutes</div>
+            <div class="text-sm text-slate-600">Cash Pickup Speed</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Fixed</div>
-            <div class="text-sm text-slate-600">Rate on Booking</div>
+            <div class="text-3xl font-bold text-slate-900">Cash First</div>
+            <div class="text-sm text-slate-600">Core Strength</div>
           </div>
         </div>
       </div>
@@ -194,7 +194,7 @@
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
-                  This is a data-first, non-sponsored review using Remit-Scout's weighted rubric. Because Delivered Value is 40% of the score, we anchor the 8.6/10 there first: what you pay in practice is fees + FX spread, and TransferGo can be very competitive in its core Europe-led corridors, but it's less dominant globally because its supported sending footprint is Europe-centric.
+                  Ria's 8.0/10 is best explained by starting with Delivered Value (40%). Ria is often chosen for its cash pickup reach and availability, not because it reliably wins on the absolute lowest all‑in price. In practice, your "real cost" is the combination of transfer fees + FX spread (the markup hidden in the exchange rate), and that's where Ria can be inconsistent depending on corridor, payout method, and funding type.
                 </p>
               </div>
 
@@ -205,7 +205,7 @@
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
                   <p class="text-lg text-slate-800 leading-relaxed italic m-0">
-                    "TransferGo (8.6): European strength; good speed tiers; value strong in-core; less dominant globally."
+                    "RIA (8.0): Very large cash network; reliable; speed good for cash pickup; delivered value varies; support can be uneven."
                   </p>
                 </div>
               </div>
@@ -220,19 +220,19 @@
                   Score Breakdown
                 </h2>
                 <p class="text-lg text-slate-600 mb-6">
-                  Here's how TransferGo performs across each category in our rubric:
+                  Here's how Ria performs across each category in our rubric:
                 </p>
               </div>
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
                   <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
-                    8.6
+                    8.0
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
                       <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
-                      TransferGo
+                      Ria
                     </h3>
                     <p class="text-sm text-black">remit-score</p>
                   </div>
@@ -241,10 +241,10 @@
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong (Core)</span>
+                      <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Moderate</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Value strong in-core (Europe-led corridors). Small FX mark-up on mid-market rate, no hidden fees. Funding method matters (card costs more than bank transfer).</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Fees + FX spread can make the effective cost higher than "rate-first" apps; value varies by corridor.</div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
@@ -252,31 +252,31 @@
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Solid in supported routes with clear status cues. Constrained by Europe-only sending footprint (not available from US, Canada, etc.).</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Strong "it actually works" profile for cash pickup use cases, supported by a very large payout network.</div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Clear speed buckets: 30 minutes, same-day, next working day by noon, 1 working day. Payout options vary by destination.</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Good speed behavior for cash pickup in many corridors (often the fastest way to get funds into a recipient's hands). Non-cash payout methods can behave more like bank rails.</div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Moderate</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Straightforward refund guidance when funds haven't been transferred. Formal complaints process (email/phone/chat).</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Post‑issue handling can feel inconsistent (especially when multiple partners/agents are involved in the payout chain).</div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
                       <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
                     <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Authorised electronic money institution by UK Financial Conduct Authority (FCA). Verifiable on FCA register.</div>
+                    <div class="text-sm text-slate-700 leading-relaxed">Operates in regulated environments where required; you can often verify licensing/registration where available in your sending country.</div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
@@ -285,8 +285,8 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.6 (not 9.0+):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">Less dominant globally because sending is Europe-only and payout methods vary by destination. Best pricing depends on funding method (card vs bank transfer) and corridor.</div>
+                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.0 (not 9.0+):</div>
+                      <div class="text-sm text-slate-700 leading-relaxed">Ria earns points for very large cash network reach, strong reliability, and good cash pickup speed—but the score is capped by Delivered Value (40%) being inconsistent (fees + FX spread can be higher than leaner, digital-first competitors), and by support variability when something goes wrong.</div>
                     </div>
                   </div>
                 </div>
@@ -302,75 +302,60 @@
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
-                  Effective cost = fees + FX spread
+                  Effective cost: fees + FX spread
                 </p>
-                <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                  When users compare money transfer providers, the trap is focusing on only the fee. With Ria (and most remittance services), the exchange rate you're offered can carry a margin. Two quotes can look identical on fees but produce different "recipient gets" outcomes because of FX spread.
+                </p>
+                <div class="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200 mb-6">
                   <p class="font-semibold text-slate-900 mb-3 text-base">
-                    For remittance pricing, the "real" cost is almost always:
-                  </p>
-                  <p class="text-slate-700 mb-3">
-                    <strong class="text-slate-900">Effective cost = upfront fee(s) + FX spread (rate markup)</strong>
-                  </p>
-                  <p class="text-slate-700 mb-3">
-                    TransferGo's help center is fairly explicit about its model:
-                  </p>
-                  <ul class="space-y-2 text-slate-700">
-                    <li>• It says it applies a small FX mark-up on the mid-market rate and emphasizes "no hidden fees."</li>
-                    <li>• It also explains why card payments cost more (percentage-based fees and other costs), and contrasts that with bank transfers using a fixed-fee structure that can enable better exchange rates and lower costs.</li>
-                  </ul>
-                  <p class="text-slate-700 mt-4 mb-0">
-                    What that means in practice: if you're trying to minimize total cost, you should treat the exchange rate you're offered as part of the "fee," and you should expect the best-value outcomes more often when you can fund via bank transfer/Open Banking versus card (all else equal).
-                  </p>
-                </div>
-
-                <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">"How often is it cheapest?"</p>
-                  <p class="text-slate-800 leading-relaxed mb-4">
-                    We don't invent "% cheapest" statistics. The best data-aligned statement is the auditor's: "value strong in-core; less dominant globally."
-                  </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">A practical interpretation is:</p>
-                  <ul class="space-y-2 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span><strong class="text-slate-900">In-core (Europe-led corridors):</strong> TransferGo can be very competitive because it's designed around Europe-origin transfers.</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span><strong class="text-slate-900">Outside core:</strong> you may find better deals elsewhere, or TransferGo may not be available at all (Europe-only sending constraint).</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="mt-6 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
-                    Quote vs delivered accuracy
-                  </p>
-                  <p class="text-slate-800 leading-relaxed mb-3">
-                    TransferGo makes a few strong "quote integrity" claims:
+                    What to do instead (data-first)
                   </p>
                   <ul class="space-y-2.5 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>"Pay the exact amount entered" and "No currency fluctuations—once booked, the transfer amount remains fixed."</span>
+                      <span>Compare providers using the same send amount, funding method, and payout method, then look at recipient receives.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>If the fee is low but the rate looks weak versus a neutral reference (mid‑market/Google), the spread may be the real cost.</span>
                     </li>
                   </ul>
-                  <p class="text-slate-700 mt-4 mb-0">
-                    That's valuable for consumers because it reduces "surprise" outcomes between the quote screen and delivery.
+                </div>
+
+                <div class="p-6 rounded-xl border-2 border-emerald-200 mb-6">
+                  <p class="font-semibold text-slate-900 mb-3">"How often is Ria the cheapest?"</p>
+                  <p class="text-slate-800 leading-relaxed mb-4">
+                    We don't claim a universal "Ria wins X% of the time" (no such stats were provided). Based on the auditor note "delivered value varies," treat Ria as:
                   </p>
-                  <p class="text-slate-700 mt-3 mb-0 text-sm">
-                    One important caveat (also documented): you must choose a currency the recipient account can accept—TransferGo warns that sending the wrong currency to an incompatible account can result in a bank rejection.
+                  <ul class="space-y-2.5 text-slate-800">
+                    <li class="flex items-start gap-2.5">
+                      <span class="text-emerald-600 font-bold mt-0.5">•</span>
+                      <span>Sometimes competitive (especially in corridors where its cash network is strong), but</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <span class="text-emerald-600 font-bold mt-0.5">•</span>
+                      <span>Not consistently the cheapest once you include spread and corridor-specific pricing.</span>
+                    </li>
+                  </ul>
+                  <p class="text-slate-800 leading-relaxed mt-4 mb-0">
+                    Ria's best "value" cases often come from situations where cash pickup is the only practical rail—because the alternative may be "cheaper on paper" but not usable or not successful.
                   </p>
                 </div>
-                <div class="mt-6 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                  <p class="font-semibold text-slate-900 mb-2">Delivered Value takeaway:</p>
-                  <p class="text-slate-800 mb-0">
-                    TransferGo earns most of its 8.6/10 here—strong value in its European core, with clearer fee/rate signaling than many banks—while losing points because "best" pricing is not universal and depends materially on payment method and corridor.
+
+                <div class="not-prose my-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p class="text-sm text-blue-800 m-0">
+                    <strong>Quote vs delivered accuracy:</strong> For cash pickup, quote accuracy often depends on whether the recipient name matches ID (a common reason for pickup friction), the selected payout location / partner availability, and any corridor-specific compliance requirements. The practical takeaway: with cash pickup, execution reliability is often better than "bank deposit everywhere," but the experience becomes sensitive to small data-entry mistakes.
+                  </p>
+                </div>
+
+                <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <p class="text-sm text-amber-800 m-0">
+                    <strong>Delivered Value verdict:</strong> This is the main reason the score is 8.0 rather than higher. Ria can be the most practical option, but the effective cost is not consistently best-in-market.
                   </p>
                 </div>
               </div>
@@ -383,35 +368,32 @@
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+                  <p>
+                    Ria scores well here because it's built around a large cash network and tends to be reliable for the use case it's known for.
+                  </p>
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Quote success / availability
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      Reliability starts with "can you even use it for your route?" TransferGo states it only supports transfers from Europe (then onward to destinations listed in its supported-countries table). That's good clarity, but it's also a real constraint versus global providers that let you send from the U.S., Canada, etc.
-                    </p>
+                    <p class="text-slate-700 mb-0">A large cash network generally improves the chance a corridor is supported, the chance the recipient can access the payout without needing a bank account, and the chance there's a nearby pickup option.</p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Pricing stability signals
+                      Pricing stability
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      A reliability-positive detail: TransferGo says once booked, the amount remains fixed (no currency fluctuations). This supports consistent "quote → outcome" behavior.
-                    </p>
+                    <p class="text-slate-700 mb-0">Pricing stability is typically corridor-driven: fees and rates can change depending on payment method (bank vs card), payout method (cash vs bank), and time (FX moves). "Stable" in this context means you should expect the checkout quote to be the authoritative one, not a rate you saw earlier.</p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      TransferGo's help content describes operational updates like: it emails you when it receives your deposit, and bank transfers can take time to arrive (timing guidance is given by region).
-                    </p>
+                    <p class="text-slate-700 mb-0">The "freshness" signal users can actually act on is simple: re-check the quote right before sending and compare "recipient receives" across providers for that exact transfer.</p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Reliability takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      Solid in supported routes with clear status cues, but constrained by Europe-only sending footprint.
+                  <div class="mt-5 p-5 rounded-xl bg-emerald-50 border-2 border-emerald-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Reliability verdict
                     </p>
+                    <p class="text-slate-700 mb-0">Strong in-core reliability, especially for cash pickup.</p>
                   </div>
                 </div>
               </div>
@@ -424,66 +406,51 @@
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
+                  <p>
+                    Ria's speed profile is best understood by payout method.
+                  </p>
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       ETA / speed buckets
                     </p>
-                    <p class="text-slate-700 mb-3">
-                      TransferGo publishes four speed options in its help center:
-                    </p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• 30 minutes</li>
-                      <li>• Same-day (end of day)</li>
-                      <li>• Next working day (by noon)</li>
-                      <li>• 1 working day</li>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span><strong class="text-slate-900">Cash pickup (fast):</strong> Often the quickest path once payment is confirmed and the transfer is made available for pickup.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span><strong class="text-slate-900">Bank deposit (moderate):</strong> Often behaves like bank timing—can range from same day to a few business days depending on corridor and bank rails.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span><strong class="text-slate-900">Edge-case delays:</strong> Verification, payout partner hours, holidays, or data mismatches can slow down even a typically fast corridor.</span>
+                      </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
-                      That's a "good speed tiers" signal (matching the audit note), because you can choose a delivery time instead of guessing.
-                    </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods
                     </p>
-                    <p class="text-slate-700 mb-3">TransferGo supports multiple "delivery options," including:</p>
-                    <ul class="space-y-2.5 text-slate-700">
-                      <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><strong class="text-slate-900">Bank account / IBAN-style delivery</strong> (implied across its help center and supported-countries guidance)</span>
-                      </li>
-                      <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><strong class="text-slate-900">Debit/credit card delivery</strong> (help article explains card-based receiving using receiver name + card info)</span>
-                      </li>
-                      <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><strong class="text-slate-900">Cash pickup in some corridors</strong> (e.g., a dedicated help article describes cash pickup for Morocco, while another destination page notes cash pickup isn't available in Ukraine)</span>
-                      </li>
-                    </ul>
+                    <p class="text-slate-700 mb-0">Ria's headline strength is cash pickup, but it may also support other payout methods in some corridors (availability varies).</p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Typical delivery behavior
+                      Typical delivery-speed behavior
                     </p>
-                    <p class="text-slate-700 mb-3">
-                      Two practical patterns show up in TransferGo's own guidance:
-                    </p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• Your end-to-end time depends on the speed option you choose.</li>
-                      <li>• If you fund via bank transfer, there's an additional "time-to-receipt" step: TransferGo notes local deposits can take up to an hour (UK) or up to 24–36 hours (some European contexts) to reach them.</li>
-                    </ul>
+                    <p class="text-slate-700 mb-0">If you're choosing Ria specifically for speed: cash pickup is the "best bet" for fast receipt, while bank deposit is usually less predictable than cash pickup.</p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Friction & Speed takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      Fast options exist and are clearly enumerated, but your funding method can add real-world delay before the "delivery speed" clock really starts.
+                  <div class="mt-5 p-5 rounded-xl bg-emerald-50 border-2 border-emerald-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Friction & Speed verdict
                     </p>
+                    <p class="text-slate-700 mb-0">Strong for cash pickup; more average when you leave the cash rail.</p>
                   </div>
                 </div>
               </div>
@@ -496,44 +463,61 @@
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
+                  <p>
+                    This is where the auditor note flags the downside: support can be uneven.
+                  </p>
+                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Refund experience
+                      Refund experience (what tends to matter)
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      TransferGo states that if you change your mind and the money hasn't been transferred yet, you can request a refund, and it may take up to 3 business days for your bank to process the refund back into your account. That's fairly standard "bank-timed" refund behavior, and it's useful that the expectation is documented.
-                    </p>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Disputes and post-issue friction
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      TransferGo offers guidance on what to do if the receiver hasn't gotten funds after the provider says it sent the deposit (submit a request after 24 hours), which is a practical escalation path.
-                    </p>
-                    <p class="text-slate-700 mb-0">
-                      They also document troubleshooting topics like rejected transfers and correcting receiver details (a common post-issue friction point).
-                    </p>
-                  </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
-                      How to contact them / complaints
-                    </p>
-                    <p class="text-slate-700 mb-3">TransferGo publishes a formal complaints process with:</p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• Complaints email</li>
-                      <li>• Phone numbers (UK and EU)</li>
-                      <li>• In-app chat route</li>
+                    <p class="text-slate-700 mb-3">Refunds and cancellations usually depend on whether:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <span class="text-amber-600 font-bold mt-0.5">•</span>
+                        <span>The funds have already been paid out / picked up,</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <span class="text-amber-600 font-bold mt-0.5">•</span>
+                        <span>The transfer is still "pending,"</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <span class="text-amber-600 font-bold mt-0.5">•</span>
+                        <span>The issue is a sender error (wrong details) versus a processing error.</span>
+                      </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
-                      And it publishes general customer support hours for English support (weekday + weekend coverage).
-                    </p>
+                    <p class="text-slate-700 mt-3 mb-0">In cash pickup networks, refund workflows can require more back-and-forth because the provider may need to confirm payout status with a partner/agent.</p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Support & Refunds takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      Clear documented pathways exist, but refunds and some fixes can still be "process-heavy" once funds are already moving (common to bank/card rails).
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Dispute handling and post-issue friction
                     </p>
+                    <p class="text-slate-700 mb-3">To reduce friction if something goes wrong:</p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Keep the transaction receipt/reference number handy,</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Contact support quickly (the earlier you do, the more options exist),</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Be ready to confirm sender identity and transfer details.</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Support & Refunds verdict
+                    </p>
+                    <p class="text-slate-700 mb-0">Clear enough in straightforward cases, but uneven when edge cases arise—partly because cash networks involve multiple parties.</p>
                   </div>
                 </div>
               </div>
@@ -547,26 +531,45 @@
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
-                    We only reference public regulatory checks where available, and we avoid implying uniform regulation in every country.
+                    We keep this conservative and verifiable where available.
                   </p>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
-                      Public licensing / regulatory checks (where available)
+                      What you can do as a consumer
                     </p>
-                    <p class="text-slate-700 mb-3">
-                      TransferGo states in its terms that it is an authorised electronic money institution authorised by the UK Financial Conduct Authority (FCA) under the Electronic Money Regulations and Payment Services Regulations (with a published FCA firm reference number).
-                    </p>
-                    <p class="text-slate-700 mb-0">
-                      The FCA register also lists a TransferGo entity as an Authorised Electronic Money Institution (you can verify directly on the FCA register).
-                    </p>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span>Check whether the provider is listed/registered as a money transfer or money services business in your sending country (register availability varies by jurisdiction).</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span>Prefer providers that give clear receipts, tracking, and a documented dispute path.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Be cautious about scams: cash pickup is convenient, but also easier for fraud if you're sending to someone you don't know.</span>
+                      </li>
+                    </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Trust & Safety takeaway:</p>
-                    <p class="text-slate-800 mb-0">
-                      "Trust strong" matches the presence of UK FCA authorisation disclosures and a verifiable register entry, while users outside the UK should still check the relevant legal entity and regulator for their region.
+                  <div class="mt-5 p-5 rounded-xl bg-emerald-50 border-2 border-emerald-200">
+                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                      Trust & Safety verdict
                     </p>
+                    <p class="text-slate-700 mb-0">Generally strong baseline for a major, widely used remittance network—without claiming universal licensing everywhere.</p>
                   </div>
                 </div>
+              </div>
+              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p class="text-sm text-amber-800 m-0">
+                  <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
+                </p>
               </div>
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
@@ -589,15 +592,15 @@
                   <ul class="space-y-2 text-slate-700 text-base">
                     <li class="flex items-start gap-2">
                       <span class="text-emerald-600 font-bold">+</span>
-                      Delivered Value: TransferGo states it applies a small FX mark‑up on the mid‑market rate and that there are no hidden fees; once booked, the transfer amount remains fixed.
+                      <span><strong>Reliability & Success:</strong> Strong "it actually works" profile for cash pickup use cases, supported by a very large payout network.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-emerald-600 font-bold">+</span>
-                      Friction & Speed: Clear speed buckets are published (30 minutes / same-day / next working day by noon / 1 working day).
+                      <span><strong>Friction & Speed:</strong> Good speed behavior for cash pickup in many corridors (often the fastest way to get funds into a recipient's hands).</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-emerald-600 font-bold">+</span>
-                      Support & Refunds: Straightforward refund guidance exists when funds haven't been transferred yet, plus a formal complaints process (email/phone/chat).
+                      <span><strong>Trust & Safety:</strong> Operates in regulated environments where required; you can often verify licensing/registration where available in your sending country.</span>
                     </li>
                   </ul>
                 </div>
@@ -611,15 +614,15 @@
                   <ul class="space-y-2 text-slate-700 text-base">
                     <li class="flex items-start gap-2">
                       <span class="text-amber-600 font-bold">−</span>
-                      Delivered Value: Funding method matters: TransferGo explains card payments cost more (percentage-based costs + exchange-rate constraints), while bank transfers use a fixed fee structure that can be cheaper.
+                      <span><strong>Delivered Value:</strong> Fees + FX spread can make the effective cost higher than "rate-first" apps; value varies by corridor.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-amber-600 font-bold">−</span>
-                      Reliability & Success: Coverage isn't "global from anywhere"—TransferGo states sending is from Europe only, which affects quote availability and corridor breadth.
+                      <span><strong>Support & Refunds:</strong> Post‑issue handling can feel inconsistent (especially when multiple partners/agents are involved in the payout chain).</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-amber-600 font-bold">−</span>
-                      Friction & Speed: Payout options are destination-dependent (e.g., cash pickup in Morocco is described, while Ukraine explicitly notes no cash pickup).
+                      <span><strong>Friction & Speed:</strong> Non-cash payout methods (like bank deposit) can behave more like bank rails—timing and reliability are more variable than cash pickup.</span>
                     </li>
                   </ul>
                 </div>
@@ -640,19 +643,19 @@
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>Sending from Europe to supported destinations, especially if you want Europe-focused coverage and pricing.</span>
+                      <span>Cash pickup recipients who need a physical location network and want money available quickly once processed.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>People who want explicit speed tiers (including a 30‑minute option in the help-center speed menu).</span>
+                      <span>Situations where reliability matters more than optimizing price (e.g., you'd rather pay a bit more than risk a failed payout method).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>Senders who can use bank transfer / Open Banking-style funding when available, to minimize card-related pricing friction.</span>
+                      <span>Recipients without easy access to bank accounts (or where bank deposits are less dependable than cash pickup).</span>
                     </li>
                   </ul>
                 </div>
@@ -669,19 +672,19 @@
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Non‑Europe senders, since TransferGo states it "only support[s] transfers from Europe" (this is a hard availability constraint).</span>
+                      <span>Cost-first senders trying to maximize the delivered amount every single time (Ria's effective cost can vary by route).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Anyone who needs a provider that's consistently cheapest globally without comparing—TransferGo's own materials describe an FX markup model and differing cost structures by payment method.</span>
+                      <span>Large transfers where FX spread dominates total cost (even small rate differences can add up).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Corridors that require specific payout methods that aren't offered in that destination (e.g., cash pickup is available in some places but not others).</span>
+                      <span>Anyone who expects a perfect, uniform support experience across all corridors and partners (support can be uneven).</span>
                     </li>
                   </ul>
                 </div>
@@ -694,45 +697,45 @@
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
-                  How to Get the Best Rate with TransferGo
+                  How to Get the Best Rate with Ria
                 </h2>
                 <p class="text-lg text-slate-600 mb-6">
-                  Use this checklist as a quick "don't overpay" routine:
+                  Quick checklist to maximize delivered value:
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
-                      <span class="text-slate-700">TransferGo explains card payments can cost more, while bank transfers use a fixed-fee structure that can improve total cost.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Compare "recipient receives":</strong>
+                      <span class="text-slate-700">across at least one alternative before sending (that captures fees + spread).</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Treat the exchange rate as part of the fee:</strong>
-                      <span class="text-slate-700">TransferGo states it applies an FX mark-up on the mid-market rate—check the actual rate you're offered at checkout.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Test funding methods:</strong>
+                      <span class="text-slate-700">bank vs card—card is convenient but often costs more overall.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Pick the slowest speed you can tolerate:</strong>
-                      <span class="text-slate-700">Speed tiers range up to 30 minutes; faster isn't free in most remittance models.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Choose payout method intentionally:</strong>
+                      <span class="text-slate-700">cash pickup is often fastest; bank deposit may be cheaper sometimes but can be slower/less predictable.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Verify payout method availability by destination:</strong>
-                      <span class="text-slate-700">Bank vs card vs cash pickup varies.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Send the right amount:</strong>
+                      <span class="text-slate-700">pricing can be tiered; a slightly larger/smaller send amount can change the effective fee/spread outcome.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Match currency to the recipient account:</strong>
-                      <span class="text-slate-700">TransferGo warns banks can reject transfers if the account can't accept that currency.</span>
+                      <strong class="text-slate-900 block mb-1.5 text-base">Verify recipient details exactly:</strong>
+                      <span class="text-slate-700">name spelling + ID match to avoid pickup failures and support loops.</span>
                     </div>
                   </div>
                 </div>
@@ -745,39 +748,27 @@
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  Two Alternatives (and When They Beat TransferGo)
+                  Two Alternatives (and When They Beat Ria)
                 </h2>
 
                 <div class="space-y-6">
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600"></span>
-                      1) XE Money (8.7)
+                      Western Union (8.2)
                     </h3>
                     <p class="text-slate-700 mb-3">
-                      XE beats TransferGo when you want a broader global footprint and you're comfortable with bank‑timed delivery. XE states transfers typically take 1–4 business days after they receive your payment (currency/destination dependent).
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      Also, XE explicitly explains a similar "send rate vs mid-market rate" model (margin varies by transfer size/currencies/conditions), which can be useful if you want a consistent quoting framework across more routes.
-                    </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose XE over TransferGo when:</strong> You need coverage outside Europe-origin sending, or you're optimizing for a general-purpose international transfer provider and don't need 30‑minute tiers.
+                      <strong class="text-slate-900">When Western Union beats Ria:</strong> If your top priority is maximum cash pickup reach and "it must work today," Western Union can be stronger in the most time-sensitive cash pickup scenarios. You may still pay a premium in effective cost, but the tradeoff is reach and execution.
                     </p>
                   </div>
 
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600"></span>
-                      2) Remitly (9.1)
+                      Remitly (9.1)
                     </h3>
                     <p class="text-slate-700 mb-3">
-                      Remitly beats TransferGo when you need more corridor breadth (Remitly markets transfers to 170+ countries/territories) and remittance-first payout options for those destinations.
-                    </p>
-                    <p class="text-slate-700 mb-3">
-                      Remitly also commonly frames speed as Express vs Economy, where Express is usually faster but more expensive (useful if you want a speed-versus-cost tradeoff on a remittance-first platform).
-                    </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose Remitly over TransferGo when:</strong> You're sending to remittance-heavy corridors outside TransferGo's Europe core, or you need a provider designed around global corridor breadth and "Express vs Economy" choices.
+                      <strong class="text-slate-900">When Remitly beats Ria:</strong> If the recipient can accept non-cash rails and you want a better value + support balance, Remitly can outperform—especially when you can use a slower, cheaper option (and only pay for "Express" when you truly need speed).
                     </p>
                   </div>
                 </div>
@@ -794,15 +785,15 @@
                 </h2>
                 <div class="space-y-5 text-lg leading-relaxed text-slate-700">
                   <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">Who should use TransferGo?</p>
+                    <p class="font-semibold text-slate-900 mb-3">Who should use Ria:</p>
                     <p class="text-slate-800 mb-0">
-                      TransferGo's 8.6/10 is justified because Delivered Value (40%) is strong in-core (European-origin transfers with a clear "rate/amount fixed once booked" posture), and because it offers good speed tiers that are unusually explicit for a consumer remittance product.
+                      People sending to recipients who need cash pickup, especially when reliability and access matter more than squeezing the lowest possible fee/spread.
                     </p>
                   </div>
                   <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">Why the 8.6/10 is justified:</p>
+                    <p class="font-semibold text-slate-900 mb-3">Why the 8.0/10 is justified:</p>
                     <p class="text-slate-800 mb-0">
-                      Who should use it: people sending from Europe who value a clear speed menu and predictable "quoted vs delivered" behavior, and who will choose funding and speed options thoughtfully. Why it's not higher: it's less dominant globally because sending is Europe-only and payout methods vary by destination—so outside its core, you'll often find a better fit (or broader availability) with alternatives like XE or Remitly.
+                      Ria earns points for very large cash network reach, strong reliability, and good cash pickup speed—but the score is capped by Delivered Value (40%) being inconsistent (fees + FX spread can be higher than leaner, digital-first competitors), and by support variability when something goes wrong.
                     </p>
                   </div>
                 </div>
@@ -817,7 +808,7 @@
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
                 <p class="text-sm text-slate-600 mb-4">
-                  See how TransferGo stacks up for your specific corridor and amount.
+                  See how Ria stacks up for your specific corridor and amount.
                 </p>
                 <NuxtLink
                   to="/send-money"
@@ -832,28 +823,24 @@
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Origin</dt>
-                    <dd class="font-semibold text-slate-900">Europe Only</dd>
+                    <dt class="text-slate-600">Cash Network</dt>
+                    <dd class="font-semibold text-slate-900">500k+ Locations</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Platform</dt>
-                    <dd class="font-semibold text-slate-900">Web & App</dd>
+                    <dt class="text-slate-600">Countries</dt>
+                    <dd class="font-semibold text-slate-900">160+</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Fastest Speed</dt>
-                    <dd class="font-semibold text-slate-900">30 Minutes</dd>
+                    <dt class="text-slate-600">Core Strength</dt>
+                    <dd class="font-semibold text-slate-900">Cash Pickup</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Speed Tiers</dt>
-                    <dd class="font-semibold text-slate-900">4 Options</dd>
+                    <dt class="text-slate-600">Cash Speed</dt>
+                    <dd class="font-semibold text-slate-900">Minutes</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Rate Lock</dt>
-                    <dd class="font-semibold text-slate-900">On Booking</dd>
-                  </div>
-                  <div class="flex justify-between">
-                    <dt class="text-slate-600">Regulation</dt>
-                    <dd class="font-semibold text-slate-900">UK FCA</dd>
+                    <dt class="text-slate-600">Bank Speed</dt>
+                    <dd class="font-semibold text-slate-900">1–3 Days</dd>
                   </div>
                 </dl>
               </div>
@@ -897,9 +884,9 @@
                 <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
                 <ul class="space-y-3">
                   <li>
-                    <NuxtLink to="/learn/providers/xe-money" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
-                      <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
-                      <span>XE Money Review</span>
+                    <NuxtLink to="/learn/providers/western-union" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                      <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">WU</div>
+                      <span>Western Union Review</span>
                     </NuxtLink>
                   </li>
                   <li>
@@ -909,9 +896,9 @@
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
-                      <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
-                      <span>Wise Review</span>
+                    <NuxtLink to="/learn/providers/orbitremit" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">OR</div>
+                      <span>OrbitRemit Review</span>
                     </NuxtLink>
                   </li>
                   <li>
@@ -931,10 +918,10 @@
     <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
-          Ready to See How TransferGo Compares?
+          Ready to See How Ria Compares?
         </h2>
         <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
-          Enter your transfer details to see real-time rates from TransferGo and 30+ other providers.
+          Enter your transfer details to see real-time rates from Ria and 30+ other providers.
         </p>
         <NuxtLink
           to="/send-money"
@@ -953,15 +940,15 @@
 
 <script setup lang="ts">
 definePageMeta({
-  alias: ['/reviews/transfergo'],
+  alias: ['/reviews/ria'],
 })
 
 useHead({
-  title: 'TransferGo Review 2024 - Remit-Score 8.6/10 | Remit-Scout',
+  title: 'Ria Review 2024 - Remit-Score 8.0/10 | Remit-Scout',
   meta: [
     {
       name: 'description',
-      content: 'Independent TransferGo review with Remit-Score 8.6/10. European strength, good speed tiers, strong value in-core. Detailed breakdown of fees, speed, and delivered value.',
+      content: 'Independent Ria review with Remit-Score 8.0/10. Very large cash network; reliable; speed good for cash pickup; delivered value varies; support can be uneven. Detailed breakdown of fees, speed, and delivered value.',
     },
   ],
 })
@@ -970,7 +957,6 @@ const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
   { name: 'Providers', path: '/learn/providers' },
-  { name: 'TransferGo Review', path: '/learn/providers/transfergo' },
+  { name: 'Ria Review', path: '/learn/providers/ria' },
 ]
 </script>
-

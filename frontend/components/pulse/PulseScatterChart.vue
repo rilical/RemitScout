@@ -287,3 +287,4 @@ function clearHover() {
   hoveredPoint.value = null
 }
 </script>
+

@@ -187,3 +187,4 @@ export function getMarkupSeverity(spreadBps: number): 'excellent' | 'good' | 'fa
   if (spreadBps < 200) return 'fair'
   return 'poor'
 }
+

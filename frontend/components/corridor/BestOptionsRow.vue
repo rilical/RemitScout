@@ -130,3 +130,4 @@ function getIcon(type: string) {
   return icons[type as keyof typeof icons] || icons.value
 }
 </script>
+

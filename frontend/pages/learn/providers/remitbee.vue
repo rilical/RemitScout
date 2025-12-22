@@ -20,7 +20,7 @@
           <div>
             <div class="flex items-center gap-4 mb-6">
               <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-xl font-bold">
+                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
                   RB
                 </div>
               </div>
@@ -194,7 +194,7 @@
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
-                  RemitBee's 8.3 is driven first and foremost by Delivered Value (40%): the pricing structure can be genuinely competitive when you use the "low-fee" funding rails (e‑Transfer / EFT / bill payment), especially for $500+ CAD transfers where the transfer fee can drop to $0, and RemitBee says it takes a 0.3%–0.8% FX margin (varies by receiving country).
+                  Remit-Scout scores providers using a weighted rubric focused on what actually happens to your money: <strong class="text-brand-600 font-bold">Delivered Value (40%)</strong>, then reliability, speed/friction, support/refunds, and trust/safety. For this review, the headline score is 8.3/10.
                 </p>
               </div>
 
@@ -294,120 +294,6 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <!-- Best For / Not Ideal For -->
-              <div class="grid md:grid-cols-2 gap-6 mb-12">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Best for
-                  </h3>
-                  <ul class="space-y-3 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Canada-based senders who can fund via e‑Transfer / EFT / bill payment and want to minimize explicit fees (especially when sending $500+ CAD).</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Recipients in countries where bank deposit is available and convenient (often the simplest receiving method).</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>People who value upfront fee tables + tracking/status updates rather than "surprise" pricing at checkout.</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Not ideal for
-                  </h3>
-                  <ul class="space-y-3 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span>Anyone who needs to fund a money transfer with a credit card (RemitBee says credit cards aren't accepted for money transfers or currency exchange).</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span>People who need a provider that works well outside Canada (RemitBee says it accepts cards issued by Canadian banks/credit unions and does not accept cards issued outside Canada).</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span>Senders who want bank-like predictability on speed across every payment method: some funding rails are inherently bank-timed (e.g., bill payment).</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <!-- Pros and Cons -->
-              <div class="grid md:grid-cols-2 gap-6 mb-12">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h3 class="text-xl font-bold text-slate-900 mb-4">Pros</h3>
-                  <ul class="space-y-3 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span><strong class="text-slate-900">Delivered Value:</strong> Clear low-fee path for $500+ CAD via bank-style funding methods; RemitBee also discloses a 0.3%–0.8% FX margin range (corridor-dependent).</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span><strong class="text-slate-900">Reliability & Success:</strong> In-app status tracking + step-by-step notifications reduce "where is my transfer?" uncertainty.</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span><strong class="text-slate-900">Support & Refunds:</strong> A published "money back guarantee" if funds don't reach the recipient, plus documented refund timelines.</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h3 class="text-xl font-bold text-slate-900 mb-4">Cons</h3>
-                  <ul class="space-y-3 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span><strong class="text-slate-900">Delivered Value:</strong> Total cost still depends on FX margin + funding method; debit-card-funded transfers can get meaningfully pricier (especially for $500+).</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span><strong class="text-slate-900">Friction & Speed:</strong> Bank speed dependencies show up with funding methods like bill payment (and some EFT flows), which can shift delivery from "minutes" to "business days."</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span><strong class="text-slate-900">Support & Refunds:</strong> Cancellation/refunds can be constrained once a transfer is processed; debit card transfers may process quickly, reducing cancellation window, and self-cancel is limited to three per year per RemitBee.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
@@ -420,28 +306,26 @@
                 </p>
                 <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
                   <p class="font-semibold text-slate-900 mb-3 text-base">
-                    Effective cost: fees + FX spread
+                    Effective cost: fees + FX spread (the part most people miss)
                   </p>
                   <p class="text-slate-700 mb-3">
                     RemitBee is unusually explicit about two key pricing components:
                   </p>
-                  <p class="text-slate-700 mb-3"><strong class="text-slate-900">Transfer fees vary by funding method and amount.</strong> RemitBee's fee table shows (examples):</p>
-                  <ul class="space-y-2 text-slate-700 mb-3">
-                    <li>• <strong class="text-slate-900">e‑Transfer / EFT / Bill Payment:</strong> $2.99 CAD under $500, FREE over $500</li>
-                    <li>• <strong class="text-slate-900">Interac Online:</strong> $2.99 CAD (both under and above $500)</li>
-                    <li>• <strong class="text-slate-900">Debit card:</strong> $2.99–$6.99 under $500, and $8.99+ over $500</li>
+                  <ul class="space-y-3 text-slate-700">
+                    <li class="flex items-start gap-3">
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                      <span><strong class="text-slate-900">Transfer fees vary by funding method and amount.</strong> RemitBee's fee table shows (examples): e‑Transfer / EFT / Bill Payment: $2.99 CAD under $500, FREE over $500; Interac Online: $2.99 CAD (both under and above $500); Debit card: $2.99–$6.99 under $500, and $8.99+ over $500</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                      <span><strong class="text-slate-900">FX margin (spread):</strong> RemitBee says it takes a 0.3%–0.8% margin on the exchange rate, and that the exact margin varies by receiving country.</span>
+                    </li>
                   </ul>
-                  <p class="text-slate-700 mb-0">
-                    <strong class="text-slate-900">FX margin (spread):</strong> RemitBee says it takes a 0.3%–0.8% margin on the exchange rate, and that the exact margin varies by receiving country.
-                  </p>
                 </div>
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200 mb-6">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
-                    A practical way to think about this:
-                  </p>
-                  <p class="text-slate-800 leading-relaxed mb-0">
-                    If you send $1,000 CAD, a 0.3%–0.8% FX margin would roughly correspond to $3–$8 CAD of value "lost" in the exchange rate, before considering the transfer fee (which could be $0 if you're above $500 on an eligible funding method). (That's just the math of the stated range, not a claim about any specific corridor.)
+                  <p class="text-slate-800 leading-relaxed mb-4">
+                    <strong class="text-slate-900">A practical way to think about this:</strong> If you send $1,000 CAD, a 0.3%–0.8% FX margin would roughly correspond to $3–$8 CAD of value "lost" in the exchange rate, before considering the transfer fee (which could be $0 if you're above $500 on an eligible funding method). (That's just the math of the stated range, not a claim about any specific corridor.)
                   </p>
                 </div>
 
@@ -465,20 +349,12 @@
                     </li>
                   </ul>
                 </div>
+              </div>
 
-                <div class="mt-6 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
-                    Quote vs delivered accuracy
-                  </p>
-                  <p class="text-slate-800 leading-relaxed mb-3">Two things matter for "quote accuracy":</p>
-                  <ul class="space-y-2 text-slate-700 mb-3">
-                    <li>• For standard transfers, RemitBee says you get an estimate of arrival time when you initiate a transfer.</li>
-                    <li>• For scheduled transfers, RemitBee's terms say exchange rates are not locked at scheduling and are confirmed/booked 24 hours prior to execution—meaning the eventual applied rate can differ from what you saw when scheduling.</li>
-                  </ul>
-                  <p class="text-slate-700 mt-3 mb-0 text-sm">
-                    That scheduled-transfer behavior isn't "good" or "bad" by itself—but it does mean you shouldn't treat an early scheduled quote as final.
-                  </p>
-                </div>
+              <div class="not-prose my-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-800 m-0">
+                  <strong>Quote vs delivered accuracy:</strong> For standard transfers, RemitBee says you get an estimate of arrival time when you initiate a transfer. For scheduled transfers, RemitBee's terms say exchange rates are not locked at scheduling and are confirmed/booked 24 hours prior to execution—meaning the eventual applied rate can differ from what you saw when scheduling.
+                </p>
               </div>
 
               <div class="mb-10">
@@ -489,15 +365,33 @@
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                  <p>
+                    This category is about whether the provider can consistently produce a usable quote and then successfully complete the transfer — without surprises like sudden unavailability, frequent recalculations, or failed deliveries.
+                  </p>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Success signals & transparency
                     </p>
                     <p class="text-slate-700 mb-3">RemitBee provides:</p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• Transaction history with clear status labels (in progress / release / completed / hold / refund in progress / refunded), and it says you'll receive notifications as the transfer processes.</li>
-                      <li>• An "expected completion date" concept, plus a list of common delay reasons (incorrect recipient details, technical issues, bank holidays, unsuccessful payment).</li>
-                      <li>• RemitBee also claims "99%" of transfers arrive on time; we treat that as a provider statement, not an independently verified benchmark.</li>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Transaction history with clear status labels (in progress / release / completed / hold / refund in progress / refunded), and it says you'll receive notifications as the transfer processes.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>An "expected completion date" concept, plus a list of common delay reasons (incorrect recipient details, technical issues, bank holidays, unsuccessful payment).</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>RemitBee also claims "99%" of transfers arrive on time; we treat that as a provider statement, not an independently verified benchmark.</span>
+                      </li>
                     </ul>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
@@ -505,9 +399,19 @@
                       Pricing stability & freshness signals
                     </p>
                     <p class="text-slate-700 mb-3">Two useful "freshness" cues appear in RemitBee's own materials:</p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• It says exchange rates are updated "every few seconds."</li>
-                      <li>• It documents that scheduled-transfer rates are booked 24 hours prior, which implies rate application is time-bound and policy-driven rather than arbitrary.</li>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>It says exchange rates are updated "every few seconds."</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>It documents that scheduled-transfer rates are booked 24 hours prior, which implies rate application is time-bound and policy-driven rather than arbitrary.</span>
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -521,6 +425,9 @@
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                  <p>
+                    This measures how quickly funds arrive in practice and how much effort is required (setup, verification, payment steps, payout complexity).
+                  </p>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Funding methods (sender-side friction)
@@ -544,9 +451,19 @@
                       Transfers can take from a few minutes up to two business days, depending on destination country (and, in practice, often the funding/receiving rail too).
                     </p>
                     <p class="text-slate-700 mb-3">On the funding side:</p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• e‑Transfer deposits to RemitBee "typically" post within ~15 minutes.</li>
-                      <li>• Bill payments typically take one business day if sent before 3pm (with later cutoff timing and weekends potentially extending this).</li>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>e‑Transfer deposits to RemitBee "typically" post within ~15 minutes.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Bill payments typically take one business day if sent before 3pm (with later cutoff timing and weekends potentially extending this).</span>
+                      </li>
                     </ul>
                     <p class="text-slate-700 mt-3 mb-0">
                       That matches the auditor note about bank speed dependencies: if you choose bank-timed funding, you're opting into bank-timed processing.
@@ -565,6 +482,12 @@
                 </div>
               </div>
 
+              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p class="text-sm text-amber-800 m-0">
+                  <strong>Occasional friction points:</strong> Bank speed dependencies show up with funding methods like bill payment (and some EFT flows), which can shift delivery from "minutes" to "business days."
+                </p>
+              </div>
+
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
@@ -573,16 +496,39 @@
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                  <p>
+                    This category is about what happens after something goes wrong: refunds, cancellations, dispute handling, and how hard it is to reach a human.
+                  </p>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Refund and cancellation experience (as documented)
                     </p>
                     <p class="text-slate-700 mb-3">RemitBee's help content is fairly explicit about limits:</p>
-                    <ul class="space-y-2 text-slate-700">
-                      <li>• If a transaction hasn't been processed, you can cancel from the transaction details screen and funds are refunded; if it has been processed, it says it cannot be cancelled/refunded.</li>
-                      <li>• Refund timelines: a refund is typically 2–4 business days, with confirmation in 1–2 business days and then processing time depending on payment method.</li>
-                      <li>• Important caveat: for debit card payments, RemitBee notes the payment is instant and the transfer may process in minutes, making cancellations/refunds "not possible" in many cases.</li>
-                      <li>• Cancellation limit: RemitBee states you can cancel up to three transactions annually yourself; beyond that, you need to request a refund for manual review and repeated cancellations may risk restrictions.</li>
+                    <ul class="space-y-2.5 text-slate-700">
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>If a transaction hasn't been processed, you can cancel from the transaction details screen and funds are refunded; if it has been processed, it says it cannot be cancelled/refunded.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Refund timelines: a refund is typically 2–4 business days, with confirmation in 1–2 business days and then processing time depending on payment method.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Important caveat: for debit card payments, RemitBee notes the payment is instant and the transfer may process in minutes, making cancellations/refunds "not possible" in many cases.</span>
+                      </li>
+                      <li class="flex items-start gap-2.5">
+                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Cancellation limit: RemitBee states you can cancel up to three transactions annually yourself; beyond that, you need to request a refund for manual review and repeated cancellations may risk restrictions.</span>
+                      </li>
                     </ul>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
@@ -628,74 +574,215 @@
                   </div>
                 </div>
               </div>
+              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p class="text-sm text-amber-800 m-0">
+                  <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
+                </p>
+              </div>
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <!-- How to get the best rate -->
-              <div class="mb-12 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                <h2 class="text-2xl font-bold text-slate-900 mb-4">
-                  How to get the best rate with RemitBee
-                </h2>
-                <ul class="space-y-3 text-slate-700">
-                  <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+                <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Pros and Cons
+              </h2>
+
+              <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
+                <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
+                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                    <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
-                    <span>Choose the funding method first. If you can, use e‑Transfer / EFT / bill payment and send $500+ CAD to avoid transfer fees (where eligible).</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    Pros
+                  </h3>
+                  <ul class="space-y-2 text-slate-700 text-base">
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">+</span>
+                      <span><strong class="text-slate-900">Delivered Value:</strong> Clear low-fee path for $500+ CAD via bank-style funding methods; RemitBee also discloses a 0.3%–0.8% FX margin range (corridor-dependent).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">+</span>
+                      <span><strong class="text-slate-900">Reliability & Success:</strong> In-app status tracking + step-by-step notifications reduce "where is my transfer?" uncertainty.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">+</span>
+                      <span><strong class="text-slate-900">Support & Refunds:</strong> A published "money back guarantee" if funds don't reach the recipient, plus documented refund timelines.</span>
+                    </li>
+                  </ul>
+                </div>
+                <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
+                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                    <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
-                    <span>Avoid debit card for larger sends unless you're paying for speed/convenience—fees can be $8.99+ for $500+ transfers.</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span>Sanity-check the FX rate. RemitBee says its FX margin ranges 0.3%–0.8% depending on country—compare the quoted rate to a mid-market reference to understand the spread.</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span>Pick the right receiving method (bank deposit vs cash pickup vs mobile-style methods where available) based on the recipient's constraints—speed and availability can vary by method and country.</span>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span>Double-check recipient details to reduce avoidable delays and reprocessing.</span>
-                  </li>
-                </ul>
+                    Cons
+                  </h3>
+                  <ul class="space-y-2 text-slate-700 text-base">
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-600 font-bold">−</span>
+                      <span><strong class="text-slate-900">Delivered Value:</strong> Total cost still depends on FX margin + funding method; debit-card-funded transfers can get meaningfully pricier (especially for $500+).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-600 font-bold">−</span>
+                      <span><strong class="text-slate-900">Friction & Speed:</strong> Bank speed dependencies show up with funding methods like bill payment (and some EFT flows), which can shift delivery from "minutes" to "business days."</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-600 font-bold">−</span>
+                      <span><strong class="text-slate-900">Support & Refunds:</strong> Cancellation/refunds can be constrained once a transfer is processed; debit card transfers may process quickly, reducing cancellation window, and self-cancel is limited to three per year per RemitBee.</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
-              <!-- Two alternatives -->
-              <div class="mb-12">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6">
-                  Two alternatives (and when they beat RemitBee)
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+
+              <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
+                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Best For
+                  </h2>
+                  <ul class="space-y-3 text-slate-700">
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Canada-based senders who can fund via e‑Transfer / EFT / bill payment and want to minimize explicit fees (especially when sending $500+ CAD).</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Recipients in countries where bank deposit is available and convenient (often the simplest receiving method).</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>People who value upfront fee tables + tracking/status updates rather than "surprise" pricing at checkout.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Not Ideal For
+                  </h2>
+                  <ul class="space-y-3 text-slate-700">
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span>Anyone who needs to fund a money transfer with a credit card (RemitBee says credit cards aren't accepted for money transfers or currency exchange).</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span>People who need a provider that works well outside Canada (RemitBee says it accepts cards issued by Canadian banks/credit unions and does not accept cards issued outside Canada).</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span>Senders who want bank-like predictability on speed across every payment method: some funding rails are inherently bank-timed (e.g., bill payment).</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+
+              <div class="mb-10">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  How to Get the Best Rate with RemitBee
                 </h2>
+                <p class="text-lg text-slate-600 mb-6">
+                  A short, practical checklist:
+                </p>
+                <div class="space-y-3">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-1">
+                      <strong class="text-slate-900 block mb-1.5 text-base">Choose the funding method first:</strong>
+                      <span class="text-slate-700">If you can, use e‑Transfer / EFT / bill payment and send $500+ CAD to avoid transfer fees (where eligible).</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-1">
+                      <strong class="text-slate-900 block mb-1.5 text-base">Avoid debit card for larger sends:</strong>
+                      <span class="text-slate-700">Unless you're paying for speed/convenience—fees can be $8.99+ for $500+ transfers.</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-1">
+                      <strong class="text-slate-900 block mb-1.5 text-base">Sanity-check the FX rate:</strong>
+                      <span class="text-slate-700">RemitBee says its FX margin ranges 0.3%–0.8% depending on country—compare the quoted rate to a mid-market reference to understand the spread.</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-1">
+                      <strong class="text-slate-900 block mb-1.5 text-base">Pick the right receiving method:</strong>
+                      <span class="text-slate-700">Bank deposit vs cash pickup vs mobile-style methods where available—speed and availability can vary by method and country.</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-1">
+                      <strong class="text-slate-900 block mb-1.5 text-base">Double-check recipient details:</strong>
+                      <span class="text-slate-700">To reduce avoidable delays and reprocessing.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+
+              <div class="mb-10">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Two Alternatives (and When They Beat RemitBee)
+                </h2>
+
                 <div class="space-y-6">
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">
+                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
                       XE Money (8.7)
                     </h3>
                     <p class="text-slate-700 mb-3">
-                      Strong all-rounder; reliable quotes; value competitive but not always cheapest; speed often bank-timed; trust strong.
+                      <strong class="text-slate-900">When it can beat RemitBee:</strong> Strong all-rounder; reliable quotes; value competitive but not always cheapest; speed often bank-timed; trust strong.
                     </p>
                     <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">When XE beats RemitBee:</strong> if you want a more "global generalist" experience (broader coverage / fewer Canada-specific constraints), and you're okay with bank-timed delivery.
+                      <strong class="text-slate-900">Choose XE over RemitBee when:</strong> If you want a more "global generalist" experience (broader coverage / fewer Canada-specific constraints), and you're okay with bank-timed delivery.
                     </p>
                   </div>
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">
+
+                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
                       Remitly (9.1)
                     </h3>
                     <p class="text-slate-700 mb-3">
-                      Very fast (express) + strong support; value strong but express can cost more; reliable execution; trust strong.
+                      <strong class="text-slate-900">When it can beat RemitBee:</strong> Very fast (express) + strong support; value strong but express can cost more; reliable execution; trust strong.
                     </p>
                     <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">When Remitly beats RemitBee:</strong> if you need express speed or want a provider that tends to excel on support and high-urgency delivery, even if that sometimes costs more.
+                      <strong class="text-slate-900">Choose Remitly over RemitBee when:</strong> If you need express speed or want a provider that tends to excel on support and high-urgency delivery, even if that sometimes costs more.
                     </p>
                   </div>
                 </div>
@@ -703,17 +790,27 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <!-- Bottom line -->
-              <div class="mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4">
-                  Bottom line
+              <div class="mb-10">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Bottom Line
                 </h2>
-                <p class="text-lg text-slate-700 leading-relaxed mb-4">
-                  <strong class="text-slate-900">Who should use RemitBee:</strong> Canadian senders who can use bank-style funding rails (especially $500+ CAD e‑Transfer/EFT/bill payment) and want a service that's price-competitive in core lanes with transparent fee tables and usable transfer tracking.
-                </p>
-                <p class="text-lg text-slate-700 leading-relaxed mb-0">
-                  <strong class="text-slate-900">Why the 8.3/10 is justified:</strong> RemitBee earns most of its score on Delivered Value (40%) because the fee structure can be low (including fee waivers above $500 on eligible rails) and the disclosed FX margin range is relatively tight—but the total cost can rise with debit-card funding and corridor variance, and speed is partly constrained by bank-timed funding methods. Add in solid reliability signals (status tracking, published delay reasons) and clear refund mechanics (with some limits), and 8.3 lands as a strong Canada-centric option rather than a universal "best for everyone."
-                </p>
+                <div class="space-y-5 text-lg leading-relaxed text-slate-700">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
+                    <p class="font-semibold text-slate-900 mb-3">Who should use RemitBee?</p>
+                    <p class="text-slate-800 mb-0">
+                      Canadian senders who can use bank-style funding rails (especially $500+ CAD e‑Transfer/EFT/bill payment) and want a service that's price-competitive in core lanes with transparent fee tables and usable transfer tracking.
+                    </p>
+                  </div>
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
+                    <p class="font-semibold text-slate-900 mb-3">Why the 8.3/10 is justified:</p>
+                    <p class="text-slate-800 mb-0">
+                      RemitBee earns most of its score on Delivered Value (40%) because the fee structure can be low (including fee waivers above $500 on eligible rails) and the disclosed FX margin range is relatively tight—but the total cost can rise with debit-card funding and corridor variance, and speed is partly constrained by bank-timed funding methods. Add in solid reliability signals (status tracking, published delay reasons) and clear refund mechanics (with some limits), and 8.3 lands as a strong Canada-centric option rather than a universal "best for everyone."
+                    </p>
+                  </div>
+                </div>
               </div>
             </article>
           </div>
@@ -834,13 +931,32 @@
         </div>
       </div>
     </section>
+
+    <!-- Final CTA -->
+    <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
+          Ready to See How RemitBee Compares?
+        </h2>
+        <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
+          Enter your transfer details to see real-time rates from RemitBee and 30+ other providers.
+        </p>
+        <NuxtLink
+          to="/send-money?provider=remitbee"
+          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-lg font-semibold shadow-lg transition-all"
+          style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
+        >
+          Compare Rates Now
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </NuxtLink>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
-
 definePageMeta({
   alias: ['/reviews/remitbee'],
 })
@@ -861,20 +977,4 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'RemitBee Review', path: '/learn/providers/remitbee' },
 ]
-
-const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
-
-setSeo({
-  title: 'RemitBee Review 2024 - Remit-Score 8.3/10 | Remit-Scout',
-  description: 'Independent RemitBee review with Remit-Score 8.3/10. Canada-focused with competitive value in core lanes, bank speed dependencies, solid reliability. Detailed breakdown of fees, speed, and delivered value.',
-  canonical: `${siteUrl}/learn/providers/remitbee`,
-})
-
-jsonLdBreadcrumb([
-  { name: 'Home', url: `${siteUrl}/` },
-  { name: 'Learn', url: `${siteUrl}/learn` },
-  { name: 'Providers', url: `${siteUrl}/learn/providers` },
-  { name: 'RemitBee Review', url: `${siteUrl}/learn/providers/remitbee` },
-])
 </script>

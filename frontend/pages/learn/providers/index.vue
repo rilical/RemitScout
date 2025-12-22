@@ -298,6 +298,12 @@ jsonLdSiteNavigation([
 // Providers data
 const { data: providers } = await useProviders()
 const filteredProviders = computed(() => {
-  return providers.value || []
+  const providerList = providers.value || []
+  // Sort by remit-score (descending order)
+  return [...providerList].sort((a, b) => {
+    const scoreA = a.score || 0
+    const scoreB = b.score || 0
+    return scoreB - scoreA
+  })
 })
 </script>

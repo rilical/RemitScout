@@ -102,10 +102,10 @@
                       cx="32"
                       cy="32"
                       r="28"
-                      :stroke="getScoreColor(provider.score)"
+                      :stroke="getScoreColor(provider.score || 0)"
                       stroke-width="4"
                       fill="none"
-                      :stroke-dasharray="`${(provider.score / 10) * 175.93} 175.93`"
+                      :stroke-dasharray="`${((provider.score || 0) / 10) * 175.93} 175.93`"
                       stroke-linecap="round"
                       class="transition-all duration-500"
                     />
@@ -113,9 +113,9 @@
                   <div class="absolute inset-0 flex items-center justify-center">
                     <span
                       class="text-xl font-bold"
-                      :class="getScoreTextClass(provider.score)"
+                      :class="getScoreTextClass(provider.score || 0)"
                     >
-                      {{ provider.score.toFixed(1) }}
+                      {{ (provider.score || 0).toFixed(1) }}
                     </span>
                   </div>
                 </div>
@@ -140,10 +140,10 @@
               <!-- Find Out More Link -->
               <div class="px-6 pb-6 text-center">
                 <NuxtLink
-                  :to="`/learn/providers/${provider.id || provider.name.toLowerCase().replace(/\s+/g, '-')}`"
+                  :to="`/learn/providers/${getProviderReviewSlug(provider)}`"
                   class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-md px-2 py-1"
                 >
-                  <span>Find out more</span>
+                  <span>Read Review</span>
                   <svg
                     class="h-4 w-4"
                     fill="none"
@@ -165,12 +165,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Delivered Value</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.reliability || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.cost || 0.8) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.reliability || provider.reliability || 0.9) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.cost || 0.8) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -178,12 +178,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Reliability & Success</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.coverage || 0.85) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.reliability || 0.85) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.coverage || 0.85) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.reliability || 0.85) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -191,12 +191,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Friction & Speed</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.cost || (1 - provider.marginPct / 10)) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.speed || 0.85) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.cost || (1 - provider.marginPct / 10)) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.speed || 0.85) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -204,12 +204,12 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-neutral-700 font-medium">Support & Refunds</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.speed || provider.reliability || 0.9) * 10).toFixed(1) }}</span>
+                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.coverage || 0.8) * 10).toFixed(1) }}</span>
                   </div>
                   <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.speed || provider.reliability || 0.9) * 100}%` }"
+                      :style="{ width: `${(provider.scoreBreakdown?.coverage || 0.8) * 100}%` }"
                     />
                   </div>
                 </div>
@@ -229,7 +229,7 @@
                   We may earn a commission. Rankings are independent.
                 </p>
                 <NuxtLink
-                  :to="`/learn/providers/${provider.id}`"
+                  :to="`/learn/providers/${getProviderReviewSlug(provider)}`"
                   class="block w-full text-sm font-medium text-brand-600 hover:text-brand-700 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded"
                 >
                   Read the full review
@@ -316,6 +316,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useCompareForm } from '~/composables/useCompareForm'
+import { getProviderScore } from '~/lib/providerScores'
 
 const props = defineProps<{
   from?: string
@@ -345,7 +346,23 @@ const { data, pending } = await useProviders(from.value, to.value, amount.value,
 
 const ratedProviders = computed(() => {
   if (!data.value?.data) return []
-  return attachRatings(data.value.data)
+  const providers = attachRatings(data.value.data)
+  return providers.map(provider => {
+    const scoreData = getProviderScore(provider.id)
+    if (scoreData) {
+      return {
+        ...provider,
+        score: scoreData.remitScore,
+        scoreBreakdown: scoreData.scoreBreakdown ? {
+          cost: scoreData.scoreBreakdown.deliveredValue,
+          speed: scoreData.scoreBreakdown.frictionSpeed,
+          reliability: scoreData.scoreBreakdown.reliability,
+          coverage: scoreData.scoreBreakdown.supportRefunds,
+        } : provider.scoreBreakdown,
+      }
+    }
+    return provider
+  })
 })
 
 const sortedProviders = computed(() => {
@@ -429,6 +446,17 @@ const getScoreTextClass = (score: number) => {
   if (score >= 8.0) return 'text-blue-600'
   if (score >= 7.0) return 'text-yellow-600'
   return 'text-red-600'
+}
+
+const getProviderReviewSlug = (provider: any) => {
+  const id = provider.id || provider.slug || provider.name?.toLowerCase().replace(/\s+/g, '-')
+  const slugMap: Record<string, string> = {
+    'xe-money': 'xe-money',
+    'xe': 'xe-money',
+    'western-union': 'western-union',
+    'worldremit': 'worldremit',
+  }
+  return slugMap[id] || id
 }
 
 const lastUpdated = computed(() => {

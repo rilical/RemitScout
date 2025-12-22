@@ -592,6 +592,16 @@
       </div>
     </section>
 
+    <!-- Disclosures -->
+    <section class="bg-slate-50 border-t border-slate-200">
+      <div class="mx-auto max-w-4xl px-4 py-6">
+        <div class="text-xs text-neutral-500 space-y-2">
+          <p><strong>Affiliate disclosure:</strong> {{ content.disclosures.advert }}</p>
+          <p><strong>Data accuracy:</strong> {{ content.disclosures.data }}</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Our Impact -->
     <TrustMetricsStrip bg-class="bg-brand-600" />
 
@@ -612,16 +622,6 @@
               How we make money
             </NuxtLink>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Disclosures -->
-    <section class="bg-slate-50 border-t border-slate-200">
-      <div class="mx-auto max-w-4xl px-4 py-6">
-        <div class="text-xs text-neutral-500 space-y-2">
-          <p><strong>Affiliate disclosure:</strong> {{ content.disclosures.advert }}</p>
-          <p><strong>Data accuracy:</strong> {{ content.disclosures.data }}</p>
         </div>
       </div>
     </section>
@@ -964,6 +964,7 @@ const sortLabels: Record<string, string> = {
   cost: 'lowest cost',
   speed: 'fastest',
   score: 'best rated',
+  'remit-score': 'remit score',
 }
 
 const sortedProviders = computed(() => {
@@ -974,7 +975,7 @@ const sortedProviders = computed(() => {
       return speedOrder.indexOf(a.speed) - speedOrder.indexOf(b.speed)
     })
   }
-  if (sortBy.value === 'score') {
+  if (sortBy.value === 'score' || sortBy.value === 'remit-score') {
     return rows.sort((a, b) => parseFloat(b.score) - parseFloat(a.score))
   }
   return rows

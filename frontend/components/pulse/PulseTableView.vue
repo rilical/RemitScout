@@ -379,3 +379,4 @@ watch([() => props.chartId, () => props.filters, () => props.range, currentPage]
 
 onMounted(loadData)
 </script>
+

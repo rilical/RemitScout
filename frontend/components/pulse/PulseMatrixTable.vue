@@ -125,3 +125,4 @@ function getMethodCount(methodKey: string): number {
   return props.rows.filter(row => row[methodKey as keyof MethodCoverageRow]).length
 }
 </script>
+
