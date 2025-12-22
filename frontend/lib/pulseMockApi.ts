@@ -674,3 +674,169 @@ export async function getMarketSnapshot(
 export function getCurrencySymbol(code: string): string {
   return CURRENCY_SYMBOLS[code] || code
 }
+
+// ============================================================================
+// TRUE COST CALCULATOR API FUNCTIONS
+// ============================================================================
+
+import type { TrueCostBreakdown, MarketDepth, ArbitrageOpportunity, BankComparisonData, CostTrendData } from '~/types/remit'
+import { buildTrueCostBreakdown, buildMarketDepth, buildBankComparison } from './trueCostCalculator'
+
+export interface TrueCostQuote {
+  provider: string
+  trueCost: TrueCostBreakdown
+  recipientGets: number
+  speed: string
+}
+
+export async function getTrueCostBreakdown(
+  corridor: PulseCorridor,
+  amount: number = 1000
+): Promise<TrueCostQuote[]> {
+  await new Promise(resolve => setTimeout(resolve, 100))
+
+  const midMarketRate = BASE_MID_MARKET_RATES[corridor.slug] || 56.25
+
+  const providerData = [
+    { provider: 'Wise', fee: 4.5, spreadBps: 40, speed: '1-2 hours' },
+    { provider: 'Remitly', fee: 0, spreadBps: 60, speed: '15 min - 4 hours' },
+    { provider: 'XE', fee: 0, spreadBps: 100, speed: '1-4 days' },
+    { provider: 'Xoom', fee: 5, spreadBps: 120, speed: '15 min - 2 days' },
+    { provider: 'WorldRemit', fee: 3.99, spreadBps: 150, speed: 'Minutes - 1 day' },
+    { provider: 'Bank', fee: 35, spreadBps: 560, speed: '2-5 days' },
+  ]
+
+  const quotes: TrueCostQuote[] = providerData.map((p, index) => {
+    const providerRate = midMarketRate * (1 - p.spreadBps / 10000)
+    const recipientGets = (amount - p.fee) * providerRate
+
+    const bestProvider = providerData[0]
+    const bestRate = midMarketRate * (1 - bestProvider.spreadBps / 10000)
+    const bestHiddenMarkup = amount * (midMarketRate - bestRate) / midMarketRate
+    const bestTotalCost = bestProvider.fee + bestHiddenMarkup
+
+    const trueCost = buildTrueCostBreakdown(
+      amount,
+      p.fee,
+      midMarketRate,
+      providerRate,
+      index === 0 ? 0 : bestTotalCost
+    )
+
+    return {
+      provider: p.provider,
+      trueCost,
+      recipientGets: Math.round(recipientGets * 100) / 100,
+      speed: p.speed,
+    }
+  })
+
+  quotes.sort((a, b) => a.trueCost.totalCost - b.trueCost.totalCost)
+
+  return quotes
+}
+
+export async function getMarketDepthData(
+  corridor: PulseCorridor
+): Promise<MarketDepth> {
+  await new Promise(resolve => setTimeout(resolve, 80))
+
+  const midMarketRate = BASE_MID_MARKET_RATES[corridor.slug] || 56.25
+
+  const providers = [
+    { name: 'Wise', rate: midMarketRate * 0.996 },
+    { name: 'Remitly', rate: midMarketRate * 0.994 },
+    { name: 'XE', rate: midMarketRate * 0.990 },
+    { name: 'Xoom', rate: midMarketRate * 0.988 },
+    { name: 'WorldRemit', rate: midMarketRate * 0.985 },
+    { name: 'Western Union', rate: midMarketRate * 0.975 },
+    { name: 'Bank', rate: midMarketRate * 0.944 },
+  ]
+
+  return buildMarketDepth(providers)
+}
+
+export async function getArbitrageOpportunities(
+  corridor: PulseCorridor
+): Promise<ArbitrageOpportunity | null> {
+  await new Promise(resolve => setTimeout(resolve, 100))
+
+  const midMarketRate = BASE_MID_MARKET_RATES[corridor.slug] || 56.25
+  const random = Math.random()
+
+  if (random > 0.4) {
+    const currentRate = midMarketRate * (0.996 + Math.random() * 0.002)
+    const averageRate = midMarketRate * 0.992
+    const savingsPercent = ((currentRate - averageRate) / averageRate) * 100
+    const percentile = 75 + Math.random() * 20
+
+    return {
+      provider: 'Wise',
+      currentRate,
+      averageRate,
+      savingsPercent,
+      percentile: Math.round(percentile),
+      isSignificant: savingsPercent > 0.3,
+      recommendation: `This rate is in the top ${Math.round(100 - percentile)}% of rates we've seen in the last 30 days. Consider sending now to lock in this favorable rate.`,
+    }
+  }
+
+  return null
+}
+
+export async function getBankComparisonData(
+  corridor: PulseCorridor,
+  amount: number = 1000
+): Promise<BankComparisonData> {
+  await new Promise(resolve => setTimeout(resolve, 80))
+
+  const midMarketRate = BASE_MID_MARKET_RATES[corridor.slug] || 56.25
+
+  const bankRate = midMarketRate * 0.944
+  const bankFee = 35
+
+  const bestSpecialistRate = midMarketRate * 0.996
+  const bestSpecialistFee = 4.5
+
+  return buildBankComparison(
+    amount,
+    midMarketRate,
+    bankRate,
+    bankFee,
+    bestSpecialistRate,
+    bestSpecialistFee,
+    'Wise'
+  )
+}
+
+export async function getCostTrendData(
+  corridor: PulseCorridor,
+  days: number = 7
+): Promise<CostTrendData[]> {
+  await new Promise(resolve => setTimeout(resolve, 100))
+
+  const now = Date.now()
+  const msPerDay = 24 * 60 * 60 * 1000
+  const baseAvgCost = 4.5
+  const providers = ['Wise', 'Remitly', 'XE', 'Xoom']
+
+  return Array.from({ length: days }, (_, i) => {
+    const timestamp = now - (days - 1 - i) * msPerDay
+    const date = new Date(timestamp).toISOString().split('T')[0]
+
+    const trend = -0.02 * (i / days)
+    const noise = (Math.random() - 0.5) * 0.3
+    const averageHiddenFee = baseAvgCost + trend + noise
+
+    const bestProvider = providers[Math.floor(Math.random() * 2)]
+    const bestProviderCost = averageHiddenFee - 0.5 - Math.random() * 0.5
+
+    return {
+      date,
+      averageHiddenFee: Math.round(averageHiddenFee * 100) / 100,
+      bestProvider,
+      bestProviderCost: Math.round(bestProviderCost * 100) / 100,
+      marketLeaderDays: Math.floor(Math.random() * days * 0.6),
+    }
+  })
+}

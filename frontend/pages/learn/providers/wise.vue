@@ -7,11 +7,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
           <NuxtLink to="/" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Home</NuxtLink>
-          <span class="text-white/50">→</span>
+          <span class="text-white/50">›</span>
           <NuxtLink to="/learn" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Learn</NuxtLink>
-          <span class="text-white/50">→</span>
+          <span class="text-white/50">›</span>
           <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
-          <span class="text-white/50">→</span>
+          <span class="text-white/50">›</span>
           <span class="font-medium text-white">Wise Review</span>
         </nav>
 

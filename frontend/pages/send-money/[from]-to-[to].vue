@@ -540,6 +540,36 @@
 
       <!-- Compare Providers Section -->
       <section v-if="content.table.rows.length" class="mb-8">
+        <!-- Understanding the Comparison -->
+        <div class="rounded-xl border border-blue-200 bg-blue-50 p-6 mb-6">
+          <div class="flex items-start gap-4">
+            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-600">
+              <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-blue-900 mb-2">How to read this comparison</h3>
+              <div class="space-y-2 text-sm text-blue-800">
+                <div class="flex items-start gap-2">
+                  <span class="font-semibold min-w-fit">True Cost:</span>
+                  <span>Shows the <strong>total cost</strong> including upfront fees + hidden exchange rate markup (calculated vs mid-market rate).</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="inline-flex items-center gap-1 font-semibold min-w-fit">
+                    <span class="text-blue-900">Δ</span> Delta:
+                  </span>
+                  <span>The delta symbol (Δ) shows how much <strong>more</strong> this provider costs vs the cheapest option. Lower is better.</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="font-semibold min-w-fit">Visual bar:</span>
+                  <span>Blue = upfront fee (visible), Red/Amber = hidden markup (invisible to most users).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="flex items-center justify-between mb-6">
           <div>
             <h2 class="text-xl font-bold text-neutral-900">
@@ -564,13 +594,15 @@
         </div>
 
         <!-- Provider Cards -->
-        <div class="space-y-4">
+        <div class="space-y-6">
           <div
             v-for="(row, index) in content.table.rows"
             :key="row.provider"
             :class="[
-              'rounded-xl border-2 p-5 transition-all hover:shadow-md',
-              index === 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-neutral-200 bg-white hover:border-brand-200',
+              'rounded-2xl border-2 p-6 transition-all',
+              index === 0 
+                ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-white shadow-lg shadow-emerald-100/50' 
+                : 'border-neutral-200 bg-white hover:border-brand-300 hover:shadow-lg',
             ]"
           >
             <!-- Badge Row -->
@@ -589,64 +621,92 @@
               </span>
             </div>
 
-            <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <!-- Top Row: Provider Info + Quick Stats -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
               <!-- Provider Info -->
-              <div class="flex items-center gap-4 lg:w-48 flex-shrink-0">
+              <div class="flex items-center gap-4">
                 <div class="relative">
-                  <div class="h-12 w-12 rounded-xl bg-neutral-100 flex items-center justify-center text-lg font-bold text-neutral-600">
+                  <div class="h-16 w-16 rounded-xl bg-neutral-100 flex items-center justify-center text-2xl font-bold text-neutral-600">
                     {{ row.provider.charAt(0) }}
                   </div>
-                  <div class="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white ring-2 ring-white">
+                  <div class="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white ring-2 ring-white">
                     {{ row.score }}
                   </div>
                 </div>
                 <div>
-                  <p class="font-bold text-neutral-900">{{ row.provider }}</p>
-                  <p class="text-xs text-neutral-500">Our score</p>
+                  <p class="text-xl font-bold text-neutral-900">{{ row.provider }}</p>
+                  <p class="text-sm text-neutral-500">Remit-Scout Score: {{ row.score }}/10</p>
                 </div>
               </div>
 
+              <!-- Quick Stats -->
+              <div class="text-right">
+                <p class="text-xs font-medium text-neutral-500 mb-1">Recipient gets</p>
+                <p class="text-3xl font-bold text-neutral-900 mb-2">{{ row.recipientGets }}</p>
+                <ProviderDeltaBadge
+                  :delta="getProviderTrueCost(row, index).deltaFromBest"
+                  :is-best="index === 0"
+                  :amount="displayAmount"
+                />
+              </div>
+            </div>
+
+            <!-- Cost Breakdown Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <!-- True Cost Breakdown -->
+              <div class="lg:col-span-2">
+                <TrueCostCard
+                  :upfront-fee="getProviderTrueCost(row, index).upfrontFee"
+                  :hidden-markup="getProviderTrueCost(row, index).hiddenMarkup"
+                  :total-cost="getProviderTrueCost(row, index).totalCost"
+                  :total-cost-percent="getProviderTrueCost(row, index).totalCostPercent"
+                  :spread-bps="getProviderTrueCost(row, index).spreadBps"
+                  :amount="displayAmount"
+                  compact
+                />
+              </div>
+
               <!-- Transfer Details -->
-              <div class="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+              <div class="space-y-4">
                 <div>
-                  <p class="text-xs text-neutral-500 mb-0.5">Transfer time</p>
-                  <p class="font-semibold text-neutral-900">{{ row.speed }}</p>
+                  <p class="text-xs font-medium text-neutral-500 mb-1">Transfer time</p>
+                  <p class="text-base font-semibold text-neutral-900">{{ row.speed }}</p>
                   <p class="text-xs text-neutral-500">{{ row.speedNote }}</p>
                 </div>
-                <div>
-                  <p class="text-xs text-neutral-500 mb-0.5">Fee & rates</p>
-                  <p class="font-semibold text-neutral-900">Fee {{ row.fee }}</p>
-                  <p class="text-xs text-neutral-500">{{ row.rate }}</p>
-                  <p :class="['text-xs', row.delta.includes('0.') ? 'text-emerald-600' : 'text-amber-600']">
-                    {{ row.delta }}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-xs text-neutral-500 mb-0.5">Recipient gets</p>
-                  <p class="text-xl font-bold text-neutral-900">{{ row.recipientGets }}</p>
-                </div>
-                <div class="flex items-center">
-                  <button
-                    type="button"
-                    :class="[
-                      'w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-colors',
-                      index === 0
-                        ? 'bg-brand-600 text-white hover:bg-brand-700'
-                        : 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50',
-                    ]"
-                  >
-                    Go to {{ row.provider.split(' ')[0] }} →
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  :class="[
+                    'w-full rounded-lg px-6 py-3 text-sm font-bold transition-all hover:shadow-lg',
+                    index === 0
+                      ? 'bg-brand-600 text-white hover:bg-brand-700'
+                      : 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50',
+                  ]"
+                >
+                  Go to {{ row.provider.split(' ')[0] }} →
+                </button>
               </div>
             </div>
 
             <!-- Extra Info -->
-            <div v-if="row.notes" class="mt-4 pt-4 border-t border-neutral-100 flex items-center gap-4 text-xs text-neutral-500">
-              <span>💳 Pay-in: {{ row.payIn }}</span>
-              <span>💵 Payout: {{ row.payOut }}</span>
-              <span class="text-neutral-400">·</span>
-              <span>{{ row.notes }}</span>
+            <div v-if="row.notes" class="pt-4 border-t border-neutral-200 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-600">
+              <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <span><span class="font-medium">Pay-in:</span> {{ row.payIn }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span><span class="font-medium">Payout:</span> {{ row.payOut }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-neutral-500">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ row.notes }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1081,8 +1141,12 @@ import { ref, computed } from 'vue'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import TrueCostCard from '~/components/shared/TrueCostCard.vue'
+import ProviderDeltaBadge from '~/components/shared/ProviderDeltaBadge.vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRoutes } from '~/composables/useRoutes'
+import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
+import type { TrueCostBreakdown } from '~/types/remit'
 
 type ProviderHighlight = {
   label: string
@@ -1455,6 +1519,45 @@ const exchangeRates: Record<string, Record<string, number>> = {
   USD: { JOD: 0.71, BND: 1.36, EUR: 0.92, GBP: 0.79, USD: 1 },
   EUR: { JOD: 0.77, BND: 1.48, USD: 1.09, GBP: 0.86, EUR: 1 },
   GBP: { JOD: 0.90, BND: 1.72, USD: 1.27, EUR: 1.16, GBP: 1 },
+}
+
+// Mid-market rate for True Cost calculation
+const midMarketRate = computed(() => {
+  const fromCurr = displaySendCurrency.value.toUpperCase()
+  const toCurr = displayReceiveCurrency.value.toUpperCase()
+  return exchangeRates[fromCurr]?.[toCurr] || 1
+})
+
+// Mock provider rate data (simulates provider markups)
+const providerMarkups: Record<string, { feePercent: number; spreadBps: number }> = {
+  'Remitly': { feePercent: 0, spreadBps: 40 },
+  'Wise': { feePercent: 0.55, spreadBps: 50 },
+  'MoneyGram': { feePercent: 0.5, spreadBps: 90 },
+  'XE': { feePercent: 0, spreadBps: 110 },
+  'WorldRemit': { feePercent: 0.4, spreadBps: 130 },
+  'Major US Bank': { feePercent: 3, spreadBps: 560 },
+}
+
+// Calculate True Cost for a provider row
+function getProviderTrueCost(row: TableRow, index: number): TrueCostBreakdown {
+  const markup = providerMarkups[row.provider] || { feePercent: 0.5, spreadBps: 100 }
+  const upfrontFee = (displayAmount.value * markup.feePercent) / 100
+  const providerRate = midMarketRate.value * (1 - markup.spreadBps / 10000)
+  
+  // Get best total cost for delta calculation
+  const bestMarkup = providerMarkups['Remitly'] || { feePercent: 0, spreadBps: 40 }
+  const bestUpfrontFee = (displayAmount.value * bestMarkup.feePercent) / 100
+  const bestProviderRate = midMarketRate.value * (1 - bestMarkup.spreadBps / 10000)
+  const bestHiddenMarkup = displayAmount.value * (midMarketRate.value - bestProviderRate) / midMarketRate.value
+  const bestTotalCost = bestUpfrontFee + bestHiddenMarkup
+
+  return buildTrueCostBreakdown(
+    displayAmount.value,
+    upfrontFee,
+    midMarketRate.value,
+    providerRate,
+    index === 0 ? 0 : bestTotalCost
+  )
 }
 
 // Calculate estimated receive amount based on DISPLAY currencies (not form)

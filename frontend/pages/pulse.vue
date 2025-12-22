@@ -70,6 +70,26 @@
         <div class="lg:col-span-12">
           <PulseMarketQuotes />
         </div>
+
+        <!-- Market Depth - 6 cols -->
+        <div class="lg:col-span-6">
+          <PulseMarketDepth />
+        </div>
+
+        <!-- Bank Comparison - 6 cols -->
+        <div class="lg:col-span-6">
+          <PulseBankComparison />
+        </div>
+
+        <!-- Arbitrage Alert - 4 cols -->
+        <div class="lg:col-span-4">
+          <PulseArbitrageAlert />
+        </div>
+
+        <!-- Cost Trend - 8 cols -->
+        <div class="lg:col-span-8">
+          <PulseCostTrend />
+        </div>
       </div>
 
       <!-- Divider -->

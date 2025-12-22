@@ -59,3 +59,63 @@ export type RatingWeights = {
   coverage: number
 }
 
+export type TrueCostBreakdown = {
+  upfrontFee: number
+  hiddenMarkup: number
+  hiddenMarkupPercent: number
+  totalCost: number
+  totalCostPercent: number
+  deltaFromBest: number
+  deltaPercent: number
+  midMarketRate: number
+  providerRate: number
+  spreadBps: number
+}
+
+export type ProviderWithTrueCost = ProviderQuote & {
+  trueCost: TrueCostBreakdown
+}
+
+export type MarketDepth = {
+  bestRate: number
+  bestProvider: string
+  secondBestRate: number
+  secondBestProvider: string
+  medianRate: number
+  worstRate: number
+  worstProvider: string
+  spreadRange: number
+  spreadRangeBps: number
+  providerCount: number
+}
+
+export type ArbitrageOpportunity = {
+  provider: string
+  currentRate: number
+  averageRate: number
+  savingsPercent: number
+  percentile: number
+  isSignificant: boolean
+  recommendation: string
+}
+
+export type CostTrendData = {
+  date: string
+  averageHiddenFee: number
+  bestProvider: string
+  bestProviderCost: number
+  marketLeaderDays: number
+}
+
+export type BankComparisonData = {
+  bankMarkup: number
+  bankFee: number
+  bankTotalCost: number
+  bestSpecialistMarkup: number
+  bestSpecialistFee: number
+  bestSpecialistTotalCost: number
+  bestSpecialistName: string
+  savings: number
+  savingsPercent: number
+}
+
