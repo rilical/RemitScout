@@ -1,47 +1,147 @@
 <template>
   <div class="min-h-screen bg-neutral-900">
-    <div class="border-b border-neutral-700 bg-neutral-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        <div class="flex flex-col gap-3">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 rounded-full bg-brand-600/20 border border-brand-600/30 px-3 py-1.5">
-              <span class="relative flex h-2 w-2">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
-                <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
-              </span>
-              <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider">Live Data</span>
-            </div>
-            <span class="text-xs text-neutral-500">Market dashboard for remittance pricing</span>
+    <!-- Plus Gate: Show upgrade prompt if not Plus member -->
+    <div v-if="!isPlus" class="min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-2xl w-full text-center">
+        <div class="mb-8 flex justify-center">
+          <div class="flex h-24 w-24 items-center justify-center rounded-full bg-blue-500/20">
+            <svg class="h-12 w-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
           </div>
-          <div class="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
+          Remit-Pulse is a Plus Feature
+        </h1>
+        <p class="text-xl text-neutral-300 mb-8 max-w-xl mx-auto">
+          Unlock real-time market intelligence, advanced analytics, and professional-grade remittance data with Remit-Scout Plus.
+        </p>
+        <div class="bg-neutral-800 rounded-2xl border border-neutral-700 p-8 mb-8">
+          <h2 class="text-2xl font-bold text-white mb-6">What you get with Plus:</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <div class="font-semibold text-white">Remit-Pulse Dashboard</div>
+                <div class="text-sm text-neutral-400">Full access to market analytics</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <div class="font-semibold text-white">365-Day History</div>
+                <div class="text-sm text-neutral-400">Extended historical data access</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <div class="font-semibold text-white">Data Exports</div>
+                <div class="text-sm text-neutral-400">CSV/PDF exports for analysis</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <div class="font-semibold text-white">Unlimited Alerts</div>
+                <div class="text-sm text-neutral-400">Track unlimited corridors</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <NuxtLink
+            to="/plus"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-8 py-4 text-lg font-bold text-white hover:bg-blue-600 transition-colors shadow-lg hover:shadow-xl"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            Upgrade to Plus
+          </NuxtLink>
+          <NuxtLink
+            to="/"
+            class="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-8 py-4 text-lg font-semibold text-white hover:bg-neutral-700 transition-colors"
+          >
+            Back to Home
+          </NuxtLink>
+        </div>
+        <p class="mt-6 text-sm text-neutral-400">
+          Already a Plus member? <NuxtLink to="/sign-in" class="text-blue-400 hover:text-blue-300 underline">Sign in</NuxtLink>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pulse Content: Only show if Plus member -->
+    <div v-else>
+    <div class="border-b border-neutral-700 bg-neutral-800">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <!-- Live Data Badge -->
+        <div class="flex items-center gap-4 mb-8">
+          <div class="flex items-center gap-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-4 py-2">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+              <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            </span>
+            <span class="text-xs font-bold text-emerald-500 uppercase tracking-wider">Live Data</span>
+          </div>
+          <span class="text-sm text-neutral-400">Market dashboard for remittance pricing</span>
+        </div>
+
+        <!-- Main Header Content -->
+        <div class="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <!-- Title and Description -->
+          <div class="flex-1 space-y-4">
             <div>
-              <h1 class="text-3xl font-bold text-white">
-                <span class="text-white">Remit</span><span class="text-brand-600">Pulse</span>
+              <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                <span class="text-white">Remit</span><span class="text-brand-600">-</span><span class="text-brand-600">Pulse</span>
               </h1>
-              <p class="text-sm text-neutral-300 max-w-2xl">
-                Real-time market intelligence for remittance pricing. Track spreads, markups, provider performance, volatility, and reliability across corridors and payment methods. Built for analysts, researchers, and enterprise teams who need accurate, up-to-date pricing data.
+              <p class="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed">
+                Real-time market intelligence for remittance pricing. Track spreads, markups, provider performance, volatility, and reliability across corridors and payment methods.
               </p>
             </div>
-            <div class="flex items-center gap-3 text-xs text-neutral-400">
-            <span class="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1">Verified Pipeline v2.4.1</span>
-              <NuxtLink
-                to="/methodology"
-                class="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-brand-600 hover:text-brand-500 transition-colors"
-              >
-                Methodology
-              </NuxtLink>
+            <p class="text-sm text-neutral-400 max-w-2xl">
+              Built for analysts, researchers, and enterprise teams who need accurate, up-to-date pricing data.
+            </p>
+          </div>
+
+          <!-- Action Links -->
+          <div class="flex flex-col items-end gap-4">
+            <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-medium text-neutral-300">
+              Verified Pipeline v2.4.1
+            </span>
+            <div class="flex flex-col gap-3">
               <NuxtLink
                 to="/institutions/data-products"
-                class="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-white hover:bg-neutral-700 transition-colors"
+                class="inline-flex items-center gap-2.5 rounded-xl border-2 border-blue-500 bg-blue-500 px-6 py-3 text-base font-semibold text-white hover:bg-blue-600 hover:border-blue-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
               >
-                Enterprise →
+                Enterprise
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </NuxtLink>
+              <NuxtLink
+                to="/methodology"
+                class="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-600 hover:border-emerald-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
+              >
+                Methodology
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </NuxtLink>
             </div>
           </div>
         </div>
       </div>
-      </div>
-      </div>
+    </div>
 
     <div class="py-8">
       <!-- Filter Form Section -->
@@ -173,6 +273,7 @@
           </div>
         </div>
         </div>
+      </div>
       </div>
 
       <!-- Navigation Bar -->
@@ -325,6 +426,17 @@
         </div>
       </section>
 
+      <!-- 4.5. Operational Coverage -->
+      <section
+        id="operational-coverage"
+        class="mb-10 px-4 sm:px-6 lg:px-8"
+        :class="highlightedSection === 'operational-coverage' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
+      >
+        <div class="mx-auto max-w-7xl">
+          <PulseOperationalCoverage />
+        </div>
+      </section>
+
       <!-- 5. Reliability & Coverage -->
       <section id="reliability" class="mb-10 px-4 sm:px-6 lg:px-8" :class="highlightedSection === 'reliability' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''">
         <div class="mx-auto max-w-7xl">
@@ -401,13 +513,13 @@
       </section>
 
       <!-- 8b. Enterprise Access -->
-      <section id="enterprise" class="mb-10 px-4 sm:px-6 lg:px-8" :class="highlightedSection === 'enterprise' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''">
+      <section id="enterprise" class="mb-10 px-4 sm:px-6 lg:px-8" :class="highlightedSection === 'enterprise' ? 'ring-1 ring-blue-500/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''">
         <div class="mx-auto max-w-7xl">
-        <div class="rounded-xl border border-brand-600/30 bg-gradient-to-br from-brand-600/10 to-neutral-800 overflow-hidden">
-          <div class="border-b border-brand-600/30 px-6 py-4">
+        <div class="rounded-xl border border-blue-500/40 bg-gradient-to-br from-blue-500/15 to-neutral-800 overflow-hidden">
+          <div class="border-b border-blue-500/40 px-6 py-4">
             <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-                <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/30">
+                <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
@@ -420,7 +532,7 @@
           <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-4">
             <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
               <div class="flex items-center gap-2 mb-2">
-                <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <div class="text-sm font-semibold text-white">API Access</div>
@@ -429,7 +541,7 @@
             </div>
             <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
               <div class="flex items-center gap-2 mb-2">
-                <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                 </svg>
                 <div class="text-sm font-semibold text-white">Webhooks</div>
@@ -438,7 +550,7 @@
             </div>
             <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
               <div class="flex items-center gap-2 mb-2">
-                <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div class="text-sm font-semibold text-white">Extended History</div>
@@ -447,7 +559,7 @@
             </div>
             <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
               <div class="flex items-center gap-2 mb-2">
-                <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 <div class="text-sm font-semibold text-white">Advanced Signals</div>
@@ -455,10 +567,10 @@
               <p class="text-xs text-neutral-400">Additional market signals, volatility metrics, and predictive indicators</p>
             </div>
           </div>
-          <div class="border-t border-brand-600/30 px-6 py-4">
+          <div class="border-t border-blue-500/40 px-6 py-4">
             <NuxtLink
               to="/institutions/data-products"
-              class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+              class="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
             >
               Learn More About Enterprise Access
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -531,6 +643,100 @@
           </div>
         </div>
       </section>
+
+      <!-- 11. Our Impact So Far -->
+      <section class="py-12 sm:py-16 bg-brand-600 w-full">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Our Impact So Far
+            </h2>
+            <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
+              Built by an expat who got tired of watching money disappear to bank fees. We track <span class="font-semibold whitespace-nowrap">30+ providers</span> across <span class="font-semibold whitespace-nowrap">150+ countries</span> in real time. <span class="font-semibold whitespace-nowrap">Providers cannot pay to rank higher</span>, we just show you which option gets the most money to your recipient.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <div class="text-5xl font-bold text-white mb-2">
+                50,000+
+              </div>
+              <div class="text-sm text-white/90">
+                Users helped
+              </div>
+            </div>
+
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div class="text-5xl font-bold text-white mb-2">
+                $2M+
+              </div>
+              <div class="text-sm text-white/90">
+                Saved by users
+              </div>
+            </div>
+
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div class="text-5xl font-bold text-white mb-2">
+                30+
+              </div>
+              <div class="text-sm text-white/90">
+                Providers tracked
+              </div>
+            </div>
+
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="text-5xl font-bold text-white mb-2">
+                150+
+              </div>
+              <div class="text-sm text-white/90">
+                Countries covered
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-12 text-center">
+            <NuxtLink
+              to="/methodology"
+              class="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
+            >
+              <span class="text-sm font-semibold">Learn about our methodology</span>
+              <svg
+                class="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </NuxtLink>
+          </div>
+        </div>
+      </section>
     </div>
 
     <PulseShareModal
@@ -548,6 +754,7 @@
       mode="embed"
       @close="embedModalChart = null"
     />
+    </div>
   </div>
 </template>
 
@@ -559,14 +766,14 @@ import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary } from '
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor } from '~/stores/pulse'
 import { COUNTRIES, getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies'
+import { useEntitlements } from '~/composables/useEntitlements'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 
 const router = useRouter()
 const route = useRoute()
 const store = usePulseStore()
-
-const isPlus = ref(false)
+const { isPlus } = useEntitlements()
 const shareModalChart = ref<string | null>(null)
 const embedModalChart = ref<string | null>(null)
 const activeMetric = ref<'rate' | 'markup'>('rate')
