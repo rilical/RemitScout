@@ -276,3 +276,5 @@ watch(() => props.chartId, loadData)
 onMounted(loadData)
 </script>
 
+
+

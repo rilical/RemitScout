@@ -317,3 +317,5 @@ export function isRangeGated(chartId: string, range: string, isPlus: boolean): b
   return chart.plusRanges.includes(range as '90d' | '365d')
 }
 
+
+

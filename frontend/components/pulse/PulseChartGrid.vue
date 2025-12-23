@@ -148,3 +148,5 @@ function getCategoryIcon(category: ChartCategory) {
 }
 </script>
 
+
+
