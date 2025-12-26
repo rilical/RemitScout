@@ -157,7 +157,7 @@
         <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="text-xl font-bold text-neutral-900">
-              Compare {{ content.table.rows.length }} providers
+              Compare {{ providerCount }} providers
             </h2>
             <p class="text-sm text-neutral-500">
               Sorted by {{ sortLabels[sortBy] }}
@@ -171,7 +171,34 @@
           </div>
         </div>
 
-        <div v-if="content.table.rows.length" class="space-y-4">
+        <div v-if="isQuotesLoading" class="space-y-4">
+          <div
+            v-for="i in 3"
+            :key="`quote-skeleton-${i}`"
+            class="rounded-xl border-2 border-slate-200 bg-white p-5 animate-pulse"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <div class="h-14 w-14 rounded-xl bg-slate-200" />
+                <div class="space-y-2">
+                  <div class="h-4 w-36 rounded bg-slate-200" />
+                  <div class="h-3 w-24 rounded bg-slate-100" />
+                </div>
+              </div>
+              <div class="space-y-2 text-right">
+                <div class="h-3 w-24 rounded bg-slate-200 ml-auto" />
+                <div class="h-6 w-28 rounded bg-slate-200 ml-auto" />
+                <div class="h-3 w-20 rounded bg-slate-100 ml-auto" />
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div class="lg:col-span-2 h-20 rounded-lg bg-slate-100" />
+              <div class="h-20 rounded-lg bg-slate-100" />
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="content.table.rows.length" class="space-y-4">
           <template v-for="(row, index) in sortedProviders" :key="row.provider">
             <div
               :id="`provider-${row.provider.toLowerCase().replace(/\s+/g, '-')}`"
@@ -631,16 +658,20 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
+import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import TrueCostCard from '~/components/shared/TrueCostCard.vue'
 import ProviderDeltaBadge from '~/components/shared/ProviderDeltaBadge.vue'
 import CorridorMiniNav from '~/components/corridor/CorridorMiniNav.vue'
 import CorridorStickyBar from '~/components/corridor/CorridorStickyBar.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
-import type { TrueCostBreakdown, Method } from '~/types/remit'
+import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
 
 const { isPlus } = useEntitlements()
+const { attachRatings, formatMoney, formatRate, getRelativeTime } = useRemittanceApi()
+
+defineRouteRules({ swr: 60 })
 
 type ProviderHighlight = {
   label: string
@@ -754,6 +785,13 @@ const fromSlug = computed(() => normalizeSlug(route.params.from))
 const toSlug = computed(() => normalizeSlug(route.params.to))
 const canonicalFrom = computed(() => getCanonicalSlug(fromSlug.value))
 const canonicalTo = computed(() => getCanonicalSlug(toSlug.value))
+const amountParam = Array.isArray(route.query.amount) ? route.query.amount[0] : route.query.amount
+const methodParam = Array.isArray(route.query.method) ? route.query.method[0] : route.query.method
+const initialAmount = Number(amountParam) || 1000
+const supportedMethods: Method[] = ['bank', 'cash', 'wallet']
+const initialMethod = supportedMethods.includes(methodParam as Method) ? (methodParam as Method) : 'bank'
+const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
+const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
 const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
 const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
 const flagFrom = computed(() => resolveFlag(canonicalFrom.value))
@@ -762,6 +800,24 @@ const flagTo = computed(() => resolveFlag(canonicalTo.value))
 if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) {
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
+
+const { data: quotesData, pending: quotesPending } = await useFetch<{
+  data: ProviderQuote[]
+  updatedAt: string
+  corridor: string
+  amount: number
+  method: string
+}>('/api/providers', {
+  key: route.fullPath,
+  server: true,
+  lazy: false,
+  query: {
+    from: fromCountryCode.value,
+    to: toCountryCode.value,
+    amount: initialAmount,
+    method: initialMethod,
+  },
+})
 
 const corridorContent: Record<string, CorridorContent> = {
   'united-states-jordan': {
@@ -932,7 +988,79 @@ const fallbackContent: CorridorContent = {
   disclosures: { advert: 'Affiliate disclosures will appear with live data.', data: 'Live rates will populate here.' },
 }
 
-const content = computed(() => corridorContent[corridorKey.value] || fallbackContent)
+const baseContent = computed(() => corridorContent[corridorKey.value] || fallbackContent)
+const providerQuotes = computed(() => (quotesData.value?.data || []) as ProviderQuote[])
+const ratedQuotes = computed(() => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>)
+const apiUpdatedAt = computed(() => quotesData.value?.updatedAt)
+const apiUpdatedLabel = computed(() => (apiUpdatedAt.value ? getRelativeTime(apiUpdatedAt.value) : ''))
+const hasApiPayload = computed(() => Array.isArray(quotesData.value?.data))
+const fromCurrencyCode = computed(() => (baseContent.value.fromCode || resolveCurrency(canonicalFrom.value) || 'USD').toUpperCase())
+const toCurrencyCode = computed(() => (baseContent.value.toCode || resolveCurrency(canonicalTo.value) || 'XXX').toUpperCase())
+
+const methodLabelMap: Record<string, string> = {
+  bank: 'Bank',
+  cash: 'Cash pickup',
+  wallet: 'Mobile wallet',
+  card: 'Card',
+}
+
+const formatMethodLabels = (methods: string[]) => methods.map(method => methodLabelMap[method] || method).join(', ')
+
+const apiRows = computed<TableRow[]>(() => {
+  if (!ratedQuotes.value.length) return []
+
+  return ratedQuotes.value.map((quote, index) => {
+    const score = Number.isFinite(quote.score) ? Number(quote.score).toFixed(1) : '0.0'
+    const methodsLabel = formatMethodLabels(quote.methods as string[])
+
+    return {
+      provider: quote.name,
+      score,
+      recipientGets: `${quote.recipientGets.toLocaleString()} ${toCurrencyCode.value}`,
+      delta: `${quote.marginPct.toFixed(2)}% off mid-market`,
+      fee: formatMoney(quote.fee, fromCurrencyCode.value),
+      rate: formatRate(quote.fxRate, fromCurrencyCode.value, toCurrencyCode.value),
+      speed: quote.delivery,
+      speedNote: quote.bestFor || 'Standard delivery',
+      payIn: methodsLabel,
+      payOut: methodsLabel,
+      notes: quote.whyThisRanking || quote.bestFor || '',
+      badge: index === 0 ? 'Best Deal' : undefined,
+      isAffiliate: true,
+    }
+  })
+})
+
+const content = computed(() => {
+  const base = baseContent.value
+  const merged = {
+    ...base,
+    fromCode: fromCurrencyCode.value || base.fromCode,
+    toCode: toCurrencyCode.value || base.toCode,
+  }
+
+  if (!hasApiPayload.value) {
+    return merged
+  }
+
+  return {
+    ...merged,
+    lastUpdated: apiUpdatedLabel.value || merged.lastUpdated,
+    table: {
+      ...merged.table,
+      rows: apiRows.value,
+    },
+    stats: {
+      ...merged.stats,
+      providerCount: String(apiRows.value.length),
+    },
+    rateWidget: {
+      ...merged.rateWidget,
+      asOf: apiUpdatedLabel.value || merged.rateWidget.asOf,
+      source: merged.rateWidget.source || 'Remit-Scout',
+    },
+  }
+})
 
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
@@ -941,9 +1069,32 @@ const breadcrumbItems = computed(() => [
   { name: `from ${content.value.from}`, path: canonicalPath.value },
 ])
 
+const providerCount = computed(() => (hasApiPayload.value ? apiRows.value.length : baseContent.value.table.rows.length) || 0)
+const bestQuote = computed(() => {
+  if (!providerQuotes.value.length) return null
+  return [...providerQuotes.value].sort((a, b) => b.recipientGets - a.recipientGets)[0]
+})
+const topProviders = computed(() => {
+  if (providerQuotes.value.length) {
+    return providerQuotes.value.slice(0, 2).map(p => p.name).join(' and ')
+  }
+  return baseContent.value.table.rows.slice(0, 2).map(p => p.provider).join(' and ')
+})
+const bestRateLabel = computed(() => {
+  if (!bestQuote.value) return ''
+  return `1 ${fromCurrencyCode.value} = ${bestQuote.value.fxRate.toFixed(4)} ${toCurrencyCode.value}`
+})
+const seoUpdatedLabel = computed(() => apiUpdatedLabel.value || 'today')
+const seoTitle = computed(() => `Today's Best ${fromCurrencyCode.value} to ${toCurrencyCode.value} Rates | Remit-Scout`)
+const seoDescription = computed(() => {
+  const providerLine = topProviders.value ? ` including ${topProviders.value}` : ''
+  const rateLine = bestRateLabel.value ? ` Best rate: ${bestRateLabel.value}.` : ''
+  return `Compare ${providerCount.value} providers${providerLine}.${rateLine} Updated ${seoUpdatedLabel.value}.`
+})
+
 setSeo({
-  title: `Send Money from ${content.value.from} to ${content.value.to} (${content.value.currencyPair}) | Remit-Scout`,
-  description: `Compare fees, FX spreads, and delivery speed for sending money from ${content.value.from} to ${content.value.to}. ${content.value.currencyPair} corridor comparison.`,
+  title: seoTitle.value,
+  description: seoDescription.value,
   canonical: `${normalizedSiteUrl}${canonicalPath.value}`,
 })
 
@@ -953,9 +1104,9 @@ if (content.value.faqs.length) {
   jsonLdFaq(content.value.faqs)
 }
 
-const displayAmount = ref(1000)
-const displayCurrency = ref('USD')
-const payoutMethod = ref<Method>('bank')
+const displayAmount = ref(initialAmount)
+const displayCurrency = ref(fromCurrencyCode.value)
+const payoutMethod = ref<Method>(initialMethod)
 const sortBy = ref('recipient')
 const insightTimeframe = ref('7d')
 
@@ -966,6 +1117,8 @@ const sortLabels: Record<string, string> = {
   score: 'best rated',
   'remit-score': 'remit score',
 }
+
+const isQuotesLoading = computed(() => quotesPending.value && !hasApiPayload.value)
 
 const sortedProviders = computed(() => {
   const rows = [...content.value.table.rows]
@@ -993,8 +1146,8 @@ const recipientRange = computed(() => {
 
 const corridorWatchTarget = computed(() => ({
   type: 'corridor' as const,
-  from: getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase(),
-  to: getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase(),
+  from: fromCountryCode.value,
+  to: toCountryCode.value,
   method: payoutMethod.value,
 }))
 

@@ -576,3 +576,4 @@ const formatChartTooltip = (rate: number, date: string) => {
 
 
 
+

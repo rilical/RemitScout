@@ -133,6 +133,12 @@ setSeo({
   canonical: `${siteUrl}/`,
 })
 
+useHead({
+  link: [
+    { rel: 'preload', as: 'image', href: '/world.webp' },
+  ],
+})
+
 // Initialize structured data
 const {
   addOrganizationSchema,

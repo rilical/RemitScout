@@ -150,3 +150,4 @@ function getCategoryIcon(category: ChartCategory) {
 
 
 
+
