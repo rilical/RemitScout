@@ -1,0 +1,39 @@
+name: Validate
+on: [push, pull_request]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+        # Using npm (or pnpm/yarn) to install devDependencies like ESLint.
+
+      - name: Run Lint
+        run: npm run lint --if-present
+        # This will run ESLint. Placeholder rules now; real rules added in next phase.
+
+      - name: Run Tests (if any)
+        run: npm test || echo "No tests yet"
+        # In Phase 0, we might not have tests; this step is a placeholder.
+
+      - name: Boundary Enforcement Test (Golden Rule)
+        shell: bash
+        run: |
+          set +e
+          # Run ESLint specifically on the forbidden import test (ignore global ignore).
+          npx eslint plane-a-product/ForbiddenImport.test.js --no-ignore
+          eslint_exit=$?
+          if [ $eslint_exit -eq 0 ]; then
+            echo "ERROR: Boundary rule did NOT trigger on forbidden import!"
+            exit 1
+          fi
+          echo "Golden Rule enforcement working (forbidden import was blocked)."

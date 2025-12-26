@@ -1,0 +1,13 @@
+{
+  "name": "remit-scout-v2",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "eslint-plugin-boundaries": "^5.0.1"
+  }
+}

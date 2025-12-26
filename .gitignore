@@ -1,0 +1,10 @@
+# Secrets and environment files (never commit secrets to Git)
+secrets/**
+!secrets/README.md
+*.env
+*.env.local
+*.secret.json
+
+# Node dependencies and build artifacts
+node_modules/
+dist/
