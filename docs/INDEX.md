@@ -6,3 +6,8 @@
 - catalogs/data-stores.md
 - slo.md
 - catalogs/slo-catalog.md
+- sprints/S2-identity-entitlements.md
+- openapi/auth.yaml
+- openapi/billing.yaml
+- aws/env-vars.md
+- aws/edge-guardrails.md

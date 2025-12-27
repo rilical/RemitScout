@@ -1,8 +1,32 @@
-CREATE TYPE IF NOT EXISTS stoplist_status AS ENUM ('active', 'paused', 'legal_hold');
-CREATE TYPE IF NOT EXISTS circuit_state AS ENUM ('open', 'half_open', 'closed');
-CREATE TYPE IF NOT EXISTS ingestion_status AS ENUM ('success', 'failed', 'blocked', 'skipped');
-CREATE TYPE IF NOT EXISTS quote_status AS ENUM ('ok', 'failed', 'blocked', 'unavailable');
-CREATE TYPE IF NOT EXISTS method_profile AS ENUM ('standard_bank', 'standard_card', 'cash_pickup');
+DO $$ BEGIN
+  CREATE TYPE stoplist_status AS ENUM ('active', 'paused', 'legal_hold');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE circuit_state AS ENUM ('open', 'half_open', 'closed');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE ingestion_status AS ENUM ('success', 'failed', 'blocked', 'skipped');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE quote_status AS ENUM ('ok', 'failed', 'blocked', 'unavailable');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE method_profile AS ENUM ('standard_bank', 'standard_card', 'cash_pickup');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE SCHEMA IF NOT EXISTS gold_export;
 

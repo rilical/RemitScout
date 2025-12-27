@@ -6,4 +6,6 @@
 | Gold Publisher/Aggregator | C | Batch aggregation and publish gates. | TBD | Batch job | Gold-only outputs. |
 | Export Worker | C | Generates export files from Gold. | TBD | Worker | Gold-only export. |
 | Identity/Billing | A | Auth and billing integrations. | TBD | Supabase/Stripe | External services. |
+| Entitlements/Auth | A | Verifies JWTs and enforces plan entitlements. | TBD | Fastify | Plane A middleware. |
+| Billing Webhook Handler | A | Processes Stripe webhook events. | TBD | Fastify | Plane A route. |
 | Watchlists/Alerts Service | A | User watchlists and alerts. | TBD | Service | Future module. |

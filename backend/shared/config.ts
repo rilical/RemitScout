@@ -3,6 +3,23 @@ const toNumber = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+const toVerifyMode = (value: string | undefined) => {
+  if (value === 'jwks' || value === 'remote' || value === 'auto') {
+    return value
+  }
+  return 'auto'
+}
+
+const toSupabaseJwksUrl = (baseUrl?: string, explicit?: string) => {
+  if (explicit && explicit.trim()) {
+    return explicit.trim()
+  }
+  if (baseUrl && baseUrl.trim()) {
+    return `${baseUrl.replace(/\/$/, '')}/auth/v1/.well-known/jwks.json`
+  }
+  return ''
+}
+
 export const config = {
   env: process.env.NODE_ENV || 'development',
   planeA: {
@@ -26,5 +43,22 @@ export const config = {
   },
   geo: {
     countryHeader: process.env.GEO_COUNTRY_HEADER || 'cf-ipcountry',
+  },
+  auth: {
+    supabase: {
+      url: process.env.SUPABASE_URL || '',
+      publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || '',
+      jwksUrl: toSupabaseJwksUrl(process.env.SUPABASE_URL, process.env.SUPABASE_JWKS_URL),
+      verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
+      remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 30),
+    },
+  },
+  billing: {
+    stripe: {
+      secretKey: process.env.STRIPE_SECRET_KEY || '',
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+      priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || '',
+      frontendBaseUrl: process.env.FRONTEND_BASE_URL || 'http://localhost:3000',
+    },
   },
 }

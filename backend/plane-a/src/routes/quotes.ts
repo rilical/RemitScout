@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify'
+import { createHash } from 'crypto'
 import { z } from 'zod'
-import { createPool } from '../../shared/db'
-import { config } from '../../shared/config'
+import { createPool } from '../../../shared/db'
+import { config } from '../../../shared/config'
 
 const planeAPool = createPool(config.db.planeAUrl)
 
@@ -42,6 +43,15 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         ORDER BY receive_amount DESC, fee_amount ASC`,
       [corridor_id, amount_bucket, payin, payout],
     )
+
+    const cachePayload = JSON.stringify({ count: result.rowCount, quotes: result.rows })
+    const etag = `"${createHash('sha256').update(cachePayload).digest('hex')}"`
+    reply.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60')
+    reply.header('ETag', etag)
+    if (request.headers['if-none-match'] === etag) {
+      reply.code(304)
+      return ''
+    }
 
     return {
       success: true,

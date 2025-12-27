@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: Remit-Scout Billing API
+  version: 0.1.0
+paths:
+  /api/billing/checkout-session:
+    post:
+      summary: Create Stripe checkout session
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Checkout session created
+  /api/billing/portal:
+    get:
+      summary: Create Stripe billing portal session
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Portal session created
+  /api/billing/webhook:
+    post:
+      summary: Stripe webhook handler
+      parameters:
+        - in: header
+          name: Stripe-Signature
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Webhook accepted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
