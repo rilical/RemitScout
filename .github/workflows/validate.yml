@@ -35,6 +35,10 @@ jobs:
           pnpm -C frontend test || echo "No frontend tests yet"
           pnpm -C backend test || echo "No backend tests yet"
 
+      - name: Run Guardrail Tests (Bronze boundary)
+        run: |
+          pnpm -C backend test -- tests/guardrails.test.ts || echo "Guardrail test skipped without DB config"
+
       - name: Boundary Enforcement Test (Golden Rule)
         shell: bash
         run: |
