@@ -3,9 +3,13 @@
 // We do not actually execute this code; it is a static analysis test.
 
 import bronzeUtil from "../storage/bronze/bronzeUtil.js";
+import { describe, it, expect } from "vitest";
 // This import from a Bronze-scoped module is not allowed for Plane A code.
 // ESLint should flag this with a "boundaries/element-types" error, enforcing that
 // raw Bronze data must never be accessed directly by Plane A (Golden Rule).
 
-// Dummy usage to avoid unused variable errors.
-console.log("[Test] Bronze Util:", bronzeUtil);
+describe("ForbiddenImport", () => {
+  it("exposes bronze util for lint boundary checks only", () => {
+    expect(bronzeUtil).toBeDefined();
+  });
+});

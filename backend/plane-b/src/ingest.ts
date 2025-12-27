@@ -233,7 +233,27 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       const amountBucket = Math.round(sendAmount)
       const payin = quote.methods[0] || 'bank'
       const payout = quote.methods.includes('cash') ? 'cash' : 'bank'
-      const bronzeObjectKey = `provider_raw/${quote.providerId}/${quote.corridorId}/${Date.now()}`
+      const bronzeResult = await db.query(
+        `INSERT INTO bronze.provider_raw (provider_id, corridor, payload)
+         VALUES ($1, $2, $3)
+         RETURNING id`,
+        [
+          quote.providerId,
+          quote.corridorId,
+          {
+            providerId: quote.providerId,
+            corridorId: quote.corridorId,
+            fee: quote.fee,
+            marginPct: quote.marginPct,
+            fxRate: quote.fxRate,
+            delivery: quote.delivery,
+            methods: quote.methods,
+            reliability: quote.reliability,
+          },
+        ],
+      )
+
+      const bronzeObjectKey = String(bronzeResult.rows[0].id)
 
       await db.query(
         `INSERT INTO silver.quote_record
@@ -297,24 +317,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         ],
       )
 
-      await db.query(
-        `INSERT INTO bronze.provider_raw (provider_id, corridor, payload)
-         VALUES ($1, $2, $3)`,
-        [
-          quote.providerId,
-          quote.corridorId,
-          {
-            providerId: quote.providerId,
-            corridorId: quote.corridorId,
-            fee: quote.fee,
-            marginPct: quote.marginPct,
-            fxRate: quote.fxRate,
-            delivery: quote.delivery,
-            methods: quote.methods,
-            reliability: quote.reliability,
-          },
-        ],
-      )
+      // Bronze write handled above to capture provider_raw id for provenance.
     }
 
     for (const rate of fxRates) {

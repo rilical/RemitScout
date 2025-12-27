@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import { config } from '../../shared/config'
 import { createPool } from '../../shared/db'
+import { publisherRoutes } from './routes/publisher'
 
 const app = Fastify({
   logger: { level: config.env === 'production' ? 'info' : 'debug' },
@@ -19,6 +20,8 @@ app.get('/readyz', async (_request, reply) => {
     return { status: 'not_ready' }
   }
 })
+
+app.register(publisherRoutes)
 
 const start = async () => {
   try {

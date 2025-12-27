@@ -100,7 +100,12 @@ CREATE INDEX IF NOT EXISTS circuit_breaker_provider_idx
   ON silver.circuit_breaker (provider_id);
 
 -- Transitional Compatibility
--- Existing tables: silver.providers, silver.corridors, silver.provider_quotes remain in use.
--- New tables: silver.provider, silver.corridor, silver.ingestion_run, silver.quote_record,
+-- Canonical tables: silver.provider, silver.corridor, silver.ingestion_run, silver.quote_record,
 -- silver.latest_quote_by_provider.
--- If runtime still references old names, keep old tables or add views in a follow-up migration.
+-- Legacy tables: silver.providers, silver.corridors, silver.provider_quotes remain in use.
+-- Current approach: dual-write in ingestion while endpoints migrate to canonical tables.
+-- Follow-up: add compatibility views or deprecate legacy tables once runtime no longer uses them.
+
+GRANT SELECT ON silver.provider, silver.corridor, silver.latest_quote_by_provider TO plane_a;
+GRANT SELECT ON silver.provider, silver.corridor, silver.quote_record, silver.latest_quote_by_provider, silver.ingestion_run, silver.circuit_breaker TO plane_c;
+GRANT SELECT, INSERT, UPDATE, DELETE ON silver.provider, silver.corridor, silver.ingestion_run, silver.quote_record, silver.latest_quote_by_provider, silver.circuit_breaker TO plane_b;
