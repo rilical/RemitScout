@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: remit
+      POSTGRES_PASSWORD: remit
+      POSTGRES_DB: remit
+    ports:
+      - "5432:5432"
+    volumes:
+      - remit-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U remit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  remit-postgres:

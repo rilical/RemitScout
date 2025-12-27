@@ -4,10 +4,12 @@
  */
 module.exports = {
   root: true,
+  parser: "@typescript-eslint/parser",
   parserOptions: { ecmaVersion: 2022, sourceType: "module" },
-  plugins: ["boundaries"],
+  plugins: ["boundaries", "@typescript-eslint"],
   extends: [
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
     // If using a framework or TS, extend its recommended config here.
   ],
   settings: {

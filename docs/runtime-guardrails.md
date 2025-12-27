@@ -23,3 +23,15 @@ pnpm -C backend guardrail:test
 ```
 
 A passing result confirms that Plane A cannot access Bronze at runtime. Any 200-level response is a failure and must be treated as a security regression.
+
+## Database Guardrail Test (Plane A)
+The Vitest guardrail in `backend/tests/guardrails.test.ts` ensures the Plane A DB user cannot read Bronze.
+
+### Usage
+```
+RUN_BRONZE_GUARDRAIL_TEST=1 \
+DATABASE_URL_PLANE_A=postgres://plane_a:plane_a@localhost:5432/remit \
+pnpm -C backend test
+```
+
+The test passes only when the Plane A role receives a permission error for `bronze.provider_raw`.

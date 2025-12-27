@@ -4,3 +4,6 @@ backend/plane-a/ForbiddenImport.test.js
 # Ignore any secrets or local env files
 secrets/**
 *.env
+
+# Ignore build output
+backend/dist/**

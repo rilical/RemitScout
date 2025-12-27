@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./plane-a" },
+    { "path": "./plane-c" },
+    { "path": "./plane-b" }
+  ]
+}
