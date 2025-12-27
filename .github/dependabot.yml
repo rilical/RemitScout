@@ -5,18 +5,37 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
   - package-ecosystem: "npm"
     directory: "/backend"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+
   - package-ecosystem: "npm"
     directory: "/infrastructure/cdk"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
