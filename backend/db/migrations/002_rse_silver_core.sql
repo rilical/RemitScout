@@ -1,6 +1,10 @@
 CREATE TYPE IF NOT EXISTS stoplist_status AS ENUM ('active', 'paused', 'legal_hold');
 CREATE TYPE IF NOT EXISTS circuit_state AS ENUM ('open', 'half_open', 'closed');
 CREATE TYPE IF NOT EXISTS ingestion_status AS ENUM ('success', 'failed', 'blocked', 'skipped');
+CREATE TYPE IF NOT EXISTS quote_status AS ENUM ('ok', 'failed', 'blocked', 'unavailable');
+CREATE TYPE IF NOT EXISTS method_profile AS ENUM ('standard_bank', 'standard_card', 'cash_pickup');
+
+CREATE SCHEMA IF NOT EXISTS gold_export;
 
 CREATE TABLE IF NOT EXISTS silver.provider (
   provider_id TEXT PRIMARY KEY,
@@ -13,13 +17,16 @@ CREATE TABLE IF NOT EXISTS silver.provider (
 
 CREATE TABLE IF NOT EXISTS silver.corridor (
   corridor_id TEXT PRIMARY KEY,
-  send_currency TEXT NOT NULL,
-  receive_currency TEXT NOT NULL,
-  send_country TEXT,
-  receive_country TEXT,
+  source_country TEXT NOT NULL,
+  dest_country TEXT NOT NULL,
+  source_currency TEXT NOT NULL,
+  dest_currency TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS corridor_identity_unique_idx
+  ON silver.corridor (source_country, dest_country, source_currency, dest_currency);
 
 CREATE TABLE IF NOT EXISTS silver.ingestion_run (
   run_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -38,11 +45,20 @@ CREATE TABLE IF NOT EXISTS silver.quote_record (
   quote_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   provider_id TEXT NOT NULL REFERENCES silver.provider(provider_id),
   corridor_id TEXT NOT NULL REFERENCES silver.corridor(corridor_id),
+  amount_bucket INT NOT NULL,
+  payin TEXT NOT NULL,
+  payout TEXT NOT NULL,
   send_amount NUMERIC NOT NULL,
   fee_amount NUMERIC NOT NULL,
   fee_currency TEXT,
+  total_debit_amount NUMERIC NOT NULL,
   receive_amount NUMERIC NOT NULL,
   implied_fx_rate NUMERIC NOT NULL,
+  delivery_time_min_minutes INT,
+  delivery_time_max_minutes INT,
+  status quote_status NOT NULL DEFAULT 'ok',
+  error_code TEXT,
+  error_message TEXT,
   collected_at TIMESTAMPTZ NOT NULL,
   ingested_at TIMESTAMPTZ NOT NULL,
   ingestion_run_id UUID NOT NULL REFERENCES silver.ingestion_run(run_id),
@@ -61,8 +77,12 @@ CREATE TABLE IF NOT EXISTS silver.latest_quote_by_provider (
   collected_at TIMESTAMPTZ NOT NULL,
   send_amount NUMERIC NOT NULL,
   fee_amount NUMERIC NOT NULL,
+  total_debit_amount NUMERIC NOT NULL,
   receive_amount NUMERIC NOT NULL,
   implied_fx_rate NUMERIC NOT NULL,
+  delivery_time_min_minutes INT,
+  delivery_time_max_minutes INT,
+  status quote_status NOT NULL DEFAULT 'ok',
   quality_flags JSONB,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -109,3 +129,31 @@ CREATE INDEX IF NOT EXISTS circuit_breaker_provider_idx
 GRANT SELECT ON silver.provider, silver.corridor, silver.latest_quote_by_provider TO plane_a;
 GRANT SELECT ON silver.provider, silver.corridor, silver.quote_record, silver.latest_quote_by_provider, silver.ingestion_run, silver.circuit_breaker TO plane_c;
 GRANT SELECT, INSERT, UPDATE, DELETE ON silver.provider, silver.corridor, silver.ingestion_run, silver.quote_record, silver.latest_quote_by_provider, silver.circuit_breaker TO plane_b;
+
+CREATE TABLE IF NOT EXISTS gold_export.cdp_daily (
+  date DATE NOT NULL,
+  corridor_id TEXT NOT NULL,
+  amount_bucket INT NOT NULL,
+  method_profile method_profile NOT NULL,
+  rci_leader_bps NUMERIC,
+  rci_median_bps NUMERIC,
+  rci_p10_bps NUMERIC,
+  rci_p90_bps NUMERIC,
+  dispersion_bps NUMERIC,
+  leader_edge_bps NUMERIC,
+  volatility_7d NUMERIC,
+  provider_count_binned INT,
+  suppression_flag BOOLEAN NOT NULL DEFAULT FALSE,
+  suppression_reason TEXT,
+  methodology_version TEXT,
+  pipeline_version TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (date, corridor_id, amount_bucket, method_profile)
+);
+
+CREATE INDEX IF NOT EXISTS cdp_daily_corridor_date_idx
+  ON gold_export.cdp_daily (corridor_id, date);
+
+GRANT USAGE ON SCHEMA gold_export TO plane_a, plane_c;
+GRANT SELECT ON gold_export.cdp_daily TO plane_a;
+GRANT SELECT, INSERT, UPDATE, DELETE ON gold_export.cdp_daily TO plane_c;

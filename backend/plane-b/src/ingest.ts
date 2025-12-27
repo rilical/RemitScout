@@ -46,6 +46,20 @@ const pulseCacheEntries = () => {
   return baseEntries
 }
 
+const parseDeliveryMinutes = (delivery: string) => {
+  const normalized = delivery.toLowerCase()
+  if (normalized.includes('15-30')) {
+    return { min: 15, max: 30 }
+  }
+  if (normalized.includes('minutes')) {
+    return { min: 5, max: 30 }
+  }
+  if (normalized.includes('same day')) {
+    return { min: 60, max: 24 * 60 }
+  }
+  return { min: null, max: null }
+}
+
 export const runIngestion = async (options: IngestOptions = {}) => {
   const db = options.pool || createPool(config.db.planeBUrl)
   const shouldClose = !options.pool
@@ -165,20 +179,20 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
     for (const corridor of corridors) {
       await db.query(
-        `INSERT INTO silver.corridor (corridor_id, send_currency, receive_currency, send_country, receive_country)
+        `INSERT INTO silver.corridor (corridor_id, source_country, dest_country, source_currency, dest_currency)
          VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (corridor_id) DO UPDATE SET
-           send_currency = EXCLUDED.send_currency,
-           receive_currency = EXCLUDED.receive_currency,
-           send_country = EXCLUDED.send_country,
-           receive_country = EXCLUDED.receive_country,
+           source_country = EXCLUDED.source_country,
+           dest_country = EXCLUDED.dest_country,
+           source_currency = EXCLUDED.source_currency,
+           dest_currency = EXCLUDED.dest_currency,
            updated_at = NOW()`,
         [
           corridor.id,
-          corridor.sendCurrency,
-          corridor.recvCurrency,
           corridor.fromCountry,
           corridor.toCountry,
+          corridor.sendCurrency,
+          corridor.recvCurrency,
         ],
       )
 
@@ -226,6 +240,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
       const sendAmount = 100
       const feeAmount = quote.fee
+      const totalDebitAmount = sendAmount + feeAmount
       const receiveAmount = (sendAmount - feeAmount) * quote.fxRate
       const impliedFxRate = quote.fxRate
       const collectedAt = new Date()
@@ -233,6 +248,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       const amountBucket = Math.round(sendAmount)
       const payin = quote.methods[0] || 'bank'
       const payout = quote.methods.includes('cash') ? 'cash' : 'bank'
+      const deliveryWindow = parseDeliveryMinutes(quote.delivery)
       const bronzeResult = await db.query(
         `INSERT INTO bronze.provider_raw (provider_id, corridor, payload)
          VALUES ($1, $2, $3)
@@ -257,15 +273,24 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
       await db.query(
         `INSERT INTO silver.quote_record
-         (provider_id, corridor_id, send_amount, fee_amount, receive_amount, implied_fx_rate, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+         (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, delivery_time_min_minutes, delivery_time_max_minutes, status, error_code, error_message, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
         [
           quote.providerId,
           quote.corridorId,
+          amountBucket,
+          payin,
+          payout,
           sendAmount,
           feeAmount,
+          totalDebitAmount,
           receiveAmount,
           impliedFxRate,
+          deliveryWindow.min,
+          deliveryWindow.max,
+          'ok',
+          null,
+          null,
           collectedAt,
           ingestedAt,
           ingestionRunId,
@@ -275,14 +300,18 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
       await db.query(
         `INSERT INTO silver.latest_quote_by_provider
-         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, receive_amount, implied_fx_rate, quality_flags)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, delivery_time_min_minutes, delivery_time_max_minutes, status, quality_flags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          ON CONFLICT (corridor_id, amount_bucket, payin, payout, provider_id) DO UPDATE SET
            collected_at = EXCLUDED.collected_at,
            send_amount = EXCLUDED.send_amount,
            fee_amount = EXCLUDED.fee_amount,
+           total_debit_amount = EXCLUDED.total_debit_amount,
            receive_amount = EXCLUDED.receive_amount,
            implied_fx_rate = EXCLUDED.implied_fx_rate,
+           delivery_time_min_minutes = EXCLUDED.delivery_time_min_minutes,
+           delivery_time_max_minutes = EXCLUDED.delivery_time_max_minutes,
+           status = EXCLUDED.status,
            quality_flags = EXCLUDED.quality_flags,
            updated_at = NOW()`,
         [
@@ -294,8 +323,12 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           collectedAt,
           sendAmount,
           feeAmount,
+          totalDebitAmount,
           receiveAmount,
           impliedFxRate,
+          deliveryWindow.min,
+          deliveryWindow.max,
+          'ok',
           null,
         ],
       )
