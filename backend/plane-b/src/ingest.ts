@@ -80,8 +80,56 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       )
     }
 
+    const stoplistResult = await db.query(
+      'SELECT provider_id, stoplist_status FROM silver.rights_matrix',
+    )
+    const stoplistByProvider = new Map(
+      stoplistResult.rows.map(row => [row.provider_id, row.stoplist_status]),
+    )
+
+    const circuitResult = await db.query(
+      'SELECT provider_id, corridor_id, state, cooldown_until FROM silver.circuit_breaker',
+    )
+
+    const now = new Date()
+    const isCircuitOpen = (providerId: string, corridorId: string | null) => {
+      return circuitResult.rows.some(row => {
+        if (row.provider_id !== providerId) return false
+        if (row.corridor_id !== null && row.corridor_id !== corridorId) return false
+        if (row.state !== 'open') return false
+        if (!row.cooldown_until) return true
+        return new Date(row.cooldown_until) > now
+      })
+    }
+
+    const logSkip = (providerId: string, corridorId: string | null, reason: string) => {
+      const corridorLabel = corridorId || 'all'
+      console.log(`skip provider_id=${providerId} corridor_id=${corridorLabel} reason=${reason}`)
+    }
+
+    const ingestionRunIds = new Map<string, string>()
+
     for (const provider of providers) {
       if (!allowedProviders.has(provider.id)) continue
+      const stoplistStatus = stoplistByProvider.get(provider.id) || 'active'
+      if (stoplistStatus !== 'active') {
+        logSkip(provider.id, null, `stoplist_${stoplistStatus}`)
+        continue
+      }
+      if (isCircuitOpen(provider.id, null)) {
+        logSkip(provider.id, null, 'circuit_open')
+        continue
+      }
+
+      await db.query(
+        `INSERT INTO silver.provider (provider_id, display_name)
+         VALUES ($1, $2)
+         ON CONFLICT (provider_id) DO UPDATE SET
+           display_name = EXCLUDED.display_name,
+           updated_at = NOW()`,
+        [provider.id, provider.name],
+      )
+
       await db.query(
         `INSERT INTO silver.providers (id, name, logo_url, reliability, methods, best_for, homepage_url)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -103,9 +151,37 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           provider.homepageUrl,
         ],
       )
+
+      const ingestionRunResult = await db.query(
+        `INSERT INTO silver.ingestion_run (provider_id, collector_type, started_at, finished_at, status)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING run_id`,
+        [provider.id, 'seed', now, now, 'success'],
+      )
+      if (ingestionRunResult.rows[0]?.run_id) {
+        ingestionRunIds.set(provider.id, ingestionRunResult.rows[0].run_id)
+      }
     }
 
     for (const corridor of corridors) {
+      await db.query(
+        `INSERT INTO silver.corridor (corridor_id, send_currency, receive_currency, send_country, receive_country)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (corridor_id) DO UPDATE SET
+           send_currency = EXCLUDED.send_currency,
+           receive_currency = EXCLUDED.receive_currency,
+           send_country = EXCLUDED.send_country,
+           receive_country = EXCLUDED.receive_country,
+           updated_at = NOW()`,
+        [
+          corridor.id,
+          corridor.sendCurrency,
+          corridor.recvCurrency,
+          corridor.fromCountry,
+          corridor.toCountry,
+        ],
+      )
+
       await db.query(
         `INSERT INTO silver.corridors (id, from_country, to_country, send_currency, recv_currency, label)
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -132,6 +208,78 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
     for (const quote of providerQuotes) {
       if (!allowedProviders.has(quote.providerId)) continue
+      const stoplistStatus = stoplistByProvider.get(quote.providerId) || 'active'
+      if (stoplistStatus !== 'active') {
+        logSkip(quote.providerId, quote.corridorId, `stoplist_${stoplistStatus}`)
+        continue
+      }
+      if (isCircuitOpen(quote.providerId, quote.corridorId)) {
+        logSkip(quote.providerId, quote.corridorId, 'circuit_open')
+        continue
+      }
+
+      const ingestionRunId = ingestionRunIds.get(quote.providerId)
+      if (!ingestionRunId) {
+        logSkip(quote.providerId, quote.corridorId, 'missing_ingestion_run')
+        continue
+      }
+
+      const sendAmount = 100
+      const feeAmount = quote.fee
+      const receiveAmount = (sendAmount - feeAmount) * quote.fxRate
+      const impliedFxRate = quote.fxRate
+      const collectedAt = new Date()
+      const ingestedAt = new Date()
+      const amountBucket = Math.round(sendAmount)
+      const payin = quote.methods[0] || 'bank'
+      const payout = quote.methods.includes('cash') ? 'cash' : 'bank'
+      const bronzeObjectKey = `provider_raw/${quote.providerId}/${quote.corridorId}/${Date.now()}`
+
+      await db.query(
+        `INSERT INTO silver.quote_record
+         (provider_id, corridor_id, send_amount, fee_amount, receive_amount, implied_fx_rate, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          quote.providerId,
+          quote.corridorId,
+          sendAmount,
+          feeAmount,
+          receiveAmount,
+          impliedFxRate,
+          collectedAt,
+          ingestedAt,
+          ingestionRunId,
+          bronzeObjectKey,
+        ],
+      )
+
+      await db.query(
+        `INSERT INTO silver.latest_quote_by_provider
+         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, receive_amount, implied_fx_rate, quality_flags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (corridor_id, amount_bucket, payin, payout, provider_id) DO UPDATE SET
+           collected_at = EXCLUDED.collected_at,
+           send_amount = EXCLUDED.send_amount,
+           fee_amount = EXCLUDED.fee_amount,
+           receive_amount = EXCLUDED.receive_amount,
+           implied_fx_rate = EXCLUDED.implied_fx_rate,
+           quality_flags = EXCLUDED.quality_flags,
+           updated_at = NOW()`,
+        [
+          quote.corridorId,
+          amountBucket,
+          payin,
+          payout,
+          quote.providerId,
+          collectedAt,
+          sendAmount,
+          feeAmount,
+          receiveAmount,
+          impliedFxRate,
+          null,
+        ],
+      )
+
       await db.query(
         `INSERT INTO silver.provider_quotes
          (provider_id, corridor_id, fee, margin_pct, fx_rate, delivery, methods, reliability, best_for)

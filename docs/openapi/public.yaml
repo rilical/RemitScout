@@ -1,0 +1,108 @@
+openapi: 3.0.3
+info:
+  title: Remit-Scout Public API
+  version: 0.1.0
+paths:
+  /api/quotes/current:
+    get:
+      summary: Current quotes for a corridor
+      parameters:
+        - in: query
+          name: corridor_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: amount_bucket
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: payin
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: payout
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Quotes response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  timestamp:
+                    type: string
+                  count:
+                    type: integer
+                  quotes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        provider_id:
+                          type: string
+                        corridor_id:
+                          type: string
+                        amount_bucket:
+                          type: integer
+                        payin:
+                          type: string
+                        payout:
+                          type: string
+                        collected_at:
+                          type: string
+                        send_amount:
+                          type: number
+                        fee_amount:
+                          type: number
+                        receive_amount:
+                          type: number
+                        implied_fx_rate:
+                          type: number
+                        quality_flags:
+                          type: object
+                        updated_at:
+                          type: string
+  /api/popular-corridors:
+    get:
+      summary: Popular corridors summary
+      responses:
+        '200':
+          description: Popular corridors response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  timestamp:
+                    type: string
+                  count:
+                    type: integer
+                  corridors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        route:
+                          type: string
+                        count_24h:
+                          type: integer
+                        top_provider:
+                          type: string
+                        fee_range:
+                          type: string
+                        speed_range:
+                          type: string
+                        best_for:
+                          type: string
+                        updated_at:
+                          type: string

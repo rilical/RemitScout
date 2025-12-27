@@ -12,18 +12,22 @@ describe('Plane A Bronze guardrail', () => {
     return
   }
 
-  it('denies Plane A access to bronze schema', async () => {
-    const pool = new Pool({ connectionString: planeAUrl })
-    try {
-      await pool.query('SELECT * FROM bronze.provider_raw LIMIT 1')
-    } catch (error: any) {
-      const message = String(error?.message || '')
-      expect(message.toLowerCase()).toContain('permission')
-      return
-    } finally {
-      await pool.end()
-    }
+  const bronzeTables = ['provider_raw']
 
-    throw new Error('Plane A unexpectedly accessed bronze data')
-  })
+  for (const table of bronzeTables) {
+    it(`denies Plane A access to bronze.${table}`, async () => {
+      const pool = new Pool({ connectionString: planeAUrl })
+      try {
+        await pool.query(`SELECT * FROM bronze.${table} LIMIT 1`)
+      } catch (error: any) {
+        const message = String(error?.message || '')
+        expect(message.toLowerCase()).toContain('permission')
+        return
+      } finally {
+        await pool.end()
+      }
+
+      throw new Error(`Plane A unexpectedly accessed bronze.${table}`)
+    })
+  }
 })
