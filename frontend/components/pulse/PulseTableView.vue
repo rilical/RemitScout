@@ -193,7 +193,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import type { TableData, TableRow, TableColumn, PulseFilters, TimeRange } from '~/types/pulse'
-import { getTableData, formatCurrency as formatCurrencyUtil } from '~/lib/pulseMockApi'
+import { getTableData, formatCurrency as formatCurrencyUtil } from '~/lib/pulseApi'
 
 interface Props {
   chartId: string

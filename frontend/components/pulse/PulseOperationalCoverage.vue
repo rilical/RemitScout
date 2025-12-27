@@ -98,7 +98,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getChartData } from '~/lib/pulseMockApi'
+import { getChartData } from '~/lib/pulseApi'
 
 const store = usePulseStore()
 

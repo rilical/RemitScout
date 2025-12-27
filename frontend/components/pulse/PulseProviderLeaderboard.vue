@@ -71,7 +71,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getProviderBenchmarkingData, getCurrencySymbol } from '~/lib/pulseMockApi'
+import { getProviderBenchmarkingData, getCurrencySymbol } from '~/lib/pulseApi'
 import type { PulseProviderBenchmarkRow } from '~/types/pulse'
 
 const store = usePulseStore()

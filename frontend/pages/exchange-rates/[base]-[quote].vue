@@ -137,6 +137,7 @@
 
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
+import { useApi } from '~/composables/useApi'
 import { getCorridorUrl, getCanonicalSlug, SLUG_TO_CODE } from '~/utils/country-slugs'
 
 const route = useRoute()
@@ -146,8 +147,28 @@ const base = computed(() => (route.params.base as string || '').toUpperCase())
 const quote = computed(() => (route.params.quote as string || '').toUpperCase())
 const pairLabel = computed(() => `${base.value} → ${quote.value}`)
 const exampleAmount = computed(() => `${base.value} 1,000`)
-const midMarketRate = computed(() => `${base.value} 1 = ${quote.value} ${mockMidMarket(quote.value)}`)
 const watchTarget = computed(() => ({ type: 'fxPair' as const, base: base.value, quote: quote.value }))
+const { request } = useApi()
+
+const { data: spotRate } = await useAsyncData(
+  () => `fx-spot-${base.value}-${quote.value}`,
+  () => request<{ rate: number, updatedAt?: string }>('/rates/spot', { query: { base: base.value, quote: quote.value } }),
+  { watch: [base, quote] },
+)
+
+const { data: providerRates } = await useAsyncData(
+  () => `fx-providers-${base.value}-${quote.value}`,
+  () => request<{ data: Array<{ name: string, rate: number, markupBps?: number, speed?: string }> }>(
+    '/rates/providers',
+    { query: { base: base.value, quote: quote.value } },
+  ),
+  { watch: [base, quote] },
+)
+
+const midMarketRate = computed(() => {
+  if (!spotRate.value?.rate) return `${base.value} 1 = ${quote.value} N/A`
+  return `${base.value} 1 = ${quote.value} ${spotRate.value.rate.toFixed(4)}`
+})
 
 // Get country codes from currency codes for corridor URL
 const baseCountryCode = computed(() => SLUG_TO_CODE[getCanonicalSlug(base.value)] || base.value)
@@ -159,12 +180,15 @@ const breadcrumbItems = computed(() => [
   { name: `${base.value} to ${quote.value}`, path: route.path },
 ])
 
-const providerPricing = computed(() => [
-  { name: 'Wise', rate: `${quote.value} ${mockRate(quote.value, 0.35)}`, markup: 0.35, speed: 'Same-day bank' },
-  { name: 'Remitly', rate: `${quote.value} ${mockRate(quote.value, 0.65)}`, markup: 0.65, speed: 'Minutes cash; bank same-day' },
-  { name: 'WorldRemit', rate: `${quote.value} ${mockRate(quote.value, 0.8)}`, markup: 0.8, speed: 'Minutes to hours' },
-  { name: 'Xoom', rate: `${quote.value} ${mockRate(quote.value, 1.2)}`, markup: 1.2, speed: 'Minutes–1 day' },
-])
+const providerPricing = computed(() => {
+  if (!providerRates.value?.data?.length) return []
+  return providerRates.value.data.map((item) => ({
+    name: item.name,
+    rate: `${quote.value} ${item.rate.toFixed(4)}`,
+    markup: item.markupBps ? item.markupBps / 100 : undefined,
+    speed: item.speed || 'N/A',
+  }))
+})
 
 const corridorLinks = computed(() => [
   { label: `${pairLabel.value} money transfers`, href: getCorridorUrl(baseCountryCode.value, quoteCountryCode.value) },
@@ -179,25 +203,4 @@ setSeo({
   canonical: `${siteUrl}/exchange-rates/${route.params.base}-${route.params.quote}`,
 })
 
-function mockMidMarket(currency: string) {
-  const sampleValues: Record<string, string> = {
-    INR: '83.10',
-    PHP: '58.20',
-    MXN: '17.10',
-    NGN: '1400.00',
-    USD: '1.10',
-    GBP: '0.84',
-    EUR: '0.92',
-    PKR: '278.00',
-    CAD: '1.36',
-  }
-  return sampleValues[currency] || '—'
-}
-
-function mockRate(currency: string, markup: number) {
-  const baseValue = Number(mockMidMarket(currency)) || 0
-  if (!baseValue) return '—'
-  const adjusted = (baseValue * (1 - markup / 100)).toFixed(2)
-  return adjusted
-}
 </script>

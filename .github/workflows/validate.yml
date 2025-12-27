@@ -6,31 +6,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install Dependencies
-        run: npm install
-        # Using npm (or pnpm/yarn) to install devDependencies like ESLint.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
 
-      - name: Run Lint
-        run: npm run lint --if-present
-        # This will run ESLint. Placeholder rules now; real rules added in next phase.
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Run Compliance Lint
+        run: pnpm -C . lint
+
+      - name: Run Frontend Lint
+        run: pnpm -C frontend lint
+
+      - name: Run Backend Lint
+        run: pnpm -C backend lint
 
       - name: Run Tests (if any)
-        run: npm test || echo "No tests yet"
-        # In Phase 0, we might not have tests; this step is a placeholder.
+        run: |
+          pnpm -C frontend test || echo "No frontend tests yet"
+          pnpm -C backend test || echo "No backend tests yet"
 
       - name: Boundary Enforcement Test (Golden Rule)
         shell: bash
         run: |
           set +e
           # Run ESLint specifically on the forbidden import test (ignore global ignore).
-          npx eslint plane-a-product/ForbiddenImport.test.js --no-ignore
+          pnpm exec eslint backend/plane-a/ForbiddenImport.test.js --no-ignore
           eslint_exit=$?
           if [ $eslint_exit -eq 0 ]; then
             echo "ERROR: Boundary rule did NOT trigger on forbidden import!"

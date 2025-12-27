@@ -1,68 +1,86 @@
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import { getProviderScore } from '~/lib/providerScores'
+import { useApi } from '~/composables/useApi'
 
 // API composables for dynamic data fetching
 export const useRemittanceApi = () => {
-  // Recent searches
-  const useRecentSearches = (limit = 12) => {
-    return useFetch<{ data: RecentSearch[], updatedAt: string }>('/api/recent-searches', {
-      query: { limit },
-      // Refresh every 15 seconds
-      watch: false,
-    })
+  const { request } = useApi()
+
+  const useRecentSearches = (limit = 12, options: Record<string, any> = {}) => {
+    const key = options.key || `recent-searches-${limit}`
+    return useAsyncData(
+      key,
+      () => request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } }),
+      { watch: false, ...options },
+    )
   }
 
-  // Popular corridors
-  const usePopularCorridors = () => {
-    return useFetch<{ data: CorridorPopularity[], updatedAt: string }>('/api/popular-corridors', {
-      // Refresh every 20 seconds
-      watch: false,
-    })
+  const usePopularCorridors = (options: Record<string, any> = {}) => {
+    const key = options.key || 'popular-corridors'
+    return useAsyncData(
+      key,
+      () => request<{ data: CorridorPopularity[], updatedAt: string }>('/popular-corridors'),
+      { watch: false, ...options },
+    )
   }
 
-  // Bank vs Specialist comparison
-  const useBankVsSpecialist = (from = 'US', to = 'PH', amount = 500) => {
-    return useFetch<{ data: BankVsSpecialist }>('/api/bank-vs-specialist', {
-      query: { from, to, amount },
-      // Cache for 1 day
-      getCachedData(key) {
-        const nuxtApp = useNuxtApp()
-        const data = nuxtApp.payload.data[key] || nuxtApp.static.data[key]
+  const useBankVsSpecialist = (from = 'US', to = 'PH', amount = 500, options: Record<string, any> = {}) => {
+    const key = options.key || `bank-vs-specialist-${from}-${to}-${amount}`
+    return useAsyncData(
+      key,
+      () => request<{ data: BankVsSpecialist }>('/bank-vs-specialist', {
+        query: { from, to, amount },
+      }),
+      {
+        getCachedData(key) {
+          const nuxtApp = useNuxtApp()
+          const data = nuxtApp.payload.data[key] || nuxtApp.static.data[key]
 
-        if (!data) {
-          return
-        }
+          if (!data) {
+            return
+          }
 
-        const expirationDate = new Date(data.fetchedAt)
-        expirationDate.setTime(expirationDate.getTime() + 24 * 60 * 60 * 1000)
-        const isExpired = expirationDate.getTime() < Date.now()
-        if (isExpired) {
-          return
-        }
+          const timestamp = data.updatedAt || data.fetchedAt
+          if (!timestamp) return
+          const expirationDate = new Date(timestamp)
+          expirationDate.setTime(expirationDate.getTime() + 24 * 60 * 60 * 1000)
+          const isExpired = expirationDate.getTime() < Date.now()
+          if (isExpired) {
+            return
+          }
 
-        return data
+          return data
+        },
+        ...options,
       },
-    })
+    )
   }
 
-  // Provider quotes
-  const useProviders = (from = 'US', to = 'PH', amount = 500, method = 'bank') => {
-    return useFetch<{ data: ProviderQuote[], updatedAt: string, corridor: string, amount: number, method: string }>('/api/providers', {
-      query: { from, to, amount, method },
-      // Refresh every 2 minutes
-      watch: false,
-    })
+  const useProviders = (
+    from = 'US',
+    to = 'PH',
+    amount = 500,
+    method: string = 'bank',
+    options: Record<string, any> = {},
+  ) => {
+    const key = options.key || `providers-${from}-${to}-${amount}-${method}`
+    return useAsyncData(
+      key,
+      () => request<{ data: ProviderQuote[], updatedAt: string, corridor: string, amount: number, method: string }>(
+        '/providers',
+        { query: { from, to, amount, method } },
+      ),
+      { watch: false, ...options },
+    )
   }
 
-  // Post a new search
   const recordSearch = async (search: Partial<RecentSearch>) => {
-    return await $fetch('/api/recent-searches', {
+    return await request('/recent-searches', {
       method: 'POST',
       body: search,
     })
   }
 
-  // Calculate provider ratings with weights
   const DEFAULT_WEIGHTS: RatingWeights = {
     cost: 0.6,
     speed: 0.25,
@@ -73,7 +91,6 @@ export const useRemittanceApi = () => {
   const attachRatings = (quotes: ProviderQuote[], weights = DEFAULT_WEIGHTS) => {
     if (quotes.length === 0) return []
 
-    // Helper to convert delivery time to hours
     const etaToHours = (eta: string): number => {
       const t = eta.toLowerCase()
       if (t.includes('min')) {
@@ -95,7 +112,7 @@ export const useRemittanceApi = () => {
 
     return quotes.map((q) => {
       const providerScoreData = getProviderScore(q.id)
-      
+
       if (providerScoreData && providerScoreData.scoreBreakdown) {
         return {
           ...q,
@@ -109,7 +126,6 @@ export const useRemittanceApi = () => {
         }
       }
 
-      // Fallback to calculated scores if no review score exists
       const costScore = recMax === recMin ? 1 : (q.recipientGets - recMin) / (recMax - recMin)
       const speedHrs = etaToHours(q.delivery)
       const speedScore = speedMax === speedMin ? 1 : (speedMax - speedHrs) / (speedMax - speedMin)
@@ -134,7 +150,6 @@ export const useRemittanceApi = () => {
     })
   }
 
-  // Format helpers
   const formatMoney = (amount: number, currency = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -144,7 +159,7 @@ export const useRemittanceApi = () => {
   }
 
   const formatRate = (rate: number, from = 'USD', to = 'PHP') => {
-    return `1 ${from} → ${rate.toFixed(4)} ${to}`
+    return `1 ${from} -> ${rate.toFixed(4)} ${to}`
   }
 
   const getRelativeTime = (date: string) => {
@@ -171,4 +186,3 @@ export const useRemittanceApi = () => {
     DEFAULT_WEIGHTS,
   }
 }
-

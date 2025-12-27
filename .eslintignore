@@ -1,5 +1,5 @@
 # Ignore the Golden Rule test file in normal lint runs (we will lint it separately in a controlled way)
-plane-a-product/ForbiddenImport.test.js
+backend/plane-a/ForbiddenImport.test.js
 
 # Ignore any secrets or local env files
 secrets/**

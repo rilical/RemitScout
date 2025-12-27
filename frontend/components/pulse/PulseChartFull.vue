@@ -171,7 +171,7 @@
 import { ref, computed, watch, onMounted, markRaw } from 'vue'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
-import { getChartData, getMethodCoverage } from '~/lib/pulseMockApi'
+import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
 import PulseLineChart from './PulseLineChart.vue'
 import PulseBarChart from './PulseBarChart.vue'
 import PulseStackedChart from './PulseStackedChart.vue'

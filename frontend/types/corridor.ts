@@ -2,7 +2,7 @@
  * Corridor Comparison API Response Types
  * 
  * These types match the server response for /api/compare endpoints.
- * See: frontend/mocks/corridor-comparison.json for example data.
+ * See the backend API schema for concrete response examples.
  */
 
 // Provider types
@@ -458,5 +458,4 @@ export function flattenQuotes(providerQuotes: ProviderQuote[]): FlattenedQuote[]
   
   return flattened.sort((a, b) => a.rank - b.rank)
 }
-
 

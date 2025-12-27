@@ -109,7 +109,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { BankComparisonData } from '~/types/remit'
-import { getBankComparisonData } from '~/lib/pulseMockApi'
+import { getBankComparisonData } from '~/lib/pulseApi'
 
 const store = usePulseStore()
 

@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getPulseEventFeed } from '~/lib/pulseMockApi'
+import { getPulseEventFeed } from '~/lib/pulseApi'
 import type { PulseEventItem } from '~/types/pulse'
 
 const store = usePulseStore()

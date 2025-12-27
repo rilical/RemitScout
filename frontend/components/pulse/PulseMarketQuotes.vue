@@ -124,7 +124,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getMarketSnapshot, getCurrencySymbol, type MarketSnapshotData } from '~/lib/pulseMockApi'
+import { getMarketSnapshot, getCurrencySymbol, type MarketSnapshotData } from '~/lib/pulseApi'
 
 const store = usePulseStore()
 

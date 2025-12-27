@@ -158,7 +158,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { getHeroChartData, type HeroChartData } from '~/lib/pulseMockApi'
+import { getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
 import { POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])

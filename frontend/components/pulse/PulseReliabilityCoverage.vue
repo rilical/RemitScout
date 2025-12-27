@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getMethodCoverage, getChartData, getPulseCoverageSummary } from '~/lib/pulseMockApi'
+import { getMethodCoverage, getChartData, getPulseCoverageSummary } from '~/lib/pulseApi'
 import type { MethodCoverageRow, PulseCoverageSummary } from '~/types/pulse'
 
 const store = usePulseStore()

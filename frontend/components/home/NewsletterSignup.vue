@@ -54,10 +54,13 @@
 </template>
 
 <script setup lang="ts">
+import { useApi } from '~/composables/useApi'
+
 const email = ref('')
 const isSubmitting = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const { request } = useApi()
 
 const handleSubmit = async () => {
   if (!email.value) return
@@ -67,11 +70,10 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    // TODO: CRITICAL - Replace with actual ESP/marketing endpoint before production
-    // This currently simulates signup but doesn't actually save the email
-    // Integrate with: Mailchimp, ConvertKit, SendGrid, or your preferred ESP
-    // Example: await fetch('/api/newsletter/subscribe', { method: 'POST', body: JSON.stringify({ email: email.value }) })
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await request('/newsletter/subscribe', {
+      method: 'POST',
+      body: { email: email.value },
+    })
 
     successMessage.value = '🎉 Thanks for subscribing! Check your inbox for confirmation.'
     email.value = ''

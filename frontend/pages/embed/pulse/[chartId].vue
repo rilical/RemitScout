@@ -95,7 +95,7 @@ import { ref, computed, onMounted, markRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 import { getChartById } from '~/lib/pulseChartRegistry'
-import { getChartData, getMethodCoverage, getCorridorBySlug } from '~/lib/pulseMockApi'
+import { getChartData, getMethodCoverage, getCorridors, getCorridorBySlug } from '~/lib/pulseApi'
 import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
 import PulseBarChart from '~/components/pulse/PulseBarChart.vue'
 import PulseStackedChart from '~/components/pulse/PulseStackedChart.vue'
@@ -119,6 +119,8 @@ const filters = ref<PulseFilters>({
   fundingMethod: (route.query.fund as 'bank' | 'card' | 'cash') || 'bank',
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
 })
+
+await useAsyncData('pulse-corridors', () => getCorridors())
 
 const loading = ref(true)
 const chartData = ref<ChartData | null>(null)
@@ -196,7 +198,6 @@ useHead({
   },
 })
 </script>
-
 
 
 

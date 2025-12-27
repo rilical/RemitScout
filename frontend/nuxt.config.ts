@@ -57,6 +57,8 @@ export default defineNuxtConfig({
 
   // Runtime Configuration
   runtimeConfig: {
+    // Server-only backend base URL for BFF proxying (must be absolute).
+    apiBase: process.env.API_BASE || process.env.PUBLIC_API_BASE || '',
     public: {
       siteUrl: process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com',
       apiBase: process.env.PUBLIC_API_BASE || '/api',

@@ -161,7 +161,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { ArbitrageOpportunity } from '~/types/remit'
-import { getArbitrageOpportunities } from '~/lib/pulseMockApi'
+import { getArbitrageOpportunities } from '~/lib/pulseApi'
 
 const store = usePulseStore()
 

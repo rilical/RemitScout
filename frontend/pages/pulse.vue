@@ -762,7 +762,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseTimeframe, PulseCoverageSummary } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary } from '~/lib/pulseMockApi'
+import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary } from '~/lib/pulseApi'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor } from '~/stores/pulse'
 import { COUNTRIES, getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies'

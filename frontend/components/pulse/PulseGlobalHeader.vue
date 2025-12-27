@@ -138,7 +138,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { usePulseStore, POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
-import { getPulseCoverageSummary } from '~/lib/pulseMockApi'
+import { getPulseCoverageSummary } from '~/lib/pulseApi'
 import type { PulseCoverageSummary } from '~/types/pulse'
 
 const store = usePulseStore()

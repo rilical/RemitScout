@@ -138,17 +138,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useApi } from '~/composables/useApi'
 
 const route = useRoute()
 const _sessionId = route.query.session_id as string | undefined
+const { request } = useApi()
 
-// TODO: Verify the Stripe session on your backend
-// if (_sessionId) {
-//   await $fetch('/api/stripe/verify-session', {
-//     method: 'POST',
-//     body: { sessionId: _sessionId }
-//   })
-// }
+if (_sessionId) {
+  try {
+    await request('/stripe/verify-session', {
+      method: 'POST',
+      body: { sessionId: _sessionId },
+    })
+  } catch (error) {
+    console.warn('Stripe verification failed:', error)
+  }
+}
 
 const nextBillingDate = computed(() => {
   const date = new Date()
@@ -167,8 +172,6 @@ useHead({
   ],
 })
 </script>
-
-
 
 
 

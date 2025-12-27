@@ -114,7 +114,7 @@ import {
 } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { usePulseStore } from '~/stores/pulse'
-import { getHeroChartData, type HeroChartData } from '~/lib/pulseMockApi'
+import { getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
 
 use([
   CanvasRenderer,

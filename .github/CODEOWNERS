@@ -1,0 +1,7 @@
+# Default owners (update to your team/handle).
+* @rilical
+
+# Plane-specific ownership for compliance-sensitive areas.
+/backend/plane-b/ @rilical
+/backend/plane-c/ @rilical
+/backend/storage/bronze/ @rilical

@@ -13,10 +13,10 @@ module.exports = {
   settings: {
     "boundaries/elements": [
       // Define our architectural element patterns and tag them with scopes.
-      { pattern: "plane-a-product/**", tags: ["scope:plane-a-product"] },
-      { pattern: "plane-b-ingestion/**", tags: ["scope:plane-b-ingestion"] },
-      { pattern: "plane-c-publishing/**", tags: ["scope:plane-c-publishing"] },
-      { pattern: "storage/bronze/**", tags: ["scope:bronze", "scope:storage-bronze"] }
+      { pattern: "backend/plane-a/**", tags: ["scope:plane-a-product"] },
+      { pattern: "backend/plane-b/**", tags: ["scope:plane-b-ingestion"] },
+      { pattern: "backend/plane-c/**", tags: ["scope:plane-c-publishing"] },
+      { pattern: "backend/storage/bronze/**", tags: ["scope:bronze", "scope:storage-bronze"] }
       // Patterns can be adjusted once actual folder structure is set in Phase 1.
     ],
     "boundaries/ignore": [

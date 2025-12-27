@@ -126,7 +126,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getProviderHeatmapData, type ProviderHeatmapData, type ProviderHeatmapDay } from '~/lib/pulseMockApi'
+import { getProviderHeatmapData, type ProviderHeatmapData, type ProviderHeatmapDay } from '~/lib/pulseApi'
 import { PROVIDER_COLORS } from '~/lib/pulseChartRegistry'
 
 const store = usePulseStore()

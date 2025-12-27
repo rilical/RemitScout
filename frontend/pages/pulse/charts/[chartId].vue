@@ -278,7 +278,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import type { PulseFilters, TimeRange } from '~/types/pulse'
 import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
-import { getPulseOverview } from '~/lib/pulseMockApi'
+import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
 
 const route = useRoute()

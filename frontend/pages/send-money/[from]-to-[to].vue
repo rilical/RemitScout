@@ -198,6 +198,13 @@
           </div>
         </div>
 
+        <div
+          v-else-if="hasApiError"
+          class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        >
+          Live quotes are unavailable right now. Please try again shortly.
+        </div>
+
         <div v-else-if="content.table.rows.length" class="space-y-4">
           <template v-for="(row, index) in sortedProviders" :key="row.provider">
             <div
@@ -669,7 +676,7 @@ import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
 
 const { isPlus } = useEntitlements()
-const { attachRatings, formatMoney, formatRate, getRelativeTime } = useRemittanceApi()
+const { attachRatings, formatMoney, formatRate, getRelativeTime, useProviders } = useRemittanceApi()
 
 defineRouteRules({ swr: 60 })
 
@@ -801,23 +808,13 @@ if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) 
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
 
-const { data: quotesData, pending: quotesPending } = await useFetch<{
-  data: ProviderQuote[]
-  updatedAt: string
-  corridor: string
-  amount: number
-  method: string
-}>('/api/providers', {
-  key: route.fullPath,
-  server: true,
-  lazy: false,
-  query: {
-    from: fromCountryCode.value,
-    to: toCountryCode.value,
-    amount: initialAmount,
-    method: initialMethod,
-  },
-})
+const { data: quotesData, pending: quotesPending, error: quotesError } = await useProviders(
+  fromCountryCode.value,
+  toCountryCode.value,
+  initialAmount,
+  initialMethod,
+  { key: route.fullPath, server: true, lazy: false },
+)
 
 const corridorContent: Record<string, CorridorContent> = {
   'united-states-jordan': {
@@ -993,7 +990,8 @@ const providerQuotes = computed(() => (quotesData.value?.data || []) as Provider
 const ratedQuotes = computed(() => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>)
 const apiUpdatedAt = computed(() => quotesData.value?.updatedAt)
 const apiUpdatedLabel = computed(() => (apiUpdatedAt.value ? getRelativeTime(apiUpdatedAt.value) : ''))
-const hasApiPayload = computed(() => Array.isArray(quotesData.value?.data))
+const hasApiPayload = computed(() => Array.isArray(quotesData.value?.data) && !quotesError.value)
+const hasApiError = computed(() => !!quotesError.value)
 const fromCurrencyCode = computed(() => (baseContent.value.fromCode || resolveCurrency(canonicalFrom.value) || 'USD').toUpperCase())
 const toCurrencyCode = computed(() => (baseContent.value.toCode || resolveCurrency(canonicalTo.value) || 'XXX').toUpperCase())
 

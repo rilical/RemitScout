@@ -120,7 +120,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { PulseFilters, AmountBucket, FundingMethod, PayoutMethod } from '~/types/pulse'
-import { getCorridors, getCorridorBySlug } from '~/lib/pulseMockApi'
+import { getCorridors, getCorridorBySlug } from '~/lib/pulseApi'
 
 interface Props {
   modelValue: PulseFilters
@@ -136,7 +136,8 @@ const emit = defineEmits<{
 const route = useRoute()
 const router = useRouter()
 
-const corridors = getCorridors()
+const { data: corridorData } = await useAsyncData('pulse-corridors', () => getCorridors())
+const corridors = computed(() => corridorData.value || [])
 
 const localFilters = ref<PulseFilters>({ ...props.modelValue })
 
@@ -207,7 +208,6 @@ onMounted(() => {
   syncFromUrl()
 })
 </script>
-
 
 
 

@@ -174,7 +174,7 @@ import { GaugeChart } from 'echarts/charts'
 import { TitleComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { usePulseStore } from '~/stores/pulse'
-import { getSmartSendData, type SmartSendData, type SmartSendLevel } from '~/lib/pulseMockApi'
+import { getSmartSendData, type SmartSendData, type SmartSendLevel } from '~/lib/pulseApi'
 
 use([CanvasRenderer, GaugeChart, TitleComponent, TooltipComponent])
 

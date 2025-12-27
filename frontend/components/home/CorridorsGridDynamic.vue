@@ -15,7 +15,10 @@
       </div>
 
       <!-- Country Slider/Carousel - 3 per slide -->
-      <div class="relative overflow-hidden">
+      <div
+        v-if="hasCorridors"
+        class="relative overflow-hidden"
+      >
         <div
           ref="sliderRef"
           class="flex gap-4 transition-transform duration-500 ease-in-out"
@@ -141,6 +144,15 @@
           </button>
         </div>
       </div>
+
+      <div
+        v-else
+        class="rounded-xl border border-neutral-200 bg-white p-6 text-center text-sm text-neutral-600"
+      >
+        <p v-if="pending">Loading corridor data...</p>
+        <p v-else-if="error">Corridor data is unavailable right now.</p>
+        <p v-else>No corridor data is available yet.</p>
+      </div>
     </div>
   </section>
 </template>
@@ -159,7 +171,8 @@ const emit = defineEmits<{
   'corridor-selected': [data: { from: string, to: string }]
 }>()
 
-const { data, pending } = await useRemittanceApi().usePopularCorridors()
+const config = useRuntimeConfig()
+const { data, pending, error } = await useRemittanceApi().usePopularCorridors()
 
 const defaultCorridors = [
   { route: 'US→PH', from: 'US', to: 'PH', count24h: 142 },
@@ -179,15 +192,21 @@ const parseRoute = (route: string) => {
 
 const corridors = computed(() => {
   const apiData = data.value as any
-  if (!apiData?.data || apiData.data.length === 0) {
+  if (apiData?.data?.length) {
+    return apiData.data.map((c: any) => ({
+      ...c,
+      ...parseRoute(c.route),
+    }))
+  }
+
+  if (config.public.devControls) {
     return defaultCorridors
   }
 
-  return apiData.data.map((c: any) => ({
-    ...c,
-    ...parseRoute(c.route),
-  }))
+  return []
 })
+
+const hasCorridors = computed(() => corridors.value.length > 0)
 
 const totalSlides = computed(() => {
   return Math.ceil(corridors.value.length / itemsPerSlide)

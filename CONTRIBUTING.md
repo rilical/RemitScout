@@ -17,7 +17,7 @@ Every change must be evaluated against our core architectural and policy require
   - *Plane C changes:* Verify any new outputs follow the Gold Publisher protocol (only derived, aggregated data leaves Plane C) and meet publishing thresholds (e.g. N>=3 anonymity rule).
 
 - **Does this change touch Bronze (raw data)?**
-  Any code path reading or writing raw Bronze data demands scrutiny. Plane A services must never directly read Bronze. Plane B can, but those raw artifacts must stay internal (no exposure to users). If your change requires an exception, flag it for security review before merging. Often, a redesign is needed rather than violating this rule.
+  Any code path reading or writing raw Bronze data demands scrutiny. Plane A services must never directly read Bronze. Plane B can, but those raw artifacts must stay internal (no exposure to users). If your change requires an exception, it must be documented in an ADR and approved via security review before merging. Often, a redesign is needed rather than violating this rule.
 
 - **Are Data Rights and Governance updated?**
   If you introduce a new data provider, feature, or change how data is used, update the Data Rights Matrix and any relevant policies. For example, if a new provider's data will be collected or published, ensure there are corresponding Allowed_Collect / Allowed_B2C / Allowed_B2B entries and they are approved. Any change to compliance-related configurations (entitlements, thresholds) might also require an ADR and review by the compliance officer.
@@ -28,8 +28,20 @@ Every change must be evaluated against our core architectural and policy require
 
 ## Coding Standards
 - Follow the established project structure (monorepo organized by plane and service). Place code in the correct directory for its plane/scope.
-- Run `npm run lint` and fix any issues before pushing. Our ESLint will catch forbidden imports or other scope violations.
+- Run `pnpm -C . lint`, `pnpm -C frontend lint`, and `pnpm -C backend lint` and fix any issues before pushing. Our ESLint will catch forbidden imports or other scope violations.
 - Write clear commit messages, and consider linking to ADRs or issues when a commit implements a particular decision or requirement.
+
+## Commit Signing (SSH)
+Signed commits are required on `main`. The easiest way on macOS is SSH signing:
+
+```
+ssh-keygen -t ed25519 -C "you@example.com"
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+```
+
+Upload the public key to GitHub as a signing key. After that, every commit will be signed by default.
 
 ## Contributor License Agreement (CLA)
 (If applicable, mention CLA or any legalities for external contributors.)

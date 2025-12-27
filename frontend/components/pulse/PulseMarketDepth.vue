@@ -146,7 +146,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { MarketDepth } from '~/types/remit'
-import { getMarketDepthData } from '~/lib/pulseMockApi'
+import { getMarketDepthData } from '~/lib/pulseApi'
 
 const store = usePulseStore()
 

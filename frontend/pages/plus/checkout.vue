@@ -216,6 +216,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useApi } from '~/composables/useApi'
 
 const form = ref({
   email: '',
@@ -227,19 +228,20 @@ const form = ref({
 })
 
 const processing = ref(false)
+const { request } = useApi()
 
 async function handleCheckout() {
   processing.value = true
 
   try {
     // Create Stripe Checkout Session via your backend API
-    const response = await $fetch('/api/stripe/create-checkout', {
+    const response = await request<{ url?: string }>('/stripe/create-checkout', {
       method: 'POST',
       body: {
         plan: 'plus',
         successUrl: `${window.location.origin}/plus/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${window.location.origin}/plus/failed`
-      }
+        cancelUrl: `${window.location.origin}/plus/failed`,
+      },
     })
     
     // Redirect to Stripe Checkout
@@ -248,10 +250,9 @@ async function handleCheckout() {
     } else {
       throw new Error('No checkout URL returned')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Checkout error:', error)
-    // If API doesn't exist yet, show helpful message
-    if (error.statusCode === 404 || error.message?.includes('fetch')) {
+    if (error?.statusCode === 404 || error?.message?.includes('fetch')) {
       alert('Stripe integration pending. Please contact support to upgrade to Plus.')
       navigateTo('/contact')
     } else {
@@ -269,7 +270,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

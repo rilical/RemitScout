@@ -91,19 +91,19 @@
             </p>
             <div class="space-y-4">
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <code class="text-sm font-mono text-brand-600">GET /api/v1/compare</code>
+                <code class="text-sm font-mono text-brand-600">GET {{ apiBase }}/compare</code>
                 <p class="text-sm text-neutral-700 mt-2">
                   Get live comparison results for a specific corridor and amount.
                 </p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <code class="text-sm font-mono text-brand-600">GET /api/v1/providers</code>
+                <code class="text-sm font-mono text-brand-600">GET {{ apiBase }}/providers</code>
                 <p class="text-sm text-neutral-700 mt-2">
                   Retrieve provider information, Remit-Scores, and metadata.
                 </p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <code class="text-sm font-mono text-brand-600">GET /api/v1/rates/history</code>
+                <code class="text-sm font-mono text-brand-600">GET {{ apiBase }}/rates/history</code>
                 <p class="text-sm text-neutral-700 mt-2">
                   Access historical rate data for trend analysis and charting.
                 </p>
@@ -272,6 +272,7 @@ const breadcrumbItems = [
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const apiBase = runtimeConfig?.public?.apiBase || '/api'
 
 setSeo({
   title: 'Embed Remit-Scout on Your Site: Widgets, API, and Editorial Independence | Remit-Scout',
@@ -285,7 +286,6 @@ jsonLdBreadcrumb([
   { name: 'For Publishers', url: `${siteUrl}/learn/embed-remit-scout-on-your-site` },
 ])
 </script>
-
 
 
 

@@ -494,6 +494,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import { useApi } from '~/composables/useApi'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import JsonLdWebSiteSearch from '~/components/seo/JsonLdWebSiteSearch.vue'
 import { SITE_STATS } from '~/config/stats'
@@ -523,6 +524,7 @@ const formSuccess = ref<string>('')
 const currentMobileStep = ref(1)
 
 const { recordSearch, useRecentSearches } = useRemittanceApi()
+const { request } = useApi()
 
 const familiesHelped = ref(1250)
 
@@ -781,10 +783,10 @@ const activeRouteDur = computed(() => {
 
 const detectUserLocation = async () => {
   try {
-    const response = await fetch('https://ipapi.co/json/')
-    const data = await response.json()
-    if (data.country_code) {
-      const countryCode = data.country_code.toUpperCase()
+    const data = await request<{ countryCode?: string, country_code?: string }>('/geo')
+    const rawCode = data.countryCode || data.country_code || ''
+    if (rawCode) {
+      const countryCode = rawCode.toUpperCase()
       const country = getCountryByCode(countryCode)
 
       if (country) {

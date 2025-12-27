@@ -1,4 +1,5 @@
 import { COUNTRIES, getCountryByCode } from '~/utils/countries-currencies'
+import { useApi } from '~/composables/useApi'
 
 export const useCountries = () => {
   const countries = ref(COUNTRIES)
@@ -36,16 +37,6 @@ export const useCountries = () => {
 }
 
 export const useCountry = (code: string) => {
-  return useLazyAsyncData(`country-${code}`, async () => {
-    // Mock country data
-    return {
-      code,
-      name: code === 'US' ? 'United States' : code === 'UK' ? 'United Kingdom' : 'Country',
-      currency: 'USD',
-      providers: 15,
-      avgTransferTime: '1-2 business days',
-      bankingHours: '9:00 AM - 5:00 PM',
-      weekendProcessing: 'Limited',
-    }
-  })
+  const { request } = useApi()
+  return useAsyncData(`country-${code}`, () => request(`/countries/${code}`))
 }
