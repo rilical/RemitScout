@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { createPool } from '../../../shared/db'
+import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { requireAuth } from '../plugins/auth-plugin'
 import { upsertUserAccount } from '../services/user-account'
@@ -7,7 +7,7 @@ import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { getUsageForUser } from '../services/plan-usage'
 
-const planeAPool = createPool(config.db.planeAUrl)
+const planeAPool = getPool(config.db.planeAUrl)
 
 export const meRoutes = async (app: FastifyInstance) => {
   app.get('/api/me', { preHandler: requireAuth() }, async (request, reply) => {

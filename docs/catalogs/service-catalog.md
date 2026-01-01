@@ -2,6 +2,7 @@
 | --- | --- | --- | --- | --- | --- |
 | Plane A API | A | Public API surface for compare and discovery. | TBD | Fastify | Runs in backend/plane-a. |
 | Plane B Ingestion Worker | B | Seed ingestion and future collectors. | TBD | Node script | Runs in backend/plane-b. |
+| Plane B Provider Collectors | B | Provider collectors and scheduler for B2B sweeps and refreshes. | TBD | Node script | Runs in backend/plane-b/src/providers. |
 | Plane C Pulse Service | C | Pulse analytics API surface. | TBD | Fastify | Runs in backend/plane-c. |
 | Gold Publisher/Aggregator | C | Batch aggregation and publish gates. | TBD | Batch job | Gold-only outputs. |
 | Export Worker | C | Generates export files from Gold. | TBD | Worker | Gold-only export. |

@@ -1,0 +1,38 @@
+{
+  "estimate": {
+    "conduit": {
+      "source_country": "GBR",
+      "source_currency": {
+        "alpha3": "GBP",
+        "decimal_count": 2,
+        "name": "Pound Sterling"
+      },
+      "target_country": "IND",
+      "target_currency": {
+        "alpha3": "INR",
+        "decimal_count": 2,
+        "name": "Indian Rupee"
+      }
+    },
+    "discount": {
+      "fee_discount_amount": "1.99",
+      "send_discount_amount": "0.00"
+    },
+    "exchange_rate": {
+      "base_rate": "120.90",
+      "capped_promotional_exchange_rate_amount": "1000.00",
+      "promotional_exchange_rate": "122.35"
+    },
+    "fee": {
+      "total_fee_amount": "1.99"
+    },
+    "pay_in_method": "OPEN_BANKING",
+    "pay_out_method": "",
+    "receive_amount": "12235.00",
+    "send_amount": "100.00",
+    "tax_details": null,
+    "total_charge_amount": "100.00",
+    "vet": null
+  },
+  "pay_out_price_estimates": null
+}

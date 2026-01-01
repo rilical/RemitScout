@@ -7,7 +7,20 @@ export const createPool = (connectionString?: string) => {
   })
 }
 
-export const pool = createPool()
+const poolCache = new Map<string, Pool>()
+
+export const getPool = (connectionString?: string) => {
+  const key = connectionString || config.db.url
+  const existing = poolCache.get(key)
+  if (existing) {
+    return existing
+  }
+  const pool = createPool(key)
+  poolCache.set(key, pool)
+  return pool
+}
+
+export const pool = getPool()
 
 export const query = async <T = any>(text: string, params: any[] = [], poolInstance: Pool = pool) => {
   const result = await poolInstance.query<T>(text, params)

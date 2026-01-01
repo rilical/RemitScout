@@ -1,12 +1,12 @@
 import type { FastifyInstance } from 'fastify'
 import { createHash } from 'crypto'
 import Stripe from 'stripe'
-import { createPool } from '../../../../shared/db'
+import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { getStripeClient } from '../../services/stripe-client'
 import { updatePlanFromStripe } from '../../services/user-plan'
 
-const planeAPool = createPool(config.db.planeAUrl)
+const planeAPool = getPool(config.db.planeAUrl)
 
 const hashPayload = (payload: Buffer) => {
   return createHash('sha256').update(payload).digest('hex')

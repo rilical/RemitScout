@@ -41,6 +41,42 @@ paths:
                     type: string
                   count:
                     type: integer
+                  requested_amount:
+                    type: number
+                  bucket_used:
+                    type: integer
+                  fee_bucket_used:
+                    type: integer
+                  approximate:
+                    type: boolean
+                  cache:
+                    type: object
+                    properties:
+                      ttl_seconds:
+                        type: integer
+                      age_seconds:
+                        type: integer
+                        nullable: true
+                      fresh:
+                        type: boolean
+                  refresh:
+                    type: object
+                    properties:
+                      attempted:
+                        type: boolean
+                      enqueued:
+                        type: boolean
+                      request_id:
+                        type: string
+                        nullable: true
+                      request_ids:
+                        type: array
+                        items:
+                          type: string
+                      providers:
+                        type: array
+                        items:
+                          type: string
                   quotes:
                     type: array
                     items:
@@ -56,6 +92,16 @@ paths:
                           type: string
                         payout:
                           type: string
+                        payin_method:
+                          type: string
+                        payout_method:
+                          type: string
+                        delivery_time_min_minutes:
+                          type: integer
+                          nullable: true
+                        delivery_time_max_minutes:
+                          type: integer
+                          nullable: true
                         collected_at:
                           type: string
                         send_amount:
@@ -66,6 +112,15 @@ paths:
                           type: number
                         implied_fx_rate:
                           type: number
+                        promotional_rate:
+                          type: number
+                          nullable: true
+                        base_rate:
+                          type: number
+                          nullable: true
+                        promotional_cap_amount:
+                          type: number
+                          nullable: true
                         quality_flags:
                           type: object
                         updated_at:

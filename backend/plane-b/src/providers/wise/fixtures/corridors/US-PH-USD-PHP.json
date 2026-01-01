@@ -1,0 +1,1082 @@
+{
+    "sourceAmount": 100.0,
+    "guaranteedTargetAmountAllowed": false,
+    "targetAmountAllowed": true,
+    "paymentOptions": [
+        {
+            "formattedEstimatedDelivery": "by Tuesday",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0755,
+            "estimatedDelivery": "2025-12-30T15:20:00Z",
+            "payIn": "BANK_TRANSFER",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 7.55,
+                        "currency": "USD",
+                        "label": "7.55 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 6.11,
+                            "currency": "USD",
+                            "label": "6.11 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 6.11,
+                "discount": 0,
+                "total": 7.55,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5440.41,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0269,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "DEBIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 2.69,
+                        "currency": "USD",
+                        "label": "2.69 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 1.23,
+                            "currency": "USD",
+                            "label": "1.23 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 1.23,
+                "discount": 0,
+                "total": 2.69,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5726.4,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.076,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "CREDIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 7.6,
+                        "currency": "USD",
+                        "label": "7.60 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 6.16,
+                            "currency": "USD",
+                            "label": "6.16 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 6.16,
+                "discount": 0,
+                "total": 7.6,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5437.46,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0632,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "INTERNATIONAL_DEBIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 6.32,
+                        "currency": "USD",
+                        "label": "6.32 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 4.88,
+                            "currency": "USD",
+                            "label": "4.88 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 4.88,
+                "discount": 0,
+                "total": 6.32,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5512.79,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0764,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "MC_BUSINESS_CREDIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 7.64,
+                        "currency": "USD",
+                        "label": "7.64 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 6.2,
+                            "currency": "USD",
+                            "label": "6.20 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 6.2,
+                "discount": 0,
+                "total": 7.64,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5435.11,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0269,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "MC_DEBIT_OR_PREPAID",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 2.69,
+                        "currency": "USD",
+                        "label": "2.69 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 1.23,
+                            "currency": "USD",
+                            "label": "1.23 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 1.23,
+                "discount": 0,
+                "total": 2.69,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5726.4,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0269,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "CARD",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 2.69,
+                        "currency": "USD",
+                        "label": "2.69 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 1.23,
+                            "currency": "USD",
+                            "label": "1.23 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 1.23,
+                "discount": 0,
+                "total": 2.69,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5726.4,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0269,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "MAESTRO",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 2.69,
+                        "currency": "USD",
+                        "label": "2.69 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 1.23,
+                            "currency": "USD",
+                            "label": "1.23 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 1.23,
+                "discount": 0,
+                "total": 2.69,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5726.4,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0443,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "INT_DEBIT_WITH_EUROPEAN_CARD",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 4.43,
+                        "currency": "USD",
+                        "label": "4.43 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 2.97,
+                            "currency": "USD",
+                            "label": "2.97 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 2.97,
+                "discount": 0,
+                "total": 4.43,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5624.01,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0443,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "INT_CREDIT_WITH_EUROPEAN_CARD",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 4.43,
+                        "currency": "USD",
+                        "label": "4.43 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 2.97,
+                            "currency": "USD",
+                            "label": "2.97 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 2.97,
+                "discount": 0,
+                "total": 4.43,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5624.01,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0301,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "VISA_BUSINESS_DEBIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 3.01,
+                        "currency": "USD",
+                        "label": "3.01 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 1.55,
+                            "currency": "USD",
+                            "label": "1.55 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 1.55,
+                "discount": 0,
+                "total": 3.01,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5707.57,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0269,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "VISA_DEBIT_OR_PREPAID",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 2.69,
+                        "currency": "USD",
+                        "label": "2.69 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 1.23,
+                            "currency": "USD",
+                            "label": "1.23 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 1.23,
+                "discount": 0,
+                "total": 2.69,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5726.4,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.076,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "MC_CREDIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 7.6,
+                        "currency": "USD",
+                        "label": "7.60 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 6.16,
+                            "currency": "USD",
+                            "label": "6.16 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 6.16,
+                "discount": 0,
+                "total": 7.6,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5437.46,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0501,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "MC_BUSINESS_DEBIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 5.01,
+                        "currency": "USD",
+                        "label": "5.01 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 3.55,
+                            "currency": "USD",
+                            "label": "3.55 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.46,
+                            "currency": "USD",
+                            "label": "1.46 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.46,
+                "payIn": 3.55,
+                "discount": 0,
+                "total": 5.01,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5589.88,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0792,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "VISA_BUSINESS_CREDIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 7.92,
+                        "currency": "USD",
+                        "label": "7.92 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 6.48,
+                            "currency": "USD",
+                            "label": "6.48 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 6.48,
+                "discount": 0,
+                "total": 7.92,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5418.63,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0632,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "INTERNATIONAL_CREDIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 6.32,
+                        "currency": "USD",
+                        "label": "6.32 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 4.88,
+                            "currency": "USD",
+                            "label": "4.88 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 4.88,
+                "discount": 0,
+                "total": 6.32,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5512.79,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in 30 minutes",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0669,
+            "estimatedDelivery": "2025-12-29T22:41:50Z",
+            "payIn": "VISA_CREDIT",
+            "price": {
+                "priceSetId": 4733,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 6.69,
+                        "currency": "USD",
+                        "label": "6.69 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 5.25,
+                            "currency": "USD",
+                            "label": "5.25 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.44,
+                            "currency": "USD",
+                            "label": "1.44 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.44,
+                "payIn": 5.25,
+                "discount": 0,
+                "total": 6.69,
+                "priceSetId": 4733,
+                "partner": 0.0
+            },
+            "disabled": false,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5491.01,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        },
+        {
+            "formattedEstimatedDelivery": "in seconds",
+            "estimatedDeliveryDelays": [],
+            "allowedProfileTypes": [
+                "PERSONAL",
+                "BUSINESS"
+            ],
+            "feePercentage": 0.0116,
+            "estimatedDelivery": "2025-12-29T22:11:50Z",
+            "payIn": "BALANCE",
+            "price": {
+                "priceSetId": 4660,
+                "total": {
+                    "type": "TOTAL",
+                    "label": "Total fees",
+                    "value": {
+                        "amount": 1.16,
+                        "currency": "USD",
+                        "label": "1.16 USD"
+                    }
+                },
+                "items": [
+                    {
+                        "type": "PAYIN",
+                        "label": "fee",
+                        "value": {
+                            "amount": 0.0,
+                            "currency": "USD",
+                            "label": "0 USD"
+                        }
+                    },
+                    {
+                        "type": "TRANSFERWISE",
+                        "label": "Our fee",
+                        "value": {
+                            "amount": 1.16,
+                            "currency": "USD",
+                            "label": "1.16 USD"
+                        }
+                    }
+                ],
+                "priceDecisionReferenceId": "6db0aba4-8827-4a3e-d320-66d268663c3b"
+            },
+            "fee": {
+                "transferwise": 1.16,
+                "payIn": 0.0,
+                "discount": 0,
+                "total": 1.16,
+                "priceSetId": 4660,
+                "partner": 0.0
+            },
+            "disabledReason": {
+                "code": "error.payInmethod.disabled",
+                "message": "Sorry, using a multi currency account is currently not available in your country. Please choose another payment method.",
+                "arguments": []
+            },
+            "disabled": true,
+            "payOut": "BANK_TRANSFER",
+            "sourceAmount": 100.0,
+            "targetAmount": 5816.44,
+            "sourceCurrency": "USD",
+            "targetCurrency": "PHP"
+        }
+    ],
+    "notices": [],
+    "transferFlowConfig": {
+        "highAmount": {
+            "showFeePercentage": false,
+            "trackAsHighAmountSender": false,
+            "showEducationStep": false,
+            "offerPrefundingOption": false,
+            "overLimitThroughCs": false,
+            "overLimitThroughWiseAccount": false
+        }
+    },
+    "rateTimestamp": "2025-12-29T22:11:07Z",
+    "clientId": "unknown",
+    "rate": 58.847,
+    "createdTime": "2025-12-29T22:11:50Z",
+    "rateType": "FIXED",
+    "payOut": "BANK_TRANSFER",
+    "funding": "POST",
+    "guaranteedTargetAmount": false,
+    "sourceCurrency": "USD",
+    "targetCurrency": "PHP",
+    "rateExpirationTime": "2025-12-30T06:11:50Z",
+    "providedAmountType": "SOURCE",
+    "type": "REGULAR",
+    "expirationTime": "2025-12-29T22:41:50Z",
+    "status": "PENDING"
+}

@@ -2,13 +2,14 @@ import Fastify from 'fastify'
 import rateLimit from '@fastify/rate-limit'
 import { randomUUID } from 'crypto'
 import { config } from '../../shared/config'
-import { createPool } from '../../shared/db'
-import { authPlugin } from './plugins/auth-plugin'
+import { getPool } from '../../shared/db'
+import { authPlugin, requireAuth } from './plugins/auth-plugin'
 import { billingRoutes } from './routes/billing'
 import { meRoutes } from './routes/me'
 import { quotesRoutes } from './routes/quotes'
 import { pulseStatusRoutes } from './routes/pulse-status'
 import { popularCorridorsRoutes } from './routes/popular-corridors'
+import { opsRoutes } from './routes/ops'
 
 export const buildApp = () => {
   const app = Fastify({
@@ -25,9 +26,36 @@ export const buildApp = () => {
     },
   })
 
-  const planeAPool = createPool(config.db.planeAUrl)
+  const planeAPool = getPool(config.db.planeAUrl)
 
-  app.register(authPlugin)
+  authPlugin(app)
+  const accountRoutePrefixes = [
+    '/api/me',
+    '/api/billing',
+    '/api/pulse',
+    '/api/watchlist',
+    '/api/alerts',
+    '/api/history',
+    '/api/exports',
+    '/api/account',
+    '/api/dashboard',
+  ]
+  const authBypassPaths = new Set(['/api/billing/webhook'])
+  const accountAuth = requireAuth()
+
+  app.addHook('preHandler', async (request, reply) => {
+    if (request.method === 'OPTIONS') {
+      return
+    }
+    const path = request.url.split('?')[0]
+    if (authBypassPaths.has(path)) {
+      return
+    }
+    if (!accountRoutePrefixes.some((prefix) => path.startsWith(prefix))) {
+      return
+    }
+    return accountAuth(request, reply)
+  })
   app.register(rateLimit, {
     global: true,
     hook: 'preHandler',
@@ -71,6 +99,7 @@ export const buildApp = () => {
   app.register(meRoutes)
   app.register(billingRoutes)
   app.register(pulseStatusRoutes)
+  app.register(opsRoutes)
 
   return app
 }

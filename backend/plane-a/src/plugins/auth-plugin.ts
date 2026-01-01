@@ -1,11 +1,11 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { config } from '../../../shared/config'
-import { createPool } from '../../../shared/db'
+import { getPool } from '../../../shared/db'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 
-export const authPlugin = async (app: FastifyInstance) => {
+export const authPlugin = (app: FastifyInstance) => {
   app.addHook('preHandler', async (request: FastifyRequest) => {
     const header = request.headers.authorization
     if (!header) {
@@ -27,7 +27,20 @@ export const requireAuth = () => async (request: FastifyRequest, reply: FastifyR
   }
 }
 
-const planeAPool = createPool(config.db.planeAUrl)
+export const requireAdmin = () => async (request: FastifyRequest, reply: FastifyReply) => {
+  if (!request.user) {
+    reply.code(401)
+    return reply.send({ error: 'unauthorized' })
+  }
+
+  const email = request.user.email?.toLowerCase()
+  if (!email || !config.planeA.adminEmails.includes(email)) {
+    reply.code(403)
+    return reply.send({ error: 'forbidden' })
+  }
+}
+
+const planeAPool = getPool(config.db.planeAUrl)
 
 const isEntitled = (entitlement: string, entitlements: ReturnType<typeof getEntitlementsForPlan>) => {
   if (entitlement === 'pulse') {

@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import { createHash } from 'crypto'
-import { createPool } from '../../../shared/db'
+import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 
-const planeAPool = createPool(config.db.planeAUrl)
+const planeAPool = getPool(config.db.planeAUrl)
 
 export const popularCorridorsRoutes = async (app: FastifyInstance) => {
   app.get('/api/popular-corridors', async (request, reply) => {

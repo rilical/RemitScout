@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 
+vi.mock('../plane-a/src/auth/verify-supabase-jwt', () => ({
+  verifySupabaseJwt: vi.fn().mockResolvedValue({
+    user_id: '00000000-0000-0000-0000-000000000001',
+    email: 'u@test.com',
+    claims: {},
+  }),
+}))
+
 import { buildApp } from '../plane-a/src/app'
 
 const shouldRun = Boolean(process.env.DATABASE_URL_PLANE_A)
@@ -12,14 +20,6 @@ describe('GET /api/me', () => {
 
   it('returns plan and entitlements for authenticated user', async () => {
     const app = buildApp()
-    app.addHook('preHandler', (request, _reply, done) => {
-      request.user = {
-        user_id: '00000000-0000-0000-0000-000000000001',
-        email: 'u@test.com',
-        claims: {},
-      }
-      done()
-    })
     const response = await app.inject({
       method: 'GET',
       url: '/api/me',

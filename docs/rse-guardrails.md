@@ -5,7 +5,16 @@ TODO:
 TODO:
 
 ## Rights Matrix
-TODO:
+The rights matrix controls collection and usage permissions per provider. It is enforced
+by Plane B before collectors run and by Plane C publish gates for B2B outputs.
+
+Provider | allowed_collect | allowed_b2c | allowed_b2b | stoplist_status | collection_method | Notes
+--- | --- | --- | --- | --- | --- | ---
+remitly | true | true | true | active | http | seed:S3.0
+wise | true | true | true | active | http | seed:S3.0
+westernunion | true | true | true | active | http | seed:S3.0
+worldremit | true | true | true | active | http | seed:S3.0
+xe | true | true | true | active | http | seed:S3.0
 
 ## Derived-Only Publishing
 TODO:

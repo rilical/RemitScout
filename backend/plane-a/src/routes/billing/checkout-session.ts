@@ -1,11 +1,11 @@
 import type { FastifyInstance } from 'fastify'
-import { createPool } from '../../../../shared/db'
+import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan, updatePlanFromStripe } from '../../services/user-plan'
 
-const planeAPool = createPool(config.db.planeAUrl)
+const planeAPool = getPool(config.db.planeAUrl)
 
 export const checkoutSessionRoutes = async (app: FastifyInstance) => {
   app.post('/api/billing/checkout-session', { preHandler: requireAuth() }, async (request, reply) => {

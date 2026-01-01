@@ -2012,6 +2012,126 @@
           </div>
         </div>
 
+        <!-- Ops Tab -->
+        <div v-else-if="activeTab === 'ops'">
+          <div class="flex flex-col gap-4 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-slate-900">Ops Health</h2>
+                <p class="text-sm text-slate-500">Admin-only health probes for provider pipelines.</p>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                :disabled="opsRefreshing"
+                @click="refreshAllOps"
+              >
+                {{ opsRefreshing ? 'Refreshing...' : 'Refresh All' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div v-for="provider in opsProviders" :key="provider.id" class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-b border-slate-100">
+                <div>
+                  <div class="text-sm font-semibold text-slate-900">{{ provider.label }}</div>
+                  <div class="text-xs text-slate-500">Last update: {{ formatOpsTimestamp(opsState[provider.id]?.timestamp) }}</div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="text-xs text-slate-500">
+                    Stale {{ opsState[provider.id]?.summary?.stale_count ?? 0 }} / {{ opsState[provider.id]?.summary?.corridor_count ?? 0 }}
+                  </div>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-60"
+                    :disabled="opsLoading[provider.id]"
+                    @click="loadOpsHealth(provider.id)"
+                  >
+                    {{ opsLoading[provider.id] ? 'Refreshing...' : 'Refresh' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="opsLoading[provider.id]" class="px-6 py-6 text-sm text-slate-500">
+                Loading health data...
+              </div>
+              <div v-else-if="opsErrors[provider.id]" class="px-6 py-6 text-sm text-amber-800 bg-amber-50">
+                {{ opsErrors[provider.id] }}
+              </div>
+              <div v-else-if="!opsState[provider.id]" class="px-6 py-6 text-sm text-slate-500">
+                No health data loaded yet.
+              </div>
+              <div v-else>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 px-6 py-4 border-b border-slate-100 text-sm">
+                  <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">Corridors</div>
+                    <div class="font-semibold text-slate-900">{{ opsState[provider.id]?.summary?.corridor_count ?? 0 }}</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">Stale</div>
+                    <div class="font-semibold text-slate-900">{{ opsState[provider.id]?.summary?.stale_count ?? 0 }}</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">Fresh window (min)</div>
+                    <div class="font-semibold text-slate-900">{{ opsState[provider.id]?.summary?.fresh_window_minutes ?? 0 }}</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">Snapshot</div>
+                    <div class="font-semibold text-slate-900">{{ formatOpsTimestamp(opsState[provider.id]?.timestamp) }}</div>
+                  </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Corridor</th>
+                        <th class="px-4 py-3 text-left font-semibold">Attempt</th>
+                        <th class="px-4 py-3 text-left font-semibold">Quote age (min)</th>
+                        <th class="px-4 py-3 text-left font-semibold">Payin</th>
+                        <th class="px-4 py-3 text-left font-semibold">Payout</th>
+                        <th class="px-4 py-3 text-left font-semibold">Send</th>
+                        <th class="px-4 py-3 text-left font-semibold">Fee</th>
+                        <th class="px-4 py-3 text-left font-semibold">Promo fee</th>
+                        <th class="px-4 py-3 text-left font-semibold">Rate</th>
+                        <th class="px-4 py-3 text-left font-semibold">Delivery (min)</th>
+                        <th class="px-4 py-3 text-left font-semibold">Flags</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="corridor in opsState[provider.id]?.corridors" :key="corridor.corridor_id" class="border-t border-slate-100">
+                        <td class="px-4 py-3 font-medium text-slate-900">{{ corridor.corridor_id }}</td>
+                        <td class="px-4 py-3">
+                          <div class="font-medium" :class="attemptStatusClass(corridor.last_attempt_success)">
+                            {{ formatAttemptStatus(corridor.last_attempt_success) }}
+                          </div>
+                          <div class="text-xs text-slate-400">
+                            age {{ corridor.last_attempt_age_minutes ?? 'n/a' }} | http {{ corridor.last_attempt_http_status ?? 'n/a' }}
+                          </div>
+                        </td>
+                        <td class="px-4 py-3">{{ corridor.last_quote_age_minutes ?? 'n/a' }}</td>
+                        <td class="px-4 py-3">{{ corridor.payin ?? 'n/a' }}</td>
+                        <td class="px-4 py-3">{{ corridor.payout ?? 'n/a' }}</td>
+                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.send_amount) }}</td>
+                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.fee_amount) }}</td>
+                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.promotional_fee_amount) }}</td>
+                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.implied_fx_rate, 6) }}</td>
+                        <td class="px-4 py-3">
+                          {{ corridor.delivery_time_min_minutes ?? 'n/a' }} - {{ corridor.delivery_time_max_minutes ?? 'n/a' }}
+                        </td>
+                        <td class="px-4 py-3 text-xs text-slate-500">
+                          {{ formatOpsFlags(corridor.quality_flags) }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Account Tab -->
         <div v-else-if="activeTab === 'account'">
           <div class="flex flex-col lg:flex-row gap-8">
@@ -2645,7 +2765,7 @@ import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { COUNTRIES } from '~/utils/countries-currencies'
 
-type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'account'
+type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
 
 const tabs: { id: DashboardTab; label: string }[] = [
@@ -2653,6 +2773,7 @@ const tabs: { id: DashboardTab; label: string }[] = [
   { id: 'watchlist', label: 'Watchlist' },
   { id: 'alerts', label: 'Alerts' },
   { id: 'history', label: 'History' },
+  { id: 'ops', label: 'Ops' },
   { id: 'account', label: 'Account' },
 ]
 
@@ -2750,7 +2871,7 @@ const alertsLimitPercent = computed(() => {
 const activeTab = computed<DashboardTab>(() => {
   const raw = route.query.tab
   const tab = Array.isArray(raw) ? raw[0] : raw
-  if (tab === 'watchlist' || tab === 'alerts' || tab === 'history' || tab === 'account') return tab
+  if (tab === 'watchlist' || tab === 'alerts' || tab === 'history' || tab === 'ops' || tab === 'account') return tab
   return 'overview'
 })
 
@@ -2763,6 +2884,153 @@ function setTab(tab: DashboardTab) {
   }
   void navigateTo({ path: route.path, query: nextQuery })
 }
+
+type OpsProviderId = 'remitly' | 'westernunion' | 'worldremit' | 'xe' | 'wise'
+
+type OpsHealthCorridor = {
+  corridor_id: string
+  last_attempt_at: string | null
+  last_attempt_age_minutes: number | null
+  last_attempt_success: boolean | null
+  last_attempt_http_status: number | null
+  last_attempt_error_type: string | null
+  last_attempt_error_message: string | null
+  last_attempt_request: string | null
+  last_quote_at: string | null
+  last_quote_age_minutes: number | null
+  payin: string | null
+  payout: string | null
+  send_amount: number | null
+  fee_amount: number | null
+  promotional_fee_amount: number | null
+  total_debit_amount: number | null
+  receive_amount: number | null
+  implied_fx_rate: number | null
+  promotional_rate: number | null
+  base_rate: number | null
+  promotional_cap_amount: number | null
+  delivery_time_min_minutes: number | null
+  delivery_time_max_minutes: number | null
+  quality_flags: unknown
+  updated_at: string | null
+}
+
+type OpsHealthResponse = {
+  success: boolean
+  provider_id: string
+  timestamp: string
+  corridors: OpsHealthCorridor[]
+  summary: {
+    corridor_count: number
+    stale_count: number
+    fresh_window_minutes: number
+  }
+}
+
+const opsProviders = [
+  { id: 'remitly', label: 'Remitly', endpoint: '/api/ops/remitly/health' },
+  { id: 'westernunion', label: 'Western Union', endpoint: '/api/ops/westernunion/health' },
+  { id: 'worldremit', label: 'WorldRemit', endpoint: '/api/ops/worldremit/health' },
+  { id: 'xe', label: 'XE', endpoint: '/api/ops/xe/health' },
+  { id: 'wise', label: 'Wise', endpoint: '/api/ops/wise/health' },
+] as const
+
+const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>({
+  remitly: null,
+  westernunion: null,
+  worldremit: null,
+  xe: null,
+  wise: null,
+})
+const opsLoading = ref<Record<OpsProviderId, boolean>>({
+  remitly: false,
+  westernunion: false,
+  worldremit: false,
+  xe: false,
+  wise: false,
+})
+const opsErrors = ref<Record<OpsProviderId, string | null>>({
+  remitly: null,
+  westernunion: null,
+  worldremit: null,
+  xe: null,
+  wise: null,
+})
+const opsHasLoaded = ref(false)
+
+const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]))
+
+const formatOpsTimestamp = (value: string | null | undefined) => {
+  if (!value) return 'n/a'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'n/a'
+  return parsed.toLocaleString()
+}
+
+const formatOpsNumber = (value: number | null | undefined, digits = 2) => {
+  if (value === null || value === undefined) return 'n/a'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 'n/a'
+  return number.toLocaleString(undefined, { maximumFractionDigits: digits })
+}
+
+const formatOpsFlags = (value: unknown) => {
+  if (!value) return 'none'
+  if (Array.isArray(value)) return value.length ? value.join(', ') : 'none'
+  if (typeof value === 'string') return value
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return 'unknown'
+  }
+}
+
+const formatAttemptStatus = (success: boolean | null) => {
+  if (success === true) return 'ok'
+  if (success === false) return 'fail'
+  return 'n/a'
+}
+
+const attemptStatusClass = (success: boolean | null) => {
+  if (success === true) return 'text-emerald-600'
+  if (success === false) return 'text-red-600'
+  return 'text-slate-400'
+}
+
+const toOpsErrorMessage = (error: unknown) => {
+  const candidate = error as { statusCode?: number; status?: number; message?: string; data?: { message?: string } }
+  const status = candidate?.statusCode ?? candidate?.status
+  if (status === 401 || status === 403) {
+    return 'Admin access required to view ops health.'
+  }
+  return candidate?.data?.message ?? candidate?.message ?? 'Unable to load ops health.'
+}
+
+const loadOpsHealth = async (providerId: OpsProviderId) => {
+  const provider = opsProviders.find(item => item.id === providerId)
+  if (!provider) return
+  opsLoading.value[providerId] = true
+  opsErrors.value[providerId] = null
+  try {
+    const response = await $fetch<OpsHealthResponse>(provider.endpoint)
+    opsState.value[providerId] = response
+  } catch (error) {
+    opsErrors.value[providerId] = toOpsErrorMessage(error)
+  } finally {
+    opsLoading.value[providerId] = false
+  }
+}
+
+const refreshAllOps = async () => {
+  opsHasLoaded.value = true
+  await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
+}
+
+watch(() => activeTab.value, (tab) => {
+  if (tab === 'ops' && !opsHasLoaded.value) {
+    void refreshAllOps()
+  }
+})
 
 // Form state
 const newWatchlist = ref({ from: 'US', to: 'PH' })

@@ -14,7 +14,14 @@
     "test": "vitest run",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:seed": "tsx scripts/db-seed.ts",
-    "guardrail:test": "node scripts/bronze-access-check.js"
+    "guardrail:test": "node scripts/bronze-access-check.js",
+    "probe:remitly": "tsx scripts/remitly-probe.ts",
+    "probe:westernunion": "tsx scripts/westernunion-probe.ts",
+    "probe:worldremit": "tsx scripts/worldremit-probe.ts",
+    "probe:xe": "tsx scripts/xe-probe.ts",
+    "probe:wise": "tsx scripts/wise-probe.ts",
+    "observe:westernunion": "tsx scripts/westernunion-observe.ts",
+    "b2c:refresh-worker": "tsx scripts/b2c-refresh-worker.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.0",
@@ -22,8 +29,11 @@
     "@fastify/rate-limit": "^10.0.0",
     "fastify": "^5.0.0",
     "jose": "^6.1.3",
+    "nodemailer": "^7.0.12",
     "pg": "^8.12.0",
+    "redis": "^5.10.0",
     "stripe": "^20.1.0",
+    "undici": "^7.16.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

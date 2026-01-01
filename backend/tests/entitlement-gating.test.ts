@@ -15,7 +15,7 @@ import { buildApp } from '../plane-a/src/app'
 
 describe('entitlement gating', () => {
   beforeEach(() => {
-    vi.resetAllMocks()
+    vi.clearAllMocks()
   })
 
   it('denies free users', async () => {
