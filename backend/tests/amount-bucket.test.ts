@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeBucketSelection } from '../plane-b/src/normalize/amount-bucket'
+import { computeBucketSelection } from '../shared/amount-bucket'
 
 describe('computeBucketSelection', () => {
   it('returns nearest bucket and floor bucket', () => {

@@ -1,15 +1,9 @@
 import { Pool } from 'pg'
 import { AuthUser } from '../auth/types'
+import { UserAccountRepository } from '../repositories'
 
 export const upsertUserAccount = async (pool: Pool, user: AuthUser) => {
   const email = user.email || null
-  await pool.query(
-    `
-    INSERT INTO silver.user_account (user_id, email, last_seen_at)
-    VALUES ($1, $2, NOW())
-    ON CONFLICT (user_id)
-    DO UPDATE SET email = EXCLUDED.email, last_seen_at = NOW()
-    `,
-    [user.user_id, email]
-  )
+  const repo = new UserAccountRepository(pool)
+  await repo.upsertUserAccount({ user_id: user.user_id, email })
 }

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Pool } from 'pg'
 
-import { createPool, query } from '../../../../shared/db'
+import { createPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { detectBlock } from '../../collectors/block-detection'
@@ -16,7 +16,7 @@ import {
   finishIngestionRun,
   insertAttempt,
   insertOpsAlert,
-  loadObservedCorridors,
+  loadUnsupportedCorridors,
   markCorridorUnsupported,
   pauseProviderForBlock,
   persistNormalizedQuote,
@@ -30,16 +30,39 @@ import {
   penalizeRpmImmediately,
 } from '../../lib/redis-circuit-breaker'
 import { getProxyTierForCorridor, type ProxyTier } from '../../lib/proxy-router'
-import { dispatchSignal } from '../../signals/webhook-dispatcher'
+import { dispatchSignal } from '../../notifications/dispatcher'
 import { writeBronzePayload } from '../../collectors/bronze-writer'
 import { createScheduler } from '../../collectors/scheduler'
 import type { CollectorRequest } from '../../collectors/types'
+import { LatestQuoteRepository, ProviderCapabilityRepository } from '../../repositories'
 import { normalizeQuote } from '../../normalize/quote-normalizer'
 import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { WESTERNUNION_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
 import { fetchWesternUnionQuote } from './fetch'
 import { extractWesternUnionMethodPairs, parseWesternUnionPayload } from './parse'
+
+/**
+ * Western Union Collector
+ *
+ * This collector orchestrates the collection of money transfer quotes from Western Union's API.
+ * It handles rate limiting, circuit breaking, error recovery, and data persistence.
+ *
+ * Flow:
+ * 1. Initialize collector with options and resolve rate limits
+ * 2. For each corridor and amount bucket:
+ *    - Check freshness SLO (if enabled) to skip recent quotes
+ *    - Wait for rate limit slot via scheduler
+ *    - Fetch quote from Western Union API
+ *    - Write raw payload to bronze storage
+ *    - Detect blocks/rate limits and handle accordingly
+ *    - Parse provider-specific payload format
+ *    - Normalize to standard quote format
+ *    - Persist normalized quote to database
+ *    - Run anomaly detection and dispatch signals if needed
+ * 3. Apply rate limit penalties on errors, decay on success
+ * 4. Update RPM rates based on performance metrics
+ */
 
 type WesternUnionCollectorOptions = {
   pool?: Pool
@@ -56,6 +79,8 @@ type WesternUnionCollectorOptions = {
   payoutMethod?: string
   locale?: string
   collectorType?: string
+  freshnessSloMinutes?: number
+  freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
 }
@@ -63,6 +88,12 @@ type WesternUnionCollectorOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.westernunion.collector')
 
+/**
+ * Updates provider capability information for a corridor.
+ * Extracts available payin/payout methods from the API response and stores them
+ * in the database. This helps track which payment methods are supported per corridor.
+ * Uses a Set to cache updates and avoid duplicate database writes.
+ */
 const upsertCapability = async (
   pool: Pool,
   corridorId: string,
@@ -78,30 +109,61 @@ const upsertCapability = async (
   const payinValue = payinMethods.length ? payinMethods : null
   const payoutValue = payoutMethods.length ? payoutMethods : null
 
-  await query(
-    `INSERT INTO silver.provider_corridor_capability
-     (provider_id, corridor_id, payin_methods, payout_methods, is_supported, source, last_verified_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NOW())
-     ON CONFLICT (provider_id, corridor_id) DO UPDATE SET
-       payin_methods = EXCLUDED.payin_methods,
-       payout_methods = EXCLUDED.payout_methods,
-       is_supported = EXCLUDED.is_supported,
-       source = EXCLUDED.source,
-       last_verified_at = EXCLUDED.last_verified_at,
-       updated_at = NOW()`,
-    ['westernunion', corridorId, payinValue, payoutValue, true, 'observed'],
-    pool,
+  const repo = new ProviderCapabilityRepository(pool)
+  await repo.upsertCapability({
+    providerId: 'westernunion',
+    corridorId,
+    payinMethods: payinValue,
+    payoutMethods: payoutValue,
+    isSupported: true,
+    source: 'observed',
+  })
+}
+
+/**
+ * Checks the age of the most recent quote for a specific corridor/amount/method combination.
+ * Used by freshness SLO to determine if we should skip fetching a new quote.
+ * Returns null if no quote exists, otherwise returns age in minutes.
+ */
+const getLatestQuoteAgeMinutes = async (
+  pool: Pool,
+  providerId: string,
+  corridorId: string,
+  amountBucket: number,
+  payinMethod: string,
+  payoutMethod: string,
+) => {
+  const repo = new LatestQuoteRepository(pool)
+  return repo.getLatestQuoteAgeMinutes(
+    providerId,
+    corridorId,
+    amountBucket,
+    payinMethod,
+    payoutMethod,
   )
 }
 
+/**
+ * Main collector function that orchestrates quote collection from Western Union.
+ *
+ * @param options - Configuration options for the collector run
+ * @returns Promise<boolean> - true if collection completed successfully, false if blocked
+ */
 export const runWesternUnionCollector = async (options: WesternUnionCollectorOptions = {}) => {
   const providerId = 'westernunion'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = !options.pool
-  const resolvedCorridors = options.corridors?.length
-    ? options.corridors
-    : await loadObservedCorridors(pool, providerId)
-  const corridors = resolvedCorridors.length ? resolvedCorridors : WESTERNUNION_SUPPORTED_CORRIDORS
+  let corridors: string[]
+
+  if (options.corridors?.length) {
+    corridors = options.corridors
+  } else {
+    const allPossibleCorridors = WESTERNUNION_SUPPORTED_CORRIDORS
+    const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
+    corridors = allPossibleCorridors.filter(
+      corridor => !unsupportedCorridors.has(corridor)
+    )
+  }
   const buckets = options.amountBuckets ?? defaultAmountBuckets
   const payinMethod = options.payinMethod ?? 'bank_transfer'
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
@@ -114,8 +176,14 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
   const corridorDelayMs = options.corridorDelayMs ?? config.planeB.remitly.corridorDelayMs
   const corridorJitterMs = options.corridorJitterMs ?? config.planeB.remitly.corridorJitterMs
   const collectorType = options.collectorType ?? 'collector'
+  const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.remitly.freshnessSloMinutes
+  const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.remitly.freshnessSloEnabled
   const blockCooldownMs = config.planeB.remitly.blockCooldownMs
   const startedAt = new Date()
+  const capabilityUpdated = new Set<string>()
+  let freshnessChecked = 0
+  let freshnessSkipped = 0
+  let freshnessStale = 0
   const providerRates = await resolveProviderRates(pool, providerId, {
     rpm: httpLimits.rpm,
     perCorridorRpm: httpLimits.perCorridorRpm,
@@ -143,6 +211,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
   let rateLimitCount = 0
   let http2xxCount = 0
   let attemptDurationMsTotal = 0
+  let extraDelayMs = 0
+  let extraJitterMs = 0
   const recordAttemptDuration = (startedAtMs: number) => {
     const durationMs = Date.now() - startedAtMs
     attemptDurationMsTotal += durationMs
@@ -152,8 +222,27 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
     const jitter = rateLimitJitterMs > 0 ? Math.floor(Math.random() * rateLimitJitterMs) : 0
     await sleep(rateLimitBackoffMs + jitter)
   }
+  const applyRateLimitPenalty = () => {
+    extraDelayMs = Math.min(extraDelayMs + rateLimitBackoffMs, rateLimitBackoffMs * 3)
+    extraJitterMs = Math.min(extraJitterMs + rateLimitJitterMs, rateLimitJitterMs * 3)
+  }
+  const decayRateLimitPenalty = () => {
+    extraDelayMs = Math.max(0, Math.floor(extraDelayMs * 0.7))
+    extraJitterMs = Math.max(0, Math.floor(extraJitterMs * 0.7))
+  }
+  const sleepBetweenCorridors = async () => {
+    if (corridorDelayMs <= 0 && corridorJitterMs <= 0) return
+    const jitter = corridorJitterMs > 0 ? Math.floor(Math.random() * corridorJitterMs) : 0
+    await sleep(corridorDelayMs + jitter)
+  }
   const isRateLimit = (reason: string | null) =>
     reason === 'http_429' || reason === 'keyword_too_many_requests'
+  const isScheduledSweep = collectorType === 'collector'
+    || collectorType === 'b2b_full_sweep'
+    || collectorType === 'b2b_tier_1_alpha'
+    || collectorType === 'b2b_tier_2_reference'
+    || collectorType === 'b2b_tier_3_discovery'
+  const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
   const proxyTierCache = new Map<string, ProxyTier>()
   const resolveProxyTier = async (corridorId: string) => {
     if (proxyTierCache.has(corridorId)) {
@@ -211,6 +300,34 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
       if (skipCorridor) {
         break
       }
+      if (shouldApplyFreshnessSlo) {
+        freshnessChecked += 1
+        const ageMinutes = await getLatestQuoteAgeMinutes(
+          pool,
+          providerId,
+          corridorId,
+          amountBucket,
+          payinMethod,
+          payoutMethod,
+        )
+        if (ageMinutes !== null && ageMinutes <= freshnessSloMinutes) {
+          freshnessSkipped += 1
+          logger.debug('freshness_skip', {
+            corridor_id: corridorId,
+            amount_bucket: amountBucket,
+            age_minutes: ageMinutes,
+            slo_minutes: freshnessSloMinutes,
+          })
+          continue
+        }
+        freshnessStale += 1
+        logger.debug('freshness_stale', {
+          corridor_id: corridorId,
+          amount_bucket: amountBucket,
+          age_minutes: ageMinutes,
+          slo_minutes: freshnessSloMinutes,
+        })
+      }
       let rateLimitRetries = 0
       let completed = false
 
@@ -255,7 +372,7 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           request_fingerprint: requestFingerprint,
         })
 
-        await scheduler.waitForSlot(corridorId)
+        await scheduler.waitForSlot(corridorId, extraDelayMs, extraJitterMs)
         let fetchResult: Awaited<ReturnType<typeof fetchWesternUnionQuote>>
         const fetchStartedAt = Date.now()
         try {
@@ -335,6 +452,7 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           blockCount += 1
           if (rateLimited) {
             rateLimitCount += 1
+            applyRateLimitPenalty()
           }
           logger.warn('quote_blocked', {
             trace_id: traceId,
@@ -481,7 +599,10 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           continue
         }
 
-        await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
+        if (!capabilityUpdated.has(corridorId)) {
+          await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
+          capabilityUpdated.add(corridorId)
+        }
 
         const parseStartedAt = Date.now()
         const parsed = parseWesternUnionPayload(fetchResult.payload as Record<string, unknown>, request)
@@ -577,6 +698,7 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           ingestion_run_id: ingestionRunId,
           bronze_object_key: bronzeObjectKey ?? 'bronze.provider_raw:unknown',
           parser_version: parsed.parser_version,
+          parse_flags: parsed.parse_flags,
         })
         normalizeDurationMs = Date.now() - normalizeStartedAt
         logger.debug('quote_normalize_ok', {
@@ -626,6 +748,7 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           await closeCircuit(pool, providerId, null)
         }
 
+        decayRateLimitPenalty()
         const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
         logger.info('quote_attempt_finish', {
           trace_id: traceId,
@@ -645,10 +768,7 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
       break
     }
 
-    if (corridorDelayMs > 0 || corridorJitterMs > 0) {
-      const jitter = corridorJitterMs > 0 ? Math.floor(Math.random() * corridorJitterMs) : 0
-      await sleep(corridorDelayMs + jitter)
-    }
+    await sleepBetweenCorridors()
   }
 
   await finishIngestionRun(pool, ingestionRunId, blocked ? 'blocked' : 'success', blockReason)
@@ -678,6 +798,9 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
     ingestion_run_id: ingestionRunId,
     status: blocked ? 'blocked' : 'success',
     block_reason: blockReason,
+    freshness_checked: freshnessChecked,
+    freshness_skipped: freshnessSkipped,
+    freshness_stale: freshnessStale,
   })
 
   return !blocked

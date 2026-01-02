@@ -1,5 +1,11 @@
 import type { Pool } from 'pg'
-import { query } from '../../../shared/db'
+
+import { createLogger } from '../../../shared/logger'
+import { BronzeRepository } from '../repositories'
+
+const logger = createLogger('plane-b.bronze-writer')
+
+const MAX_PAYLOAD_SIZE = 10 * 1024 * 1024 // 10MB
 
 export type BronzeWriteInput = {
   provider_id: string
@@ -35,18 +41,89 @@ const normalizePayload = (payload: unknown) => {
 }
 
 export const writeBronzePayload = async (pool: Pool, input: BronzeWriteInput) => {
-  const normalized = normalizePayload(input.payload)
-  let serialized = 'null'
-  try {
-    serialized = JSON.stringify(normalized ?? null) ?? 'null'
-  } catch {
-    serialized = JSON.stringify(String(normalized))
+  if (!input.provider_id || typeof input.provider_id !== 'string' || input.provider_id.trim().length === 0) {
+    logger.warn('bronze_write_invalid_provider_id', { provider_id: input.provider_id })
+    return null
   }
-  const result = await query<{ id: number }>(
-    'INSERT INTO bronze.provider_raw (provider_id, corridor, payload) VALUES ($1, $2, $3) RETURNING id',
-    [input.provider_id, input.corridor_id, serialized],
-    pool,
-  )
 
-  return result.rows[0]?.id
+  if (!input.corridor_id || typeof input.corridor_id !== 'string' || input.corridor_id.trim().length === 0) {
+    logger.warn('bronze_write_invalid_corridor_id', { corridor_id: input.corridor_id })
+    return null
+  }
+
+  try {
+    let payloadToStore = input.payload
+
+    // Check size if payload is a string
+    if (typeof input.payload === 'string' && input.payload.length > MAX_PAYLOAD_SIZE) {
+      logger.warn('bronze_payload_truncated', {
+        provider_id: input.provider_id,
+        corridor_id: input.corridor_id,
+        original_size: input.payload.length,
+        max_size: MAX_PAYLOAD_SIZE,
+      })
+      payloadToStore = input.payload.substring(0, MAX_PAYLOAD_SIZE) + '... [truncated]'
+    }
+
+    const normalized = normalizePayload(payloadToStore)
+
+    // Convert to a clean JSON-serializable object for JSONB storage
+    let payloadObject: unknown = null
+    try {
+      if (normalized !== null && normalized !== undefined) {
+        // Test serialization to ensure it's valid JSON
+        const testSerialized = JSON.stringify(normalized)
+        payloadObject = JSON.parse(testSerialized)
+      } else {
+        payloadObject = null
+      }
+    } catch (error: any) {
+      logger.warn('bronze_payload_serialization_failed', {
+        provider_id: input.provider_id,
+        corridor_id: input.corridor_id,
+        error: error.message,
+        payload_type: typeof normalized,
+      })
+      // Fallback: create a safe wrapper object that preserves data
+      if (typeof normalized === 'string') {
+        payloadObject = { raw: normalized, serialization_error: true }
+      } else if (normalized && typeof normalized === 'object') {
+        // Try to extract what we can using Object.getOwnPropertyNames
+        try {
+          payloadObject = {
+            raw: JSON.stringify(normalized, Object.getOwnPropertyNames(normalized)),
+            serialization_error: true,
+          }
+        } catch {
+          payloadObject = { raw: String(normalized), serialization_error: true }
+        }
+      } else {
+        payloadObject = { raw: String(normalized ?? 'null'), serialization_error: true }
+      }
+    }
+
+    const repo = new BronzeRepository(pool)
+    const bronzeId = await repo.insertPayload({
+      providerId: input.provider_id,
+      corridorId: input.corridor_id,
+      payload: payloadObject, // Pass object, let PostgreSQL handle JSONB conversion
+    })
+
+    logger.debug('bronze_payload_written', {
+      provider_id: input.provider_id,
+      corridor_id: input.corridor_id,
+      bronze_id: bronzeId,
+    })
+
+    return bronzeId
+  } catch (error: any) {
+    logger.error('bronze_payload_write_failed', {
+      provider_id: input.provider_id,
+      corridor_id: input.corridor_id,
+      error: error.message,
+      stack: error.stack,
+    })
+    // Don't throw - allow collector to continue even if bronze write fails
+    return null
+  }
 }

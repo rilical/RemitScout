@@ -19,7 +19,9 @@ const parseBearerToken = (header?: string) => {
 
 const makeError = (code: AuthError['code'], message: string): AuthError => ({ code, message })
 
-export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<AuthUser | AuthError> => {
+import type { AuthResult } from './types'
+
+export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<AuthResult> => {
   const token = parseBearerToken(authorizationHeader)
   if (!token) {
     return makeError('missing_token', 'Missing or invalid Authorization header')

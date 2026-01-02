@@ -3,24 +3,17 @@ import { createHash } from 'crypto'
 import Stripe from 'stripe'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
+import { createLogger } from '../../../../shared/logger'
 import { getStripeClient } from '../../services/stripe-client'
-import { updatePlanFromStripe } from '../../services/user-plan'
+import { BillingWebhookEventRepository, UserPlanRepository } from '../../repositories'
 
-const planeAPool = getPool(config.db.planeAUrl)
+const logger = createLogger('plane-a.billing.webhook')
 
 const hashPayload = (payload: Buffer) => {
   return createHash('sha256').update(payload).digest('hex')
 }
 
-const lookupUserIdByCustomerId = async (customerId: string) => {
-  const result = await planeAPool.query<{ user_id: string }>(
-    `SELECT user_id FROM silver.user_plan WHERE stripe_customer_id = $1`,
-    [customerId]
-  )
-  return result.rows[0]?.user_id || null
-}
-
-const extractUserId = async (event: Stripe.Event) => {
+const extractUserId = async (event: Stripe.Event, userPlanRepo: UserPlanRepository) => {
   const dataObject = event.data.object as any
   const metadataUserId = dataObject?.metadata?.user_id
   if (metadataUserId) {
@@ -28,7 +21,8 @@ const extractUserId = async (event: Stripe.Event) => {
   }
   const customerId = dataObject?.customer
   if (typeof customerId === 'string') {
-    return await lookupUserIdByCustomerId(customerId)
+    const plan = await userPlanRepo.getUserPlanByCustomerId(customerId)
+    return plan?.user_id || null
   }
   return null
 }
@@ -68,57 +62,131 @@ export const webhookRoutes = async (app: FastifyInstance) => {
       return { error: 'invalid_signature' }
     }
 
-    const payloadHash = hashPayload(rawBody)
-    const insertResult = await planeAPool.query(
-      `
-      INSERT INTO silver.billing_webhook_event (event_id, type, payload_hash, payload_json)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (event_id) DO NOTHING
-      `,
-      [event.id, event.type, payloadHash, event]
-    )
+    const planeAPool = getPool(config.db.planeAUrl)
+    const webhookEventRepo = new BillingWebhookEventRepository(planeAPool)
+    const userPlanRepo = new UserPlanRepository(planeAPool)
 
-    if (insertResult.rowCount === 0) {
+    const payloadHash = hashPayload(rawBody)
+    const isNewEvent = await webhookEventRepo.insertEvent({
+      eventId: event.id,
+      type: event.type,
+      payloadHash,
+      payloadJson: event,
+    })
+
+    if (!isNewEvent) {
       return { received: true, duplicate: true }
     }
 
-    const userId = await extractUserId(event)
+    const userId = await extractUserId(event, userPlanRepo)
+
+    let processingSucceeded = false
 
     if (userId) {
-      if (event.type === 'checkout.session.completed') {
-        await updatePlanFromStripe(planeAPool, {
-          user_id: userId,
-          plan_code: 'plus',
-          status: 'active',
-        })
-      }
+      try {
+        if (event.type === 'checkout.session.completed') {
+          const session = event.data.object as any
+          const subscriptionId = session?.subscription || null
+          
+          await userPlanRepo.updatePlan({
+            user_id: userId,
+            plan_code: 'plus',
+            status: 'active',
+            stripe_subscription_id: subscriptionId,
+          })
+          
+          logger.info('webhook_checkout_completed', {
+            eventId: event.id,
+            userId,
+            subscriptionId,
+          })
+          
+          processingSucceeded = true
+        }
 
-      if (event.type.startsWith('customer.subscription.')) {
-        const subscription = event.data.object as any
-        const status = subscription?.status
-        const currentPeriodEnd = toUnixTimestamp(subscription?.current_period_end)
+        if (event.type === 'customer.subscription.deleted') {
+          await userPlanRepo.updatePlan({
+            user_id: userId,
+            plan_code: 'free',
+            status: 'canceled',
+            stripe_subscription_id: null,
+            current_period_end: null,
+          })
+          
+          logger.info('webhook_subscription_deleted', {
+            eventId: event.id,
+            userId,
+          })
+          
+          processingSucceeded = true
+        } else if (event.type.startsWith('customer.subscription.')) {
+          const subscription = event.data.object as any
+          const status = subscription?.status
+          
+          if (!status || typeof status !== 'string') {
+            logger.warn('webhook_invalid_subscription_status', {
+              eventId: event.id,
+              userId,
+              subscriptionId: subscription?.id,
+            })
+            processingSucceeded = true
+          } else {
+            const currentPeriodEnd = toUnixTimestamp(subscription?.current_period_end)
 
-        await updatePlanFromStripe(planeAPool, {
-          user_id: userId,
-          plan_code: status ? 'plus' : undefined,
-          status: typeof status === 'string' ? status : undefined,
-          stripe_subscription_id: subscription?.id || null,
-          current_period_end: currentPeriodEnd,
-        })
-      }
+            let planCode: string | undefined
+            if (status === 'active' || status === 'trialing') {
+              planCode = 'plus'
+            } else if (status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired') {
+              planCode = 'free'
+            }
 
-      if (event.type === 'invoice.payment_failed') {
-        await updatePlanFromStripe(planeAPool, {
-          user_id: userId,
-          status: 'past_due',
+            await userPlanRepo.updatePlan({
+              user_id: userId,
+              plan_code: planCode,
+              status: status,
+              stripe_subscription_id: subscription?.id || null,
+              current_period_end: currentPeriodEnd,
+            })
+            
+            logger.info('webhook_subscription_updated', {
+              eventId: event.id,
+              userId,
+              status,
+              planCode,
+            })
+            
+            processingSucceeded = true
+          }
+        }
+
+        if (event.type === 'invoice.payment_failed') {
+          await userPlanRepo.updatePlan({
+            user_id: userId,
+            status: 'past_due',
+          })
+          
+          logger.info('webhook_payment_failed', {
+            eventId: event.id,
+            userId,
+          })
+          
+          processingSucceeded = true
+        }
+      } catch (error: any) {
+        logger.error('webhook_processing_failed', {
+          eventId: event.id,
+          eventType: event.type,
+          userId,
+          error: error.message,
+          stack: error.stack,
         })
+        processingSucceeded = false
       }
     }
 
-    await planeAPool.query(
-      `UPDATE silver.billing_webhook_event SET processed_at = NOW() WHERE event_id = $1`,
-      [event.id]
-    )
+    if (processingSucceeded || !userId) {
+      await webhookEventRepo.markAsProcessed(event.id)
+    }
 
     return { received: true }
   })

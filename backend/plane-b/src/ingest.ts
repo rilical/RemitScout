@@ -4,18 +4,25 @@ import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { partitionCorridors } from '../../shared/sharding'
 import { pulseDefaults, buildChartData } from '../../shared/pulse-defaults'
-import {
-  rightsMatrix,
-  providers,
-  corridors,
-  providerQuotes,
-  fxRates,
-  fxProviderRates,
-  popularCorridors,
-  countries,
-} from './data/sample-data'
 import { providerRegistry } from './providers'
 import { processQuoteRefreshQueue } from './quote-refresh'
+import {
+  BronzeRepository,
+  CircuitBreakerRepository,
+  CorridorRepository,
+  CountriesRepository,
+  FreshnessReportRepository,
+  FxProviderRateRepository,
+  FxRateRepository,
+  IngestionRunRepository,
+  LatestQuoteRepository,
+  PopularCorridorRepository,
+  ProviderCapabilityRepository,
+  ProviderRepository,
+  PulseCacheRepository,
+  QuoteRecordRepository,
+  RightsMatrixRepository,
+} from './repositories'
 
 type IngestOptions = {
   pool?: Pool
@@ -90,17 +97,8 @@ const getLastPrioritySweepAgeSeconds = async (
   providerId: string,
   collectorType: string,
 ) => {
-  const result = await pool.query<{ age_seconds: number | null }>(
-    `SELECT EXTRACT(EPOCH FROM (NOW() - COALESCE(finished_at, started_at))) AS age_seconds
-       FROM silver.ingestion_run
-      WHERE provider_id = $1
-        AND collector_type = $2
-      ORDER BY COALESCE(finished_at, started_at) DESC
-      LIMIT 1`,
-    [providerId, collectorType],
-  )
-  const age = result.rows[0]?.age_seconds
-  return Number.isFinite(age) ? Number(age) : null
+  const repo = new IngestionRunRepository(pool)
+  return repo.getLastSweepAgeSeconds(providerId, collectorType)
 }
 
 const shouldRunPrioritySweep = async (
@@ -121,15 +119,9 @@ const shouldRunPrioritySweep = async (
 
 const loadCoverageCorridors = async (pool: Pool, minProviders: number) => {
   if (minProviders <= 1) return null
-  const result = await pool.query<{ corridor_id: string }>(
-    `SELECT corridor_id
-       FROM silver.provider_corridor_capability
-      WHERE is_supported = true
-      GROUP BY corridor_id
-      HAVING COUNT(DISTINCT provider_id) >= $1`,
-    [minProviders],
-  )
-  const corridors = result.rows.map(row => row.corridor_id).filter(Boolean)
+  const repo = new ProviderCapabilityRepository(pool)
+  const rows = await repo.loadCoverageCorridors(minProviders)
+  const corridors = rows.map(row => row.corridor_id).filter(Boolean)
   return new Set(corridors)
 }
 
@@ -144,23 +136,15 @@ const loadPriorityQueues = async (
   pool: Pool,
   providerId: string,
 ): Promise<PriorityQueues> => {
-  const result = await pool.query<{ corridor_id: string; priority_tier: string | null }>(
-    `SELECT pcc.corridor_id, cp.priority_tier
-       FROM silver.provider_corridor_capability pcc
-       LEFT JOIN silver.corridor_priority cp
-         ON cp.corridor_id = pcc.corridor_id
-      WHERE pcc.provider_id = $1
-        AND pcc.is_supported = true
-      ORDER BY pcc.corridor_id`,
-    [providerId],
-  )
+  const repo = new ProviderCapabilityRepository(pool)
+  const rows = await repo.loadPriorityCorridors(providerId)
   const queues: PriorityQueues = {
     tier1: [],
     tier2: [],
     tier3: [],
     all: [],
   }
-  for (const row of result.rows) {
+  for (const row of rows) {
     if (!row.corridor_id) continue
     queues.all.push(row.corridor_id)
     const tier = row.priority_tier ?? 'tier_3_discovery'
@@ -182,17 +166,10 @@ type RightsMatrixEntry = {
 }
 
 const loadProviderRights = async (pool: Pool) => {
-  const result = await pool.query<{
-    provider_id: string
-    allowed_collect: boolean
-    allowed_b2b: boolean
-    stoplist_status: string
-  }>(
-    `SELECT provider_id, allowed_collect, allowed_b2b, stoplist_status
-       FROM silver.rights_matrix`,
-  )
+  const repo = new RightsMatrixRepository(pool)
+  const rows = await repo.loadProviderRights()
   const rights = new Map<string, RightsMatrixEntry>()
-  for (const row of result.rows) {
+  for (const row of rows) {
     if (!row.provider_id) continue
     rights.set(row.provider_id, {
       allowedCollect: Boolean(row.allowed_collect),
@@ -237,18 +214,15 @@ const loadFreshnessLagByCorridor = async (
   if (!corridors.length) {
     return ageByCorridor
   }
-  const result = await pool.query<{ corridor_id: string; age_minutes: number | null }>(
-    `SELECT corridor_id,
-            EXTRACT(EPOCH FROM (now() - collected_at)) / 60.0 AS age_minutes
-       FROM silver.latest_quote_by_provider
-      WHERE provider_id = $1
-        AND corridor_id = ANY($2)
-        AND amount_bucket = $3
-        AND payin = $4
-        AND payout = $5`,
-    [providerId, corridors, amountBucket, payinMethod, payoutMethod],
+  const repo = new LatestQuoteRepository(pool)
+  const rows = await repo.loadFreshnessLagByCorridor(
+    providerId,
+    corridors,
+    amountBucket,
+    payinMethod,
+    payoutMethod,
   )
-  for (const row of result.rows) {
+  for (const row of rows) {
     if (!row.corridor_id) {
       continue
     }
@@ -278,32 +252,18 @@ const persistFreshnessReport = async (
   const staleFlags = reports.map(report => report.isStale)
   const observedAts = reports.map(() => observedAt)
 
-  await pool.query(
-    `INSERT INTO silver.freshness_slo_report
-     (provider_id, corridor_id, amount_bucket, payin_method, payout_method, age_minutes, slo_minutes, is_stale, observed_at)
-     SELECT * FROM UNNEST(
-       $1::text[],
-       $2::text[],
-       $3::int[],
-       $4::text[],
-       $5::text[],
-       $6::double precision[],
-       $7::int[],
-       $8::boolean[],
-       $9::timestamptz[]
-     )`,
-    [
-      providerIds,
-      corridorIds,
-      amountBuckets,
-      payinMethods,
-      payoutMethods,
-      ageMinutes,
-      sloMinutes,
-      staleFlags,
-      observedAts,
-    ],
-  )
+  const repo = new FreshnessReportRepository(pool)
+  await repo.insertBatch({
+    providerIds,
+    corridorIds,
+    amountBuckets,
+    payinMethods,
+    payoutMethods,
+    ageMinutes,
+    sloMinutes,
+    isStale: staleFlags,
+    observedAts,
+  })
 }
 
 const applyFreshnessSlo = async (options: {
@@ -389,29 +349,9 @@ const applyFreshnessSlo = async (options: {
 }
 
 const reportSweepDurations = async (pool: Pool) => {
-  const result = await pool.query<{
-    provider_id: string
-    duration_minutes: number
-    finished_at: string
-    status: string
-  }>(
-    `SELECT DISTINCT ON (provider_id)
-        provider_id,
-        EXTRACT(EPOCH FROM (finished_at - started_at)) / 60.0 AS duration_minutes,
-        finished_at,
-        status
-       FROM silver.ingestion_run
-      WHERE collector_type IN (
-        'b2b_tier_1_alpha',
-        'b2b_tier_2_reference',
-        'b2b_tier_3_discovery',
-        'b2b_full_sweep',
-        'b2b_full_sweep_monthly'
-      )
-        AND finished_at IS NOT NULL
-      ORDER BY provider_id, finished_at DESC`,
-  )
-  logger.info('b2b_sweep_duration_report', { providers: result.rows })
+  const repo = new IngestionRunRepository(pool)
+  const rows = await repo.loadLatestSweepDurations()
+  logger.info('b2b_sweep_duration_report', { providers: rows })
 }
 
 export const runIngestion = async (options: IngestOptions = {}) => {
@@ -420,7 +360,9 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const shouldClose = !options.pool
 
     logger.info('ingestion_start', { mode: 'collector' })
-    await processQuoteRefreshQueue({ pool })
+    if (config.planeB.b2cQueueInSweep) {
+      await processQuoteRefreshQueue({ pool })
+    }
 
     const minProviderCount = config.planeB.b2bMinProviderCount
     const b2bFreshnessSloEnabled = config.planeB.b2bFreshnessSloEnabled
@@ -707,331 +649,10 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     }
   }
 
-  const db = options.pool || createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
-
-  logger.info('ingestion_start', { mode: 'seed' })
-
-  const allowedProviders = new Set(
-    rightsMatrix.filter(entry => entry.allowedCollect).map(entry => entry.providerId),
+  throw new Error(
+    'Seed data functionality has been removed. The sample-data.ts file no longer exists. ' +
+    'Set config.planeB.useSeedData to false to use collector mode instead.',
   )
-
-  try {
-    await db.query('BEGIN')
-
-    for (const country of countries) {
-      await db.query(
-        `INSERT INTO silver.countries (code, name, currency)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, currency = EXCLUDED.currency`,
-        [country.code, country.name, country.currency],
-      )
-    }
-
-    for (const rights of rightsMatrix) {
-      await db.query(
-        `INSERT INTO silver.rights_matrix (provider_id, allowed_collect, allowed_b2c, allowed_b2b, notes)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (provider_id) DO UPDATE SET
-           allowed_collect = EXCLUDED.allowed_collect,
-           allowed_b2c = EXCLUDED.allowed_b2c,
-           allowed_b2b = EXCLUDED.allowed_b2b,
-           notes = EXCLUDED.notes,
-           updated_at = NOW()`,
-        [rights.providerId, rights.allowedCollect, rights.allowedB2c, rights.allowedB2b, rights.notes],
-      )
-    }
-
-    const stoplistResult = await db.query(
-      'SELECT provider_id, stoplist_status FROM silver.rights_matrix',
-    )
-    const stoplistByProvider = new Map(
-      stoplistResult.rows.map(row => [row.provider_id, row.stoplist_status]),
-    )
-
-    const circuitResult = await db.query(
-      'SELECT provider_id, corridor_id, state, cooldown_until FROM silver.circuit_breaker',
-    )
-
-    const now = new Date()
-    const isCircuitOpen = (providerId: string, corridorId: string | null) => {
-      return circuitResult.rows.some(row => {
-        if (row.provider_id !== providerId) return false
-        if (row.corridor_id !== null && row.corridor_id !== corridorId) return false
-        if (row.state !== 'open') return false
-        if (!row.cooldown_until) return true
-        return new Date(row.cooldown_until) > now
-      })
-    }
-
-    const logSkip = (providerId: string, corridorId: string | null, reason: string) => {
-      const corridorLabel = corridorId || 'all'
-      logger.info('seed_skip', { provider_id: providerId, corridor_id: corridorLabel, reason })
-    }
-
-    const ingestionRunIds = new Map<string, string>()
-
-    for (const provider of providers) {
-      if (!allowedProviders.has(provider.id)) continue
-      const stoplistStatus = stoplistByProvider.get(provider.id) || 'active'
-      if (stoplistStatus !== 'active') {
-        logSkip(provider.id, null, `stoplist_${stoplistStatus}`)
-        continue
-      }
-      if (isCircuitOpen(provider.id, null)) {
-        logSkip(provider.id, null, 'circuit_open')
-        continue
-      }
-
-      await db.query(
-        `INSERT INTO silver.provider (provider_id, display_name)
-         VALUES ($1, $2)
-         ON CONFLICT (provider_id) DO UPDATE SET
-           display_name = EXCLUDED.display_name,
-           updated_at = NOW()`,
-        [provider.id, provider.name],
-      )
-
-      const ingestionRunResult = await db.query(
-        `INSERT INTO silver.ingestion_run (provider_id, collector_type, started_at, finished_at, status)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING run_id`,
-        [provider.id, 'seed', now, now, 'success'],
-      )
-      if (ingestionRunResult.rows[0]?.run_id) {
-        ingestionRunIds.set(provider.id, ingestionRunResult.rows[0].run_id)
-      }
-    }
-
-    for (const corridor of corridors) {
-      await db.query(
-        `INSERT INTO silver.corridor (corridor_id, source_country, dest_country, source_currency, dest_currency)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (corridor_id) DO UPDATE SET
-           source_country = EXCLUDED.source_country,
-           dest_country = EXCLUDED.dest_country,
-           source_currency = EXCLUDED.source_currency,
-           dest_currency = EXCLUDED.dest_currency,
-           updated_at = NOW()`,
-        [
-          corridor.id,
-          corridor.fromCountry,
-          corridor.toCountry,
-          corridor.sendCurrency,
-          corridor.recvCurrency,
-        ],
-      )
-
-    }
-
-    for (const quote of providerQuotes) {
-      if (!allowedProviders.has(quote.providerId)) continue
-      const stoplistStatus = stoplistByProvider.get(quote.providerId) || 'active'
-      if (stoplistStatus !== 'active') {
-        logSkip(quote.providerId, quote.corridorId, `stoplist_${stoplistStatus}`)
-        continue
-      }
-      if (isCircuitOpen(quote.providerId, quote.corridorId)) {
-        logSkip(quote.providerId, quote.corridorId, 'circuit_open')
-        continue
-      }
-
-      const ingestionRunId = ingestionRunIds.get(quote.providerId)
-      if (!ingestionRunId) {
-        logSkip(quote.providerId, quote.corridorId, 'missing_ingestion_run')
-        continue
-      }
-
-      const sendAmount = 100
-      const feeAmount = quote.fee
-      const totalDebitAmount = sendAmount + feeAmount
-      const promotionalFeeAmount = null
-      const promotionalRate = quote.promotionalRate ?? null
-      const baseRate = quote.baseRate ?? (quote.promotionalRate ? quote.fxRate : null)
-      const promotionalCapAmount = quote.promotionalCapAmount ?? null
-      const appliedFxRate = promotionalRate ?? quote.fxRate
-      const receiveAmount = (sendAmount - feeAmount) * appliedFxRate
-      const impliedFxRate = appliedFxRate
-      const collectedAt = new Date()
-      const ingestedAt = new Date()
-      const amountBucket = Math.round(sendAmount)
-      const payin = quote.payinMethod ?? quote.methods[0] ?? 'bank_transfer'
-      const payout =
-        quote.payoutMethod ??
-        (quote.methods.includes('cash_pickup')
-          ? 'cash_pickup'
-          : quote.methods.includes('mobile_wallet')
-            ? 'mobile_wallet'
-            : 'bank_deposit')
-      const deliveryWindow = parseDeliveryMinutes(quote.delivery)
-      const bronzeResult = await db.query(
-        `INSERT INTO bronze.provider_raw (provider_id, corridor, payload)
-         VALUES ($1, $2, $3)
-         RETURNING id`,
-        [
-          quote.providerId,
-          quote.corridorId,
-          {
-            providerId: quote.providerId,
-            corridorId: quote.corridorId,
-            fee: quote.fee,
-            marginPct: quote.marginPct,
-            fxRate: quote.fxRate,
-            promotionalRate,
-            baseRate,
-            promotionalCapAmount,
-            delivery: quote.delivery,
-            methods: quote.methods,
-            reliability: quote.reliability,
-            payinMethod: quote.payinMethod,
-            payoutMethod: quote.payoutMethod,
-          },
-        ],
-      )
-
-      const bronzeObjectKey = String(bronzeResult.rows[0].id)
-
-      await db.query(
-        `INSERT INTO silver.quote_record
-         (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, promotional_fee_amount, total_debit_amount, receive_amount, implied_fx_rate, promotional_rate, base_rate, promotional_cap_amount, delivery_time_min_minutes, delivery_time_max_minutes, status, error_code, error_message, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
-        [
-          quote.providerId,
-          quote.corridorId,
-          amountBucket,
-          payin,
-          payout,
-          sendAmount,
-          feeAmount,
-          promotionalFeeAmount,
-          totalDebitAmount,
-          receiveAmount,
-          impliedFxRate,
-          promotionalRate,
-          baseRate,
-          promotionalCapAmount,
-          deliveryWindow.min,
-          deliveryWindow.max,
-          'ok',
-          null,
-          null,
-          collectedAt,
-          ingestedAt,
-          ingestionRunId,
-          bronzeObjectKey,
-        ],
-      )
-
-      await db.query(
-        `INSERT INTO silver.latest_quote_by_provider
-         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, promotional_fee_amount, total_debit_amount, receive_amount, implied_fx_rate, promotional_rate, base_rate, promotional_cap_amount, delivery_time_min_minutes, delivery_time_max_minutes, status, quality_flags)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-         ON CONFLICT (corridor_id, amount_bucket, payin, payout, provider_id) DO UPDATE SET
-           collected_at = EXCLUDED.collected_at,
-           send_amount = EXCLUDED.send_amount,
-           fee_amount = EXCLUDED.fee_amount,
-           promotional_fee_amount = EXCLUDED.promotional_fee_amount,
-           total_debit_amount = EXCLUDED.total_debit_amount,
-           receive_amount = EXCLUDED.receive_amount,
-           implied_fx_rate = EXCLUDED.implied_fx_rate,
-           promotional_rate = EXCLUDED.promotional_rate,
-           base_rate = EXCLUDED.base_rate,
-           promotional_cap_amount = EXCLUDED.promotional_cap_amount,
-           delivery_time_min_minutes = EXCLUDED.delivery_time_min_minutes,
-           delivery_time_max_minutes = EXCLUDED.delivery_time_max_minutes,
-           status = EXCLUDED.status,
-           quality_flags = EXCLUDED.quality_flags,
-           updated_at = NOW()`,
-        [
-          quote.corridorId,
-          amountBucket,
-          payin,
-          payout,
-          quote.providerId,
-          collectedAt,
-          sendAmount,
-          feeAmount,
-          promotionalFeeAmount,
-          totalDebitAmount,
-          receiveAmount,
-          impliedFxRate,
-          promotionalRate,
-          baseRate,
-          promotionalCapAmount,
-          deliveryWindow.min,
-          deliveryWindow.max,
-          'ok',
-          null,
-        ],
-      )
-
-      // Bronze write handled above to capture provider_raw id for provenance.
-    }
-
-    for (const rate of fxRates) {
-      await db.query(
-        `INSERT INTO gold.fx_rates (base_currency, quote_currency, rate)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (base_currency, quote_currency) DO UPDATE SET
-           rate = EXCLUDED.rate,
-           updated_at = NOW()`,
-        [rate.base, rate.quote, rate.rate],
-      )
-    }
-
-    for (const rate of fxProviderRates) {
-      await db.query(
-        `INSERT INTO gold.fx_provider_rates (provider_name, base_currency, quote_currency, rate, markup_bps, speed)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (provider_name, base_currency, quote_currency) DO UPDATE SET
-           rate = EXCLUDED.rate,
-           markup_bps = EXCLUDED.markup_bps,
-           speed = EXCLUDED.speed,
-           updated_at = NOW()`,
-        [rate.providerName, rate.base, rate.quote, rate.rate, rate.markupBps, rate.speed],
-      )
-    }
-
-    await db.query('DELETE FROM gold.popular_corridors')
-    for (const corridor of popularCorridors) {
-      await db.query(
-        `INSERT INTO gold.popular_corridors (route, count_24h, top_provider, fee_range, speed_range, best_for)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          corridor.route,
-          corridor.count24h,
-          corridor.topProvider,
-          corridor.feeRange,
-          corridor.speedRange,
-          corridor.bestFor,
-        ],
-      )
-    }
-
-    const cacheEntries = pulseCacheEntries()
-    for (const [key, payload] of Object.entries(cacheEntries)) {
-      await db.query(
-        `INSERT INTO gold.pulse_cache (key, payload)
-         VALUES ($1, $2)
-         ON CONFLICT (key) DO UPDATE SET
-           payload = EXCLUDED.payload,
-           updated_at = NOW()`,
-        [key, serializeJson(payload)],
-      )
-    }
-
-    await db.query('COMMIT')
-    logger.info('ingestion_finish', { mode: 'seed', status: 'success' })
-    return true
-  } catch (error) {
-    await db.query('ROLLBACK')
-    logger.error('ingestion_error', { mode: 'seed', error })
-    throw error
-  } finally {
-    if (shouldClose) {
-      await db.end()
-    }
-  }
 }
 
 if (require.main === module) {

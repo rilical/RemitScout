@@ -1,5 +1,9 @@
 import { COUNTRIES } from '../../../../shared/countries-currencies'
 
+// Wise uses provider-specific currency lists extracted from their currency selectors.
+// This approach differs from other providers (Remitly, WorldRemit, etc.) which use
+// BASE_SEND_CURRENCIES (USD/EUR/GBP) + local currencies. Wise's currency lists already
+// include USD, EUR, and GBP, so the coverage is equivalent but uses a different pattern.
 // Extracted from Wise currency selectors.
 const WISE_SOURCE_CURRENCIES = [
   'AED',

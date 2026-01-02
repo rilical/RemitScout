@@ -145,7 +145,7 @@ const mapPayin = (method?: WorldRemitPayInMethod | null): string => {
     payinMethodMap[method.transferRedirectionType] ??
     payinMethodMap[method.name] ??
     payinMethodMap[method.id] ??
-    payinMethodMap[token.toUpperCase()] ??
+    payinMethodMap[token] ??
     null
   if (mapped) return mapped
 
@@ -353,7 +353,11 @@ export const parseWorldRemitPayload = (
     send_amount: sendAmount,
     receive_amount: receiveAmount,
     fee_amount: Number.isFinite(feeAmount) ? feeAmount : 0,
-    total_debit_amount: Number.isFinite(selectedTotalToPay) ? selectedTotalToPay : sendAmount,
+    total_debit_amount: Number.isFinite(selectedTotalToPay)
+      ? selectedTotalToPay
+      : Number.isFinite(sendAmount) && Number.isFinite(feeAmount)
+        ? sendAmount + feeAmount
+        : sendAmount,
     payin_method: payinMethod,
     payout_method: payoutMethod,
     fee_currency: feeCurrency,

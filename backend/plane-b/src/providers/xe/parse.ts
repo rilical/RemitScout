@@ -1,7 +1,10 @@
 import type { CollectorRequest } from '../../collectors/types'
 import { requireCorridorId } from '../../../../shared/corridor'
+import { createLogger } from '../../../../shared/logger'
 import { qualityFlags, QualityFlag } from '../../normalize/quality-flags'
 import { payinMethodMap, payoutMethodMap } from './code-map'
+
+const logger = createLogger('plane-b.xe.parse')
 
 type XeIndividualQuote = {
   rate?: number | string | null
@@ -147,6 +150,10 @@ export const parseXePayload = (
   request: CollectorRequest,
 ): XeParsedQuote | null => {
   if (payload.errorMessages && Object.keys(payload.errorMessages).length > 0) {
+    logger.warn('xe_parse_error_messages', {
+      corridor_id: request.corridor_id,
+      error_messages: payload.errorMessages,
+    })
     return null
   }
 

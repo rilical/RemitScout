@@ -1,15 +1,11 @@
 import type { Pool } from 'pg'
 
-import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
+import { CorridorPriorityRepository } from '../repositories'
 
 const logger = createLogger('plane-b.proxy-router')
 
 export type ProxyTier = 'RESIDENTIAL_PREMIUM' | 'DATACENTER_ROTATING' | 'NONE'
-
-type CorridorPriorityRow = {
-  proxy_tier: string | null
-}
 
 const isProxyTier = (value: string | null | undefined): value is ProxyTier =>
   value === 'RESIDENTIAL_PREMIUM' || value === 'DATACENTER_ROTATING' || value === 'NONE'
@@ -33,14 +29,9 @@ export const getProxyTierForCorridor = async (
   corridorId: string,
 ): Promise<ProxyTier> => {
   try {
-    const result = await query<CorridorPriorityRow>(
-      `SELECT proxy_tier
-         FROM silver.corridor_priority
-        WHERE corridor_id = $1`,
-      [corridorId],
-      pool,
-    )
-    const proxyTier = result.rows[0]?.proxy_tier
+    const repo = new CorridorPriorityRepository(pool)
+    const row = await repo.getProxyTier(corridorId)
+    const proxyTier = row?.proxy_tier
     if (isProxyTier(proxyTier)) {
       return proxyTier
     }

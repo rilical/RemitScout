@@ -59,18 +59,18 @@ export type WiseParsedQuote = {
   parse_flags: QualityFlag[]
 }
 
-const normalizeToken = (value: string) => value.trim().toUpperCase().replace(/\s+/g, '_')
+const normalizeToken = (value: string) => value.trim().toLowerCase().replace(/\s+/g, '_')
 
 const mapPayin = (code?: string | null) => {
   if (!code) return 'other'
   const token = normalizeToken(code)
-  return payinMethodMap[token] ?? 'other'
+  return payinMethodMap[token.toUpperCase()] ?? payinMethodMap[token] ?? 'other'
 }
 
 const mapPayout = (code?: string | null) => {
   if (!code) return 'other'
   const token = normalizeToken(code)
-  return payoutMethodMap[token] ?? 'other'
+  return payoutMethodMap[token.toUpperCase()] ?? payoutMethodMap[token] ?? 'other'
 }
 
 const parseNumber = (value?: number | string | null): number => {

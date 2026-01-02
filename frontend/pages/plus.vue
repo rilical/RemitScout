@@ -571,8 +571,27 @@
 <script setup lang="ts">
 const { isAuthenticated } = useAuth()
 const { plan, isPlus } = useEntitlements()
+const { request } = useApi()
 
-function handleUpgrade() {
+async function handleUpgrade() {
+  try {
+    const meResponse = await request<{ plan?: { stripe_customer_id?: string } }>('/api/me', { method: 'GET' })
+    const hasCustomer = meResponse?.plan?.stripe_customer_id
+    
+    if (hasCustomer) {
+      const portalResponse = await request<{ url: string }>('/api/billing/portal', {
+        method: 'GET',
+      })
+      
+      if (portalResponse.url) {
+        window.location.href = portalResponse.url
+        return
+      }
+    }
+  } catch (error) {
+    console.warn('Could not check customer status, using checkout:', error)
+  }
+  
   navigateTo('/plus/checkout')
 }
 

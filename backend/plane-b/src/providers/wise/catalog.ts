@@ -29,3 +29,6 @@ export const payoutMethods: string[] = [
   'mobile_wallet',
   'airtime',
 ]
+
+export const defaultPayinMethod = 'bank_transfer'
+export const defaultPayoutMethod = 'bank_deposit'

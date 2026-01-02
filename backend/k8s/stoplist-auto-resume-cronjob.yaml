@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: stoplist-auto-resume
+  namespace: remit-scout
+spec:
+  # Run daily at 02:00 UTC
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: stoplist-auto-resume
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: resume
+            image: remit-scout-backend:latest
+            imagePullPolicy: IfNotPresent
+            command: ["node", "dist/scripts/stoplist-auto-resume.js"]
+            env:
+            - name: STOPLIST_AUTO_RESUME_LOCK_TTL_SECONDS
+              value: "300"
+            - name: DATABASE_URL_PLANE_B
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: plane-b-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: url
+            - name: NODE_ENV
+              value: "production"
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "50m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+

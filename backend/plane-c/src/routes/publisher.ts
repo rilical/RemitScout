@@ -1,22 +1,16 @@
 import type { FastifyInstance } from 'fastify'
 import { evaluatePublisherGates } from '../services/publisher-gates'
-import { getPool, query } from '../../shared/db'
+import { getPool } from '../../shared/db'
 import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
+import { PublisherRepository } from '../data'
 
 const logger = createLogger('plane-c.publisher')
 const pool = getPool(config.db.planeCUrl)
+const publisherRepository = new PublisherRepository(pool)
 
 const loadContributorCount = async (corridorId: string) => {
-  const result = await query<{ contributor_count: number }>(
-    `SELECT COUNT(DISTINCT provider_id)::int AS contributor_count
-       FROM silver.provider_corridor_capability
-      WHERE corridor_id = $1
-        AND is_supported = true`,
-    [corridorId],
-    pool,
-  )
-  return result.rows[0]?.contributor_count ?? 0
+  return publisherRepository.getContributorCount(corridorId)
 }
 
 export const publisherRoutes = async (app: FastifyInstance) => {

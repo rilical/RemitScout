@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: b2c-refresh-worker
+  namespace: remit-scout
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: worker
+              image: remit-scout/backend:latest
+              command: ["pnpm", "-C", "backend", "b2c:refresh-worker"]
+              env:
+                - name: B2C_REFRESH_LIMIT
+                  value: "25"
+                - name: DATABASE_URL_PLANE_B
+                  valueFrom:
+                    secretKeyRef:
+                      name: remit-scout-secrets
+                      key: database-url-plane-b
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+          restartPolicy: OnFailure

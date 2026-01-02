@@ -15,7 +15,6 @@ const mapCurrency = (code: string) => currencyCodeMap[code] ?? code
 type FetchOptions = {
   jitterMs?: number
   proxyTier?: ProxyTier
-  corridorId?: string
 }
 
 const PAYOUT_METHODS_QUERY = `
@@ -238,8 +237,9 @@ const executeGraphQL = async <T>(
   operationName: string,
   query: string,
   variables: Record<string, unknown>,
+  corridorId: string,
   options: FetchOptions = {},
-): Promise<{ status: number; json: GraphQLResponse<T> }> => {
+): Promise<{ status: number; bodyText: string; json: GraphQLResponse<T> | null }> => {
   const requestId = randomUUID()
   
   const response = await httpRequest({
@@ -262,16 +262,13 @@ const executeGraphQL = async <T>(
     },
     jitterMs: options.jitterMs,
     proxyTier: options.proxyTier,
-    corridorId: options.corridorId,
+    corridorId,
   })
-
-  if (!response.json) {
-    throw new Error('Invalid JSON response from WorldRemit GraphQL API')
-  }
 
   return {
     status: response.status,
-    json: response.json as GraphQLResponse<T>,
+    bodyText: response.bodyText,
+    json: response.json as GraphQLResponse<T> | null,
   }
 }
 
@@ -287,108 +284,121 @@ export const fetchWorldRemitQuote = async (
   const sendCurrency = mapCurrency(sourceCurrency)
   const receiveCountry = mapCountry(destCountry)
   const receiveCurrency = mapCurrency(destCurrency)
-  const baseOptions = { ...options, corridorId: request.corridor_id }
 
-  try {
-    const payoutMethodsResponse = await executeGraphQL<PayoutMethodsResponse>(
-      'PayoutMethods',
-      PAYOUT_METHODS_QUERY,
+  const payoutMethodsResponse = await executeGraphQL<PayoutMethodsResponse>(
+    'PayoutMethods',
+    PAYOUT_METHODS_QUERY,
+    {
+      sendCountry,
+      receiveCountry,
+      receiveCurrency,
+    },
+    request.corridor_id,
+    options,
+  )
+
+  if (
+    !payoutMethodsResponse.json ||
+    payoutMethodsResponse.json.errors ||
+    !payoutMethodsResponse.json.data?.payOutMethods?.length
+  ) {
+    return {
+      status: payoutMethodsResponse.status,
+      bodyText: payoutMethodsResponse.bodyText,
+      payload: payoutMethodsResponse.json ?? payoutMethodsResponse.bodyText,
+    }
+  }
+
+  const payoutMethods = payoutMethodsResponse.json.data.payOutMethods
+
+  const requestedPayout = request.payout_method && request.payout_method !== 'other'
+    ? request.payout_method
+    : null
+
+  const payoutCandidates = [...payoutMethods]
+  if (requestedPayout) {
+    payoutCandidates.sort((left, right) => {
+      const leftMapped = payoutMethodMap[left.code] ?? left.code.toLowerCase()
+      const rightMapped = payoutMethodMap[right.code] ?? right.code.toLowerCase()
+      const leftScore = leftMapped === requestedPayout ? 0 : 1
+      const rightScore = rightMapped === requestedPayout ? 0 : 1
+      return leftScore - rightScore
+    })
+  }
+
+  let selectedPayoutMethod = payoutCandidates[0]
+  let calculationResponse: {
+    status: number
+    bodyText: string
+    json: GraphQLResponse<CreateCalculationResponse> | null
+  } | null = null
+
+  for (const candidate of payoutCandidates) {
+    const payoutMethodCode = candidate.code
+    const correspondentId = candidate.correspondents?.[0]?.id ?? ''
+
+    const response = await executeGraphQL<CreateCalculationResponse>(
+      'createCalculation',
+      CREATE_CALCULATION_MUTATION,
       {
-        sendCountry,
-        receiveCountry,
-        receiveCurrency,
+        amount: request.send_amount,
+        type: 'SEND',
+        sendCountryCode: sendCountry,
+        sendCurrencyCode: sendCurrency,
+        receiveCountryCode: receiveCountry,
+        receiveCurrencyCode: receiveCurrency,
+        payOutMethodCode: payoutMethodCode,
+        correspondentId,
       },
-      baseOptions,
+      request.corridor_id,
+      options,
     )
 
-    if (payoutMethodsResponse.json.errors || !payoutMethodsResponse.json.data?.payOutMethods?.length) {
-      return {
-        status: payoutMethodsResponse.status,
-        bodyText: JSON.stringify(payoutMethodsResponse.json),
-        payload: payoutMethodsResponse.json,
-      }
+    calculationResponse = response
+    const calculation = response.json?.data?.createCalculation?.calculation
+    const errors = response.json?.data?.createCalculation?.errors
+    if (!response.json?.errors && calculation && (!errors || errors.length === 0)) {
+      selectedPayoutMethod = candidate
+      break
     }
+  }
 
-    const payoutMethods = payoutMethodsResponse.json.data.payOutMethods
-
-    const requestedPayout = request.payout_method && request.payout_method !== 'other'
-      ? request.payout_method
-      : null
-
-    const payoutCandidates = [...payoutMethods]
-    if (requestedPayout) {
-      payoutCandidates.sort((left, right) => {
-        const leftMapped = payoutMethodMap[left.code] ?? left.code.toLowerCase()
-        const rightMapped = payoutMethodMap[right.code] ?? right.code.toLowerCase()
-        const leftScore = leftMapped === requestedPayout ? 0 : 1
-        const rightScore = rightMapped === requestedPayout ? 0 : 1
-        return leftScore - rightScore
-      })
+  if (!calculationResponse) {
+    return {
+      status: payoutMethodsResponse.status,
+      bodyText: payoutMethodsResponse.bodyText,
+      payload: payoutMethodsResponse.json ?? payoutMethodsResponse.bodyText,
     }
+  }
 
-    let selectedPayoutMethod = payoutCandidates[0]
-    let calculationResponse: { status: number; json: GraphQLResponse<CreateCalculationResponse> } | null = null
-
-    for (const candidate of payoutCandidates) {
-      const payoutMethodCode = candidate.code
-      const correspondentId = candidate.correspondents?.[0]?.id ?? ''
-
-      const response = await executeGraphQL<CreateCalculationResponse>(
-        'createCalculation',
-        CREATE_CALCULATION_MUTATION,
-        {
-          amount: request.send_amount,
-          type: 'SEND',
-          sendCountryCode: sendCountry,
-          sendCurrencyCode: sendCurrency,
-          receiveCountryCode: receiveCountry,
-          receiveCurrencyCode: receiveCurrency,
-          payOutMethodCode: payoutMethodCode,
-          correspondentId,
-        },
-        baseOptions,
-      )
-
-      calculationResponse = response
-      const calculation = response.json.data?.createCalculation?.calculation
-      const errors = response.json.data?.createCalculation?.errors
-      if (!response.json.errors && calculation && (!errors || errors.length === 0)) {
-        selectedPayoutMethod = candidate
-        break
-      }
-    }
-
-    if (!calculationResponse) {
-      return {
-        status: payoutMethodsResponse.status,
-        bodyText: JSON.stringify(payoutMethodsResponse.json),
-        payload: payoutMethodsResponse.json,
-      }
-    }
-
-    if (calculationResponse.json.errors) {
-      return {
-        status: calculationResponse.status,
-        bodyText: JSON.stringify(calculationResponse.json),
-        payload: calculationResponse.json,
-      }
-    }
-
-    const mappedPayoutMethod = payoutMethodMap[selectedPayoutMethod.code] ?? 'other'
-
-    const combinedPayload = {
-      payoutMethods: payoutMethodsResponse.json.data,
-      calculation: calculationResponse.json.data,
-      mappedPayoutMethod,
-      selectedPayoutMethod,
-    }
-
+  if (calculationResponse.json?.errors) {
     return {
       status: calculationResponse.status,
-      bodyText: JSON.stringify(combinedPayload),
-      payload: combinedPayload,
+      bodyText: calculationResponse.bodyText,
+      payload: calculationResponse.json ?? calculationResponse.bodyText,
     }
-  } catch (error) {
-    throw new Error(`WorldRemit fetch error: ${(error as Error).message}`)
+  }
+
+  if (!calculationResponse.json?.data) {
+    return {
+      status: calculationResponse.status,
+      bodyText: calculationResponse.bodyText,
+      payload: calculationResponse.json ?? calculationResponse.bodyText,
+    }
+  }
+
+  const mappedPayoutMethod = payoutMethodMap[selectedPayoutMethod.code] ?? 'other'
+
+  const combinedPayload = {
+    payoutMethods: payoutMethodsResponse.json.data,
+    calculation: calculationResponse.json.data,
+    mappedPayoutMethod,
+    selectedPayoutMethod,
+  }
+
+  return {
+    status: calculationResponse.status,
+    bodyText: calculationResponse.bodyText,
+    payload: combinedPayload,
   }
 }

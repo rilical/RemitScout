@@ -1,22 +1,10 @@
 import type { Pool } from 'pg'
 import nodemailer from 'nodemailer'
 
-import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-
-type OpsAlertEventRow = {
-  alert_id: string
-  provider_id: string | null
-  corridor_id: string | null
-  amount_bucket: number | null
-  http_status: number | null
-  block_reason: string | null
-  bronze_object_key: string | null
-  request_id: string | null
-  payload: unknown
-  created_at: string
-}
+import type { OpsAlertRecord } from '../repositories'
+import { OpsAlertRepository } from '../repositories'
 
 type OpsAlertPayload = {
   payin_method?: string
@@ -30,15 +18,8 @@ const logger = createLogger('plane-b.alerts')
 let emailTransporter: nodemailer.Transporter | null = null
 
 const loadOpsAlertEvent = async (pool: Pool, alertId: string) => {
-  const result = await query<OpsAlertEventRow>(
-    `SELECT alert_id, provider_id, corridor_id, amount_bucket, http_status, block_reason,
-            bronze_object_key, request_id, payload, created_at
-       FROM silver.ops_alert_event
-      WHERE alert_id = $1`,
-    [alertId],
-    pool,
-  )
-  return result.rows[0] ?? null
+  const repo = new OpsAlertRepository(pool)
+  return repo.getAlert(alertId)
 }
 
 const normalizePayload = (payload: unknown): OpsAlertPayload => {
@@ -65,7 +46,7 @@ const getEmailTransporter = () => {
   return emailTransporter
 }
 
-const buildAlertText = (event: OpsAlertEventRow, payload: OpsAlertPayload) => {
+const buildAlertText = (event: OpsAlertRecord, payload: OpsAlertPayload) => {
   const payinMethod = payload.payin_method ?? 'n/a'
   const payoutMethod = payload.payout_method ?? 'n/a'
   const collectorType = payload.collector_type ?? 'n/a'
@@ -88,17 +69,31 @@ const buildAlertText = (event: OpsAlertEventRow, payload: OpsAlertPayload) => {
 const sendSlackAlert = async (text: string) => {
   const webhookUrl = config.alerts.slackWebhookUrl
   if (!webhookUrl) return false
-  const response = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      text: `:rotating_light: Block alert\n${text}`,
-    }),
-  })
-  if (!response.ok) {
-    throw new Error(`slack_webhook_failed:${response.status}`)
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        text: `:rotating_light: Block alert\n${text}`,
+      }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    if (!response.ok) {
+      throw new Error(`slack_webhook_failed:${response.status}`)
+    }
+    return true
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === 'AbortError') {
+      throw new Error('slack_webhook_timeout')
+    }
+    throw error
   }
-  return true
 }
 
 const sendEmailAlert = async (subject: string, text: string) => {
@@ -116,7 +111,23 @@ const sendEmailAlert = async (subject: string, text: string) => {
 }
 
 export const notifyBlockAlert = async (pool: Pool, alertId: string) => {
-  const event = await loadOpsAlertEvent(pool, alertId)
+  if (!alertId || typeof alertId !== 'string' || alertId.trim().length === 0) {
+    logger.warn('alert_invalid_id', { alert_id: alertId })
+    return
+  }
+
+  let event: OpsAlertRecord | null
+  try {
+    event = await loadOpsAlertEvent(pool, alertId)
+  } catch (error: any) {
+    logger.error('alert_load_failed', {
+      alert_id: alertId,
+      error: error.message,
+      stack: error.stack,
+    })
+    return
+  }
+
   if (!event) {
     logger.warn('alert_missing', { alert_id: alertId })
     return
@@ -139,17 +150,21 @@ export const notifyBlockAlert = async (pool: Pool, alertId: string) => {
   const text = buildAlertText(event, payload)
   const subject = `Block alert: ${event.provider_id ?? 'unknown'} (${event.http_status ?? 'n/a'})`
   const results: Record<string, 'sent' | 'skipped' | 'failed'> = {
-    slack: slackConfigured ? 'skipped' : 'skipped',
-    email: emailConfigured ? 'skipped' : 'skipped',
+    slack: 'skipped',  // Will be updated to 'sent' or 'failed' if slackConfigured is true
+    email: 'skipped',  // Will be updated to 'sent' or 'failed' if emailConfigured is true
   }
 
   if (slackConfigured) {
     try {
       await sendSlackAlert(text)
       results.slack = 'sent'
-    } catch (error) {
+    } catch (error: any) {
       results.slack = 'failed'
-      logger.error('alert_slack_failed', { alert_id: event.alert_id, error })
+      logger.error('alert_slack_failed', {
+        alert_id: event.alert_id,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
     }
   }
 
@@ -157,9 +172,13 @@ export const notifyBlockAlert = async (pool: Pool, alertId: string) => {
     try {
       await sendEmailAlert(subject, text)
       results.email = 'sent'
-    } catch (error) {
+    } catch (error: any) {
       results.email = 'failed'
-      logger.error('alert_email_failed', { alert_id: event.alert_id, error })
+      logger.error('alert_email_failed', {
+        alert_id: event.alert_id,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
     }
   }
 

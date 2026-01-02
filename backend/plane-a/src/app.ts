@@ -3,6 +3,7 @@ import rateLimit from '@fastify/rate-limit'
 import { randomUUID } from 'crypto'
 import { config } from '../../shared/config'
 import { getPool } from '../../shared/db'
+import { createLogger } from '../../shared/logger'
 import { authPlugin, requireAuth } from './plugins/auth-plugin'
 import { billingRoutes } from './routes/billing'
 import { meRoutes } from './routes/me'
@@ -27,6 +28,14 @@ export const buildApp = () => {
   })
 
   const planeAPool = getPool(config.db.planeAUrl)
+
+  if (config.planeA.adminEmails.length === 0) {
+    const logger = createLogger('plane-a.app')
+    logger.warn('admin_emails_empty', {
+      message: 'PLANE_A_ADMIN_EMAILS is not set or empty. Admin routes will be inaccessible.',
+      env: config.env,
+    })
+  }
 
   authPlugin(app)
   const accountRoutePrefixes = [

@@ -1,3 +1,4 @@
+- technical-debt.md
 - rse-guardrails.md
 - adr/ADR-0001-guardrails.md
 - catalogs/service-catalog.md

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Pool } from 'pg'
 
-import { createPool, query } from '../../../../shared/db'
+import { createPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { detectBlock } from '../../collectors/block-detection'
@@ -16,7 +16,7 @@ import {
   finishIngestionRun,
   insertAttempt,
   insertOpsAlert,
-  loadObservedCorridors,
+  loadUnsupportedCorridors,
   markCorridorUnsupported,
   pauseProviderForBlock,
   persistNormalizedQuote,
@@ -26,6 +26,7 @@ import {
 import { writeBronzePayload } from '../../collectors/bronze-writer'
 import { createScheduler } from '../../collectors/scheduler'
 import type { CollectorRequest } from '../../collectors/types'
+import { LatestQuoteRepository, ProviderCapabilityRepository } from '../../repositories'
 import {
   checkCircuitState,
   closeCircuit,
@@ -33,13 +34,35 @@ import {
   penalizeRpmImmediately,
 } from '../../lib/redis-circuit-breaker'
 import { getProxyTierForCorridor, type ProxyTier } from '../../lib/proxy-router'
-import { dispatchSignal } from '../../signals/webhook-dispatcher'
+import { dispatchSignal } from '../../notifications/dispatcher'
 import { normalizeQuote } from '../../normalize/quote-normalizer'
 import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { WISE_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
 import { fetchWiseQuote } from './fetch'
 import { extractWiseMethodPairs, parseWisePayload } from './parse'
+
+/**
+ * Wise Collector
+ *
+ * This collector orchestrates the collection of money transfer quotes from Wise's API.
+ * It handles rate limiting, circuit breaking, error recovery, and data persistence.
+ *
+ * Flow:
+ * 1. Initialize collector with options and resolve rate limits
+ * 2. For each corridor and amount bucket:
+ *    - Check freshness SLO (if enabled) to skip recent quotes
+ *    - Wait for rate limit slot via scheduler
+ *    - Fetch quote from Wise API
+ *    - Write raw payload to bronze storage
+ *    - Detect blocks/rate limits and handle accordingly
+ *    - Parse provider-specific payload format
+ *    - Normalize to standard quote format
+ *    - Persist normalized quote to database
+ *    - Run anomaly detection and dispatch signals if needed
+ * 3. Apply rate limit penalties on errors, decay on success
+ * 4. Update RPM rates based on performance metrics
+ */
 
 type WiseCollectorOptions = {
   pool?: Pool
@@ -56,6 +79,8 @@ type WiseCollectorOptions = {
   payoutMethod?: string
   locale?: string
   collectorType?: string
+  freshnessSloMinutes?: number
+  freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
 }
@@ -63,6 +88,12 @@ type WiseCollectorOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.wise.collector')
 
+/**
+ * Updates provider capability information for a corridor.
+ * Extracts available payin/payout methods from the API response and stores them
+ * in the database. This helps track which payment methods are supported per corridor.
+ * Uses a Set to cache updates and avoid duplicate database writes.
+ */
 const upsertCapability = async (
   pool: Pool,
   corridorId: string,
@@ -78,30 +109,61 @@ const upsertCapability = async (
   const payinValue = payinMethods.length ? payinMethods : null
   const payoutValue = payoutMethods.length ? payoutMethods : null
 
-  await query(
-    `INSERT INTO silver.provider_corridor_capability
-     (provider_id, corridor_id, payin_methods, payout_methods, is_supported, source, last_verified_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NOW())
-     ON CONFLICT (provider_id, corridor_id) DO UPDATE SET
-       payin_methods = EXCLUDED.payin_methods,
-       payout_methods = EXCLUDED.payout_methods,
-       is_supported = EXCLUDED.is_supported,
-       source = EXCLUDED.source,
-       last_verified_at = EXCLUDED.last_verified_at,
-       updated_at = NOW()`,
-    ['wise', corridorId, payinValue, payoutValue, true, 'observed'],
-    pool,
+  const repo = new ProviderCapabilityRepository(pool)
+  await repo.upsertCapability({
+    providerId: 'wise',
+    corridorId,
+    payinMethods: payinValue,
+    payoutMethods: payoutValue,
+    isSupported: true,
+    source: 'observed',
+  })
+}
+
+/**
+ * Checks the age of the most recent quote for a specific corridor/amount/method combination.
+ * Used by freshness SLO to determine if we should skip fetching a new quote.
+ * Returns null if no quote exists, otherwise returns age in minutes.
+ */
+const getLatestQuoteAgeMinutes = async (
+  pool: Pool,
+  providerId: string,
+  corridorId: string,
+  amountBucket: number,
+  payinMethod: string,
+  payoutMethod: string,
+) => {
+  const repo = new LatestQuoteRepository(pool)
+  return repo.getLatestQuoteAgeMinutes(
+    providerId,
+    corridorId,
+    amountBucket,
+    payinMethod,
+    payoutMethod,
   )
 }
 
+/**
+ * Main collector function that orchestrates quote collection from Wise.
+ *
+ * @param options - Configuration options for the collector run
+ * @returns Promise<boolean> - true if collection completed successfully, false if blocked
+ */
 export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
   const providerId = 'wise'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = !options.pool
-  const resolvedCorridors = options.corridors?.length
-    ? options.corridors
-    : await loadObservedCorridors(pool, providerId)
-  const corridors = resolvedCorridors.length ? resolvedCorridors : WISE_SUPPORTED_CORRIDORS
+  let corridors: string[]
+
+  if (options.corridors?.length) {
+    corridors = options.corridors
+  } else {
+    const allPossibleCorridors = WISE_SUPPORTED_CORRIDORS
+    const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
+    corridors = allPossibleCorridors.filter(
+      corridor => !unsupportedCorridors.has(corridor)
+    )
+  }
   const buckets = options.amountBuckets ?? defaultAmountBuckets
   const payinMethod = options.payinMethod ?? 'bank_transfer'
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
@@ -114,9 +176,14 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
   const corridorDelayMs = options.corridorDelayMs ?? config.planeB.remitly.corridorDelayMs
   const corridorJitterMs = options.corridorJitterMs ?? config.planeB.remitly.corridorJitterMs
   const collectorType = options.collectorType ?? 'collector'
+  const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.remitly.freshnessSloMinutes
+  const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.remitly.freshnessSloEnabled
   const blockCooldownMs = config.planeB.remitly.blockCooldownMs
   const startedAt = new Date()
   const capabilityUpdated = new Set<string>()
+  let freshnessChecked = 0
+  let freshnessSkipped = 0
+  let freshnessStale = 0
   let extraDelayMs = 0
   let extraJitterMs = 0
   const providerRates = await resolveProviderRates(pool, providerId, {
@@ -170,6 +237,12 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
   }
   const isRateLimit = (reason: string | null) =>
     reason === 'http_429' || reason === 'keyword_too_many_requests'
+  const isScheduledSweep = collectorType === 'collector'
+    || collectorType === 'b2b_full_sweep'
+    || collectorType === 'b2b_tier_1_alpha'
+    || collectorType === 'b2b_tier_2_reference'
+    || collectorType === 'b2b_tier_3_discovery'
+  const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
   const proxyTierCache = new Map<string, ProxyTier>()
   const resolveProxyTier = async (corridorId: string) => {
     if (proxyTierCache.has(corridorId)) {
@@ -226,6 +299,34 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
     for (const amountBucket of buckets) {
       if (skipCorridor) {
         break
+      }
+      if (shouldApplyFreshnessSlo) {
+        freshnessChecked += 1
+        const ageMinutes = await getLatestQuoteAgeMinutes(
+          pool,
+          providerId,
+          corridorId,
+          amountBucket,
+          payinMethod,
+          payoutMethod,
+        )
+        if (ageMinutes !== null && ageMinutes <= freshnessSloMinutes) {
+          freshnessSkipped += 1
+          logger.debug('freshness_skip', {
+            corridor_id: corridorId,
+            amount_bucket: amountBucket,
+            age_minutes: ageMinutes,
+            slo_minutes: freshnessSloMinutes,
+          })
+          continue
+        }
+        freshnessStale += 1
+        logger.debug('freshness_stale', {
+          corridor_id: corridorId,
+          amount_bucket: amountBucket,
+          age_minutes: ageMinutes,
+          slo_minutes: freshnessSloMinutes,
+        })
       }
       let rateLimitRetries = 0
       let completed = false
@@ -573,12 +674,13 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
           delivery_time_min_minutes: parsed.delivery_time_min_minutes,
           delivery_time_max_minutes: parsed.delivery_time_max_minutes,
           promotional_rate: parsed.promotional_rate,
-          base_rate: parsed.base_rate ?? parsed.exchange_rate,
+          base_rate: parsed.base_rate,
           promotional_cap_amount: parsed.promotional_cap_amount,
           collected_at: parsed.collected_at,
           ingestion_run_id: ingestionRunId,
           bronze_object_key: bronzeObjectKey ?? 'bronze.provider_raw:unknown',
           parser_version: parsed.parser_version,
+          parse_flags: parsed.parse_flags,
         })
         normalizeDurationMs = Date.now() - normalizeStartedAt
         logger.debug('quote_normalize_ok', {
@@ -678,6 +780,9 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
     ingestion_run_id: ingestionRunId,
     status: blocked ? 'blocked' : 'success',
     block_reason: blockReason,
+    freshness_checked: freshnessChecked,
+    freshness_skipped: freshnessSkipped,
+    freshness_stale: freshnessStale,
   })
 
   return !blocked

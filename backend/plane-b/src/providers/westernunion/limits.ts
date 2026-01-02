@@ -10,6 +10,10 @@ export const httpLimits = {
   perCorridorRpm: toNumber(process.env.PLANE_B_WESTERNUNION_CORRIDOR_RPM, 2),
 }
 
+/**
+ * MVP: Playwright support is not yet implemented.
+ * These limits are defined for future use and do not affect current functionality.
+ */
 export const playwrightLimits = {
   rpm: toNumber(process.env.PLANE_B_WESTERNUNION_PLAYWRIGHT_RPM, 4),
   concurrency: toNumber(process.env.PLANE_B_WESTERNUNION_PLAYWRIGHT_CONCURRENCY, 1),

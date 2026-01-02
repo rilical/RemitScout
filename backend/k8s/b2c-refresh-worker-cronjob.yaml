@@ -1,0 +1,90 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: b2c-refresh-worker
+  namespace: remit-scout
+spec:
+  # Run every 2 minutes
+  schedule: "*/2 * * * *"
+  # Prevent overlapping runs (if previous job still running, skip)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: b2c-refresh-worker
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: worker
+            image: remit-scout-backend:latest
+            imagePullPolicy: IfNotPresent
+            command: ["node", "dist/scripts/b2c-refresh-worker.js"]
+            env:
+            - name: B2C_REFRESH_LIMIT
+              value: "50"
+            - name: DATABASE_URL_PLANE_B
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: plane-b-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: url
+            - name: NODE_ENV
+              value: "production"
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: b2c-retry-failed
+  namespace: remit-scout
+spec:
+  # Run every 15 minutes
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: b2c-retry-failed
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: retry
+            image: remit-scout-backend:latest
+            imagePullPolicy: IfNotPresent
+            command: ["node", "dist/scripts/b2c-retry-failed.js"]
+            env:
+            - name: B2C_RETRY_MIN_AGE_SECONDS
+              value: "300"
+            - name: DATABASE_URL_PLANE_B
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: plane-b-url
+            - name: NODE_ENV
+              value: "production"
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "50m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+

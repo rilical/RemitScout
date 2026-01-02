@@ -1,4 +1,4 @@
-import { Pool } from 'pg'
+import { Pool, type PoolClient } from 'pg'
 import { config } from './config'
 
 export const createPool = (connectionString?: string) => {
@@ -22,7 +22,11 @@ export const getPool = (connectionString?: string) => {
 
 export const pool = getPool()
 
-export const query = async <T = any>(text: string, params: any[] = [], poolInstance: Pool = pool) => {
+export const query = async <T = any>(
+  text: string,
+  params: any[] = [],
+  poolInstance: Pool | PoolClient = pool,
+) => {
   const result = await poolInstance.query<T>(text, params)
   return result
 }

@@ -2315,15 +2315,10 @@
                   <div v-if="isPlus" class="flex gap-3">
                     <button
                       type="button"
+                      @click="openBillingPortal"
                       class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
                     >
-                      Change Plan
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                      Cancel Subscription
+                      Manage Subscription
                     </button>
                   </div>
                 </div>
@@ -2342,6 +2337,7 @@
                     </div>
                     <button
                       type="button"
+                      @click="openBillingPortal"
                       class="text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
                       Update
@@ -2827,6 +2823,7 @@ const route = useRoute()
 const { user, isAuthenticated, updateProfile, updateAvatar } = useAuth()
 const { isPlus, limits } = useEntitlements()
 const modal = useSaveAlertModal()
+const { request } = useApi()
 
 const {
   items: watchlistItems,
@@ -2883,6 +2880,21 @@ function setTab(tab: DashboardTab) {
     nextQuery.tab = tab
   }
   void navigateTo({ path: route.path, query: nextQuery })
+}
+
+async function openBillingPortal() {
+  try {
+    const response = await request<{ url: string }>('/api/billing/portal', {
+      method: 'GET',
+    })
+    
+    if (response.url) {
+      window.location.href = response.url
+    }
+  } catch (error: any) {
+    console.error('Failed to open billing portal:', error)
+    alert('Unable to open billing portal. Please try again.')
+  }
 }
 
 type OpsProviderId = 'remitly' | 'westernunion' | 'worldremit' | 'xe' | 'wise'

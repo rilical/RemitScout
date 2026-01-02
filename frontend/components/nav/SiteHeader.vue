@@ -9,7 +9,7 @@ const scrolled = ref(false)
 
 const { compareUrl } = useCompareForm()
 const { isAuthenticated, signIn, signOut } = useAuth()
-const { isPlus, plan, setPlan } = useEntitlements()
+const { isPlus, plan, refreshPlan } = useEntitlements()
 
 const runtimeConfig = useRuntimeConfig()
 type PublicDevConfig = { devControls?: boolean }
@@ -26,20 +26,22 @@ const devStatusNextLabel = computed(() => {
   return 'Sign out'
 })
 
-function cycleDevStatus() {
+async function cycleDevStatus() {
   if (!isAuthenticated.value) {
     signIn('dev@remitscout.test')
-    setPlan('free')
+    await refreshPlan()
     return
   }
 
   if (plan.value === 'free') {
-    setPlan('plus')
+    // Plan is managed by backend - can't manually upgrade in dev mode
+    // This would require actual checkout flow
+    await refreshPlan()
     return
   }
 
   signOut()
-  setPlan('free')
+  await refreshPlan()
 }
 
 function handleDevCycleFromMenu() {

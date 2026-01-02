@@ -1,13 +1,28 @@
 import type { FastifyInstance } from 'fastify'
+import type { Pool } from 'pg'
 import { createHash } from 'crypto'
 import { z } from 'zod'
 import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
+import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { createTtlCache } from '../../../shared/cache'
+import { VolatilityService } from '../../plane-b/src/services/volatility-service'
+import {
+  FxRateRepository,
+  LatestQuoteRepository,
+  QuoteRefreshRepository,
+  RightsMatrixRepository,
+} from '../repositories'
+
+const logger = createLogger('plane-a.quotes')
 
 const planeAPool = getPool(config.db.planeAUrl)
+const fxRateRepository = new FxRateRepository(planeAPool)
+const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
+const quoteRefreshRepository = new QuoteRefreshRepository(planeAPool)
+const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
 
 const fxRateCache = createTtlCache<number>({ namespace: 'plane_a:fx_rate' })
 const latestQuoteCache = createTtlCache<any[]>({ namespace: 'plane_a:latest_quote' })
@@ -38,11 +53,7 @@ const getFxRate = async (baseCurrency: string, quoteCurrency: string) => {
   const cached = await fxRateCache.get(cacheKey)
   if (cached !== null) return cached
 
-  const result = await planeAPool.query<{ rate: number }>(
-    `SELECT rate FROM gold.fx_rates WHERE base_currency = $1 AND quote_currency = $2`,
-    [baseCurrency, quoteCurrency],
-  )
-  const rate = result.rows[0]?.rate ? Number(result.rows[0].rate) : null
+  const rate = await fxRateRepository.getRate(baseCurrency, quoteCurrency)
   if (rate && Number.isFinite(rate)) {
     const ttlMs = config.planeA.b2c.fxRateCacheTtlSeconds * 1000
     await fxRateCache.set(cacheKey, rate, ttlMs)
@@ -56,12 +67,12 @@ const getUsdEquivalent = async (amount: number, currency: string) => {
   if (currency === 'USD') return amount
 
   const direct = await getFxRate(currency, 'USD')
-  if (direct) {
+  if (direct && direct !== 0 && Number.isFinite(direct)) {
     return amount * direct
   }
 
   const inverse = await getFxRate('USD', currency)
-  if (inverse) {
+  if (inverse && inverse !== 0 && Number.isFinite(inverse)) {
     return amount / inverse
   }
 
@@ -85,6 +96,21 @@ const getCacheAgeSeconds = (newestCollectedAt: number) => {
   return Math.max(0, Math.round((Date.now() - newestCollectedAt) / 1000))
 }
 
+const getDynamicCacheTtl = async (pool: Pool, corridorId: string): Promise<number> => {
+  try {
+    const volatilityService = new VolatilityService(pool)
+    const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
+    return ttlResult.ttlSeconds
+  } catch (error: any) {
+    logger.warn('volatility_service_failed', {
+      corridor_id: corridorId,
+      error: error.message,
+    })
+    // Fallback to default TTL (1 hour = 3600 seconds)
+    return 3600
+  }
+}
+
 const enqueueRefreshRequest = async (input: {
   providerId: string
   corridorId: string
@@ -92,33 +118,16 @@ const enqueueRefreshRequest = async (input: {
   payinMethod: string
   payoutMethod: string
 }) => {
-  const result = await planeAPool.query(
-    `INSERT INTO silver.quote_refresh_request
-     (provider_id, corridor_id, amount_bucket, payin_method, payout_method, status, requested_at, last_requested_at, request_count)
-     VALUES ($1, $2, $3, $4, $5, 'pending', NOW(), NOW(), 1)
-     ON CONFLICT (provider_id, corridor_id, amount_bucket, payin_method, payout_method)
-     DO UPDATE SET
-       status = 'pending',
-       last_requested_at = NOW(),
-       request_count = silver.quote_refresh_request.request_count + 1
-     RETURNING request_id`,
-    [input.providerId, input.corridorId, input.amountBucket, input.payinMethod, input.payoutMethod],
-  )
-  return result.rows?.[0]?.request_id as string | undefined
+  const requestId = await quoteRefreshRepository.enqueueRequest(input)
+  return requestId ?? undefined
 }
 
 const DEFAULT_B2C_PROVIDERS = ['remitly', 'westernunion', 'worldremit', 'xe', 'wise']
 
 const loadB2cProviders = async () => {
   try {
-    const result = await planeAPool.query<{ provider_id: string }>(
-      `SELECT provider_id
-         FROM silver.rights_matrix
-        WHERE allowed_b2c = true
-          AND allowed_collect = true
-          AND stoplist_status = 'active'`,
-    )
-    return result.rows.map(row => row.provider_id).filter(Boolean)
+    const rows = await rightsMatrixRepository.listActiveB2cProviders()
+    return rows.map(row => row.provider_id).filter(Boolean)
   } catch {
     return []
   }
@@ -170,6 +179,8 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: [{ message: `amount must be >= ${MIN_SEND_AMOUNT} USD equivalent` }] }
     }
 
+    try {
+
     const bucketSelection = amountInput !== undefined
       ? computeBucketSelection(amountInput)
       : {
@@ -179,52 +190,51 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       }
     const amount_bucket = bucketSelection.bucket_used
 
-    const fetchLatest = async () => {
+    // Get dynamic TTL once before fetching
+    const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
+
+    const fetchLatest = async (ttlSeconds: number) => {
       const cacheKey = `${corridor_id}:${amount_bucket}:${payin}:${payout}`
       const cached = await latestQuoteCache.get(cacheKey)
       if (cached !== null) {
+        logger.debug('quotes_cache_hit', {
+          corridor_id,
+          amount_bucket,
+          cache_key: cacheKey,
+        })
         return { rows: cached, rowCount: cached.length }
       }
 
-      const result = await planeAPool.query(
-      `SELECT provider_id,
-              corridor_id,
-              amount_bucket,
-              payin,
-              payout,
-              payin AS payin_method,
-              payout AS payout_method,
-              delivery_time_min_minutes,
-              delivery_time_max_minutes,
-              collected_at,
-              send_amount,
-              fee_amount,
-              promotional_fee_amount,
-              receive_amount,
-              implied_fx_rate,
-              promotional_rate,
-              base_rate,
-              promotional_cap_amount,
-              quality_flags,
-              updated_at
-         FROM silver.latest_quote_by_provider
-        WHERE corridor_id = $1
-          AND amount_bucket = $2
-          AND payin = $3
-          AND payout = $4
-        ORDER BY receive_amount DESC, fee_amount ASC`,
-      [corridor_id, amount_bucket, payin, payout],
-    )
-      const ttlMs = config.planeA.b2c.latestQuoteCacheTtlSeconds * 1000
+      const rows = await latestQuoteRepository.listLatestByCorridor(
+        corridor_id,
+        amount_bucket,
+        payin,
+        payout,
+      )
+
+      if (!Array.isArray(rows)) {
+        logger.error('quotes_invalid_response', {
+          corridor_id,
+          type: typeof rows,
+        })
+        throw new Error('Invalid response from database')
+      }
+
+      const result = { rows, rowCount: rows.length }
+      const ttlMs = ttlSeconds * 1000
       await latestQuoteCache.set(cacheKey, result.rows, ttlMs)
+      logger.debug('quotes_cache_miss', {
+        corridor_id,
+        amount_bucket,
+        count: rows.length,
+      })
       return result
     }
 
-    let result = await fetchLatest()
-    const cacheTtlSeconds = config.planeA.b2c.cacheTtlSeconds
+    let result = await fetchLatest(dynamicCacheTtlSeconds)
     let newestCollectedAt = getNewestCollectedAt(result.rows)
     let cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
-    let cacheFresh = cacheAgeSeconds !== null && cacheAgeSeconds <= cacheTtlSeconds
+    let cacheFresh = cacheAgeSeconds !== null && cacheAgeSeconds <= dynamicCacheTtlSeconds
 
     let refreshAttempted = false
     let refreshEnqueued = false
@@ -262,6 +272,15 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       }
       refreshRequestId = refreshRequestIds[0] ?? null
       refreshEnqueued = refreshRequestIds.length > 0
+
+      if (refreshEnqueued) {
+        logger.info('quotes_refresh_enqueued', {
+          corridor_id,
+          amount_bucket,
+          provider_count: refreshProviderIds.length,
+          request_ids: refreshRequestIds,
+        })
+      }
     }
 
     const requestedAmount = amountInput ?? amountBucketInput ?? bucketSelection.bucket_used
@@ -274,7 +293,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       fee_bucket_used: bucketSelection.fee_bucket_used,
       approximate: bucketSelection.approximate,
       cache: {
-        ttl_seconds: cacheTtlSeconds,
+        ttl_seconds: dynamicCacheTtlSeconds,
         age_seconds: cacheAgeSeconds,
         fresh: cacheFresh,
       },
@@ -292,11 +311,35 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     const etag = `"${createHash('sha256').update(cachePayload).digest('hex')}"`
     reply.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60')
     reply.header('ETag', etag)
-    if (request.headers['if-none-match'] === etag) {
+
+    const clientEtag = request.headers['if-none-match']
+    if (clientEtag && clientEtag.toLowerCase() === etag.toLowerCase()) {
+      logger.debug('quotes_cache_hit', { etag })
       reply.code(304)
       return ''
     }
 
+    logger.debug('quotes_request_success', {
+      corridor_id,
+      amount_bucket,
+      count: result.rowCount,
+      cache_fresh: cacheFresh,
+      refresh_enqueued: refreshEnqueued,
+    })
+
     return responsePayload
+    } catch (error: any) {
+      logger.error('quotes_request_failed', {
+        corridor_id,
+        amount_bucket: amount_bucket ?? null,
+        error: error.message,
+        stack: error.stack,
+      })
+      reply.code(500)
+      return {
+        error: 'internal_error',
+        message: 'Failed to fetch quotes',
+      }
+    }
   })
 }

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Pool } from 'pg'
 
-import { createPool, query } from '../../../../shared/db'
+import { createPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { detectBlock } from '../../collectors/block-detection'
@@ -16,7 +16,7 @@ import {
   finishIngestionRun,
   insertAttempt,
   insertOpsAlert,
-  loadObservedCorridors,
+  loadUnsupportedCorridors,
   markCorridorUnsupported,
   pauseProviderForBlock,
   persistNormalizedQuote,
@@ -30,16 +30,39 @@ import {
   penalizeRpmImmediately,
 } from '../../lib/redis-circuit-breaker'
 import { getProxyTierForCorridor, type ProxyTier } from '../../lib/proxy-router'
-import { dispatchSignal } from '../../signals/webhook-dispatcher'
+import { dispatchSignal } from '../../notifications/dispatcher'
 import { writeBronzePayload } from '../../collectors/bronze-writer'
 import { createScheduler } from '../../collectors/scheduler'
 import type { CollectorRequest } from '../../collectors/types'
+import { LatestQuoteRepository, ProviderCapabilityRepository } from '../../repositories'
 import { normalizeQuote } from '../../normalize/quote-normalizer'
 import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { REMITLY_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
 import { fetchRemitlyQuote } from './fetch'
 import { extractRemitlyMethodPairs, parseRemitlyPayload } from './parse'
+
+/**
+ * Remitly Collector
+ *
+ * This collector orchestrates the collection of money transfer quotes from Remitly's API.
+ * It handles rate limiting, circuit breaking, error recovery, and data persistence.
+ *
+ * Flow:
+ * 1. Initialize collector with options and resolve rate limits
+ * 2. For each corridor and amount bucket:
+ *    - Check freshness SLO (if enabled) to skip recent quotes
+ *    - Wait for rate limit slot via scheduler
+ *    - Fetch quote from Remitly API
+ *    - Write raw payload to bronze storage
+ *    - Detect blocks/rate limits and handle accordingly
+ *    - Parse provider-specific payload format
+ *    - Normalize to standard quote format
+ *    - Persist normalized quote to database
+ *    - Run anomaly detection and dispatch signals if needed
+ * 3. Apply rate limit penalties on errors, decay on success
+ * 4. Update RPM rates based on performance metrics
+ */
 
 type RemitlyCollectorOptions = {
   pool?: Pool
@@ -65,6 +88,12 @@ type RemitlyCollectorOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.remitly.collector')
 
+/**
+ * Updates provider capability information for a corridor.
+ * Extracts available payin/payout methods from the API response and stores them
+ * in the database. This helps track which payment methods are supported per corridor.
+ * Uses a Set to cache updates and avoid duplicate database writes.
+ */
 const upsertCapability = async (
   pool: Pool,
   corridorId: string,
@@ -80,22 +109,22 @@ const upsertCapability = async (
   const payinValue = payinMethods.length ? payinMethods : null
   const payoutValue = payoutMethods.length ? payoutMethods : null
 
-  await query(
-    `INSERT INTO silver.provider_corridor_capability
-     (provider_id, corridor_id, payin_methods, payout_methods, is_supported, source, last_verified_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NOW())
-     ON CONFLICT (provider_id, corridor_id) DO UPDATE SET
-       payin_methods = EXCLUDED.payin_methods,
-       payout_methods = EXCLUDED.payout_methods,
-       is_supported = EXCLUDED.is_supported,
-       source = EXCLUDED.source,
-       last_verified_at = EXCLUDED.last_verified_at,
-       updated_at = NOW()`,
-    ['remitly', corridorId, payinValue, payoutValue, true, 'observed'],
-    pool,
-  )
+  const repo = new ProviderCapabilityRepository(pool)
+  await repo.upsertCapability({
+    providerId: 'remitly',
+    corridorId,
+    payinMethods: payinValue,
+    payoutMethods: payoutValue,
+    isSupported: true,
+    source: 'observed',
+  })
 }
 
+/**
+ * Checks the age of the most recent quote for a specific corridor/amount/method combination.
+ * Used by freshness SLO to determine if we should skip fetching a new quote.
+ * Returns null if no quote exists, otherwise returns age in minutes.
+ */
 const getLatestQuoteAgeMinutes = async (
   pool: Pool,
   providerId: string,
@@ -104,30 +133,39 @@ const getLatestQuoteAgeMinutes = async (
   payinMethod: string,
   payoutMethod: string,
 ) => {
-  const result = await query<{ age_minutes: number | null }>(
-    `SELECT EXTRACT(EPOCH FROM (now() - collected_at)) / 60.0 AS age_minutes
-       FROM silver.latest_quote_by_provider
-      WHERE provider_id = $1
-        AND corridor_id = $2
-        AND amount_bucket = $3
-        AND payin = $4
-        AND payout = $5`,
-    [providerId, corridorId, amountBucket, payinMethod, payoutMethod],
-    pool,
+  const repo = new LatestQuoteRepository(pool)
+  return repo.getLatestQuoteAgeMinutes(
+    providerId,
+    corridorId,
+    amountBucket,
+    payinMethod,
+    payoutMethod,
   )
-  const age = result.rows[0]?.age_minutes
-  return Number.isFinite(age) ? Number(age) : null
 }
 
-
+/**
+ * Main collector function that orchestrates quote collection from Remitly.
+ *
+ * @param options - Configuration options for the collector run
+ * @returns Promise<boolean> - true if collection completed successfully, false if blocked
+ */
 export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {}) => {
   const providerId = 'remitly'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = !options.pool
-  const resolvedCorridors = options.corridors?.length
-    ? options.corridors
-    : await loadObservedCorridors(pool, providerId)
-  const corridors = resolvedCorridors.length ? resolvedCorridors : REMITLY_SUPPORTED_CORRIDORS
+  let corridors: string[]
+
+  // Resolve corridors to collect: use provided list or filter supported corridors
+  // by removing those marked as unsupported in the database
+  if (options.corridors?.length) {
+    corridors = options.corridors
+  } else {
+    const allPossibleCorridors = REMITLY_SUPPORTED_CORRIDORS
+    const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
+    corridors = allPossibleCorridors.filter(
+      corridor => !unsupportedCorridors.has(corridor)
+    )
+  }
   const buckets = options.amountBuckets ?? defaultAmountBuckets
   const payinMethod = options.payinMethod ?? 'debit_card'
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
@@ -144,15 +182,17 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
   const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.remitly.freshnessSloEnabled
   const blockCooldownMs = config.planeB.remitly.blockCooldownMs
   const startedAt = new Date()
-  const capabilityUpdated = new Set<string>()
+  const capabilityUpdated = new Set<string>() // Cache to prevent duplicate capability updates per corridor
   let freshnessChecked = 0
   let freshnessSkipped = 0
   let freshnessStale = 0
+  // Rate limit penalty state: increases on rate limit errors, decays on success
   let extraDelayMs = 0
   let extraJitterMs = 0
+  // Resolve rate limits: check database for overrides, fall back to httpLimits from limits.ts
   const providerRates = await resolveProviderRates(pool, providerId, {
-    rpm: config.planeB.remitly.rpm,
-    perCorridorRpm: config.planeB.remitly.perCorridorRpm,
+    rpm: httpLimits.rpm,
+    perCorridorRpm: httpLimits.perCorridorRpm,
   }, {
     rpm: options.rpmOverride,
     perCorridorRpm: options.perCorridorRpmOverride,
@@ -171,43 +211,76 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
     locale,
     perLocale: httpLimits.perLocale,
   })
+  // Performance tracking counters
   let attemptCount = 0
   let successCount = 0
   let blockCount = 0
   let rateLimitCount = 0
   let http2xxCount = 0
   let attemptDurationMsTotal = 0
+  /**
+   * Records the duration of an attempt for performance metrics.
+   */
   const recordAttemptDuration = (startedAtMs: number) => {
     const durationMs = Date.now() - startedAtMs
     attemptDurationMsTotal += durationMs
     return durationMs
   }
+  /**
+   * Sleeps for rate limit backoff period with jitter to avoid thundering herd.
+   * Called when a rate limit error is detected and we're retrying.
+   */
   const sleepRateLimit = async () => {
     const jitter = rateLimitJitterMs > 0 ? Math.floor(Math.random() * rateLimitJitterMs) : 0
     await sleep(rateLimitBackoffMs + jitter)
   }
+  /**
+   * Increases rate limit penalty when a rate limit error is detected.
+   * Penalty is capped at 3x the base backoff to prevent excessive delays.
+   * This penalty is applied to the scheduler's wait time for subsequent requests.
+   */
   const applyRateLimitPenalty = () => {
     extraDelayMs = Math.min(extraDelayMs + rateLimitBackoffMs, rateLimitBackoffMs * 3)
     extraJitterMs = Math.min(extraJitterMs + rateLimitJitterMs, rateLimitJitterMs * 3)
   }
+  /**
+   * Decays rate limit penalty on successful quote collection.
+   * Reduces penalty by 30% each time, allowing gradual recovery from rate limit issues.
+   */
   const decayRateLimitPenalty = () => {
     extraDelayMs = Math.max(0, Math.floor(extraDelayMs * 0.7))
     extraJitterMs = Math.max(0, Math.floor(extraJitterMs * 0.7))
   }
+  /**
+   * Adds delay between processing different corridors to avoid overwhelming the provider.
+   * Includes jitter to randomize timing and prevent synchronized requests.
+   */
   const sleepBetweenCorridors = async () => {
     if (corridorDelayMs <= 0 && corridorJitterMs <= 0) return
     const jitter = corridorJitterMs > 0 ? Math.floor(Math.random() * corridorJitterMs) : 0
     await sleep(corridorDelayMs + jitter)
   }
+  /**
+   * Determines if a block reason indicates a rate limit error.
+   */
   const isRateLimit = (reason: string | null) =>
     reason === 'http_429' || reason === 'keyword_too_many_requests'
+  /**
+   * Checks if this is a scheduled sweep (not a manual health probe or B2C request).
+   * Freshness SLO is only applied to scheduled sweeps to avoid skipping B2C requests.
+   */
   const isScheduledSweep = collectorType === 'collector'
     || collectorType === 'b2b_full_sweep'
     || collectorType === 'b2b_tier_1_alpha'
     || collectorType === 'b2b_tier_2_reference'
     || collectorType === 'b2b_tier_3_discovery'
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
+  // Cache proxy tier lookups to avoid repeated database queries
   const proxyTierCache = new Map<string, ProxyTier>()
+  /**
+   * Resolves the proxy tier for a corridor, using cache to avoid duplicate lookups.
+   * Proxy tiers determine which proxy infrastructure to use for API requests.
+   */
   const resolveProxyTier = async (corridorId: string) => {
     if (proxyTierCache.has(corridorId)) {
       return proxyTierCache.get(corridorId) as ProxyTier
@@ -217,8 +290,10 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
     return proxyTier
   }
 
+  // Ensure provider exists in database, create if missing
   await ensureProvider(pool, providerId, 'Remitly')
 
+  // Check if provider is paused due to previous blocks, resume if cooldown expired
   const resumeStatus = await resumeProviderIfCooldownExpired(pool, providerId)
   if (!resumeStatus.canCollect) {
     logger.warn('collector_paused', { reason: resumeStatus.reason })
@@ -228,6 +303,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
     logger.info('collector_resumed', { reason: resumeStatus.reason })
   }
 
+  // Create ingestion run record to track this collection session
   const ingestionRunId = await createIngestionRun(pool, providerId, collectorType, startedAt)
   logger.info('collector_start', {
     ingestion_run_id: ingestionRunId,
@@ -242,8 +318,10 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
     rpm_source: providerRates.source,
   })
 
+  // Track blocking state to stop collection if provider is blocked
   let blocked = false
   let blockReason: string | null = null
+  // Check circuit breaker state: if open, provider is temporarily disabled
   const providerCircuitState = await checkCircuitState(pool, providerId, null)
   if (providerCircuitState === 'open') {
     logger.warn('collector_circuit_open', { scope: 'provider', provider_id: providerId })
@@ -254,16 +332,20 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
     return false
   }
 
+  // Main collection loop: iterate through all corridors
   for (const corridorId of corridors) {
-    let skipCorridor = false
+    let skipCorridor = false // Flag to skip remaining buckets if corridor is unsupported
     logger.debug('corridor_start', { corridor_id: corridorId })
+    // Ensure corridor exists in database, create if missing
     await ensureCorridor(pool, corridorId)
     const proxyTier = await resolveProxyTier(corridorId)
 
+    // Inner loop: iterate through amount buckets for this corridor
     for (const amountBucket of buckets) {
       if (skipCorridor) {
-        break
+        break // Skip remaining buckets if corridor was marked unsupported
       }
+      // Freshness SLO: skip if quote is already fresh enough
       if (shouldApplyFreshnessSlo) {
         freshnessChecked += 1
         const ageMinutes = await getLatestQuoteAgeMinutes(
@@ -292,10 +374,12 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           slo_minutes: freshnessSloMinutes,
         })
       }
+      // Retry loop: handles rate limit retries and error recovery
       let rateLimitRetries = 0
       let completed = false
 
       while (!completed) {
+        // Check circuit breaker: skip if circuit is open (provider/corridor disabled)
         const circuitState = await checkCircuitState(pool, providerId, corridorId)
         if (circuitState === 'open') {
           logger.warn('circuit_open_skip', { provider_id: providerId, corridor_id: corridorId })
@@ -305,14 +389,16 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
         const isHalfOpen = circuitState === 'half_open'
 
         attemptCount += 1
-        const traceId = randomUUID()
+        const traceId = randomUUID() // Unique ID for tracing this attempt through logs
         const attemptStartedAt = Date.now()
+        // Performance tracking: measure duration of each stage
         let fetchDurationMs = 0
         let bronzeDurationMs = 0
         let parseDurationMs = 0
         let normalizeDurationMs = 0
         let persistDurationMs = 0
 
+        // Build request object for this quote attempt
         const request: CollectorRequest = {
           provider_id: providerId,
           corridor_id: corridorId,
@@ -323,6 +409,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           locale,
         }
 
+        // Create fingerprint for deduplication and tracking
         const requestFingerprint = createHash('sha256')
           .update(`${corridorId}:${amountBucket}:${payinMethod}:${payoutMethod}`)
           .digest('hex')
@@ -336,9 +423,12 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           request_fingerprint: requestFingerprint,
         })
 
+        // Wait for rate limit slot: scheduler ensures we don't exceed RPM limits
+        // extraDelayMs/extraJitterMs apply penalty from previous rate limit errors
         await scheduler.waitForSlot(corridorId, extraDelayMs, extraJitterMs)
         let fetchResult: Awaited<ReturnType<typeof fetchRemitlyQuote>>
         const fetchStartedAt = Date.now()
+        // Fetch quote from Remitly API
         try {
           fetchResult = await fetchRemitlyQuote(request, { jitterMs, proxyTier })
           fetchDurationMs = Date.now() - fetchStartedAt
@@ -388,6 +478,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           continue
         }
 
+        // Write raw API response to bronze storage for audit trail and debugging
         const payload = fetchResult.payload ?? fetchResult.bodyText
         const bronzeStartedAt = Date.now()
         const bronzeId = await writeBronzePayload(pool, {
@@ -405,6 +496,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           duration_ms: bronzeDurationMs,
         })
 
+        // Detect if we were blocked (rate limit, IP ban, etc.)
         const blockResult = detectBlock(fetchResult.status, fetchResult.bodyText)
         if (blockResult.blocked) {
           const reason = blockResult.reason ?? 'blocked'
@@ -413,6 +505,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           if (rateLimited) {
             rateLimitCount += 1
           }
+          // Apply penalty to slow down future requests if rate limited
           if (rateLimited) {
             applyRateLimitPenalty()
           }
@@ -455,6 +548,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           if (shouldAlert && alertId) {
             await notifyBlockAlert(pool, alertId)
           }
+          // Open circuit breaker for severe errors (429, 403) to prevent further requests
           if (fetchResult.status === 429 || fetchResult.status === 403) {
             const reasonLabel = fetchResult.status === 429 ? 'rate_limit' : 'http_403'
             await openCircuit(pool, providerId, corridorId, reasonLabel, config.planeB.circuitOpenMs)
@@ -472,6 +566,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
               at: new Date().toISOString(),
             })
           }
+          // Retry rate limit errors up to max retries
           if (rateLimited && rateLimitRetries < Math.max(rateLimitMaxRetries, 0)) {
             const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
             rateLimitRetries += 1
@@ -501,6 +596,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
             continue
           }
 
+          // Pause provider/corridor and stop collection if non-rate-limit block
           await pauseProviderForBlock(pool, providerId, corridorId, reason, blockCooldownMs)
           blocked = true
           blockReason = reason
@@ -517,6 +613,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           continue
         }
 
+        // Validate response: must be 200 with valid JSON payload
         if (fetchResult.status !== 200 || !fetchResult.payload || typeof fetchResult.payload !== 'object') {
           logger.warn('quote_fetch_non_200', {
             trace_id: traceId,
@@ -526,6 +623,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
             payout_method: payoutMethod,
             http_status: fetchResult.status,
           })
+          // Mark corridor as unsupported if 400 error (invalid corridor)
           if (fetchResult.status === 400) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_http_400')
             logger.warn('corridor_marked_unsupported', {
@@ -561,11 +659,13 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           continue
         }
 
+        // Update capability info once per corridor (cached to avoid duplicates)
         if (!capabilityUpdated.has(corridorId)) {
           await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
           capabilityUpdated.add(corridorId)
         }
 
+        // Parse provider-specific payload format to standard parsed quote
         const parseStartedAt = Date.now()
         const parsed = parseRemitlyPayload(fetchResult.payload as Record<string, unknown>, request)
         parseDurationMs = Date.now() - parseStartedAt
@@ -612,6 +712,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           duration_ms: parseDurationMs,
         })
 
+        // Normalize parsed quote to standard format with validation and quality flags
         const normalizeStartedAt = Date.now()
         const normalized = normalizeQuote({
           provider_id: providerId,
@@ -623,6 +724,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           receive_amount: parsed.receive_amount,
           payin_method: parsed.payin_method,
           payout_method: parsed.payout_method,
+          promotional_fee_amount: parsed.promotional_fee_amount,
           delivery_time_min_minutes: parsed.delivery_time_min_minutes,
           delivery_time_max_minutes: parsed.delivery_time_max_minutes,
           promotional_rate: parsed.promotional_rate,
@@ -632,6 +734,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           ingestion_run_id: ingestionRunId,
           bronze_object_key: bronzeObjectKey ?? 'bronze.provider_raw:unknown',
           parser_version: parsed.parser_version,
+          parse_flags: parsed.parse_flags,
         })
         normalizeDurationMs = Date.now() - normalizeStartedAt
         logger.debug('quote_normalize_ok', {
@@ -642,9 +745,11 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           duration_ms: normalizeDurationMs,
         })
 
+        // Persist normalized quote to database
         const persistStartedAt = Date.now()
         await persistNormalizedQuote(pool, normalized)
         persistDurationMs = Date.now() - persistStartedAt
+        // Run anomaly detection: check if exchange rate is suspicious
         const anomaly = await runAnomalyDetection({
           pool,
           providerId,
@@ -652,6 +757,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           currentRate: normalized.implied_fx_rate,
           collectorType,
         })
+        // Dispatch webhook signal if anomaly detected
         if (anomaly?.detected) {
           await dispatchSignal(pool, corridorId, providerId, anomaly)
         }
@@ -678,11 +784,13 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
           requestFingerprint,
         })
         successCount += 1
+        // Close circuit breaker if it was half-open (testing recovery)
         if (isHalfOpen) {
           await closeCircuit(pool, providerId, corridorId)
           await closeCircuit(pool, providerId, null)
         }
 
+        // Decay rate limit penalty on success to gradually recover
         decayRateLimitPenalty()
         const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
         logger.info('quote_attempt_finish', {
@@ -699,18 +807,23 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
       }
     }
 
+    // Stop collection if provider was blocked
     if (blocked) {
       break
     }
 
+    // Add delay between corridors to avoid overwhelming provider
     await sleepBetweenCorridors()
   }
 
+  // Finalize ingestion run and update metrics
   await finishIngestionRun(pool, ingestionRunId, blocked ? 'blocked' : 'success', blockReason)
+  // Persist performance metrics for monitoring
   if (attemptCount > 0) {
     const avgAttemptSeconds = attemptDurationMsTotal / attemptCount / 1000
     await persistAttemptMetrics(pool, providerId, locale, avgAttemptSeconds, attemptCount)
   }
+  // Apply RPM ramp: adjust rate limits based on performance (increase if doing well, decrease if blocked)
   await applyRpmRamp({
     pool,
     providerId,

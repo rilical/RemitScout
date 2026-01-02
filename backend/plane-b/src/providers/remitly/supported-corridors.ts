@@ -4,7 +4,7 @@ const currencyByCountry = new Map(COUNTRIES.map(country => [country.code, countr
 const ALL_COUNTRIES = COUNTRIES.map((country) => country.code)
 
 const BASE_SEND_CURRENCIES = ['USD', 'EUR', 'GBP'] as const
-const BASE_RECEIVE_CURRENCIES = ['USD'] as const
+const BASE_RECEIVE_CURRENCIES = ['USD', 'EUR', 'GBP'] as const
 
 const buildCorridorIds = (source: string, destination: string) => {
   if (source === destination) return []

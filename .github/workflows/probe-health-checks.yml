@@ -1,0 +1,64 @@
+name: Provider Health Probes
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/scripts/*-probe.ts'
+      - 'backend/plane-b/src/providers/**'
+
+jobs:
+  probe-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [remitly, wise, xe, worldremit, westernunion]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run ${{ matrix.provider }} probe
+        env:
+          PROBE_TIMEOUT_MS: 300000
+          PROBE_RETRIES: 1
+          PROBE_OUTPUT_FORMAT: json
+          DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+        run: pnpm -C backend probe:${{ matrix.provider }}
+      - name: Upload probe results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: probe-${{ matrix.provider }}-results
+          path: probe-results.json
+          if-no-files-found: ignore
+
+  cache-ttl-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run cache TTL probe
+        env:
+          PROBE_TIMEOUT_MS: 60000
+          DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+        run: pnpm -C backend probe:cache-ttl
+

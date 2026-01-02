@@ -1,3 +1,14 @@
+/**
+ * Pulse dashboard defaults and mock data.
+ *
+ * NOTE: This file contains Plane C-specific Pulse dashboard data, but is kept
+ * in `shared/` because Plane B uses it to seed Redis cache during ingestion.
+ * This is a known cross-plane dependency that will be refactored in the future
+ * to have Plane C manage its own cache seeding.
+ *
+ * @todo Move to plane-c/src/config/ once Plane C handles its own cache seeding
+ */
+
 type ChartCategory = 'cost-markup' | 'delivered-amount' | 'volatility' | 'availability'
 type ChartType = 'line' | 'bar' | 'stacked' | 'scatter' | 'matrix'
 type TimeRange = '7d' | '30d' | '90d' | '365d'

@@ -1,11 +1,9 @@
 import type { Pool } from 'pg'
 
-import { query } from '../../../shared/db'
+import { createLogger } from '../../../shared/logger'
+import { AttemptMetricsRepository } from '../repositories'
 
-type AttemptMetricsRow = {
-  avg_attempt_seconds: number | null
-  sample_count: number | null
-}
+const logger = createLogger('plane-b.attempt-metrics')
 
 const isPositiveNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
@@ -15,24 +13,49 @@ export const loadAttemptMetrics = async (
   providerId: string,
   locale: string,
 ) => {
-  const result = await query<AttemptMetricsRow>(
-    `SELECT avg_attempt_seconds, sample_count
-       FROM silver.collector_attempt_metrics
-      WHERE provider_id = $1
-        AND locale = $2`,
-    [providerId, locale],
-    pool,
-  )
-  const row = result.rows[0]
-  const avgAttemptSeconds = isPositiveNumber(row?.avg_attempt_seconds)
-    ? Number(row?.avg_attempt_seconds)
-    : null
-  const sampleCount = isPositiveNumber(row?.sample_count)
-    ? Math.floor(Number(row?.sample_count))
-    : 0
-  return {
-    avgAttemptSeconds,
-    sampleCount,
+  if (!providerId || typeof providerId !== 'string' || providerId.trim().length === 0) {
+    logger.warn('attempt_metrics_invalid_provider_id', { provider_id: providerId })
+    return { avgAttemptSeconds: null, sampleCount: 0 }
+  }
+
+  if (!locale || typeof locale !== 'string' || locale.trim().length === 0) {
+    logger.warn('attempt_metrics_invalid_locale', { locale })
+    return { avgAttemptSeconds: null, sampleCount: 0 }
+  }
+
+  try {
+    const repo = new AttemptMetricsRepository(pool)
+    const row = await repo.getMetrics(providerId, locale)
+    const avgAttemptSeconds = isPositiveNumber(row?.avg_attempt_seconds)
+      ? row.avg_attempt_seconds
+      : null
+    const sampleCount = isPositiveNumber(row?.sample_count)
+      ? Math.floor(row.sample_count)
+      : 0
+
+    logger.debug('attempt_metrics_loaded', {
+      provider_id: providerId,
+      locale,
+      avg_attempt_seconds: avgAttemptSeconds,
+      sample_count: sampleCount,
+    })
+
+    return {
+      avgAttemptSeconds,
+      sampleCount,
+    }
+  } catch (error: any) {
+    logger.error('attempt_metrics_load_failed', {
+      provider_id: providerId,
+      locale,
+      error: error.message,
+      stack: error.stack,
+    })
+    // Return default values on error
+    return {
+      avgAttemptSeconds: null,
+      sampleCount: 0,
+    }
   }
 }
 
@@ -43,18 +66,50 @@ export const persistAttemptMetrics = async (
   avgAttemptSeconds: number,
   sampleCount: number,
 ) => {
-  if (!isPositiveNumber(avgAttemptSeconds) || !isPositiveNumber(sampleCount)) {
+  if (!providerId || typeof providerId !== 'string' || providerId.trim().length === 0) {
+    logger.warn('attempt_metrics_invalid_provider_id', { provider_id: providerId })
     return
   }
-  await query(
-    `INSERT INTO silver.collector_attempt_metrics
-     (provider_id, locale, avg_attempt_seconds, sample_count, updated_at)
-     VALUES ($1, $2, $3, $4, NOW())
-     ON CONFLICT (provider_id, locale) DO UPDATE SET
-       avg_attempt_seconds = EXCLUDED.avg_attempt_seconds,
-       sample_count = EXCLUDED.sample_count,
-       updated_at = NOW()`,
-    [providerId, locale, avgAttemptSeconds, Math.floor(sampleCount)],
-    pool,
-  )
+
+  if (!locale || typeof locale !== 'string' || locale.trim().length === 0) {
+    logger.warn('attempt_metrics_invalid_locale', { locale })
+    return
+  }
+
+  if (!isPositiveNumber(avgAttemptSeconds) || !isPositiveNumber(sampleCount)) {
+    logger.warn('attempt_metrics_validation_failed', {
+      provider_id: providerId,
+      locale,
+      avg_attempt_seconds: avgAttemptSeconds,
+      sample_count: sampleCount,
+    })
+    return
+  }
+
+  try {
+    const repo = new AttemptMetricsRepository(pool)
+    await repo.upsertMetrics({
+      providerId,
+      locale,
+      avgAttemptSeconds,
+      sampleCount: Math.floor(sampleCount),
+    })
+
+    logger.debug('attempt_metrics_persisted', {
+      provider_id: providerId,
+      locale,
+      avg_attempt_seconds: avgAttemptSeconds,
+      sample_count: sampleCount,
+    })
+  } catch (error: any) {
+    logger.error('attempt_metrics_persist_failed', {
+      provider_id: providerId,
+      locale,
+      avg_attempt_seconds: avgAttemptSeconds,
+      sample_count: sampleCount,
+      error: error.message,
+      stack: error.stack,
+    })
+    // Don't throw - allow collector to continue even if metrics save fails
+  }
 }
