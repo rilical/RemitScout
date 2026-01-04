@@ -2,46 +2,69 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useAuth } from '~/composables/useAuth'
-import { useEntitlements } from '~/composables/useEntitlements'
+import { useEntitlements, type Plan } from '~/composables/useEntitlements'
 
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
 
 const { compareUrl } = useCompareForm()
 const { isAuthenticated, signIn, signOut } = useAuth()
-const { isPlus, plan, refreshPlan } = useEntitlements()
+const { isPlus, plan, refreshPlan, getEffectivePlan } = useEntitlements()
 
 const runtimeConfig = useRuntimeConfig()
 type PublicDevConfig = { devControls?: boolean }
 const devControlsEnabled = computed(() => import.meta.dev || Boolean((runtimeConfig.public as unknown as PublicDevConfig).devControls))
 
+// Dev-only plan override state (shared with useEntitlements)
+const devPlanOverride = useState<Plan | null>('dev:plan-override', () => null)
+
 const devStatusLabel = computed(() => {
   if (!isAuthenticated.value) return 'Logged out'
-  return plan.value === 'plus' ? 'Plus' : 'Free'
+  const currentPlan = devPlanOverride.value || plan.value
+  return currentPlan === 'plus' ? 'Plus' : 'Free'
 })
 
 const devStatusNextLabel = computed(() => {
   if (!isAuthenticated.value) return 'Sign in (Free)'
-  if (plan.value === 'free') return 'Upgrade to Plus'
+  const currentPlan = devPlanOverride.value || plan.value
+  if (currentPlan === 'free') return 'Upgrade to Plus'
   return 'Sign out'
+})
+
+const effectivePlan = computed(() => {
+  if (!isAuthenticated.value) return 'free' as Plan
+  return devPlanOverride.value || plan.value
 })
 
 async function cycleDevStatus() {
   if (!isAuthenticated.value) {
+    // Step 1: Sign in as Free user
     signIn('dev@remitscout.test')
+    devPlanOverride.value = 'free'
     await refreshPlan()
     return
   }
 
-  if (plan.value === 'free') {
-    // Plan is managed by backend - can't manually upgrade in dev mode
-    // This would require actual checkout flow
-    await refreshPlan()
+  const currentPlan = devPlanOverride.value || plan.value
+
+  if (currentPlan === 'free') {
+    // Step 2: Upgrade to Plus (dev override)
+    devPlanOverride.value = 'plus'
+    // Also update the plan state directly for immediate UI update
+    const planState = useState<Plan>('entitlements:plan')
+    if (planState.value) {
+      planState.value = 'plus'
+    }
     return
   }
 
-  signOut()
-  await refreshPlan()
+  if (currentPlan === 'plus') {
+    // Step 3: Sign out
+    devPlanOverride.value = null
+    signOut()
+    await refreshPlan()
+    return
+  }
 }
 
 function handleDevCycleFromMenu() {
@@ -207,7 +230,7 @@ watch(() => route.path, () => {
             Dashboard
           </NuxtLink>
           <NuxtLink
-            v-if="!isPlus"
+            v-if="effectivePlan !== 'plus'"
             to="/plus"
             class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
@@ -216,7 +239,7 @@ watch(() => route.path, () => {
 
           <!-- Plus pill (if Plus member) -->
           <span
-            v-if="isPlus"
+            v-if="effectivePlan === 'plus'"
             class="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
           >
             <svg
@@ -419,7 +442,7 @@ watch(() => route.path, () => {
 
             <template v-else>
               <NuxtLink
-                v-if="!isPlus"
+                v-if="effectivePlan !== 'plus'"
                 to="/plus"
                 class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
               >

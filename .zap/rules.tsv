@@ -1,0 +1,21 @@
+10021	WARN	10021	X-Content-Type-Options Header Missing
+10054	WARN	10054	Application Error Disclosure
+10095	WARN	10095	Permissions Policy Header Not Set
+10109	WARN	10109	Content Security Policy (CSP) Header Not Set
+10202	WARN	10202	Absence of Anti-CSRF Tokens
+10305	WARN	10305	Directory Browsing
+10400	WARN	10400	Timestamp Disclosure
+10410	WARN	10410	Weak Authentication Method
+10411	WARN	10411	Weak Cipher Suites
+10412	WARN	10412	Weak Hash Algorithms
+10415	WARN	10415	Server Side Request Forgery (SSRF)
+10420	WARN	10420	Weak Random Number Generation
+10421	WARN	10421	Weak Session ID
+10422	WARN	10422	Weak Session Cookie
+10423	WARN	10423	Weak Session Cookie - HTTPOnly Not Set
+10424	WARN	10424	Weak Session Cookie - Secure Not Set
+10425	WARN	10425	Weak Session Cookie - SameSite Not Set
+10426	WARN	10426	Weak Session Cookie - SameSite Lax
+10427	WARN	10427	Weak Session Cookie - SameSite None
+10428	WARN	10428	Weak Session Cookie - SameSite Strict
+

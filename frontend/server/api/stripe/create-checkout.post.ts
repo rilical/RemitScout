@@ -1,5 +1,5 @@
 import { proxyToBackend } from '~/server/utils/backendProxy'
 
 export default defineEventHandler(async (event) => {
-  return await proxyToBackend(event, '/stripe/create-checkout')
+  return await proxyToBackend(event, '/billing/checkout-session')
 })

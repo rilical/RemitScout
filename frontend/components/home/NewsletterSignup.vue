@@ -72,14 +72,14 @@ const handleSubmit = async () => {
   try {
     await request('/newsletter/subscribe', {
       method: 'POST',
-      body: { email: email.value },
+      body: { email: email.value, source: 'NewsletterSignup' },
     })
 
     successMessage.value = '🎉 Thanks for subscribing! Check your inbox for confirmation.'
     email.value = ''
   }
   catch (error) {
-    errorMessage.value = 'Something went wrong. Please try again.'
+    errorMessage.value = (error as Error)?.message || 'Something went wrong. Please try again.'
   }
   finally {
     isSubmitting.value = false

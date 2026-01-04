@@ -3,8 +3,64 @@ secrets/**
 !secrets/README.md
 *.env
 *.env.local
+*.env.*.local
 *.secret.json
 
 # Node dependencies and build artifacts
 node_modules/
 dist/
+build/
+.next/
+.nuxt/
+.output/
+
+# CDK Infrastructure
+infrastructure/cdk/cdk.out/
+infrastructure/cdk/*.js
+infrastructure/cdk/*.d.ts
+infrastructure/cdk/asset.*
+infrastructure/cdk/*.tsbuildinfo
+!infrastructure/cdk/*.config.js
+!infrastructure/cdk/jest.config.js
+# Keep cdk.context.json (needed for reproducible builds)
+!infrastructure/cdk/cdk.context.json
+
+# Coverage reports
+backend/coverage/
+coverage/
+*.lcov
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.cache/
+.temp/

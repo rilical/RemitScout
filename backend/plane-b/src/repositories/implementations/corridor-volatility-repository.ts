@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { computeVolatilityScore } from '../../../../shared/volatility-service'
 import type {
   ICorridorVolatilityRepository,
   CorridorVolatilityRecord,
@@ -121,20 +122,15 @@ export class CorridorVolatilityRepository implements ICorridorVolatilityReposito
     const meanRate = row.mean_rate !== null ? Number(row.mean_rate) : null
     const stddevRate = row.stddev_rate !== null ? Number(row.stddev_rate) : null
     const sampleCount = Number(row.sample_count)
+    const volatilityScore = computeVolatilityScore({
+      meanRate,
+      stddevRate,
+      sampleCount,
+    })
 
-    if (
-      meanRate === null ||
-      stddevRate === null ||
-      !Number.isFinite(meanRate) ||
-      !Number.isFinite(stddevRate) ||
-      meanRate === 0 ||
-      sampleCount < 10
-    ) {
+    if (volatilityScore === null || meanRate === null || stddevRate === null) {
       return null
     }
-
-    const coefficientOfVariation = stddevRate / meanRate
-    const volatilityScore = Math.min(1.0, Math.max(0.0, coefficientOfVariation))
 
     await query(
       `INSERT INTO silver.corridor_volatility_cache
@@ -160,4 +156,3 @@ export class CorridorVolatilityRepository implements ICorridorVolatilityReposito
     }
   }
 }
-

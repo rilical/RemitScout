@@ -10,7 +10,16 @@ export const useRemittanceApi = () => {
     const key = options.key || `recent-searches-${limit}`
     return useAsyncData(
       key,
-      () => request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } }),
+      async () => {
+        try {
+          return await request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } })
+        } catch (error: any) {
+          if (error?.statusCode === 401 || error?.statusCode === 403) {
+            return { data: [], updatedAt: new Date().toISOString() }
+          }
+          throw error
+        }
+      },
       { watch: false, ...options },
     )
   }
@@ -24,7 +33,7 @@ export const useRemittanceApi = () => {
     )
   }
 
-  const useBankVsSpecialist = (from = 'US', to = 'PH', amount = 500, options: Record<string, any> = {}) => {
+  const useBankVsSpecialist = (from = 'US', to = 'MX', amount = 500, options: Record<string, any> = {}) => {
     const key = options.key || `bank-vs-specialist-${from}-${to}-${amount}`
     return useAsyncData(
       key,

@@ -15,19 +15,20 @@
  * - Comprehensive logging with metrics
  */
 
-import { createPool, query } from '../shared/db'
+import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { createShutdownHandler } from '../shared/shutdown'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { FxRateRepository } from '../plane-b/src/repositories'
-
-type FxRateRow = {
-  base_currency: string
-  quote_currency: string
-  rate: number | string | null
-  provider_count: number | string
-  sample_count: number | string
-}
+import type { FxRateAggregationRow } from '../plane-b/src/repositories/interfaces/fx-rate-repository.interface'
+import {
+  recordJobStart,
+  recordJobComplete,
+  recordJobFailure,
+} from './gold-fx-rates-job-metrics'
+import { startHealthServer } from './gold-fx-rates-job-health'
+import { retry } from '../shared/retry'
 
 const toNumber = (value: string | number | null | undefined, fallback: number | null) => {
   const parsed = Number(value)
@@ -40,74 +41,59 @@ const lockTtlSeconds = toNumber(process.env.GOLD_FX_RATES_LOCK_TTL_SECONDS, 300)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-fx-rates')
 
-let shutdownRequested = false
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
+let pool: ReturnType<typeof createPool> | null = null
 
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-}
+const { isShutdownRequested } = createShutdownHandler({
+  timeoutMs: 30000,
+  logger,
+  onShutdown: async () => {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (lockRefreshTimer) {
+      clearInterval(lockRefreshTimer)
+    }
+    if (lock) {
+      await lock.release().catch((error) => {
+        logger.warn('lock_release_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (pool) {
+      await pool.end()
+    }
+  },
+})
 
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-const aggregationQuery = `
-WITH weighted_rates AS (
-  SELECT
-    c.source_currency AS base_currency,
-    c.dest_currency AS quote_currency,
-    lqp.implied_fx_rate,
-    lqp.send_amount,
-    lqp.provider_id,
-    CASE
-      WHEN ct.corridor_tier = 'tier_1' THEN 1
-      WHEN ct.corridor_tier = 'tier_2' THEN 4
-      ELSE 24
-    END AS freshness_hours
-  FROM silver.latest_quote_by_provider lqp
-  JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
-  LEFT JOIN silver.corridor_tier ct ON ct.corridor_id = lqp.corridor_id
-  JOIN silver.rights_matrix rm ON rm.provider_id = lqp.provider_id
-  WHERE lqp.status = 'ok'
-    AND rm.allowed_b2c = true
-    AND rm.stoplist_status = 'active'
-    AND lqp.collected_at >= NOW() - INTERVAL '1 hour' * COALESCE(
-      CASE
-        WHEN ct.corridor_tier = 'tier_1' THEN 1
-        WHEN ct.corridor_tier = 'tier_2' THEN 4
-        ELSE 24
-      END,
-      4
-    )
-),
-aggregated AS (
-  SELECT
-    base_currency,
-    quote_currency,
-    SUM(implied_fx_rate * send_amount) / NULLIF(SUM(send_amount), 0) AS weighted_avg_rate,
-    COUNT(*) AS sample_count,
-    COUNT(DISTINCT provider_id) AS provider_count
-  FROM weighted_rates
-  GROUP BY base_currency, quote_currency
-  HAVING COUNT(DISTINCT provider_id) >= 3
-)
-SELECT
-  base_currency,
-  quote_currency,
-  weighted_avg_rate AS rate,
-  provider_count,
-  sample_count
-FROM aggregated
-WHERE weighted_avg_rate > 0
-ORDER BY base_currency, quote_currency;
-`
-
-const run = async (): Promise<void> => {
-  if (shutdownRequested) {
+export const runGoldFxRatesJob = async (
+  options: { enableHealthServer?: boolean } = {},
+): Promise<void> => {
+  if (isShutdownRequested()) {
     logger.info('job_skipped', { reason: 'shutdown_requested' })
     return
+  }
+
+  const enableHealthServer =
+    options.enableHealthServer ?? !isLambdaRuntime
+
+  if (enableHealthServer) {
+    try {
+      healthServer = await startHealthServer({ logger })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   lock = new WorkerLock('gold-fx-rates-job', lockTtlSeconds)
@@ -115,8 +101,11 @@ const run = async (): Promise<void> => {
 
   if (!acquired) {
     logger.info('job_skipped', { reason: 'lock_already_held' })
+    recordJobFailure('lock_failed')
     return
   }
+
+  recordJobStart()
 
   lockRefreshTimer = setInterval(() => {
     if (!lock) return
@@ -134,15 +123,28 @@ const run = async (): Promise<void> => {
       })
   }, lockRefreshMs)
 
-  const pool = createPool(config.db.planeBUrl)
+  pool = createPool(config.db.planeBUrl)
   const repo = new FxRateRepository(pool)
   const startTime = Date.now()
+  let rows: FxRateAggregationRow[] = []
+  let upserted = 0
 
   try {
     logger.info('job_start', { lock_ttl_seconds: lockTtlSeconds })
-    const result = await query<FxRateRow>(aggregationQuery, [], pool)
-    const rows = result.rows
-    let upserted = 0
+    rows = await retry(
+      () => repo.aggregateFxRates(),
+      {
+        maxRetries: 3,
+        initialDelayMs: 500,
+        retryable: (error) => {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          return errorMessage.includes('connection') ||
+                 errorMessage.includes('timeout') ||
+                 errorMessage.includes('ECONNREFUSED') ||
+                 errorMessage.includes('ETIMEDOUT')
+        },
+      },
+    )
 
     for (const row of rows) {
       const baseCurrency = row.base_currency?.toUpperCase()
@@ -167,11 +169,23 @@ const run = async (): Promise<void> => {
       }
 
       try {
-        await repo.upsertRate({
-          baseCurrency,
-          quoteCurrency,
-          rate,
-        })
+        await retry(
+          () => repo.upsertRate({
+            baseCurrency,
+            quoteCurrency,
+            rate,
+          }),
+          {
+            maxRetries: 2,
+            initialDelayMs: 200,
+            retryable: (error) => {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              return errorMessage.includes('connection') ||
+                     errorMessage.includes('timeout') ||
+                     errorMessage.includes('ECONNREFUSED')
+            },
+          },
+        )
         upserted += 1
       } catch (error) {
         logger.error('rate_upsert_failed', {
@@ -183,37 +197,65 @@ const run = async (): Promise<void> => {
     }
 
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
     logger.info('job_complete', {
       rates_processed: rows.length,
       rates_upserted: upserted,
       duration_ms: durationMs,
     })
+    recordJobComplete(durationSeconds, rows.length, upserted)
   } catch (error) {
     const durationMs = Date.now() - startTime
     logger.error('job_failed', {
       error: error instanceof Error ? error.message : String(error),
       duration_ms: durationMs,
     })
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    let errorType = 'unknown'
+    if (errorMessage.includes('lock') || errorMessage.includes('Lock')) {
+      errorType = 'lock_failed'
+    } else if (errorMessage.includes('query') || errorMessage.includes('SELECT') || errorMessage.includes('aggregate')) {
+      errorType = 'query_failed'
+    } else if (errorMessage.includes('insert') || errorMessage.includes('INSERT') || errorMessage.includes('upsert') || errorMessage.includes('constraint')) {
+      errorType = 'insert_failed'
+    } else if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
+      errorType = 'validation_failed'
+    }
+
+    recordJobFailure(errorType)
     throw error
   } finally {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
     if (lockRefreshTimer) {
       clearInterval(lockRefreshTimer)
     }
     if (lock) {
       await lock.release()
     }
-    await pool.end()
+    if (pool && !isShutdownRequested()) {
+      await pool.end()
+      pool = null
+    }
   }
 }
 
-run()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('job_fatal_error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module && !isLambdaRuntime) {
+  runGoldFxRatesJob()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('job_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

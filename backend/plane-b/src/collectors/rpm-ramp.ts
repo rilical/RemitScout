@@ -168,14 +168,13 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
   let changePercent = 0
   let reason = 'stable'
 
+  const poorHttp2xxThreshold = thresholds.http2xxStableThreshold * 0.75
+  const isHttp2xxPoor = http2xxRate < poorHttp2xxThreshold
+
   if (stats.rateLimitCount > 0 || blockRate >= thresholds.highBlockRate) {
     decision = 'decrease'
     const pressureRate = stats.rateLimitCount > 0 ? rateLimitRate : blockRate
-    const normalized = clamp(
-      pressureRate / thresholds.highBlockRate,
-      0,
-      1,
-    )
+    const normalized = clamp(pressureRate / (thresholds.highBlockRate * 5), 0, 1)
     changePercent =
       thresholds.decreaseBasePercent +
       (thresholds.decreaseMaxPercent - thresholds.decreaseBasePercent) * normalized
@@ -190,6 +189,18 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
     changePercent = thresholds.moderateDecreasePercent
     nextRpm = Math.max(1, Math.round(rates.rpm * (1 - changePercent)))
     reason = 'block_rate_moderate'
+  } else if (blockRate < thresholds.moderateBlockRate && isHttp2xxPoor) {
+    decision = 'decrease'
+    const normalized = clamp(
+      (poorHttp2xxThreshold - http2xxRate) / poorHttp2xxThreshold,
+      0,
+      1,
+    )
+    changePercent =
+      thresholds.decreaseBasePercent +
+      (thresholds.moderateDecreasePercent - thresholds.decreaseBasePercent) * normalized
+    nextRpm = Math.max(1, Math.round(rates.rpm * (1 - changePercent)))
+    reason = 'http_2xx_unstable'
   } else if (blockRate < thresholds.moderateBlockRate && twoXXStable) {
     decision = 'increase'
     const normalized = clamp(

@@ -1,0 +1,107 @@
+import type { Pool } from 'pg'
+
+import { query } from '../../../shared/db'
+import {
+  VolatilityService as SharedVolatilityService,
+  type CacheTtlResult,
+  type VolatilityRecord,
+  type VolatilityRepository,
+  computeVolatilityScore,
+} from '../../../shared/volatility-service'
+
+class PlaneAVolatilityRepository implements VolatilityRepository {
+  constructor(private readonly pool: Pool) {}
+
+  async getVolatilityScore(corridorId: string): Promise<VolatilityRecord | null> {
+    const result = await query<VolatilityRecord>(
+      `SELECT
+        corridor_id,
+        volatility_score,
+        sample_count,
+        mean_rate,
+        stddev_rate,
+        calculated_at
+       FROM silver.corridor_volatility_cache
+       WHERE corridor_id = $1
+       ORDER BY calculated_at DESC
+       LIMIT 1`,
+      [corridorId],
+      this.pool,
+    )
+
+    return result.rows[0] ?? null
+  }
+
+  async calculateVolatilityScore(corridorId: string): Promise<VolatilityRecord | null> {
+    const result = await query<{
+      mean_rate: number | null
+      stddev_rate: number | null
+      sample_count: number
+    }>(
+      `SELECT
+        AVG(implied_fx_rate) AS mean_rate,
+        STDDEV(implied_fx_rate) AS stddev_rate,
+        COUNT(*) AS sample_count
+       FROM silver.quote_record
+       WHERE corridor_id = $1
+         AND collected_at >= NOW() - INTERVAL '7 days'
+         AND status = 'ok'
+         AND implied_fx_rate > 0`,
+      [corridorId],
+      this.pool,
+    )
+
+    const row = result.rows[0]
+    if (!row) {
+      return null
+    }
+
+    const meanRate = row.mean_rate !== null ? Number(row.mean_rate) : null
+    const stddevRate = row.stddev_rate !== null ? Number(row.stddev_rate) : null
+    const sampleCount = Number(row.sample_count)
+    const volatilityScore = computeVolatilityScore({
+      meanRate,
+      stddevRate,
+      sampleCount,
+    })
+
+    if (volatilityScore === null) {
+      return null
+    }
+
+    await query(
+      `INSERT INTO silver.corridor_volatility_cache
+       (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       ON CONFLICT (corridor_id) DO UPDATE SET
+         volatility_score = EXCLUDED.volatility_score,
+         sample_count = EXCLUDED.sample_count,
+         mean_rate = EXCLUDED.mean_rate,
+         stddev_rate = EXCLUDED.stddev_rate,
+         calculated_at = EXCLUDED.calculated_at`,
+      [corridorId, volatilityScore, sampleCount, meanRate, stddevRate],
+      this.pool,
+    )
+
+    return {
+      corridor_id: corridorId,
+      volatility_score: volatilityScore,
+      sample_count: sampleCount,
+      mean_rate: meanRate ?? 0,
+      stddev_rate: stddevRate ?? 0,
+      calculated_at: new Date(),
+    }
+  }
+}
+
+export class VolatilityService {
+  private readonly service: SharedVolatilityService
+
+  constructor(pool: Pool) {
+    this.service = new SharedVolatilityService(new PlaneAVolatilityRepository(pool))
+  }
+
+  getCacheTtlForCorridor(corridorId: string): Promise<CacheTtlResult> {
+    return this.service.getCacheTtlForCorridor(corridorId)
+  }
+}

@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify'
 import { evaluatePublisherGates } from '../services/publisher-gates'
-import { getPool } from '../../shared/db'
-import { config } from '../../shared/config'
-import { createLogger } from '../../shared/logger'
+import { getPool } from '../../../shared/db'
+import { config } from '../../../shared/config'
+import { createLogger } from '../../../shared/logger'
 import { PublisherRepository } from '../data'
 
 const logger = createLogger('plane-c.publisher')

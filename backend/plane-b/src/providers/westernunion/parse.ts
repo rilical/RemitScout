@@ -127,7 +127,7 @@ const normalizeDeliveryWindow = (label: string | null, speedDays: number | null)
   if (token.includes('home_delivery')) {
     return { min: 24 * 60, max: 48 * 60 }
   }
-  if (Number.isFinite(speedDays) && speedDays > 0) {
+  if (speedDays !== null && Number.isFinite(speedDays) && speedDays > 0) {
     const minutes = Math.round(speedDays * 1440)
     return { min: minutes, max: minutes }
   }

@@ -40,11 +40,18 @@
 
         <!-- Sign Up Form -->
         <div v-else>
+          <div
+            v-if="errorMessage"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {{ errorMessage }}
+          </div>
           <!-- Social Sign Up Buttons -->
           <div class="space-y-3">
             <button
               type="button"
               class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+              :disabled="loading"
               @click="handleSocialSignUp('google')"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -59,6 +66,7 @@
             <button
               type="button"
               class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-900 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
+              :disabled="loading"
               @click="handleSocialSignUp('apple')"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -188,10 +196,10 @@
 
             <button
               type="submit"
-              :disabled="password !== confirmPassword || !captchaChecked"
+              :disabled="password !== confirmPassword || !captchaChecked || loading"
               class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
             >
-              Create account
+              {{ loading ? 'Creating account…' : 'Create account' }}
             </button>
           </form>
         </div>
@@ -226,6 +234,8 @@
 </template>
 
 <script setup lang="ts">
+const { signUp, signInWithOAuth } = useAuth()
+
 const name = ref('')
 const email = ref('')
 const password = ref('')
@@ -233,31 +243,47 @@ const confirmPassword = ref('')
 const acceptTerms = ref(false)
 const captchaChecked = ref(false)
 const success = ref(false)
+const loading = ref(false)
+const errorMessage = ref<string | null>(null)
 
-function handleSignUp() {
-  // TODO: Implement Supabase sign up
-  // const supabase = useSupabaseClient()
-  // const { data, error } = await supabase.auth.signUp({
-  //   email: email.value,
-  //   password: password.value,
-  //   options: {
-  //     data: {
-  //       full_name: name.value,
-  //     },
-  //   },
-  // })
-  
-  console.log('Sign up:', { name: name.value, email: email.value })
+async function handleSignUp() {
+  errorMessage.value = null
+
+  if (!acceptTerms.value) {
+    errorMessage.value = 'Please accept the Terms of Service.'
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = 'Passwords do not match.'
+    return
+  }
+
+  loading.value = true
+  const result = await signUp({
+    name: name.value,
+    email: email.value,
+    password: password.value,
+  })
+  loading.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Sign up failed.'
+    return
+  }
+
   success.value = true
 }
 
-function handleSocialSignUp(provider: 'google' | 'apple') {
-  // TODO: Implement Supabase OAuth
-  // const supabase = useSupabaseClient()
-  // await supabase.auth.signInWithOAuth({ provider })
-  
-  console.log(`Sign up with ${provider} - Supabase integration pending`)
-  alert(`${provider} sign-up coming soon! Connect Supabase to enable social authentication.`)
+async function handleSocialSignUp(provider: 'google' | 'apple') {
+  errorMessage.value = null
+  loading.value = true
+  const result = await signInWithOAuth(provider)
+  loading.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || `Unable to sign up with ${provider}.`
+  }
 }
 
 useHead({
@@ -267,7 +293,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

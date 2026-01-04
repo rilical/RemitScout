@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto'
 import { setTimeout as sleep } from 'timers/promises'
-import { ProxyAgent } from 'undici'
+import { ProxyAgent, fetch as undiciFetch } from 'undici'
 
 import { createLogger } from '../../../shared/logger'
-import { getProxyForTier } from '../lib/proxy-router'
+import { retry } from '../../../shared/retry'
+import { formatError, isError } from '../../../shared/utils/error-handling'
 import type { ProxyTier } from '../lib/proxy-router'
 
 export type HttpClientOptions = {
@@ -89,7 +90,17 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
     }
   }
 
-  const resolvedProxyUrl = proxyUrl ?? (proxyTier ? getProxyForTier(proxyTier) : null)
+  // Resolve proxy URL (async for Secrets Manager/SSM support)
+  let resolvedProxyUrl: string | null = proxyUrl
+  if (!resolvedProxyUrl && proxyTier) {
+    const { getProxyForTier, getProxyForTierSync } = await import('../lib/proxy-router')
+    // Try sync first (uses cache or env vars)
+    resolvedProxyUrl = getProxyForTierSync(proxyTier)
+    // If not resolved, try async (resolves from Secrets Manager/SSM)
+    if (!resolvedProxyUrl) {
+      resolvedProxyUrl = await getProxyForTier(proxyTier)
+    }
+  }
   if (proxyTier && corridorId) {
     const proxyUrlHash = resolvedProxyUrl ? hashProxyUrl(resolvedProxyUrl) : null
     const logKey = `${corridorId}:${proxyTier}:${proxyUrlHash ?? 'none'}`
@@ -110,56 +121,99 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
   }
   const dispatcher = resolvedProxyUrl ? new ProxyAgent(resolvedProxyUrl) : undefined
 
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: finalHeaders,
-      body: payload,
-      signal: controller.signal,
-      dispatcher,
-    })
+  const executeRequest = async (): Promise<HttpResponse> => {
+    const requestController = new AbortController()
+    const requestTimeout = setTimeout(() => requestController.abort(), timeoutMs)
 
-    let bodyText: string
     try {
-      bodyText = await response.text()
-    } catch (error: any) {
-      logger.error('http_response_body_read_failed', {
-        url,
-        status: response.status,
-        error: error.message,
-        proxy_tier: proxyTier,
-        corridor_id: corridorId,
+      const response = await undiciFetch(url, {
+        method,
+        headers: finalHeaders,
+        body: payload,
+        signal: requestController.signal,
+        dispatcher,
       })
-      return {
-        status: response.status,
-        bodyText: '',
-        json: undefined,
-      }
-    }
 
-    let json: unknown
-    try {
-      json = JSON.parse(bodyText)
-    } catch (parseError) {
-      json = undefined
-      if (response.headers.get('content-type')?.includes('application/json')) {
-        logger.debug('http_response_json_parse_failed', {
+      let bodyText: string
+      try {
+        bodyText = await response.text()
+      } catch (error: unknown) {
+        clearTimeout(requestTimeout)
+        const { message } = formatError(error)
+        logger.error('http_response_body_read_failed', {
           url,
           status: response.status,
-          body_preview: bodyText.substring(0, 200),
+          error: message,
+          proxy_tier: proxyTier,
+          corridor_id: corridorId,
         })
+        return {
+          status: response.status,
+          bodyText: '',
+          json: undefined,
+        }
       }
-    }
 
-    return {
-      status: response.status,
-      bodyText,
-      json,
+      let json: unknown
+      try {
+        json = JSON.parse(bodyText)
+      } catch (parseError) {
+        json = undefined
+        if (response.headers.get('content-type')?.includes('application/json')) {
+          logger.debug('http_response_json_parse_failed', {
+            url,
+            status: response.status,
+            body_preview: bodyText.substring(0, 200),
+          })
+        }
+      }
+
+      clearTimeout(requestTimeout)
+
+      if (response.status >= 500 || response.status === 429) {
+        throw new Error(`HTTP ${response.status}: ${url}`)
+      }
+
+      return {
+        status: response.status,
+        bodyText,
+        json,
+      }
+    } catch (error: unknown) {
+      clearTimeout(requestTimeout)
+
+      if (isError(error) && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+        throw new Error(`Request timeout after ${timeoutMs}ms: ${url}`)
+      }
+
+      throw error
     }
-  } catch (error: any) {
+  }
+
+  try {
+    return await retry(executeRequest, {
+      maxRetries: 3,
+      initialDelayMs: 1000,
+      retryable: (error) => {
+        if (isError(error)) {
+          const errorMessage = error.message
+          if (errorMessage.includes('network') ||
+              errorMessage.includes('timeout') ||
+              errorMessage.includes('ECONNREFUSED') ||
+              errorMessage.includes('ETIMEDOUT') ||
+              errorMessage.includes('ENOTFOUND') ||
+              errorMessage.includes('HTTP 5') ||
+              errorMessage.includes('HTTP 429')) {
+            return true
+          }
+        }
+        return false
+      },
+    })
+  } catch (error: unknown) {
     clearTimeout(timeout)
 
-    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+    if (isError(error) && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
       logger.warn('http_request_timeout', {
         url,
         timeout_ms: timeoutMs,
@@ -169,14 +223,16 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       throw new Error(`Request timeout after ${timeoutMs}ms: ${url}`)
     }
 
+    const { message, stack } = formatError(error)
+    const errorName = isError(error) ? error.name : 'Unknown'
     logger.error('http_request_failed', {
       url,
       method,
       proxy_tier: proxyTier,
       corridor_id: corridorId,
-      error: error.message,
-      error_name: error.name,
-      stack: error.stack,
+      error: message,
+      error_name: errorName,
+      stack,
     })
     throw error
   } finally {

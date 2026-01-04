@@ -1,45 +1,34 @@
-import { config } from '../shared/config'
+/**
+ * XE Provider Health Probe
+ * 
+ * Thin wrapper around generic probe implementation.
+ */
+
 import { createLogger } from '../shared/logger'
-import { getHealthCorridors } from '../shared/health-corridors'
-import { runXeCollector } from '../plane-b/src/providers/xe/collector'
-import { httpLimits } from '../plane-b/src/providers/xe/limits'
-import { createProbeRunner, outputProbeResult } from './lib/probe-utils'
+import { runGenericProbe } from './lib/generic-probe'
+import { formatError } from '../shared/utils/error-handling'
 
 const logger = createLogger('script.xe-probe')
-const corridors = getHealthCorridors('xe')
 
 const main = async () => {
-  const runner = createProbeRunner({
-    providerId: 'xe',
-    corridors,
-    timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
-    retries: Number(process.env.PROBE_RETRIES) || 0,
-  })
-
-  const result = await runner.run(async () => {
-    return await runXeCollector({
-      collectorType: 'health_probe',
-      corridors,
-      amountBuckets: [100],
-      payinMethod: 'bank_transfer',
-      payoutMethod: 'bank_deposit',
-      locale: 'en-US',
-      delayMs: config.planeB.xe.delayMs,
-      jitterMs: config.planeB.xe.jitterMs,
-      corridorDelayMs: config.planeB.xe.corridorDelayMs,
-      corridorJitterMs: config.planeB.xe.corridorJitterMs,
-      rateLimitBackoffMs: config.planeB.xe.rateLimitBackoffMs,
-      rateLimitJitterMs: config.planeB.xe.rateLimitJitterMs,
-      rateLimitMaxRetries: config.planeB.xe.rateLimitMaxRetries,
-      rpmOverride: httpLimits.rpm,
-      perCorridorRpmOverride: httpLimits.perCorridorRpm,
+  try {
+    const result = await runGenericProbe({
+      providerId: 'xe',
+      timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
+      retries: Number(process.env.PROBE_RETRIES) || 0,
+      outputFormat: process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json',
     })
-  })
 
-  outputProbeResult(result, process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json')
-  logger.info('probe_complete', result)
-
-  process.exit(result.success ? 0 : 1)
+    process.exit(result.success ? 0 : 1)
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
+    logger.error('probe_failed', {
+      provider_id: 'xe',
+      error: message,
+      stack,
+    })
+    process.exit(1)
+  }
 }
 
 let shutdownRequested = false

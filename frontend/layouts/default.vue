@@ -19,6 +19,7 @@
     />
 
     <SaveAlertModal />
+    <ProviderVisitPrompt />
   </div>
 </template>
 
@@ -29,6 +30,7 @@ import NavSiteHeader from '~/components/nav/SiteHeader.vue'
 import NavSiteFooter from '~/components/nav/SiteFooter.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
 import SaveAlertModal from '~/components/shared/SaveAlertModal.vue'
+import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
 
 const footerModalOpen = ref(false)
 </script>

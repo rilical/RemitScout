@@ -1,0 +1,20 @@
+name: "Remit-Scout CodeQL Configuration"
+
+paths:
+  - backend/
+  - frontend/
+
+paths-ignore:
+  - '**/node_modules'
+  - '**/dist'
+  - '**/build'
+  - '**/coverage'
+  - '**/*.test.ts'
+  - '**/*.test.js'
+  - '**/*.spec.ts'
+  - '**/*.spec.js'
+
+queries:
+  - uses: security-and-quality
+
+

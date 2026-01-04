@@ -53,12 +53,18 @@ const chartCategoryMap: Record<string, ChartCategory> = {
   'all-in-cost': 'cost-markup',
   'fx-markup': 'cost-markup',
   'fee-vs-markup': 'cost-markup',
+  'spread-distribution': 'cost-markup',
   'provider-winner': 'delivered-amount',
+  'leader-change-frequency': 'delivered-amount',
   'leader-edge': 'delivered-amount',
+  'pass-through-latency': 'delivered-amount',
   'volatility-pulse': 'volatility',
+  'quote-anomalies': 'volatility',
   'spread-volatility': 'volatility',
   'quote-success': 'availability',
   'provider-availability': 'availability',
+  'data-freshness': 'availability',
+  'corridor-liquidity': 'availability',
 }
 
 const titleFromId = (id: string) => id

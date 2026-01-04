@@ -1,4 +1,80 @@
+import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
 import { createLogger } from '../../shared/logger'
+import { formatError } from '../../shared/utils/error-handling'
+
+const logger = createLogger('script.probe-utils')
+
+let cloudWatchClient: CloudWatchClient | null = null
+
+const getCloudWatchClient = (): CloudWatchClient => {
+  if (!cloudWatchClient) {
+    cloudWatchClient = new CloudWatchClient({})
+  }
+  return cloudWatchClient
+}
+
+/**
+ * Publishes CloudWatch metrics for probe results.
+ */
+const publishProbeMetrics = async (
+  providerId: string,
+  result: ProbeResult,
+): Promise<void> => {
+  try {
+    const client = getCloudWatchClient()
+    await client.send(
+      new PutMetricDataCommand({
+        Namespace: 'RemitScout/Probes',
+        MetricData: [
+          {
+            MetricName: 'probe_result',
+            Value: result.success ? 1 : 0,
+            Unit: 'Count',
+            Timestamp: new Date(),
+            Dimensions: [
+              { Name: 'ProviderId', Value: providerId },
+              { Name: 'Status', Value: result.success ? 'success' : 'failure' },
+            ],
+          },
+          {
+            MetricName: 'probe_duration',
+            Value: result.durationMs / 1000, // Convert to seconds
+            Unit: 'Seconds',
+            Timestamp: new Date(),
+            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+          },
+          {
+            MetricName: 'probe_corridors_tested',
+            Value: result.corridorsTested,
+            Unit: 'Count',
+            Timestamp: new Date(),
+            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+          },
+          {
+            MetricName: 'probe_corridors_succeeded',
+            Value: result.corridorsSucceeded,
+            Unit: 'Count',
+            Timestamp: new Date(),
+            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+          },
+          {
+            MetricName: 'probe_corridors_failed',
+            Value: result.corridorsFailed,
+            Unit: 'Count',
+            Timestamp: new Date(),
+            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+          },
+        ],
+      }),
+    )
+  } catch (error: unknown) {
+    // Silently fail metrics - don't break probe execution
+    logger.debug('probe_metrics_failed', {
+      provider_id: providerId,
+      error: formatError(error).message,
+    })
+  }
+}
 
 export type ProbeResult = {
   success: boolean
@@ -29,7 +105,18 @@ export const createProbeRunner = (options: {
 
       for (let attempt = 0; attempt <= retries; attempt++) {
         let timeoutId: ReturnType<typeof setTimeout> | null = null
+        let timeoutWarningId: ReturnType<typeof setTimeout> | null = null
         try {
+          // Set up timeout warning (at 80% of timeout)
+          const warningTimeout = Math.floor(timeoutMs * 0.8)
+          timeoutWarningId = setTimeout(() => {
+            logger.warn('probe_timeout_warning', {
+              provider_id: options.providerId,
+              timeout_ms: timeoutMs,
+              warning_at_ms: warningTimeout,
+            })
+          }, warningTimeout)
+
           const timeoutPromise = new Promise<never>((_, reject) => {
             timeoutId = setTimeout(
               () => reject(new Error(`Probe timeout after ${timeoutMs}ms`)),
@@ -49,6 +136,9 @@ export const createProbeRunner = (options: {
             durationMs,
           }
 
+          // Publish CloudWatch metrics
+          await publishProbeMetrics(options.providerId, result)
+
           if (options.onResult) {
             options.onResult(result)
           }
@@ -64,6 +154,9 @@ export const createProbeRunner = (options: {
           if (timeoutId) {
             clearTimeout(timeoutId)
           }
+          if (timeoutWarningId) {
+            clearTimeout(timeoutWarningId)
+          }
         }
       }
 
@@ -77,6 +170,9 @@ export const createProbeRunner = (options: {
         durationMs,
         errors: [{ corridor: 'all', error: lastError?.message ?? 'Unknown error' }],
       }
+
+      // Publish CloudWatch metrics
+      await publishProbeMetrics(options.providerId, result)
 
       if (options.onResult) {
         options.onResult(result)
@@ -101,3 +197,4 @@ export const outputProbeResult = (result: ProbeResult, format: 'json' | 'text' =
     }
   }
 }
+

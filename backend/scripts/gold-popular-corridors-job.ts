@@ -8,6 +8,7 @@
  *
  * **Environment Variables**:
  * - `GOLD_POPULAR_CORRIDORS_LOCK_TTL_SECONDS`: Lock TTL in seconds (default: 600 = 10 minutes)
+ * - `GOLD_POPULAR_CORRIDORS_MAX`: Max corridors to process (default: 100)
  *
  * **Features**:
  * - Graceful shutdown (SIGTERM/SIGINT)
@@ -15,103 +16,88 @@
  * - Comprehensive logging with metrics
  */
 
-import { createPool, query } from '../shared/db'
+import type { PoolClient } from 'pg'
+
+import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { createShutdownHandler } from '../shared/shutdown'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { PopularCorridorRepository } from '../plane-b/src/repositories'
-
-type PopularCorridorRow = {
-  route: string
-  count_24h: number | string
-  top_provider: string | null
-  fee_range: string | null
-  speed_range: string | null
-  best_for: string | null
-}
+import type { PopularCorridorAggregationRow } from '../plane-b/src/repositories/interfaces/popular-corridor-repository.interface'
+import {
+  recordJobStart,
+  recordJobComplete,
+  recordJobFailure,
+} from './gold-popular-corridors-job-metrics'
+import { startHealthServer } from './gold-popular-corridors-job-health'
+import { retry } from '../shared/retry'
 
 const toNumber = (value: string | number | null | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+const isValidRoute = (value: string) => {
+  const trimmed = value.trim()
+  return /^[^→]+ → [^→]+$/.test(trimmed)
+}
+
 const lockTtlSeconds = toNumber(process.env.GOLD_POPULAR_CORRIDORS_LOCK_TTL_SECONDS, 600)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-popular-corridors')
 
-let shutdownRequested = false
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
+let pool: ReturnType<typeof createPool> | null = null
 
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-}
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const { isShutdownRequested } = createShutdownHandler({
+  timeoutMs: 30000,
+  logger,
+  onShutdown: async () => {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (lockRefreshTimer) {
+      clearInterval(lockRefreshTimer)
+    }
+    if (lock) {
+      await lock.release().catch((error) => {
+        logger.warn('lock_release_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (pool) {
+      await pool.end()
+    }
+  },
+})
 
-const aggregationQuery = `
-WITH route_searches AS (
-  SELECT
-    from_country || ' → ' || to_country AS route,
-    COUNT(*) AS count_24h,
-    MODE() WITHIN GROUP (ORDER BY best_provider_name) AS top_provider
-  FROM silver.recent_searches
-  WHERE created_at >= NOW() - INTERVAL '24 hours'
-  GROUP BY from_country, to_country
-),
-route_quotes AS (
-  SELECT
-    c.source_country || ' → ' || c.dest_country AS route,
-    MIN(lqp.fee_amount) AS min_fee,
-    MAX(lqp.fee_amount) AS max_fee,
-    MIN(lqp.delivery_time_min_minutes) AS min_delivery,
-    MAX(lqp.delivery_time_max_minutes) AS max_delivery
-  FROM silver.latest_quote_by_provider lqp
-  JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
-  WHERE lqp.status = 'ok'
-    AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-  GROUP BY c.source_country, c.dest_country
-),
-route_providers AS (
-  SELECT
-    c.source_country || ' → ' || c.dest_country AS route,
-    MODE() WITHIN GROUP (ORDER BY p.best_for) AS best_for
-  FROM silver.latest_quote_by_provider lqp
-  JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
-  JOIN silver.providers p ON p.id = lqp.provider_id
-  WHERE lqp.status = 'ok'
-    AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-  GROUP BY c.source_country, c.dest_country
-)
-SELECT
-  rs.route,
-  rs.count_24h,
-  rs.top_provider,
-  CASE
-    WHEN rq.min_fee IS NOT NULL AND rq.max_fee IS NOT NULL
-    THEN '$' || ROUND(rq.min_fee::numeric, 2) || ' - $' || ROUND(rq.max_fee::numeric, 2)
-    ELSE NULL
-  END AS fee_range,
-  CASE
-    WHEN rq.min_delivery IS NOT NULL AND rq.max_delivery IS NOT NULL
-    THEN rq.min_delivery || ' - ' || rq.max_delivery || ' min'
-    ELSE NULL
-  END AS speed_range,
-  rp.best_for
-FROM route_searches rs
-LEFT JOIN route_quotes rq ON rq.route = rs.route
-LEFT JOIN route_providers rp ON rp.route = rs.route
-ORDER BY rs.count_24h DESC
-LIMIT 100;
-`
-
-const run = async (): Promise<void> => {
-  if (shutdownRequested) {
+export const runGoldPopularCorridorsJob = async (
+  options: { enableHealthServer?: boolean } = {},
+): Promise<void> => {
+  if (isShutdownRequested()) {
     logger.info('job_skipped', { reason: 'shutdown_requested' })
     return
+  }
+
+  const enableHealthServer = options.enableHealthServer ?? !isLambdaRuntime
+  if (enableHealthServer) {
+    try {
+      healthServer = await startHealthServer({ logger })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   lock = new WorkerLock('gold-popular-corridors-job', lockTtlSeconds)
@@ -119,8 +105,11 @@ const run = async (): Promise<void> => {
 
   if (!acquired) {
     logger.info('job_skipped', { reason: 'lock_already_held' })
+    recordJobFailure('lock_failed')
     return
   }
+
+  recordJobStart()
 
   lockRefreshTimer = setInterval(() => {
     if (!lock) return
@@ -138,69 +127,157 @@ const run = async (): Promise<void> => {
       })
   }, lockRefreshMs)
 
-  const pool = createPool(config.db.planeBUrl)
+  pool = createPool(config.db.planeBUrl)
   const repo = new PopularCorridorRepository(pool)
   const startTime = Date.now()
+  const maxCorridors = toNumber(process.env.GOLD_POPULAR_CORRIDORS_MAX, 100)
+  let client: PoolClient | null = null
+  let rows: PopularCorridorAggregationRow[] = []
+  let inserted = 0
 
   try {
-    logger.info('job_start', { lock_ttl_seconds: lockTtlSeconds })
-    const result = await query<PopularCorridorRow>(aggregationQuery, [], pool)
-    const rows = result.rows
-    let inserted = 0
+    logger.info('job_start', {
+      lock_ttl_seconds: lockTtlSeconds,
+      max_corridors: maxCorridors,
+    })
+    rows = await retry(
+      () => repo.aggregatePopularCorridors(maxCorridors),
+      {
+        maxRetries: 3,
+        initialDelayMs: 500,
+        retryable: (error) => {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          return errorMessage.includes('connection') ||
+                 errorMessage.includes('timeout') ||
+                 errorMessage.includes('ECONNREFUSED') ||
+                 errorMessage.includes('ETIMEDOUT')
+        },
+      },
+    )
 
-    await repo.clearAll()
+    if (rows.length === 0) {
+      logger.warn('job_no_data', { message: 'No popular corridors found in last 24 hours' })
+      const durationMs = Date.now() - startTime
+      const durationSeconds = durationMs / 1000
+      recordJobComplete(durationSeconds, 0, 0)
+      return
+    }
 
-    for (const row of rows) {
-      try {
-        await repo.insertCorridor({
-          route: row.route,
-          count24h: toNumber(row.count_24h, 0),
-          topProvider: row.top_provider ?? null,
-          feeRange: row.fee_range ?? null,
-          speedRange: row.speed_range ?? null,
-          bestFor: row.best_for ?? null,
-        })
-        inserted += 1
-      } catch (error) {
-        logger.error('corridor_insert_failed', {
-          route: row.route,
-          error: error instanceof Error ? error.message : String(error),
-        })
+    client = await pool.connect()
+    const txRepo = new PopularCorridorRepository(client)
+    await client.query('BEGIN')
+    try {
+      await txRepo.clearAll()
+
+      for (const row of rows) {
+        if (!isValidRoute(row.route)) {
+          logger.warn('invalid_route_format', { route: row.route })
+          continue
+        }
+
+        try {
+          await client.query('SAVEPOINT popular_corridor_insert')
+          await retry(
+            () => txRepo.insertCorridor({
+              route: row.route,
+              count24h: toNumber(row.count_24h, 0),
+              topProvider: row.top_provider ?? null,
+              feeRange: row.fee_range ?? null,
+              speedRange: row.speed_range ?? null,
+              bestFor: row.best_for ?? null,
+            }),
+            {
+              maxRetries: 2,
+              initialDelayMs: 200,
+              retryable: (error) => {
+                const errorMessage = error instanceof Error ? error.message : String(error)
+                return errorMessage.includes('connection') ||
+                       errorMessage.includes('timeout') ||
+                       errorMessage.includes('ECONNREFUSED')
+              },
+            },
+          )
+          await client.query('RELEASE SAVEPOINT popular_corridor_insert')
+          inserted += 1
+        } catch (error) {
+          await client.query('ROLLBACK TO SAVEPOINT popular_corridor_insert')
+          await client.query('RELEASE SAVEPOINT popular_corridor_insert')
+          logger.error('corridor_insert_failed', {
+            route: row.route,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
       }
+
+      await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK')
+      throw error
     }
 
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
     logger.info('job_complete', {
       corridors_processed: rows.length,
       corridors_inserted: inserted,
       duration_ms: durationMs,
     })
+    recordJobComplete(durationSeconds, rows.length, inserted)
   } catch (error) {
     const durationMs = Date.now() - startTime
     logger.error('job_failed', {
       error: error instanceof Error ? error.message : String(error),
       duration_ms: durationMs,
     })
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    let errorType = 'unknown'
+    if (errorMessage.includes('lock') || errorMessage.includes('Lock')) {
+      errorType = 'lock_failed'
+    } else if (errorMessage.includes('query') || errorMessage.includes('SELECT') || errorMessage.includes('aggregate')) {
+      errorType = 'query_failed'
+    } else if (errorMessage.includes('insert') || errorMessage.includes('INSERT') || errorMessage.includes('constraint')) {
+      errorType = 'insert_failed'
+    } else if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
+      errorType = 'validation_failed'
+    }
+
+    recordJobFailure(errorType)
     throw error
   } finally {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
     if (lockRefreshTimer) {
       clearInterval(lockRefreshTimer)
     }
     if (lock) {
       await lock.release()
     }
-    await pool.end()
+    if (client) {
+      client.release()
+    }
+    if (pool && !isShutdownRequested()) {
+      await pool.end()
+      pool = null
+    }
   }
 }
 
-run()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('job_fatal_error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module && !isLambdaRuntime) {
+  runGoldPopularCorridorsJob()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('job_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

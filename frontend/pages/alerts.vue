@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePageMeta({ middleware: 'auth' })
+
 await navigateTo({
   path: '/dashboard',
   query: { tab: 'alerts' },

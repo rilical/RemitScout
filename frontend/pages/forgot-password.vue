@@ -40,6 +40,12 @@
 
         <!-- Reset Form -->
         <form v-else class="space-y-4" @submit.prevent="handleReset">
+          <div
+            v-if="errorMessage"
+            class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {{ errorMessage }}
+          </div>
           <div>
             <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
               Email address
@@ -83,10 +89,10 @@
 
           <button
             type="submit"
-            :disabled="!captchaChecked"
+            :disabled="!captchaChecked || loading"
             class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
           >
-            Send reset link
+            {{ loading ? 'Sending…' : 'Send reset link' }}
           </button>
         </form>
       </div>
@@ -120,16 +126,26 @@
 </template>
 
 <script setup lang="ts">
+const { requestPasswordReset } = useAuth()
+
 const email = ref('')
 const captchaChecked = ref(false)
 const sent = ref(false)
+const loading = ref(false)
+const errorMessage = ref<string | null>(null)
 
-function handleReset() {
-  // TODO: Implement Supabase password reset
-  // const supabase = useSupabaseClient()
-  // const { error } = await supabase.auth.resetPasswordForEmail(email.value)
-  
-  console.log('Password reset requested for:', email.value)
+async function handleReset() {
+  errorMessage.value = null
+  loading.value = true
+
+  const result = await requestPasswordReset(email.value)
+  loading.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Unable to send reset link.'
+    return
+  }
+
   sent.value = true
 }
 
@@ -140,7 +156,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

@@ -15,34 +15,31 @@
  * - Comprehensive logging with metrics
  */
 
-import { createPool, query } from '../shared/db'
+import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
-import { buildChartData, pulseDefaults } from '../shared/pulse-defaults'
+import { createShutdownHandler } from '../shared/shutdown'
+import { pulseDefaults } from '../shared/pulse-defaults'
+import {
+  buildPulseCacheKey,
+  PULSE_AMOUNTS,
+  PULSE_TIMEFRAMES,
+  type PulseCacheFilters,
+} from '../shared/pulse-cache-keys'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { PulseCacheRepository } from '../plane-b/src/repositories'
-
-type PulseQueryResult = {
-  key: string
-  payload?: unknown
-  error?: Error
-}
-
-type PulseQueryTask = {
-  key: string
-  sql: string
-  format: (rows: any[]) => unknown
-}
+import { FxRateHistoryRepository } from '../plane-b/src/repositories'
+import {
+  recordJobStart,
+  recordJobComplete,
+  recordJobFailure,
+} from './gold-pulse-cache-job-metrics'
+import { startHealthServer } from './gold-pulse-cache-job-health'
+import { retry } from '../shared/retry'
 
 const toNumber = (value: string | number | null | undefined, fallback: number | null = null) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const toIsoString = (value: Date | string | null | undefined) => {
-  if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
 const serializeJson = (value: unknown) => {
@@ -57,290 +54,67 @@ const lockTtlSeconds = toNumber(process.env.GOLD_PULSE_CACHE_LOCK_TTL_SECONDS, 9
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-pulse-cache')
 
-let shutdownRequested = false
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
+let pool: ReturnType<typeof createPool> | null = null
 
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-}
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const { isShutdownRequested } = createShutdownHandler({
+  timeoutMs: 30000,
+  logger,
+  onShutdown: async () => {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (lockRefreshTimer) {
+      clearInterval(lockRefreshTimer)
+    }
+    if (lock) {
+      await lock.release().catch((error) => {
+        logger.warn('lock_release_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (pool) {
+      await pool.end()
+    }
+  },
+})
 
-const queryTasks: PulseQueryTask[] = [
-  {
-    key: 'pulse:corridors',
-    sql: `
-      SELECT
-        c.corridor_id,
-        c.source_country AS from_country,
-        c.dest_country AS to_country,
-        c.source_currency AS send_currency,
-        c.dest_currency AS recv_currency,
-        COUNT(DISTINCT lqp.provider_id) AS provider_count,
-        MAX(lqp.collected_at) AS last_updated
-      FROM silver.corridor c
-      LEFT JOIN silver.latest_quote_by_provider lqp
-        ON lqp.corridor_id = c.corridor_id
-       AND lqp.status = 'ok'
-      GROUP BY c.corridor_id, c.source_country, c.dest_country, c.source_currency, c.dest_currency
-      HAVING COUNT(DISTINCT lqp.provider_id) >= 1
-      ORDER BY last_updated DESC NULLS LAST;
-    `,
-    format: (rows) =>
-      rows.map((row) => ({
-        corridor_id: row.corridor_id,
-        from_country: row.from_country,
-        to_country: row.to_country,
-        send_currency: row.send_currency,
-        recv_currency: row.recv_currency,
-        provider_count: toNumber(row.provider_count, 0),
-        last_updated: toIsoString(row.last_updated),
-      })),
-  },
-  {
-    key: 'pulse:overview',
-    sql: `
-      SELECT
-        COUNT(DISTINCT c.corridor_id) AS total_corridors,
-        COUNT(DISTINCT lqp.provider_id) AS active_providers,
-        COUNT(DISTINCT lqp.corridor_id) AS corridors_with_quotes,
-        AVG(EXTRACT(EPOCH FROM (NOW() - lqp.collected_at)) / 60) AS avg_freshness_minutes
-      FROM silver.corridor c
-      LEFT JOIN silver.latest_quote_by_provider lqp
-        ON lqp.corridor_id = c.corridor_id
-       AND lqp.status = 'ok'
-       AND lqp.collected_at >= NOW() - INTERVAL '24 hours';
-    `,
-    format: (rows) => {
-      const row = rows[0] ?? {}
-      return {
-        total_corridors: toNumber(row.total_corridors, 0),
-        active_providers: toNumber(row.active_providers, 0),
-        corridors_with_quotes: toNumber(row.corridors_with_quotes, 0),
-        avg_freshness_minutes: toNumber(row.avg_freshness_minutes, null),
-      }
-    },
-  },
-  {
-    key: 'pulse:method-coverage',
-    sql: `
-      SELECT
-        lqp.payin AS payin_method,
-        lqp.payout AS payout_method,
-        COUNT(*) AS quote_count,
-        COUNT(DISTINCT lqp.corridor_id) AS corridor_count
-      FROM silver.latest_quote_by_provider lqp
-      WHERE lqp.status = 'ok'
-        AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-      GROUP BY lqp.payin, lqp.payout
-      ORDER BY quote_count DESC;
-    `,
-    format: (rows) =>
-      rows.map((row) => ({
-        payin_method: row.payin_method,
-        payout_method: row.payout_method,
-        quote_count: toNumber(row.quote_count, 0),
-        corridor_count: toNumber(row.corridor_count, 0),
-      })),
-  },
-  {
-    key: 'pulse:table',
-    sql: `
-      SELECT
-        c.corridor_id,
-        c.corridor_id AS corridor_label,
-        COUNT(DISTINCT lqp.provider_id) AS provider_count,
-        AVG(lqp.implied_fx_rate) AS avg_rate,
-        MIN(lqp.fee_amount) AS min_fee,
-        MAX(lqp.fee_amount) AS max_fee
-      FROM silver.corridor c
-      JOIN silver.latest_quote_by_provider lqp ON lqp.corridor_id = c.corridor_id
-      WHERE lqp.status = 'ok'
-        AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-      GROUP BY c.corridor_id
-      HAVING COUNT(DISTINCT lqp.provider_id) >= 2
-      ORDER BY provider_count DESC, avg_rate DESC;
-    `,
-    format: (rows) =>
-      rows.map((row) => ({
-        corridor_id: row.corridor_id,
-        corridor_label: row.corridor_label,
-        provider_count: toNumber(row.provider_count, 0),
-        avg_rate: toNumber(row.avg_rate, null),
-        min_fee: toNumber(row.min_fee, null),
-        max_fee: toNumber(row.max_fee, null),
-      })),
-  },
-  {
-    key: 'pulse:hero',
-    sql: `
-      SELECT
-        COUNT(DISTINCT lqp.corridor_id) AS active_corridors,
-        COUNT(DISTINCT lqp.provider_id) AS active_providers,
-        SUM(lqp.send_amount) AS total_volume_24h,
-        AVG(lqp.implied_fx_rate) AS global_avg_rate
-      FROM silver.latest_quote_by_provider lqp
-      WHERE lqp.status = 'ok'
-        AND lqp.collected_at >= NOW() - INTERVAL '24 hours';
-    `,
-    format: (rows) => {
-      const row = rows[0] ?? {}
-      return {
-        active_corridors: toNumber(row.active_corridors, 0),
-        active_providers: toNumber(row.active_providers, 0),
-        total_volume_24h: toNumber(row.total_volume_24h, null),
-        global_avg_rate: toNumber(row.global_avg_rate, null),
-      }
-    },
-  },
-  {
-    key: 'pulse:coverage-summary',
-    sql: `
-      SELECT
-        COUNT(DISTINCT c.corridor_id) AS total_corridors,
-        COUNT(DISTINCT CASE WHEN lqp.provider_id IS NOT NULL THEN c.corridor_id END) AS covered_corridors,
-        ROUND(
-          100.0 * COUNT(DISTINCT CASE WHEN lqp.provider_id IS NOT NULL THEN c.corridor_id END) /
-          NULLIF(COUNT(DISTINCT c.corridor_id), 0),
-          2
-        ) AS coverage_percentage
-      FROM silver.corridor c
-      LEFT JOIN silver.latest_quote_by_provider lqp
-        ON lqp.corridor_id = c.corridor_id
-       AND lqp.status = 'ok'
-       AND lqp.collected_at >= NOW() - INTERVAL '24 hours';
-    `,
-    format: (rows) => {
-      const row = rows[0] ?? {}
-      return {
-        total_corridors: toNumber(row.total_corridors, 0),
-        covered_corridors: toNumber(row.covered_corridors, 0),
-        coverage_percentage: toNumber(row.coverage_percentage, null),
-      }
-    },
-  },
-  {
-    key: 'pulse:snapshot-summary',
-    sql: `
-      SELECT
-        COUNT(*) AS total_quotes,
-        COUNT(DISTINCT corridor_id) AS unique_corridors,
-        COUNT(DISTINCT provider_id) AS unique_providers,
-        MIN(collected_at) AS oldest_quote,
-        MAX(collected_at) AS newest_quote
-      FROM silver.latest_quote_by_provider
-      WHERE status = 'ok'
-        AND collected_at >= NOW() - INTERVAL '1 hour';
-    `,
-    format: (rows) => {
-      const row = rows[0] ?? {}
-      return {
-        total_quotes: toNumber(row.total_quotes, 0),
-        unique_corridors: toNumber(row.unique_corridors, 0),
-        unique_providers: toNumber(row.unique_providers, 0),
-        oldest_quote: toIsoString(row.oldest_quote),
-        newest_quote: toIsoString(row.newest_quote),
-      }
-    },
-  },
-  {
-    key: 'pulse:provider-benchmarking',
-    sql: `
-      SELECT
-        lqp.provider_id,
-        p.display_name AS provider_name,
-        COUNT(*) AS quote_count,
-        AVG(lqp.implied_fx_rate) AS avg_rate,
-        AVG(lqp.fee_amount) AS avg_fee,
-        AVG(EXTRACT(EPOCH FROM (NOW() - lqp.collected_at)) / 60) AS avg_freshness_minutes
-      FROM silver.latest_quote_by_provider lqp
-      JOIN silver.provider p ON p.provider_id = lqp.provider_id
-      WHERE lqp.status = 'ok'
-        AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-      GROUP BY lqp.provider_id, p.display_name
-      HAVING COUNT(*) >= 10
-      ORDER BY quote_count DESC;
-    `,
-    format: (rows) =>
-      rows.map((row) => ({
-        provider_id: row.provider_id,
-        provider_name: row.provider_name,
-        quote_count: toNumber(row.quote_count, 0),
-        avg_rate: toNumber(row.avg_rate, null),
-        avg_fee: toNumber(row.avg_fee, null),
-        avg_freshness_minutes: toNumber(row.avg_freshness_minutes, null),
-      })),
-  },
-  {
-    key: 'pulse:events',
-    sql: `
-      SELECT
-        alert_id AS id,
-        provider_id,
-        corridor_id,
-        block_reason,
-        http_status,
-        created_at
-      FROM silver.ops_alert_event
-      WHERE created_at >= NOW() - INTERVAL '24 hours'
-      ORDER BY created_at DESC
-      LIMIT 100;
-    `,
-    format: (rows) =>
-      rows.map((row) => ({
-        id: row.id,
-        provider_id: row.provider_id,
-        corridor_id: row.corridor_id,
-        block_reason: row.block_reason,
-        http_status: toNumber(row.http_status, null),
-        created_at: toIsoString(row.created_at),
-      })),
-  },
-  {
-    key: 'pulse:provider-heatmap',
-    sql: `
-      SELECT
-        c.source_country AS from_country,
-        c.dest_country AS to_country,
-        lqp.provider_id,
-        COUNT(*) AS quote_count
-      FROM silver.latest_quote_by_provider lqp
-      JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
-      WHERE lqp.status = 'ok'
-        AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-      GROUP BY c.source_country, c.dest_country, lqp.provider_id
-      ORDER BY quote_count DESC;
-    `,
-    format: (rows) =>
-      rows.map((row) => ({
-        from_country: row.from_country,
-        to_country: row.to_country,
-        provider_id: row.provider_id,
-        quote_count: toNumber(row.quote_count, 0),
-      })),
-  },
-]
+const buildDefaultEntries = () => ({
+  'pulse:smart-send': pulseDefaults.smartSend,
+  'pulse:market-snapshot': pulseDefaults.marketSnapshot,
+  'pulse:true-cost': pulseDefaults.trueCost,
+  'pulse:market-depth': pulseDefaults.marketDepth,
+  'pulse:arbitrage': pulseDefaults.arbitrage,
+  'pulse:bank-comparison': pulseDefaults.bankComparison,
+  'pulse:cost-trend': pulseDefaults.costTrend,
+})
 
-const buildDefaultEntries = () => {
-  return {
-    'pulse:smart-send': pulseDefaults.smartSend,
-    'pulse:market-snapshot': pulseDefaults.marketSnapshot,
-    'pulse:true-cost': pulseDefaults.trueCost,
-    'pulse:market-depth': pulseDefaults.marketDepth,
-    'pulse:arbitrage': pulseDefaults.arbitrage,
-    'pulse:bank-comparison': pulseDefaults.bankComparison,
-    'pulse:cost-trend': pulseDefaults.costTrend,
-  }
-}
-
-const run = async (): Promise<void> => {
-  if (shutdownRequested) {
+export const runGoldPulseCacheJob = async (
+  options: { enableHealthServer?: boolean } = {},
+): Promise<void> => {
+  if (isShutdownRequested()) {
     logger.info('job_skipped', { reason: 'shutdown_requested' })
     return
+  }
+
+  const enableHealthServer = options.enableHealthServer ?? !isLambdaRuntime
+  if (enableHealthServer) {
+    try {
+      healthServer = await startHealthServer({ logger })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   lock = new WorkerLock('gold-pulse-cache-job', lockTtlSeconds)
@@ -348,8 +122,11 @@ const run = async (): Promise<void> => {
 
   if (!acquired) {
     logger.info('job_skipped', { reason: 'lock_already_held' })
+    recordJobFailure('lock_failed')
     return
   }
+
+  recordJobStart()
 
   lockRefreshTimer = setInterval(() => {
     if (!lock) return
@@ -367,98 +144,212 @@ const run = async (): Promise<void> => {
       })
   }, lockRefreshMs)
 
-  const pool = createPool(config.db.planeBUrl)
+  pool = createPool(config.db.planeBUrl)
   const repo = new PulseCacheRepository(pool)
+  const fxRateHistoryRepository = new FxRateHistoryRepository(pool)
   const startTime = Date.now()
 
   try {
     logger.info('job_start', { lock_ttl_seconds: lockTtlSeconds })
 
-    const queryResults = await Promise.all(
-      queryTasks.map(async (task): Promise<PulseQueryResult> => {
+    const corridors = await retry(
+      () => repo.listPulseCorridors(),
+      {
+        maxRetries: 3,
+        initialDelayMs: 500,
+        retryable: (error) => {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          return errorMessage.includes('connection') ||
+                 errorMessage.includes('timeout') ||
+                 errorMessage.includes('ECONNREFUSED') ||
+                 errorMessage.includes('ETIMEDOUT')
+        },
+      },
+    )
+
+    const historyDays = config.fxRates?.historyDays ?? 30
+    await Promise.all(
+      corridors.map(async (corridor) => {
+        if (!corridor.send_currency || !corridor.recv_currency) return
         try {
-          const result = await query(task.sql, [], pool)
-          return { key: task.key, payload: task.format(result.rows) }
+          await fxRateHistoryRepository.getLatestHistory(
+            corridor.send_currency.toUpperCase(),
+            corridor.recv_currency.toUpperCase(),
+            historyDays,
+          )
         } catch (error) {
-          return { key: task.key, error: error as Error }
+          logger.warn('fx_rate_history_prefetch_failed', {
+            corridor: corridor.corridor,
+            error: error instanceof Error ? error.message : String(error),
+          })
         }
       }),
     )
 
-    const chartIds = ['all-in-cost', 'fx-markup', 'provider-winner', 'volatility-pulse', 'quote-success', 'market-depth']
-    const chartEntries = chartIds.map((chartId) => ({
-      key: `pulse:chart:${chartId}`,
-      payload: buildChartData(chartId),
-    }))
-
     const defaultEntries = buildDefaultEntries()
-    const entries: Array<{ key: string; payload: unknown }> = []
+    const entries = new Map<string, unknown>()
 
-    for (const result of queryResults) {
-      if (result.error) {
-        logger.error('pulse_query_failed', {
-          key: result.key,
-          error: result.error instanceof Error ? result.error.message : String(result.error),
-        })
-        continue
+    entries.set('pulse:corridors', corridors)
+
+    const baseFilters: PulseCacheFilters = {
+      corridor: null,
+      timeframe: '30d',
+      amount: 1000,
+      payin: 'bank',
+      payout: 'bank',
+    }
+
+    const filterContexts: PulseCacheFilters[] = [baseFilters]
+
+    for (const corridor of corridors) {
+      for (const timeframe of PULSE_TIMEFRAMES) {
+        for (const amount of PULSE_AMOUNTS) {
+          const methodPairs = await repo.listPulseMethods({
+            corridor: corridor.corridor,
+            timeframe,
+            amount,
+          })
+          if (methodPairs.length === 0) {
+            filterContexts.push({ corridor: corridor.corridor, timeframe, amount })
+            continue
+          }
+
+          for (const method of methodPairs) {
+            filterContexts.push({
+              corridor: corridor.corridor,
+              timeframe,
+              amount,
+              payin: method.payin,
+              payout: method.payout,
+            })
+          }
+        }
       }
-      entries.push({ key: result.key, payload: result.payload })
+    }
+
+    let filtersProcessed = 0
+
+    for (const filters of filterContexts) {
+      const cacheData = await retry(
+        () => repo.aggregatePulseCacheData(filters),
+        {
+          maxRetries: 3,
+          initialDelayMs: 500,
+          retryable: (error) => {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            return errorMessage.includes('connection') ||
+                   errorMessage.includes('timeout') ||
+                   errorMessage.includes('ECONNREFUSED') ||
+                   errorMessage.includes('ETIMEDOUT')
+          },
+        },
+      )
+
+      for (const [baseKey, payload] of cacheData.entries()) {
+        const filteredKey = buildPulseCacheKey(baseKey, filters)
+        entries.set(filteredKey, payload)
+        if (filters === baseFilters) {
+          entries.set(baseKey, payload)
+        }
+      }
+
+      filtersProcessed += 1
     }
 
     for (const [key, payload] of Object.entries(defaultEntries)) {
-      entries.push({ key, payload })
-    }
-
-    for (const entry of chartEntries) {
-      entries.push(entry)
+      if (!entries.has(key)) {
+        entries.set(key, payload)
+      }
     }
 
     let upserted = 0
-    for (const entry of entries) {
+    for (const [key, payload] of entries.entries()) {
       try {
-        const payload = serializeJson(entry.payload)
-        await repo.upsertEntry({ key: entry.key, payload })
+        const payloadJson = serializeJson(payload)
+        await retry(
+          () => repo.upsertEntry({ key, payload: payloadJson }),
+          {
+            maxRetries: 2,
+            initialDelayMs: 200,
+            retryable: (error) => {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              return errorMessage.includes('connection') ||
+                     errorMessage.includes('timeout') ||
+                     errorMessage.includes('ECONNREFUSED')
+            },
+          },
+        )
         upserted += 1
       } catch (error) {
         logger.error('pulse_cache_upsert_failed', {
-          key: entry.key,
+          key,
           error: error instanceof Error ? error.message : String(error),
         })
       }
     }
 
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
     logger.info('job_complete', {
-      entries_processed: entries.length,
+      entries_processed: entries.size,
       entries_upserted: upserted,
+      filters_processed: filtersProcessed,
+      corridors_processed: corridors.length,
       duration_ms: durationMs,
     })
+    recordJobComplete(durationSeconds, entries.size, upserted)
   } catch (error) {
     const durationMs = Date.now() - startTime
     logger.error('job_failed', {
       error: error instanceof Error ? error.message : String(error),
       duration_ms: durationMs,
     })
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    let errorType = 'unknown'
+    if (errorMessage.includes('lock') || errorMessage.includes('Lock')) {
+      errorType = 'lock_failed'
+    } else if (errorMessage.includes('query') || errorMessage.includes('SELECT') || errorMessage.includes('aggregate')) {
+      errorType = 'query_failed'
+    } else if (errorMessage.includes('insert') || errorMessage.includes('INSERT') || errorMessage.includes('upsert') || errorMessage.includes('constraint')) {
+      errorType = 'insert_failed'
+    } else if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
+      errorType = 'validation_failed'
+    }
+
+    recordJobFailure(errorType)
     throw error
   } finally {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
     if (lockRefreshTimer) {
       clearInterval(lockRefreshTimer)
     }
     if (lock) {
       await lock.release()
     }
-    await pool.end()
+    if (pool && !isShutdownRequested()) {
+      await pool.end()
+      pool = null
+    }
   }
 }
 
-run()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('job_fatal_error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module && !isLambdaRuntime) {
+  runGoldPulseCacheJob()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('job_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

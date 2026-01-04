@@ -19,6 +19,16 @@ export type CreateAlertResult =
     watchlistItemId: string
   }
 
+type AlertsApiResponse = {
+  success: boolean
+  alerts?: Alert[]
+  alert?: Alert
+  status?: 'created' | 'already_exists'
+  error?: string
+  message?: string
+  limit?: number
+}
+
 function sortByUpdatedDesc(a: Alert, b: Alert) {
   return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
 }
@@ -39,12 +49,17 @@ function defaultRuleForTarget(target: WatchTarget): AlertRule {
 export const useAlerts = () => {
   const { limits } = useEntitlements()
   const watchlist = useWatchlist()
+  const { isLoggedIn } = useAuth()
+  const { request } = useApi()
 
-  const { state: alerts, hydrated, reset } = usePersistedState<Alert[]>(
+  const { state: alerts, hydrated: localStorageHydrated, reset: resetLocalStorage } = usePersistedState<Alert[]>(
     'alerts:items',
     () => [],
     { validate: (value): value is Alert[] => Array.isArray(value) },
   )
+
+  const hydrated = useState<boolean>('alerts:api:hydrated', () => false)
+  const syncing = useState<boolean>('alerts:syncing', () => false)
 
   const { state: historyByAlertId } = usePersistedState<Record<string, AlertHistoryEvent[]>>(
     'alerts:history',
@@ -53,6 +68,101 @@ export const useAlerts = () => {
   )
 
   const count = computed(() => alerts.value.length)
+
+  async function fetchFromBackend() {
+    if (!isLoggedIn.value) {
+      hydrated.value = true
+      return
+    }
+
+    try {
+      syncing.value = true
+      const response = await request<AlertsApiResponse>('/alerts')
+      
+      if (response.success && response.alerts) {
+        alerts.value = response.alerts.sort(sortByUpdatedDesc)
+        hydrated.value = true
+      } else {
+        console.warn('Failed to fetch alerts from backend:', response)
+        hydrated.value = true
+      }
+    } catch (error) {
+      console.error('Error fetching alerts from backend:', error)
+      hydrated.value = true
+    } finally {
+      syncing.value = false
+    }
+  }
+
+  async function syncToBackend(operation: 'create' | 'update' | 'delete', alert: Alert | Partial<Alert>, id?: string) {
+    if (!isLoggedIn.value) {
+      return
+    }
+
+    try {
+      if (operation === 'create') {
+        const fullAlert = alert as Alert
+        const response = await request<AlertsApiResponse>('/alerts', {
+          method: 'POST',
+          body: {
+            watchlistItemId: fullAlert.watchlistItemId,
+            rule: fullAlert.rule,
+            frequency: fullAlert.frequency,
+            enabled: fullAlert.enabled,
+          },
+        })
+
+        if (response.success && response.alert) {
+          const existingIndex = alerts.value.findIndex(a => a.id === response.alert!.id)
+          if (existingIndex >= 0) {
+            alerts.value[existingIndex] = response.alert
+          } else {
+            alerts.value = [response.alert, ...alerts.value].sort(sortByUpdatedDesc)
+          }
+        }
+      } else if (operation === 'update' && id) {
+        const patch = alert as Partial<Alert>
+        const response = await request<AlertsApiResponse>(`/alerts/${id}`, {
+          method: 'PATCH',
+          body: {
+            rule: patch.rule,
+            frequency: patch.frequency,
+            enabled: patch.enabled,
+          },
+        })
+
+        if (response.success && response.alert) {
+          const index = alerts.value.findIndex(a => a.id === id)
+          if (index >= 0) {
+            alerts.value[index] = response.alert
+            alerts.value = [...alerts.value].sort(sortByUpdatedDesc)
+          }
+        }
+      } else if (operation === 'delete' && id) {
+        await request<AlertsApiResponse>(`/alerts/${id}`, {
+          method: 'DELETE',
+        })
+      }
+    } catch (error) {
+      console.error(`Error syncing ${operation} to backend:`, error)
+    }
+  }
+
+  onMounted(async () => {
+    if (isLoggedIn.value) {
+      await fetchFromBackend()
+    } else {
+      hydrated.value = localStorageHydrated.value
+    }
+  })
+
+  watch(isLoggedIn, async (loggedIn) => {
+    if (loggedIn) {
+      await fetchFromBackend()
+    } else {
+      hydrated.value = localStorageHydrated.value
+    }
+  })
 
   function findById(id: string) {
     return alerts.value.find(a => a.id === id) ?? null
@@ -66,10 +176,10 @@ export const useAlerts = () => {
     return `${rule.metric}:${rule.comparator}:${rule.value}:${rule.currency ?? ''}`
   }
 
-  function createForWatchlistItem(
+  async function createForWatchlistItem(
     watchlistItemId: string,
     draft?: Partial<Pick<Alert, 'frequency' | 'enabled'>> & { rule?: Partial<AlertRule> },
-  ): CreateAlertResult {
+  ): Promise<CreateAlertResult> {
     const limit = limits.value.alerts
     if (limit !== 'unlimited' && alerts.value.length >= limit) {
       return {
@@ -90,6 +200,11 @@ export const useAlerts = () => {
     if (existing) {
       existing.updatedAt = now
       alerts.value = [...alerts.value].sort(sortByUpdatedDesc)
+      
+      if (isLoggedIn.value) {
+        await syncToBackend('update', existing, existing.id)
+      }
+      
       return { status: 'already_exists', alert: existing, watchlistItemId }
     }
 
@@ -104,17 +219,22 @@ export const useAlerts = () => {
     }
 
     alerts.value = [next, ...alerts.value].sort(sortByUpdatedDesc)
+
+    if (isLoggedIn.value) {
+      await syncToBackend('create', next)
+    }
+
     return { status: 'created', alert: next, watchlistItemId }
   }
 
-  function createForTarget(
+  async function createForTarget(
     target: WatchTarget,
     draft?: Partial<Pick<Alert, 'frequency' | 'enabled'>> & {
       rule?: Partial<AlertRule>
       label?: string
     },
-  ): CreateAlertResult {
-    const ensured = watchlist.ensure(target, draft?.label ? { label: draft.label } : undefined)
+  ): Promise<CreateAlertResult> {
+    const ensured = await watchlist.ensure(target, draft?.label ? { label: draft.label } : undefined)
     if (ensured.status === 'limit_reached') {
       return {
         status: 'watchlist_limit_reached',
@@ -132,21 +252,33 @@ export const useAlerts = () => {
     return createForWatchlistItem(ensured.item.id, mergedDraft)
   }
 
-  function update(id: string, patch: Partial<Omit<Alert, 'id' | 'createdAt'>>) {
+  async function update(id: string, patch: Partial<Omit<Alert, 'id' | 'createdAt'>>) {
     const existing = findById(id)
     if (!existing) return
+    
     const next: Alert = {
       ...existing,
       ...patch,
       updatedAt: new Date().toISOString(),
     }
     alerts.value = [next, ...alerts.value.filter(a => a.id !== id)].sort(sortByUpdatedDesc)
+
+    if (isLoggedIn.value) {
+      await syncToBackend('update', patch, id)
+    }
   }
 
-  function remove(id: string) {
+  async function remove(id: string) {
+    const index = alerts.value.findIndex(a => a.id === id)
+    if (index === -1) return
+
     alerts.value = alerts.value.filter(a => a.id !== id)
     const { [id]: _removed, ...rest } = historyByAlertId.value
     historyByAlertId.value = rest
+
+    if (isLoggedIn.value) {
+      await syncToBackend('delete', {} as Alert, id)
+    }
   }
 
   function toggleEnabled(id: string) {
@@ -178,9 +310,17 @@ export const useAlerts = () => {
     return historyByAlertId.value[alertId] ?? []
   }
 
+  function reset() {
+    alerts.value = []
+    resetLocalStorage()
+    if (isLoggedIn.value) {
+      fetchFromBackend()
+    }
+  }
+
   return {
     alerts,
-    hydrated,
+    hydrated: computed(() => hydrated.value && localStorageHydrated.value),
     count,
     findById,
     listByWatchlistItemId,
@@ -192,5 +332,7 @@ export const useAlerts = () => {
     addHistoryEvent,
     getHistory,
     reset,
+    syncing: readonly(syncing),
+    refresh: fetchFromBackend,
   }
 }

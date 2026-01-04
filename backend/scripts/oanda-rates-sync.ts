@@ -1,0 +1,352 @@
+/**
+ * OANDA Rates Sync Job - Fetches exchange rates from OANDA API and stores them in the database.
+ *
+ * **Usage**:
+ * ```bash
+ * pnpm -C backend oanda:sync-rates
+ * ```
+ *
+ * **Environment Variables**:
+ * - `OANDA_USE_AUTHENTICATED_API`: Set to '1' or 'true' to use authenticated API (default: false)
+ * - `OANDA_API_KEY`: API key for authenticated OANDA API (required if using authenticated API)
+ * - `FX_RATE_OANDA_FALLBACK`: Set to '1' or 'true' to enable fallback fetching in repository (default: false)
+ * - `OANDA_SYNC_CURRENCIES`: Comma-separated list of currency codes to sync (e.g., "USD,EUR,GBP")
+ * - `OANDA_SYNC_INTERVAL_MINUTES`: How often to sync rates (default: 60)
+ *
+ * **Features**:
+ * - Fetches rates from OANDA public API (scraping) or authenticated API
+ * - Stores bid/ask/mid rates in database
+ * - Stores historical rates in gold.fx_rate_history
+ * - Graceful shutdown
+ * - Comprehensive logging + CloudWatch metrics
+ */
+
+import { createPool, query } from '../shared/db'
+import { config } from '../shared/config'
+import { createLogger } from '../shared/logger'
+import { createShutdownHandler } from '../shared/shutdown'
+import { OandaRateFetcher } from '../plane-a/src/services/oanda-rate-fetcher'
+import { FxRateHistoryRepository } from '../plane-a/src/repositories/implementations/fx-rate-history-repository'
+import { FxRateRepository } from '../plane-a/src/repositories/implementations/fx-rate-repository'
+import { fxRateCache, fxRateHistoryCache } from '../shared/repository-cache'
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
+
+const logger = createLogger('script.oanda-rates-sync')
+
+const MAJOR_CURRENCIES = [
+  'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'NZD',
+  'SGD', 'MXN', 'INR', 'BRL', 'ZAR', 'KRW', 'TRY', 'RUB', 'SEK', 'NOK',
+  'DKK', 'PLN', 'THB', 'IDR', 'MYR', 'PHP', 'CZK', 'HUF', 'ILS', 'CLP',
+  'ARS', 'COP', 'PEN', 'VND', 'PKR', 'BDT', 'EGP', 'NGN', 'KES', 'UGX',
+]
+
+const toNumber = (value: string | undefined, fallback: number): number => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const toBoolean = (value: string | undefined): boolean => {
+  return value === '1' || value === 'true' || value === 'yes'
+}
+
+const dedupePairs = (pairs: Array<{ base: string; quote: string }>) => {
+  const seen = new Set<string>()
+  const deduped: Array<{ base: string; quote: string }> = []
+  for (const pair of pairs) {
+    const key = `${pair.base}:${pair.quote}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    deduped.push(pair)
+  }
+  return deduped
+}
+
+const getCurrencyPairsFromEnv = (): Array<{ base: string; quote: string }> => {
+  const currencies = process.env.OANDA_SYNC_CURRENCIES
+    ? process.env.OANDA_SYNC_CURRENCIES.split(',').map(c => c.trim().toUpperCase()).filter(Boolean)
+    : MAJOR_CURRENCIES
+
+  const pairs: Array<{ base: string; quote: string }> = []
+
+  for (let i = 0; i < currencies.length; i++) {
+    for (let j = i + 1; j < currencies.length; j++) {
+      pairs.push({ base: currencies[i], quote: currencies[j] })
+      pairs.push({ base: currencies[j], quote: currencies[i] })
+    }
+  }
+
+  return pairs
+}
+
+const fetchPriorityPairs = async (pool: ReturnType<typeof createPool>) => {
+  const pairs: Array<{ base: string; quote: string }> = []
+
+  try {
+    const tierResult = await query<{ base_currency: string; quote_currency: string }>(
+      `SELECT DISTINCT c.source_currency AS base_currency, c.dest_currency AS quote_currency
+       FROM silver.corridor c
+       JOIN silver.corridor_tier ct ON ct.corridor_id = c.corridor_id
+       WHERE ct.corridor_tier IS NOT NULL`,
+      [],
+      pool,
+    )
+
+    pairs.push(...tierResult.rows.map(row => ({
+      base: row.base_currency,
+      quote: row.quote_currency,
+    })))
+  } catch (error) {
+    logger.warn('priority_pairs_tier_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+
+  try {
+    const popularResult = await query<{ base_currency: string; quote_currency: string }>(
+      `SELECT DISTINCT c.source_currency AS base_currency, c.dest_currency AS quote_currency
+       FROM gold.popular_corridors pc
+       JOIN silver.corridor c
+         ON c.source_country = TRIM(split_part(pc.route, CHR(8594), 1))
+        AND c.dest_country = TRIM(split_part(pc.route, CHR(8594), 2))`,
+      [],
+      pool,
+    )
+
+    pairs.push(...popularResult.rows.map(row => ({
+      base: row.base_currency,
+      quote: row.quote_currency,
+    })))
+  } catch (error) {
+    logger.warn('priority_pairs_popular_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+
+  return pairs
+}
+
+const buildCurrencyPairs = async (pool: ReturnType<typeof createPool>) => {
+  const manualPairs = getCurrencyPairsFromEnv()
+  const priorityPairs = await fetchPriorityPairs(pool)
+
+  const pairs: Array<{ base: string; quote: string }> = []
+
+  for (const pair of [...priorityPairs, ...manualPairs]) {
+    if (!pair.base || !pair.quote) continue
+    if (pair.base === pair.quote) continue
+    pairs.push({ base: pair.base.toUpperCase(), quote: pair.quote.toUpperCase() })
+  }
+
+  return dedupePairs(pairs)
+}
+
+let pool: ReturnType<typeof createPool> | null = null
+let syncInterval: ReturnType<typeof setInterval> | null = null
+let isRunning = false
+
+const { isShutdownRequested } = createShutdownHandler({
+  timeoutMs: 30000,
+  logger,
+  onShutdown: async () => {
+    if (syncInterval) {
+      clearInterval(syncInterval)
+      syncInterval = null
+    }
+    if (pool) {
+      await pool.end()
+      pool = null
+    }
+  },
+})
+
+const syncRates = async (): Promise<void> => {
+  if (isRunning) {
+    logger.info('sync_skipped', { reason: 'already_running' })
+    return
+  }
+
+  if (isShutdownRequested()) {
+    logger.info('sync_skipped', { reason: 'shutdown_requested' })
+    return
+  }
+
+  isRunning = true
+  const startTime = Date.now()
+  let successCount = 0
+  let failureCount = 0
+
+  try {
+    if (!pool) {
+      pool = createPool(config.db.planeAUrl)
+    }
+
+    const useAuthenticatedApi = toBoolean(process.env.OANDA_USE_AUTHENTICATED_API)
+    const apiKey = process.env.OANDA_API_KEY
+    const fetcher = new OandaRateFetcher(pool, useAuthenticatedApi, apiKey)
+    const fxRateRepository = new FxRateRepository(pool)
+    const fxRateHistoryRepository = new FxRateHistoryRepository(pool)
+
+    const pairs = await buildCurrencyPairs(pool)
+
+    logger.info('sync_start', {
+      total_pairs: pairs.length,
+      use_authenticated_api: useAuthenticatedApi,
+    })
+
+    for (const { base, quote } of pairs) {
+      if (isShutdownRequested()) {
+        logger.info('sync_interrupted', { reason: 'shutdown_requested' })
+        break
+      }
+
+      try {
+        const result = await fetcher.fetchRate(base, quote, false)
+        if (result.success && result.data) {
+          await fxRateRepository.upsertRate({
+            baseCurrency: base,
+            quoteCurrency: quote,
+            rate: result.data.rate,
+            bid: result.data.bid,
+            ask: result.data.ask,
+            source: result.data.source,
+            lastUpdated: result.data.last_updated,
+          })
+
+          if (result.historical_rates.length > 0) {
+            await fxRateHistoryRepository.upsertHistory(
+              result.historical_rates.map((row) => ({
+                baseCurrency: base,
+                quoteCurrency: quote,
+                rate: row.rate,
+                bid: row.bid,
+                ask: row.ask,
+                rateDate: row.date,
+                source: result.data?.source ?? 'OANDA',
+              })),
+            )
+          }
+
+          successCount++
+          logger.debug('rate_synced', {
+            base_currency: base,
+            quote_currency: quote,
+            rate: result.data.rate,
+            cached: result.cached,
+          })
+        } else {
+          failureCount++
+          logger.warn('rate_sync_failed', {
+            base_currency: base,
+            quote_currency: quote,
+            error: result.error,
+          })
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 100))
+      } catch (error) {
+        failureCount++
+        logger.error('rate_sync_error', {
+          base_currency: base,
+          quote_currency: quote,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    await fxRateCache.invalidatePattern('*')
+    await fxRateHistoryCache.invalidatePattern('*')
+
+    const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
+
+    recordCloudWatchMetric({
+      name: 'oanda_sync_duration_seconds',
+      value: durationSeconds,
+      unit: 'Seconds',
+      dimensions: { JobName: 'oanda-sync' },
+    })
+    recordCloudWatchMetric({
+      name: 'oanda_sync_rates_fetched_total',
+      value: successCount,
+      unit: 'Count',
+      dimensions: { JobName: 'oanda-sync' },
+    })
+    recordCloudWatchMetric({
+      name: 'oanda_sync_failures_total',
+      value: failureCount,
+      unit: 'Count',
+      dimensions: { JobName: 'oanda-sync' },
+    })
+
+    logger.info('sync_complete', {
+      success_count: successCount,
+      failure_count: failureCount,
+      total_pairs: pairs.length,
+      duration_ms: durationMs,
+    })
+  } catch (error) {
+    const durationMs = Date.now() - startTime
+    recordCloudWatchMetric({
+      name: 'oanda_sync_failures_total',
+      value: 1,
+      unit: 'Count',
+      dimensions: { JobName: 'oanda-sync' },
+    })
+
+    logger.error('sync_failed', {
+      error: error instanceof Error ? error.message : String(error),
+      duration_ms: durationMs,
+    })
+  } finally {
+    isRunning = false
+  }
+}
+
+const runContinuousSync = async (): Promise<void> => {
+  const intervalMinutes = toNumber(process.env.OANDA_SYNC_INTERVAL_MINUTES, config.fxRates?.syncIntervalMinutes ?? 60)
+  const intervalMs = intervalMinutes * 60 * 1000
+
+  logger.info('starting_continuous_sync', {
+    interval_minutes: intervalMinutes,
+    use_authenticated_api: toBoolean(process.env.OANDA_USE_AUTHENTICATED_API),
+  })
+
+  await syncRates()
+
+  syncInterval = setInterval(() => {
+    syncRates().catch((error) => {
+      logger.error('sync_interval_error', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    })
+  }, intervalMs)
+}
+
+if (require.main === module) {
+  const runOnce = process.argv.includes('--once')
+
+  if (runOnce) {
+    syncRates()
+      .then(() => {
+        process.exit(0)
+      })
+      .catch((error) => {
+        logger.error('sync_fatal_error', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        })
+        process.exit(1)
+      })
+  } else {
+    runContinuousSync()
+      .catch((error) => {
+        logger.error('sync_fatal_error', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        })
+        process.exit(1)
+      })
+  }
+}
+
+export { syncRates, runContinuousSync }

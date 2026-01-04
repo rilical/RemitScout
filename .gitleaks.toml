@@ -1,0 +1,48 @@
+title = "Remit-Scout Gitleaks Configuration"
+
+[extend]
+# Use default regexes
+useDefault = true
+
+[allowlist]
+description = "Allowlist for known false positives"
+paths = [
+  '''\.md$''',
+  '''\.txt$''',
+  '''\.json$''',
+  '''\.example$''',
+  '''\.sample$''',
+  '''\.test\.ts$''',
+  '''\.test\.js$''',
+  '''\.spec\.ts$''',
+  '''\.spec\.js$''',
+  '''node_modules/''',
+  '''\.git/''',
+  '''dist/''',
+  '''build/''',
+  '''coverage/''',
+  '''\.env\.example''',
+  '''\.env\.sample''',
+]
+
+commits = [
+  '''^Initial commit''',
+  '''^Merge.*''',
+]
+
+[allowlist.regexes]
+description = "Allowlist regexes for known patterns"
+regexes = [
+  '''example.*key''',
+  '''test.*secret''',
+  '''placeholder''',
+  '''your.*here''',
+]
+
+[rules]
+description = "Custom rules for Remit-Scout"
+id = "remit-scout-custom"
+description = "Custom patterns for Remit-Scout"
+regex = '''(?i)(api[_-]?key|secret[_-]?key|access[_-]?token|private[_-]?key)\s*[=:]\s*['"]?[a-zA-Z0-9]{20,}['"]?'''
+
+

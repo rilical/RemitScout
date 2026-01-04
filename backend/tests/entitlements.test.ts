@@ -1,22 +1,122 @@
 import { describe, it, expect } from 'vitest'
-import { getEntitlementsForPlan } from '../plane-a/src/services/entitlements'
+import { getEntitlementsForPlan, type Entitlements, type PlanCode } from '../plane-a/src/services/entitlements'
 
-describe('entitlements mapping', () => {
-  it('returns free defaults for unknown plans', () => {
-    const entitlements = getEntitlementsForPlan('unknown')
-    expect(entitlements.exports_enabled).toBe(false)
-    expect(entitlements.pulse_access).toBe('none')
-  })
+describe('entitlements', () => {
+  describe('getEntitlementsForPlan', () => {
+    it('returns free plan entitlements for free plan', () => {
+      const entitlements = getEntitlementsForPlan('free')
 
-  it('returns plus entitlements', () => {
-    const entitlements = getEntitlementsForPlan('plus')
-    expect(entitlements.exports_enabled).toBe(true)
-    expect(entitlements.pulse_access).toBe('full')
-  })
+      expect(entitlements).toEqual({
+        pulse_access: 'none',
+        exports_enabled: false,
+        alerts_max: 0,
+        history_max_days: 30,
+      })
+    })
 
-  it('returns enterprise entitlements', () => {
-    const entitlements = getEntitlementsForPlan('enterprise')
-    expect(entitlements.exports_enabled).toBe(true)
-    expect(entitlements.pulse_access).toBe('full')
+    it('returns plus plan entitlements for plus plan', () => {
+      const entitlements = getEntitlementsForPlan('plus')
+
+      expect(entitlements).toEqual({
+        pulse_access: 'full',
+        exports_enabled: true,
+        alerts_max: 5,
+        history_max_days: 365,
+      })
+    })
+
+    it('returns enterprise plan entitlements for enterprise plan', () => {
+      const entitlements = getEntitlementsForPlan('enterprise')
+
+      expect(entitlements).toEqual({
+        pulse_access: 'full',
+        exports_enabled: true,
+        alerts_max: null,
+        history_max_days: null,
+      })
+    })
+
+    it('returns free plan entitlements for invalid plan code', () => {
+      const entitlements = getEntitlementsForPlan('invalid')
+
+      expect(entitlements).toEqual({
+        pulse_access: 'none',
+        exports_enabled: false,
+        alerts_max: 0,
+        history_max_days: 30,
+      })
+    })
+
+    it('returns free plan entitlements for undefined plan code', () => {
+      const entitlements = getEntitlementsForPlan(undefined)
+
+      expect(entitlements).toEqual({
+        pulse_access: 'none',
+        exports_enabled: false,
+        alerts_max: 0,
+        history_max_days: 30,
+      })
+    })
+
+    it('returns free plan entitlements for empty string', () => {
+      const entitlements = getEntitlementsForPlan('')
+
+      expect(entitlements).toEqual({
+        pulse_access: 'none',
+        exports_enabled: false,
+        alerts_max: 0,
+        history_max_days: 30,
+      })
+    })
+
+    it('validates pulse_access values', () => {
+      const free = getEntitlementsForPlan('free')
+      const plus = getEntitlementsForPlan('plus')
+      const enterprise = getEntitlementsForPlan('enterprise')
+
+      expect(free.pulse_access).toBe('none')
+      expect(plus.pulse_access).toBe('full')
+      expect(enterprise.pulse_access).toBe('full')
+    })
+
+    it('validates exports_enabled values', () => {
+      const free = getEntitlementsForPlan('free')
+      const plus = getEntitlementsForPlan('plus')
+      const enterprise = getEntitlementsForPlan('enterprise')
+
+      expect(free.exports_enabled).toBe(false)
+      expect(plus.exports_enabled).toBe(true)
+      expect(enterprise.exports_enabled).toBe(true)
+    })
+
+    it('validates alerts_max values', () => {
+      const free = getEntitlementsForPlan('free')
+      const plus = getEntitlementsForPlan('plus')
+      const enterprise = getEntitlementsForPlan('enterprise')
+
+      expect(free.alerts_max).toBe(0)
+      expect(plus.alerts_max).toBe(5)
+      expect(enterprise.alerts_max).toBeNull()
+    })
+
+    it('validates history_max_days values', () => {
+      const free = getEntitlementsForPlan('free')
+      const plus = getEntitlementsForPlan('plus')
+      const enterprise = getEntitlementsForPlan('enterprise')
+
+      expect(free.history_max_days).toBe(30)
+      expect(plus.history_max_days).toBe(365)
+      expect(enterprise.history_max_days).toBeNull()
+    })
+
+    it('returns consistent structure for all plans', () => {
+      const free = getEntitlementsForPlan('free')
+      const plus = getEntitlementsForPlan('plus')
+      const enterprise = getEntitlementsForPlan('enterprise')
+
+      expect(Object.keys(free)).toEqual(['pulse_access', 'exports_enabled', 'alerts_max', 'history_max_days'])
+      expect(Object.keys(plus)).toEqual(['pulse_access', 'exports_enabled', 'alerts_max', 'history_max_days'])
+      expect(Object.keys(enterprise)).toEqual(['pulse_access', 'exports_enabled', 'alerts_max', 'history_max_days'])
+    })
   })
 })

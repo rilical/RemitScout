@@ -6,8 +6,6 @@
  * with expiration to ensure locks are released even if a worker crashes.
  */
 
-import type { RedisClientType } from 'redis'
-
 import { getRedisClient } from '../../../shared/redis'
 import { createLogger } from '../../../shared/logger'
 
@@ -20,7 +18,7 @@ const logger = createLogger('plane-b.worker-lock')
  * multiple processes/containers.
  */
 export class WorkerLock {
-  private client: RedisClientType | null = null
+  private client: NonNullable<Awaited<ReturnType<typeof getRedisClient>>> | null = null
   private lockKey: string
   private lockValue: string
   private ttlSeconds: number
@@ -48,11 +46,13 @@ export class WorkerLock {
     try {
       this.client = await getRedisClient()
       if (!this.client) {
-        logger.warn('lock_acquire_skipped', {
+        logger.error('lock_acquire_failed', {
           lock_key: this.lockKey,
           reason: 'redis_unavailable',
+          message: 'Worker lock requires Redis. Cannot proceed without distributed locking.',
         })
-        return true
+        // Fail fast: return false instead of true to prevent multiple workers
+        return false
       }
 
       const result = await this.client.set(this.lockKey, this.lockValue, {
@@ -148,3 +148,4 @@ export class WorkerLock {
     }
   }
 }
+

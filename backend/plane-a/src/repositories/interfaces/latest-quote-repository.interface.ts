@@ -41,6 +41,16 @@ export type LatestQuoteByProviderRecord = {
   updated_at: string | Date | null
 }
 
+export type LatestQuoteByCurrencyPairRecord = {
+  provider_id: string
+  provider_name: string
+  corridor_id: string
+  implied_fx_rate: number | null
+  delivery_time_min_minutes: number | null
+  delivery_time_max_minutes: number | null
+  collected_at: string | Date | null
+}
+
 export interface ILatestQuoteRepository {
   listLatestByCorridor(
     corridorId: string,
@@ -53,4 +63,10 @@ export interface ILatestQuoteRepository {
     providerId: string,
     corridorIds: string[],
   ): Promise<LatestQuoteByProviderRecord[]>
+
+  listLatestByCurrencyPair(
+    baseCurrency: string,
+    quoteCurrency: string,
+    maxAgeHours?: number,
+  ): Promise<LatestQuoteByCurrencyPairRecord[]>
 }

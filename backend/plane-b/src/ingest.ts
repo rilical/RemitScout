@@ -1,34 +1,92 @@
 import type { Pool } from 'pg'
 import { createPool } from '../../shared/db'
-import { config } from '../../shared/config'
+import { assertRuntimeConfig, config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
+import { initErrorTracking } from '../../shared/error-tracker'
+import { initTracing } from '../../shared/tracing'
+import { sendJsonMessage } from '../../shared/sqs'
 import { partitionCorridors } from '../../shared/sharding'
-import { pulseDefaults, buildChartData } from '../../shared/pulse-defaults'
+import { startHealthServer } from './health-server'
 import { providerRegistry } from './providers'
 import { processQuoteRefreshQueue } from './quote-refresh'
 import {
-  BronzeRepository,
-  CircuitBreakerRepository,
-  CorridorRepository,
-  CountriesRepository,
   FreshnessReportRepository,
-  FxProviderRateRepository,
-  FxRateRepository,
   IngestionRunRepository,
   LatestQuoteRepository,
-  PopularCorridorRepository,
   ProviderCapabilityRepository,
-  ProviderRepository,
-  PulseCacheRepository,
-  QuoteRecordRepository,
   RightsMatrixRepository,
 } from './repositories'
+
+if (config.env === 'production' || process.env.STRICT_CONFIG === '1') {
+  assertRuntimeConfig({
+    requirePlaneB: true,
+    requireRedis: true,
+  })
+}
+
+initErrorTracking('plane-b')
+initTracing('plane-b')
 
 type IngestOptions = {
   pool?: Pool
 }
 
 const logger = createLogger('plane-b.ingest')
+const shutdownTimeoutMs = 30000
+const ingestFanoutMode = config.queues.ingestFanout.mode
+const ingestFanoutQueueUrl = config.queues.ingestFanout.url
+const ingestFanoutEnabled = ingestFanoutMode !== 'off' && Boolean(ingestFanoutQueueUrl)
+
+type IngestFanoutMessage = {
+  providerId: string
+  collectorType: string
+  corridors: string[]
+  amountBuckets: number[]
+  payinMethod: string
+  payoutMethod: string
+  freshnessSloMinutes?: number
+  freshnessSloEnabled?: boolean
+  rpmOverride?: number
+  perCorridorRpmOverride?: number
+  priorityTier?: string
+  shardIndex?: number
+  requestedAt: string
+}
+
+const enqueueIngestFanout = async (payload: IngestFanoutMessage): Promise<boolean> => {
+  if (!ingestFanoutQueueUrl) {
+    return false
+  }
+
+  try {
+    await sendJsonMessage(ingestFanoutQueueUrl, payload)
+    return true
+  } catch (error) {
+    logger.warn('ingest_fanout_enqueue_failed', {
+      provider_id: payload.providerId,
+      collector_type: payload.collectorType,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
+
+let shutdownRequested = false
+let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+
+const shutdown = (signal: string) => {
+  if (shutdownRequested) return
+  shutdownRequested = true
+  logger.info('shutdown_requested', { signal })
+
+  forceExitTimer = setTimeout(() => {
+    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
+    process.exit(1)
+  }, shutdownTimeoutMs)
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'))
+process.on('SIGINT', () => shutdown('SIGINT'))
 
 const estimateTargetShards = (
   corridorCount: number,
@@ -41,56 +99,6 @@ const estimateTargetShards = (
   return Math.max(1, Math.ceil(corridorCount / (rpm * targetMinutes)))
 }
 
-const pulseCacheEntries = () => {
-  const baseEntries: Record<string, unknown> = {
-    'pulse:corridors': pulseDefaults.corridors,
-    'pulse:overview': pulseDefaults.overview,
-    'pulse:method-coverage': pulseDefaults.methodCoverage,
-    'pulse:table': pulseDefaults.table,
-    'pulse:hero': pulseDefaults.hero,
-    'pulse:coverage-summary': pulseDefaults.coverageSummary,
-    'pulse:snapshot-summary': pulseDefaults.snapshotSummary,
-    'pulse:provider-benchmarking': pulseDefaults.providerBenchmarking,
-    'pulse:events': pulseDefaults.events,
-    'pulse:provider-heatmap': pulseDefaults.providerHeatmap,
-    'pulse:smart-send': pulseDefaults.smartSend,
-    'pulse:market-snapshot': pulseDefaults.marketSnapshot,
-    'pulse:true-cost': pulseDefaults.trueCost,
-    'pulse:market-depth': pulseDefaults.marketDepth,
-    'pulse:arbitrage': pulseDefaults.arbitrage,
-    'pulse:bank-comparison': pulseDefaults.bankComparison,
-    'pulse:cost-trend': pulseDefaults.costTrend,
-  }
-
-  const chartIds = ['all-in-cost', 'fx-markup', 'provider-winner', 'volatility-pulse', 'quote-success', 'market-depth']
-  for (const chartId of chartIds) {
-    baseEntries[`pulse:chart:${chartId}`] = buildChartData(chartId)
-  }
-
-  return baseEntries
-}
-
-const parseDeliveryMinutes = (delivery: string) => {
-  const normalized = delivery.toLowerCase()
-  if (normalized.includes('15-30')) {
-    return { min: 15, max: 30 }
-  }
-  if (normalized.includes('minutes')) {
-    return { min: 5, max: 30 }
-  }
-  if (normalized.includes('same day')) {
-    return { min: 60, max: 24 * 60 }
-  }
-  return { min: null, max: null }
-}
-
-const serializeJson = (value: unknown) => {
-  try {
-    return JSON.stringify(value ?? null) ?? 'null'
-  } catch {
-    return JSON.stringify(String(value))
-  }
-}
 
 const getLastPrioritySweepAgeSeconds = async (
   pool: Pool,
@@ -355,11 +363,40 @@ const reportSweepDurations = async (pool: Pool) => {
 }
 
 export const runIngestion = async (options: IngestOptions = {}) => {
+  if (shutdownRequested) {
+    logger.info('ingestion_skipped', { reason: 'shutdown_requested' })
+    return false
+  }
+
   if (!config.planeB.useSeedData) {
     const pool = options.pool ?? createPool(config.db.planeBUrl)
     const shouldClose = !options.pool
 
+    const healthEnabled = process.env.PLANE_B_HEALTH_ENABLED !== '0'
+    let healthServer: { close: () => Promise<void> } | null = null
+
+    if (healthEnabled) {
+      try {
+        healthServer = await startHealthServer({
+          pool: options.pool ? undefined : pool,
+          logger,
+        })
+      } catch (error) {
+        logger.warn('health_server_start_failed', { error })
+      }
+    }
+
     logger.info('ingestion_start', { mode: 'collector' })
+    if (ingestFanoutMode !== 'off') {
+      if (!ingestFanoutQueueUrl) {
+        logger.warn('ingest_fanout_disabled', { reason: 'missing_queue_url' })
+      } else {
+        logger.info('ingest_fanout_enabled', {
+          mode: ingestFanoutMode,
+          queue_url: ingestFanoutQueueUrl,
+        })
+      }
+    }
     if (config.planeB.b2cQueueInSweep) {
       await processQuoteRefreshQueue({ pool })
     }
@@ -597,6 +634,40 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             for (let shardIndex = 0; shardIndex < plan.partitions.length; shardIndex += 1) {
               const corridors = plan.partitions[shardIndex]
               if (!corridors.length) continue
+              const fanoutPayload: IngestFanoutMessage = {
+                providerId,
+                collectorType: tierConfig.collectorType,
+                corridors,
+                amountBuckets: [b2bAmount],
+                payinMethod: b2bPayinMethod,
+                payoutMethod: b2bPayoutMethod,
+                freshnessSloMinutes: tierConfig.sloMinutes,
+                freshnessSloEnabled: b2bFreshnessSloEnabled,
+                rpmOverride: tierConfig.rpm,
+                perCorridorRpmOverride: tierConfig.perCorridorRpm,
+                priorityTier: tierConfig.label,
+                shardIndex,
+                requestedAt: new Date().toISOString(),
+              }
+              const enqueued = ingestFanoutEnabled
+                ? await enqueueIngestFanout(fanoutPayload)
+                : false
+              if (ingestFanoutEnabled) {
+                logger.debug('ingest_fanout_enqueued', {
+                  provider_id: providerId,
+                  priority_tier: tierConfig.label,
+                  shard_index: shardIndex,
+                  corridors_count: corridors.length,
+                  mode: ingestFanoutMode,
+                  enqueued,
+                })
+              }
+              if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
+                if (!enqueued) {
+                  tierOk = false
+                }
+                continue
+              }
               const ok = await provider.run({
                 pool,
                 collectorType: tierConfig.collectorType,
@@ -643,6 +714,11 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       }
       return ok
     } finally {
+      if (healthServer) {
+        await healthServer.close().catch((error) => {
+          logger.warn('health_server_close_failed', { error })
+        })
+      }
       if (shouldClose) {
         await pool.end()
       }
@@ -656,14 +732,25 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 }
 
 if (require.main === module) {
+  if (shutdownRequested) {
+    logger.info('ingestion_skipped', { reason: 'shutdown_requested' })
+    process.exit(0)
+  }
+
   runIngestion()
     .then((ran) => {
+      if (forceExitTimer) {
+        clearTimeout(forceExitTimer)
+      }
       if (ran) {
         logger.info('ingestion_complete', { mode: config.planeB.useSeedData ? 'seed' : 'collector' })
       }
       process.exit(0)
     })
     .catch((error) => {
+      if (forceExitTimer) {
+        clearTimeout(forceExitTimer)
+      }
       logger.error('ingestion_failed', { error })
       process.exit(1)
     })

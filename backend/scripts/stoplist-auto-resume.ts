@@ -25,6 +25,8 @@ import { createLogger } from '../shared/logger'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { StoplistService } from '../plane-b/src/services'
 import { RightsMatrixRepository } from '../plane-b/src/repositories'
+import { recordBatchJobMetric } from '../shared/worker-metrics'
+import { formatError } from '../shared/utils/error-handling'
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -46,7 +48,7 @@ const shutdown = (signal: string) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT', () => shutdown('SIGINT'))
 
-const run = async (): Promise<void> => {
+export const runStoplistAutoResume = async (): Promise<void> => {
   if (shutdownRequested) {
     logger.info('job_skipped', { reason: 'shutdown_requested' })
     return
@@ -70,6 +72,8 @@ const run = async (): Promise<void> => {
   let errors = 0
 
   try {
+    await recordBatchJobMetric('stoplist-auto-resume', 'job_start')
+    
     const stoplistStatuses = await rightsRepo.loadStoplistStatuses()
     const pausedProviders = stoplistStatuses.filter(
       (status) => status.stoplist_status === 'paused',
@@ -79,45 +83,77 @@ const run = async (): Promise<void> => {
       paused_provider_count: pausedProviders.length,
     })
 
-    for (const status of pausedProviders) {
+    // Process providers in parallel batches of 5
+    const batchSize = 5
+    for (let i = 0; i < pausedProviders.length; i += batchSize) {
       if (shutdownRequested) {
-        logger.info('auto_resume_interrupted', { provider_id: status.provider_id })
+        logger.info('auto_resume_interrupted')
         break
       }
 
-      try {
-        const shouldResume = await stoplistService.shouldAutoResume(status.provider_id)
-        if (shouldResume) {
-          await stoplistService.autoResumeProvider(status.provider_id)
-          resumed++
-          logger.info('provider_resumed', {
-            provider_id: status.provider_id,
-          })
-        } else {
-          skipped++
-        }
-      } catch (error) {
-        errors++
-        logger.error('provider_resume_error', {
-          provider_id: status.provider_id,
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-        })
+      const batch = pausedProviders.slice(i, i + batchSize)
+      const results = await Promise.allSettled(
+        batch.map(async (status) => {
+          try {
+            const shouldResume = await stoplistService.shouldAutoResume(status.provider_id)
+            if (shouldResume) {
+              await stoplistService.autoResumeProvider(status.provider_id)
+              resumed++
+              logger.info('provider_resumed', {
+                provider_id: status.provider_id,
+              })
+              return { resumed: true, skipped: false }
+            } else {
+              skipped++
+              return { resumed: false, skipped: true }
+            }
+          } catch (error) {
+            errors++
+            const { message, stack } = formatError(error)
+            logger.error('provider_resume_error', {
+              provider_id: status.provider_id,
+              error: message,
+              stack,
+            })
+            return { resumed: false, skipped: false, error: true }
+          }
+        }),
+      )
+
+      // Log connection pool stats
+      const poolStats = {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount,
       }
+      logger.debug('auto_resume_pool_stats', poolStats)
     }
 
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
     logger.info('auto_resume_complete', {
       resumed,
       skipped,
       errors,
       duration_ms: durationMs,
     })
+    
+    await recordBatchJobMetric('stoplist-auto-resume', 'job_complete', durationSeconds, {
+      resumed: String(resumed),
+      skipped: String(skipped),
+      errors: String(errors),
+    })
   } catch (error) {
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
+    const { message } = formatError(error)
     logger.error('auto_resume_failed', {
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
       duration_ms: durationMs,
+    })
+    
+    await recordBatchJobMetric('stoplist-auto-resume', 'job_failure', durationSeconds, {
+      error_type: 'exception',
     })
     throw error
   } finally {
@@ -128,15 +164,17 @@ const run = async (): Promise<void> => {
   }
 }
 
-run()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('job_fatal_error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  runStoplistAutoResume()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('job_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}
 

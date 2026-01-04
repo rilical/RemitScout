@@ -1,0 +1,5195 @@
+{
+ "Description": "Remit-Scout AWS-native stack (dev)",
+ "Resources": {
+  "RemitScoutVpc880ACCCD": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/Resource"
+   }
+  },
+  "RemitScoutVpcpublicSubnet1Subnet570C4540": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-2a",
+    "CidrBlock": "10.0.0.0/18",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/publicSubnet1"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet1/Subnet"
+   }
+  },
+  "RemitScoutVpcpublicSubnet1RouteTableC9D6E8DF": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/publicSubnet1"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet1/RouteTable"
+   }
+  },
+  "RemitScoutVpcpublicSubnet1RouteTableAssociationBF9EF2CF": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcpublicSubnet1RouteTableC9D6E8DF"
+    },
+    "SubnetId": {
+     "Ref": "RemitScoutVpcpublicSubnet1Subnet570C4540"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet1/RouteTableAssociation"
+   }
+  },
+  "RemitScoutVpcpublicSubnet1DefaultRoute20E19933": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "RemitScoutVpcIGW50EF3971"
+    },
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcpublicSubnet1RouteTableC9D6E8DF"
+    }
+   },
+   "DependsOn": [
+    "RemitScoutVpcVPCGW41ABCA54"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet1/DefaultRoute"
+   }
+  },
+  "RemitScoutVpcpublicSubnet1EIP5EC86330": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/publicSubnet1"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet1/EIP"
+   }
+  },
+  "RemitScoutVpcpublicSubnet1NATGateway60DD9F86": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "RemitScoutVpcpublicSubnet1EIP5EC86330",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "RemitScoutVpcpublicSubnet1Subnet570C4540"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/publicSubnet1"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "DependsOn": [
+    "RemitScoutVpcpublicSubnet1DefaultRoute20E19933",
+    "RemitScoutVpcpublicSubnet1RouteTableAssociationBF9EF2CF"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet1/NATGateway"
+   }
+  },
+  "RemitScoutVpcpublicSubnet2Subnet55D7D878": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-2b",
+    "CidrBlock": "10.0.64.0/18",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/publicSubnet2"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet2/Subnet"
+   }
+  },
+  "RemitScoutVpcpublicSubnet2RouteTable75A021B4": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/publicSubnet2"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet2/RouteTable"
+   }
+  },
+  "RemitScoutVpcpublicSubnet2RouteTableAssociation12200A43": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcpublicSubnet2RouteTable75A021B4"
+    },
+    "SubnetId": {
+     "Ref": "RemitScoutVpcpublicSubnet2Subnet55D7D878"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet2/RouteTableAssociation"
+   }
+  },
+  "RemitScoutVpcpublicSubnet2DefaultRoute04404ED8": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "RemitScoutVpcIGW50EF3971"
+    },
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcpublicSubnet2RouteTable75A021B4"
+    }
+   },
+   "DependsOn": [
+    "RemitScoutVpcVPCGW41ABCA54"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/publicSubnet2/DefaultRoute"
+   }
+  },
+  "RemitScoutVpcprivateSubnet1Subnet12105B45": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-2a",
+    "CidrBlock": "10.0.128.0/18",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/privateSubnet1"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet1/Subnet"
+   }
+  },
+  "RemitScoutVpcprivateSubnet1RouteTable6680C817": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/privateSubnet1"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet1/RouteTable"
+   }
+  },
+  "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcprivateSubnet1RouteTable6680C817"
+    },
+    "SubnetId": {
+     "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet1/RouteTableAssociation"
+   }
+  },
+  "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "RemitScoutVpcpublicSubnet1NATGateway60DD9F86"
+    },
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcprivateSubnet1RouteTable6680C817"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet1/DefaultRoute"
+   }
+  },
+  "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-2b",
+    "CidrBlock": "10.0.192.0/18",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/privateSubnet2"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet2/Subnet"
+   }
+  },
+  "RemitScoutVpcprivateSubnet2RouteTableDFA3A160": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc/privateSubnet2"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet2/RouteTable"
+   }
+  },
+  "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcprivateSubnet2RouteTableDFA3A160"
+    },
+    "SubnetId": {
+     "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet2/RouteTableAssociation"
+   }
+  },
+  "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "RemitScoutVpcpublicSubnet1NATGateway60DD9F86"
+    },
+    "RouteTableId": {
+     "Ref": "RemitScoutVpcprivateSubnet2RouteTableDFA3A160"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/privateSubnet2/DefaultRoute"
+   }
+  },
+  "RemitScoutVpcIGW50EF3971": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/IGW"
+   }
+  },
+  "RemitScoutVpcVPCGW41ABCA54": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "RemitScoutVpcIGW50EF3971"
+    },
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/VPCGW"
+   }
+  },
+  "PlaneASecurityGroupAAB7E8B7": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Plane A service security group.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneASecurityGroup/Resource"
+   }
+  },
+  "PlaneBSecurityGroup1D22FE93": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Plane B service security group.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBSecurityGroup/Resource"
+   }
+  },
+  "PlaneCSecurityGroup8E635584": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Plane C service security group.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCSecurityGroup/Resource"
+   }
+  },
+  "DatabaseSecurityGroup7319C0F6": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Database security group (Aurora/RDS).",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/DatabaseSecurityGroup/Resource"
+   }
+  },
+  "DatabaseSecurityGroupfromremitscoutdevPlaneASecurityGroup538F9AB454325A1D5251": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Plane A -> DB",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PlaneASecurityGroupAAB7E8B7",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/DatabaseSecurityGroup/from remitscoutdevPlaneASecurityGroup538F9AB4:5432"
+   }
+  },
+  "DatabaseSecurityGroupfromremitscoutdevPlaneBSecurityGroup36AEC08C5432464E3629": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Plane B -> DB",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PlaneBSecurityGroup1D22FE93",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/DatabaseSecurityGroup/from remitscoutdevPlaneBSecurityGroup36AEC08C:5432"
+   }
+  },
+  "DatabaseSecurityGroupfromremitscoutdevPlaneCSecurityGroup161DDA385432821DCA80": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Plane C -> DB",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PlaneCSecurityGroup8E635584",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/DatabaseSecurityGroup/from remitscoutdevPlaneCSecurityGroup161DDA38:5432"
+   }
+  },
+  "DatabaseSecurityGroupfromremitscoutdevDatabaseSecurityGroupE574E160IndirectPort80EC6791": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow connections to the database Cluster from the Proxy",
+    "FromPort": {
+     "Fn::GetAtt": [
+      "RemitScoutAuroraCluster4AA33BAB",
+      "Endpoint.Port"
+     ]
+    },
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "ToPort": {
+     "Fn::GetAtt": [
+      "RemitScoutAuroraCluster4AA33BAB",
+      "Endpoint.Port"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/DatabaseSecurityGroup/from remitscoutdevDatabaseSecurityGroupE574E160:{IndirectPort}"
+   }
+  },
+  "RedisSecurityGroupB05951F6": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Redis security group (ElastiCache).",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RedisSecurityGroup/Resource"
+   }
+  },
+  "RedisSecurityGroupfromremitscoutdevPlaneASecurityGroup538F9AB46379F8B04518": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Plane A -> Redis",
+    "FromPort": 6379,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "RedisSecurityGroupB05951F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PlaneASecurityGroupAAB7E8B7",
+      "GroupId"
+     ]
+    },
+    "ToPort": 6379
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RedisSecurityGroup/from remitscoutdevPlaneASecurityGroup538F9AB4:6379"
+   }
+  },
+  "RedisSecurityGroupfromremitscoutdevPlaneBSecurityGroup36AEC08C6379CB80C9CD": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Plane B -> Redis",
+    "FromPort": 6379,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "RedisSecurityGroupB05951F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PlaneBSecurityGroup1D22FE93",
+      "GroupId"
+     ]
+    },
+    "ToPort": 6379
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RedisSecurityGroup/from remitscoutdevPlaneBSecurityGroup36AEC08C:6379"
+   }
+  },
+  "RedisSecurityGroupfromremitscoutdevPlaneCSecurityGroup161DDA386379B29398F6": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Plane C -> Redis",
+    "FromPort": 6379,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "RedisSecurityGroupB05951F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PlaneCSecurityGroup8E635584",
+      "GroupId"
+     ]
+    },
+    "ToPort": 6379
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RedisSecurityGroup/from remitscoutdevPlaneCSecurityGroup161DDA38:6379"
+   }
+  },
+  "PlaneALambdaRole53C31A9E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneALambdaRole/Resource"
+   }
+  },
+  "PlaneALambdaRoleDefaultPolicy47A3B050": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ssm:*:*:parameter/remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AuroraMasterSecret66504F3D"
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "QuoteRefreshQueue342D1DBA",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PlaneALambdaRoleDefaultPolicy47A3B050",
+    "Roles": [
+     {
+      "Ref": "PlaneALambdaRole53C31A9E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneALambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "PlaneBLambdaRole635FBF0A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBLambdaRole/Resource"
+   }
+  },
+  "PlaneBLambdaRoleDefaultPolicyBF46AA01": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ssm:*:*:parameter/remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AuroraMasterSecret66504F3D"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "Roles": [
+     {
+      "Ref": "PlaneBLambdaRole635FBF0A"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "PlaneCLambdaRoleE46EF278": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCLambdaRole/Resource"
+   }
+  },
+  "PlaneCLambdaRoleDefaultPolicy7F08ADF6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ssm:*:*:parameter/remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AuroraMasterSecret66504F3D"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PlaneCLambdaRoleDefaultPolicy7F08ADF6",
+    "Roles": [
+     {
+      "Ref": "PlaneCLambdaRoleE46EF278"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "PlaneBEcsTaskExecutionRole8540AF12": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBEcsTaskExecutionRole/Resource"
+   }
+  },
+  "PlaneBEcsTaskExecutionRoleDefaultPolicy741258DD": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ssm:*:*:parameter/remit-scout/dev/*"
+      },
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "BackendRepository9B711290",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "PlaneBIngestTaskPlaneBIngestContainerLogGroup34F265C3",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AuroraMasterSecret66504F3D"
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "B2cRefreshWorkerTaskB2cRefreshWorkerContainerLogGroup836A2795",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "IngestFanoutWorkerTaskIngestFanoutWorkerContainerLogGroupDFADF5F9",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "NotificationsQueueWorkerTaskNotificationsQueueWorkerContainerLogGroup4D8B73E3",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "OpsAlertsQueueWorkerTaskOpsAlertsQueueWorkerContainerLogGroup253C6B34",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PlaneBEcsTaskExecutionRoleDefaultPolicy741258DD",
+    "Roles": [
+     {
+      "Ref": "PlaneBEcsTaskExecutionRole8540AF12"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBEcsTaskExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "PlaneBEcsTaskRoleE3D3CC2D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBEcsTaskRole/Resource"
+   }
+  },
+  "PlaneBEcsTaskRoleDefaultPolicy7221FD5D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "BronzeBucketFF082204",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "BronzeBucketFF082204",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "QuoteRefreshQueue342D1DBA",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "IngestFanoutQueue4638B0A9",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "IngestFanoutQueue4638B0A9",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "NotificationsQueue3B766469",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "NotificationsQueue3B766469",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "OpsAlertsQueue3B41FDE7",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "OpsAlertsQueue3B41FDE7",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "Roles": [
+     {
+      "Ref": "PlaneBEcsTaskRoleE3D3CC2D"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBEcsTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "BackendRepository9B711290": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "ImageScanningConfiguration": {
+     "ScanOnPush": true
+    },
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the last 25 images.\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":25},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "remit-scout-backend-dev",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/BackendRepository/Resource"
+   }
+  },
+  "AuroraMasterSecret66504F3D": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "password",
+     "SecretStringTemplate": "{\"username\":\"remit_scout\"}"
+    },
+    "Name": "remit-scout/dev/database/master",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/AuroraMasterSecret/Resource"
+   }
+  },
+  "AuroraMasterSecretAttachment7037C2F1": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "AuroraMasterSecret66504F3D"
+    },
+    "TargetId": {
+     "Ref": "RemitScoutAuroraCluster4AA33BAB"
+    },
+    "TargetType": "AWS::RDS::DBCluster"
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/AuroraMasterSecret/Attachment/Resource"
+   }
+  },
+  "RemitScoutAuroraClusterSubnets4D3BB01A": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnets for RemitScoutAuroraCluster database",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutAuroraCluster/Subnets/Default"
+   }
+  },
+  "RemitScoutAuroraCluster4AA33BAB": {
+   "Type": "AWS::RDS::DBCluster",
+   "Properties": {
+    "BackupRetentionPeriod": 7,
+    "CopyTagsToSnapshot": true,
+    "DBClusterParameterGroupName": "default.aurora-postgresql15",
+    "DBSubnetGroupName": {
+     "Ref": "RemitScoutAuroraClusterSubnets4D3BB01A"
+    },
+    "DatabaseName": "remit_scout",
+    "DeletionProtection": false,
+    "Engine": "aurora-postgresql",
+    "EngineVersion": "15.4",
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "AuroraMasterSecret66504F3D"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "MasterUsername": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "AuroraMasterSecret66504F3D"
+       },
+       ":SecretString:username::}}"
+      ]
+     ]
+    },
+    "Port": 5432,
+    "StorageEncrypted": true,
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcSecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "DatabaseSecurityGroup7319C0F6",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutAuroraCluster/Resource"
+   }
+  },
+  "RemitScoutAuroraClusterInstance140ECBA32": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "RemitScoutAuroraCluster4AA33BAB"
+    },
+    "DBInstanceClass": "db.r6g.large",
+    "DBSubnetGroupName": {
+     "Ref": "RemitScoutAuroraClusterSubnets4D3BB01A"
+    },
+    "Engine": "aurora-postgresql",
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutAuroraCluster/Instance1"
+   }
+  },
+  "RemitScoutDbProxyIAMRole9CB56781": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "rds.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutDbProxy/IAMRole/Resource"
+   }
+  },
+  "RemitScoutDbProxyIAMRoleDefaultPolicyEB5BD0C1": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AuroraMasterSecret66504F3D"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "RemitScoutDbProxyIAMRoleDefaultPolicyEB5BD0C1",
+    "Roles": [
+     {
+      "Ref": "RemitScoutDbProxyIAMRole9CB56781"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutDbProxy/IAMRole/DefaultPolicy/Resource"
+   }
+  },
+  "RemitScoutDbProxy00B4B69D": {
+   "Type": "AWS::RDS::DBProxy",
+   "Properties": {
+    "Auth": [
+     {
+      "AuthScheme": "SECRETS",
+      "IAMAuth": "DISABLED",
+      "SecretArn": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    ],
+    "DBProxyName": "RemitScoutDbProxy",
+    "EngineFamily": "POSTGRESQL",
+    "IdleClientTimeout": 600,
+    "RequireTLS": true,
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "RemitScoutDbProxyIAMRole9CB56781",
+      "Arn"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcSecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "DatabaseSecurityGroup7319C0F6",
+       "GroupId"
+      ]
+     }
+    ],
+    "VpcSubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutDbProxy/Resource"
+   }
+  },
+  "RemitScoutDbProxyProxyTargetGroup0F882BF8": {
+   "Type": "AWS::RDS::DBProxyTargetGroup",
+   "Properties": {
+    "ConnectionPoolConfigurationInfo": {
+     "ConnectionBorrowTimeout": 120,
+     "MaxConnectionsPercent": 90,
+     "MaxIdleConnectionsPercent": 50
+    },
+    "DBClusterIdentifiers": [
+     {
+      "Ref": "RemitScoutAuroraCluster4AA33BAB"
+     }
+    ],
+    "DBProxyName": {
+     "Ref": "RemitScoutDbProxy00B4B69D"
+    },
+    "TargetGroupName": "default"
+   },
+   "DependsOn": [
+    "RemitScoutAuroraClusterInstance140ECBA32",
+    "RemitScoutAuroraCluster4AA33BAB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutDbProxy/ProxyTargetGroup"
+   }
+  },
+  "RedisSubnetGroup": {
+   "Type": "AWS::ElastiCache::SubnetGroup",
+   "Properties": {
+    "CacheSubnetGroupName": "remit-scout-dev-redis",
+    "Description": "Remit-Scout Redis subnet group",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RedisSubnetGroup"
+   }
+  },
+  "RedisReplicationGroup": {
+   "Type": "AWS::ElastiCache::ReplicationGroup",
+   "Properties": {
+    "AtRestEncryptionEnabled": true,
+    "AutoMinorVersionUpgrade": true,
+    "AutomaticFailoverEnabled": false,
+    "CacheNodeType": "cache.t4g.micro",
+    "CacheSubnetGroupName": {
+     "Ref": "RedisSubnetGroup"
+    },
+    "Engine": "redis",
+    "EngineVersion": "7.1",
+    "MultiAZEnabled": false,
+    "NumNodeGroups": 1,
+    "ReplicationGroupDescription": "Remit-Scout Redis (dev)",
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RedisSecurityGroupB05951F6",
+       "GroupId"
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TransitEncryptionEnabled": true
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RedisReplicationGroup"
+   }
+  },
+  "BronzeBucketFF082204": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": "remit-scout-bronze-dev",
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+       },
+       "Status": "Enabled",
+       "Transitions": [
+        {
+         "StorageClass": "GLACIER",
+         "TransitionInDays": 90
+        },
+        {
+         "StorageClass": "DEEP_ARCHIVE",
+         "TransitionInDays": 365
+        }
+       ]
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/BronzeBucket/Resource"
+   }
+  },
+  "QuoteRefreshDlq4D72C8A1": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 1209600,
+    "QueueName": "remit-scout-dev-quote-refresh-dlq",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/QuoteRefreshDlq/Resource"
+   }
+  },
+  "QuoteRefreshQueue342D1DBA": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 345600,
+    "QueueName": "remit-scout-dev-quote-refresh",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "QuoteRefreshDlq4D72C8A1",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 5
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VisibilityTimeout": 300
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/QuoteRefreshQueue/Resource"
+   }
+  },
+  "IngestFanoutDlq3CC657DF": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 1209600,
+    "QueueName": "remit-scout-dev-ingest-fanout-dlq",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutDlq/Resource"
+   }
+  },
+  "IngestFanoutQueue4638B0A9": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 345600,
+    "QueueName": "remit-scout-dev-ingest-fanout",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "IngestFanoutDlq3CC657DF",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 5
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VisibilityTimeout": 300
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutQueue/Resource"
+   }
+  },
+  "NotificationsDlq12302AF4": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 1209600,
+    "QueueName": "remit-scout-dev-notifications-dlq",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/NotificationsDlq/Resource"
+   }
+  },
+  "NotificationsQueue3B766469": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 172800,
+    "QueueName": "remit-scout-dev-notifications",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "NotificationsDlq12302AF4",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 5
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VisibilityTimeout": 120
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/NotificationsQueue/Resource"
+   }
+  },
+  "OpsAlertsDlq793A9410": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 1209600,
+    "QueueName": "remit-scout-dev-ops-alerts-dlq",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/OpsAlertsDlq/Resource"
+   }
+  },
+  "OpsAlertsQueue3B41FDE7": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 345600,
+    "QueueName": "remit-scout-dev-ops-alerts",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "OpsAlertsDlq793A9410",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 5
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VisibilityTimeout": 300
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/OpsAlertsQueue/Resource"
+   }
+  },
+  "RemitScoutCluster47990504": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": "remit-scout-dev",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutCluster/Resource"
+   }
+  },
+  "PlaneBIngestTask41725D6D": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "backend/dist/scripts/aws/plane-b-ingest-ecs.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "PLANE_B_DB_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "RemitScoutDbProxy00B4B69D",
+          "Endpoint"
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PORT",
+        "Value": "5432"
+       },
+       {
+        "Name": "PLANE_B_DB_NAME",
+        "Value": "remit_scout"
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
+        "Value": {
+         "Ref": "IngestFanoutQueue4638B0A9"
+        }
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_URL",
+        "Value": {
+         "Ref": "NotificationsQueue3B766469"
+        }
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_URL",
+        "Value": {
+         "Ref": "OpsAlertsQueue3B41FDE7"
+        }
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_MODE",
+        "Value": "off"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BackendRepository9B711290"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "PlaneBIngestTaskPlaneBIngestContainerLogGroup34F265C3"
+        },
+        "awslogs-stream-prefix": "plane-b-ingest",
+        "awslogs-region": "us-east-2"
+       }
+      },
+      "Name": "PlaneBIngestContainer",
+      "Secrets": [
+       {
+        "Name": "PLANE_B_DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskExecutionRole8540AF12",
+      "Arn"
+     ]
+    },
+    "Family": "remitscoutdevPlaneBIngestTaskE5A705C6",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskRoleE3D3CC2D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBIngestTask/Resource"
+   }
+  },
+  "PlaneBIngestTaskPlaneBIngestContainerLogGroup34F265C3": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBIngestTask/PlaneBIngestContainer/LogGroup/Resource"
+   }
+  },
+  "B2cRefreshWorkerTask3DA7DC15": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "backend/dist/scripts/aws/b2c-refresh-worker-ecs.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "PLANE_B_DB_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "RemitScoutDbProxy00B4B69D",
+          "Endpoint"
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PORT",
+        "Value": "5432"
+       },
+       {
+        "Name": "PLANE_B_DB_NAME",
+        "Value": "remit_scout"
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
+        "Value": {
+         "Ref": "IngestFanoutQueue4638B0A9"
+        }
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_URL",
+        "Value": {
+         "Ref": "NotificationsQueue3B766469"
+        }
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_URL",
+        "Value": {
+         "Ref": "OpsAlertsQueue3B41FDE7"
+        }
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "B2C_REFRESH_LIMIT",
+        "Value": "50"
+       },
+       {
+        "Name": "B2C_REFRESH_HEALTH_ENABLED",
+        "Value": "0"
+       },
+       {
+        "Name": "QUOTE_REFRESH_QUEUE_URL",
+        "Value": {
+         "Ref": "QuoteRefreshQueue342D1DBA"
+        }
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BackendRepository9B711290"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "B2cRefreshWorkerTaskB2cRefreshWorkerContainerLogGroup836A2795"
+        },
+        "awslogs-stream-prefix": "b2c-refresh-worker",
+        "awslogs-region": "us-east-2"
+       }
+      },
+      "Name": "B2cRefreshWorkerContainer",
+      "Secrets": [
+       {
+        "Name": "PLANE_B_DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskExecutionRole8540AF12",
+      "Arn"
+     ]
+    },
+    "Family": "remitscoutdevB2cRefreshWorkerTask8A4CD02D",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskRoleE3D3CC2D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRefreshWorkerTask/Resource"
+   }
+  },
+  "B2cRefreshWorkerTaskB2cRefreshWorkerContainerLogGroup836A2795": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRefreshWorkerTask/B2cRefreshWorkerContainer/LogGroup/Resource"
+   }
+  },
+  "B2cRefreshWorkerTaskEventsRole33262001": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRefreshWorkerTask/EventsRole/Resource"
+   }
+  },
+  "B2cRefreshWorkerTaskEventsRoleDefaultPolicy651806B6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "ecs:RunTask",
+       "Condition": {
+        "ArnEquals": {
+         "ecs:cluster": {
+          "Fn::GetAtt": [
+           "RemitScoutCluster47990504",
+           "Arn"
+          ]
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "B2cRefreshWorkerTask3DA7DC15"
+       }
+      },
+      {
+       "Action": "ecs:TagResource",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecs:us-east-2:*:task/",
+          {
+           "Ref": "RemitScoutCluster47990504"
+          },
+          "/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "PlaneBEcsTaskExecutionRole8540AF12",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "PlaneBEcsTaskRoleE3D3CC2D",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "B2cRefreshWorkerTaskEventsRoleDefaultPolicy651806B6",
+    "Roles": [
+     {
+      "Ref": "B2cRefreshWorkerTaskEventsRole33262001"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRefreshWorkerTask/EventsRole/DefaultPolicy/Resource"
+   }
+  },
+  "IngestFanoutWorkerTask160E255A": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "backend/dist/scripts/ingest-fanout-worker.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "PLANE_B_DB_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "RemitScoutDbProxy00B4B69D",
+          "Endpoint"
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PORT",
+        "Value": "5432"
+       },
+       {
+        "Name": "PLANE_B_DB_NAME",
+        "Value": "remit_scout"
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
+        "Value": {
+         "Ref": "IngestFanoutQueue4638B0A9"
+        }
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_URL",
+        "Value": {
+         "Ref": "NotificationsQueue3B766469"
+        }
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_URL",
+        "Value": {
+         "Ref": "OpsAlertsQueue3B41FDE7"
+        }
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_MODE",
+        "Value": "off"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BackendRepository9B711290"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "IngestFanoutWorkerTaskIngestFanoutWorkerContainerLogGroupDFADF5F9"
+        },
+        "awslogs-stream-prefix": "ingest-fanout-worker",
+        "awslogs-region": "us-east-2"
+       }
+      },
+      "Name": "IngestFanoutWorkerContainer",
+      "Secrets": [
+       {
+        "Name": "PLANE_B_DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskExecutionRole8540AF12",
+      "Arn"
+     ]
+    },
+    "Family": "remitscoutdevIngestFanoutWorkerTask23C93F47",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskRoleE3D3CC2D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerTask/Resource"
+   }
+  },
+  "IngestFanoutWorkerTaskIngestFanoutWorkerContainerLogGroupDFADF5F9": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerTask/IngestFanoutWorkerContainer/LogGroup/Resource"
+   }
+  },
+  "NotificationsQueueWorkerTask7919B5A7": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "backend/dist/scripts/notifications-queue-worker.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "PLANE_B_DB_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "RemitScoutDbProxy00B4B69D",
+          "Endpoint"
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PORT",
+        "Value": "5432"
+       },
+       {
+        "Name": "PLANE_B_DB_NAME",
+        "Value": "remit_scout"
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
+        "Value": {
+         "Ref": "IngestFanoutQueue4638B0A9"
+        }
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_URL",
+        "Value": {
+         "Ref": "NotificationsQueue3B766469"
+        }
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_URL",
+        "Value": {
+         "Ref": "OpsAlertsQueue3B41FDE7"
+        }
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_MODE",
+        "Value": "off"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BackendRepository9B711290"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "NotificationsQueueWorkerTaskNotificationsQueueWorkerContainerLogGroup4D8B73E3"
+        },
+        "awslogs-stream-prefix": "notifications-queue-worker",
+        "awslogs-region": "us-east-2"
+       }
+      },
+      "Name": "NotificationsQueueWorkerContainer",
+      "Secrets": [
+       {
+        "Name": "PLANE_B_DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskExecutionRole8540AF12",
+      "Arn"
+     ]
+    },
+    "Family": "remitscoutdevNotificationsQueueWorkerTask91E4D201",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskRoleE3D3CC2D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/NotificationsQueueWorkerTask/Resource"
+   }
+  },
+  "NotificationsQueueWorkerTaskNotificationsQueueWorkerContainerLogGroup4D8B73E3": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/NotificationsQueueWorkerTask/NotificationsQueueWorkerContainer/LogGroup/Resource"
+   }
+  },
+  "OpsAlertsQueueWorkerTask9089B6AC": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "backend/dist/scripts/ops-alerts-queue-worker.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "PLANE_B_DB_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "RemitScoutDbProxy00B4B69D",
+          "Endpoint"
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PORT",
+        "Value": "5432"
+       },
+       {
+        "Name": "PLANE_B_DB_NAME",
+        "Value": "remit_scout"
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
+        "Value": {
+         "Ref": "IngestFanoutQueue4638B0A9"
+        }
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_URL",
+        "Value": {
+         "Ref": "NotificationsQueue3B766469"
+        }
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_URL",
+        "Value": {
+         "Ref": "OpsAlertsQueue3B41FDE7"
+        }
+       },
+       {
+        "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
+        "Value": "off"
+       },
+       {
+        "Name": "PLANE_B_OPS_ALERT_QUEUE_MODE",
+        "Value": "off"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepository9B711290",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BackendRepository9B711290"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "OpsAlertsQueueWorkerTaskOpsAlertsQueueWorkerContainerLogGroup253C6B34"
+        },
+        "awslogs-stream-prefix": "ops-alerts-queue-worker",
+        "awslogs-region": "us-east-2"
+       }
+      },
+      "Name": "OpsAlertsQueueWorkerContainer",
+      "Secrets": [
+       {
+        "Name": "PLANE_B_DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "PLANE_B_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AuroraMasterSecret66504F3D"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskExecutionRole8540AF12",
+      "Arn"
+     ]
+    },
+    "Family": "remitscoutdevOpsAlertsQueueWorkerTaskD773E762",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "PlaneBEcsTaskRoleE3D3CC2D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/OpsAlertsQueueWorkerTask/Resource"
+   }
+  },
+  "OpsAlertsQueueWorkerTaskOpsAlertsQueueWorkerContainerLogGroup253C6B34": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/OpsAlertsQueueWorkerTask/OpsAlertsQueueWorkerContainer/LogGroup/Resource"
+   }
+  },
+  "PlaneCApiFunction02CF465E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "aec40ffabb53300aa1f14ff69d0a5db0deb538c666f7f88c0f24e991aca2dbec.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "NODE_ENV": "production",
+      "PLANE_C_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_C_DB_PORT": "5432",
+      "PLANE_C_DB_NAME": "remit_scout",
+      "PLANE_C_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneCLambdaRoleE46EF278",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 30,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneCSecurityGroup8E635584",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "PlaneCLambdaRoleDefaultPolicy7F08ADF6",
+    "PlaneCLambdaRoleE46EF278",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCApiFunction/Resource",
+    "aws:asset:path": "asset.aec40ffabb53300aa1f14ff69d0a5db0deb538c666f7f88c0f24e991aca2dbec",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "PlaneCHttpApi95BE662B": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "Name": "remit-scout-plane-c-dev",
+    "ProtocolType": "HTTP",
+    "Tags": {
+     "environment": "dev",
+     "project": "remit-scout"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/Resource"
+   }
+  },
+  "PlaneCHttpApiDefaultStageAD5010A1": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneCHttpApi95BE662B"
+    },
+    "AutoDeploy": true,
+    "StageName": "$default",
+    "Tags": {
+     "environment": "dev",
+     "project": "remit-scout"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/DefaultStage/Resource"
+   }
+  },
+  "PlaneCHttpApiANYproxyPlaneCLambdaIntegration058C676F": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneCHttpApi95BE662B"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::GetAtt": [
+      "PlaneCApiFunction02CF465E",
+      "Arn"
+     ]
+    },
+    "PayloadFormatVersion": "2.0"
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/ANY--{proxy+}/PlaneCLambdaIntegration/Resource"
+   }
+  },
+  "PlaneCHttpApiANYproxyPlaneCLambdaIntegrationPermission048165B0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "PlaneCApiFunction02CF465E",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-2:242201284656:",
+       {
+        "Ref": "PlaneCHttpApi95BE662B"
+       },
+       "/*/*/{proxy+}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/ANY--{proxy+}/PlaneCLambdaIntegration-Permission"
+   }
+  },
+  "PlaneCHttpApiANYproxy089942A4": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneCHttpApi95BE662B"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /{proxy+}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "PlaneCHttpApiANYproxyPlaneCLambdaIntegration058C676F"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/ANY--{proxy+}/Resource"
+   }
+  },
+  "PlaneCHttpApiANYPlaneCLambdaIntegrationPermissionA849C1E8": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "PlaneCApiFunction02CF465E",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-2:242201284656:",
+       {
+        "Ref": "PlaneCHttpApi95BE662B"
+       },
+       "/*/*/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/ANY--/PlaneCLambdaIntegration-Permission"
+   }
+  },
+  "PlaneCHttpApiANYE34ECF26": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneCHttpApi95BE662B"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "PlaneCHttpApiANYproxyPlaneCLambdaIntegration058C676F"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneCHttpApi/ANY--/Resource"
+   }
+  },
+  "PlaneAApiFunction8248FA15": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "17e3535fa67658fefacbdaeeff311613dbd64cd6da8b49f5d5bb7b58960a9a74.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "NODE_ENV": "production",
+      "PLANE_A_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_A_DB_PORT": "5432",
+      "PLANE_A_DB_NAME": "remit_scout",
+      "PLANE_C_BASE_URL": {
+       "Fn::GetAtt": [
+        "PlaneCHttpApi95BE662B",
+        "ApiEndpoint"
+       ]
+      },
+      "PLANE_A_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneALambdaRole53C31A9E",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 30,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "PlaneALambdaRoleDefaultPolicy47A3B050",
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAApiFunction/Resource",
+    "aws:asset:path": "asset.17e3535fa67658fefacbdaeeff311613dbd64cd6da8b49f5d5bb7b58960a9a74",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "PlaneAHttpApi827058CE": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "Name": "remit-scout-plane-a-dev",
+    "ProtocolType": "HTTP",
+    "Tags": {
+     "environment": "dev",
+     "project": "remit-scout"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/Resource"
+   }
+  },
+  "PlaneAHttpApiDefaultStageA48C516C": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneAHttpApi827058CE"
+    },
+    "AutoDeploy": true,
+    "StageName": "$default",
+    "Tags": {
+     "environment": "dev",
+     "project": "remit-scout"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/DefaultStage/Resource"
+   }
+  },
+  "PlaneAHttpApiANYproxyPlaneALambdaIntegrationAECB4124": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneAHttpApi827058CE"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::GetAtt": [
+      "PlaneAApiFunction8248FA15",
+      "Arn"
+     ]
+    },
+    "PayloadFormatVersion": "2.0"
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/ANY--{proxy+}/PlaneALambdaIntegration/Resource"
+   }
+  },
+  "PlaneAHttpApiANYproxyPlaneALambdaIntegrationPermission5A9B1B16": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "PlaneAApiFunction8248FA15",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-2:242201284656:",
+       {
+        "Ref": "PlaneAHttpApi827058CE"
+       },
+       "/*/*/{proxy+}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/ANY--{proxy+}/PlaneALambdaIntegration-Permission"
+   }
+  },
+  "PlaneAHttpApiANYproxyB428698A": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneAHttpApi827058CE"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /{proxy+}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "PlaneAHttpApiANYproxyPlaneALambdaIntegrationAECB4124"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/ANY--{proxy+}/Resource"
+   }
+  },
+  "PlaneAHttpApiANYPlaneALambdaIntegrationPermissionCFA52525": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "PlaneAApiFunction8248FA15",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-2:242201284656:",
+       {
+        "Ref": "PlaneAHttpApi827058CE"
+       },
+       "/*/*/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/ANY--/PlaneALambdaIntegration-Permission"
+   }
+  },
+  "PlaneAHttpApiANYB43B2FBE": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "PlaneAHttpApi827058CE"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "PlaneAHttpApiANYproxyPlaneALambdaIntegrationAECB4124"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneAHttpApi/ANY--/Resource"
+   }
+  },
+  "GoldFxRatesJobFunction17A7CC7B": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "047ef5b62b652b70d4829d9637768656a8019d58599cf3f6adc42af2f26bc31e.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldFxRatesJobFunction/Resource",
+    "aws:asset:path": "asset.047ef5b62b652b70d4829d9637768656a8019d58599cf3f6adc42af2f26bc31e",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "GoldFxRatesSchedule76D078CC": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs gold-fx-rates job every 15 minutes.",
+    "ScheduleExpression": "rate(15 minutes)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "GoldFxRatesJobFunction17A7CC7B",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldFxRatesSchedule/Resource"
+   }
+  },
+  "GoldFxRatesScheduleAllowEventRuleremitscoutdevGoldFxRatesJobFunction466A2819B61170FE": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GoldFxRatesJobFunction17A7CC7B",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "GoldFxRatesSchedule76D078CC",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldFxRatesSchedule/AllowEventRuleremitscoutdevGoldFxRatesJobFunction466A2819"
+   }
+  },
+  "GoldPopularCorridorsJobFunctionAC15A6B1": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "f4e73af6a9db395ee8c9649811c3e78125005514c16dc1bb0a775d9d47139884.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "gold-popular-corridors",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPopularCorridorsJobFunction/Resource",
+    "aws:asset:path": "asset.f4e73af6a9db395ee8c9649811c3e78125005514c16dc1bb0a775d9d47139884",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "GoldPopularCorridorsJobSchedule73ADAFEE": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs gold-popular-corridors on a schedule.",
+    "ScheduleExpression": "rate(1 hour)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "GoldPopularCorridorsJobFunctionAC15A6B1",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPopularCorridorsJobSchedule/Resource"
+   }
+  },
+  "GoldPopularCorridorsJobScheduleAllowEventRuleremitscoutdevGoldPopularCorridorsJobFunction163EFBDF7C4EC99A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GoldPopularCorridorsJobFunctionAC15A6B1",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "GoldPopularCorridorsJobSchedule73ADAFEE",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPopularCorridorsJobSchedule/AllowEventRuleremitscoutdevGoldPopularCorridorsJobFunction163EFBDF"
+   }
+  },
+  "GoldPulseCacheJobFunction06B3E7B9": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "d3f12b123a8b5134c2b3c8961e9f31132a58d1ce91f1f509f40b247f84993699.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "gold-pulse-cache",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPulseCacheJobFunction/Resource",
+    "aws:asset:path": "asset.d3f12b123a8b5134c2b3c8961e9f31132a58d1ce91f1f509f40b247f84993699",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "GoldPulseCacheJobSchedule58509416": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs gold-pulse-cache on a schedule.",
+    "ScheduleExpression": "rate(1 hour)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "GoldPulseCacheJobFunction06B3E7B9",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPulseCacheJobSchedule/Resource"
+   }
+  },
+  "GoldPulseCacheJobScheduleAllowEventRuleremitscoutdevGoldPulseCacheJobFunctionEA470679C9E835C0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GoldPulseCacheJobFunction06B3E7B9",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "GoldPulseCacheJobSchedule58509416",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPulseCacheJobSchedule/AllowEventRuleremitscoutdevGoldPulseCacheJobFunctionEA470679"
+   }
+  },
+  "GoldPublisherJobFunction7B7413FF": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "0bb280a7c13daab081cb7d333d17d258bfd81d3e81194b739091ab3436f52b49.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "gold-publisher",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_C_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_C_DB_PORT": "5432",
+      "PLANE_C_DB_NAME": "remit_scout",
+      "PLANE_C_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneCLambdaRoleE46EF278",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneCLambdaRoleDefaultPolicy7F08ADF6",
+    "PlaneCLambdaRoleE46EF278"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPublisherJobFunction/Resource",
+    "aws:asset:path": "asset.0bb280a7c13daab081cb7d333d17d258bfd81d3e81194b739091ab3436f52b49",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "GoldPublisherJobScheduleD886A741": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs gold-publisher on a schedule.",
+    "ScheduleExpression": "rate(30 minutes)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "GoldPublisherJobFunction7B7413FF",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPublisherJobSchedule/Resource"
+   }
+  },
+  "GoldPublisherJobScheduleAllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8FB72252DA": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GoldPublisherJobFunction7B7413FF",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "GoldPublisherJobScheduleD886A741",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldPublisherJobSchedule/AllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8F"
+   }
+  },
+  "B2cRetryFailedJobFunction5D0A7238": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "de44f1974bfffe5dc1040c7bbf369ed355d83c10258f66d3a7b40a5d9cec4ffc.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "b2c-retry-failed",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRetryFailedJobFunction/Resource",
+    "aws:asset:path": "asset.de44f1974bfffe5dc1040c7bbf369ed355d83c10258f66d3a7b40a5d9cec4ffc",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "B2cRetryFailedJobSchedule21CA5C8E": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs b2c-retry-failed on a schedule.",
+    "ScheduleExpression": "rate(15 minutes)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "B2cRetryFailedJobFunction5D0A7238",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRetryFailedJobSchedule/Resource"
+   }
+  },
+  "B2cRetryFailedJobScheduleAllowEventRuleremitscoutdevB2cRetryFailedJobFunctionD3E796AB60C71BF8": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "B2cRetryFailedJobFunction5D0A7238",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "B2cRetryFailedJobSchedule21CA5C8E",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRetryFailedJobSchedule/AllowEventRuleremitscoutdevB2cRetryFailedJobFunctionD3E796AB"
+   }
+  },
+  "B2cQueueCleanupJobFunction60DEB75E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "ae297fa5bf6b97288db4214d92bef93fafbd117992e7c534cb8239f50fcf4f51.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "b2c-queue-cleanup",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cQueueCleanupJobFunction/Resource",
+    "aws:asset:path": "asset.ae297fa5bf6b97288db4214d92bef93fafbd117992e7c534cb8239f50fcf4f51",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "B2cQueueCleanupJobSchedule2B41C33A": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs b2c-queue-cleanup on a schedule.",
+    "ScheduleExpression": "cron(30 2 * * ? *)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "B2cQueueCleanupJobFunction60DEB75E",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cQueueCleanupJobSchedule/Resource"
+   }
+  },
+  "B2cQueueCleanupJobScheduleAllowEventRuleremitscoutdevB2cQueueCleanupJobFunction49A70D49D1E4A1A2": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "B2cQueueCleanupJobFunction60DEB75E",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "B2cQueueCleanupJobSchedule2B41C33A",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cQueueCleanupJobSchedule/AllowEventRuleremitscoutdevB2cQueueCleanupJobFunction49A70D49"
+   }
+  },
+  "StoplistAutoResumeJobFunctionBD0BF241": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-242201284656-us-east-2",
+     "S3Key": "e194d15ccc5e1be80cdf692e02213de857b4060f0af6e8ac44683c164e0e4ef5.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "stoplist-auto-resume",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobFunction/Resource",
+    "aws:asset:path": "asset.e194d15ccc5e1be80cdf692e02213de857b4060f0af6e8ac44683c164e0e4ef5",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "StoplistAutoResumeJobScheduleC8710ABF": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs stoplist-auto-resume on a schedule.",
+    "ScheduleExpression": "cron(0 2 * * ? *)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "StoplistAutoResumeJobFunctionBD0BF241",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobSchedule/Resource"
+   }
+  },
+  "StoplistAutoResumeJobScheduleAllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268D074E894": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "StoplistAutoResumeJobFunctionBD0BF241",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "StoplistAutoResumeJobScheduleC8710ABF",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobSchedule/AllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268"
+   }
+  },
+  "B2cRefreshWorkerScheduleC6D481F4": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs the B2C refresh worker on a 5-minute cadence.",
+    "ScheduleExpression": "rate(5 minutes)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "RemitScoutCluster47990504",
+        "Arn"
+       ]
+      },
+      "EcsParameters": {
+       "LaunchType": "FARGATE",
+       "NetworkConfiguration": {
+        "AwsVpcConfiguration": {
+         "AssignPublicIp": "DISABLED",
+         "SecurityGroups": [
+          {
+           "Fn::GetAtt": [
+            "PlaneBSecurityGroup1D22FE93",
+            "GroupId"
+           ]
+          }
+         ],
+         "Subnets": [
+          {
+           "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+          },
+          {
+           "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+          }
+         ]
+        }
+       },
+       "PlatformVersion": "LATEST",
+       "TaskCount": 1,
+       "TaskDefinitionArn": {
+        "Ref": "B2cRefreshWorkerTask3DA7DC15"
+       }
+      },
+      "Id": "Target0",
+      "Input": "{}",
+      "RoleArn": {
+       "Fn::GetAtt": [
+        "B2cRefreshWorkerTaskEventsRole33262001",
+        "Arn"
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRefreshWorkerSchedule/Resource"
+   }
+  },
+  "PlaneBIngestService1875B86C": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "RemitScoutCluster47990504"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 0,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "PlaneBSecurityGroup1D22FE93",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+       },
+       {
+        "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+       }
+      ]
+     }
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "PlaneBIngestTask41725D6D"
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/PlaneBIngestService/Service"
+   }
+  },
+  "IngestFanoutWorkerService58DE2198": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "RemitScoutCluster47990504"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 0,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "PlaneBSecurityGroup1D22FE93",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+       },
+       {
+        "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+       }
+      ]
+     }
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "IngestFanoutWorkerTask160E255A"
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerService/Service"
+   }
+  },
+  "NotificationsQueueWorkerService2727E158": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "RemitScoutCluster47990504"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 0,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "PlaneBSecurityGroup1D22FE93",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+       },
+       {
+        "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+       }
+      ]
+     }
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "NotificationsQueueWorkerTask7919B5A7"
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/NotificationsQueueWorkerService/Service"
+   }
+  },
+  "OpsAlertsQueueWorkerServiceD58F4B7D": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "RemitScoutCluster47990504"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 0,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "PlaneBSecurityGroup1D22FE93",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+       },
+       {
+        "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+       }
+      ]
+     }
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "OpsAlertsQueueWorkerTask9089B6AC"
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/OpsAlertsQueueWorkerService/Service"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31T227bMAz9lr2r2pp8QS5rF2DovKToa0ArrKfEljxRShcY/vdRku0EGbAnHpJH1CFFzeRsPpdfPsEHPajD6aHWpex2HtRJcGjfoZrJ7q1VYvVu3oqVKEJZa7ULpUEfY1e0tcHjK5Q1XuPX2ILIKg1eWzORI/i6KaJ5Af8MHj/gIgqnzwyvhTfGo2M8ErKSwVt41vqrQePFDlVw2l+enQ1t0vDfwMZUDol6oaGR3dZm3ckWlntMF2XUC1SOOdha0t66lLp6vSDOo6cGDFTIzF3yhysjyuYVXIX+RvJEuM/0wh1IdmvwUALhqg7EQxB5KFM/6+U/gZGZnI0hD0ahGOsUzv655Nw9zApSJW63BvJasRiU3fSa0zXcOo8lPeZwgOayWwZ1yk0PKJsl38uE39zOz4AhTTmBOFUO3ige4RNrgbg4dFrjuzZ6XJv7iDUetEF3ExvO7tCdtcqrmGEvalvxfd9tNTUyYs5BUx5gb+wBjyRfknkKRqWaNN8DET+wXEQzkNNkJk5cFnSNJmKvF9DqKm/omT/QN+/bRasjKZro8h+rsrwEYih/iojiyldu+i13buLx9M68KNzQNgyry7bvxRbJBsetJ62xujZVzP8Ivg28WbFHeaTP59lcPj7y3z+S1g8uGK8blNts/wLSXu/FGAQAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "VpcId": {
+   "Description": "Remit-Scout VPC ID",
+   "Value": {
+    "Ref": "RemitScoutVpc880ACCCD"
+   }
+  },
+  "PublicSubnetIds": {
+   "Description": "Public subnet IDs",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Ref": "RemitScoutVpcpublicSubnet1Subnet570C4540"
+      },
+      ",",
+      {
+       "Ref": "RemitScoutVpcpublicSubnet2Subnet55D7D878"
+      }
+     ]
+    ]
+   }
+  },
+  "PrivateSubnetIds": {
+   "Description": "Private subnet IDs",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      ",",
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
+    ]
+   }
+  },
+  "PlaneASecurityGroupId": {
+   "Description": "Plane A security group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "PlaneASecurityGroupAAB7E8B7",
+     "GroupId"
+    ]
+   }
+  },
+  "PlaneBSecurityGroupId": {
+   "Description": "Plane B security group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "PlaneBSecurityGroup1D22FE93",
+     "GroupId"
+    ]
+   }
+  },
+  "PlaneCSecurityGroupId": {
+   "Description": "Plane C security group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "PlaneCSecurityGroup8E635584",
+     "GroupId"
+    ]
+   }
+  },
+  "DatabaseSecurityGroupId": {
+   "Description": "Database security group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "DatabaseSecurityGroup7319C0F6",
+     "GroupId"
+    ]
+   }
+  },
+  "RedisSecurityGroupId": {
+   "Description": "Redis security group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "RedisSecurityGroupB05951F6",
+     "GroupId"
+    ]
+   }
+  },
+  "AuroraClusterEndpoint": {
+   "Description": "Aurora cluster writer endpoint",
+   "Value": {
+    "Fn::GetAtt": [
+     "RemitScoutAuroraCluster4AA33BAB",
+     "Endpoint.Address"
+    ]
+   }
+  },
+  "RdsProxyEndpoint": {
+   "Description": "RDS Proxy endpoint",
+   "Value": {
+    "Fn::GetAtt": [
+     "RemitScoutDbProxy00B4B69D",
+     "Endpoint"
+    ]
+   }
+  },
+  "AuroraCredentialsSecretArn": {
+   "Description": "Secrets Manager ARN for Aurora credentials",
+   "Value": {
+    "Ref": "AuroraMasterSecret66504F3D"
+   }
+  },
+  "RedisEndpoint": {
+   "Description": "Redis primary endpoint address",
+   "Value": {
+    "Fn::GetAtt": [
+     "RedisReplicationGroup",
+     "PrimaryEndPoint.Address"
+    ]
+   }
+  },
+  "RedisPort": {
+   "Description": "Redis primary endpoint port",
+   "Value": {
+    "Fn::GetAtt": [
+     "RedisReplicationGroup",
+     "PrimaryEndPoint.Port"
+    ]
+   }
+  },
+  "BronzeBucketName": {
+   "Description": "Bronze S3 bucket name",
+   "Value": {
+    "Ref": "BronzeBucketFF082204"
+   }
+  },
+  "QuoteRefreshQueueUrl": {
+   "Description": "Quote refresh SQS queue URL",
+   "Value": {
+    "Ref": "QuoteRefreshQueue342D1DBA"
+   }
+  },
+  "QuoteRefreshDlqUrl": {
+   "Description": "Quote refresh DLQ URL",
+   "Value": {
+    "Ref": "QuoteRefreshDlq4D72C8A1"
+   }
+  },
+  "IngestFanoutQueueUrl": {
+   "Description": "Ingestion fanout queue URL",
+   "Value": {
+    "Ref": "IngestFanoutQueue4638B0A9"
+   }
+  },
+  "IngestFanoutDlqUrl": {
+   "Description": "Ingestion fanout DLQ URL",
+   "Value": {
+    "Ref": "IngestFanoutDlq3CC657DF"
+   }
+  },
+  "NotificationsQueueUrl": {
+   "Description": "Notifications queue URL",
+   "Value": {
+    "Ref": "NotificationsQueue3B766469"
+   }
+  },
+  "NotificationsDlqUrl": {
+   "Description": "Notifications DLQ URL",
+   "Value": {
+    "Ref": "NotificationsDlq12302AF4"
+   }
+  },
+  "OpsAlertsQueueUrl": {
+   "Description": "Ops alerts queue URL",
+   "Value": {
+    "Ref": "OpsAlertsQueue3B41FDE7"
+   }
+  },
+  "OpsAlertsDlqUrl": {
+   "Description": "Ops alerts DLQ URL",
+   "Value": {
+    "Ref": "OpsAlertsDlq793A9410"
+   }
+  },
+  "PlaneAApiUrl": {
+   "Description": "Plane A HTTP API endpoint",
+   "Value": {
+    "Fn::GetAtt": [
+     "PlaneAHttpApi827058CE",
+     "ApiEndpoint"
+    ]
+   }
+  },
+  "PlaneCApiUrl": {
+   "Description": "Plane C HTTP API endpoint",
+   "Value": {
+    "Fn::GetAtt": [
+     "PlaneCHttpApi95BE662B",
+     "ApiEndpoint"
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

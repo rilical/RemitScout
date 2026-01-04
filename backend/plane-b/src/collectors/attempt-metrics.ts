@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { createLogger } from '../../../shared/logger'
+import { formatError } from '../../../shared/utils/error-handling'
 import { AttemptMetricsRepository } from '../repositories'
 
 const logger = createLogger('plane-b.attempt-metrics')
@@ -44,12 +45,13 @@ export const loadAttemptMetrics = async (
       avgAttemptSeconds,
       sampleCount,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
     logger.error('attempt_metrics_load_failed', {
       provider_id: providerId,
       locale,
-      error: error.message,
-      stack: error.stack,
+      error: message,
+      stack,
     })
     // Return default values on error
     return {
@@ -101,14 +103,15 @@ export const persistAttemptMetrics = async (
       avg_attempt_seconds: avgAttemptSeconds,
       sample_count: sampleCount,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
     logger.error('attempt_metrics_persist_failed', {
       provider_id: providerId,
       locale,
       avg_attempt_seconds: avgAttemptSeconds,
       sample_count: sampleCount,
-      error: error.message,
-      stack: error.stack,
+      error: message,
+      stack,
     })
     // Don't throw - allow collector to continue even if metrics save fails
   }

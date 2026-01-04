@@ -1,45 +1,34 @@
-import { config } from '../shared/config'
+/**
+ * Western Union Provider Health Probe
+ * 
+ * Thin wrapper around generic probe implementation.
+ */
+
 import { createLogger } from '../shared/logger'
-import { getHealthCorridors } from '../shared/health-corridors'
-import { runWesternUnionCollector } from '../plane-b/src/providers/westernunion/collector'
-import { httpLimits } from '../plane-b/src/providers/westernunion/limits'
-import { createProbeRunner, outputProbeResult } from './lib/probe-utils'
+import { runGenericProbe } from './lib/generic-probe'
+import { formatError } from '../shared/utils/error-handling'
 
 const logger = createLogger('script.westernunion-probe')
-const corridors = getHealthCorridors('westernunion')
 
 const main = async () => {
-  const runner = createProbeRunner({
-    providerId: 'westernunion',
-    corridors,
-    timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
-    retries: Number(process.env.PROBE_RETRIES) || 0,
-  })
-
-  const result = await runner.run(async () => {
-    return await runWesternUnionCollector({
-      collectorType: 'health_probe',
-      corridors,
-      amountBuckets: [100],
-      payinMethod: 'bank_transfer',
-      payoutMethod: 'bank_deposit',
-      locale: 'en-US',
-      delayMs: config.planeB.westernunion.delayMs,
-      jitterMs: config.planeB.westernunion.jitterMs,
-      corridorDelayMs: config.planeB.westernunion.corridorDelayMs,
-      corridorJitterMs: config.planeB.westernunion.corridorJitterMs,
-      rateLimitBackoffMs: config.planeB.westernunion.rateLimitBackoffMs,
-      rateLimitJitterMs: config.planeB.westernunion.rateLimitJitterMs,
-      rateLimitMaxRetries: config.planeB.westernunion.rateLimitMaxRetries,
-      rpmOverride: httpLimits.rpm,
-      perCorridorRpmOverride: httpLimits.perCorridorRpm,
+  try {
+    const result = await runGenericProbe({
+      providerId: 'westernunion',
+      timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
+      retries: Number(process.env.PROBE_RETRIES) || 0,
+      outputFormat: process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json',
     })
-  })
 
-  outputProbeResult(result, process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json')
-  logger.info('probe_complete', result)
-
-  process.exit(result.success ? 0 : 1)
+    process.exit(result.success ? 0 : 1)
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
+    logger.error('probe_failed', {
+      provider_id: 'westernunion',
+      error: message,
+      stack,
+    })
+    process.exit(1)
+  }
 }
 
 let shutdownRequested = false

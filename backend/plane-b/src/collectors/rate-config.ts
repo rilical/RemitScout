@@ -3,6 +3,7 @@ import type { Pool } from 'pg'
 import { getRedisClient } from '../../../shared/redis'
 import { createLogger } from '../../../shared/logger'
 import { ProviderRateRepository } from '../repositories'
+import type { ProviderRateConfigRecord } from '../repositories/interfaces/provider-rate-repository.interface'
 
 export type ProviderRates = {
   rpm: number
@@ -52,7 +53,7 @@ export const resolveProviderRates = async (
   }
 
   const repo = new ProviderRateRepository(pool)
-  let row: { rpm?: number; per_corridor_rpm?: number } | null = null
+  let row: ProviderRateConfigRecord | null = null
 
   try {
     row = await repo.getRates(providerId)

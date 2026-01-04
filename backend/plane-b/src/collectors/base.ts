@@ -1,7 +1,10 @@
 import type { Pool } from 'pg'
 
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireCorridorId } from '../../../shared/corridor'
+import { getTracer } from '../../../shared/tracing'
+import { sendJsonMessage } from '../../../shared/sqs'
 import type { NormalizedQuote } from '../normalize/quote-normalizer'
 import { detectAnomaly } from '../signals/anomaly-detector'
 import {
@@ -16,9 +19,49 @@ import {
   RightsMatrixRepository,
 } from '../repositories'
 import { StoplistService, getBlockTypeFromReason } from '../services'
-import { persistProviderRates } from './rate-config'
+import { recordCollection, updateCircuitBreakerState } from './collector-metrics'
 
 const logger = createLogger('plane-b.collectors.base')
+const tracer = getTracer('plane-b.collectors')
+const opsAlertsQueueUrl = config.queues.opsAlerts.url
+const opsAlertsQueueMode = config.queues.opsAlerts.mode
+let notifiedOpsAlertsQueueMisconfig = false
+
+type OpsAlertsQueueMessage = {
+  alertId: string
+  providerId: string
+  corridorId: string
+  amountBucket: number | null
+  httpStatus: number | null
+  blockReason: string | null
+  bronzeObjectKey: string | null
+  requestId: string | null
+  payload: Record<string, unknown>
+  createdAt: string
+}
+
+const enqueueOpsAlert = async (payload: OpsAlertsQueueMessage): Promise<boolean> => {
+  if (!opsAlertsQueueUrl) {
+    if (!notifiedOpsAlertsQueueMisconfig && opsAlertsQueueMode !== 'off') {
+      notifiedOpsAlertsQueueMisconfig = true
+      logger.warn('ops_alert_queue_disabled', { reason: 'missing_queue_url' })
+    }
+    return false
+  }
+
+  try {
+    await sendJsonMessage(opsAlertsQueueUrl, payload)
+    return true
+  } catch (error) {
+    logger.warn('ops_alert_queue_enqueue_failed', {
+      alert_id: payload.alertId,
+      provider_id: payload.providerId,
+      corridor_id: payload.corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
 
 export type CollectorResumeStatus = {
   canCollect: boolean
@@ -75,12 +118,14 @@ export const ensureProvider = async (
     const repo = new ProviderRepository(pool)
     await repo.upsertProvider({ providerId, displayName })
     logger.debug('provider_ensured', { provider_id: providerId, display_name: displayName })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('ensure_provider_failed', {
       provider_id: providerId,
       display_name: displayName,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     throw error
   }
@@ -101,11 +146,13 @@ export const loadObservedCorridors = async (pool: Pool, providerId: string) => {
       count: corridors.length,
     })
     return corridors
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('load_observed_corridors_failed', {
       provider_id: providerId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     return []
   }
@@ -120,17 +167,19 @@ export const loadUnsupportedCorridors = async (pool: Pool, providerId: string): 
   try {
     const repo = new ProviderCapabilityRepository(pool)
     const rows = await repo.loadUnsupportedCorridors(providerId)
-    const corridors = new Set(rows.map(row => row.corridor_id).filter(Boolean))
+    const corridors = new Set(rows.map(row => row.corridor_id).filter((id): id is string => Boolean(id)))
     logger.debug('unsupported_corridors_loaded', {
       provider_id: providerId,
       count: corridors.size,
     })
     return corridors
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('load_unsupported_corridors_failed', {
       provider_id: providerId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     return new Set()
   }
@@ -153,11 +202,13 @@ export const ensureCorridor = async (pool: Pool, corridorId: string) => {
       destCurrency,
     })
     logger.debug('corridor_ensured', { corridor_id: corridorId })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('ensure_corridor_failed', {
       corridor_id: corridorId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     throw error
   }
@@ -167,6 +218,7 @@ export const insertAttempt = async (
   pool: Pool,
   providerId: string,
   input: AttemptInput,
+  durationSeconds?: number,
 ) => {
   if (!providerId || typeof providerId !== 'string' || providerId.trim().length === 0) {
     logger.warn('insert_attempt_invalid_provider_id', { provider_id: providerId })
@@ -176,6 +228,20 @@ export const insertAttempt = async (
   if (!input.corridorId || typeof input.corridorId !== 'string' || input.corridorId.trim().length === 0) {
     logger.warn('insert_attempt_invalid_corridor_id', { corridor_id: input.corridorId })
     return
+  }
+
+  try {
+    if (durationSeconds !== undefined) {
+      recordCollection(
+        providerId,
+        input.corridorId,
+        input.success,
+        durationSeconds,
+        input.success ? undefined : (input.errorType ?? input.errorMessage ?? undefined),
+      )
+    }
+  } catch {
+    // Silently ignore metrics errors
   }
 
   try {
@@ -198,12 +264,14 @@ export const insertAttempt = async (
       corridor_id: input.corridorId,
       success: input.success,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('insert_attempt_failed', {
       provider_id: providerId,
       corridor_id: input.corridorId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -250,17 +318,41 @@ export const insertOpsAlert = async (
       http_status: input.httpStatus,
     })
 
+    if (alertId && opsAlertsQueueMode !== 'off') {
+      const enqueued = await enqueueOpsAlert({
+        alertId,
+        providerId,
+        corridorId: input.corridorId,
+        amountBucket: input.amountBucket,
+        httpStatus: input.httpStatus,
+        blockReason: input.blockReason,
+        bronzeObjectKey: input.bronzeObjectKey,
+        requestId: input.traceId,
+        payload,
+        createdAt: new Date().toISOString(),
+      })
+      logger.debug('ops_alert_enqueued', {
+        alert_id: alertId,
+        provider_id: providerId,
+        corridor_id: input.corridorId,
+        enqueued,
+        mode: opsAlertsQueueMode,
+      })
+    }
+
     if (input.blockReason) {
       await handleBlockDetectionAutoStop(pool, providerId, input.corridorId, input.blockReason, input.httpStatus)
     }
 
     return alertId
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('insert_ops_alert_failed', {
       provider_id: providerId,
       corridor_id: input.corridorId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
     return null
@@ -282,14 +374,16 @@ export const handleBlockDetectionAutoStop = async (
     const blockType = getBlockTypeFromReason(blockReason, httpStatus)
     const stoplistService = new StoplistService(pool)
     await stoplistService.handleBlockDetection(providerId, corridorId, blockType)
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('auto_stop_on_block_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
       block_reason: blockReason,
       http_status: httpStatus,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -319,13 +413,15 @@ export const markCorridorUnsupported = async (
       corridor_id: corridorId,
       source,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('mark_corridor_unsupported_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
       source,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -345,14 +441,22 @@ export const persistNormalizedQuote = async (
     return
   }
 
+  const span = tracer.startSpan('collector.persist_quote')
+  span.setAttributes({
+    'provider.id': normalized.provider_id,
+    'corridor.id': normalized.corridor_id,
+    'amount.bucket': normalized.amount_bucket,
+  })
+
   let qualityFlags: string
   try {
     qualityFlags = JSON.stringify(normalized.quality_flags)
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.warn('quality_flags_serialization_failed', {
       provider_id: normalized.provider_id,
       corridor_id: normalized.corridor_id,
-      error: error.message,
+      error: errorMessage,
     })
     qualityFlags = '[]' // Fallback to empty array
   }
@@ -415,13 +519,20 @@ export const persistNormalizedQuote = async (
       corridor_id: normalized.corridor_id,
       amount_bucket: normalized.amount_bucket,
     })
-  } catch (error: any) {
+    span.end()
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('persist_quote_failed', {
       provider_id: normalized.provider_id,
       corridor_id: normalized.corridor_id,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
+    if (error instanceof Error) {
+      span.recordException(error)
+    }
+    span.end()
     // Don't throw - allow collector to continue
   }
 }
@@ -440,7 +551,8 @@ export const runAnomalyDetection = async (input: AnomalyDetectionInput) => {
       input.providerId,
       input.currentRate,
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.warn('anomaly_detection_error', {
       provider_id: input.providerId,
       corridor_id: input.corridorId,
@@ -476,13 +588,15 @@ export const pauseProviderForBlock = async (
       reason,
       cooldown_ms: cooldownMs,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('pause_provider_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
       reason,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -527,11 +641,13 @@ export const resumeProviderIfCooldownExpired = async (
 
     logger.debug('provider_resumed', { provider_id: providerId })
     return { canCollect: true, reason: 'auto_resume' }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('resume_provider_failed', {
       provider_id: providerId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Return safe default - don't allow collection if we can't verify status
     return { canCollect: false, reason: 'resume_check_failed' }
@@ -541,7 +657,7 @@ export const resumeProviderIfCooldownExpired = async (
 export const loadActiveCircuits = async (pool: Pool, providerId: string) => {
   if (!providerId || typeof providerId !== 'string' || providerId.trim().length === 0) {
     logger.warn('load_active_circuits_invalid_provider_id', { provider_id: providerId })
-    return new Set<string | null>()
+    return new Set<string>()
   }
 
   try {
@@ -560,13 +676,15 @@ export const loadActiveCircuits = async (pool: Pool, providerId: string) => {
       count: active.size,
     })
     return active
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('load_active_circuits_failed', {
       provider_id: providerId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
-    return new Set<string | null>()
+    return new Set<string>()
   }
 }
 
@@ -581,6 +699,12 @@ export const createIngestionRun = async (
     throw new Error('Invalid provider ID')
   }
 
+  const span = tracer.startSpan('collector.create_ingestion_run')
+  span.setAttributes({
+    'provider.id': providerId,
+    'collector.type': collectorType,
+  })
+
   try {
     const repo = new IngestionRunRepository(pool)
     const runId = await repo.insertRun({
@@ -590,19 +714,27 @@ export const createIngestionRun = async (
       finishedAt: startedAt,
       status: 'success',
     })
+    span.setAttribute('ingestion.run_id', runId)
     logger.debug('ingestion_run_created', {
       provider_id: providerId,
       collector_type: collectorType,
       run_id: runId,
     })
+    span.end()
     return runId
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('create_ingestion_run_failed', {
       provider_id: providerId,
       collector_type: collectorType,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
+    if (error instanceof Error) {
+      span.recordException(error)
+    }
+    span.end()
     throw error
   }
 }
@@ -626,13 +758,15 @@ export const finishIngestionRun = async (
       status,
       error_code: errorCode,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('finish_ingestion_run_failed', {
       run_id: runId,
       status,
       error_code: errorCode,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -668,24 +802,44 @@ export const recordCircuitOpen = async (
     return
   }
 
+  const span = tracer.startSpan('collector.circuit_open')
+  span.setAttributes({
+    'provider.id': providerId,
+    'corridor.id': corridorId ?? 'global',
+    'circuit.reason': reason,
+    'circuit.ttl_ms': ttlMs,
+  })
+
   try {
     const cooldownUntil = ttlMs > 0 ? new Date(Date.now() + ttlMs).toISOString() : null
     const circuitRepo = new CircuitBreakerRepository(pool)
     await circuitRepo.openCircuit(providerId, corridorId, reason, cooldownUntil)
+    try {
+      updateCircuitBreakerState(providerId, corridorId ?? 'global', 'open')
+    } catch {
+      // Silently ignore metrics errors
+    }
     logger.debug('circuit_opened', {
       provider_id: providerId,
       corridor_id: corridorId,
       reason,
       ttl_ms: ttlMs,
     })
-  } catch (error: any) {
+    span.end()
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('record_circuit_open_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
       reason,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
+    if (error instanceof Error) {
+      span.recordException(error)
+    }
+    span.end()
     // Don't throw - allow collector to continue
   }
 }
@@ -705,17 +859,24 @@ export const recordCircuitHalfOpen = async (
     const cooldownUntil = ttlMs > 0 ? new Date(Date.now() + ttlMs).toISOString() : null
     const circuitRepo = new CircuitBreakerRepository(pool)
     await circuitRepo.halfOpenCircuit(providerId, corridorId, cooldownUntil)
+    try {
+      updateCircuitBreakerState(providerId, corridorId ?? 'global', 'half_open')
+    } catch {
+      // Silently ignore metrics errors
+    }
     logger.debug('circuit_half_opened', {
       provider_id: providerId,
       corridor_id: corridorId,
       ttl_ms: ttlMs,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('record_circuit_half_open_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -734,16 +895,23 @@ export const recordCircuitClosed = async (
   try {
     const circuitRepo = new CircuitBreakerRepository(pool)
     await circuitRepo.closeCircuit(providerId, corridorId)
+    try {
+      updateCircuitBreakerState(providerId, corridorId ?? 'global', 'closed')
+    } catch {
+      // Silently ignore metrics errors
+    }
     logger.debug('circuit_closed', {
       provider_id: providerId,
       corridor_id: corridorId,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('record_circuit_closed_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     // Don't throw - allow collector to continue
   }
@@ -790,12 +958,14 @@ export const loadCircuitStateFromDb = async (
     }
 
     return { state: 'closed' as CircuitState, cooldownMs: null }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
     logger.error('load_circuit_state_failed', {
       provider_id: providerId,
       corridor_id: corridorId,
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: errorStack,
     })
     return { state: 'closed' as CircuitState, cooldownMs: null }
   }

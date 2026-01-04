@@ -1,16 +1,22 @@
 import type { FastifyInstance } from 'fastify'
 import { createHash } from 'crypto'
 import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { recordSearch } from '../../../shared/business-metrics'
 import { PopularCorridorRepository } from '../repositories'
+import { getErrorMessage, getErrorStack } from '../types/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
 const popularCorridorRepository = new PopularCorridorRepository(planeAPool)
 const logger = createLogger('plane-a.popular-corridors')
 
 export const popularCorridorsRoutes = async (app: FastifyInstance) => {
-  app.get('/api/popular-corridors', async (request, reply) => {
+  app.get('/popular-corridors', async (request, reply) => {
+    try {
+      recordSearch('popular', 'corridors')
+    } catch {
+      // Silently ignore metrics errors
+    }
     try {
       const corridors = await popularCorridorRepository.listPopularCorridors()
 
@@ -42,16 +48,28 @@ export const popularCorridorsRoutes = async (app: FastifyInstance) => {
         cache_miss: true,
       })
 
+      // Transform to frontend-expected format
+      const transformedCorridors = corridors.map(c => ({
+        route: c.route,
+        count24h: c.count_24h,
+        topProvider: c.top_provider,
+        feeRange: c.fee_range,
+        speedRange: c.speed_range,
+        bestFor: c.best_for,
+      }))
+
       return {
         success: true,
         timestamp: new Date().toISOString(),
-        count: corridors.length,
-        corridors,
+        updatedAt: new Date().toISOString(),
+        count: transformedCorridors.length,
+        data: transformedCorridors,
+        corridors: transformedCorridors, // Keep for backward compatibility
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('popular_corridors_failed', {
-        error: error.message,
-        stack: error.stack,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
       })
       reply.code(500)
       return {

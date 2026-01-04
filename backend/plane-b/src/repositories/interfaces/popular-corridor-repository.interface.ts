@@ -9,7 +9,7 @@ export type PopularCorridorInput = {
 
 export type PopularCorridorAggregationRow = {
   route: string
-  count_24h: number
+  count_24h: number | string
   top_provider: string | null
   fee_range: string | null
   speed_range: string | null

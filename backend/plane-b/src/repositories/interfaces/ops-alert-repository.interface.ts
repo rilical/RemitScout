@@ -1,7 +1,7 @@
 export type OpsAlertInput = {
   providerId: string
-  corridorId: string
-  amountBucket: number
+  corridorId: string | null
+  amountBucket: number | null
   httpStatus: number | null
   blockReason: string | null
   bronzeObjectKey: string | null

@@ -6,7 +6,7 @@ let client: Stripe | null = null
 export const getStripeClient = () => {
   if (!client) {
     client = new Stripe(config.billing.stripe.secretKey, {
-      apiVersion: '2024-06-20',
+      apiVersion: '2025-12-15.clover',
     })
   }
   return client

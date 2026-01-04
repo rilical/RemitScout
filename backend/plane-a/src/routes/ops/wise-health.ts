@@ -4,6 +4,7 @@ import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { getHealthCorridors } from '../../../../shared/health-corridors'
 import { requireAdmin } from '../../plugins/auth-plugin'
+import { getProviderMetadata } from '../../services/provider-metadata'
 import { LatestQuoteRepository, QuoteAttemptRepository } from '../../repositories'
 
 const planeAPool = getPool(config.db.planeAUrl)
@@ -19,7 +20,7 @@ const minutesSince = (value: string | Date | null) => {
 }
 
 export const wiseHealthRoutes = async (app: FastifyInstance) => {
-  app.get('/api/ops/wise/health', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.get('/ops/wise/health', { preHandler: requireAdmin() }, async (request, reply) => {
     const healthCorridors = getHealthCorridors('wise')
     if (!healthCorridors || healthCorridors.length === 0) {
       logger.warn('wise_health_no_corridors')
@@ -33,12 +34,12 @@ export const wiseHealthRoutes = async (app: FastifyInstance) => {
     try {
       const attempts = await quoteAttemptRepository.listLatestAttemptsByProvider(
         'wise',
-        healthCorridors,
+        [...healthCorridors],
       )
 
       const quotes = await latestQuoteRepository.listLatestByProvider(
         'wise',
-        healthCorridors,
+        [...healthCorridors],
       )
 
       const attemptsByCorridor = new Map(
@@ -92,9 +93,17 @@ export const wiseHealthRoutes = async (app: FastifyInstance) => {
         stale_count: staleCorridors.length,
       })
 
+      const metadata = getProviderMetadata('wise')
+      const affiliateUrl = metadata?.affiliateUrl ?? null
+      const affiliate = Boolean(affiliateUrl) || metadata?.isAffiliate || false
+      const outboundUrl = affiliateUrl ?? metadata?.url ?? null
+
       return {
         success: true,
         provider_id: 'wise',
+        affiliate,
+        affiliate_url: affiliateUrl,
+        outbound_url: outboundUrl,
         timestamp: new Date().toISOString(),
         corridors,
         summary: {
@@ -103,10 +112,12 @@ export const wiseHealthRoutes = async (app: FastifyInstance) => {
           fresh_window_minutes: freshWindowMinutes,
         },
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorStack = error instanceof Error ? error.stack : undefined
       logger.error('wise_health_failed', {
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
+        stack: errorStack,
       })
       reply.code(500)
       return {

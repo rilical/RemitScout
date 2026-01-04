@@ -3,8 +3,15 @@ import type { Pool } from 'pg'
 import { createPool } from '../../shared/db'
 import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
+import {
+  deleteMessages,
+  getQueueDepth as getSqsQueueDepth,
+  receiveJsonMessages,
+  sendJsonMessage,
+} from '../../shared/sqs'
 import { getProvider } from './providers'
 import { LatestQuoteRepository, QuoteRefreshRepository } from './repositories'
+import type { QuoteRefreshRequestRecord } from './repositories/interfaces/quote-refresh-repository.interface'
 import { QuoteRefreshStatus, type QuoteRefreshStatusValue } from './repositories/types/quote-refresh-status'
 import { VolatilityService } from './services/volatility-service'
 
@@ -17,6 +24,15 @@ export type QuoteRefreshQueueEvent = {
   durationSeconds: number
   retryCount: number
   skipReason?: string | null
+}
+
+export type QuoteRefreshMessage = {
+  requestId: string
+  providerId: string
+  corridorId: string
+  amountBucket: number
+  payinMethod: string
+  payoutMethod: string
 }
 
 export type QuoteRefreshQueueOptions = {
@@ -58,16 +74,140 @@ const checkQuoteFreshness = async (
 
 const reportQueueDepth = async (
   repo: QuoteRefreshRepository,
+  queueUrl: string | null,
   onQueueDepth?: (depth: number) => void | Promise<void>,
 ) => {
   if (!onQueueDepth) return
-  const depth = await repo.getQueueDepth()
+  const depth = queueUrl ? await getSqsQueueDepth(queueUrl) : await repo.getQueueDepth()
   await Promise.resolve(onQueueDepth(depth))
 }
 
 export const getQueueDepth = async (pool: Pool): Promise<number> => {
+  if (config.queues.quoteRefreshUrl && config.queues.quoteRefreshMode !== 'off') {
+    return getSqsQueueDepth(config.queues.quoteRefreshUrl)
+  }
   const repo = new QuoteRefreshRepository(pool)
   return repo.getQueueDepth()
+}
+
+const shouldDeleteMessage = (
+  status: QuoteRefreshStatusValue,
+  retryCount: number,
+  maxRetries: number,
+): boolean => {
+  if (status !== QuoteRefreshStatus.FAILED) {
+    return true
+  }
+  return retryCount >= maxRetries
+}
+
+const toNumber = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const buildRequestFromMessage = (
+  payload: QuoteRefreshMessage,
+  retryCount: number,
+): QuoteRefreshRequestRecord | null => {
+  if (
+    !payload.requestId ||
+    !payload.providerId ||
+    !payload.corridorId ||
+    typeof payload.amountBucket !== 'number' ||
+    !payload.payinMethod ||
+    !payload.payoutMethod
+  ) {
+    return null
+  }
+
+  return {
+    request_id: payload.requestId,
+    provider_id: payload.providerId,
+    corridor_id: payload.corridorId,
+    amount_bucket: payload.amountBucket,
+    payin_method: payload.payinMethod,
+    payout_method: payload.payoutMethod,
+    retry_count: retryCount,
+  }
+}
+
+const processRequest = async (
+  pool: Pool,
+  repo: QuoteRefreshRepository,
+  request: QuoteRefreshRequestRecord,
+  maxRetries: number,
+  writeDb: boolean,
+): Promise<{ status: QuoteRefreshStatusValue; skipReason: string | null }> => {
+  let status: QuoteRefreshStatusValue = QuoteRefreshStatus.FAILED
+  let skipReason: string | null = null
+
+  try {
+    const freshness = await checkQuoteFreshness(
+      pool,
+      request.corridor_id,
+      request.amount_bucket,
+      request.payin_method,
+      request.payout_method,
+      request.provider_id,
+    )
+
+    if (freshness.exists && freshness.isFresh) {
+      status = QuoteRefreshStatus.SKIPPED
+      skipReason = 'quote_already_fresh'
+      if (writeDb) {
+        await repo.markRequestStatus(request.request_id, status, skipReason)
+      }
+      logger.info('queue_item_skipped', {
+        request_id: request.request_id,
+        reason: skipReason,
+        age_seconds: freshness.ageSeconds,
+      })
+    } else {
+      const provider = getProvider(request.provider_id)
+      if (!provider) {
+        status = QuoteRefreshStatus.FAILED
+        const errorMessage = 'unsupported_provider'
+        if (writeDb) {
+          await repo.markRequestFailed(request.request_id, errorMessage, maxRetries)
+        }
+        logger.warn('queue_item_failed', {
+          request_id: request.request_id,
+          reason: errorMessage,
+          provider_id: request.provider_id,
+        })
+      } else {
+        const ok = await provider.run({
+          pool,
+          collectorType: 'b2c_live',
+          corridors: [request.corridor_id],
+          amountBuckets: [request.amount_bucket],
+          payinMethod: request.payin_method,
+          payoutMethod: request.payout_method,
+        })
+
+        status = ok ? QuoteRefreshStatus.COMPLETED : QuoteRefreshStatus.BLOCKED
+        if (writeDb) {
+          await repo.markRequestStatus(request.request_id, status, ok ? null : 'blocked')
+        }
+        logger.info('queue_item_done', {
+          request_id: request.request_id,
+          status,
+        })
+      }
+    }
+  } catch (error) {
+    status = QuoteRefreshStatus.FAILED
+    if (writeDb) {
+      await repo.markRequestFailed(
+        request.request_id,
+        error instanceof Error ? error.message : String(error),
+      )
+    }
+    logger.error('queue_item_error', { request_id: request.request_id, error })
+  }
+
+  return { status, skipReason }
 }
 
 export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions = {}) => {
@@ -75,85 +215,100 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
   const shouldClose = !options.pool
   const limit = options.limit ?? config.planeB.b2cRefreshBatchLimit
   const maxRetries = options.maxRetries ?? config.planeB.b2cRefreshMaxRetries
+  const queueMode = config.queues.quoteRefreshMode
+  const queueUrl = config.queues.quoteRefreshUrl || null
+  const dlqUrl = config.queues.quoteRefreshDlqUrl || null
+  const useQueue = queueMode === 'queue' && Boolean(queueUrl)
+  const writeDb = queueMode !== 'queue'
   const repo = new QuoteRefreshRepository(pool)
   let processed = 0
 
   try {
-    const requests = await repo.claimPendingRequests(limit, maxRetries)
-    logger.info('queue_claimed', { requested_limit: limit, claimed_count: requests.length })
-    await reportQueueDepth(repo, options.onQueueDepth)
-
-    for (const request of requests) {
-      const requestStart = Date.now()
-      let status: QuoteRefreshStatusValue = QuoteRefreshStatus.FAILED
-      let skipReason: string | null = null
-
-      logger.debug('queue_item_start', {
-        request_id: request.request_id,
-        provider_id: request.provider_id,
-        corridor_id: request.corridor_id,
-        amount_bucket: request.amount_bucket,
-        payin_method: request.payin_method,
-        payout_method: request.payout_method,
-        retry_count: request.retry_count,
+    if (useQueue) {
+      const messages = await receiveJsonMessages<QuoteRefreshMessage>(queueUrl, limit)
+      logger.info('queue_claimed', {
+        requested_limit: limit,
+        claimed_count: messages.length,
+        source: 'sqs',
       })
+      await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
 
-      try {
-        const freshness = await checkQuoteFreshness(
-          pool,
-          request.corridor_id,
-          request.amount_bucket,
-          request.payin_method,
-          request.payout_method,
-          request.provider_id,
+      const deleteHandles: string[] = []
+
+      for (const message of messages) {
+        const retryCount = Math.max(
+          0,
+          toNumber(message.attributes.ApproximateReceiveCount, 1) - 1,
         )
-
-        if (freshness.exists && freshness.isFresh) {
-          status = QuoteRefreshStatus.SKIPPED
-          skipReason = 'quote_already_fresh'
-          await repo.markRequestStatus(request.request_id, status, skipReason)
-          logger.info('queue_item_skipped', {
-            request_id: request.request_id,
-            reason: skipReason,
-            age_seconds: freshness.ageSeconds,
-          })
-        } else {
-          const provider = getProvider(request.provider_id)
-          if (!provider) {
-            status = QuoteRefreshStatus.FAILED
-            const errorMessage = 'unsupported_provider'
-            await repo.markRequestFailed(request.request_id, errorMessage, maxRetries)
-            logger.warn('queue_item_failed', {
-              request_id: request.request_id,
-              reason: errorMessage,
-              provider_id: request.provider_id,
-            })
-          } else {
-            const ok = await provider.run({
-              pool,
-              collectorType: 'b2c_live',
-              corridors: [request.corridor_id],
-              amountBuckets: [request.amount_bucket],
-              payinMethod: request.payin_method,
-              payoutMethod: request.payout_method,
-            })
-
-            status = ok ? QuoteRefreshStatus.COMPLETED : QuoteRefreshStatus.BLOCKED
-            await repo.markRequestStatus(request.request_id, status, ok ? null : 'blocked')
-            logger.info('queue_item_done', {
-              request_id: request.request_id,
-              status,
-            })
-          }
+        if (!message.payload) {
+          logger.warn('queue_item_invalid', { message_id: message.messageId })
+          deleteHandles.push(message.receiptHandle)
+          continue
         }
-      } catch (error) {
-        status = QuoteRefreshStatus.FAILED
-        await repo.markRequestFailed(
-          request.request_id,
-          error instanceof Error ? error.message : String(error),
+
+        const request = buildRequestFromMessage(message.payload, retryCount)
+        if (!request) {
+          logger.warn('queue_item_invalid', {
+            message_id: message.messageId,
+            payload: message.payload,
+          })
+          deleteHandles.push(message.receiptHandle)
+          continue
+        }
+
+        if (retryCount >= maxRetries) {
+          if (writeDb) {
+            await repo.markRequestFailed(request.request_id, 'max_retries_exceeded', retryCount)
+          }
+          logger.warn('queue_item_max_retries', {
+            request_id: request.request_id,
+            retry_count: retryCount,
+          })
+          if (dlqUrl && message.payload) {
+            try {
+              await sendJsonMessage(dlqUrl, {
+                ...message.payload,
+                failedAt: new Date().toISOString(),
+                retryCount,
+                failureReason: 'max_retries_exceeded',
+              })
+              logger.info('queue_item_dlq_sent', {
+                request_id: request.request_id,
+                retry_count: retryCount,
+              })
+            } catch (error) {
+              logger.warn('queue_item_dlq_failed', {
+                request_id: request.request_id,
+                retry_count: retryCount,
+                error: error instanceof Error ? error.message : String(error),
+              })
+            }
+          }
+          deleteHandles.push(message.receiptHandle)
+          continue
+        }
+
+        const requestStart = Date.now()
+
+        logger.debug('queue_item_start', {
+          request_id: request.request_id,
+          provider_id: request.provider_id,
+          corridor_id: request.corridor_id,
+          amount_bucket: request.amount_bucket,
+          payin_method: request.payin_method,
+          payout_method: request.payout_method,
+          retry_count: request.retry_count,
+          source: 'sqs',
+        })
+
+        const { status, skipReason } = await processRequest(
+          pool,
+          repo,
+          request,
+          maxRetries,
+          writeDb,
         )
-        logger.error('queue_item_error', { request_id: request.request_id, error })
-      } finally {
+
         processed += 1
         const durationSeconds = (Date.now() - requestStart) / 1000
         if (options.onRequestFinished) {
@@ -166,7 +321,63 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
             skipReason,
           }))
         }
-        await reportQueueDepth(repo, options.onQueueDepth)
+
+        if (shouldDeleteMessage(status, retryCount, maxRetries)) {
+          deleteHandles.push(message.receiptHandle)
+        } else {
+          logger.info('queue_item_retry_scheduled', {
+            request_id: request.request_id,
+            retry_count: retryCount,
+          })
+        }
+
+        await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
+      }
+
+      await deleteMessages(queueUrl, deleteHandles)
+    } else {
+      if (queueMode === 'queue' && !queueUrl) {
+        logger.warn('queue_mode_without_url', { mode: queueMode })
+      }
+      const requests = await repo.claimPendingRequests(limit, maxRetries)
+      logger.info('queue_claimed', { requested_limit: limit, claimed_count: requests.length })
+      const depthQueueUrl = queueMode === 'shadow' ? queueUrl : null
+      await reportQueueDepth(repo, depthQueueUrl, options.onQueueDepth)
+
+      for (const request of requests) {
+        const requestStart = Date.now()
+
+        logger.debug('queue_item_start', {
+          request_id: request.request_id,
+          provider_id: request.provider_id,
+          corridor_id: request.corridor_id,
+          amount_bucket: request.amount_bucket,
+          payin_method: request.payin_method,
+          payout_method: request.payout_method,
+          retry_count: request.retry_count,
+        })
+
+        const { status, skipReason } = await processRequest(
+          pool,
+          repo,
+          request,
+          maxRetries,
+          writeDb,
+        )
+
+        processed += 1
+        const durationSeconds = (Date.now() - requestStart) / 1000
+        if (options.onRequestFinished) {
+          await Promise.resolve(options.onRequestFinished({
+            requestId: request.request_id,
+            providerId: request.provider_id,
+            status,
+            durationSeconds,
+            retryCount: request.retry_count,
+            skipReason,
+          }))
+        }
+        await reportQueueDepth(repo, depthQueueUrl, options.onQueueDepth)
       }
     }
   } finally {

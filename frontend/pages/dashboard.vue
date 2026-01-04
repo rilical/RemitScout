@@ -904,13 +904,42 @@
               <!-- Recent Activity -->
               <div class="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 class="font-semibold text-slate-900 mb-4">Recent Activity</h3>
-                <div v-if="!compareHydrated || !watchlistHydrated || !alertsHydrated" class="text-sm text-slate-500">
+                <div
+                  v-if="!compareHydrated || !watchlistHydrated || !alertsHydrated || recentSearchesPending"
+                  class="text-sm text-slate-500"
+                >
                   Loading...
                 </div>
-                <div v-else-if="!compareRuns[0] && !watchlistItems[0] && !alertItems[0]" class="text-sm text-slate-500">
+                <div
+                  v-else-if="!compareRuns[0] && !watchlistItems[0] && !alertItems[0] && !recentSearches[0]"
+                  class="text-sm text-slate-500"
+                >
                   No activity yet. Start by comparing rates.
                 </div>
                 <div v-else class="space-y-4">
+                  <div v-if="recentSearches[0]" class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-base">{{ getFlag(recentSearches[0].from) }}</span>
+                        <span class="text-xs text-slate-400">→</span>
+                        <span class="text-base">{{ getFlag(recentSearches[0].to) }}</span>
+                        <NuxtLink
+                          :to="getCorridorUrl(recentSearches[0].from, recentSearches[0].to)"
+                          class="text-sm font-medium text-slate-900 ml-1 truncate hover:text-blue-600"
+                        >
+                          {{ recentSearches[0].from }}/{{ recentSearches[0].to }}
+                        </NuxtLink>
+                      </div>
+                      <p class="text-xs text-slate-500">
+                        Searched {{ formatCurrency(recentSearches[0].amount, recentSearches[0].from) }} • {{ recentSearches[0].method }}
+                      </p>
+                    </div>
+                  </div>
                   <div v-if="compareRuns[0]" class="flex items-start gap-3">
                     <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                       <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1881,6 +1910,15 @@
                   </div>
                 </div>
 
+                <div v-if="exportStatusMessage || exportErrorMessage" class="text-sm">
+                  <p v-if="exportErrorMessage" class="text-red-600">
+                    {{ exportErrorMessage }}
+                  </p>
+                  <p v-else class="text-slate-600">
+                    {{ exportStatusMessage }}
+                  </p>
+                </div>
+
                 <div class="flex gap-3 pt-2">
                   <button
                     type="button"
@@ -1902,6 +1940,85 @@
                     {{ isExporting ? 'Exporting...' : 'Export' }}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delete Account Modal -->
+          <div
+            v-if="showDeleteAccountModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div class="absolute inset-0 bg-black/50" @click="closeDeleteAccountModal" />
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-slate-900">Delete Account</h3>
+                <button
+                  type="button"
+                  class="text-slate-400 hover:text-slate-600"
+                  :disabled="accountApi.deleting"
+                  @click="closeDeleteAccountModal"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="space-y-4 text-sm text-slate-600">
+                <p>
+                  This will permanently delete your account and remove your personal data.
+                  Export your data before continuing if you need a copy.
+                </p>
+                <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+                  This action is irreversible.
+                </div>
+              </div>
+
+              <div class="mt-4 space-y-3">
+                <label class="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    v-model="deleteAccountConfirmed"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  />
+                  I understand this action cannot be undone.
+                </label>
+                <input
+                  v-model="deleteAccountConfirmText"
+                  type="text"
+                  placeholder="Type DELETE to confirm"
+                  class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                />
+                <p v-if="deleteAccountError" class="text-xs text-red-600">
+                  {{ deleteAccountError }}
+                </p>
+                <p v-else-if="deleteAccountWarning" class="text-xs text-amber-700">
+                  {{ deleteAccountWarning }}
+                </p>
+              </div>
+
+              <div class="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  class="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  :disabled="accountApi.deleting"
+                  @click="closeDeleteAccountModal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+                  :disabled="!deleteAccountReady || accountApi.deleting"
+                  @click="handleDeleteAccount"
+                >
+                  <svg v-if="accountApi.deleting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  {{ accountApi.deleting ? 'Deleting...' : 'Delete Account' }}
+                </button>
               </div>
             </div>
           </div>
@@ -2035,7 +2152,27 @@
             <div v-for="provider in opsProviders" :key="provider.id" class="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-b border-slate-100">
                 <div>
-                  <div class="text-sm font-semibold text-slate-900">{{ provider.label }}</div>
+                  <div class="flex items-center gap-2">
+                    <div class="text-sm font-semibold text-slate-900">{{ provider.label }}</div>
+                    <span
+                      v-if="opsState[provider.id]?.affiliate === true"
+                      class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700"
+                    >
+                      Affiliate
+                    </span>
+                    <span
+                      v-else-if="opsState[provider.id]?.affiliate === false"
+                      class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600"
+                    >
+                      No affiliate
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700"
+                    >
+                      Unknown
+                    </span>
+                  </div>
                   <div class="text-xs text-slate-500">Last update: {{ formatOpsTimestamp(opsState[provider.id]?.timestamp) }}</div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -2266,6 +2403,24 @@
                   <h2 class="text-lg font-semibold text-slate-900">Billing</h2>
                   <p class="text-sm text-slate-500">Manage your subscription and payment methods</p>
                 </div>
+                <div
+                  v-if="checkoutNotice === 'success'"
+                  class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+                >
+                  Subscription updated successfully. Your entitlements have been refreshed.
+                </div>
+                <div
+                  v-else-if="checkoutNotice === 'cancel'"
+                  class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700"
+                >
+                  Checkout canceled. No changes were made to your subscription.
+                </div>
+                <div
+                  v-if="billingActionMessage"
+                  class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                  {{ billingActionMessage }}
+                </div>
 
                 <div class="bg-white rounded-xl border border-slate-200 p-6">
                   <div class="flex items-center justify-between mb-6">
@@ -2273,22 +2428,33 @@
                       <h3 class="font-medium text-slate-900">Current Plan</h3>
                       <p class="text-sm text-slate-500">{{ isPlus ? 'Billed monthly' : 'Free forever' }}</p>
                     </div>
-                    <div
-                      class="px-3 py-1.5 rounded-full text-sm font-semibold"
-                      :class="isPlus ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
-                    >
-                      {{ isPlus ? 'Plus' : 'Free' }}
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="px-3 py-1.5 rounded-full text-sm font-semibold"
+                        :class="isPlus ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+                      >
+                        {{ isPlus ? 'Plus' : 'Free' }}
+                      </div>
+                      <div
+                        v-if="isPlus"
+                        class="px-3 py-1.5 rounded-full text-xs font-semibold"
+                        :class="billingStatusBadge.classes"
+                      >
+                        {{ billingStatusBadge.label }}
+                      </div>
                     </div>
                   </div>
 
                   <div class="bg-slate-50 rounded-lg p-4 mb-6">
                     <div class="flex items-baseline justify-between mb-2">
                       <span class="text-sm text-slate-600">{{ isPlus ? 'Next billing date' : 'Plan type' }}</span>
-                      <span class="text-sm font-medium text-slate-900">{{ isPlus ? 'January 20, 2025' : 'No billing' }}</span>
+                      <span class="text-sm font-medium text-slate-900">{{ isPlus ? formatBillingDate(billingSummary?.next_billing_date) : 'No billing' }}</span>
                     </div>
                     <div v-if="isPlus" class="flex items-baseline justify-between">
                       <span class="text-sm text-slate-600">Amount</span>
-                      <span class="text-sm font-medium text-slate-900">$9.99/month</span>
+                      <span class="text-sm font-medium text-slate-900">
+                        {{ formatBillingAmount(billingSummary?.amount, billingSummary?.currency) }}
+                      </span>
                     </div>
                   </div>
 
@@ -2303,12 +2469,14 @@
                         <h4 class="text-sm font-semibold text-slate-900">Upgrade to Plus</h4>
                         <p class="text-xs text-slate-600 mt-0.5">Unlimited alerts, extended history, and data exports</p>
                       </div>
-                      <NuxtLink
-                        to="/plus"
-                        class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                      <button
+                        type="button"
+                        class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-300"
+                        :disabled="billingActions.checkoutLoading"
+                        @click="startCheckout"
                       >
-                        Upgrade
-                      </NuxtLink>
+                        {{ billingActions.checkoutLoading ? 'Starting…' : 'Upgrade' }}
+                      </button>
                     </div>
                   </div>
 
@@ -2316,9 +2484,10 @@
                     <button
                       type="button"
                       @click="openBillingPortal"
-                      class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                      class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                      :disabled="billingActions.portalLoading"
                     >
-                      Manage Subscription
+                      {{ billingActions.portalLoading ? 'Opening…' : 'Manage Subscription' }}
                     </button>
                   </div>
                 </div>
@@ -2328,17 +2497,25 @@
                   <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded flex items-center justify-center">
-                        <span class="text-white text-xs font-bold">VISA</span>
+                        <span class="text-white text-[10px] font-bold uppercase">
+                          {{ billingSummary?.payment_method?.brand || 'Card' }}
+                        </span>
                       </div>
                       <div>
-                        <div class="text-sm font-medium text-slate-900">•••• •••• •••• 4242</div>
-                        <div class="text-xs text-slate-500">Expires 12/26</div>
+                        <div class="text-sm font-medium text-slate-900">
+                          <span v-if="billingSummary?.payment_method?.last4">•••• •••• •••• {{ billingSummary?.payment_method?.last4 }}</span>
+                          <span v-else>No payment method on file</span>
+                        </div>
+                        <div class="text-xs text-slate-500" v-if="billingSummary?.payment_method?.exp_month && billingSummary?.payment_method?.exp_year">
+                          Expires {{ billingSummary?.payment_method?.exp_month }}/{{ billingSummary?.payment_method?.exp_year }}
+                        </div>
                       </div>
                     </div>
                     <button
                       type="button"
                       @click="openBillingPortal"
                       class="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      :disabled="billingActions.portalLoading"
                     >
                       Update
                     </button>
@@ -2347,25 +2524,41 @@
 
                 <div v-if="isPlus" class="bg-white rounded-xl border border-slate-200 p-6">
                   <h3 class="font-medium text-slate-900 mb-4">Billing History</h3>
-                  <div class="space-y-3">
-                    <div class="flex items-center justify-between py-2">
+                  <div v-if="billingHistoryLoading" class="text-sm text-slate-500">
+                    Loading billing history…
+                  </div>
+                  <div v-else-if="billingHistoryError" class="text-sm text-red-600">
+                    {{ billingHistoryError }}
+                  </div>
+                  <div v-else-if="billingHistory.length === 0" class="text-sm text-slate-500">
+                    No invoices yet.
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="(invoice, index) in billingHistory"
+                      :key="invoice.id"
+                      class="flex items-center justify-between py-2"
+                      :class="index > 0 ? 'border-t border-slate-100' : ''"
+                    >
                       <div>
-                        <div class="text-sm font-medium text-slate-900">December 2024</div>
-                        <div class="text-xs text-slate-500">Plus subscription</div>
+                        <div class="text-sm font-medium text-slate-900">
+                          {{ invoice.date ? new Date(invoice.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long' }) : 'Invoice' }}
+                        </div>
+                        <div class="text-xs text-slate-500">{{ invoice.status || 'paid' }}</div>
                       </div>
                       <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-slate-900">$9.99</span>
-                        <button type="button" class="text-sm text-blue-600 hover:text-blue-700">Invoice</button>
-                      </div>
-                    </div>
-                    <div class="flex items-center justify-between py-2 border-t border-slate-100">
-                      <div>
-                        <div class="text-sm font-medium text-slate-900">November 2024</div>
-                        <div class="text-xs text-slate-500">Plus subscription</div>
-                      </div>
-                      <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-slate-900">$9.99</span>
-                        <button type="button" class="text-sm text-blue-600 hover:text-blue-700">Invoice</button>
+                        <span class="text-sm font-medium text-slate-900">
+                          {{ formatBillingAmount(invoice.amount, invoice.currency) }}
+                        </span>
+                        <a
+                          v-if="invoice.invoice_url"
+                          :href="invoice.invoice_url"
+                          target="_blank"
+                          rel="noreferrer"
+                          class="text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          Invoice
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -2504,12 +2697,20 @@
                       />
                     </div>
                   </div>
+                  <div v-if="passwordUpdateError" class="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                    {{ passwordUpdateError }}
+                  </div>
+                  <div v-else-if="passwordUpdateSuccess" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                    Password updated successfully.
+                  </div>
                   <div class="mt-4">
                     <button
                       type="button"
+                      :disabled="passwordUpdateLoading"
+                      @click="handlePasswordUpdate"
                       class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
                     >
-                      Update Password
+                      {{ passwordUpdateLoading ? 'Updating...' : 'Update Password' }}
                     </button>
                   </div>
                 </div>
@@ -2534,25 +2735,63 @@
 
                 <div class="bg-white rounded-xl border border-slate-200 p-6">
                   <h3 class="font-medium text-slate-900 mb-4">Active Sessions</h3>
-                  <div class="space-y-3">
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div v-if="sessionsLoading" class="text-sm text-slate-500">Loading sessions...</div>
+                  <div v-else-if="sessionsError" class="text-sm text-rose-600">{{ sessionsError }}</div>
+                  <div v-else-if="sessions.length === 0" class="text-sm text-slate-500">
+                    No active sessions found.
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="session in sessions"
+                      :key="session.id"
+                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
                       <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div
+                          class="w-8 h-8 rounded-full flex items-center justify-center"
+                          :class="session.is_current ? 'bg-emerald-100' : 'bg-slate-100'"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            :class="session.is_current ? 'text-emerald-600' : 'text-slate-600'"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                         </div>
                         <div>
-                          <div class="text-sm font-medium text-slate-900">Current Session</div>
-                          <div class="text-xs text-slate-500">macOS • Chrome • San Francisco, CA</div>
+                          <div class="text-sm font-medium text-slate-900">
+                            {{ session.is_current ? 'Current Session' : 'Session' }}
+                          </div>
+                          <div class="text-xs text-slate-500">
+                            {{ sessionMeta(session) }} • {{ session.ip_address || 'IP hidden' }}
+                          </div>
                         </div>
                       </div>
-                      <span class="text-xs text-emerald-600 font-medium">Active now</span>
+                      <div class="flex items-center gap-3">
+                        <span
+                          class="text-xs font-medium"
+                          :class="session.is_current ? 'text-emerald-600' : 'text-slate-500'"
+                        >
+                          {{ formatSessionActivity(session.last_activity) }}
+                        </span>
+                        <button
+                          v-if="!session.is_current"
+                          type="button"
+                          class="text-xs font-medium text-slate-500 hover:text-rose-600"
+                          @click="handleRevokeSession(session.session_id)"
+                        >
+                          Revoke
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <button
                     type="button"
                     class="mt-4 text-sm font-medium text-red-600 hover:text-red-700"
+                    @click="handleRevokeAllSessions"
                   >
                     Sign out all other sessions
                   </button>
@@ -2605,10 +2844,17 @@
                       <button
                         type="button"
                         class="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                        @click="requestGdprExport"
                       >
                         Request Download
                       </button>
                     </div>
+                    <p v-if="gdprExportStatus" class="text-xs text-emerald-700">
+                      {{ gdprExportStatus }}
+                    </p>
+                    <p v-else-if="gdprExportError" class="text-xs text-red-600">
+                      {{ gdprExportError }}
+                    </p>
                     <div class="flex items-center justify-between border-t border-slate-100 pt-4">
                       <div>
                         <div class="text-sm font-medium text-slate-900">Delete Account</div>
@@ -2617,6 +2863,7 @@
                       <button
                         type="button"
                         class="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
+                        @click="openDeleteAccountModal"
                       >
                         Delete Account
                       </button>
@@ -2756,6 +3003,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: 'auth' })
+
 import type { AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
@@ -2820,10 +3069,24 @@ const accountSections: { id: AccountSection; label: string; icon: ReturnType<typ
 ]
 
 const route = useRoute()
-const { user, isAuthenticated, updateProfile, updateAvatar } = useAuth()
-const { isPlus, limits } = useEntitlements()
+const { user, isAuthenticated, updatePasswordWithCurrent } = useAuth()
+const {
+  sessions,
+  loading: sessionsLoading,
+  error: sessionsError,
+  fetchSessions,
+  revokeSession,
+  revokeAllSessions,
+} = useSessions()
+const { updateProfile, uploadAvatar, removeAvatar: removeAvatarApi } = useMe()
+const { isPlus, limits, billing, refreshPlan } = useEntitlements()
+const billingActions = useBilling()
+const exportsApi = useExports()
+const dataExportApi = useDataExport()
+const accountApi = useAccount()
 const modal = useSaveAlertModal()
 const { request } = useApi()
+const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: false })
 
 const {
   items: watchlistItems,
@@ -2852,6 +3115,8 @@ const {
   remove: compareRemove,
   reset: compareReset,
 } = useCompareHistory()
+
+const recentSearches = computed(() => recentSearchesData.value?.data ?? [])
 
 const watchlistFindById = (id: string) => watchlistItems.value.find(i => i.id === id) ?? null
 
@@ -2883,17 +3148,22 @@ function setTab(tab: DashboardTab) {
 }
 
 async function openBillingPortal() {
-  try {
-    const response = await request<{ url: string }>('/api/billing/portal', {
-      method: 'GET',
-    })
-    
-    if (response.url) {
-      window.location.href = response.url
-    }
-  } catch (error: any) {
-    console.error('Failed to open billing portal:', error)
-    alert('Unable to open billing portal. Please try again.')
+  billingActionMessage.value = null
+  const result = await billingActions.openBillingPortal()
+  if (!result.ok) {
+    billingActionMessage.value = result.error || 'Unable to open billing portal.'
+  }
+}
+
+async function startCheckout() {
+  billingActionMessage.value = null
+  const result = await billingActions.createCheckoutSession('plus')
+  if (!result.ok || !result.url) {
+    billingActionMessage.value = result.error || 'Unable to start checkout.'
+    return
+  }
+  if (process.client) {
+    window.location.href = result.url
   }
 }
 
@@ -2930,6 +3200,9 @@ type OpsHealthCorridor = {
 type OpsHealthResponse = {
   success: boolean
   provider_id: string
+  affiliate: boolean
+  affiliate_url: string | null
+  outbound_url: string | null
   timestamp: string
   corridors: OpsHealthCorridor[]
   summary: {
@@ -2939,12 +3212,21 @@ type OpsHealthResponse = {
   }
 }
 
+type BillingInvoice = {
+  id: string
+  date: string | null
+  amount: number | null
+  currency: string | null
+  status: string | null
+  invoice_url: string | null
+}
+
 const opsProviders = [
-  { id: 'remitly', label: 'Remitly', endpoint: '/api/ops/remitly/health' },
-  { id: 'westernunion', label: 'Western Union', endpoint: '/api/ops/westernunion/health' },
-  { id: 'worldremit', label: 'WorldRemit', endpoint: '/api/ops/worldremit/health' },
-  { id: 'xe', label: 'XE', endpoint: '/api/ops/xe/health' },
-  { id: 'wise', label: 'Wise', endpoint: '/api/ops/wise/health' },
+  { id: 'remitly', label: 'Remitly', endpoint: '/ops/remitly/health' },
+  { id: 'westernunion', label: 'Western Union', endpoint: '/ops/westernunion/health' },
+  { id: 'worldremit', label: 'WorldRemit', endpoint: '/ops/worldremit/health' },
+  { id: 'xe', label: 'XE', endpoint: '/ops/xe/health' },
+  { id: 'wise', label: 'Wise', endpoint: '/ops/wise/health' },
 ] as const
 
 const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>({
@@ -3221,6 +3503,45 @@ function handleSetAlert() {
 
 // Account section state
 const activeAccountSection = ref<AccountSection>('profile')
+const checkoutNotice = ref<'success' | 'cancel' | null>(null)
+
+const billingHistory = ref<BillingInvoice[]>([])
+const billingHistoryLoading = ref(false)
+const billingHistoryError = ref<string | null>(null)
+const billingActionMessage = ref<string | null>(null)
+
+const billingSummary = computed(() => billing.value)
+const billingStatus = computed(() => billingSummary.value?.status ?? (isPlus.value ? 'active' : 'free'))
+
+const formatBillingDate = (value: string | null | undefined) => {
+  if (!value) return 'Unavailable'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'Unavailable'
+  return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+const formatBillingAmount = (amount: number | null | undefined, currency: string | null | undefined) => {
+  if (amount === null || amount === undefined || !currency) return '—'
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
+  } catch {
+    return `${currency.toUpperCase()} ${amount.toFixed(2)}`
+  }
+}
+
+const billingStatusBadge = computed(() => {
+  const status = billingStatus.value
+  if (status === 'active' || status === 'trialing') {
+    return { label: 'Active', classes: 'bg-emerald-100 text-emerald-700' }
+  }
+  if (status === 'past_due') {
+    return { label: 'Past due', classes: 'bg-amber-100 text-amber-700' }
+  }
+  if (status === 'canceled' || status === 'incomplete_expired') {
+    return { label: 'Canceled', classes: 'bg-slate-100 text-slate-600' }
+  }
+  return { label: status ? status.replace(/_/g, ' ') : 'Free', classes: 'bg-slate-100 text-slate-600' }
+})
 
 const notificationSettings = ref({
   rateAlerts: true,
@@ -3236,6 +3557,9 @@ const securitySettings = ref({
   newPassword: '',
   confirmPassword: '',
 })
+const passwordUpdateLoading = ref(false)
+const passwordUpdateError = ref<string | null>(null)
+const passwordUpdateSuccess = ref(false)
 
 const privacySettings = ref({
   analytics: true,
@@ -3250,31 +3574,189 @@ watch(() => user.value?.name, (name) => {
   if (name) profileName.value = name
 }, { immediate: true })
 
-function handleAvatarUpload(event: Event) {
+watch(
+  () => route.query.checkout,
+  (value) => {
+    void handleCheckoutNotice(value)
+  },
+  { immediate: true },
+)
+
+watch(
+  () => activeAccountSection.value,
+  (section) => {
+    if (section === 'billing' && isPlus.value) {
+      void fetchBillingHistory()
+    }
+    if (section === 'security' && isAuthenticated.value) {
+      void fetchSessions()
+    }
+  },
+)
+
+watch(
+  () => isPlus.value,
+  (value) => {
+    if (value && activeAccountSection.value === 'billing') {
+      void fetchBillingHistory(true)
+    }
+  },
+)
+
+async function handleAvatarUpload(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const dataUrl = e.target?.result as string
-    updateAvatar(dataUrl)
+  try {
+    await uploadAvatar(file)
+  } catch (error) {
+    console.warn('Avatar upload failed', error)
+  } finally {
+    input.value = ''
   }
-  reader.readAsDataURL(file)
 }
 
-function removeAvatar() {
-  updateAvatar(undefined)
+async function removeAvatar() {
+  try {
+    await removeAvatarApi()
+  } catch (error) {
+    console.warn('Avatar removal failed', error)
+  }
 }
 
-function saveProfile() {
-  if (profileName.value.trim()) {
-    updateProfile({ name: profileName.value.trim() })
+async function saveProfile() {
+  const trimmed = profileName.value.trim()
+  if (!trimmed) return
+
+  try {
+    await updateProfile({ name: trimmed })
     profileSaved.value = true
     setTimeout(() => {
       profileSaved.value = false
     }, 3000)
+  } catch (error) {
+    console.warn('Profile update failed', error)
   }
+}
+
+async function handlePasswordUpdate() {
+  passwordUpdateError.value = null
+  passwordUpdateSuccess.value = false
+
+  const currentPassword = securitySettings.value.currentPassword.trim()
+  const newPassword = securitySettings.value.newPassword.trim()
+  const confirmPassword = securitySettings.value.confirmPassword.trim()
+
+  if (!currentPassword) {
+    passwordUpdateError.value = 'Enter your current password.'
+    return
+  }
+
+  if (newPassword.length < 8) {
+    passwordUpdateError.value = 'New password must be at least 8 characters.'
+    return
+  }
+
+  if (newPassword !== confirmPassword) {
+    passwordUpdateError.value = 'Passwords do not match.'
+    return
+  }
+
+  passwordUpdateLoading.value = true
+  try {
+    const result = await updatePasswordWithCurrent(currentPassword, newPassword)
+    if (!result.ok) {
+      passwordUpdateError.value = result.error || 'Unable to update password.'
+      return
+    }
+    securitySettings.value = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    }
+    passwordUpdateSuccess.value = true
+    setTimeout(() => {
+      passwordUpdateSuccess.value = false
+    }, 3000)
+  } catch (error) {
+    passwordUpdateError.value =
+      error instanceof Error ? error.message : 'Unable to update password.'
+  } finally {
+    passwordUpdateLoading.value = false
+  }
+}
+
+const formatSessionActivity = (timestamp: string) => {
+  const parsed = new Date(timestamp)
+  if (Number.isNaN(parsed.getTime())) return 'Recently active'
+  const diffMs = Date.now() - parsed.getTime()
+  const diffMinutes = Math.floor(diffMs / 60000)
+  if (diffMinutes < 5) return 'Active now'
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours} hours ago`
+  return parsed.toLocaleDateString()
+}
+
+const sessionMeta = (session: { device_type: string | null; location: string | null }) => {
+  const device = session.device_type
+    ? session.device_type.charAt(0).toUpperCase() + session.device_type.slice(1)
+    : 'Unknown device'
+  const location = session.location || 'Unknown location'
+  return `${device} • ${location}`
+}
+
+const handleRevokeSession = async (sessionId: string) => {
+  try {
+    await revokeSession(sessionId)
+  } catch (error) {
+    console.warn('Failed to revoke session', error)
+  }
+}
+
+const handleRevokeAllSessions = async () => {
+  const current = sessions.value.find((session) => session.is_current)
+  try {
+    await revokeAllSessions(current?.session_id)
+  } catch (error) {
+    console.warn('Failed to revoke sessions', error)
+  }
+}
+
+const fetchBillingHistory = async (force = false) => {
+  if (!isPlus.value) return
+  if (billingHistoryLoading.value) return
+  if (billingHistory.value.length > 0 && !force) return
+
+  billingHistoryLoading.value = true
+  billingHistoryError.value = null
+
+  try {
+    const response = await request<{ invoices: BillingInvoice[] }>('/billing/history')
+    billingHistory.value = Array.isArray(response.invoices) ? response.invoices : []
+  } catch (error: any) {
+    billingHistoryError.value = error?.message || 'Unable to load billing history.'
+  } finally {
+    billingHistoryLoading.value = false
+  }
+}
+
+const handleCheckoutNotice = async (value: unknown) => {
+  if (value === 'success') {
+    checkoutNotice.value = 'success'
+    await refreshPlan()
+    await fetchBillingHistory(true)
+  } else if (value === 'cancel') {
+    checkoutNotice.value = 'cancel'
+  } else {
+    checkoutNotice.value = null
+    return
+  }
+
+  const nextQuery = { ...route.query } as Record<string, unknown>
+  delete nextQuery.checkout
+  void navigateTo({ path: route.path, query: nextQuery, replace: true })
 }
 
 // Export functionality
@@ -3295,6 +3777,57 @@ const exportSettings = ref({
   format: 'csv' as 'csv' | 'pdf',
 })
 
+const exportStatusMessage = ref<string | null>(null)
+const exportErrorMessage = ref<string | null>(null)
+const exportJobId = ref<string | null>(null)
+let exportPollTimer: ReturnType<typeof setInterval> | null = null
+
+const clearExportPolling = () => {
+  if (exportPollTimer) {
+    clearInterval(exportPollTimer)
+    exportPollTimer = null
+  }
+}
+
+onBeforeUnmount(() => {
+  clearExportPolling()
+})
+
+const triggerDownload = (url: string) => {
+  if (import.meta.client) {
+    window.open(url, '_blank', 'noopener')
+  }
+}
+
+const pollExportStatus = async (jobId: string) => {
+  clearExportPolling()
+  exportPollTimer = setInterval(async () => {
+    try {
+      const response = await exportsApi.getExportStatus(jobId)
+      const status = response.job.status
+      if (status === 'failed') {
+        exportErrorMessage.value = response.job.error || 'Export failed. Please try again.'
+        isExporting.value = false
+        clearExportPolling()
+        return
+      }
+      if (status === 'done') {
+        const download = await exportsApi.getExportDownloadUrl(jobId)
+        exportStatusMessage.value = 'Export ready. Downloading...'
+        triggerDownload(download.url)
+        isExporting.value = false
+        clearExportPolling()
+      } else {
+        exportStatusMessage.value = 'Export in progress...'
+      }
+    } catch (error: any) {
+      exportErrorMessage.value = error?.message || 'Failed to check export status.'
+      isExporting.value = false
+      clearExportPolling()
+    }
+  }, 2000)
+}
+
 function setExportDateRange(range: '7d' | '30d' | '90d' | 'all') {
   const today = new Date()
   exportSettings.value.dateTo = today.toISOString().split('T')[0]
@@ -3312,24 +3845,90 @@ function setExportDateRange(range: '7d' | '30d' | '90d' | 'all') {
 }
 
 async function handleExport() {
+  exportErrorMessage.value = null
+  exportStatusMessage.value = null
   isExporting.value = true
-  
-  // Simulate export process
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  // In production, this would trigger actual file download
-  const filename = `remitscout-${exportSettings.value.dataType}-${exportSettings.value.dateFrom}-to-${exportSettings.value.dateTo}.${exportSettings.value.format}`
-  console.log('Exporting:', filename, exportSettings.value)
-  
-  isExporting.value = false
-  showExportModal.value = false
-  
-  // Show success message (in production, trigger download)
-  alert(`Export started: ${filename}`)
+
+  try {
+    const response = await exportsApi.createExport({
+      dataType: exportSettings.value.dataType,
+      format: exportSettings.value.format,
+      dateFrom: exportSettings.value.dateFrom,
+      dateTo: exportSettings.value.dateTo,
+      itemIds: selectedExportItems.value.length > 0 ? selectedExportItems.value : undefined,
+    })
+
+    exportJobId.value = response.job.id
+    exportStatusMessage.value = 'Export queued. We will start processing shortly.'
+    await pollExportStatus(response.job.id)
+  } catch (error: any) {
+    exportErrorMessage.value = error?.message || 'Failed to start export.'
+    isExporting.value = false
+  }
 }
 
 function handleExportSelected() {
   showExportModal.value = true
+}
+
+const gdprExportStatus = ref<string | null>(null)
+const gdprExportError = ref<string | null>(null)
+const showDeleteAccountModal = ref(false)
+const deleteAccountConfirmText = ref('')
+const deleteAccountConfirmed = ref(false)
+const deleteAccountError = ref<string | null>(null)
+const deleteAccountWarning = ref<string | null>(null)
+
+const deleteAccountReady = computed(() => {
+  return deleteAccountConfirmed.value && deleteAccountConfirmText.value.trim().toUpperCase() === 'DELETE'
+})
+
+const requestGdprExport = async () => {
+  gdprExportStatus.value = null
+  gdprExportError.value = null
+  try {
+    const response = await dataExportApi.requestExport()
+    gdprExportStatus.value = `Export requested (job ${response.job.id}). We'll notify you when it's ready.`
+  } catch (error: any) {
+    gdprExportError.value = error?.message || 'Failed to request GDPR export.'
+  }
+}
+
+const openDeleteAccountModal = () => {
+  showDeleteAccountModal.value = true
+  deleteAccountConfirmText.value = ''
+  deleteAccountConfirmed.value = false
+  deleteAccountError.value = null
+  deleteAccountWarning.value = null
+}
+
+const closeDeleteAccountModal = () => {
+  if (accountApi.deleting.value) return
+  showDeleteAccountModal.value = false
+  deleteAccountConfirmText.value = ''
+  deleteAccountConfirmed.value = false
+  deleteAccountError.value = null
+  deleteAccountWarning.value = null
+}
+
+const handleDeleteAccount = async () => {
+  deleteAccountError.value = null
+  deleteAccountWarning.value = null
+
+  if (!deleteAccountReady.value) {
+    deleteAccountError.value = 'Please confirm account deletion.'
+    return
+  }
+
+  const result = await accountApi.deleteAccount()
+  if (!result.ok) {
+    deleteAccountError.value = result.error || 'Account deletion failed.'
+    return
+  }
+
+  if (result.result?.warnings?.length) {
+    deleteAccountWarning.value = result.result.warnings.join(', ')
+  }
 }
 
 // Graph data

@@ -25,6 +25,17 @@ describe('createScheduler', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockBucketInstances.clear()
+    vi.mocked(RedisTokenBucket).mockImplementation((key: string) => {
+      if (!mockBucketInstances.has(key)) {
+        mockBucketInstances.set(key, {
+          key,
+          updateRpm: vi.fn(),
+          updateUseRedis: vi.fn(),
+          acquireToken: vi.fn().mockResolvedValue(undefined),
+        })
+      }
+      return mockBucketInstances.get(key)
+    })
   })
 
   describe('initialization', () => {
@@ -470,4 +481,3 @@ describe('createScheduler', () => {
     })
   })
 })
-

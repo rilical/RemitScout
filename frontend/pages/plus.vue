@@ -212,9 +212,10 @@
             <button
               v-else-if="!isPlus"
               @click="handleUpgrade"
-              class="w-full py-3.5 bg-white text-blue-600 hover:bg-blue-50 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] mt-auto"
+              class="w-full py-3.5 bg-white text-blue-600 hover:bg-blue-50 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] mt-auto disabled:cursor-not-allowed disabled:opacity-70"
+              :disabled="billingActions.checkoutLoading || billingActions.portalLoading"
             >
-              Upgrade to Plus
+              {{ billingActions.checkoutLoading ? 'Starting…' : 'Upgrade to Plus' }}
             </button>
             <div v-else class="w-full py-3.5 bg-white/20 border-2 border-white/40 text-white rounded-xl font-bold text-center mt-auto">
               Current Plan
@@ -571,28 +572,29 @@
 <script setup lang="ts">
 const { isAuthenticated } = useAuth()
 const { plan, isPlus } = useEntitlements()
-const { request } = useApi()
+const billingActions = useBilling()
 
 async function handleUpgrade() {
-  try {
-    const meResponse = await request<{ plan?: { stripe_customer_id?: string } }>('/api/me', { method: 'GET' })
-    const hasCustomer = meResponse?.plan?.stripe_customer_id
-    
-    if (hasCustomer) {
-      const portalResponse = await request<{ url: string }>('/api/billing/portal', {
-        method: 'GET',
-      })
-      
-      if (portalResponse.url) {
-        window.location.href = portalResponse.url
-        return
-      }
-    }
-  } catch (error) {
-    console.warn('Could not check customer status, using checkout:', error)
+  if (!isAuthenticated.value) {
+    await navigateTo({ path: '/sign-in', query: { redirect: '/plus' } })
+    return
   }
-  
-  navigateTo('/plus/checkout')
+
+  if (isPlus.value) {
+    const portalResult = await billingActions.openBillingPortal()
+    if (!portalResult.ok) {
+      alert(portalResult.error || 'Unable to open billing portal.')
+    }
+    return
+  }
+
+  const checkoutResult = await billingActions.createCheckoutSession('plus')
+  if (checkoutResult.ok && checkoutResult.url && process.client) {
+    window.location.href = checkoutResult.url
+    return
+  }
+
+  alert(checkoutResult.error || 'Unable to start checkout.')
 }
 
 useHead({

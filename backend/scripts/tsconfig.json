@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "../dist/scripts"
+  },
+  "include": ["**/*.ts"],
+  "references": [
+    { "path": "../plane-a" },
+    { "path": "../shared" },
+    { "path": "../plane-b" },
+    { "path": "../plane-c" }
+  ]
+}

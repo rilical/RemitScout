@@ -41,11 +41,18 @@
 
         <!-- Sign In Form -->
         <div v-else>
+          <div
+            v-if="errorMessage"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {{ errorMessage }}
+          </div>
           <!-- Social Login Buttons -->
           <div class="space-y-3">
             <button
               type="button"
               class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+              :disabled="loading"
               @click="handleSocialSignIn('google')"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -60,6 +67,7 @@
             <button
               type="button"
               class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-900 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
+              :disabled="loading"
               @click="handleSocialSignIn('apple')"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -144,10 +152,10 @@
 
             <button
               type="submit"
-              :disabled="!captchaChecked"
+              :disabled="!captchaChecked || loading"
               class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
             >
-              Sign in
+              {{ loading ? 'Signing in…' : 'Sign in' }}
             </button>
           </form>
         </div>
@@ -182,29 +190,45 @@
 </template>
 
 <script setup lang="ts">
-const { user, isLoggedIn, signIn, signOut } = useAuth()
+const { user, isLoggedIn, signIn, signOut, signInWithOAuth } = useAuth()
+const route = useRoute()
 
 const email = ref('')
 const password = ref('')
 const captchaChecked = ref(false)
+const loading = ref(false)
+const errorMessage = ref<string | null>(null)
 
-function handleSignIn() {
-  signIn(email.value, password.value)
-  navigateTo('/dashboard')
+async function handleSignIn() {
+  errorMessage.value = null
+  loading.value = true
+
+  const result = await signIn(email.value, password.value)
+  loading.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Sign in failed.'
+    return
+  }
+
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+  await navigateTo(redirect)
 }
 
-function handleSignOut() {
-  signOut()
+async function handleSignOut() {
+  await signOut()
 }
 
-function handleSocialSignIn(provider: 'google' | 'apple') {
-  // TODO: Implement Supabase OAuth
-  // const supabase = useSupabaseClient()
-  // await supabase.auth.signInWithOAuth({ provider })
+async function handleSocialSignIn(provider: 'google' | 'apple') {
+  errorMessage.value = null
+  loading.value = true
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+  const result = await signInWithOAuth(provider, redirect)
+  loading.value = false
 
-  console.log(`Sign in with ${provider} - Supabase integration pending`)
-  // Placeholder: For now, just show an alert
-  alert(`${provider} sign-in coming soon! Connect Supabase to enable social authentication.`)
+  if (!result.ok) {
+    errorMessage.value = result.error || `Unable to sign in with ${provider}.`
+  }
 }
 
 useHead({

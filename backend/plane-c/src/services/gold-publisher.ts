@@ -177,39 +177,69 @@ export class GoldPublisher {
       errors: 0,
     }
 
-    for (const corridorId of corridors) {
-      try {
-        const aggregatedData = await this.aggregateCorridorData(corridorId)
+    // Process corridors in parallel batches of 10
+    const batchSize = 10
+    for (let i = 0; i < corridors.length; i += batchSize) {
+      const batch = corridors.slice(i, i + batchSize)
+      const batchResults = await Promise.allSettled(
+        batch.map(async (corridorId) => {
+          try {
+            const aggregatedData = await this.aggregateCorridorData(corridorId)
 
-        if (!aggregatedData) {
-          continue
-        }
+            if (!aggregatedData) {
+              return { published: false, withheld: false }
+            }
 
-        const gateResult = this.applyPublisherGates(aggregatedData)
+            const gateResult = this.applyPublisherGates(aggregatedData)
 
-        if (gateResult.allowed) {
-          await this.publishToGoldExport(aggregatedData)
-          result.published++
-          logger.info('corridor_published', {
-            corridor_id: corridorId,
-            provider_count: aggregatedData.providerCount,
-            contributor_count: aggregatedData.contributorCount,
-          })
+            if (gateResult.allowed) {
+              await this.publishToGoldExport(aggregatedData)
+              logger.info('corridor_published', {
+                corridor_id: corridorId,
+                provider_count: aggregatedData.providerCount,
+                contributor_count: aggregatedData.contributorCount,
+              })
+              return { published: true, withheld: false }
+            } else {
+              logger.info('corridor_withheld', {
+                corridor_id: corridorId,
+                reasons: gateResult.reasons,
+                provider_count: aggregatedData.providerCount,
+                contributor_count: aggregatedData.contributorCount,
+              })
+              return { published: false, withheld: true }
+            }
+          } catch (error) {
+            logger.error('corridor_processing_error', {
+              corridor_id: corridorId,
+              error: error instanceof Error ? error.message : String(error),
+            })
+            throw error
+          }
+        }),
+      )
+
+      // Aggregate batch results
+      for (const batchResult of batchResults) {
+        if (batchResult.status === 'fulfilled') {
+          if (batchResult.value.published) {
+            result.published++
+          } else if (batchResult.value.withheld) {
+            result.withheld++
+          }
         } else {
-          result.withheld++
-          logger.info('corridor_withheld', {
-            corridor_id: corridorId,
-            reasons: gateResult.reasons,
-            provider_count: aggregatedData.providerCount,
-            contributor_count: aggregatedData.contributorCount,
-          })
+          result.errors++
         }
-      } catch (error) {
-        result.errors++
-        logger.error('corridor_processing_error', {
-          corridor_id: corridorId,
-          error: error instanceof Error ? error.message : String(error),
-        })
+      }
+
+      // Log connection pool stats periodically
+      if (i % (batchSize * 5) === 0) {
+        const poolStats = {
+          total: this.pool.totalCount,
+          idle: this.pool.idleCount,
+          waiting: this.pool.waitingCount,
+        }
+        logger.debug('publisher_pool_stats', poolStats)
       }
     }
 

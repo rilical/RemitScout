@@ -28,7 +28,7 @@ const minAgeSeconds = toNumber(process.env.B2C_RETRY_MIN_AGE_SECONDS, 300)
 const logger = createLogger('script.b2c-retry-failed')
 const lockTtlSeconds = 300
 
-const retryFailed = async (): Promise<number> => {
+export const runB2cRetryFailed = async (): Promise<number> => {
   const lock = new WorkerLock('b2c-retry-failed', lockTtlSeconds)
   const acquired = await lock.acquire()
   if (!acquired) {
@@ -52,14 +52,18 @@ const retryFailed = async (): Promise<number> => {
   }
 }
 
-retryFailed()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('retry_failed', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  runB2cRetryFailed()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('retry_failed', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}
+
+

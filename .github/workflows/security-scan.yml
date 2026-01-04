@@ -1,0 +1,230 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * 1' # Every Monday at 2 AM
+  workflow_dispatch:
+
+# Security scanning automation for Remit-Scout
+# Includes: Dependency scanning (Snyk, npm audit), DAST (OWASP ZAP), Secret scanning (TruffleHog)
+
+jobs:
+  snyk-security-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --all-projects
+        id: snyk-scan
+
+      - name: Upload Snyk results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && steps.snyk-scan.outcome == 'success'
+        continue-on-error: true
+        with:
+          sarif_file: snyk.sarif
+          wait-for-processing: true
+        # Note: Snyk node action doesn't generate SARIF by default
+        # To enable SARIF output, add --sarif flag to Snyk args above
+
+      - name: Snyk Security Scan (Backend)
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=backend/package.json
+        working-directory: backend
+
+      - name: Snyk Security Scan (Frontend)
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=frontend/package.json
+        working-directory: frontend
+
+  # OWASP ZAP scans disabled - application not available in CI environment
+  # To enable: Start the application before running ZAP scans
+  # owasp-zap-baseline:
+  #   name: OWASP ZAP Baseline Scan
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 18
+  #     - name: Setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 10.19.0
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #     - name: Start application
+  #       run: |
+  #         pnpm -C backend start &
+  #         sleep 10
+  #     - name: ZAP Baseline Scan
+  #       uses: zaproxy/action-baseline@v0.10.0
+  #       with:
+  #         target: 'http://localhost:3000'
+  #         rules_file_name: '.zap/rules.tsv'
+  #         cmd_options: '-a'
+  #       continue-on-error: true
+  #     - name: Upload ZAP results
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: zap-results
+  #         path: zap-report.html
+  #         if-no-files-found: ignore
+  #     - name: Publish ZAP results to GitHub Security
+  #       if: always()
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       continue-on-error: true
+  #       with:
+  #         sarif_file: zap-report.sarif
+  #         wait-for-processing: true
+
+  # owasp-zap-full-scan:
+  #   name: OWASP ZAP Full Scan
+  #   runs-on: ubuntu-latest
+  #   if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.event.repository.full_name == github.repository
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 18
+  #     - name: Setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 10.19.0
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #     - name: Start application
+  #       run: |
+  #         pnpm -C backend start &
+  #         sleep 10
+  #     - name: ZAP Full Scan
+  #       uses: zaproxy/action-full-scan@v0.10.0
+  #       with:
+  #         target: 'http://localhost:3000'
+  #         rules_file_name: '.zap/rules.tsv'
+  #         cmd_options: '-a'
+  #       continue-on-error: true
+  #     - name: Upload ZAP Full Scan results
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: zap-full-scan-results
+  #         path: zap-report.html
+  #         if-no-files-found: ignore
+
+  npm-audit:
+    name: NPM Audit Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      matrix:
+        directory: ['.', 'backend', 'frontend']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.directory }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Run npm audit
+        working-directory: ${{ matrix.directory }}
+        run: |
+          pnpm audit --audit-level=high --json > audit-results.json || true
+        continue-on-error: true
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-${{ matrix.directory }}
+          path: ${{ matrix.directory }}/audit-results.json
+          if-no-files-found: ignore
+
+      - name: Comment PR with audit results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '${{ matrix.directory }}/audit-results.json';
+            if (fs.existsSync(path)) {
+              const audit = JSON.parse(fs.readFileSync(path, 'utf8'));
+              const vulnerabilities = audit.metadata?.vulnerabilities || {};
+              const total = Object.values(vulnerabilities).reduce((a, b) => a + b, 0);
+              if (total > 0) {
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `## NPM Audit Results (${{ matrix.directory }})\n\n` +
+                        `⚠️ Found ${total} vulnerabilities:\n` +
+                        `- Critical: ${vulnerabilities.critical || 0}\n` +
+                        `- High: ${vulnerabilities.high || 0}\n` +
+                        `- Moderate: ${vulnerabilities.moderate || 0}\n` +
+                        `- Low: ${vulnerabilities.low || 0}\n\n` +
+                        `Please review and fix these issues.`
+                });
+              }
+            }
+

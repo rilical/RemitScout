@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto'
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 const levelRank: Record<LogLevel, number> = {
@@ -46,8 +48,49 @@ const normalizeContext = (context?: Record<string, unknown>) => {
   return normalized
 }
 
-export const createLogger = (component: string) => {
+/**
+ * Gets AWS context for logging.
+ */
+const getAwsLogContext = (): Record<string, unknown> => {
+  const context: Record<string, unknown> = {}
+
+  // Lambda context
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    context.lambda_function_name = process.env.AWS_LAMBDA_FUNCTION_NAME
+    context.lambda_function_version = process.env.AWS_LAMBDA_FUNCTION_VERSION
+    context.lambda_request_id =
+      process.env.AWS_REQUEST_ID || process.env.AWS_LAMBDA_REQUEST_ID
+  }
+
+  // ECS context
+  if (process.env.ECS_TASK_ARN) {
+    context.ecs_task_arn = process.env.ECS_TASK_ARN
+    const arnParts = process.env.ECS_TASK_ARN.split('/')
+    if (arnParts.length > 0) {
+      context.ecs_task_id = arnParts[arnParts.length - 1]
+    }
+  }
+  if (process.env.ECS_CONTAINER_NAME) {
+    context.ecs_container_name = process.env.ECS_CONTAINER_NAME
+  }
+
+  // AWS general
+  if (process.env.AWS_REGION) {
+    context.aws_region = process.env.AWS_REGION
+  }
+
+  // Correlation ID from header (if available in request context)
+  if (process.env.X_CORRELATION_ID) {
+    context.correlation_id = process.env.X_CORRELATION_ID
+  }
+
+  return context
+}
+
+export const createLogger = (component: string, traceId?: string) => {
   const currentLevel = resolveLogLevel()
+  const resolvedTraceId = traceId || randomUUID()
+  const awsContext = getAwsLogContext()
 
   const emit = (level: LogLevel, event: string, context?: Record<string, unknown>) => {
     if (levelRank[level] < levelRank[currentLevel]) return
@@ -56,6 +99,8 @@ export const createLogger = (component: string) => {
       time: new Date().toISOString(),
       component,
       event,
+      trace_id: resolvedTraceId,
+      ...awsContext,
       ...normalizeContext(context),
     }
     if (level === 'error') {

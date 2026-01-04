@@ -290,6 +290,7 @@
                   <div class="space-y-2">
                     <button
                       type="button"
+                      @click="handleProviderOutbound(row)"
                       :class="[
                         'w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-all',
                         index === 0
@@ -674,11 +675,11 @@ import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
 import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { useTelemetry } from '~/composables/useTelemetry'
 
 const { isPlus } = useEntitlements()
 const { attachRatings, formatMoney, formatRate, getRelativeTime, useProviders } = useRemittanceApi()
-
-defineRouteRules({ swr: 60 })
+const { trackClick } = useTelemetry()
 
 type ProviderHighlight = {
   label: string
@@ -706,6 +707,11 @@ type TableRow = {
   badge?: string
   warning?: string
   isAffiliate?: boolean
+  providerId?: string
+  outboundUrl?: string | null
+  affiliateUrl?: string | null
+  fxRate?: number
+  feeAmount?: number
 }
 
 type Insight = {
@@ -1013,6 +1019,7 @@ const apiRows = computed<TableRow[]>(() => {
 
     return {
       provider: quote.name,
+      providerId: quote.id,
       score,
       recipientGets: `${quote.recipientGets.toLocaleString()} ${toCurrencyCode.value}`,
       delta: `${quote.marginPct.toFixed(2)}% off mid-market`,
@@ -1024,7 +1031,11 @@ const apiRows = computed<TableRow[]>(() => {
       payOut: methodsLabel,
       notes: quote.whyThisRanking || quote.bestFor || '',
       badge: index === 0 ? 'Best Deal' : undefined,
-      isAffiliate: true,
+      isAffiliate: quote.isAffiliate ?? Boolean(quote.affiliateUrl),
+      affiliateUrl: quote.affiliateUrl ?? null,
+      outboundUrl: quote.outboundUrl ?? quote.affiliateUrl ?? null,
+      fxRate: quote.fxRate,
+      feeAmount: quote.fee,
     }
   })
 })
@@ -1089,6 +1100,24 @@ const seoDescription = computed(() => {
   const rateLine = bestRateLabel.value ? ` Best rate: ${bestRateLabel.value}.` : ''
   return `Compare ${providerCount.value} providers${providerLine}.${rateLine} Updated ${seoUpdatedLabel.value}.`
 })
+
+const handleProviderOutbound = (row: TableRow) => {
+  const targetUrl = row.outboundUrl ?? row.affiliateUrl
+  if (!targetUrl || typeof window === 'undefined') return
+
+  if (row.providerId) {
+    void trackClick({
+      provider_id: row.providerId,
+      corridor_id: quotesData.value?.corridor || corridorKey.value,
+      target_url: targetUrl,
+      quoted_rate: row.fxRate,
+      quoted_fee: row.feeAmount,
+      is_affiliate: row.isAffiliate ?? false,
+    })
+  }
+
+  window.open(targetUrl, '_blank', 'noopener,noreferrer')
+}
 
 setSeo({
   title: seoTitle.value,

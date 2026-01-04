@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getCountryByCode } from '~/utils/countries-currencies'
+import { useApi } from '~/composables/useApi'
 
 export interface CompareFormState {
   from: string
@@ -25,9 +27,50 @@ const globalForm = ref<CompareFormState>({
   toCurrency: '',
 })
 
+let geoDefaultPromise: Promise<void> | null = null
+
 export function useCompareForm() {
   const form = globalForm
   const validationError = ref<string>('')
+  const { request } = useApi()
+
+  const ensureGeoDefault = () => {
+    if (!import.meta.client) return
+    if (geoDefaultPromise) return
+
+    geoDefaultPromise = (async () => {
+      const current = form.value
+      const isDefaultFrom =
+        !current.from || (current.from === 'US' && current.fromCurrency === 'USD')
+
+      if (!isDefaultFrom) {
+        return
+      }
+
+      try {
+        const data = await request<{ countryCode?: string, country_code?: string }>('/geo', {
+          timeoutMs: 3000,
+          retries: 0,
+        })
+        const rawCode = data.countryCode || data.country_code
+        if (!rawCode) {
+          return
+        }
+
+        const country = getCountryByCode(rawCode.toUpperCase())
+        if (!country) {
+          return
+        }
+
+        form.value.from = country.code
+        form.value.fromCurrency = country.currency
+      } catch {
+        // Keep default values when geo lookup fails.
+      }
+    })()
+  }
+
+  ensureGeoDefault()
 
   const isValid = computed(() => {
     return (

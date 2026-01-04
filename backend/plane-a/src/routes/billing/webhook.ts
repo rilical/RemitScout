@@ -14,7 +14,7 @@ const hashPayload = (payload: Buffer) => {
 }
 
 const extractUserId = async (event: Stripe.Event, userPlanRepo: UserPlanRepository) => {
-  const dataObject = event.data.object as any
+  const dataObject = event.data.object as { metadata?: { user_id?: string }; customer?: string }
   const metadataUserId = dataObject?.metadata?.user_id
   if (metadataUserId) {
     return String(metadataUserId)
@@ -35,7 +35,7 @@ const toUnixTimestamp = (value: unknown) => {
 }
 
 export const webhookRoutes = async (app: FastifyInstance) => {
-  app.post('/api/billing/webhook', async (request, reply) => {
+  app.post('/billing/webhook', async (request, reply) => {
     if (!config.billing.stripe.webhookSecret || !config.billing.stripe.secretKey) {
       reply.code(500)
       return { error: 'billing_not_configured' }
@@ -85,8 +85,12 @@ export const webhookRoutes = async (app: FastifyInstance) => {
     if (userId) {
       try {
         if (event.type === 'checkout.session.completed') {
-          const session = event.data.object as any
-          const subscriptionId = session?.subscription || null
+          const session = event.data.object as { subscription?: string | Stripe.Subscription | null }
+          const subscriptionId = typeof session?.subscription === 'string' 
+            ? session.subscription 
+            : session?.subscription && typeof session.subscription === 'object' && 'id' in session.subscription
+            ? session.subscription.id
+            : null
           
           await userPlanRepo.updatePlan({
             user_id: userId,
@@ -120,7 +124,11 @@ export const webhookRoutes = async (app: FastifyInstance) => {
           
           processingSucceeded = true
         } else if (event.type.startsWith('customer.subscription.')) {
-          const subscription = event.data.object as any
+          const subscription = event.data.object as { 
+            status?: string
+            id?: string
+            current_period_end?: number
+          }
           const status = subscription?.status
           
           if (!status || typeof status !== 'string') {
@@ -172,13 +180,15 @@ export const webhookRoutes = async (app: FastifyInstance) => {
           
           processingSucceeded = true
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorStack = error instanceof Error ? error.stack : undefined
         logger.error('webhook_processing_failed', {
           eventId: event.id,
           eventType: event.type,
           userId,
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         })
         processingSucceeded = false
       }

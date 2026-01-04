@@ -1,0 +1,29 @@
+{
+  "app": "npx ts-node --project tsconfig.json bin/app.ts",
+  "context": {
+    "@aws-cdk/core:newStyleStackSynthesis": true
+  },
+  "watch": {
+    "include": [
+      "**/*.ts"
+    ],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "node_modules",
+      "cdk.out"
+    ]
+  },
+  "output": "cdk.out",
+  "build": {
+    "command": "tsc",
+    "options": {
+      "cwd": "."
+    }
+  },
+  "test": {
+    "command": "echo 'No tests configured'"
+  }
+}

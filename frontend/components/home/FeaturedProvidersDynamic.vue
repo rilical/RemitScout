@@ -221,6 +221,7 @@
                   :href="`/go/${provider.id}`"
                   target="_blank"
                   rel="nofollow"
+                  @click="handleProviderClick(provider)"
                   class="block w-full rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-3 text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
                 >
                   Go to {{ provider.name }}
@@ -316,6 +317,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useCompareForm } from '~/composables/useCompareForm'
+import { useTelemetry } from '~/composables/useTelemetry'
 import { getProviderScore } from '~/lib/providerScores'
 
 const props = defineProps<{
@@ -341,6 +343,7 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 
 const { useProviders, attachRatings } = useRemittanceApi()
+const { trackClick } = useTelemetry()
 
 const { data, pending } = await useProviders(from.value, to.value, amount.value, method.value)
 
@@ -420,6 +423,15 @@ const scrollRight = () => {
   if (!scrollContainer.value) return
   const cardWidth = 320 + 24
   scrollContainer.value.scrollBy({ left: cardWidth, behavior: 'smooth' })
+}
+
+const handleProviderClick = (provider: { id: string }) => {
+  if (!provider?.id) return
+  void trackClick({
+    provider_id: provider.id,
+    target_url: `/go/${provider.id}`,
+    is_affiliate: Boolean((provider as { affiliateUrl?: string | null }).affiliateUrl),
+  })
 }
 
 const scrollToPage = (pageIndex: number) => {

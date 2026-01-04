@@ -1,11 +1,19 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { createLogger } from '../../../../shared/logger'
+import { formatError, isError } from '../../../../shared/utils/error-handling'
+import { queueDepthCache } from '../../../../shared/repository-cache'
+import { recordRepositoryMetric, recordQueueDepthMetric } from '../../../../shared/repository-metrics'
+import { withRetry, withCircuitBreaker } from '../../../../shared/repository-retry'
+import { triggerQueueDepthCacheRefresh } from '../../../../shared/eventbridge-cache-refresh'
 import type {
   IQuoteRefreshRepository,
   QuoteRefreshRequestRecord,
 } from '../interfaces/quote-refresh-repository.interface'
 import { QuoteRefreshStatus, type QuoteRefreshStatusValue } from '../types/quote-refresh-status'
+
+const logger = createLogger('plane-b.quote-refresh-repository')
 
 export class QuoteRefreshRepository implements IQuoteRefreshRepository {
   constructor(private readonly pool: Pool) {}
@@ -105,13 +113,69 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
   }
 
   async getQueueDepth(): Promise<number> {
-    const result = await query<{ count: number }>(
-      `SELECT COUNT(*)::int AS count
-         FROM silver.quote_refresh_request
-        WHERE status = $1`,
-      [QuoteRefreshStatus.PENDING],
+    const startTime = Date.now()
+    const cacheKey = 'queue_depth'
+    let success = false
+    let errorType: string | undefined
+
+    try {
+      // Check cache first
+      const cached = await queueDepthCache.get<number>(cacheKey)
+      if (cached !== null) {
+        return cached
+      }
+
+      const result = await withCircuitBreaker('quote-refresh', async () => {
+        return await withRetry(async () => {
+          return await query<{ count: number }>(
+            `SELECT COUNT(*)::int AS count
+             FROM silver.quote_refresh_request
+             WHERE status = $1`,
+            [QuoteRefreshStatus.PENDING],
+            this.pool,
+          )
+        })
+      })
+
+      const depth = result.rows[0]?.count ?? 0
+
+      // Cache result
+      await queueDepthCache.set(cacheKey, depth)
+
+      // Record CloudWatch metric
+      await recordQueueDepthMetric('quote-refresh', depth)
+
+      // Trigger EventBridge cache refresh
+      await triggerQueueDepthCacheRefresh()
+
+      success = true
+      return depth
+    } catch (error: unknown) {
+      const { message } = formatError(error)
+      errorType = isError(error) ? error.code || 'unknown' : 'unknown'
+      logger.error('queue_depth_get_failed', { error: message })
+      throw error
+    } finally {
+      const durationMs = Date.now() - startTime
+      await recordRepositoryMetric('quote-refresh', 'get', durationMs, success, errorType)
+    }
+  }
+
+  async cleanupRequests(
+    statuses: QuoteRefreshStatusValue[],
+    olderThanHours: number,
+  ): Promise<number> {
+    if (statuses.length === 0 || olderThanHours <= 0) return 0
+
+    const result = await query<{ request_id: string }>(
+      `DELETE FROM silver.quote_refresh_request
+        WHERE status = ANY($1)
+          AND processed_at IS NOT NULL
+          AND processed_at < NOW() - ($2 * INTERVAL '1 hour')
+        RETURNING request_id`,
+      [statuses, olderThanHours],
       this.pool,
     )
-    return result.rows[0]?.count ?? 0
+    return result.rowCount ?? 0
   }
 }

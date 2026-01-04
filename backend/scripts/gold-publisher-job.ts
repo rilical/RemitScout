@@ -21,8 +21,18 @@
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { createShutdownHandler } from '../shared/shutdown'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { GoldPublisher } from '../plane-c/src/services/gold-publisher'
+import {
+  recordJobStart,
+  recordJobComplete,
+  recordJobFailure,
+} from './gold-publisher-job-metrics'
+import { startHealthServer } from './gold-publisher-job-health'
+import { retry } from '../shared/retry'
+import { recordBatchJobMetric } from '../shared/worker-metrics'
+import { formatError } from '../shared/utils/error-handling'
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -33,23 +43,57 @@ const lockTtlSeconds = toNumber(process.env.GOLD_PUBLISHER_LOCK_TTL_SECONDS, 600
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-publisher-job')
 
-let shutdownRequested = false
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
+let pool: ReturnType<typeof createPool> | null = null
 
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-}
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const { isShutdownRequested } = createShutdownHandler({
+  timeoutMs: 30000,
+  logger,
+  onShutdown: async () => {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (lockRefreshTimer) {
+      clearInterval(lockRefreshTimer)
+    }
+    if (lock) {
+      await lock.release().catch((error) => {
+        logger.warn('lock_release_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+    if (pool) {
+      await pool.end()
+    }
+  },
+})
 
-const run = async (): Promise<void> => {
-  if (shutdownRequested) {
+export const runGoldPublisherJob = async (
+  options: { enableHealthServer?: boolean } = {},
+): Promise<void> => {
+  if (isShutdownRequested()) {
     logger.info('job_skipped', { reason: 'shutdown_requested' })
     return
+  }
+
+  const enableHealthServer = options.enableHealthServer ?? !isLambdaRuntime
+  if (enableHealthServer) {
+    try {
+      healthServer = await startHealthServer({ logger })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   lock = new WorkerLock('gold-publisher-job', lockTtlSeconds)
@@ -57,8 +101,11 @@ const run = async (): Promise<void> => {
 
   if (!acquired) {
     logger.info('job_skipped', { reason: 'lock_already_held' })
+    recordJobFailure('lock_failed')
     return
   }
+
+  recordJobStart()
 
   lockRefreshTimer = setInterval(() => {
     if (!lock) return
@@ -76,13 +123,29 @@ const run = async (): Promise<void> => {
       })
   }, lockRefreshMs)
 
-  const pool = createPool(config.db.planeCUrl)
+  pool = createPool(config.db.planeCUrl)
   const publisher = new GoldPublisher(pool)
 
   const startTime = Date.now()
   try {
-    const result = await publisher.processAllCorridors()
+    await recordBatchJobMetric('gold-publisher-job', 'job_start')
+    
+    const result = await retry(
+      () => publisher.processAllCorridors(),
+      {
+        maxRetries: 3,
+        initialDelayMs: 500,
+        retryable: (error) => {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          return errorMessage.includes('connection') ||
+                 errorMessage.includes('timeout') ||
+                 errorMessage.includes('ECONNREFUSED') ||
+                 errorMessage.includes('ETIMEDOUT')
+        },
+      },
+    )
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
 
     logger.info('job_complete', {
       published: result.published,
@@ -90,33 +153,68 @@ const run = async (): Promise<void> => {
       errors: result.errors,
       duration_ms: durationMs,
     })
+    recordJobComplete(durationSeconds, result.published, result.withheld)
+    await recordBatchJobMetric('gold-publisher-job', 'job_complete', durationSeconds, {
+      published: String(result.published),
+      withheld: String(result.withheld),
+      errors: String(result.errors),
+    })
   } catch (error) {
     const durationMs = Date.now() - startTime
+    const durationSeconds = durationMs / 1000
+    const { message } = formatError(error)
     logger.error('job_failed', {
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
       duration_ms: durationMs,
+    })
+
+    let errorType = 'unknown'
+    if (message.includes('lock') || message.includes('Lock')) {
+      errorType = 'lock_failed'
+    } else if (message.includes('query') || message.includes('SELECT') || message.includes('process')) {
+      errorType = 'query_failed'
+    } else if (message.includes('insert') || message.includes('INSERT') || message.includes('publish') || message.includes('constraint')) {
+      errorType = 'insert_failed'
+    } else if (message.includes('validation') || message.includes('invalid')) {
+      errorType = 'validation_failed'
+    }
+
+    recordJobFailure(errorType)
+    await recordBatchJobMetric('gold-publisher-job', 'job_failure', durationSeconds, {
+      error_type: errorType,
     })
     throw error
   } finally {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
     if (lockRefreshTimer) {
       clearInterval(lockRefreshTimer)
     }
     if (lock) {
       await lock.release()
     }
-    await pool.end()
+    if (pool && !isShutdownRequested()) {
+      await pool.end()
+      pool = null
+    }
   }
 }
 
-run()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('job_fatal_error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module && !isLambdaRuntime) {
+  runGoldPublisherJob()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
-
+    .catch((error) => {
+      logger.error('job_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

@@ -123,7 +123,9 @@ const emit = defineEmits<{
 
 const allCountries = COUNTRIES.map(country => ({
   value: country.code,
-  label: `${country.flag} ${country.name}`,
+  label: `${country.flag} ${country.name}`, // Full label with emoji for dropdown display
+  name: country.name, // Country name only (no emoji) for input field
+  searchText: country.name.toLowerCase(), // Searchable text without emoji
   currency: country.currency,
 }))
 
@@ -139,9 +141,10 @@ const filterCountries = () => {
     filteredCountries.value = allCountries
   }
   else {
-    const query = searchQuery.value.toLowerCase()
+    const query = searchQuery.value.toLowerCase().trim()
+    // Filter by searchText (name only, no emoji) for lookup
     filteredCountries.value = allCountries.filter(country =>
-      country.label.toLowerCase().includes(query),
+      country.searchText.includes(query),
     )
   }
 }
@@ -149,40 +152,44 @@ const filterCountries = () => {
 watch(searchQuery, filterCountries)
 
 const selectCountry = (country: typeof allCountries[0]) => {
-  console.log('=== Select Country ===')
-  console.log('Selected:', country.value, country.label)
-
   emit('update:modelValue', country.value)
   emit('country-selected', country.value, country.currency)
-  // Show the full label
   searchQuery.value = country.label
   isOpen.value = false
-
-  console.log('searchQuery set to:', searchQuery.value)
 }
 
 const handleSearch = (event: Event) => {
   const target = event.target as HTMLInputElement
-  searchQuery.value = target.value
-  isOpen.value = true
+  const value = target.value
+  
+  // If user is typing and there's a selected country, allow free typing for search
+  // But preserve emoji if they're just editing the selected country name
+  if (props.modelValue && value && !isOpen.value) {
+    // User started typing - allow free search
+    searchQuery.value = value
+    isOpen.value = true
+  } else {
+    searchQuery.value = value
+    isOpen.value = true
+  }
+  
   updateDropdownPosition()
 }
 
 const handleFocus = async () => {
-  console.log('=== Country Focus ===')
-  console.log('Current searchQuery:', searchQuery.value)
-  console.log('Current modelValue:', props.modelValue)
-  console.log('All countries count:', allCountries.length)
-
   isOpen.value = true
 
-  // Clear and force update
-  searchQuery.value = ''
+  if (props.modelValue) {
+    const country = allCountries.find((c) => c.value === props.modelValue)
+    if (country && !searchQuery.value) {
+      searchQuery.value = country.label
+    }
+  } else {
+    searchQuery.value = ''
+  }
+  
   await nextTick()
   filteredCountries.value = [...allCountries]
-
-  console.log('After clear - searchQuery:', searchQuery.value)
-  console.log('Filtered countries count:', filteredCountries.value.length)
 
   updateDropdownPosition()
 }
@@ -194,6 +201,7 @@ const handleBlur = () => {
     if (props.modelValue) {
       const country = allCountries.find(c => c.value === props.modelValue)
       if (country) {
+        // Show full label with emoji
         searchQuery.value = country.label
       }
     } else {
@@ -212,31 +220,19 @@ const updateDropdownPosition = async () => {
       left: `${rect.left}px`,
       width: `${rect.width}px`,
     }
-    console.log('Dropdown position updated:', dropdownStyle.value, 'Total countries:', filteredCountries.value.length)
   }
 }
 
 watch(
   () => props.modelValue,
-  (newValue, oldValue) => {
-    console.log('=== Country ModelValue Watch ===')
-    console.log('Old:', oldValue, 'New:', newValue)
-    console.log('isOpen:', isOpen.value)
-
+  (newValue) => {
     if (newValue && !isOpen.value) {
-      // Only update searchQuery when dropdown is closed
-      const country = allCountries.find(c => c.value === newValue)
+      const country = allCountries.find((c) => c.value === newValue)
       if (country) {
-        console.log('Setting searchQuery to:', country.label)
         searchQuery.value = country.label
       }
-    }
-    else if (!newValue) {
-      console.log('Clearing searchQuery')
+    } else if (!newValue) {
       searchQuery.value = ''
-    }
-    else {
-      console.log('Skipping update because dropdown is open')
     }
   },
   { immediate: true },
@@ -248,6 +244,7 @@ onMounted(() => {
   if (props.modelValue) {
     const country = allCountries.find(c => c.value === props.modelValue)
     if (country) {
+      // Show full label with emoji
       searchQuery.value = country.label
     }
   }

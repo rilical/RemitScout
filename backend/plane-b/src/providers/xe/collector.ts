@@ -29,7 +29,11 @@ import {
   openCircuit,
   penalizeRpmImmediately,
 } from '../../lib/redis-circuit-breaker'
-import { getProxyTierForCorridor, type ProxyTier } from '../../lib/proxy-router'
+import {
+  getDefaultProxyTierForCollector,
+  getProxyTierForCorridor,
+  type ProxyTier,
+} from '../../lib/proxy-router'
 import { dispatchSignal } from '../../notifications/dispatcher'
 import { writeBronzePayload } from '../../collectors/bronze-writer'
 import { createScheduler } from '../../collectors/scheduler'
@@ -243,12 +247,13 @@ export const runXeCollector = async (options: XeCollectorOptions = {}) => {
     || collectorType === 'b2b_tier_2_reference'
     || collectorType === 'b2b_tier_3_discovery'
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
+  const defaultProxyTier = getDefaultProxyTierForCollector(collectorType)
   const proxyTierCache = new Map<string, ProxyTier>()
   const resolveProxyTier = async (corridorId: string) => {
     if (proxyTierCache.has(corridorId)) {
       return proxyTierCache.get(corridorId) as ProxyTier
     }
-    const proxyTier = await getProxyTierForCorridor(pool, corridorId)
+    const proxyTier = await getProxyTierForCorridor(pool, corridorId, defaultProxyTier)
     proxyTierCache.set(corridorId, proxyTier)
     return proxyTier
   }

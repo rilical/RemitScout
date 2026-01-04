@@ -23,12 +23,15 @@ export type ProviderQuote = {
   corridorPros?: string[] // Corridor-specific pros
   corridorCons?: string[] // Corridor-specific cons
   whyThisRanking?: string // Explanation for ranking
+  affiliateUrl?: string | null
+  outboundUrl?: string | null
+  isAffiliate?: boolean
 }
 
 export type BankVsSpecialist = {
   corridor: Corridor
   midRate: number
-  bank: Omit<ProviderQuote, 'id' | 'name'> & { name: 'Your bank' }
+  bank: Omit<ProviderQuote, 'id'> & { name: string }
   top: ProviderQuote
   updatedAt: string // ISO
 }
@@ -118,4 +121,3 @@ export type BankComparisonData = {
   savings: number
   savingsPercent: number
 }
-

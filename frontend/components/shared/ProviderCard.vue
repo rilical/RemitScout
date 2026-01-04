@@ -68,6 +68,7 @@
           :href="provider?.affiliateUrl || provider?.url"
           target="_blank"
           rel="noopener noreferrer"
+          @click="handleOutboundClick"
           class="flex items-center justify-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-6 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           Visit
@@ -96,6 +97,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import { useTelemetry } from '~/composables/useTelemetry'
 
 interface Provider {
   id?: string
@@ -121,6 +123,18 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   compact: false,
 })
+
+const { trackClick } = useTelemetry()
+
+const handleOutboundClick = () => {
+  const targetUrl = props.provider?.affiliateUrl || props.provider?.url
+  if (!props.provider || !targetUrl) return
+  void trackClick({
+    provider_id: props.provider.id || props.provider.slug,
+    target_url: targetUrl,
+    is_affiliate: Boolean(props.provider.affiliateUrl),
+  })
+}
 
 const scoreDisplay = computed(() => {
   const score = props.provider?.score || 0

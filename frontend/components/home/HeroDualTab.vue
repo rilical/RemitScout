@@ -299,9 +299,14 @@
                   type="number"
                   min="1"
                   step="1"
-                  class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
-                  placeholder="500"
+                  class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+                  placeholder="Enter amount (e.g., 500)"
+                  @keydown="preventNegative"
+                  @blur="handleAmountBlur"
                 >
+                <p class="mt-1.5 text-xs text-gray-500">
+                  Enter the amount you want to send
+                </p>
 
                 <!-- Mobile Back Button for Step 3 -->
                 <div class="mt-4 sm:hidden">
@@ -834,24 +839,66 @@ watch(
   },
 )
 
+const handleAmountBlur = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const value = parseFloat(target.value)
+  
+  // Validate and fix on blur
+  if (isNaN(value) || value < 1) {
+    moneyForm.value.amount = 1
+    target.value = '1'
+  } else {
+    const intValue = Math.floor(value)
+    moneyForm.value.amount = intValue
+    target.value = String(intValue)
+  }
+}
+
+const preventNegative = (event: KeyboardEvent) => {
+  // Only prevent specific problematic keys, allow normal typing
+  if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
+    event.preventDefault()
+  }
+}
+
 const handleMoneySubmit = async () => {
   const { from, to, amount, method } = moneyForm.value
 
   formSuccess.value = ''
+  formError.value = ''
+
+  // Validate form
+  if (!from || !to) {
+    formError.value = 'Please select both sending and receiving countries.'
+    return
+  }
+
+  if (!amount || amount < 1) {
+    formError.value = 'Please enter a valid amount (minimum 1).'
+    moneyForm.value.amount = 1
+    return
+  }
+
+  // Ensure amount is positive integer
+  moneyForm.value.amount = Math.max(1, Math.floor(amount))
 
   try {
     await recordSearch({
       from,
       to,
-      amount,
-      method,
+      amount: moneyForm.value.amount,
+      method: method || 'bank',
     })
   }
   catch {
     // Ignore recordSearch errors
   }
 
-  await submitForm()
+  // Submit form and navigate
+  const success = await submitForm()
+  if (!success && validationError.value) {
+    formError.value = validationError.value
+  }
 }
 
 // Update families helped based on recent searches

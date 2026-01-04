@@ -216,7 +216,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useApi } from '~/composables/useApi'
 
 const form = ref({
   email: '',
@@ -228,28 +227,25 @@ const form = ref({
 })
 
 const processing = ref(false)
-const { request } = useApi()
+const { isAuthenticated } = useAuth()
+const billingActions = useBilling()
 
 async function handleCheckout() {
+  if (!isAuthenticated.value) {
+    await navigateTo({ path: '/sign-in', query: { redirect: '/plus/checkout' } })
+    return
+  }
+
   processing.value = true
 
   try {
-    // Create Stripe Checkout Session via your backend API
-    const response = await request<{ url?: string }>('/stripe/create-checkout', {
-      method: 'POST',
-      body: {
-        plan: 'plus',
-        successUrl: `${window.location.origin}/plus/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${window.location.origin}/plus/failed`,
-      },
-    })
-    
-    // Redirect to Stripe Checkout
-    if (response.url) {
-      window.location.href = response.url
-    } else {
-      throw new Error('No checkout URL returned')
+    const result = await billingActions.createCheckoutSession('plus')
+    if (result.ok && result.url) {
+      window.location.href = result.url
+      return
     }
+
+    throw new Error(result.error || 'No checkout URL returned')
   } catch (error: any) {
     console.error('Checkout error:', error)
     if (error?.statusCode === 404 || error?.message?.includes('fetch')) {
@@ -270,7 +266,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

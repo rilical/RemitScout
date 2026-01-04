@@ -174,7 +174,8 @@ const emit = defineEmits<{
 const config = useRuntimeConfig()
 const { data, pending, error } = await useRemittanceApi().usePopularCorridors()
 
-const defaultCorridors = [
+const defaultCorridors = import.meta.dev
+  ? [
   { route: 'US→PH', from: 'US', to: 'PH', count24h: 142 },
   { route: 'US→IN', from: 'US', to: 'IN', count24h: 98 },
   { route: 'GB→PK', from: 'GB', to: 'PK', count24h: 76 },
@@ -184,22 +185,49 @@ const defaultCorridors = [
   { route: 'FR→SN', from: 'FR', to: 'SN', count24h: 38 },
   { route: 'US→NG', from: 'US', to: 'NG', count24h: 31 },
 ]
+  : []
 
 const parseRoute = (route: string) => {
   const [from, to] = route.split('→')
   return { from, to }
 }
 
+type CorridorData = {
+  route?: string
+  from?: string
+  to?: string
+  count_24h?: number
+  count24h?: number
+}
+
+type ApiResponse = {
+  corridors?: CorridorData[]
+  data?: CorridorData[]
+  success?: boolean
+  timestamp?: string
+  count?: number
+}
+
 const corridors = computed(() => {
-  const apiData = data.value as any
-  if (apiData?.data?.length) {
-    return apiData.data.map((c: any) => ({
+  const apiData = data.value as ApiResponse | null
+  
+  if (apiData?.corridors?.length) {
+    return apiData.corridors.map((c) => ({
       ...c,
-      ...parseRoute(c.route),
+      count24h: c.count_24h || 0,
+      ...parseRoute(c.route || ''),
+    }))
+  }
+  
+  if (apiData?.data?.length) {
+    return apiData.data.map((c) => ({
+      ...c,
+      count24h: c.count_24h || c.count24h || 0,
+      ...parseRoute(c.route || ''),
     }))
   }
 
-  if (config.public.devControls) {
+  if (import.meta.dev && config.public.devControls) {
     return defaultCorridors
   }
 

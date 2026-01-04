@@ -1,4 +1,4 @@
-import { createId } from '~/utils/id'
+import type { Session, User as SupabaseUser, OAuthProvider } from '@supabase/supabase-js'
 
 export interface User {
   id: string
@@ -7,54 +7,451 @@ export interface User {
   avatar?: string
 }
 
+type BackendProfile = {
+  user_id: string
+  email: string
+  name?: string | null
+  avatar_url?: string | null
+}
+
+type AuthResult = {
+  ok: boolean
+  error?: string
+}
+
+type SignUpInput = {
+  name: string
+  email: string
+  password: string
+}
+
+const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
+  if (!supabaseUser) return null
+  const metadata = supabaseUser.user_metadata || {}
+  const email = supabaseUser.email || ''
+  const name =
+    metadata.full_name ||
+    metadata.name ||
+    metadata.display_name ||
+    (email ? email.split('@')[0] : 'User')
+  const avatar = metadata.avatar_url || metadata.avatar
+
+  return {
+    id: supabaseUser.id,
+    email,
+    name,
+    avatar,
+  }
+}
+
 export const useAuth = () => {
-  const { state: user, hydrated } = usePersistedState<User | null>('auth:user', () => null)
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase || '/api'
+
+  const user = useState<User | null>('auth:user', () => null)
+  const session = useState<Session | null>('auth:session', () => null)
+  const hydrated = useState<boolean>('auth:hydrated', () => false)
+  const initPromise = useState<Promise<void> | null>('auth:init', () => null)
+  const listenerAttached = useState<boolean>('auth:listener', () => false)
+  const lastError = useState<string | null>('auth:error', () => null)
 
   const isLoggedIn = computed(() => user.value !== null)
+  const isAuthenticated = isLoggedIn
+  const accessToken = computed(() => session.value?.access_token ?? null)
+  const isConfigured = computed(() => Boolean(
+    config.public.supabaseUrl && config.public.supabaseAnonKey,
+  ))
 
-  function setUser(newUser: User | null) {
-    user.value = newUser
+  const setSession = (nextSession: Session | null) => {
+    session.value = nextSession
+    user.value = mapSupabaseUser(nextSession?.user ?? null)
+    hydrated.value = true
   }
 
-  function signIn(email: string, _password?: string) {
-    setUser({
-      id: createId('user'),
-      email,
-      name: email.split('@')[0] || 'User',
+  const getSupabase = () => {
+    if (!process.client) return null
+    return useSupabaseClient()
+  }
+
+  const getRedirectBase = () => {
+    if (config.public.siteUrl) return config.public.siteUrl
+    if (process.client && typeof window !== 'undefined') {
+      return window.location.origin
+    }
+    return ''
+  }
+
+  const buildApiUrl = (path: string) => {
+    if (/^https?:\/\//.test(path)) return path
+    const cleanedBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase
+    const cleanedPath = path.startsWith('/') ? path : `/${path}`
+    if (cleanedPath === cleanedBase || cleanedPath.startsWith(`${cleanedBase}/`)) {
+      return cleanedPath
+    }
+    return `${cleanedBase}${cleanedPath}`
+  }
+
+  const ensureHydrated = async () => {
+    if (hydrated.value) return
+    if (!process.client) {
+      hydrated.value = true
+      return
+    }
+    if (!isConfigured.value) {
+      hydrated.value = true
+      return
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      hydrated.value = true
+      return
+    }
+
+    if (!initPromise.value) {
+      initPromise.value = supabase.auth
+        .getSession()
+        .then(({ data, error }) => {
+          if (error) {
+            lastError.value = error.message
+          }
+          setSession(data.session ?? null)
+        })
+        .catch((error) => {
+          lastError.value = error instanceof Error ? error.message : String(error)
+          hydrated.value = true
+        })
+        .finally(() => {
+          if (!listenerAttached.value) {
+            listenerAttached.value = true
+            supabase.auth.onAuthStateChange((_event, nextSession) => {
+              setSession(nextSession)
+            })
+          }
+        })
+    }
+
+    await initPromise.value
+  }
+
+  if (process.client && !hydrated.value) {
+    void ensureHydrated()
+  }
+
+  const signIn = async (email: string, password?: string): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!password) {
+      const devControls = Boolean(config.public.devControls) || import.meta.dev
+      if (!devControls) {
+        lastError.value = 'Password is required.'
+        return { ok: false, error: lastError.value }
+      }
+
+      user.value = {
+        id: `dev_${email || 'user'}`,
+        email,
+        name: email ? email.split('@')[0] : 'Dev User',
+      }
+      session.value = null
+      hydrated.value = true
+      return { ok: true }
+    }
+
+    if (!isConfigured.value) {
+      lastError.value = 'Supabase is not configured.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    setSession(data.session ?? null)
+    return { ok: true }
+  }
+
+  const signUp = async (input: SignUpInput): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!isConfigured.value) {
+      lastError.value = 'Supabase is not configured.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const redirectBase = getRedirectBase()
+    const emailRedirectTo = redirectBase
+      ? `${redirectBase.replace(/\/$/, '')}/auth/confirm`
+      : undefined
+
+    const { data, error } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        emailRedirectTo,
+        data: {
+          full_name: input.name,
+        },
+      },
     })
+
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    if (data.session) {
+      setSession(data.session)
+    } else {
+      hydrated.value = true
+    }
+
+    return { ok: true }
   }
 
-  function signOut() {
-    setUser(null)
+  const signInWithOAuth = async (
+    provider: OAuthProvider,
+    redirectPath: string = '/dashboard',
+  ): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!isConfigured.value) {
+      lastError.value = 'Supabase is not configured.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    if (process.client) {
+      sessionStorage.setItem('auth:redirect', redirectPath)
+    }
+
+    const redirectBase = getRedirectBase()
+    const redirectTo = redirectBase
+      ? `${redirectBase.replace(/\/$/, '')}/auth/callback`
+      : undefined
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    })
+
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    return { ok: true }
   }
 
-  function updateProfile(updates: Partial<Pick<User, 'name' | 'avatar'>>) {
-    if (user.value) {
-      user.value = { ...user.value, ...updates }
+  const requestPasswordReset = async (email: string): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!isConfigured.value) {
+      lastError.value = 'Supabase is not configured.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const redirectBase = getRedirectBase()
+    const redirectTo = redirectBase
+      ? `${redirectBase.replace(/\/$/, '')}/reset-password`
+      : undefined
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    return { ok: true }
+  }
+
+  const updatePassword = async (password: string): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!isConfigured.value) {
+      lastError.value = 'Supabase is not configured.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    return { ok: true }
+  }
+
+  const updatePasswordWithCurrent = async (
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!accessToken.value) {
+      lastError.value = 'You must be signed in to update your password.'
+      return { ok: false, error: lastError.value }
+    }
+
+    try {
+      await $fetch(buildApiUrl('/me/password'), {
+        method: 'POST',
+        body: {
+          current_password: currentPassword,
+          new_password: newPassword,
+        },
+        headers: {
+          authorization: `Bearer ${accessToken.value}`,
+        },
+      })
+      return { ok: true }
+    } catch (error: unknown) {
+      const apiError = error as {
+        data?: { error?: string; message?: string }
+        message?: string
+      }
+      const code = apiError?.data?.error
+      if (code === 'invalid_credentials') {
+        lastError.value = 'Current password is incorrect.'
+      } else if (code === 'supabase_not_configured') {
+        lastError.value = 'Password updates are unavailable right now.'
+      } else {
+        lastError.value = apiError?.data?.message || apiError?.message || 'Unable to update password.'
+      }
+      return { ok: false, error: lastError.value }
     }
   }
 
-  function updateAvatar(avatarUrl: string | undefined) {
-    updateProfile({ avatar: avatarUrl })
+  const signOut = async (): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!isConfigured.value) {
+      user.value = null
+      session.value = null
+      return { ok: true }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      user.value = null
+      session.value = null
+      return { ok: true }
+    }
+
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    setSession(null)
+    return { ok: true }
+  }
+
+  const updateProfile = async (updates: Partial<Pick<User, 'name' | 'avatar'>>): Promise<AuthResult> => {
+    lastError.value = null
+
+    if (!isConfigured.value) {
+      lastError.value = 'Supabase is not configured.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        full_name: updates.name,
+        avatar_url: updates.avatar,
+      },
+    })
+
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    if (data.user) {
+      user.value = mapSupabaseUser(data.user)
+    }
+
+    return { ok: true }
+  }
+
+  const updateAvatar = async (avatarUrl: string | undefined): Promise<AuthResult> => {
+    return updateProfile({ avatar: avatarUrl })
+  }
+
+  const applyBackendProfile = (profile: BackendProfile) => {
+    if (!profile) return
+    const fallbackName =
+      profile.email && profile.email.includes('@')
+        ? profile.email.split('@')[0]
+        : 'User'
+    const hasAvatar = Object.prototype.hasOwnProperty.call(profile, 'avatar_url')
+    const nextAvatar = hasAvatar ? profile.avatar_url ?? undefined : user.value?.avatar
+
+    user.value = {
+      id: profile.user_id,
+      email: profile.email,
+      name: profile.name ?? user.value?.name ?? fallbackName,
+      avatar: nextAvatar,
+    }
   }
 
   return {
     user,
+    session,
     hydrated,
     isLoggedIn,
-    isAuthenticated: isLoggedIn,
+    isAuthenticated,
+    accessToken,
+    lastError,
+    isConfigured,
+    ensureHydrated,
     signIn,
+    signUp,
+    signInWithOAuth,
     signOut,
-    setUser,
+    requestPasswordReset,
+    updatePassword,
+    updatePasswordWithCurrent,
     updateProfile,
     updateAvatar,
+    applyBackendProfile,
   }
 }
-
-
-
-
-
-
-
-

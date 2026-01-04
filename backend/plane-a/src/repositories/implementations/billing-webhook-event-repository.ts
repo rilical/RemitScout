@@ -19,7 +19,7 @@ export class BillingWebhookEventRepository implements IBillingWebhookEventReposi
       [input.eventId, input.type, input.payloadHash, input.payloadJson],
       this.pool,
     )
-    return result.rowCount > 0
+    return (result.rowCount ?? 0) > 0
   }
 
   async markAsProcessed(eventId: string): Promise<void> {
@@ -41,4 +41,5 @@ export class BillingWebhookEventRepository implements IBillingWebhookEventReposi
     return result.rows[0] ?? null
   }
 }
+
 

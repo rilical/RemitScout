@@ -4,11 +4,12 @@ import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
+import { getErrorMessage, isStripeError } from '../../types/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
 
 export const billingPortalRoutes = async (app: FastifyInstance) => {
-  app.get('/api/billing/portal', { preHandler: requireAuth() }, async (request, reply) => {
+  app.get('/billing/portal', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
 
     if (!config.billing.stripe.secretKey) {
@@ -28,18 +29,21 @@ export const billingPortalRoutes = async (app: FastifyInstance) => {
       try {
         const session = await stripe.billingPortal.sessions.create({
           customer: plan.stripe_customer_id,
-          return_url: `${config.billing.stripe.frontendBaseUrl}/account`,
+          return_url: `${config.billing.stripe.frontendBaseUrl}/dashboard?tab=account`,
         })
 
         return { url: session.url }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = isStripeError(error) 
+          ? error.message 
+          : getErrorMessage(error)
         reply.code(500)
         return { 
           error: 'stripe_portal_creation_failed', 
-          message: error.message || 'Failed to create billing portal session' 
+          message: errorMessage || 'Failed to create billing portal session' 
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       reply.code(500)
       return { 
         error: 'internal_error', 

@@ -4,6 +4,7 @@ import type {
   ILatestQuoteRepository,
   LatestQuoteByCorridorRecord,
   LatestQuoteByProviderRecord,
+  LatestQuoteByCurrencyPairRecord,
 } from '../interfaces/latest-quote-repository.interface'
 
 export class LatestQuoteRepository implements ILatestQuoteRepository {
@@ -76,6 +77,35 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
          AND corridor_id = ANY($2::text[])
        ORDER BY corridor_id, collected_at DESC`,
       [providerId, corridorIds],
+      this.pool,
+    )
+    return result.rows
+  }
+
+  async listLatestByCurrencyPair(
+    baseCurrency: string,
+    quoteCurrency: string,
+    maxAgeHours: number = 24,
+  ): Promise<LatestQuoteByCurrencyPairRecord[]> {
+    const interval = `${Math.max(1, Math.floor(maxAgeHours))} hours`
+    const result = await query<LatestQuoteByCurrencyPairRecord>(
+      `SELECT DISTINCT ON (lqp.provider_id)
+         lqp.provider_id,
+         p.display_name AS provider_name,
+         lqp.corridor_id,
+         lqp.implied_fx_rate,
+         lqp.delivery_time_min_minutes,
+         lqp.delivery_time_max_minutes,
+         lqp.collected_at
+       FROM silver.latest_quote_by_provider lqp
+       JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
+       JOIN silver.provider p ON p.provider_id = lqp.provider_id
+       WHERE lqp.status = 'ok'
+         AND UPPER(c.source_currency) = UPPER($1)
+         AND UPPER(c.dest_currency) = UPPER($2)
+         AND lqp.collected_at >= NOW() - $3::interval
+       ORDER BY lqp.provider_id, lqp.collected_at DESC`,
+      [baseCurrency, quoteCurrency, interval],
       this.pool,
     )
     return result.rows

@@ -1,13 +1,14 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan, updatePlanFromStripe } from '../../services/user-plan'
+import { getErrorMessage, isStripeError } from '../../types/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
 
-const createCheckoutHandler = async (request: any, reply: any) => {
+const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   const user = request.user!
 
   if (!config.billing.stripe.secretKey || !config.billing.stripe.priceIdPlus) {
@@ -47,11 +48,14 @@ const createCheckoutHandler = async (request: any, reply: any) => {
           user_id: user.user_id,
           stripe_customer_id: customerId,
         })
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = isStripeError(error) 
+          ? error.message 
+          : getErrorMessage(error)
         reply.code(500)
         return { 
           error: 'stripe_customer_creation_failed', 
-          message: error.message || 'Failed to create Stripe customer' 
+          message: errorMessage || 'Failed to create Stripe customer' 
         }
       }
     }
@@ -61,8 +65,8 @@ const createCheckoutHandler = async (request: any, reply: any) => {
         mode: 'subscription',
         customer: customerId,
         line_items: [{ price: config.billing.stripe.priceIdPlus, quantity: 1 }],
-        success_url: `${config.billing.stripe.frontendBaseUrl}/account?checkout=success`,
-        cancel_url: `${config.billing.stripe.frontendBaseUrl}/account?checkout=cancel`,
+        success_url: `${config.billing.stripe.frontendBaseUrl}/dashboard?tab=account&checkout=success`,
+        cancel_url: `${config.billing.stripe.frontendBaseUrl}/dashboard?tab=account&checkout=cancel`,
         metadata: {
           user_id: user.user_id,
           plan_code: 'plus',
@@ -73,14 +77,17 @@ const createCheckoutHandler = async (request: any, reply: any) => {
         url: session.url,
         session_id: session.id,
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = isStripeError(error) 
+        ? error.message 
+        : getErrorMessage(error)
       reply.code(500)
       return { 
         error: 'stripe_session_creation_failed', 
-        message: error.message || 'Failed to create checkout session' 
+        message: errorMessage || 'Failed to create checkout session' 
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     reply.code(500)
     return { 
       error: 'internal_error', 
@@ -90,7 +97,7 @@ const createCheckoutHandler = async (request: any, reply: any) => {
 }
 
 export const checkoutSessionRoutes = async (app: FastifyInstance) => {
-  app.post('/api/billing/checkout-session', { preHandler: requireAuth() }, createCheckoutHandler)
+  app.post('/billing/checkout-session', { preHandler: requireAuth() }, createCheckoutHandler)
   
   // Add route that matches frontend proxy path
   app.post('/stripe/create-checkout', { preHandler: requireAuth() }, createCheckoutHandler)

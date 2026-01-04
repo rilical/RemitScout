@@ -1,45 +1,34 @@
-import { config } from '../shared/config'
+/**
+ * WorldRemit Provider Health Probe
+ * 
+ * Thin wrapper around generic probe implementation.
+ */
+
 import { createLogger } from '../shared/logger'
-import { getHealthCorridors } from '../shared/health-corridors'
-import { runWorldRemitCollector } from '../plane-b/src/providers/worldremit/collector'
-import { httpLimits } from '../plane-b/src/providers/worldremit/limits'
-import { createProbeRunner, outputProbeResult } from './lib/probe-utils'
+import { runGenericProbe } from './lib/generic-probe'
+import { formatError } from '../shared/utils/error-handling'
 
 const logger = createLogger('script.worldremit-probe')
-const corridors = getHealthCorridors('worldremit')
 
 const main = async () => {
-  const runner = createProbeRunner({
-    providerId: 'worldremit',
-    corridors,
-    timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
-    retries: Number(process.env.PROBE_RETRIES) || 0,
-  })
-
-  const result = await runner.run(async () => {
-    return await runWorldRemitCollector({
-      collectorType: 'health_probe',
-      corridors,
-      amountBuckets: [100],
-      payinMethod: 'bank_transfer',
-      payoutMethod: 'bank_deposit',
-      locale: 'en-US',
-      delayMs: config.planeB.worldremit.delayMs,
-      jitterMs: config.planeB.worldremit.jitterMs,
-      corridorDelayMs: config.planeB.worldremit.corridorDelayMs,
-      corridorJitterMs: config.planeB.worldremit.corridorJitterMs,
-      rateLimitBackoffMs: config.planeB.worldremit.rateLimitBackoffMs,
-      rateLimitJitterMs: config.planeB.worldremit.rateLimitJitterMs,
-      rateLimitMaxRetries: config.planeB.worldremit.rateLimitMaxRetries,
-      rpmOverride: httpLimits.rpm,
-      perCorridorRpmOverride: httpLimits.perCorridorRpm,
+  try {
+    const result = await runGenericProbe({
+      providerId: 'worldremit',
+      timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
+      retries: Number(process.env.PROBE_RETRIES) || 0,
+      outputFormat: process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json',
     })
-  })
 
-  outputProbeResult(result, process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json')
-  logger.info('probe_complete', result)
-
-  process.exit(result.success ? 0 : 1)
+    process.exit(result.success ? 0 : 1)
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
+    logger.error('probe_failed', {
+      provider_id: 'worldremit',
+      error: message,
+      stack,
+    })
+    process.exit(1)
+  }
 }
 
 let shutdownRequested = false

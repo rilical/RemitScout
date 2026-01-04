@@ -8,7 +8,9 @@ import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { createTtlCache } from '../../../shared/cache'
-import { VolatilityService } from '../../plane-b/src/services/volatility-service'
+import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
+import { VolatilityService } from '../services/volatility-service'
+import { getProviderMetadata } from '../services/provider-metadata'
 import {
   FxRateRepository,
   LatestQuoteRepository,
@@ -96,15 +98,42 @@ const getCacheAgeSeconds = (newestCollectedAt: number) => {
   return Math.max(0, Math.round((Date.now() - newestCollectedAt) / 1000))
 }
 
+const buildAffiliateInfo = (providerId: string) => {
+  const metadata = getProviderMetadata(providerId)
+  if (!metadata) {
+    return {
+      provider_url: null,
+      affiliate_url: null,
+      is_affiliate: false,
+      outbound_url: null,
+    }
+  }
+
+  const affiliateUrl = metadata.affiliateUrl ?? null
+  const isAffiliate = Boolean(affiliateUrl) || metadata.isAffiliate
+  return {
+    provider_url: metadata.url,
+    affiliate_url: affiliateUrl,
+    is_affiliate: isAffiliate,
+    outbound_url: affiliateUrl ?? metadata.url,
+  }
+}
+
 const getDynamicCacheTtl = async (pool: Pool, corridorId: string): Promise<number> => {
+  // Special case: US-MX corridor uses 5-hour cache (18000 seconds)
+  if (corridorId === 'US-MX-USD-MXN') {
+    return 18000 // 5 hours
+  }
+  
   try {
     const volatilityService = new VolatilityService(pool)
     const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
     return ttlResult.ttlSeconds
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.warn('volatility_service_failed', {
       corridor_id: corridorId,
-      error: error.message,
+      error: errorMessage,
     })
     // Fallback to default TTL (1 hour = 3600 seconds)
     return 3600
@@ -134,7 +163,7 @@ const loadB2cProviders = async () => {
 }
 
 export const quotesRoutes = async (app: FastifyInstance) => {
-  app.get('/api/quotes/current', async (request, reply) => {
+  app.get('/quotes/current', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
       reply.code(400)
@@ -179,62 +208,63 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: [{ message: `amount must be >= ${MIN_SEND_AMOUNT} USD equivalent` }] }
     }
 
+    let amount_bucket = amountBucketInput ?? 0
+
     try {
+      const bucketSelection = amountInput !== undefined
+        ? computeBucketSelection(amountInput)
+        : {
+          bucket_used: amountBucketInput ?? 0,
+          fee_bucket_used: amountBucketInput ?? 0,
+          approximate: false,
+        }
+      amount_bucket = bucketSelection.bucket_used
 
-    const bucketSelection = amountInput !== undefined
-      ? computeBucketSelection(amountInput)
-      : {
-        bucket_used: amountBucketInput ?? 0,
-        fee_bucket_used: amountBucketInput ?? 0,
-        approximate: false,
-      }
-    const amount_bucket = bucketSelection.bucket_used
+      // Get dynamic TTL once before fetching
+      const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
 
-    // Get dynamic TTL once before fetching
-    const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
+      const fetchLatest = async (ttlSeconds: number) => {
+        const cacheKey = `${corridor_id}:${amount_bucket}:${payin}:${payout}`
+        const cached = await latestQuoteCache.get(cacheKey)
+        if (cached !== null) {
+          logger.debug('quotes_cache_hit', {
+            corridor_id,
+            amount_bucket,
+            cache_key: cacheKey,
+          })
+          return { rows: cached, rowCount: cached.length }
+        }
 
-    const fetchLatest = async (ttlSeconds: number) => {
-      const cacheKey = `${corridor_id}:${amount_bucket}:${payin}:${payout}`
-      const cached = await latestQuoteCache.get(cacheKey)
-      if (cached !== null) {
-        logger.debug('quotes_cache_hit', {
+        const rows = await latestQuoteRepository.listLatestByCorridor(
           corridor_id,
           amount_bucket,
-          cache_key: cacheKey,
-        })
-        return { rows: cached, rowCount: cached.length }
-      }
+          payin,
+          payout,
+        )
 
-      const rows = await latestQuoteRepository.listLatestByCorridor(
-        corridor_id,
-        amount_bucket,
-        payin,
-        payout,
-      )
+        if (!Array.isArray(rows)) {
+          logger.error('quotes_invalid_response', {
+            corridor_id,
+            type: typeof rows,
+          })
+          throw new Error('Invalid response from database')
+        }
 
-      if (!Array.isArray(rows)) {
-        logger.error('quotes_invalid_response', {
+        const result = { rows, rowCount: rows.length }
+        const ttlMs = ttlSeconds * 1000
+        await latestQuoteCache.set(cacheKey, result.rows, ttlMs)
+        logger.debug('quotes_cache_miss', {
           corridor_id,
-          type: typeof rows,
+          amount_bucket,
+          count: rows.length,
         })
-        throw new Error('Invalid response from database')
+        return result
       }
 
-      const result = { rows, rowCount: rows.length }
-      const ttlMs = ttlSeconds * 1000
-      await latestQuoteCache.set(cacheKey, result.rows, ttlMs)
-      logger.debug('quotes_cache_miss', {
-        corridor_id,
-        amount_bucket,
-        count: rows.length,
-      })
-      return result
-    }
-
-    let result = await fetchLatest(dynamicCacheTtlSeconds)
-    let newestCollectedAt = getNewestCollectedAt(result.rows)
-    let cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
-    let cacheFresh = cacheAgeSeconds !== null && cacheAgeSeconds <= dynamicCacheTtlSeconds
+      let result = await fetchLatest(dynamicCacheTtlSeconds)
+      let newestCollectedAt = getNewestCollectedAt(result.rows)
+      let cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
+      let cacheFresh = cacheAgeSeconds !== null && cacheAgeSeconds <= dynamicCacheTtlSeconds
 
     let refreshAttempted = false
     let refreshEnqueued = false
@@ -258,16 +288,35 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         }
       }
       refreshProviderIds = Array.from(providerIds)
-      for (const providerId of refreshProviderIds) {
-        const requestId = await enqueueRefreshRequest({
-          providerId,
-          corridorId: corridor_id,
-          amountBucket: amount_bucket,
-          payinMethod: payin,
-          payoutMethod: payout,
-        })
-        if (requestId) {
-          refreshRequestIds.push(requestId)
+      // Enqueue refresh requests in parallel (non-blocking)
+      // Don't await - these are fire-and-forget operations
+      const enqueuePromises = refreshProviderIds.map(async (providerId) => {
+        try {
+          const requestId = await enqueueRefreshRequest({
+            providerId,
+            corridorId: corridor_id,
+            amountBucket: amount_bucket,
+            payinMethod: payin,
+            payoutMethod: payout,
+          })
+          return requestId
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          logger.warn('refresh_enqueue_failed', {
+            provider_id: providerId,
+            corridor_id,
+            error: errorMessage,
+          })
+          return null
+        }
+      })
+      
+      // Wait for all enqueue operations to complete (but don't block response)
+      // Use Promise.allSettled to handle partial failures gracefully
+      const enqueueResults = await Promise.allSettled(enqueuePromises)
+      for (const result of enqueueResults) {
+        if (result.status === 'fulfilled' && result.value) {
+          refreshRequestIds.push(result.value)
         }
       }
       refreshRequestId = refreshRequestIds[0] ?? null
@@ -284,6 +333,17 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     }
 
     const requestedAmount = amountInput ?? amountBucketInput ?? bucketSelection.bucket_used
+    const isAdmin =
+      request.user?.role === 'admin' ||
+      request.user?.role === 'super_admin' ||
+      (request.user?.email &&
+        config.planeA.adminEmails.includes(request.user.email.toLowerCase()))
+    const quotesWithAffiliate = result.rows.map((row) => ({
+      ...row,
+      ...buildAffiliateInfo(row.provider_id),
+      is_admin: Boolean(isAdmin),
+    }))
+
     const responsePayload = {
       success: true,
       timestamp: new Date().toISOString(),
@@ -304,7 +364,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         request_ids: refreshRequestIds,
         providers: refreshProviderIds,
       },
-      quotes: result.rows,
+      quotes: quotesWithAffiliate,
     }
 
     const cachePayload = JSON.stringify(responsePayload)
@@ -319,6 +379,13 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       return ''
     }
 
+    try {
+      recordQuoteRequest(corridor_id, amount_bucket)
+      recordSearch(corridorParts.sourceCountry, corridorParts.destCountry)
+    } catch {
+      // Silently ignore metrics errors
+    }
+
     logger.debug('quotes_request_success', {
       corridor_id,
       amount_bucket,
@@ -328,12 +395,14 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     })
 
     return responsePayload
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorStack = error instanceof Error ? error.stack : undefined
       logger.error('quotes_request_failed', {
         corridor_id,
-        amount_bucket: amount_bucket ?? null,
-        error: error.message,
-        stack: error.stack,
+        amount_bucket,
+        error: errorMessage,
+        stack: errorStack,
       })
       reply.code(500)
       return {

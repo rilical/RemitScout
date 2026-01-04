@@ -1,0 +1,42 @@
+# CDK Build Output
+cdk.out/
+*.js
+*.d.ts
+!*.config.js
+!jest.config.js
+
+# Node modules
+node_modules/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# CDK asset staging directory
+asset.*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Keep cdk.context.json (needed for reproducible builds)
+!cdk.context.json
+

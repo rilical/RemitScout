@@ -3,6 +3,7 @@
   "references": [
     { "path": "./plane-a" },
     { "path": "./plane-c" },
-    { "path": "./plane-b" }
+    { "path": "./plane-b" },
+    { "path": "./scripts" }
   ]
 }

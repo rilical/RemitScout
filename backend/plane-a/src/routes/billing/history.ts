@@ -1,0 +1,56 @@
+import type { FastifyInstance } from 'fastify'
+import { getPool } from '../../../../shared/db'
+import { config } from '../../../../shared/config'
+import { requireAuth } from '../../plugins/auth-plugin'
+import { getStripeClient } from '../../services/stripe-client'
+import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
+import { getErrorMessage, isStripeError } from '../../types/errors'
+
+const planeAPool = getPool(config.db.planeAUrl)
+
+export const billingHistoryRoutes = async (app: FastifyInstance) => {
+  app.get('/billing/history', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+
+    if (!config.billing.stripe.secretKey) {
+      reply.code(500)
+      return { error: 'billing_not_configured' }
+    }
+
+    try {
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+
+      if (!plan || !plan.stripe_customer_id) {
+        reply.code(400)
+        return { error: 'customer_not_found' }
+      }
+
+      const stripe = getStripeClient()
+      const invoices = await stripe.invoices.list({
+        customer: plan.stripe_customer_id,
+        limit: 24,
+      })
+
+      return {
+        invoices: invoices.data.map((invoice) => ({
+          id: invoice.id,
+          date: invoice.created ? new Date(invoice.created * 1000).toISOString() : null,
+          amount: typeof invoice.amount_paid === 'number' ? invoice.amount_paid / 100 : null,
+          currency: invoice.currency ? invoice.currency.toUpperCase() : null,
+          status: invoice.status ?? null,
+          invoice_url: invoice.hosted_invoice_url ?? null,
+        })),
+      }
+    } catch (error: unknown) {
+      const errorMessage = isStripeError(error)
+        ? error.message
+        : getErrorMessage(error)
+      reply.code(500)
+      return {
+        error: 'billing_history_failed',
+        message: errorMessage || 'Failed to fetch billing history',
+      }
+    }
+  })
+}

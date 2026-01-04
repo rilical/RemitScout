@@ -1,3 +1,7 @@
+const isAwsEnvironment = Boolean(
+  process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
+)
+
 export default defineNuxtConfig({
   // Development
 
@@ -60,10 +64,26 @@ export default defineNuxtConfig({
     // Server-only backend base URL for BFF proxying (must be absolute).
     apiBase: process.env.API_BASE || process.env.PUBLIC_API_BASE || '',
     public: {
-      siteUrl: process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com',
-      apiBase: process.env.PUBLIC_API_BASE || '/api',
-      imageBase: process.env.PUBLIC_IMAGE_BASE || 'https://images.Remit-Scout.com',
-      devControls: process.env.PUBLIC_DEV_CONTROLS === '1',
+      siteUrl:
+        process.env.PUBLIC_SITE_URL ||
+        (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
+          ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
+          : 'https://Remit-Scout.com'),
+      apiBase: process.env.PUBLIC_API_BASE || '/api/v1',
+      imageBase:
+        process.env.PUBLIC_IMAGE_BASE ||
+        (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
+          ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net/images`
+          : 'https://images.Remit-Scout.com'),
+      supabaseUrl:
+        process.env.PUBLIC_SUPABASE_URL ||
+        process.env.SUPABASE_URL ||
+        '',
+      supabaseAnonKey:
+        process.env.PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_PUBLISHABLE_KEY ||
+        '',
+      devControls: process.env.PUBLIC_DEV_CONTROLS === '1' && !isAwsEnvironment,
     },
   },
 
@@ -93,11 +113,11 @@ export default defineNuxtConfig({
   // Nitro Configuration
   nitro: {
     compressPublicAssets: true,
-    minify: true,
-    output: {
-      dir: '.output',
-      serverDir: '.output/server',
-      publicDir: '.output/public',
+    minify: !isAwsEnvironment, // Disable minify in dev to avoid build issues
+    preset: isAwsEnvironment ? 'static' : undefined, // Use static generation for AWS deployment
+    prerender: {
+      crawlLinks: true,
+      routes: ['/'],
     },
   },
 
@@ -145,9 +165,13 @@ export default defineNuxtConfig({
 
   // Image Configuration
   image: {
-    provider: 'ipx',
+    provider: isAwsEnvironment ? 'ipx' : 'ipx',
     sizes: [320, 640, 768, 1024, 1280, 1536],
     format: ['webp', 'avif', 'png', 'jpg'],
+    domains: isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
+      ? [`d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`]
+      : [],
+    cloudflare: false,
   },
 
   // Robots Configuration

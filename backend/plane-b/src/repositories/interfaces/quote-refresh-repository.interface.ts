@@ -24,4 +24,7 @@ export interface IQuoteRefreshRepository {
   ): Promise<void>
   retryFailedRequests(minAgeSeconds: number): Promise<number>
   getQueueDepth(): Promise<number>
+  cleanupRequests(statuses: QuoteRefreshStatusValue[], olderThanHours: number): Promise<number>
 }
+
+

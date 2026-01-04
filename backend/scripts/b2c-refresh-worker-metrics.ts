@@ -1,40 +1,41 @@
-import { Counter, Gauge, Histogram, Registry } from 'prom-client'
+import { Counter, Gauge, Histogram } from 'prom-client'
 
-const register = new Registry()
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
+import { getMetrics, metricsContentType, metricsRegistry } from '../shared/metrics-registry'
 
 const requestsTotal = new Counter({
   name: 'b2c_refresh_requests_total',
   help: 'Total B2C refresh requests processed.',
   labelNames: ['provider_id', 'status'],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 const requestsCompleted = new Counter({
   name: 'b2c_refresh_requests_completed',
   help: 'Total B2C refresh requests completed successfully.',
   labelNames: ['provider_id'],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 const requestsFailed = new Counter({
   name: 'b2c_refresh_requests_failed',
   help: 'Total B2C refresh requests failed.',
   labelNames: ['provider_id'],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 const requestsBlocked = new Counter({
   name: 'b2c_refresh_requests_blocked',
   help: 'Total B2C refresh requests blocked by provider.',
   labelNames: ['provider_id'],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 const requestsSkipped = new Counter({
   name: 'b2c_refresh_requests_skipped',
   help: 'Total B2C refresh requests skipped.',
   labelNames: ['provider_id', 'reason'],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 const durationSeconds = new Histogram({
@@ -42,14 +43,14 @@ const durationSeconds = new Histogram({
   help: 'B2C refresh request processing duration in seconds.',
   labelNames: ['provider_id', 'status'],
   buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 30],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 const queueDepth = new Gauge({
   name: 'b2c_refresh_queue_depth',
   help: 'Current pending queue depth.',
   labelNames: ['status'],
-  registers: [register],
+  registers: [metricsRegistry],
 })
 
 export type B2cRefreshRequestMetric = {
@@ -63,21 +64,63 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
   const providerId = event.providerId || 'unknown'
   requestsTotal.inc({ provider_id: providerId, status: event.status })
   durationSeconds.observe({ provider_id: providerId, status: event.status }, event.durationSeconds)
+  recordCloudWatchMetric({
+    name: 'b2c_refresh_requests_total',
+    value: 1,
+    unit: 'Count',
+    dimensions: { provider_id: providerId, status: event.status },
+    highCardinality: true,
+  })
+  recordCloudWatchMetric({
+    name: 'b2c_refresh_duration_seconds',
+    value: event.durationSeconds,
+    unit: 'Seconds',
+    dimensions: { provider_id: providerId, status: event.status },
+    highCardinality: true,
+  })
 
   switch (event.status) {
     case 'completed':
       requestsCompleted.inc({ provider_id: providerId })
+      recordCloudWatchMetric({
+        name: 'b2c_refresh_requests_completed',
+        value: 1,
+        unit: 'Count',
+        dimensions: { provider_id: providerId },
+        highCardinality: true,
+      })
       break
     case 'failed':
       requestsFailed.inc({ provider_id: providerId })
+      recordCloudWatchMetric({
+        name: 'b2c_refresh_requests_failed',
+        value: 1,
+        unit: 'Count',
+        dimensions: { provider_id: providerId },
+        highCardinality: true,
+      })
       break
     case 'blocked':
       requestsBlocked.inc({ provider_id: providerId })
+      recordCloudWatchMetric({
+        name: 'b2c_refresh_requests_blocked',
+        value: 1,
+        unit: 'Count',
+        dimensions: { provider_id: providerId },
+        highCardinality: true,
+      })
       break
     case 'skipped':
       requestsSkipped.inc({
         provider_id: providerId,
         reason: event.skipReason ?? 'unknown',
+      })
+      recordCloudWatchMetric({
+        name: 'b2c_refresh_requests_skipped',
+        value: 1,
+        unit: 'Count',
+        dimensions: { provider_id: providerId, reason: event.skipReason ?? 'unknown' },
+        highCardinality: true,
       })
       break
     default:
@@ -87,7 +130,12 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
 
 export const updateQueueDepth = (depth: number) => {
   queueDepth.set({ status: 'pending' }, depth)
+  recordCloudWatchMetric({
+    name: 'b2c_refresh_queue_depth',
+    value: depth,
+    unit: 'Count',
+    dimensions: { status: 'pending' },
+  })
 }
 
-export const getMetrics = async () => register.metrics()
-export const metricsContentType = register.contentType
+export { getMetrics, metricsContentType }

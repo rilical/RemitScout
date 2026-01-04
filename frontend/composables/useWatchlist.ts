@@ -12,6 +12,16 @@ export type SaveResult =
     message: string
   }
 
+type WatchlistApiResponse = {
+  success: boolean
+  items?: WatchlistItem[]
+  item?: WatchlistItem
+  status?: 'saved' | 'already_saved'
+  error?: string
+  message?: string
+  limit?: number
+}
+
 function normalizeTarget(target: WatchTarget): WatchTarget {
   switch (target.type) {
     case 'corridor':
@@ -66,8 +76,10 @@ function sortByUpdatedDesc(a: WatchlistItem, b: WatchlistItem) {
 
 export const useWatchlist = () => {
   const { limits } = useEntitlements()
+  const { isLoggedIn } = useAuth()
+  const { request } = useApi()
 
-  const { state: items, hydrated, reset } = usePersistedState<WatchlistItem[]>(
+  const { state: items, hydrated: localStorageHydrated, reset: resetLocalStorage } = usePersistedState<WatchlistItem[]>(
     'watchlist:items',
     () => [],
     {
@@ -75,7 +87,94 @@ export const useWatchlist = () => {
     },
   )
 
+  const hydrated = useState<boolean>('watchlist:api:hydrated', () => false)
+  const syncing = useState<boolean>('watchlist:syncing', () => false)
+
   const count = computed(() => items.value.length)
+
+  async function fetchFromBackend() {
+    if (!isLoggedIn.value) {
+      hydrated.value = true
+      return
+    }
+
+    try {
+      syncing.value = true
+      const response = await request<WatchlistApiResponse>('/watchlist')
+      
+      if (response.success && response.items) {
+        items.value = response.items.sort(sortByUpdatedDesc)
+        hydrated.value = true
+      } else {
+        console.warn('Failed to fetch watchlist from backend:', response)
+        hydrated.value = true
+      }
+    } catch (error) {
+      console.error('Error fetching watchlist from backend:', error)
+      hydrated.value = true
+    } finally {
+      syncing.value = false
+    }
+  }
+
+  async function syncToBackend(operation: 'save' | 'update' | 'delete', item: WatchlistItem | WatchTarget, id?: string) {
+    if (!isLoggedIn.value) {
+      return
+    }
+
+    try {
+      if (operation === 'save') {
+        const target = item as WatchTarget
+        const normalized = normalizeTarget(target)
+        const response = await request<WatchlistApiResponse>('/watchlist', {
+          method: 'POST',
+          body: {
+            target: normalized,
+            label: defaultLabel(normalized),
+          },
+        })
+
+        if (response.success && response.item) {
+          const existingIndex = items.value.findIndex(i => i.id === response.item!.id)
+          if (existingIndex >= 0) {
+            items.value[existingIndex] = response.item
+          } else {
+            items.value = [response.item, ...items.value].sort(sortByUpdatedDesc)
+          }
+        }
+      } else if (operation === 'update' && id) {
+        const watchlistItem = item as WatchlistItem
+        await request<WatchlistApiResponse>(`/watchlist/${id}`, {
+          method: 'PATCH',
+          body: {
+            label: watchlistItem.label,
+          },
+        })
+      } else if (operation === 'delete' && id) {
+        await request<WatchlistApiResponse>(`/watchlist/${id}`, {
+          method: 'DELETE',
+        })
+      }
+    } catch (error) {
+      console.error(`Error syncing ${operation} to backend:`, error)
+    }
+  }
+
+  onMounted(async () => {
+    if (isLoggedIn.value) {
+      await fetchFromBackend()
+    } else {
+      hydrated.value = localStorageHydrated.value
+    }
+  })
+
+  watch(isLoggedIn, async (loggedIn) => {
+    if (loggedIn) {
+      await fetchFromBackend()
+    } else {
+      hydrated.value = localStorageHydrated.value
+    }
+  })
 
   function findById(id: string) {
     return items.value.find(i => i.id === id) ?? null
@@ -91,13 +190,18 @@ export const useWatchlist = () => {
     return !!findByTarget(target)
   }
 
-  function save(target: WatchTarget, options?: { label?: string }): SaveResult {
+  async function save(target: WatchTarget, options?: { label?: string }): Promise<SaveResult> {
     const normalized = normalizeTarget(target)
     const existing = findByTarget(normalized)
+    
     if (existing) {
-      // Touch for recency
       existing.updatedAt = new Date().toISOString()
       items.value = [...items.value].sort(sortByUpdatedDesc)
+      
+      if (isLoggedIn.value) {
+        await syncToBackend('update', existing, existing.id)
+      }
+      
       return { status: 'already_saved', item: existing }
     }
 
@@ -111,48 +215,76 @@ export const useWatchlist = () => {
     }
 
     const now = new Date().toISOString()
+    const label = options?.label ?? defaultLabel(normalized)
     const next: WatchlistItem = {
       id: createId('wl'),
       target: normalized,
-      label: options?.label ?? defaultLabel(normalized),
+      label,
       createdAt: now,
       updatedAt: now,
     }
 
     items.value = [next, ...items.value].sort(sortByUpdatedDesc)
+
+    if (isLoggedIn.value) {
+      await syncToBackend('save', normalized)
+    }
+
     return { status: 'saved', item: next }
   }
 
-  function ensure(target: WatchTarget, options?: { label?: string }) {
-    const result = save(target, options)
+  async function ensure(target: WatchTarget, options?: { label?: string }): Promise<SaveResult> {
+    const result = await save(target, options)
     if (result.status === 'limit_reached') {
-      // If it already exists, we would have returned it above. At this point we truly can't create.
       return result
     }
     return result
   }
 
-  function remove(id: string) {
+  async function remove(id: string) {
+    const index = items.value.findIndex(i => i.id === id)
+    if (index === -1) return
+
     items.value = items.value.filter(i => i.id !== id)
+
+    if (isLoggedIn.value) {
+      await syncToBackend('delete', {} as WatchTarget, id)
+    }
   }
 
   function removeByTarget(target: WatchTarget) {
     const normalized = normalizeTarget(target)
     const key = targetKey(normalized)
-    items.value = items.value.filter(i => targetKey(normalizeTarget(i.target)) !== key)
+    const item = items.value.find(i => targetKey(normalizeTarget(i.target)) === key)
+    if (item) {
+      remove(item.id)
+    }
   }
 
-  function updateLabel(id: string, label: string) {
+  async function updateLabel(id: string, label: string) {
     const idx = items.value.findIndex(i => i.id === id)
     if (idx === -1) return
+    
     const now = new Date().toISOString()
     const next = { ...items.value[idx], label, updatedAt: now }
     items.value = [next, ...items.value.filter(i => i.id !== id)].sort(sortByUpdatedDesc)
+
+    if (isLoggedIn.value) {
+      await syncToBackend('update', next, id)
+    }
+  }
+
+  function reset() {
+    items.value = []
+    resetLocalStorage()
+    if (isLoggedIn.value) {
+      fetchFromBackend()
+    }
   }
 
   return {
     items,
-    hydrated,
+    hydrated: computed(() => hydrated.value && localStorageHydrated.value),
     count,
     findById,
     isSaved,
@@ -163,5 +295,7 @@ export const useWatchlist = () => {
     removeByTarget,
     updateLabel,
     reset,
+    syncing: readonly(syncing),
+    refresh: fetchFromBackend,
   }
 }

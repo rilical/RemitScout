@@ -1,6 +1,8 @@
 import type { Pool } from 'pg'
 
+import { writeBronzePayloadToS3 } from '../../../shared/bronze-storage'
 import { createLogger } from '../../../shared/logger'
+import { formatError } from '../../../shared/utils/error-handling'
 import { BronzeRepository } from '../repositories'
 
 const logger = createLogger('plane-b.bronze-writer')
@@ -77,11 +79,12 @@ export const writeBronzePayload = async (pool: Pool, input: BronzeWriteInput) =>
       } else {
         payloadObject = null
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const { message } = formatError(error)
       logger.warn('bronze_payload_serialization_failed', {
         provider_id: input.provider_id,
         corridor_id: input.corridor_id,
-        error: error.message,
+        error: message,
         payload_type: typeof normalized,
       })
       // Fallback: create a safe wrapper object that preserves data
@@ -102,26 +105,35 @@ export const writeBronzePayload = async (pool: Pool, input: BronzeWriteInput) =>
       }
     }
 
+    const s3Result = await writeBronzePayloadToS3({
+      providerId: input.provider_id,
+      corridorId: input.corridor_id,
+      payload: payloadObject,
+    })
+
     const repo = new BronzeRepository(pool)
     const bronzeId = await repo.insertPayload({
       providerId: input.provider_id,
       corridorId: input.corridor_id,
       payload: payloadObject, // Pass object, let PostgreSQL handle JSONB conversion
+      s3ObjectKey: s3Result?.uri ?? null,
     })
 
     logger.debug('bronze_payload_written', {
       provider_id: input.provider_id,
       corridor_id: input.corridor_id,
       bronze_id: bronzeId,
+      s3_object_key: s3Result?.uri ?? null,
     })
 
     return bronzeId
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
     logger.error('bronze_payload_write_failed', {
       provider_id: input.provider_id,
       corridor_id: input.corridor_id,
-      error: error.message,
-      stack: error.stack,
+      error: message,
+      stack,
     })
     // Don't throw - allow collector to continue even if bronze write fails
     return null

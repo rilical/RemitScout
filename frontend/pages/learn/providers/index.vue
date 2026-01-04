@@ -247,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import ProviderCard from '~/components/shared/ProviderCard.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
@@ -255,9 +255,8 @@ import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
 import HomeFaq from '~/components/home/HomeFaq.vue'
-import { useProviders } from '~/composables/useProviders'
+import { PROVIDER_SCORES } from '~/lib/providerScores'
 import { setSeo, jsonLdBreadcrumb, jsonLdSiteNavigation } from '~/composables/useSeo'
-import { SITE_STATS } from '~/config/stats'
 
 definePageMeta({
   alias: ['/reviews'],
@@ -295,12 +294,22 @@ jsonLdSiteNavigation([
   { name: 'FAQ', url: `${siteUrl}/faq` },
 ])
 
-// Providers data
-const { data: providers } = await useProviders()
+// Providers data - use static list from provider scores
+const allProviders = computed(() => {
+  return Object.values(PROVIDER_SCORES)
+    .map(provider => ({
+      id: provider.id,
+      slug: provider.slug,
+      name: provider.name,
+      score: provider.remitScore,
+      scoreBreakdown: provider.scoreBreakdown,
+    }))
+    .filter(p => p.score > 0) // Only show providers with scores
+})
+
 const filteredProviders = computed(() => {
-  const providerList = providers.value || []
   // Sort by remit-score (descending order)
-  return [...providerList].sort((a, b) => {
+  return [...allProviders.value].sort((a, b) => {
     const scoreA = a.score || 0
     const scoreB = b.score || 0
     return scoreB - scoreA

@@ -53,65 +53,114 @@
                 Get in Touch
               </h2>
 
-              <form class="space-y-6">
+              <form class="space-y-6" @submit.prevent="handleSubmit">
+                <div v-if="submitSuccess" class="rounded-lg bg-green-50 border border-green-200 p-4">
+                  <div class="flex">
+                    <svg class="h-5 w-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <p class="text-sm text-green-800">{{ submitSuccess }}</p>
+                  </div>
+                </div>
+
+                <div v-if="submitError" class="rounded-lg bg-red-50 border border-red-200 p-4">
+                  <div class="flex">
+                    <svg class="h-5 w-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <p class="text-sm text-red-800">{{ submitError }}</p>
+                  </div>
+                </div>
+
                 <div>
                   <label
                     for="name"
                     class="mb-2 block text-sm font-medium text-gray-600"
-                  >Name</label>
+                  >Name <span class="text-red-500">*</span></label>
                   <input
                     id="name"
+                    v-model="form.name"
                     type="text"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                    :disabled="isSubmitting"
+                    class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    :class="errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
                   >
+                  <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
                 </div>
 
                 <div>
                   <label
                     for="email"
                     class="mb-2 block text-sm font-medium text-gray-600"
-                  >Email</label>
+                  >Email <span class="text-red-500">*</span></label>
                   <input
                     id="email"
+                    v-model="form.email"
                     type="email"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                    :disabled="isSubmitting"
+                    class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    :class="errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
                   >
+                  <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
                 </div>
 
                 <div>
                   <label
                     for="subject"
                     class="mb-2 block text-sm font-medium text-gray-600"
-                  >Subject</label>
+                  >Subject <span class="text-red-500">*</span></label>
                   <select
                     id="subject"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    v-model="form.subject"
+                    required
+                    :disabled="isSubmitting"
+                    class="w-full rounded-md border px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 transition-colors"
+                    :class="errors.subject ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
                   >
-                    <option class="text-gray-900">General Question</option>
-                    <option class="text-gray-900">Provider Comparison</option>
-                    <option class="text-gray-900">Technical Support</option>
-                    <option class="text-gray-900">Partnership Inquiry</option>
-                    <option class="text-gray-900">Other</option>
+                    <option value="" disabled>Select a subject</option>
+                    <option value="General Question">General Question</option>
+                    <option value="Provider Comparison">Provider Comparison</option>
+                    <option value="Technical Support">Technical Support</option>
+                    <option value="Partnership Inquiry">Partnership Inquiry</option>
+                    <option value="Other">Other</option>
                   </select>
+                  <p v-if="errors.subject" class="mt-1 text-sm text-red-600">{{ errors.subject }}</p>
                 </div>
 
                 <div>
                   <label
                     for="message"
                     class="mb-2 block text-sm font-medium text-gray-600"
-                  >Message</label>
+                  >Message <span class="text-red-500">*</span></label>
                   <textarea
                     id="message"
+                    v-model="form.message"
                     rows="6"
-                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                    :disabled="isSubmitting"
+                    class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    :class="errors.message ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
                   />
+                  <p v-if="errors.message" class="mt-1 text-sm text-red-600">{{ errors.message }}</p>
+                  <p class="mt-1 text-xs text-gray-500">{{ form.message.length }}/5000 characters</p>
                 </div>
 
                 <button
                   type="submit"
-                  class="w-full rounded-md bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
+                  :disabled="isSubmitting"
+                  class="w-full rounded-md px-4 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  :class="isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'"
                 >
-                  Send Message
+                  <span v-if="isSubmitting" class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </span>
+                  <span v-else>Send Message</span>
                 </button>
               </form>
             </div>
@@ -376,10 +425,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import WhyTrustUs from '~/components/home/WhyTrustUs.vue'
 import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useSeo'
+import { useApi } from '~/composables/useApi'
 
 // Breadcrumbs
 const breadcrumbItems = [
@@ -442,6 +492,129 @@ const confirmExternalLink = () => {
 const closeExternalLinkModal = () => {
   showExternalLinkModal.value = false
   pendingExternalUrl.value = ''
+}
+
+// Contact form state
+const { request } = useApi()
+const isSubmitting = ref(false)
+const submitSuccess = ref('')
+const submitError = ref('')
+
+const form = reactive({
+  name: '',
+  email: '',
+  subject: '',
+  message: '',
+})
+
+const errors = reactive({
+  name: '',
+  email: '',
+  subject: '',
+  message: '',
+})
+
+const validateForm = (): boolean => {
+  let isValid = true
+  
+  // Reset errors
+  errors.name = ''
+  errors.email = ''
+  errors.subject = ''
+  errors.message = ''
+
+  // Validate name
+  if (!form.name.trim()) {
+    errors.name = 'Name is required'
+    isValid = false
+  } else if (form.name.length > 200) {
+    errors.name = 'Name must be less than 200 characters'
+    isValid = false
+  }
+
+  // Validate email
+  if (!form.email.trim()) {
+    errors.email = 'Email is required'
+    isValid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    errors.email = 'Please enter a valid email address'
+    isValid = false
+  } else if (form.email.length > 200) {
+    errors.email = 'Email must be less than 200 characters'
+    isValid = false
+  }
+
+  // Validate subject
+  if (!form.subject) {
+    errors.subject = 'Please select a subject'
+    isValid = false
+  } else if (form.subject.length > 200) {
+    errors.subject = 'Subject must be less than 200 characters'
+    isValid = false
+  }
+
+  // Validate message
+  if (!form.message.trim()) {
+    errors.message = 'Message is required'
+    isValid = false
+  } else if (form.message.trim().length < 10) {
+    errors.message = 'Message must be at least 10 characters'
+    isValid = false
+  } else if (form.message.length > 5000) {
+    errors.message = 'Message must be less than 5000 characters'
+    isValid = false
+  }
+
+  return isValid
+}
+
+const handleSubmit = async () => {
+  submitSuccess.value = ''
+  submitError.value = ''
+
+  if (!validateForm()) {
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    const response = await request<{ success: boolean; message?: string; error?: string }>(
+      '/contact',
+      {
+        method: 'POST',
+        body: {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          subject: form.subject,
+          message: form.message.trim(),
+        },
+      },
+    )
+
+    if (response.success) {
+      submitSuccess.value = response.message || 'Thank you for contacting us. We will get back to you soon.'
+      
+      // Reset form
+      form.name = ''
+      form.email = ''
+      form.subject = ''
+      form.message = ''
+
+      // Scroll to top to show success message
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      submitError.value = response.message || 'Failed to send message. Please try again.'
+    }
+  } catch (error: any) {
+    const errorMessage = error?.data?.message || error?.message || 'An error occurred while sending your message. Please try again later.'
+    submitError.value = errorMessage
+    
+    // Scroll to top to show error message
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 // Mini FAQ for contact page

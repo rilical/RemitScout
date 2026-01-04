@@ -5,6 +5,8 @@ import { createLogger } from '../../../shared/logger'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
+import { getRequestContext, logAuditEvent } from '../services/audit-log'
+import { getErrorMessage } from '../types/errors'
 
 type EntitlementType = 'pulse' | 'exports' | 'alerts' | 'history'
 
@@ -17,6 +19,28 @@ export const authPlugin = (app: FastifyInstance) => {
     const result = await verifySupabaseJwt(header)
     if ('code' in result) {
       request.authError = result
+      if (result.code !== 'missing_token') {
+        try {
+          await logAuditEvent(planeAPool, {
+            actorId: 'anonymous',
+            actorType: 'user',
+            action: 'auth.failed',
+            entityType: 'auth',
+            metadata: {
+              code: result.code,
+              message: result.message,
+            },
+            category: 'security',
+            severity: 'warning',
+            ...getRequestContext(request),
+          })
+        } catch (error) {
+          const logger = createLogger('plane-a.auth-plugin')
+          logger.warn('audit_log_failed', {
+            error: getErrorMessage(error),
+          })
+        }
+      }
       return
     }
     request.user = result

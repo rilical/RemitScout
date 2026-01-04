@@ -146,7 +146,7 @@ const { request } = useApi()
 
 if (_sessionId) {
   try {
-    await request('/stripe/verify-session', {
+    await request('/billing/verify-session', {
       method: 'POST',
       body: { sessionId: _sessionId },
     })
@@ -172,7 +172,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

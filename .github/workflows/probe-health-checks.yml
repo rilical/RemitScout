@@ -20,9 +20,9 @@ jobs:
         provider: [remitly, wise, xe, worldremit, westernunion]
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.19.0
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -37,7 +37,7 @@ jobs:
         run: pnpm -C backend probe:${{ matrix.provider }}
       - name: Upload probe results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: probe-${{ matrix.provider }}-results
           path: probe-results.json
@@ -48,9 +48,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.19.0
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -61,4 +61,5 @@ jobs:
           PROBE_TIMEOUT_MS: 60000
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
         run: pnpm -C backend probe:cache-ttl
+
 

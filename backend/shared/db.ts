@@ -1,10 +1,64 @@
-import { Pool, type PoolClient } from 'pg'
+import { Pool, type PoolClient, type QueryResultRow } from 'pg'
 import { config } from './config'
+import { recordQueryFromSql, updateConnectionPoolMetrics } from './db-metrics'
+import { registerDatabasePool } from './connection-manager'
+
+/**
+ * Gets pool size limits based on runtime environment.
+ */
+const getPoolSizeLimits = (): { max: number; min: number } => {
+  const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+  const isECS = Boolean(
+    process.env.ECS_CONTAINER_METADATA_URI || process.env.ECS_CONTAINER_METADATA_URI_V4,
+  )
+
+  if (isLambda) {
+    return { max: 20, min: 1 }
+  }
+  if (isECS) {
+    return { max: 50, min: 2 }
+  }
+  return { max: 10, min: 1 }
+}
 
 export const createPool = (connectionString?: string) => {
-  return new Pool({
+  const sslMode = process.env.DB_SSL_MODE || process.env.PGSSLMODE
+  const sslEnabled = sslMode === 'require' || sslMode === 'verify-full' || sslMode === 'verify-ca'
+  const queryTimeoutMs = Number(process.env.DB_QUERY_TIMEOUT_MS) || 30000 // 30 seconds default
+  const connectionTimeoutMs = Number(process.env.DB_CONNECTION_TIMEOUT_MS) || 10000 // 10 seconds
+  const isProduction = process.env.NODE_ENV === 'production'
+  const poolLimits = getPoolSizeLimits()
+
+  // SSL configuration: verify certificates in production
+  const sslConfig = sslEnabled
+    ? {
+        rejectUnauthorized: isProduction && (sslMode === 'verify-full' || sslMode === 'verify-ca'),
+      }
+    : undefined
+
+  const pool = new Pool({
     connectionString: connectionString || config.db.url,
+    ssl: sslConfig,
+    statement_timeout: queryTimeoutMs,
+    query_timeout: queryTimeoutMs,
+    connectionTimeoutMillis: connectionTimeoutMs,
+    max: poolLimits.max,
+    min: poolLimits.min,
+    idleTimeoutMillis: 30000,
+    allowExitOnIdle: true,
   })
+
+  // Cleanup pool on process exit
+  const cleanup = () => {
+    pool.end().catch(() => {
+      // Silently fail on cleanup
+    })
+  }
+  process.once('exit', cleanup)
+  process.once('SIGTERM', cleanup)
+  process.once('SIGINT', cleanup)
+
+  return pool
 }
 
 const poolCache = new Map<string, Pool>()
@@ -17,16 +71,83 @@ export const getPool = (connectionString?: string) => {
   }
   const pool = createPool(key)
   poolCache.set(key, pool)
+
+  const poolName =
+    key === config.db.planeAUrl
+      ? 'plane-a'
+      : key === config.db.planeBUrl
+        ? 'plane-b'
+        : key === config.db.planeCUrl
+          ? 'plane-c'
+          : 'default'
+  registerDatabasePool(pool, poolName)
+
   return pool
 }
 
 export const pool = getPool()
 
-export const query = async <T = any>(
+const startPoolMetricsUpdater = () => {
+  setInterval(() => {
+    try {
+      for (const [name, p] of poolCache.entries()) {
+        const poolName =
+          name === config.db.planeAUrl
+            ? 'plane-a'
+            : name === config.db.planeBUrl
+              ? 'plane-b'
+              : name === config.db.planeCUrl
+                ? 'plane-c'
+                : 'default'
+        const active = p.totalCount - p.idleCount
+        updateConnectionPoolMetrics(poolName, active, p.idleCount)
+      }
+    } catch {
+      // Silently ignore metrics errors
+    }
+  }, 10000)
+}
+
+startPoolMetricsUpdater()
+
+export const query = async <T extends QueryResultRow = QueryResultRow>(
   text: string,
-  params: any[] = [],
+  params: unknown[] = [],
   poolInstance: Pool | PoolClient = pool,
+  timeoutMs?: number,
 ) => {
-  const result = await poolInstance.query<T>(text, params)
-  return result
+  const startTime = Date.now()
+  const queryTimeout = timeoutMs ?? (Number(process.env.DB_QUERY_TIMEOUT_MS) || 30000)
+  
+  try {
+    // Set query timeout if pool client supports it
+    if ('query' in poolInstance && typeof (poolInstance as Pool).query === 'function') {
+      const pool = poolInstance as Pool
+      const client = await pool.connect()
+      try {
+        await client.query(`SET statement_timeout = ${queryTimeout}`)
+        const result = await client.query<T>(text, params)
+        return result
+      } finally {
+        client.release()
+      }
+    } else {
+      const result = await poolInstance.query<T>(text, params)
+      try {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordQueryFromSql(text, durationSeconds, 'success')
+      } catch {
+        // Silently ignore metrics errors
+      }
+      return result
+    }
+  } catch (error) {
+    try {
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordQueryFromSql(text, durationSeconds, 'error')
+    } catch {
+      // Silently ignore metrics errors
+    }
+    throw error
+  }
 }

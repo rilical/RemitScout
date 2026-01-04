@@ -159,5 +159,113 @@ paths:
                           type: string
                         best_for:
                           type: string
+
+  /api/bank-vs-specialist:
+    get:
+      summary: Bank vs specialist comparison (US to Mexico)
+      parameters:
+        - in: query
+          name: amount
+          required: false
+          schema:
+            type: number
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bank vs specialist response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      corridor:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                          to:
+                            type: string
+                          sendCurrency:
+                            type: string
+                          recvCurrency:
+                            type: string
+                      midRate:
+                        type: number
+                      bank:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          fee:
+                            type: number
+                          fxRate:
+                            type: number
+                          recipientGets:
+                            type: number
+                          delivery:
+                            type: string
+                      top:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          fee:
+                            type: number
+                          fxRate:
+                            type: number
+                          recipientGets:
+                            type: number
+                          delivery:
+                            type: string
+                      updatedAt:
+                        type: string
+                      savings:
+                        type: object
+                        properties:
+                          amount:
+                            type: number
+                          recipientGetsDifference:
+                            type: number
+                          percentage:
+                            type: number
+                  updatedAt:
+                    type: string
+
+  /api/geo:
+    get:
+      summary: Geolocation lookup
+      responses:
+        '200':
+          description: Geolocation response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countryCode:
+                    type: string
+                  country:
+                    type: string
+                  currency:
+                    type: string
+                  timezone:
+                    type: string
+                    nullable: true
+                  source:
+                    type: string
                         updated_at:
                           type: string

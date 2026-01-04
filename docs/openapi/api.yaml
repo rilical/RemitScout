@@ -1,0 +1,1978 @@
+openapi: 3.0.3
+info:
+  title: Remit-Scout API
+  version: 1.0.0
+  description: |
+    Remit-Scout API for comparing money transfer providers and accessing remittance data.
+    
+    ## Authentication
+    - Public endpoints: Rate-limited by IP
+    - Protected endpoints: Require JWT Bearer token
+    
+    ## Rate Limiting
+    - Public: 100 requests per window (default 1 minute)
+    - Authenticated: 500 requests per window
+    
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.remit-scout.com
+    description: Production
+
+paths:
+  /api/providers:
+    get:
+      summary: Get provider quotes for a corridor
+      description: |
+        Returns aggregated provider quotes with metadata (scores, logos, affiliate links) 
+        for a given corridor and payment method. This is the main endpoint for the frontend 
+        comparison page.
+      tags:
+        - Providers
+      parameters:
+        - name: from
+          in: query
+          description: Source country code (ISO 3166-1 alpha-2)
+          required: false
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+            example: US
+        - name: to
+          in: query
+          description: Destination country code (ISO 3166-1 alpha-2)
+          required: false
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+            example: PH
+        - name: amount
+          in: query
+          description: Send amount
+          required: false
+          schema:
+            type: number
+            minimum: 50
+            example: 1000
+        - name: method
+          in: query
+          description: Payment method preference
+          required: false
+          schema:
+            type: string
+            enum: [bank, cash, wallet]
+            default: bank
+        - name: corridor_id
+          in: query
+          description: Full corridor ID (e.g., "US-PH-USD-PHP")
+          required: false
+          schema:
+            type: string
+        - name: amount_bucket
+          in: query
+          description: Pre-computed amount bucket
+          required: false
+          schema:
+            type: integer
+        - name: payin
+          in: query
+          description: Canonical payin method (e.g., "bank_transfer")
+          required: false
+          schema:
+            type: string
+        - name: payout
+          in: query
+          description: Canonical payout method (e.g., "bank_deposit")
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider quotes response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvidersResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/quotes/current:
+    get:
+      summary: Get current quotes for a corridor
+      description: |
+        Returns raw normalized quotes from the database for a specific corridor, 
+        amount bucket, and payment methods. More technical endpoint than /api/providers.
+      tags:
+        - Quotes
+      parameters:
+        - name: corridor_id
+          in: query
+          required: true
+          schema:
+            type: string
+            example: US-PH-USD-PHP
+        - name: amount_bucket
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 1000
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+            example: 1000
+        - name: payin
+          in: query
+          required: true
+          schema:
+            type: string
+            example: bank_transfer
+        - name: payout
+          in: query
+          required: true
+          schema:
+            type: string
+            example: bank_deposit
+        - name: live
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Quotes response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/popular-corridors:
+    get:
+      summary: Get popular corridors
+      description: Returns the most popular remittance corridors based on recent searches
+      tags:
+        - Corridors
+      responses:
+        '200':
+          description: Popular corridors response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopularCorridorsResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/bank-vs-specialist:
+    get:
+      summary: Bank vs specialist comparison (US to Mexico)
+      description: |
+        Returns a fixed US-MX comparison between the best specialist provider and Wells Fargo.
+        The corridor is fixed to US-MX-USD-MXN; any from/to params are ignored.
+      tags:
+        - Discovery
+      parameters:
+        - name: amount
+          in: query
+          description: Send amount (defaults to 500)
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            example: 500
+        - name: from
+          in: query
+          description: Ignored (corridor is fixed to US-MX)
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          description: Ignored (corridor is fixed to US-MX)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bank vs specialist comparison response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      corridor:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                          to:
+                            type: string
+                          sendCurrency:
+                            type: string
+                          recvCurrency:
+                            type: string
+                      midRate:
+                        type: number
+                      bank:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          logoUrl:
+                            type: string
+                            nullable: true
+                          fee:
+                            type: number
+                          marginPct:
+                            type: number
+                          fxRate:
+                            type: number
+                          recipientGets:
+                            type: number
+                          delivery:
+                            type: string
+                          reliability:
+                            type: number
+                          methods:
+                            type: array
+                            items:
+                              type: string
+                              enum: [bank, cash, wallet]
+                          bestFor:
+                            type: string
+                      top:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          logoUrl:
+                            type: string
+                            nullable: true
+                          fee:
+                            type: number
+                          marginPct:
+                            type: number
+                          fxRate:
+                            type: number
+                          recipientGets:
+                            type: number
+                          delivery:
+                            type: string
+                          reliability:
+                            type: number
+                          methods:
+                            type: array
+                            items:
+                              type: string
+                              enum: [bank, cash, wallet]
+                          bestFor:
+                            type: string
+                      updatedAt:
+                        type: string
+                      savings:
+                        type: object
+                        properties:
+                          amount:
+                            type: number
+                          recipientGetsDifference:
+                            type: number
+                          percentage:
+                            type: number
+                  updatedAt:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          description: Required bank or specialist quote unavailable
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/geo:
+    get:
+      summary: Geolocation lookup
+      description: Returns country and currency based on forwarded headers (CloudFront/Cloudflare).
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Geolocation response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countryCode:
+                    type: string
+                  country:
+                    type: string
+                  currency:
+                    type: string
+                  timezone:
+                    type: string
+                    nullable: true
+                  source:
+                    type: string
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/me:
+    get:
+      summary: Get current user information
+      description: Returns user plan, entitlements, and usage information
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/billing/checkout-session:
+    post:
+      summary: Create Stripe checkout session
+      description: Creates a Stripe checkout session for upgrading to Plus plan
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan_code:
+                  type: string
+                  enum: [plus]
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/billing/portal:
+    get:
+      summary: Get Stripe billing portal link
+      description: Returns a link to the Stripe customer portal for managing subscriptions
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/billing/webhook:
+    post:
+      summary: Stripe webhook handler
+      description: Handles Stripe webhook events (internal use only)
+      tags:
+        - Billing
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/pulse/status:
+    get:
+      summary: Pulse service status
+      description: Check if Pulse service is available (requires Plus entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Service is available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/corridors:
+    get:
+      summary: Pulse corridor list
+      description: Returns available Pulse corridors (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Corridor options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                    label:
+                      type: string
+                    fromFlag:
+                      type: string
+                    toFlag:
+                      type: string
+                    fromCode:
+                      type: string
+                    toCode:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/overview:
+    get:
+      summary: Pulse overview
+      description: Returns Pulse overview tiles and charts (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Corridor slug (e.g., us-ph or usd-php)
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 30d
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: fundingMethod
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: payoutMethod
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pulse overview payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        label:
+                          type: string
+                        value:
+                          type: string
+                        delta:
+                          type: string
+                        deltaType:
+                          type: string
+                        deltaLabel:
+                          type: string
+                        tooltip:
+                          type: string
+                        chartId:
+                          type: string
+                        icon:
+                          type: string
+                  charts:
+                    type: array
+                    items:
+                      type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                  corridorName:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/charts/{chartId}:
+    get:
+      summary: Pulse chart data
+      description: Returns chart series for a chart id (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 30d
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: fundingMethod
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: payoutMethod
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chart payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metadata:
+                    type: object
+                  series:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        label:
+                          type: string
+                        color:
+                          type: string
+                        points:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              t:
+                                type: number
+                              v:
+                                type: number
+                              label:
+                                type: string
+                  annotations:
+                    type: array
+                    items:
+                      type: object
+                  insight:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/table:
+    get:
+      summary: Pulse table data
+      description: Returns provider table rows (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 30d
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: fundingMethod
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: payoutMethod
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Table payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  columns:
+                    type: array
+                    items:
+                      type: object
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                  totalRows:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/hero:
+    get:
+      summary: Pulse hero chart
+      description: Returns hero chart data (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Hero chart payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: number
+                        midMarketRate:
+                          type: number
+                        bestProviderRate:
+                          type: number
+                        bestProvider:
+                          type: string
+                        bankAverageRate:
+                          type: number
+                        spread:
+                          type: number
+                        spreadPercent:
+                          type: number
+                  currentSpread:
+                    type: number
+                  currentSpreadPercent:
+                    type: number
+                  bestProvider:
+                    type: string
+                  lossOn1000:
+                    type: number
+                  currency:
+                    type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/coverage-summary:
+    get:
+      summary: Pulse coverage summary
+      description: Returns coverage summary (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Coverage summary payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quotesInRange:
+                    type: integer
+                  providersIncluded:
+                    type: integer
+                  methodsIncluded:
+                    type: array
+                    items:
+                      type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/snapshot-summary:
+    get:
+      summary: Pulse snapshot summary
+      description: Returns snapshot summary (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Snapshot summary payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kpis:
+                    type: array
+                    items:
+                      type: object
+                  quotesInRange:
+                    type: integer
+                  providersIncluded:
+                    type: integer
+                  methodsIncluded:
+                    type: array
+                    items:
+                      type: string
+                  leader:
+                    type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/providers/heatmap:
+    get:
+      summary: Pulse provider heatmap
+      description: Returns provider heatmap data (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider heatmap payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  days:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        timestamp:
+                          type: number
+                        winner:
+                          type: string
+                        winnerColor:
+                          type: string
+                        savings:
+                          type: number
+                  providerStats:
+                    type: object
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/smart-send:
+    get:
+      summary: Pulse smart send
+      description: Returns smart send guidance (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Smart send payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  level:
+                    type: string
+                  message:
+                    type: string
+                  rationale:
+                    type: array
+                    items:
+                      type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/market-snapshot:
+    get:
+      summary: Pulse market snapshot
+      description: Returns market snapshot data (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Market snapshot payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quotes:
+                    type: array
+                    items:
+                      type: object
+                  midMarketRate:
+                    type: number
+                  currency:
+                    type: string
+                  amount:
+                    type: number
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/true-cost:
+    get:
+      summary: Pulse true cost breakdown
+      description: Returns provider true cost breakdown (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: True cost rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    fee:
+                      type: number
+                    marginPct:
+                      type: number
+                    fxRate:
+                      type: number
+                    recipientGets:
+                      type: number
+                    delivery:
+                      type: string
+                    reliability:
+                      type: number
+                    trueCost:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/market-depth:
+    get:
+      summary: Pulse market depth
+      description: Returns market depth summary (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Market depth payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bestRate:
+                    type: number
+                  bestProvider:
+                    type: string
+                  secondBestRate:
+                    type: number
+                  secondBestProvider:
+                    type: string
+                  medianRate:
+                    type: number
+                  worstRate:
+                    type: number
+                  worstProvider:
+                    type: string
+                  spreadRange:
+                    type: number
+                  spreadRangeBps:
+                    type: number
+                  providerCount:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/arbitrage:
+    get:
+      summary: Pulse arbitrage insight
+      description: Returns arbitrage opportunity summary (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Arbitrage payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                  currentRate:
+                    type: number
+                  averageRate:
+                    type: number
+                  savingsPercent:
+                    type: number
+                  percentile:
+                    type: number
+                  isSignificant:
+                    type: boolean
+                  recommendation:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/bank-comparison:
+    get:
+      summary: Pulse bank comparison
+      description: Returns bank comparison summary (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Bank comparison payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bankMarkup:
+                    type: number
+                  bankFee:
+                    type: number
+                  bankTotalCost:
+                    type: number
+                  bestSpecialistMarkup:
+                    type: number
+                  bestSpecialistFee:
+                    type: number
+                  bestSpecialistTotalCost:
+                    type: number
+                  bestSpecialistName:
+                    type: string
+                  savings:
+                    type: number
+                  savingsPercent:
+                    type: number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/cost-trend:
+    get:
+      summary: Pulse cost trend
+      description: Returns cost trend time series (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Cost trend rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                    averageHiddenFee:
+                      type: number
+                    bestProvider:
+                      type: string
+                    bestProviderCost:
+                      type: number
+                    marketLeaderDays:
+                      type: number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/fx-rate-history:
+    get:
+      summary: Pulse FX rate history
+      description: Returns FX rate history for a corridor (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: FX rate history payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  baseCurrency:
+                    type: string
+                  quoteCurrency:
+                    type: string
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        rate:
+                          type: number
+                        bid:
+                          type: number
+                        ask:
+                          type: number
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/events:
+    get:
+      summary: Pulse events feed
+      description: Returns corridor event feed (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Corridor slug (e.g., us-ph or usd-php)
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 30d
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: payin
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: payout
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pulse events feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: date-time
+                    severity:
+                      type: string
+                      enum: [high, medium, low]
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    chartId:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/providers/benchmarking:
+    get:
+      summary: Pulse provider benchmarking
+      description: Returns provider benchmarking data for a corridor (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Corridor slug (e.g., us-ph or usd-php)
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 30d
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: payin
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: payout
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider benchmarking rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    provider:
+                      type: string
+                    deliveredAmount:
+                      type: number
+                    totalCost:
+                      type: number
+                    totalCostBps:
+                      type: number
+                    fee:
+                      type: number
+                    markupBps:
+                      type: number
+                    speed:
+                      type: string
+                    winRate:
+                      type: number
+                    reliability:
+                      type: number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/pulse/method-coverage:
+    get:
+      summary: Pulse method coverage
+      description: Returns method coverage for a corridor (requires Pulse entitlement)
+      tags:
+        - Pulse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: corridor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Corridor slug (e.g., us-ph or usd-php)
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 30d
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: payin
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: payout
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Method coverage rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    provider:
+                      type: string
+                    bank:
+                      type: boolean
+                    cash:
+                      type: boolean
+                    wallet:
+                      type: boolean
+                    card:
+                      type: boolean
+                    speed:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/ops/{provider}/health:
+    get:
+      summary: Provider health check (Admin only)
+      description: Returns health status for a specific provider
+      tags:
+        - Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [remitly, wise, worldremit, westernunion, xe]
+      responses:
+        '200':
+          description: Provider health data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderHealthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /healthz:
+    get:
+      summary: Health check
+      description: Basic health check endpoint
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /readyz:
+    get:
+      summary: Readiness check
+      description: Checks if service is ready to accept traffic (database connectivity)
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ready
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: not_ready
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns Prometheus-formatted metrics
+      tags:
+        - Metrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Supabase Auth
+
+  schemas:
+    ProviderQuote:
+      type: object
+      required:
+        - id
+        - name
+        - fee
+        - marginPct
+        - fxRate
+        - recipientGets
+        - delivery
+        - reliability
+        - methods
+        - bestFor
+      properties:
+        id:
+          type: string
+          description: Provider slug
+          example: remitly
+        name:
+          type: string
+          description: Provider display name
+          example: Remitly
+        logoUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: /logos/remitly.svg
+        fee:
+          type: number
+          description: Total fee in send currency
+          example: 1.99
+        marginPct:
+          type: number
+          description: FX markup percentage vs mid-market rate
+          example: 0.4
+        fxRate:
+          type: number
+          description: Exchange rate (send currency → receive currency)
+          example: 56.5
+        recipientGets:
+          type: number
+          description: Amount recipient receives in receive currency
+          example: 56500
+        delivery:
+          type: string
+          description: Human-readable delivery time
+          example: Same day
+        reliability:
+          type: number
+          description: Reliability score (0-1)
+          minimum: 0
+          maximum: 1
+          example: 0.91
+        methods:
+          type: array
+          items:
+            type: string
+            enum: [bank, cash, wallet]
+          description: Available payment methods
+          example: [bank]
+        bestFor:
+          type: string
+          description: Use case description
+          example: Bank deposit
+        whyThisRanking:
+          type: string
+          nullable: true
+          description: Explanation for ranking
+          example: Bank deposit
+        limits:
+          type: string
+          nullable: true
+          description: Transfer limits
+        corridorPros:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Corridor-specific pros
+        corridorCons:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Corridor-specific cons
+
+    ProvidersResponse:
+      type: object
+      required:
+        - data
+        - updatedAt
+        - corridor
+        - amount
+        - method
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderQuote'
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of when data was last updated
+        corridor:
+          type: string
+          description: Corridor ID
+          example: US-PH-USD-PHP
+        amount:
+          type: number
+          description: Send amount
+          example: 1000
+        method:
+          type: string
+          enum: [bank, cash, wallet]
+          description: Payment method used
+          example: bank
+
+    QuotesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+        count:
+          type: integer
+        requested_amount:
+          type: number
+        bucket_used:
+          type: integer
+        fee_bucket_used:
+          type: integer
+        approximate:
+          type: boolean
+        cache:
+          type: object
+          properties:
+            ttl_seconds:
+              type: integer
+            age_seconds:
+              type: integer
+              nullable: true
+            fresh:
+              type: boolean
+        refresh:
+          type: object
+          properties:
+            attempted:
+              type: boolean
+            enqueued:
+              type: boolean
+            request_id:
+              type: string
+              nullable: true
+            request_ids:
+              type: array
+              items:
+                type: string
+            providers:
+              type: array
+              items:
+                type: string
+        quotes:
+          type: array
+          items:
+            type: object
+
+    PopularCorridorsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+        count:
+          type: integer
+        corridors:
+          type: array
+          items:
+            type: object
+            properties:
+              route:
+                type: string
+                example: US→PH
+              count_24h:
+                type: integer
+              top_provider:
+                type: string
+                nullable: true
+              fee_range:
+                type: string
+                nullable: true
+              speed_range:
+                type: string
+                nullable: true
+              best_for:
+                type: string
+                nullable: true
+              updated_at:
+                type: string
+                format: date-time
+
+    MeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+        user:
+          type: object
+          properties:
+            user_id:
+              type: string
+            email:
+              type: string
+        plan:
+          type: object
+          properties:
+            plan_code:
+              type: string
+              enum: [free, plus]
+            status:
+              type: string
+              enum: [active, cancelled, expired]
+        entitlements:
+          type: object
+        usage:
+          type: object
+
+    ProviderHealthResponse:
+      type: object
+      properties:
+        provider_id:
+          type: string
+        summary:
+          type: object
+          properties:
+            corridor_count:
+              type: integer
+            stale_count:
+              type: integer
+            ok_count:
+              type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized - Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Providers
+    description: Provider quotes and comparison endpoints
+  - name: Quotes
+    description: Raw quote data endpoints
+  - name: Corridors
+    description: Corridor information endpoints
+  - name: User
+    description: User account and plan endpoints
+  - name: Billing
+    description: Billing and subscription endpoints
+  - name: Pulse
+    description: Pulse analytics endpoints (Plus only)
+  - name: Operations
+    description: Operational endpoints (Admin only)
+  - name: Health
+    description: Health check endpoints
+  - name: Metrics
+    description: Metrics endpoints

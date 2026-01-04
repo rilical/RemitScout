@@ -1,0 +1,270 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Remit-Scout CDK Context Schema",
+  "description": "Schema for validating CDK context variables",
+  "type": "object",
+  "properties": {
+    "env": {
+      "type": "string",
+      "enum": ["dev", "staging", "prod"],
+      "description": "Environment name (dev, staging, prod)",
+      "default": "dev"
+    },
+    "backendImageTag": {
+      "type": "string",
+      "description": "ECR image tag for backend Docker image",
+      "default": "latest"
+    },
+    "planeADbSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Plane A database credentials"
+    },
+    "planeADbSecretJsonKey": {
+      "type": "string",
+      "description": "JSON key in Plane A database secret (e.g., DATABASE_URL_PLANE_A)"
+    },
+    "planeADbSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for Plane A database URL"
+    },
+    "planeBDbSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Plane B database credentials"
+    },
+    "planeBDbSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for Plane B database URL"
+    },
+    "planeCDbSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Plane C database credentials"
+    },
+    "planeCDbSecretJsonKey": {
+      "type": "string",
+      "description": "JSON key in Plane C database secret (e.g., DATABASE_URL_PLANE_C)"
+    },
+    "planeCDbSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for Plane C database URL"
+    },
+    "redisSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Redis credentials"
+    },
+    "redisSecretJsonKey": {
+      "type": "string",
+      "description": "JSON key in Redis secret (e.g., REDIS_URL)"
+    },
+    "redisSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for Redis URL"
+    },
+    "oandaSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for OANDA API key"
+    },
+    "oandaSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for OANDA API key"
+    },
+    "proxyResidentialSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for residential proxy credentials"
+    },
+    "proxyResidentialSecretJsonKey": {
+      "type": "string",
+      "description": "JSON key in residential proxy secret"
+    },
+    "proxyResidentialSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for residential proxy URL"
+    },
+    "proxyResidentialUrl": {
+      "type": "string",
+      "description": "Residential proxy URL"
+    },
+    "proxyDatacenterSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for datacenter proxy credentials"
+    },
+    "proxyDatacenterSecretJsonKey": {
+      "type": "string",
+      "description": "JSON key in datacenter proxy secret"
+    },
+    "proxyDatacenterSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for datacenter proxy URL"
+    },
+    "proxyDatacenterUrl": {
+      "type": "string",
+      "description": "Datacenter proxy URL"
+    },
+    "planeBIngestFanoutMode": {
+      "type": "string",
+      "enum": ["off", "queue", "shadow"],
+      "description": "Ingest fanout queue mode"
+    },
+    "planeBNotificationsMode": {
+      "type": "string",
+      "enum": ["off", "queue", "shadow"],
+      "description": "Notifications queue mode"
+    },
+    "planeBOpsAlertsMode": {
+      "type": "string",
+      "enum": ["off", "queue", "shadow"],
+      "description": "Ops alerts queue mode"
+    },
+    "planeBB2cQueueInSweep": {
+      "type": "boolean",
+      "description": "Enable B2C queue in sweep"
+    },
+    "bronzePrefix": {
+      "type": "string",
+      "description": "S3 prefix for bronze storage",
+      "default": "bronze"
+    },
+    "planeCBaseUrl": {
+      "type": "string",
+      "description": "Base URL for Plane C API"
+    },
+    "enableCloudFront": {
+      "type": "boolean",
+      "description": "Enable CloudFront distribution for Plane A API"
+    },
+    "enableWaf": {
+      "type": "boolean",
+      "description": "Enable WAF for Plane A API"
+    },
+    "enablePlaneAJwtAuth": {
+      "type": "boolean",
+      "description": "Enable JWT authentication for Plane A"
+    },
+    "planeAJwtIssuer": {
+      "type": "string",
+      "description": "JWT issuer URL for Plane A (e.g., Supabase auth URL)"
+    },
+    "planeAJwtAudiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "JWT audience values for Plane A"
+    },
+    "publicSupabaseUrl": {
+      "type": "string",
+      "description": "Public Supabase project URL for frontend builds"
+    },
+    "publicSupabaseAnonKey": {
+      "type": "string",
+      "description": "Public Supabase anon key for frontend builds"
+    },
+    "enablePlaneCIamAuth": {
+      "type": "boolean",
+      "description": "Enable IAM authentication for Plane C"
+    },
+    "disablePlaneCExecuteEndpoint": {
+      "type": "boolean",
+      "description": "Disable execute endpoint for Plane C"
+    },
+    "wafAllowListIps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of IP addresses to allow in WAF"
+    },
+    "wafBlockListIps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of IP addresses to block in WAF"
+    },
+    "wafEnableBotControl": {
+      "type": "boolean",
+      "description": "Enable AWS WAF bot control"
+    },
+    "planeAThrottleRate": {
+      "type": "number",
+      "description": "Throttle rate for Plane A API (requests per second)"
+    },
+    "planeAThrottleBurst": {
+      "type": "number",
+      "description": "Throttle burst for Plane A API"
+    },
+    "planeCThrottleRate": {
+      "type": "number",
+      "description": "Throttle rate for Plane C API (requests per second)"
+    },
+    "planeCThrottleBurst": {
+      "type": "number",
+      "description": "Throttle burst for Plane C API"
+    },
+    "otelLambdaLayerArn": {
+      "type": "string",
+      "description": "ARN of OpenTelemetry Lambda layer"
+    },
+    "pipelineConnectionArn": {
+      "type": "string",
+      "description": "ARN of CodeStar Connections connection for CI/CD pipeline"
+    },
+    "pipelineRepoOwner": {
+      "type": "string",
+      "description": "GitHub repository owner for CI/CD pipeline"
+    },
+    "pipelineRepoName": {
+      "type": "string",
+      "description": "GitHub repository name for CI/CD pipeline"
+    },
+    "pipelineRepoBranch": {
+      "type": "string",
+      "description": "GitHub repository branch for CI/CD pipeline",
+      "default": "main"
+    },
+    "pipelineEnableDeploy": {
+      "type": "boolean",
+      "description": "Enable deployment stage in CI/CD pipeline"
+    },
+    "planeADomainName": {
+      "type": "string",
+      "description": "Custom domain name for Plane A API (e.g., api.remit-scout.com)"
+    },
+    "planeACertificateArn": {
+      "type": "string",
+      "description": "ACM certificate ARN for Plane A domain"
+    },
+    "planeAHostedZoneId": {
+      "type": "string",
+      "description": "Route53 hosted zone ID for Plane A domain"
+    },
+    "planeAHostedZoneName": {
+      "type": "string",
+      "description": "Route53 hosted zone name for Plane A domain"
+    },
+    "frontendDomainName": {
+      "type": "string",
+      "description": "Custom domain name for frontend (e.g., remit-scout.com)"
+    },
+    "frontendCertificateArn": {
+      "type": "string",
+      "description": "ACM certificate ARN for frontend domain"
+    },
+    "frontendHostedZoneId": {
+      "type": "string",
+      "description": "Route53 hosted zone ID for frontend domain"
+    },
+    "frontendHostedZoneName": {
+      "type": "string",
+      "description": "Route53 hosted zone name for frontend domain"
+    },
+    "slackWebhookUrl": {
+      "type": "string",
+      "description": "Slack webhook URL for alert notifications"
+    },
+    "pagerDutyIntegrationKey": {
+      "type": "string",
+      "description": "PagerDuty integration key for critical alerts"
+    }
+  },
+  "required": ["env"]
+}

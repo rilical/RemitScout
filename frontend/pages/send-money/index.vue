@@ -648,10 +648,12 @@ import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import { useTelemetry } from '~/composables/useTelemetry'
 
 const { form: moneyForm, validationError, submit: submitForm } = useCompareForm()
 const formError = validationError
 const { recordSearch } = useRemittanceApi()
+const { trackSearch } = useTelemetry()
 
 // Watch for country changes and reset currency if needed
 watch(() => moneyForm.value.to, (newCountry) => {
@@ -699,9 +701,16 @@ const isFormValid = computed(() => {
 })
 
 const handleMoneySubmit = async () => {
-  const { from, to, amount, method } = moneyForm.value
+  const { from, to, amount, method, fromCurrency, toCurrency } = moneyForm.value
+  const corridorId = `${from}-${to}-${fromCurrency}-${toCurrency}`
 
   try {
+    void trackSearch({
+      corridor_id: corridorId,
+      amount,
+      payin: 'bank',
+      payout: method,
+    })
     await recordSearch({
       from_country: from,
       to_country: to,

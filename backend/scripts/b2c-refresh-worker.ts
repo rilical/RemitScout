@@ -44,6 +44,8 @@ const shutdownTimeoutMs = 30000
 const healthEnabled = process.env.B2C_REFRESH_HEALTH_ENABLED !== '0'
 const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
 
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+
 let shutdownRequested = false
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
@@ -83,7 +85,7 @@ const handleQueueDepth = (depth: number) => {
 /**
  * Main worker execution function.
  */
-const run = async (): Promise<number> => {
+export const runB2cRefreshWorker = async (): Promise<number> => {
   if (shutdownRequested) {
     logger.info('worker_skipped', { reason: 'shutdown_requested' })
     return 0
@@ -159,8 +161,9 @@ const closeHealthServer = async () => {
   }
 }
 
-const main = async () => {
-  if (healthEnabled) {
+const main = async (options: { enableHealthServer?: boolean } = {}) => {
+  const enableHealthServer = options.enableHealthServer ?? (!isLambdaRuntime && healthEnabled)
+  if (enableHealthServer) {
     try {
       healthServer = await startHealthServer({ port: healthPort, logger })
     } catch (error) {
@@ -172,7 +175,7 @@ const main = async () => {
 
   let exitCode = 0
   try {
-    await run()
+    await runB2cRefreshWorker()
   } catch (error) {
     exitCode = 1
     logger.error('worker_fatal_error', {
@@ -189,4 +192,6 @@ const main = async () => {
   process.exit(exitCode)
 }
 
-void main()
+if (require.main === module && !isLambdaRuntime) {
+  void main()
+}

@@ -4,11 +4,12 @@ import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient } from '../../services/stripe-client'
 import { getUserPlan } from '../../services/user-plan'
+import { getErrorMessage, isStripeError } from '../../types/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
 
 export const verifySessionRoutes = async (app: FastifyInstance) => {
-  app.post('/stripe/verify-session', { preHandler: requireAuth() }, async (request, reply) => {
+  app.post('/billing/verify-session', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
     
     if (!config.billing.stripe.secretKey) {
@@ -40,11 +41,14 @@ export const verifySessionRoutes = async (app: FastifyInstance) => {
         status: session.status,
         payment_status: session.payment_status,
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = isStripeError(error) 
+        ? error.message 
+        : getErrorMessage(error)
       reply.code(500)
       return { 
         error: 'verification_failed', 
-        message: error.message || 'Failed to verify session' 
+        message: errorMessage || 'Failed to verify session' 
       }
     }
   })

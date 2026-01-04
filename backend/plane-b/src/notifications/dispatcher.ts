@@ -22,13 +22,103 @@ import { setTimeout as sleep } from 'timers/promises'
 import type { Pool } from 'pg'
 
 import { createLogger } from '../../../shared/logger'
+import { config } from '../../../shared/config'
+import { sendJsonMessage } from '../../../shared/sqs'
 import type { AnomalyResult } from '../signals/anomaly-detector'
 import type { WebhookSubscriptionRecord } from '../repositories'
 import { SignalRepository, WebhookRepository } from '../repositories'
 import { WEBHOOK_CONFIG, NOTIFICATION_CONFIG, SIGNAL_TYPES } from './config'
-import type { WebhookPayload } from './types'
+import { recordNotificationMetric, recordNotificationDuration } from './aws-services'
+import type { SignalType, WebhookPayload } from './types'
 
 const logger = createLogger('plane-b.notifications.dispatcher')
+const notificationsQueueUrl = config.queues.notifications.url
+const notificationsQueueMode = config.queues.notifications.mode
+let notifiedQueueMisconfig = false
+
+export type NotificationsQueueMessage = {
+  signalType: SignalType | string
+  corridorId: string
+  providerId: string
+  anomaly: {
+    zScore: number
+    currentRate: number
+    avg24h: number | null
+    stdDev24h: number | null
+    direction: string | null
+  }
+  requestedAt: string
+}
+
+const normalizeWebhookSignalType = (value: string): WebhookPayload['type'] | null => {
+  if (value === 'ARBITRAGE_SIGNAL') {
+    return 'ARBITRAGE_SIGNAL'
+  }
+  return null
+}
+
+const normalizeDirection = (
+  value: string | null | undefined,
+): WebhookPayload['direction'] => {
+  if (value === 'above' || value === 'below' || value === 'neutral') {
+    return value
+  }
+  return 'neutral'
+}
+
+const enqueueNotification = async (
+  payload: NotificationsQueueMessage,
+): Promise<boolean> => {
+  if (!notificationsQueueUrl) {
+    if (!notifiedQueueMisconfig && notificationsQueueMode !== 'off') {
+      notifiedQueueMisconfig = true
+      logger.warn('notifications_queue_disabled', { reason: 'missing_queue_url' })
+    }
+    return false
+  }
+
+  try {
+    await sendJsonMessage(notificationsQueueUrl, payload)
+    return true
+  } catch (error) {
+    logger.warn('notifications_queue_enqueue_failed', {
+      corridor_id: payload.corridorId,
+      provider_id: payload.providerId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
+
+const dispatchWebhookBatch = async (
+  subscriptions: WebhookSubscriptionRecord[],
+  payload: WebhookPayload,
+): Promise<void> => {
+  if (!subscriptions.length) return
+
+  if (NOTIFICATION_CONFIG.PARALLEL_DISPATCH) {
+    const deliveryPromises = subscriptions.map(subscription =>
+      dispatchWebhook(subscription, payload)
+        .catch(error => {
+          logger.error('webhook_dispatch_failed', {
+            subscription_id: subscription.subscription_id,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        })
+    )
+    await Promise.allSettled(deliveryPromises)
+  } else {
+    for (const subscription of subscriptions) {
+      await dispatchWebhook(subscription, payload)
+        .catch(error => {
+          logger.error('webhook_dispatch_failed', {
+            subscription_id: subscription.subscription_id,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        })
+    }
+  }
+}
 
 /**
  * Dispatches arbitrage signal to subscribed webhooks.
@@ -107,28 +197,86 @@ export const dispatchSignal = async (
     timestamp: new Date().toISOString(),
   }
 
-  if (NOTIFICATION_CONFIG.PARALLEL_DISPATCH) {
-    const deliveryPromises = subscriptions.map(subscription =>
-      dispatchWebhook(subscription, payload)
-        .catch(error => {
-          logger.error('webhook_dispatch_failed', {
-            subscription_id: subscription.subscription_id,
-            error: error instanceof Error ? error.message : String(error),
-          })
-        })
-    )
-    await Promise.allSettled(deliveryPromises)
-  } else {
-    for (const subscription of subscriptions) {
-      await dispatchWebhook(subscription, payload)
-        .catch(error => {
-          logger.error('webhook_dispatch_failed', {
-            subscription_id: subscription.subscription_id,
-            error: error instanceof Error ? error.message : String(error),
-          })
-        })
-    }
+  const queued = notificationsQueueMode !== 'off'
+    ? await enqueueNotification({
+      signalType: SIGNAL_TYPES.ARBITRAGE_SIGNAL,
+      corridorId,
+      providerId,
+      anomaly: {
+        zScore: anomaly.zScore,
+        currentRate: anomaly.currentRate,
+        avg24h: anomaly.avg24h ?? null,
+        stdDev24h: anomaly.stdDev24h ?? null,
+        direction: anomaly.direction ?? null,
+      },
+      requestedAt: new Date().toISOString(),
+    })
+    : false
+
+  if (notificationsQueueMode === 'queue' && queued) {
+    logger.info('notifications_queued', {
+      corridor_id: corridorId,
+      provider_id: providerId,
+      mode: notificationsQueueMode,
+    })
+    return
   }
+
+  await dispatchWebhookBatch(subscriptions, payload)
+}
+
+export const dispatchQueuedSignal = async (
+  pool: Pool,
+  payload: NotificationsQueueMessage,
+): Promise<void> => {
+  if (!payload || typeof payload !== 'object') return
+  if (!payload.providerId || !payload.corridorId) return
+  if (typeof payload.anomaly?.zScore !== 'number') {
+    logger.warn('queued_signal_invalid', {
+      corridor_id: payload.corridorId,
+      provider_id: payload.providerId,
+    })
+    return
+  }
+
+  const webhookRepo = new WebhookRepository(pool)
+  const subscriptions = await webhookRepo.loadActiveSubscriptions(
+    payload.corridorId,
+    payload.providerId,
+    payload.anomaly.zScore,
+  )
+
+  if (!subscriptions.length) {
+    logger.debug('no_webhook_subscriptions', {
+      corridor_id: payload.corridorId,
+      provider_id: payload.providerId,
+      z_score: payload.anomaly.zScore,
+    })
+    return
+  }
+
+  const signalType = normalizeWebhookSignalType(payload.signalType)
+  if (!signalType) {
+    logger.warn('queued_signal_unsupported_type', {
+      corridor_id: payload.corridorId,
+      provider_id: payload.providerId,
+      signal_type: payload.signalType,
+    })
+    return
+  }
+
+  const webhookPayload: WebhookPayload = {
+    type: signalType,
+    corridor: payload.corridorId,
+    provider: payload.providerId,
+    current_rate: payload.anomaly.currentRate,
+    avg_24h: payload.anomaly.avg24h ?? 0,
+    deviation_sigma: payload.anomaly.zScore,
+    direction: normalizeDirection(payload.anomaly.direction),
+    timestamp: payload.requestedAt || new Date().toISOString(),
+  }
+
+  await dispatchWebhookBatch(subscriptions, webhookPayload)
 }
 
 /**
@@ -160,6 +308,7 @@ const dispatchWebhook = async (
   payload: WebhookPayload,
 ): Promise<void> => {
   let retryCount = 0
+  const startTime = Date.now()
 
   while (retryCount < WEBHOOK_CONFIG.MAX_RETRIES) {
     try {
@@ -182,11 +331,15 @@ const dispatchWebhook = async (
       })
 
       if (response.ok) {
+        const durationMs = Date.now() - startTime
+        await recordNotificationMetric('webhook', 'sent', 1)
+        await recordNotificationDuration('webhook', durationMs)
         logger.info('webhook_delivered', {
           subscription_id: subscription.subscription_id,
           status_code: response.status,
           success: true,
           retry_count: retryCount,
+          duration_ms: durationMs,
         })
         return
       }
@@ -221,11 +374,15 @@ const dispatchWebhook = async (
     }
   }
 
+  const durationMs = Date.now() - startTime
+  await recordNotificationMetric('webhook', 'failed', 1)
+  await recordNotificationDuration('webhook', durationMs)
   logger.error('webhook_max_retries_exceeded', {
     subscription_id: subscription.subscription_id,
     status_code: null,
     success: false,
     retry_count: WEBHOOK_CONFIG.MAX_RETRIES,
+    duration_ms: durationMs,
   })
 }
 
@@ -279,4 +436,3 @@ const dispatchWebhook = async (
  *   // Dispatch to all preferred channels in parallel
  * }
  */
-

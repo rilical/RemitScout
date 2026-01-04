@@ -25,6 +25,8 @@ function sameRun(a: Pick<CompareRun, 'from' | 'to' | 'method' | 'amount'>, b: Pi
 }
 
 export const useCompareHistory = () => {
+  const { isAuthenticated } = useAuth()
+  const { request } = useApi()
   const { state: runs, hydrated, reset } = usePersistedState<CompareRun[]>(
     'compare:history',
     () => [],
@@ -65,6 +67,22 @@ export const useCompareHistory = () => {
     }
 
     runs.value = [next, ...runs.value].slice(0, 50)
+
+    if (import.meta.client && isAuthenticated.value) {
+      void request('/history', {
+        method: 'POST',
+        body: {
+          from_country: normalized.from,
+          to_country: normalized.to,
+          amount: normalized.amount,
+          method: normalized.method,
+          path: normalized.path,
+        },
+      }).catch(() => {
+        // Ignore sync errors to avoid blocking UI
+      })
+    }
+
     return next
   }
 

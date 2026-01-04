@@ -8,18 +8,58 @@ import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implem
 describe('CorridorVolatilityRepository', () => {
   let pool: Pool
   let repo: CorridorVolatilityRepository
+  let ingestionRunId: string
+
+  const providerId = 'remitly'
+  const corridorId = 'US-PE-USD-PEN'
+
+  const ensureProvider = async () => {
+    await pool.query(
+      `INSERT INTO silver.provider (provider_id, display_name)
+       VALUES ($1, $2)
+       ON CONFLICT (provider_id) DO NOTHING`,
+      [providerId, providerId],
+    )
+  }
+
+  const ensureCorridor = async () => {
+    const [sourceCountry, destCountry, sourceCurrency, destCurrency] = corridorId.split('-')
+    await pool.query(
+      `INSERT INTO silver.corridor
+       (corridor_id, source_country, dest_country, source_currency, dest_currency)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (corridor_id) DO NOTHING`,
+      [corridorId, sourceCountry, destCountry, sourceCurrency, destCurrency],
+    )
+  }
 
   beforeEach(async () => {
     pool = createPool(config.db.planeBUrl)
     repo = new CorridorVolatilityRepository(pool)
 
-    await pool.query('DELETE FROM silver.corridor_volatility_cache')
-    await pool.query('DELETE FROM silver.quote_record')
+    await pool.query(
+      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = $1',
+      [corridorId],
+    )
+    await pool.query('DELETE FROM silver.quote_record WHERE corridor_id = $1', [corridorId])
+
+    await ensureProvider()
+    await ensureCorridor()
+    const result = await pool.query<{ run_id: string }>(
+      `INSERT INTO silver.ingestion_run (provider_id, collector_type, status)
+       VALUES ($1, $2, $3)
+       RETURNING run_id`,
+      [providerId, 'test', 'success'],
+    )
+    ingestionRunId = result.rows[0].run_id
   })
 
   afterEach(async () => {
-    await pool.query('DELETE FROM silver.corridor_volatility_cache')
-    await pool.query('DELETE FROM silver.quote_record')
+    await pool.query(
+      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = $1',
+      [corridorId],
+    )
+    await pool.query('DELETE FROM silver.quote_record WHERE corridor_id = $1', [corridorId])
     await pool.end()
   })
 
@@ -29,15 +69,28 @@ describe('CorridorVolatilityRepository', () => {
   })
 
   it('returns null when corridor has less than 10 samples', async () => {
-    const corridorId = 'US-MX-USD-MXN'
     const baseRate = 18.0
 
     for (let i = 0; i < 5; i++) {
       await pool.query(
         `INSERT INTO silver.quote_record
          (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} days', NOW(), gen_random_uuid(), $12)`,
-        ['remitly', corridorId, 100, 'debit_card', 'bank_deposit', 100, 2, 102, baseRate * 100, baseRate, 'ok', `bronze:${i}`],
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} hours', NOW(), $12, $13)`,
+        [
+          providerId,
+          corridorId,
+          100,
+          'debit_card',
+          'bank_deposit',
+          100,
+          2,
+          102,
+          baseRate * 100,
+          baseRate,
+          'ok',
+          ingestionRunId,
+          `bronze:${i}`,
+        ],
       )
     }
 
@@ -46,7 +99,6 @@ describe('CorridorVolatilityRepository', () => {
   })
 
   it('calculates volatility score correctly with sufficient data', async () => {
-    const corridorId = 'US-MX-USD-MXN'
     const baseRate = 18.0
 
     for (let i = 0; i < 15; i++) {
@@ -56,8 +108,22 @@ describe('CorridorVolatilityRepository', () => {
       await pool.query(
         `INSERT INTO silver.quote_record
          (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} days', NOW(), gen_random_uuid(), $12)`,
-        ['remitly', corridorId, 100, 'debit_card', 'bank_deposit', 100, 2, 102, rate * 100, rate, 'ok', `bronze:${i}`],
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} hours', NOW(), $12, $13)`,
+        [
+          providerId,
+          corridorId,
+          100,
+          'debit_card',
+          'bank_deposit',
+          100,
+          2,
+          102,
+          rate * 100,
+          rate,
+          'ok',
+          ingestionRunId,
+          `bronze:${i}`,
+        ],
       )
     }
 
@@ -72,7 +138,6 @@ describe('CorridorVolatilityRepository', () => {
   })
 
   it('caches volatility score after calculation', async () => {
-    const corridorId = 'US-MX-USD-MXN'
     const baseRate = 18.0
 
     for (let i = 0; i < 15; i++) {
@@ -80,8 +145,22 @@ describe('CorridorVolatilityRepository', () => {
       await pool.query(
         `INSERT INTO silver.quote_record
          (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} days', NOW(), gen_random_uuid(), $12)`,
-        ['remitly', corridorId, 100, 'debit_card', 'bank_deposit', 100, 2, 102, rate * 100, rate, 'ok', `bronze:${i}`],
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} hours', NOW(), $12, $13)`,
+        [
+          providerId,
+          corridorId,
+          100,
+          'debit_card',
+          'bank_deposit',
+          100,
+          2,
+          102,
+          rate * 100,
+          rate,
+          'ok',
+          ingestionRunId,
+          `bronze:${i}`,
+        ],
       )
     }
 
@@ -95,8 +174,6 @@ describe('CorridorVolatilityRepository', () => {
   })
 
   it('returns cached score when available', async () => {
-    const corridorId = 'US-MX-USD-MXN'
-
     await pool.query(
       `INSERT INTO silver.corridor_volatility_cache
        (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
@@ -112,7 +189,12 @@ describe('CorridorVolatilityRepository', () => {
   })
 
   it('handles multiple corridors in getVolatilityScores', async () => {
-    const corridors = ['US-MX-USD-MXN', 'US-PH-USD-PHP', 'GB-IN-GBP-INR']
+    const corridors = ['US-ZA-USD-ZAR', 'US-KR-USD-KRW', 'GB-AU-GBP-AUD']
+
+    await pool.query(
+      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
+      [corridors],
+    )
 
     for (const corridorId of corridors) {
       await pool.query(
@@ -125,9 +207,8 @@ describe('CorridorVolatilityRepository', () => {
 
     const result = await repo.getVolatilityScores(corridors)
     expect(result.size).toBe(3)
-    expect(result.get('US-MX-USD-MXN')).not.toBeUndefined()
-    expect(result.get('US-PH-USD-PHP')).not.toBeUndefined()
-    expect(result.get('GB-IN-GBP-INR')).not.toBeUndefined()
+    expect(result.get(corridors[0])).not.toBeUndefined()
+    expect(result.get(corridors[1])).not.toBeUndefined()
+    expect(result.get(corridors[2])).not.toBeUndefined()
   })
 })
-

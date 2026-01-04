@@ -1,0 +1,83 @@
+groups:
+  - name: data_health_slo
+    interval: 1m
+    rules:
+      - alert: FreshnessSLOBreach
+        expr: |
+          histogram_quantile(0.95, 
+            data_freshness_age_minutes{priority_tier="tier_1_alpha"}
+          ) > 15
+        for: 5m
+        labels:
+          severity: warning
+          component: data_pipeline
+        annotations:
+          summary: "Tier 1 corridor freshness exceeds 15 minutes (p95)"
+          description: "P95 freshness is {{ $value }} minutes for Tier 1 corridors"
+
+      - alert: QuoteSuccessRateDrop
+        expr: |
+          avg(quote_success_rate{priority_tier="tier_1_alpha"}) < 0.98
+        for: 10m
+        labels:
+          severity: critical
+          component: ingestion
+        annotations:
+          summary: "Quote success rate below 98% for Tier 1 corridors"
+          description: "Current success rate: {{ $value | humanizePercentage }}"
+
+      - alert: ProviderCoverageDrop
+        expr: |
+          min(provider_coverage_count{priority_tier="tier_1_alpha"}) < 3
+        for: 5m
+        labels:
+          severity: warning
+          component: data_quality
+        annotations:
+          summary: "Provider coverage below 3 for Tier 1 corridors"
+          description: "Minimum coverage: {{ $value }} providers"
+
+  - name: batch_job_health
+    interval: 1m
+    rules:
+      - alert: GoldPublisherJobStuck
+        expr: |
+          (time() - gold_publisher_job_last_success_timestamp) > 900
+        for: 5m
+        labels:
+          severity: warning
+          component: batch_jobs
+        annotations:
+          summary: "Gold publisher job has not completed in 15 minutes"
+          description: "Last success: {{ $value | humanizeDuration }} ago"
+
+      - alert: GoldBatchJobFailure
+        expr: |
+          rate(gold_popular_corridors_job_failures_total[5m]) > 0 OR
+          rate(gold_fx_rates_job_failures_total[5m]) > 0 OR
+          rate(gold_pulse_cache_job_failures_total[5m]) > 0 OR
+          rate(gold_publisher_job_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: batch_jobs
+        annotations:
+          summary: "Gold batch job is failing"
+          description: "One or more batch jobs are experiencing failures"
+
+      - alert: GoldBatchJobSlow
+        expr: |
+          histogram_quantile(0.95, gold_popular_corridors_job_duration_seconds) > 300 OR
+          histogram_quantile(0.95, gold_fx_rates_job_duration_seconds) > 300 OR
+          histogram_quantile(0.95, gold_pulse_cache_job_duration_seconds) > 600 OR
+          histogram_quantile(0.95, gold_publisher_job_duration_seconds) > 600
+        for: 10m
+        labels:
+          severity: warning
+          component: batch_jobs
+        annotations:
+          summary: "Gold batch job p95 duration exceeds threshold"
+          description: "One or more batch jobs are running slowly (p95 > threshold)"
+
+
+

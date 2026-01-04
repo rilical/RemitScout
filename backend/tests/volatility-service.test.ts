@@ -8,21 +8,28 @@ import { VolatilityService } from '../plane-b/src/services/volatility-service'
 describe('VolatilityService', () => {
   let pool: Pool
   let service: VolatilityService
+  const corridorIds = ['US-BR-USD-BRL', 'US-TH-USD-THB', 'GB-ZA-GBP-ZAR', 'CA-JP-CAD-JPY']
 
   beforeEach(async () => {
     pool = createPool(config.db.planeBUrl)
     service = new VolatilityService(pool)
 
-    await pool.query('DELETE FROM silver.corridor_volatility_cache')
+    await pool.query(
+      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
+      [corridorIds],
+    )
   })
 
   afterEach(async () => {
-    await pool.query('DELETE FROM silver.corridor_volatility_cache')
+    await pool.query(
+      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
+      [corridorIds],
+    )
     await pool.end()
   })
 
   it('assigns tier1 (30 min) for high volatility (>= 0.15)', async () => {
-    const corridorId = 'US-MX-USD-MXN'
+    const corridorId = 'US-BR-USD-BRL'
 
     await pool.query(
       `INSERT INTO silver.corridor_volatility_cache
@@ -39,7 +46,7 @@ describe('VolatilityService', () => {
   })
 
   it('assigns tier2 (1 hour) for moderate volatility (>= 0.08, < 0.15)', async () => {
-    const corridorId = 'US-PH-USD-PHP'
+    const corridorId = 'US-TH-USD-THB'
 
     await pool.query(
       `INSERT INTO silver.corridor_volatility_cache
@@ -56,7 +63,7 @@ describe('VolatilityService', () => {
   })
 
   it('assigns tier3 (4 hours) for low volatility (< 0.08)', async () => {
-    const corridorId = 'GB-IN-GBP-INR'
+    const corridorId = 'GB-ZA-GBP-ZAR'
 
     await pool.query(
       `INSERT INTO silver.corridor_volatility_cache
@@ -73,7 +80,7 @@ describe('VolatilityService', () => {
   })
 
   it('defaults to 2 hours when no volatility data exists', async () => {
-    const corridorId = 'US-CA-USD-CAD'
+    const corridorId = 'CA-JP-CAD-JPY'
 
     const result = await service.getCacheTtlForCorridor(corridorId)
     expect(result.tier).toBe('tier2')
@@ -84,9 +91,9 @@ describe('VolatilityService', () => {
 
   it('handles multiple corridors correctly', async () => {
     const corridors = [
-      { id: 'US-MX-USD-MXN', score: 0.20, expectedTier: 'tier1' },
-      { id: 'US-PH-USD-PHP', score: 0.10, expectedTier: 'tier2' },
-      { id: 'GB-IN-GBP-INR', score: 0.05, expectedTier: 'tier3' },
+      { id: 'US-BR-USD-BRL', score: 0.20, expectedTier: 'tier1' },
+      { id: 'US-TH-USD-THB', score: 0.10, expectedTier: 'tier2' },
+      { id: 'GB-ZA-GBP-ZAR', score: 0.05, expectedTier: 'tier3' },
     ]
 
     for (const corridor of corridors) {
@@ -101,9 +108,8 @@ describe('VolatilityService', () => {
     const result = await service.getCacheTtlForCorridors(corridors.map(c => c.id))
 
     expect(result.size).toBe(3)
-    expect(result.get('US-MX-USD-MXN')?.tier).toBe('tier1')
-    expect(result.get('US-PH-USD-PHP')?.tier).toBe('tier2')
-    expect(result.get('GB-IN-GBP-INR')?.tier).toBe('tier3')
+    expect(result.get('US-BR-USD-BRL')?.tier).toBe('tier1')
+    expect(result.get('US-TH-USD-THB')?.tier).toBe('tier2')
+    expect(result.get('GB-ZA-GBP-ZAR')?.tier).toBe('tier3')
   })
 })
-

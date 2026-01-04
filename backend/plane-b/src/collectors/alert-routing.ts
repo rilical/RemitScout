@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer'
 
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { formatError, isError } from '../../../shared/utils/error-handling'
 import type { OpsAlertRecord } from '../repositories'
 import { OpsAlertRepository } from '../repositories'
 
@@ -87,9 +88,9 @@ const sendSlackAlert = async (text: string) => {
       throw new Error(`slack_webhook_failed:${response.status}`)
     }
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     clearTimeout(timeoutId)
-    if (error.name === 'AbortError') {
+    if (isError(error) && error.name === 'AbortError') {
       throw new Error('slack_webhook_timeout')
     }
     throw error
@@ -110,20 +111,30 @@ const sendEmailAlert = async (subject: string, text: string) => {
   return true
 }
 
-export const notifyBlockAlert = async (pool: Pool, alertId: string) => {
+export const notifyBlockAlert = async (
+  pool: Pool,
+  alertId: string,
+  options: { force?: boolean } = {},
+) => {
   if (!alertId || typeof alertId !== 'string' || alertId.trim().length === 0) {
     logger.warn('alert_invalid_id', { alert_id: alertId })
+    return
+  }
+
+  if (config.queues.opsAlerts.mode === 'queue' && !options.force) {
+    logger.info('alert_queue_mode_skip', { alert_id: alertId })
     return
   }
 
   let event: OpsAlertRecord | null
   try {
     event = await loadOpsAlertEvent(pool, alertId)
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const { message, stack } = formatError(error)
     logger.error('alert_load_failed', {
       alert_id: alertId,
-      error: error.message,
-      stack: error.stack,
+      error: message,
+      stack,
     })
     return
   }
@@ -158,12 +169,13 @@ export const notifyBlockAlert = async (pool: Pool, alertId: string) => {
     try {
       await sendSlackAlert(text)
       results.slack = 'sent'
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.slack = 'failed'
+      const { message, stack } = formatError(error)
       logger.error('alert_slack_failed', {
         alert_id: event.alert_id,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
+        error: message,
+        stack,
       })
     }
   }
@@ -172,12 +184,13 @@ export const notifyBlockAlert = async (pool: Pool, alertId: string) => {
     try {
       await sendEmailAlert(subject, text)
       results.email = 'sent'
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.email = 'failed'
+      const { message, stack } = formatError(error)
       logger.error('alert_email_failed', {
         alert_id: event.alert_id,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
+        error: message,
+        stack,
       })
     }
   }
