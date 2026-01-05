@@ -15,6 +15,9 @@ import { httpLimits as xeLimits } from './xe/limits'
 import { runWiseCollector } from './wise/collector'
 import { WISE_B2B_CORRIDORS } from './wise/supported-corridors'
 import { httpLimits as wiseLimits } from './wise/limits'
+import { runWellsFargoCollector } from './wellsfargo/collector'
+import { WELLSFARGO_B2B_CORRIDORS } from './wellsfargo/supported-corridors'
+import { httpLimits as wellsFargoLimits } from './wellsfargo/limits'
 
 /**
  * Common run options passed through the provider registry to collectors.
@@ -180,6 +183,35 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       perCorridorRpm: wiseLimits.perCorridorRpm,
     },
     run: (options) => runWiseCollector({
+      pool: options.pool,
+      collectorType: options.collectorType,
+      corridors: options.corridors,
+      amountBuckets: options.amountBuckets,
+      payinMethod: options.payinMethod,
+      payoutMethod: options.payoutMethod,
+      locale: options.locale,
+      delayMs: options.delayMs,
+      jitterMs: options.jitterMs,
+      rateLimitBackoffMs: options.rateLimitBackoffMs,
+      rateLimitJitterMs: options.rateLimitJitterMs,
+      rateLimitMaxRetries: options.rateLimitMaxRetries,
+      corridorDelayMs: options.corridorDelayMs,
+      corridorJitterMs: options.corridorJitterMs,
+      freshnessSloMinutes: options.freshnessSloMinutes,
+      freshnessSloEnabled: options.freshnessSloEnabled,
+      rpmOverride: options.rpmOverride,
+      perCorridorRpmOverride: options.perCorridorRpmOverride,
+    }),
+  },
+  {
+    providerId: 'wellsfargo',
+    displayName: 'Wells Fargo',
+    supportedCorridors: WELLSFARGO_B2B_CORRIDORS,
+    baseRates: {
+      rpm: wellsFargoLimits.rpm,
+      perCorridorRpm: wellsFargoLimits.perCorridorRpm,
+    },
+    run: (options) => runWellsFargoCollector({
       pool: options.pool,
       collectorType: options.collectorType,
       corridors: options.corridors,

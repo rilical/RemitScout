@@ -17,7 +17,7 @@ const fxRateRepository = new FxRateRepository(planeAPool)
 
 const CORRIDOR_ID = 'US-MX-USD-MXN'
 const DEFAULT_AMOUNT = 500
-const CACHE_TTL_MS = 60 * 60 * 1000
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 const bankVsSpecialistCache = createTtlCache<BankVsSpecialistResponse>({
   namespace: 'plane_a:bank_vs_specialist',

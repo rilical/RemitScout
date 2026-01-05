@@ -53,9 +53,10 @@ Notes:
 ## 2) Deployment configuration and packaging
 
 - Docker:
-  - Only `docker-compose.yml` exists (local Postgres). No Dockerfiles found.
+  - `docker-compose.yml` exists for local Postgres.
+  - `backend/Dockerfile` exists as a placeholder image build (default entrypoint Plane B ingest).
   - Kubernetes manifests reference images (`remit-scout-backend:latest`,
-    `remit-scout/backend:latest`) but Docker build definitions are missing.
+    `remit-scout/backend:latest`) but per-plane Dockerfiles and CI build steps are still missing.
 - Runtime entrypoints:
   - Plane A: `backend/plane-a/src/server.ts`
   - Plane B: `backend/plane-b/src/ingest.ts`
@@ -64,7 +65,7 @@ Notes:
 - Build:
   - `backend/package.json` -> `tsc -b plane-a plane-c plane-b` generates `dist/`.
 
-AWS gap: need Dockerfiles or Lambda packaging strategy plus ECR/CDK build pipeline.
+AWS gap: standardize Docker/Lambda packaging plus ECR/CDK build pipeline.
 
 ## 3) Batch jobs and scheduling
 
@@ -80,6 +81,12 @@ AWS gap: need Dockerfiles or Lambda packaging strategy plus ECR/CDK build pipeli
 | `backend/scripts/gold-fx-rates-job.ts` | Gold FX rate aggregation | Postgres + Redis | None in repo | EventBridge -> Lambda |
 | `backend/scripts/gold-pulse-cache-job.ts` | Gold pulse cache aggregation | Postgres + Redis | None in repo | EventBridge -> Lambda |
 | `backend/scripts/gold-publisher-job.ts` | Publisher gates to Gold | Postgres + Redis | None in repo | EventBridge -> Lambda/ECS |
+| `backend/scripts/alert-evaluation-worker.ts` | Alert evaluation worker (SQS) | Postgres + Redis + SQS | None in repo | EventBridge scheduler -> Lambda/ECS worker |
+| `backend/scripts/export-worker.ts` | Export job worker (SQS/DB -> S3) | Postgres + S3 | None in repo | ECS/Lambda worker |
+| `backend/scripts/telemetry-analytics-job.ts` | Telemetry analytics aggregation | Postgres + Redis | None in repo | EventBridge -> Lambda |
+| `backend/scripts/audit-log-cleanup-worker.ts` | Archive + delete audit logs | Postgres + S3 | None in repo | EventBridge -> Lambda/ECS |
+| `backend/scripts/session-cleanup-worker.ts` | Revoke expired sessions | Postgres | None in repo | EventBridge -> Lambda |
+| `backend/scripts/oanda-rates-sync.ts` | FX rate sync (interval loop) | Postgres + OANDA HTTP | None in repo | ECS service (long-running) |
 | `backend/scripts/ingest-run.ts` | Manual ingestion run | Postgres | Manual | Optional EventBridge |
 | `backend/scripts/db-migrate.ts` | DB migrations | Postgres | Manual | CodeBuild or pre-deploy step |
 | `backend/scripts/sql-guardrail.ts` | SQL guardrail/inventory | Repo scan | Manual | CI only |
@@ -89,6 +96,7 @@ AWS gap: need Dockerfiles or Lambda packaging strategy plus ECR/CDK build pipeli
 
 - Probes: `backend/scripts/*-probe.ts`, `backend/scripts/cache-ttl-probe.ts`
   - Scheduled in GitHub Actions (`.github/workflows/probe-health-checks.yml`).
+- AWS canary handler: `backend/scripts/aws-synthetic-monitor.ts` (CloudWatch Synthetics).
 - Dev-only: `backend/scripts/dev/remitly-snapshot.ts`, `backend/scripts/dev/westernunion-observe.ts`.
 
 ## 4) API endpoints inventory
@@ -97,32 +105,117 @@ AWS gap: need Dockerfiles or Lambda packaging strategy plus ECR/CDK build pipeli
 
 Auth mechanisms:
 - Supabase JWT verification and role checks in `backend/plane-a/src/plugins/auth-plugin.ts`.
-- Entitlements gate in `backend/plane-a/src/routes/pulse-status.ts`.
+- Entitlements enforced via `requireEntitlement` for Pulse/History/Exports; watchlist and alerts enforce plan limits in-route.
 
-| Method | Path | Auth | File | Notes |
-|---|---|---|---|---|
-| GET | `/api/quotes/current` | Public | `backend/plane-a/src/routes/quotes.ts` | Uses B2C refresh queue and caching |
-| GET | `/api/popular-corridors` | Public | `backend/plane-a/src/routes/popular-corridors.ts` | Public cache headers |
-| GET | `/api/pulse/status` | Entitlement (`pulse`) | `backend/plane-a/src/routes/pulse-status.ts` | |
-| GET | `/api/me` | requireAuth | `backend/plane-a/src/routes/me.ts` | |
-| POST | `/api/billing/checkout-session` | requireAuth | `backend/plane-a/src/routes/billing/checkout-session.ts` | |
-| POST | `/stripe/create-checkout` | requireAuth | `backend/plane-a/src/routes/billing/checkout-session.ts` | |
-| POST | `/api/billing/webhook` | No auth (bypass) | `backend/plane-a/src/routes/billing/webhook.ts` | Stripe webhook |
-| POST | `/stripe/verify-session` | requireAuth | `backend/plane-a/src/routes/billing/verify-session.ts` | |
-| GET | `/api/billing/portal` | requireAuth | `backend/plane-a/src/routes/billing/portal.ts` | |
-| GET | `/api/ops/{provider}/health` | requireAdmin | `backend/plane-a/src/routes/ops/*.ts` | Ops-only endpoints |
-| GET | `/healthz` | Public | `backend/plane-a/src/app.ts` | Health |
-| GET | `/readyz` | Public | `backend/plane-a/src/app.ts` | DB readiness |
-| GET | `/metrics` | Public | `backend/plane-a/src/app.ts` | Prometheus metrics |
+Route base:
+- Plane A mounts both `/api` and `/api/v1` prefixes. `/api/v1` is preferred; `/api` is backward compatibility.
+
+Public (no auth):
+- GET `/api/quotes/current`
+- GET `/api/providers`
+- GET `/api/popular-corridors`
+- GET `/api/bank-vs-specialist`
+- GET `/api/geo`
+- GET `/api/rates/spot`
+- GET `/api/rates/providers`
+- GET `/api/rates/history`
+- GET `/api/rates/exchange/:base/:quote`
+- GET `/api/rates/exchange/:base/:quote/history`
+- POST `/api/contact`
+- POST `/api/newsletter/subscribe`
+- GET `/api/newsletter/confirm`
+- GET `/api/newsletter/unsubscribe`
+- GET `/api/newsletter/status`
+- POST `/api/telemetry/search`
+- POST `/api/telemetry/click`
+- POST `/api/telemetry/session`
+- POST `/api/provider-visits/track`
+- GET `/api/alerts/unsubscribe`
+- GET `/healthz`
+- GET `/readyz`
+- GET `/metrics`
+
+Webhook (no auth, signature required):
+- POST `/api/billing/webhook`
+
+Authenticated (requireAuth):
+- GET `/api/me`
+- PATCH `/api/me`
+- POST `/api/me/avatar`
+- DELETE `/api/me/avatar`
+- POST `/api/me/password`
+- POST `/api/billing/checkout-session`
+- POST `/api/stripe/create-checkout`
+- GET `/api/billing/portal`
+- GET `/api/billing/history`
+- POST `/api/billing/verify-session`
+- GET `/api/sessions`
+- DELETE `/api/sessions/:id`
+- POST `/api/sessions/revoke-all`
+- POST `/api/sessions/track`
+- DELETE `/api/account`
+- GET `/api/watchlist`
+- POST `/api/watchlist`
+- PATCH `/api/watchlist/:id`
+- DELETE `/api/watchlist/:id`
+- GET `/api/alerts`
+- POST `/api/alerts`
+- PATCH `/api/alerts/:id`
+- DELETE `/api/alerts/:id`
+- GET `/api/alerts/smart-notifier`
+- GET `/api/recent-searches`
+- POST `/api/recent-searches`
+- POST `/api/history`
+- GET `/api/provider-visits/pending-feedback`
+- POST `/api/provider-visits/:id/feedback`
+- POST `/api/data/export`
+- GET `/api/data/export/:id`
+- GET `/api/data/export/:id/download`
+- GET `/api/audit/my-activity`
+
+Entitlement-gated:
+- GET `/api/pulse/status`
+- GET `/api/pulse/corridors`
+- GET `/api/pulse/overview`
+- GET `/api/pulse/charts/:chartId`
+- GET `/api/pulse/method-coverage`
+- GET `/api/pulse/table`
+- GET `/api/pulse/hero`
+- GET `/api/pulse/coverage-summary`
+- GET `/api/pulse/snapshot-summary`
+- GET `/api/pulse/providers/benchmarking`
+- GET `/api/pulse/events`
+- GET `/api/pulse/providers/heatmap`
+- GET `/api/pulse/smart-send`
+- GET `/api/pulse/market-snapshot`
+- GET `/api/pulse/true-cost`
+- GET `/api/pulse/market-depth`
+- GET `/api/pulse/arbitrage`
+- GET `/api/pulse/bank-comparison`
+- GET `/api/pulse/cost-trend`
+- GET `/api/pulse/fx-rate-history`
+- GET `/api/history/corridor`
+- POST `/api/exports`
+- GET `/api/exports`
+- GET `/api/exports/:id`
+- GET `/api/exports/:id/download`
+
+Admin-only:
+- GET `/api/ops/{provider}/health`
+- GET `/api/telemetry/analytics`
+- GET `/api/analytics/*`
+- GET `/api/audit/logs`
+- GET `/api/audit/logs/export`
+- GET `/api/audit/logs/:eventId`
 
 ### Plane C (internal API)
 
 | Method | Path | Auth | File | Notes |
 |---|---|---|---|---|
 | POST | `/internal/publisher/validate` | None | `backend/plane-c/src/routes/publisher.ts` | Should be private network / IAM |
-| GET | `/healthz` | Public | `backend/plane-c/src/server.ts` | |
-| GET | `/readyz` | Public | `backend/plane-c/src/server.ts` | |
-| GET | `/metrics` | Public | `backend/plane-c/src/server.ts` | Prometheus metrics |
+| GET | `/healthz` | Public | `backend/plane-c/src/app.ts` | |
+| GET | `/readyz` | Public | `backend/plane-c/src/app.ts` | |
+| GET | `/metrics` | Public | `backend/plane-c/src/app.ts` | Prometheus metrics |
 
 ## 5) Database connectivity
 
@@ -158,6 +251,12 @@ AWS gap: migrate to RDS Proxy for Lambda/ECS; remove long-lived connections in L
   - Mode gated by `PLANE_B_OPS_ALERT_QUEUE_MODE`.
   - Worker script: `backend/scripts/ops-alerts-queue-worker.ts` (queue mode only).
   - ECS service created; desired count gated by queue mode in CDK.
+- Export job queue (SQS/DB):
+  - Enqueue in Plane A exports API (`backend/plane-a/src/routes/exports.ts`), optional SQS via `EXPORT_JOB_QUEUE_URL`.
+  - Worker script: `backend/scripts/export-worker.ts` (queue/shadow/off).
+- Alert evaluation queue (SQS):
+  - Queue config in `backend/shared/config.ts` (`alerts.evaluation`).
+  - Scheduler/worker in `backend/scripts/aws/*` and `backend/scripts/alert-evaluation-worker.ts`.
 - Ingestion execution is still inline in `backend/plane-b/src/ingest.ts`.
 
 AWS gap: quote refresh is SQS-ready. Ingestion/notifications/ops alerts now have
@@ -178,7 +277,7 @@ cutover timing and scaling thresholds.
 ### Health endpoints
 
 - Plane A: `/healthz`, `/readyz`, `/metrics` in `backend/plane-a/src/app.ts`.
-- Plane C: `/healthz`, `/readyz`, `/metrics` in `backend/plane-c/src/server.ts`.
+- Plane C: `/healthz`, `/readyz`, `/metrics` in `backend/plane-c/src/app.ts`.
 - Plane B: `backend/plane-b/src/health-server.ts` with `/healthz`, `/readyz`, `/metrics`.
 - Jobs: `backend/scripts/*-job-health.ts` (per-job health + metrics server).
 
@@ -234,22 +333,66 @@ AWS gap: CodePipeline + CodeBuild + IaC deploy (CDK/Terraform).
 
 - Bronze storage is placeholder: `backend/storage/bronze/bronzeUtil.js`
   (no S3 integration in runtime code).
+- S3 is used for exports (`backend/scripts/export-worker.ts`),
+  user assets (`backend/plane-a/src/services/avatar-upload.ts`),
+  and audit log archives (`backend/scripts/audit-log-cleanup-worker.ts`).
 - SQL seeds reference "seed:S3.0" in `backend/db/migrations/009_provider_seeds.sql`.
 
-AWS gap: implement real S3 integration for Bronze data path.
+AWS gap: implement real S3 integration for Bronze data path and standardize bucket provisioning.
+
+## 12) RSE alignment notes (update RSE-271225-022936.pdf/.txt)
+
+These are the code-first corrections to apply to the RSE knowledge base:
+
+- API base: Plane A mounts both `/api` and `/api/v1`; `/api/v1` is preferred and `/api` is backward compatibility.
+- Pulse: chart path is `/api/pulse/charts/:chartId` (plural). RSE should also list the rest of the Pulse surface
+  (`/api/pulse/corridors`, `/overview`, `/method-coverage`, `/table`, `/hero`, `/coverage-summary`,
+  `/snapshot-summary`, `/providers/benchmarking`, `/providers/heatmap`, `/events`, `/smart-send`,
+  `/market-snapshot`, `/true-cost`, `/market-depth`, `/arbitrage`, `/bank-comparison`, `/cost-trend`,
+  `/fx-rate-history`), all gated by the `pulse` entitlement.
+- Telemetry: use `/api/telemetry/search` and `/api/telemetry/click` (public). `recent-searches` is
+  `/api/recent-searches` (auth) and is not a telemetry endpoint. Also add `/api/telemetry/session`
+  (public) and admin `/api/telemetry/analytics`.
+- History: endpoint is `GET /api/history/corridor` with query params, plus `POST /api/history` for
+  comparison history logging (auth). Remove `/api/history/{corridor}`.
+- Billing: `/api/billing/portal` is GET; add `/api/billing/history` and `/api/billing/verify-session`.
+  Keep `/api/billing/webhook` (no auth, Stripe signature). `/api/stripe/create-checkout` is an alias
+  for checkout session creation.
+- Alerts: no guest alert subsystem in code. Keep `/api/alerts` CRUD, `/api/alerts/unsubscribe`, and
+  `/api/alerts/smart-notifier`.
+- Exports: add `GET /api/exports`, `GET /api/exports/:id`, and `GET /api/exports/:id/download`
+  alongside `POST /api/exports`. Add GDPR export endpoints under `/api/data/export`.
+- Additional public endpoints to include: `/api/providers`, `/api/bank-vs-specialist`, `/api/geo`,
+  `/api/rates/*`, `/api/contact`, `/api/newsletter/*`, `/api/provider-visits/track`.
+- Additional auth/admin endpoints to include: `/api/sessions/*`, `/api/account`, `/api/provider-visits/*`,
+  `/api/analytics/*` (admin), `/api/audit/logs*` (admin), `/api/audit/my-activity` (auth).
+- Tiering and freshness: corridor priority comes from `silver.corridor_priority` with tiers
+  `tier_1_alpha`, `tier_2_reference`, `tier_3_discovery`. Current sweep intervals/SLOs in code are
+  60s/1m, 3600s/60m, 86400s/1440m (see `backend/plane-b/src/ingest.ts`); remove the
+  `corridors_schedule.json` requirement unless it becomes authoritative again.
+- Data products: Pulse and history read from Postgres gold schemas
+  (`gold.pulse_cache`, `gold_export.*`), not ClickHouse, in the current codebase.
+- B2C cache TTL: volatility-based TTLs are 30m/1h/4h defaults with a US-MX 5h override
+  (`backend/shared/volatility-service.ts`, `backend/plane-a/src/routes/quotes.ts`).
+- FX move trigger: code emits SNS alerts on >5% FX rate changes; there is no 0.5% auto-sweep trigger.
+- Queues: B2C refresh uses `QUOTE_REFRESH_QUEUE_URL`; ingestion fanout uses
+  `PLANE_B_INGEST_FANOUT_QUEUE_URL`; exports use `EXPORT_JOB_QUEUE_URL`;
+  ops alerts and notifications use their respective Plane B queue envs; alert evaluation uses
+  `ALERT_EVALUATION_QUEUE_URL`.
 
 ## Gap summary (by category)
 
-- IaC: None present. Need CDK/Terraform.
-- Compute: No AWS deployments or task definitions.
-- Scheduling: K8s CronJobs only. Need EventBridge schedules.
+- IaC: CDK scaffold exists (VPC/SG/IAM/SQS/Lambda/ECS placeholders), but core services
+  (Aurora, API Gateway, CloudFront, X-Ray) are not deployed here.
+- Compute: ECS/Lambda placeholders exist; no production deploy pipeline yet.
+- Scheduling: EventBridge schedules added for gold jobs and workers; K8s CronJobs still present for legacy.
 - Observability: Prometheus/Jaeger stack in k8s; no CloudWatch/X-Ray.
-- Secrets: Policy exists, no runtime integration.
-- Queues: SQS integrated for quote refresh and fanout queues. ECS services exist
-  for queue workers; queue mode defaults to off.
-- Storage: S3 not wired in code.
+- Secrets: Secrets Manager/SSM resolver exists (`backend/shared/aws-params.ts`), but runtime still uses env for most services.
+- Queues: SQS integrated for quote refresh, ingest fanout, notifications, ops alerts, exports, and alert evaluation.
+  Queue mode defaults to off.
+- Storage: Bronze not wired; exports/avatars/audit logs already use S3.
 - CI/CD: GitHub Actions only. No CodePipeline.
-- Network: No VPC or IAM modeling in repo.
+- Network: VPC/SG modeling exists in CDK, but no full AWS deployment wiring yet.
 
 ## AWS-native target mapping (high level)
 

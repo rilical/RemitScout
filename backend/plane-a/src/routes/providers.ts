@@ -326,6 +326,10 @@ const groupQuotesByProvider = (
       continue
     }
 
+    if (metadata.type === 'BANK') {
+      continue
+    }
+
     if (!providerMap.has(providerId)) {
       const scoreCategories = metadata.scoreBreakdown
         ? [

@@ -120,11 +120,6 @@ const buildAffiliateInfo = (providerId: string) => {
 }
 
 const getDynamicCacheTtl = async (pool: Pool, corridorId: string): Promise<number> => {
-  // Special case: US-MX corridor uses 5-hour cache (18000 seconds)
-  if (corridorId === 'US-MX-USD-MXN') {
-    return 18000 // 5 hours
-  }
-  
   try {
     const volatilityService = new VolatilityService(pool)
     const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)

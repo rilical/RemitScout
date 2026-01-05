@@ -5,8 +5,58 @@ import { config } from '../shared/config'
 
 const migrationsDir = path.resolve(__dirname, '..', 'db', 'migrations')
 
+const getConnectionErrorHelp = (error: unknown): string => {
+  const errorMessage = error instanceof Error ? error.message : String(error)
+  const errorString = String(error)
+  
+  if (errorMessage.includes('ECONNREFUSED') || errorString.includes('ECONNREFUSED') || 
+      errorMessage.includes('connect') || errorString.includes('connect')) {
+    const dbUrl = config.db.planeBUrl || 'not configured'
+    const isLocalhost = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')
+    
+    let help = '\n❌ Database connection failed\n\n'
+    
+    if (isLocalhost) {
+      help += 'The migration script is trying to connect to a local PostgreSQL database, but it\'s not running.\n\n'
+      help += 'Options:\n'
+      help += '1. Start a local PostgreSQL instance:\n'
+      help += '   - Using Docker: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=remit -e POSTGRES_USER=remit -e POSTGRES_DB=remit postgres:15\n'
+      help += '   - Using Homebrew: brew services start postgresql@15\n'
+      help += '   - Using Postgres.app (macOS): Download from https://postgresapp.com/\n\n'
+      help += '2. Connect to AWS RDS by setting environment variables:\n'
+      help += '   export DATABASE_URL_PLANE_B="postgres://user:pass@host:5432/dbname"\n'
+      help += '   export DB_SSL_MODE="require"\n\n'
+    } else {
+      help += 'The migration script is trying to connect to a remote database, but the connection failed.\n\n'
+      help += 'Please check:\n'
+      help += '1. Database server is running and accessible\n'
+      help += '2. Network connectivity (firewall, VPN, etc.)\n'
+      help += '3. Connection string is correct (check DATABASE_URL_PLANE_B)\n'
+      help += '4. SSL settings are correct (check DB_SSL_MODE)\n\n'
+    }
+    
+    help += `Current connection string: ${dbUrl.replace(/:[^:@]+@/, ':****@')}\n`
+    help += '\nFor more information, see: docs/aws/database-migrations.md\n'
+    
+    return help
+  }
+  
+  return ''
+}
+
 const run = async () => {
-  const db = createPool(config.db.planeBUrl)
+  const dbUrl = config.db.planeBUrl
+  if (!dbUrl) {
+    console.error('\n❌ Database connection string is not configured\n')
+    console.error('Please set one of the following environment variables:')
+    console.error('  - DATABASE_URL_PLANE_B (recommended)')
+    console.error('  - DATABASE_URL (fallback)')
+    console.error('\nExample:')
+    console.error('  export DATABASE_URL_PLANE_B="postgres://user:pass@localhost:5432/dbname"\n')
+    process.exit(1)
+  }
+
+  const db = createPool(dbUrl)
   try {
     await db.query(
       `CREATE TABLE IF NOT EXISTS public.schema_migrations (
@@ -22,6 +72,7 @@ const run = async () => {
       .filter(file => file.endsWith('.sql'))
       .sort()
 
+    let appliedCount = 0
     for (const file of files) {
       if (applied.has(file)) continue
       const sql = await readFile(path.join(migrationsDir, file), 'utf8')
@@ -30,11 +81,18 @@ const run = async () => {
         await db.query(sql)
         await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
         await db.query('COMMIT')
-        console.log(`Applied migration: ${file}`)
+        console.log(`✅ Applied migration: ${file}`)
+        appliedCount++
       } catch (error) {
         await db.query('ROLLBACK')
         throw error
       }
+    }
+    
+    if (appliedCount === 0) {
+      console.log('✅ All migrations are already applied')
+    } else {
+      console.log(`\n✅ Successfully applied ${appliedCount} migration(s)`)
     }
   } finally {
     await db.end()
@@ -42,6 +100,35 @@ const run = async () => {
 }
 
 run().catch((error) => {
-  console.error('Migration failed:', error)
+  // Handle AggregateError (common with pg-pool connection errors)
+  let errorMessage = ''
+  let errorString = ''
+  
+  if (error instanceof AggregateError) {
+    errorMessage = error.message || ''
+    errorString = JSON.stringify(error, null, 2)
+    // Check nested errors too
+    if (error.errors && error.errors.length > 0) {
+      const firstError = error.errors[0]
+      if (firstError instanceof Error) {
+        errorMessage = firstError.message || errorMessage
+        errorString += '\n' + firstError.message
+      }
+    }
+  } else if (error instanceof Error) {
+    errorMessage = error.message
+    errorString = error.toString()
+  } else {
+    errorMessage = String(error)
+    errorString = String(error)
+  }
+  
+  console.error('Migration failed:', errorMessage || 'Unknown error')
+  const help = getConnectionErrorHelp({ message: errorMessage, toString: () => errorString })
+  if (help) {
+    console.error(help)
+  } else {
+    console.error('\nFor more information, see: docs/aws/database-migrations.md\n')
+  }
   process.exit(1)
 })
