@@ -22,7 +22,7 @@
       :aria-labelledby="labelId"
     >
       <span class="flex-1 truncate">
-        <slot name="selected">
+        <slot name="selected" :option="selectedOption.value?.option">
           {{ selectedLabel }}
         </slot>
       </span>
@@ -59,11 +59,14 @@
             :key="getOptionValue(option, index)"
             type="button"
             :class="[
-              'w-full px-3 py-2 text-sm text-left flex items-center transition-colors',
+              'w-full px-3 py-2 text-sm text-left flex items-center transition-all',
               isSelected(option, index)
-                ? 'bg-blue-50 text-blue-600 font-medium'
+                ? getOptionValue(option, index) === 'sendScore'
+                  ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 text-purple-900 font-semibold'
+                  : 'bg-blue-50 text-blue-600 font-medium'
                 : 'text-slate-900 hover:bg-slate-50',
-              index === highlightedIndex ? 'bg-blue-50' : ''
+              index === highlightedIndex && !isSelected(option, index) ? 'bg-slate-50' : '',
+              getOptionValue(option, index) === 'sendScore' && !isSelected(option, index) ? 'hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50' : ''
             ]"
             role="option"
             :aria-selected="isSelected(option, index)"
@@ -154,16 +157,22 @@ const getOptionValue = (option: DropdownOption | string, index: number): string 
   return defaultGetValue(option, index)
 }
 
-const selectedLabel = computed(() => {
-  if (!props.modelValue) return props.placeholder
+const selectedOption = computed(() => {
+  if (!props.modelValue) return null
   
-  const selectedOption = props.options.find((opt, idx) => {
+  const found = props.options.find((opt, idx) => {
     const value = getOptionValue(opt, idx)
     return value === props.modelValue
   })
   
-  if (selectedOption) {
-    return getOptionLabel(selectedOption, props.options.indexOf(selectedOption))
+  return found ? { option: found, index: props.options.indexOf(found) } : null
+})
+
+const selectedLabel = computed(() => {
+  if (!props.modelValue) return props.placeholder
+  
+  if (selectedOption.value) {
+    return getOptionLabel(selectedOption.value.option, selectedOption.value.index)
   }
   
   return props.placeholder

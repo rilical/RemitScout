@@ -14,6 +14,7 @@ import { LatestQuoteRepository, QuoteRefreshRepository } from './repositories'
 import type { QuoteRefreshRequestRecord } from './repositories/interfaces/quote-refresh-repository.interface'
 import { QuoteRefreshStatus, type QuoteRefreshStatusValue } from './repositories/types/quote-refresh-status'
 import { VolatilityService } from './services/volatility-service'
+import { resolveProviderSupport } from './services/provider-capability'
 
 const logger = createLogger('plane-b.quote-refresh')
 
@@ -39,6 +40,7 @@ export type QuoteRefreshQueueOptions = {
   pool?: Pool
   limit?: number
   maxRetries?: number
+  concurrency?: number
   onRequestFinished?: (event: QuoteRefreshQueueEvent) => void | Promise<void>
   onQueueDepth?: (depth: number) => void | Promise<void>
 }
@@ -164,6 +166,35 @@ const processRequest = async (
         age_seconds: freshness.ageSeconds,
       })
     } else {
+      const supportDecision = await resolveProviderSupport(
+        pool,
+        {
+          provider_id: request.provider_id,
+          corridor_id: request.corridor_id,
+          amount_bucket: request.amount_bucket,
+          payin_method: request.payin_method,
+          payout_method: request.payout_method,
+          send_amount: request.amount_bucket,
+          locale: 'en-US',
+        },
+        { allowProbe: false },
+      )
+      if (!supportDecision.supported) {
+        status = QuoteRefreshStatus.SKIPPED
+        skipReason = supportDecision.reason
+        if (writeDb) {
+          await repo.markRequestStatus(request.request_id, status, skipReason)
+        }
+        logger.info('queue_item_skipped', {
+          request_id: request.request_id,
+          reason: skipReason,
+          provider_id: request.provider_id,
+          corridor_id: request.corridor_id,
+          source: supportDecision.source,
+        })
+        return { status, skipReason }
+      }
+
       const provider = getProvider(request.provider_id)
       if (!provider) {
         status = QuoteRefreshStatus.FAILED
@@ -215,6 +246,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
   const shouldClose = !options.pool
   const limit = options.limit ?? config.planeB.b2cRefreshBatchLimit
   const maxRetries = options.maxRetries ?? config.planeB.b2cRefreshMaxRetries
+  const concurrency = Math.max(1, options.concurrency ?? config.planeB.b2cRefreshConcurrency)
   const queueMode = config.queues.quoteRefreshMode
   const queueUrl = config.queues.quoteRefreshUrl || null
   const dlqUrl = config.queues.quoteRefreshDlqUrl || null
@@ -222,6 +254,22 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
   const writeDb = queueMode !== 'queue'
   const repo = new QuoteRefreshRepository(pool)
   let processed = 0
+
+  const runWithConcurrency = async <T>(
+    items: T[],
+    worker: (item: T) => Promise<void>,
+  ) => {
+    let index = 0
+    const workerCount = Math.min(concurrency, items.length)
+    const workers = Array.from({ length: workerCount }, async () => {
+      while (index < items.length) {
+        const current = items[index]
+        index += 1
+        await worker(current)
+      }
+    })
+    await Promise.all(workers)
+  }
 
   try {
     if (useQueue) {
@@ -234,6 +282,12 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
       await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
 
       const deleteHandles: string[] = []
+      const workItems: Array<{
+        request: QuoteRefreshRequestRecord
+        receiptHandle: string
+        retryCount: number
+      }> = []
+      const preTasks: Array<Promise<void>> = []
 
       for (const message of messages) {
         const retryCount = Math.max(
@@ -257,38 +311,54 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         }
 
         if (retryCount >= maxRetries) {
-          if (writeDb) {
-            await repo.markRequestFailed(request.request_id, 'max_retries_exceeded', retryCount)
-          }
-          logger.warn('queue_item_max_retries', {
-            request_id: request.request_id,
-            retry_count: retryCount,
-          })
-          if (dlqUrl && message.payload) {
-            try {
-              await sendJsonMessage(dlqUrl, {
-                ...message.payload,
-                failedAt: new Date().toISOString(),
-                retryCount,
-                failureReason: 'max_retries_exceeded',
-              })
-              logger.info('queue_item_dlq_sent', {
-                request_id: request.request_id,
-                retry_count: retryCount,
-              })
-            } catch (error) {
-              logger.warn('queue_item_dlq_failed', {
-                request_id: request.request_id,
-                retry_count: retryCount,
-                error: error instanceof Error ? error.message : String(error),
-              })
+          preTasks.push((async () => {
+            if (writeDb) {
+              await repo.markRequestFailed(request.request_id, 'max_retries_exceeded', retryCount)
             }
-          }
+            logger.warn('queue_item_max_retries', {
+              request_id: request.request_id,
+              retry_count: retryCount,
+            })
+            if (dlqUrl && message.payload) {
+              try {
+                await sendJsonMessage(dlqUrl, {
+                  ...message.payload,
+                  failedAt: new Date().toISOString(),
+                  retryCount,
+                  failureReason: 'max_retries_exceeded',
+                })
+                logger.info('queue_item_dlq_sent', {
+                  request_id: request.request_id,
+                  retry_count: retryCount,
+                })
+              } catch (error) {
+                logger.warn('queue_item_dlq_failed', {
+                  request_id: request.request_id,
+                  retry_count: retryCount,
+                  error: error instanceof Error ? error.message : String(error),
+                })
+              }
+            }
+          })())
           deleteHandles.push(message.receiptHandle)
           continue
         }
 
+        workItems.push({
+          request,
+          receiptHandle: message.receiptHandle,
+          retryCount,
+        })
+      }
+
+      if (preTasks.length) {
+        await Promise.all(preTasks)
+      }
+
+      await runWithConcurrency(workItems, async (item) => {
         const requestStart = Date.now()
+        const request = item.request
+        const retryCount = item.retryCount
 
         logger.debug('queue_item_start', {
           request_id: request.request_id,
@@ -323,7 +393,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         }
 
         if (shouldDeleteMessage(status, retryCount, maxRetries)) {
-          deleteHandles.push(message.receiptHandle)
+          deleteHandles.push(item.receiptHandle)
         } else {
           logger.info('queue_item_retry_scheduled', {
             request_id: request.request_id,
@@ -332,7 +402,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         }
 
         await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
-      }
+      })
 
       await deleteMessages(queueUrl, deleteHandles)
     } else {
@@ -344,7 +414,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
       const depthQueueUrl = queueMode === 'shadow' ? queueUrl : null
       await reportQueueDepth(repo, depthQueueUrl, options.onQueueDepth)
 
-      for (const request of requests) {
+      await runWithConcurrency(requests, async (request) => {
         const requestStart = Date.now()
 
         logger.debug('queue_item_start', {
@@ -378,7 +448,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
           }))
         }
         await reportQueueDepth(repo, depthQueueUrl, options.onQueueDepth)
-      }
+      })
     }
   } finally {
     if (shouldClose) {

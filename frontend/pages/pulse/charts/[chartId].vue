@@ -376,7 +376,13 @@ function handleExportPDF() {
 }
 
 function addToWatchlist() {
-  console.log('Add to watchlist')
+  const watchlist = useWatchlist()
+  const label = chartMeta.value?.title || `Pulse chart ${chartId.value}`
+  watchlist.save({ type: 'pulseChart', chartId: chartId.value }, { label }).then((result) => {
+    if (result.status === 'limit_reached' || result.status === 'error') {
+      alert(result.message)
+    }
+  })
 }
 
 onMounted(async () => {
@@ -395,7 +401,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

@@ -152,6 +152,19 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         ? await fxRateHistoryRepository.getHistory(base, quote, startDate, endDate)
         : await fxRateHistoryRepository.getLatestHistory(base, quote, days)
 
+      if (rows.length === 0) {
+        logger.warn('rate_history_empty', {
+          base,
+          quote,
+          days,
+          startDate,
+          endDate,
+          message: 'No rate history found in database. OANDA sync may not be running or data not yet populated.',
+        })
+        reply.code(404)
+        return { error: 'rate_unavailable', base, quote, message: 'No rate history available. OANDA sync may be pending.' }
+      }
+
       const history = rows.map((row) => ({
         date: row.rate_date instanceof Date
           ? row.rate_date.toISOString().slice(0, 10)
@@ -162,9 +175,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         source: row.source ?? null,
       }))
 
-      const lastUpdated = rows.length > 0
-        ? toIsoString(rows[0].created_at ?? rows[0].rate_date)
-        : new Date().toISOString()
+      const lastUpdated = toIsoString(rows[0].created_at ?? rows[0].rate_date)
+
+      logger.info('rate_history_success', {
+        base,
+        quote,
+        count: history.length,
+        source: rows[0]?.source ?? 'unknown',
+      })
 
       return {
         base,
@@ -176,10 +194,12 @@ export const ratesRoutes = async (app: FastifyInstance) => {
       logger.error('rate_history_failed', {
         base,
         quote,
+        days,
         error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
       })
       reply.code(500)
-      return { error: 'internal_error' }
+      return { error: 'internal_error', message: 'Failed to fetch rate history' }
     }
   })
 

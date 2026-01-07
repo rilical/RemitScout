@@ -9,6 +9,7 @@ vi.mock('../plane-b/src/collectors/http-client', () => ({
 
 import { httpRequest } from '../plane-b/src/collectors/http-client'
 import { fetchRemitlyQuote } from '../plane-b/src/providers/remitly/fetch'
+import { getUserAgentForCorridor } from '../plane-b/src/collectors/user-agent'
 
 describe('fetchRemitlyQuote', () => {
   beforeEach(() => {
@@ -56,7 +57,7 @@ describe('fetchRemitlyQuote', () => {
       origin: 'https://www.remitly.com',
       referer: 'https://www.remitly.com/',
       'accept-language': 'en',
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(request.corridor_id),
     })
   })
 

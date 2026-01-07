@@ -15,7 +15,15 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
     amountBucket: number,
     payin: string,
     payout: string,
+    maxAgeSeconds?: number,
   ): Promise<LatestQuoteByCorridorRecord[]> {
+    const maxAge = Number.isFinite(maxAgeSeconds ?? Number.NaN) && (maxAgeSeconds ?? 0) > 0
+      ? Math.floor(maxAgeSeconds ?? 0)
+      : null
+    const ageClause = maxAge ? 'AND collected_at >= NOW() - ($5 * INTERVAL \'1 second\')' : ''
+    const params = maxAge
+      ? [corridorId, amountBucket, payin, payout, maxAge]
+      : [corridorId, amountBucket, payin, payout]
     const result = await query<LatestQuoteByCorridorRecord>(
       `SELECT provider_id,
               corridor_id,
@@ -27,14 +35,14 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
               delivery_time_min_minutes,
               delivery_time_max_minutes,
               collected_at,
-              send_amount,
-              fee_amount,
-              promotional_fee_amount,
-              receive_amount,
-              implied_fx_rate,
-              promotional_rate,
-              base_rate,
-              promotional_cap_amount,
+              send_amount::double precision AS send_amount,
+              fee_amount::double precision AS fee_amount,
+              promotional_fee_amount::double precision AS promotional_fee_amount,
+              receive_amount::double precision AS receive_amount,
+              implied_fx_rate::double precision AS implied_fx_rate,
+              promotional_rate::double precision AS promotional_rate,
+              base_rate::double precision AS base_rate,
+              promotional_cap_amount::double precision AS promotional_cap_amount,
               quality_flags,
               updated_at
          FROM silver.latest_quote_by_provider
@@ -42,8 +50,60 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
           AND amount_bucket = $2
           AND payin = $3
           AND payout = $4
+          ${ageClause}
         ORDER BY receive_amount DESC, fee_amount ASC`,
-      [corridorId, amountBucket, payin, payout],
+      params,
+      this.pool,
+    )
+    return result.rows
+  }
+
+  async listLatestByCorridorPayins(
+    corridorId: string,
+    amountBucket: number,
+    payins: string[],
+    payout: string,
+    maxAgeSeconds?: number,
+  ): Promise<LatestQuoteByCorridorRecord[]> {
+    if (!payins.length) {
+      return []
+    }
+    const maxAge = Number.isFinite(maxAgeSeconds ?? Number.NaN) && (maxAgeSeconds ?? 0) > 0
+      ? Math.floor(maxAgeSeconds ?? 0)
+      : null
+    const ageClause = maxAge ? 'AND collected_at >= NOW() - ($5 * INTERVAL \'1 second\')' : ''
+    const params = maxAge
+      ? [corridorId, amountBucket, payins, payout, maxAge]
+      : [corridorId, amountBucket, payins, payout]
+    const result = await query<LatestQuoteByCorridorRecord>(
+      `SELECT provider_id,
+              corridor_id,
+              amount_bucket,
+              payin,
+              payout,
+              payin AS payin_method,
+              payout AS payout_method,
+              delivery_time_min_minutes,
+              delivery_time_max_minutes,
+              collected_at,
+              send_amount::double precision AS send_amount,
+              fee_amount::double precision AS fee_amount,
+              promotional_fee_amount::double precision AS promotional_fee_amount,
+              receive_amount::double precision AS receive_amount,
+              implied_fx_rate::double precision AS implied_fx_rate,
+              promotional_rate::double precision AS promotional_rate,
+              base_rate::double precision AS base_rate,
+              promotional_cap_amount::double precision AS promotional_cap_amount,
+              quality_flags,
+              updated_at
+         FROM silver.latest_quote_by_provider
+        WHERE corridor_id = $1
+          AND amount_bucket = $2
+          AND payin = ANY($3::text[])
+          AND payout = $4
+          ${ageClause}
+        ORDER BY receive_amount DESC, fee_amount ASC`,
+      params,
       this.pool,
     )
     return result.rows
@@ -59,15 +119,15 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
          payin,
          payout,
          collected_at,
-         send_amount,
-         fee_amount,
-         promotional_fee_amount,
-         total_debit_amount,
-         receive_amount,
-         implied_fx_rate,
-         promotional_rate,
-         base_rate,
-         promotional_cap_amount,
+         send_amount::double precision AS send_amount,
+         fee_amount::double precision AS fee_amount,
+         promotional_fee_amount::double precision AS promotional_fee_amount,
+         total_debit_amount::double precision AS total_debit_amount,
+         receive_amount::double precision AS receive_amount,
+         implied_fx_rate::double precision AS implied_fx_rate,
+         promotional_rate::double precision AS promotional_rate,
+         base_rate::double precision AS base_rate,
+         promotional_cap_amount::double precision AS promotional_cap_amount,
          delivery_time_min_minutes,
          delivery_time_max_minutes,
          quality_flags,
@@ -93,7 +153,7 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
          lqp.provider_id,
          p.display_name AS provider_name,
          lqp.corridor_id,
-         lqp.implied_fx_rate,
+         lqp.implied_fx_rate::double precision AS implied_fx_rate,
          lqp.delivery_time_min_minutes,
          lqp.delivery_time_max_minutes,
          lqp.collected_at

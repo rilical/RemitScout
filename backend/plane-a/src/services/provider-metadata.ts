@@ -176,28 +176,6 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
       trustSafety: 0.85,
     },
   },
-  wellsfargo: {
-    id: 'wellsfargo',
-    slug: 'wells-fargo',
-    name: 'Wells Fargo',
-    displayName: 'Wells Fargo',
-    type: 'BANK',
-    url: 'https://www.wellsfargo.com/international-remittances/cost-estimator/',
-    affiliateUrl: null,
-    isAffiliate: false,
-    logo: {
-      sm: '/logos/wells-fargo.svg',
-      ico: '/logos/wells-fargo.svg',
-    },
-    remitScore: 7.0,
-    scoreBreakdown: {
-      deliveredValue: 0.65,
-      reliability: 0.85,
-      frictionSpeed: 0.75,
-      supportRefunds: 0.80,
-      trustSafety: 0.90,
-    },
-  },
 }
 
 export function getProviderMetadata(providerId: string): ProviderMetadata | null {

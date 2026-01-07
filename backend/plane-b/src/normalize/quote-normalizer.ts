@@ -101,6 +101,21 @@ const isFiniteNumber = (value: number): boolean => Number.isFinite(value)
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0
 
+const parseNumeric = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/[^0-9.+-Ee]/g, '').trim()
+    if (!cleaned) return null
+    const parsed = Number(cleaned)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 /**
  * Normalizes and validates the collected_at timestamp.
  *
@@ -225,6 +240,33 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   const flags = new Set<QualityFlag>(input.parse_flags ?? [])
   validateInput(input, flags)
 
+  const sendAmountParsed = parseNumeric(input.send_amount)
+  let feeAmountParsed = parseNumeric(input.fee_amount)
+  const receiveAmountParsed = parseNumeric(input.receive_amount)
+  const totalDebitParsed = parseNumeric(input.total_debit_amount ?? null)
+  const deliveryTimeMinParsed = parseNumeric(input.delivery_time_min_minutes ?? null)
+  const deliveryTimeMaxParsed = parseNumeric(input.delivery_time_max_minutes ?? null)
+
+  if (feeAmountParsed === null && totalDebitParsed !== null && sendAmountParsed !== null) {
+    const derivedFee = totalDebitParsed - sendAmountParsed
+    if (Number.isFinite(derivedFee)) {
+      feeAmountParsed = Math.max(derivedFee, 0)
+    }
+  }
+
+  if (sendAmountParsed === null || receiveAmountParsed === null) {
+    flags.add(qualityFlags.parse_error)
+  }
+  if (feeAmountParsed === null && totalDebitParsed === null) {
+    flags.add(qualityFlags.partial_data)
+  }
+
+  const sendAmount = sendAmountParsed ?? 0
+  const feeAmount = feeAmountParsed ?? 0
+  const receiveAmount = receiveAmountParsed ?? 0
+  const deliveryTimeMinMinutes = deliveryTimeMinParsed !== null ? Math.round(deliveryTimeMinParsed) : null
+  const deliveryTimeMaxMinutes = deliveryTimeMaxParsed !== null ? Math.round(deliveryTimeMaxParsed) : null
+
   const payin = toCanonicalPayinMethod(input.payin_method)
   const payout = toCanonicalPayoutMethod(input.payout_method)
 
@@ -232,36 +274,36 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     flags.add(qualityFlags.unknown_method)
   }
 
-  const bucketSelection = computeBucketSelection(input.send_amount)
+  const bucketSelection = computeBucketSelection(sendAmount)
   if (bucketSelection.approximate) {
     flags.add(qualityFlags.bucket_approx)
   }
 
-  const promotionalRate = isFiniteNumber(input.promotional_rate ?? Number.NaN)
-    ? Number(input.promotional_rate)
-    : null
-  const promotionalFeeAmount = isFiniteNumber(input.promotional_fee_amount ?? Number.NaN)
-    ? Number(input.promotional_fee_amount)
-    : null
-  const baseRate = isFiniteNumber(input.base_rate ?? Number.NaN) ? Number(input.base_rate) : null
-  const promotionalCapAmount = isFiniteNumber(input.promotional_cap_amount ?? Number.NaN)
-    ? Number(input.promotional_cap_amount)
-    : null
+  const promotionalRate = parseNumeric(input.promotional_rate ?? null)
+  const promotionalFeeAmount = parseNumeric(input.promotional_fee_amount ?? null)
+  const baseRate = parseNumeric(input.base_rate ?? null)
+  const promotionalCapAmount = parseNumeric(input.promotional_cap_amount ?? null)
   const totalDebit = calculateTotalDebit(
-    input.total_debit_amount,
-    input.send_amount,
-    input.fee_amount,
+    totalDebitParsed,
+    sendAmount,
+    feeAmount,
     promotionalFeeAmount,
   )
 
-  if (!isFiniteNumber(input.send_amount) || !isFiniteNumber(input.receive_amount)) {
-    flags.add(qualityFlags.parse_error)
+  // Calculate implied FX rate, prioritizing promotional_rate when available
+  // Promotional rate is the actual rate offered and should be used for accurate comparisons
+  let impliedFxRate = 0
+  if (isFiniteNumber(promotionalRate) && promotionalRate > 0) {
+    // Use promotional rate directly when available (most accurate)
+    impliedFxRate = promotionalRate
+  } else if (isFiniteNumber(baseRate) && baseRate > 0) {
+    // Fallback to base rate if promotional rate not available
+    impliedFxRate = baseRate
+  } else if (isFiniteNumber(sendAmount) && sendAmount > 0 && isFiniteNumber(receiveAmount)) {
+    // Last resort: calculate from receive_amount / send_amount
+    // This accounts for fees already applied in receive_amount
+    impliedFxRate = receiveAmount / sendAmount
   }
-
-  const impliedFxRate =
-    isFiniteNumber(input.send_amount) && input.send_amount > 0 && isFiniteNumber(input.receive_amount)
-      ? input.receive_amount / input.send_amount
-      : 0
 
   const ingestedAt = new Date().toISOString()
   const collectedAt = normalizeCollectedAt(input.collected_at, ingestedAt)
@@ -269,6 +311,18 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   const methodProfile = deriveMethodProfile(payin, payout)
   if (methodProfile === null) {
     flags.add(qualityFlags.invalid_method_profile)
+  }
+
+  const hasRequiredFields = isNonEmptyString(input.provider_id)
+    && isNonEmptyString(input.corridor_id)
+    && isNonEmptyString(input.bronze_object_key)
+    && isNonEmptyString(input.ingestion_run_id)
+  const hasCoreAmounts = sendAmountParsed !== null && receiveAmountParsed !== null
+  const hasCost = feeAmountParsed !== null || totalDebitParsed !== null
+  const hasMethods = payin !== 'other' && payout !== 'other'
+
+  if (hasRequiredFields && hasCoreAmounts && hasCost && hasMethods && methodProfile !== null) {
+    flags.delete(qualityFlags.partial_data)
   }
 
   return {
@@ -280,15 +334,15 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     approximate: bucketSelection.approximate,
     payin,
     payout,
-    send_amount: input.send_amount,
-    fee_amount: input.fee_amount,
+    send_amount: sendAmount,
+    fee_amount: feeAmount,
     fee_currency: input.fee_currency ?? null,
     total_debit_amount: totalDebit,
-    receive_amount: input.receive_amount,
+    receive_amount: receiveAmount,
     implied_fx_rate: impliedFxRate,
     promotional_fee_amount: promotionalFeeAmount,
-    delivery_time_min_minutes: input.delivery_time_min_minutes ?? null,
-    delivery_time_max_minutes: input.delivery_time_max_minutes ?? null,
+    delivery_time_min_minutes: deliveryTimeMinMinutes,
+    delivery_time_max_minutes: deliveryTimeMaxMinutes,
     promotional_rate: promotionalRate,
     base_rate: baseRate,
     promotional_cap_amount: promotionalCapAmount,

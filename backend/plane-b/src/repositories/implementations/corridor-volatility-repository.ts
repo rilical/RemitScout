@@ -96,6 +96,11 @@ export class CorridorVolatilityRepository implements ICorridorVolatilityReposito
   async calculateVolatilityScore(
     corridorId: string,
   ): Promise<CorridorVolatilityRecord | null> {
+    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    if (!allowOnDemand) {
+      return null
+    }
+
     const result = await query<{
       mean_rate: number | null
       stddev_rate: number | null
@@ -105,11 +110,13 @@ export class CorridorVolatilityRepository implements ICorridorVolatilityReposito
         AVG(implied_fx_rate) AS mean_rate,
         STDDEV(implied_fx_rate) AS stddev_rate,
         COUNT(*) AS sample_count
-       FROM silver.quote_record
-       WHERE corridor_id = $1
-         AND collected_at >= NOW() - INTERVAL '7 days'
-         AND status = 'ok'
-         AND implied_fx_rate > 0`,
+       FROM silver.quote_record qr
+       JOIN silver.ingestion_run ir ON ir.run_id = qr.ingestion_run_id
+       WHERE qr.corridor_id = $1
+         AND qr.collected_at >= NOW() - INTERVAL '7 days'
+         AND qr.status = 'ok'
+         AND qr.implied_fx_rate > 0
+         AND ir.collector_type LIKE 'b2b_%'`,
       [corridorId],
       this.pool,
     )
@@ -154,5 +161,64 @@ export class CorridorVolatilityRepository implements ICorridorVolatilityReposito
       stddev_rate: stddevRate,
       calculated_at: new Date(),
     }
+  }
+
+  async upsertVolatilityForCorridors(
+    corridorIds: string[],
+  ): Promise<number> {
+    if (corridorIds.length === 0) {
+      return 0
+    }
+
+    const result = await query(
+      `WITH stats AS (
+         SELECT
+           qr.corridor_id,
+           AVG(qr.implied_fx_rate) AS mean_rate,
+           STDDEV(qr.implied_fx_rate) AS stddev_rate,
+           COUNT(*) AS sample_count
+         FROM silver.quote_record qr
+         JOIN silver.ingestion_run ir ON ir.run_id = qr.ingestion_run_id
+         WHERE qr.corridor_id = ANY($1::text[])
+           AND qr.collected_at >= NOW() - INTERVAL '7 days'
+           AND qr.status = 'ok'
+           AND qr.implied_fx_rate > 0
+           AND ir.collector_type LIKE 'b2b_%'
+         GROUP BY qr.corridor_id
+       ),
+       scored AS (
+         SELECT
+           corridor_id,
+           mean_rate,
+           stddev_rate,
+           sample_count,
+           CASE
+             WHEN mean_rate IS NULL OR stddev_rate IS NULL OR mean_rate = 0 OR sample_count < 10 THEN NULL
+             ELSE LEAST(1.0, GREATEST(0.0, stddev_rate / mean_rate))
+           END AS volatility_score
+         FROM stats
+       )
+       INSERT INTO silver.corridor_volatility_cache
+         (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+       SELECT
+         corridor_id,
+         volatility_score,
+         sample_count,
+         mean_rate,
+         stddev_rate,
+         NOW()
+       FROM scored
+       WHERE volatility_score IS NOT NULL
+       ON CONFLICT (corridor_id) DO UPDATE SET
+         volatility_score = EXCLUDED.volatility_score,
+         sample_count = EXCLUDED.sample_count,
+         mean_rate = EXCLUDED.mean_rate,
+         stddev_rate = EXCLUDED.stddev_rate,
+         calculated_at = EXCLUDED.calculated_at`,
+      [corridorIds],
+      this.pool,
+    )
+
+    return result.rowCount ?? 0
   }
 }

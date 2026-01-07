@@ -25,7 +25,7 @@ const defaultOptions: Required<Omit<RetryOptions, 'timeoutMs' | 'signal'>> & {
   maxDelayMs: 10000,
   backoffMultiplier: 2,
   jitter: true,
-  retryable: (error) => isRetryableError(error),
+  retryable: (error) => isRetryableError(error) || error instanceof Error,
 }
 
 const calculateDelay = (
@@ -53,6 +53,8 @@ export const retry = async <T>(
     ...defaultOptions,
     ...options,
   }
+  const retryableFn =
+    typeof options.retryable === 'function' ? options.retryable : defaultOptions.retryable
 
   const operation = options.operation || 'unknown'
   let lastError: unknown
@@ -102,7 +104,18 @@ export const retry = async <T>(
         throw new Error('Retry cancelled via AbortSignal')
       }
 
-      if (!opts.retryable(error)) {
+      let retryable = false
+      try {
+        retryable = retryableFn(error)
+      } catch (retryableError) {
+        logger.warn('retryable_check_failed', {
+          attempt,
+          error: retryableError instanceof Error ? retryableError.message : String(retryableError),
+        })
+        retryable = false
+      }
+
+      if (!retryable) {
         logger.debug('retry_skipped_not_retryable', { attempt, error })
         throw error
       }
@@ -152,12 +165,12 @@ export const retry = async <T>(
           const timeoutId = setTimeout(resolve, actualDelay)
         })
       } else {
-      logger.debug('retry_waiting', {
-        attempt: attempt + 1,
-        delayMs: Math.round(delay),
+        logger.debug('retry_waiting', {
+          attempt: attempt + 1,
+          delayMs: Math.round(delay),
           total_delay_ms: totalDelay,
-        error: error instanceof Error ? error.message : String(error),
-      })
+          error: error instanceof Error ? error.message : String(error),
+        })
         await new Promise<void>((resolve, reject) => {
           if (opts.signal) {
             opts.signal.addEventListener('abort', () => {
@@ -174,5 +187,3 @@ export const retry = async <T>(
 
   throw lastError
 }
-
-

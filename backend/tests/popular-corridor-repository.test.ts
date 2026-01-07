@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Pool } from 'pg'
 import { PopularCorridorRepository } from '../plane-a/src/repositories/implementations/popular-corridor-repository'
-import * as dbModule from '../../shared/db'
+import * as dbModule from '../shared/db'
 
-vi.mock('../../shared/db', () => ({
+vi.mock('../shared/db', () => ({
   query: vi.fn(),
 }))
 
@@ -140,5 +140,6 @@ describe('PopularCorridorRepository', () => {
     })
   })
 })
+
 
 

@@ -115,6 +115,7 @@ interface Props {
   countryCode?: string
   currencies?: string[]
   theme?: 'light' | 'dark'
+  codeOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -126,6 +127,7 @@ const props = withDefaults(defineProps<Props>(), {
   countryCode: undefined,
   currencies: undefined,
   theme: 'light',
+  codeOnly: false,
 })
 
 const emit = defineEmits<{
@@ -166,7 +168,7 @@ const allCurrencies = computed(() => {
     if (currencyInfo) {
       currencies.push({
         code: currencyInfo.code,
-        label: `${currencyInfo.code} | ${currencyInfo.name}`,
+        label: props.codeOnly ? currencyInfo.code : `${currencyInfo.code} | ${currencyInfo.name}`,
         name: currencyInfo.name,
         symbol: currencyInfo.symbol,
       })

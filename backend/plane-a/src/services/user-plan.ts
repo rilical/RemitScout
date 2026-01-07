@@ -1,5 +1,6 @@
 import { Pool } from 'pg'
 import { UserPlanRepository } from '../repositories'
+import { config } from '../../../shared/config'
 
 export type UserPlan = {
   user_id: string
@@ -17,7 +18,20 @@ export const ensureUserPlan = async (pool: Pool, userId: string) => {
 
 export const getUserPlan = async (pool: Pool, userId: string): Promise<UserPlan | null> => {
   const repo = new UserPlanRepository(pool)
-  return await repo.getUserPlan(userId)
+  const plan = await repo.getUserPlan(userId)
+  
+  // In dev mode with mock auth, allow plan override via SUPABASE_MOCK_PLAN
+  if (plan && config.auth.supabase.mock.enabled && config.auth.supabase.mock.planOverride) {
+    const override = config.auth.supabase.mock.planOverride
+    if (override === 'plus' || override === 'free' || override === 'enterprise') {
+      return {
+        ...plan,
+        plan_code: override,
+      }
+    }
+  }
+  
+  return plan
 }
 
 export type StripePlanUpdate = {

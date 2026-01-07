@@ -114,19 +114,42 @@ const getBestFor = (method: 'bank' | 'cash' | 'wallet') => {
   return 'Bank deposit'
 }
 
-const parseNumeric = (value: number | null | undefined, fallback = 0) => {
-  return Number.isFinite(value ?? NaN) ? Number(value) : fallback
+const parseNumeric = (value: number | string | null | undefined, fallback = 0) => {
+  const num = Number(value)
+  return Number.isFinite(num) ? num : fallback
 }
 
 const computeRecipientGets = (row: QuoteRow, amount: number) => {
-  if (row.receive_amount !== null && row.receive_amount !== undefined) {
-    return parseNumeric(row.receive_amount, 0)
-  }
-
-  const sendAmount = parseNumeric(row.send_amount, amount)
+  const sendAmount = amount
   const feeAmount = parseNumeric(row.promotional_fee_amount, parseNumeric(row.fee_amount, 0))
-  const fxRate = parseNumeric(row.implied_fx_rate, parseNumeric(row.promotional_rate, 0))
-  if (!Number.isFinite(sendAmount) || !Number.isFinite(fxRate)) return 0
+  
+  // Prioritize promotional_rate over implied_fx_rate for accurate calculations
+  let fxRate = parseNumeric(row.promotional_rate, parseNumeric(row.implied_fx_rate, 0))
+  
+  // If rate is missing or invalid, try to calculate it from receive_amount and send_amount
+  if (!Number.isFinite(fxRate) || fxRate <= 0) {
+    const storedSendAmount = parseNumeric(row.send_amount, 0)
+    const storedReceiveAmount = parseNumeric(row.receive_amount, 0)
+    const storedFeeAmount = parseNumeric(row.promotional_fee_amount, parseNumeric(row.fee_amount, 0))
+    
+    // If we have both send_amount and receive_amount, calculate the rate
+    if (storedSendAmount > 0 && storedReceiveAmount > 0 && storedSendAmount > storedFeeAmount) {
+      fxRate = storedReceiveAmount / (storedSendAmount - storedFeeAmount)
+    }
+    
+    // If amounts match exactly, use the stored receive_amount directly
+    if (Math.abs(storedSendAmount - amount) < 0.01 && storedReceiveAmount > 0) {
+      return storedReceiveAmount
+    }
+    
+    // If we still don't have a valid rate, return 0
+    if (!Number.isFinite(fxRate) || fxRate <= 0) {
+      return 0
+    }
+  }
+  
+  // Calculate using rate: (sendAmount - fee) * rate
+  // This matches how Remitly calculates: send amount minus fee, then apply rate
   return Math.max(0, (sendAmount - feeAmount) * fxRate)
 }
 
@@ -152,9 +175,36 @@ const buildProviderQuote = (
   const name = metadata?.displayName ?? row.display_name ?? row.provider_id
   const id = metadata?.id ?? row.provider_id
   const sendAmount = parseNumeric(row.send_amount, amount)
+  // Use promotional_fee_amount when available (discounted fee), otherwise use regular fee
   const fee = parseNumeric(row.promotional_fee_amount, parseNumeric(row.fee_amount, 0))
-  const fxRate = parseNumeric(row.implied_fx_rate, parseNumeric(row.promotional_rate, 0))
+  
+  // Calculate recipient gets first (this handles fallback to receive_amount)
   const recipientGets = computeRecipientGets(row, amount)
+  
+  // Calculate fxRate: prioritize promotional_rate, then implied_fx_rate, then calculate from receive_amount
+  let fxRate = parseNumeric(row.promotional_rate, parseNumeric(row.implied_fx_rate, null))
+  
+  // If rate is still missing, try to calculate it from stored receive_amount and send_amount
+  if ((!fxRate || fxRate <= 0) && recipientGets > 0 && sendAmount > fee) {
+    fxRate = recipientGets / (sendAmount - fee)
+  }
+  
+  // If still missing, try calculating from stored values in the database row
+  if ((!fxRate || fxRate <= 0)) {
+    const storedSendAmount = parseNumeric(row.send_amount, 0)
+    const storedReceiveAmount = parseNumeric(row.receive_amount, 0)
+    const storedFeeAmount = parseNumeric(row.promotional_fee_amount, parseNumeric(row.fee_amount, 0))
+    
+    if (storedSendAmount > 0 && storedReceiveAmount > 0 && storedSendAmount > storedFeeAmount) {
+      fxRate = storedReceiveAmount / (storedSendAmount - storedFeeAmount)
+    }
+  }
+  
+  // Final fallback to 0 if still no valid rate
+  if (!fxRate || fxRate <= 0 || !Number.isFinite(fxRate)) {
+    fxRate = 0
+  }
+  
   const marginPct = midRate && midRate > 0 && fxRate > 0
     ? Math.max(0, ((midRate - fxRate) / midRate) * 100)
     : 0

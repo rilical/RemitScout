@@ -36,30 +36,49 @@ const toUnixTimestamp = (value: unknown) => {
 
 export const webhookRoutes = async (app: FastifyInstance) => {
   app.post('/billing/webhook', async (request, reply) => {
-    if (!config.billing.stripe.webhookSecret || !config.billing.stripe.secretKey) {
+    const isMock = config.billing.stripe.mockEnabled
+
+    if (!isMock && (!config.billing.stripe.webhookSecret || !config.billing.stripe.secretKey)) {
       reply.code(500)
       return { error: 'billing_not_configured' }
     }
 
-    const signature = request.headers['stripe-signature']
-    if (typeof signature !== 'string') {
-      reply.code(400)
-      return { error: 'missing_signature' }
-    }
-
     const rawBody = request.body
-    if (!Buffer.isBuffer(rawBody)) {
-      reply.code(400)
-      return { error: 'missing_raw_body' }
-    }
-
-    const stripe = getStripeClient()
     let event: Stripe.Event
-    try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, config.billing.stripe.webhookSecret)
-    } catch (_error) {
-      reply.code(400)
-      return { error: 'invalid_signature' }
+    if (isMock) {
+      const payload = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : rawBody
+      let parsed: any = payload
+      if (typeof payload === 'string') {
+        try {
+          parsed = JSON.parse(payload)
+        } catch {
+          parsed = {}
+        }
+      }
+      event = {
+        id: parsed?.id ?? `evt_mock_${Date.now()}`,
+        type: parsed?.type ?? 'checkout.session.completed',
+        data: parsed?.data ?? { object: parsed },
+      } as Stripe.Event
+    } else {
+      const signature = request.headers['stripe-signature']
+      if (typeof signature !== 'string') {
+        reply.code(400)
+        return { error: 'missing_signature' }
+      }
+
+      if (!Buffer.isBuffer(rawBody)) {
+        reply.code(400)
+        return { error: 'missing_raw_body' }
+      }
+
+      const stripe = getStripeClient()
+      try {
+        event = stripe.webhooks.constructEvent(rawBody, signature, config.billing.stripe.webhookSecret)
+      } catch (_error) {
+        reply.code(400)
+        return { error: 'invalid_signature' }
+      }
     }
 
     const planeAPool = getPool(config.db.planeAUrl)

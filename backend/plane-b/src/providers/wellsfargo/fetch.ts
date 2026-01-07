@@ -2,6 +2,7 @@ import type { CollectorRequest, FetchResult } from '../../collectors/types'
 import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
+import { getUserAgentForCorridor } from '../../collectors/user-agent'
 
 const wellsFargoEndpoint = 'https://www.wellsfargo.com/as/grs/country/rnm/paymentMethod/amount'
 
@@ -36,7 +37,7 @@ export const fetchWellsFargoQuote = async (
       'Accept': 'application/json, text/javascript, */*; q=0.01',
       'Origin': 'https://www.wellsfargo.com',
       'Referer': 'https://www.wellsfargo.com/international-remittances/cost-estimator/',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Safari/605.1.15',
+      'User-Agent': getUserAgentForCorridor(request.corridor_id),
       'X-Requested-With': 'XMLHttpRequest',
       'Accept-Language': 'en-US,en;q=0.9',
     },

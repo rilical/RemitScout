@@ -9,5 +9,5 @@ export type PopularCorridorRecord = {
 }
 
 export interface IPopularCorridorRepository {
-  listPopularCorridors(): Promise<PopularCorridorRecord[]>
+  listPopularCorridors(limit?: number): Promise<PopularCorridorRecord[]>
 }

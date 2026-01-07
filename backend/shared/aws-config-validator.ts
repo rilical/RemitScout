@@ -214,3 +214,4 @@ export const assertAwsConfig = async (
     throw new Error(`AWS configuration validation failed: ${errors}`)
   }
 }
+

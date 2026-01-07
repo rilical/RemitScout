@@ -48,6 +48,7 @@ import { parseWellsFargoPayload } from './parse'
 
 type WellsFargoCollectorOptions = {
   pool?: Pool
+  closePool?: boolean
   corridors?: string[]
   delayMs?: number
   jitterMs?: number
@@ -107,7 +108,7 @@ const getLatestQuoteAgeMinutes = async (
 export const runWellsFargoCollector = async (options: WellsFargoCollectorOptions = {}) => {
   const providerId = 'wellsfargo'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
+  const shouldClose = options.closePool ?? !options.pool
   let corridors: string[]
 
   if (options.corridors?.length) {
@@ -717,4 +718,3 @@ export const runWellsFargoCollector = async (options: WellsFargoCollectorOptions
 
   return !blocked
 }
-

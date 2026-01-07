@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { config } from '../../../shared/config'
 import { fetchJwks } from './jwks-fetch'
 import { getCachedJwks, setCachedJwks } from './jwks-cache'
@@ -19,12 +20,58 @@ const parseBearerToken = (header?: string) => {
 
 const makeError = (code: AuthError['code'], message: string): AuthError => ({ code, message })
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const isUuid = (value: string) => uuidPattern.test(value)
+
+const toDeterministicUuid = (value: string) => {
+  const hash = createHash('sha256').update(value).digest('hex')
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`
+}
+
+const resolveMockUserId = (value: string, fallback: string) => {
+  const candidate = value || fallback
+  if (isUuid(candidate)) {
+    return candidate
+  }
+  return toDeterministicUuid(candidate)
+}
+
 import type { AuthResult } from './types'
 
 export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<AuthResult> => {
   const token = parseBearerToken(authorizationHeader)
   if (!token) {
     return makeError('missing_token', 'Missing or invalid Authorization header')
+  }
+
+  if (config.auth.supabase.mock.enabled) {
+    const { token: userToken, adminToken, userId, email, role, adminEmail } =
+      config.auth.supabase.mock
+    const isAdmin = token === adminToken
+    const isUser = token === userToken
+
+    if (!isAdmin && !isUser) {
+      return makeError('invalid_token', 'Invalid mock token')
+    }
+
+    const resolvedUserId = resolveMockUserId(userId, userToken || adminToken || 'dev-user')
+    const resolvedEmail = isAdmin ? adminEmail : email
+    const resolvedRole = isAdmin ? 'admin' : role
+    const claims = {
+      sub: resolvedUserId,
+      email: resolvedEmail,
+      role: resolvedRole,
+      mock: true,
+    }
+
+    return {
+      user_id: resolvedUserId,
+      email: resolvedEmail,
+      role: resolvedRole,
+      claims,
+    }
   }
 
   const mode = config.auth.supabase.verifyMode

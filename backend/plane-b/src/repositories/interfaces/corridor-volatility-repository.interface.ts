@@ -13,5 +13,6 @@ export interface ICorridorVolatilityRepository {
   getVolatilityScores(corridorIds: string[]): Promise<Map<string, CorridorVolatilityRecord>>
 
   calculateVolatilityScore(corridorId: string): Promise<CorridorVolatilityRecord | null>
-}
 
+  upsertVolatilityForCorridors(corridorIds: string[]): Promise<number>
+}

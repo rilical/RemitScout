@@ -35,6 +35,17 @@ CREATE INDEX IF NOT EXISTS watchlist_item_user_id_deleted_at_idx
 
 -- Grant permissions to plane_a
 GRANT SELECT, INSERT, UPDATE, DELETE ON silver.watchlist_item TO plane_a;
-GRANT USAGE, SELECT ON SEQUENCE silver.watchlist_item_id_seq TO plane_a;
-
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.relkind = 'S'
+       AND c.relname = 'watchlist_item_id_seq'
+       AND n.nspname = 'silver'
+  ) THEN
+    GRANT USAGE, SELECT ON SEQUENCE silver.watchlist_item_id_seq TO plane_a;
+  END IF;
+END $$;
 

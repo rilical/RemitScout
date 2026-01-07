@@ -63,12 +63,9 @@
         >
           Read Review
         </NuxtLink>
-        <a
+        <NuxtLink
           v-if="provider?.affiliateUrl || provider?.url"
-          :href="provider?.affiliateUrl || provider?.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          @click="handleOutboundClick"
+          :to="outboundUrl"
           class="flex items-center justify-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-6 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           Visit
@@ -85,7 +82,7 @@
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
             />
           </svg>
-        </a>
+        </NuxtLink>
       </div>
     </div>
 
@@ -97,7 +94,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
-import { useTelemetry } from '~/composables/useTelemetry'
+import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
 
 interface Provider {
   id?: string
@@ -124,17 +121,19 @@ const props = withDefaults(defineProps<Props>(), {
   compact: false,
 })
 
-const { trackClick } = useTelemetry()
+const route = useRoute()
 
-const handleOutboundClick = () => {
-  const targetUrl = props.provider?.affiliateUrl || props.provider?.url
-  if (!props.provider || !targetUrl) return
-  void trackClick({
-    provider_id: props.provider.id || props.provider.slug,
-    target_url: targetUrl,
-    is_affiliate: Boolean(props.provider.affiliateUrl),
+const outboundUrl = computed(() => {
+  const providerId = props.provider?.id || props.provider?.slug
+  if (!providerId) return '/go/unknown'
+  return buildOutboundUrl({
+    providerId,
+    targetUrl: props.provider?.affiliateUrl || props.provider?.url || null,
+    isAffiliate: Boolean(props.provider?.affiliateUrl),
+    source: 'provider-card',
+    utm: extractUtmParams(route.query as Record<string, unknown>),
   })
-}
+})
 
 const scoreDisplay = computed(() => {
   const score = props.provider?.score || 0

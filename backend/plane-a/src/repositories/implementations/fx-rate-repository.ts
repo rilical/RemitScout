@@ -96,14 +96,15 @@ export class FxRateRepository implements IFxRateRepository {
       }
 
       const record = await this.getRateRecord(baseCurrency, quoteCurrency)
-      if (!record || record.rate === null || record.rate === undefined) {
+      const normalizedRate = this.normalizeRate(record?.rate)
+      if (normalizedRate === null) {
         return null
       }
 
       const ttlSeconds = config.fxRates?.cacheTtlSeconds ?? 300
-      await fxRateCache.set(cacheKey, record.rate, ttlSeconds)
+      await fxRateCache.set(cacheKey, normalizedRate, ttlSeconds)
       success = true
-      return record.rate
+      return normalizedRate
     } catch (error: unknown) {
       const { message } = formatError(error)
       errorType = isError(error) ? error.code || 'unknown' : 'unknown'
@@ -217,5 +218,16 @@ export class FxRateRepository implements IFxRateRepository {
 
   private shouldUseOandaFallback(): boolean {
     return config.fxRates?.oandaFallbackEnabled ?? false
+  }
+
+  private normalizeRate(rate: unknown): number | null {
+    if (rate === null || rate === undefined) {
+      return null
+    }
+    const numeric = typeof rate === 'string' ? Number(rate) : rate
+    if (typeof numeric !== 'number' || !Number.isFinite(numeric)) {
+      return null
+    }
+    return numeric
   }
 }

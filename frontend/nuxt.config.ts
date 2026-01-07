@@ -1,6 +1,23 @@
+import { promises as fs } from 'node:fs'
+import { join } from 'node:path'
+
 const isAwsEnvironment = Boolean(
   process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
 )
+
+const ensureClientPrecomputed = async () => {
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+    return
+  }
+  const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
+  await fs.mkdir(serverDist, { recursive: true })
+  const precomputedPath = join(serverDist, 'client.precomputed.mjs')
+  try {
+    await fs.access(precomputedPath)
+  } catch {
+    await fs.writeFile(precomputedPath, 'export default undefined', 'utf8')
+  }
+}
 
 export default defineNuxtConfig({
   // Development
@@ -15,9 +32,59 @@ export default defineNuxtConfig({
       '~/components/home',
       '~/components/nav',
       '~/components/pulse',
-    ],
+  ],
   },
   devtools: { enabled: true },
+  hooks: {
+    'build:before': async () => {
+      // Copy SVG files from frontend/png/SVG to public/png/SVG for proper routing
+      const sourceDir = join(process.cwd(), 'frontend', 'png', 'SVG')
+      const destDir = join(process.cwd(), 'frontend', 'public', 'png', 'SVG')
+      try {
+        await fs.mkdir(destDir, { recursive: true })
+        const files = await fs.readdir(sourceDir)
+        for (const file of files) {
+          if (file.endsWith('.svg')) {
+            const sourcePath = join(sourceDir, file)
+            const destPath = join(destDir, file)
+            await fs.copyFile(sourcePath, destPath)
+          }
+        }
+      } catch (error) {
+        // Source directory doesn't exist or is empty - that's okay
+      }
+
+      // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
+      const providersSourceDir = join(process.cwd(), 'frontend', 'png', 'SVG', 'PROVIDERS')
+      const logosDestDir = join(process.cwd(), 'frontend', 'public', 'logos')
+      const providerLogoMap: Record<string, string> = {
+        'WISE_LOGO.svg': 'wise.svg',
+        'REMITLY_LOGO.svg': 'remitly.svg',
+        'WORLD_REMIT_LOGO.svg': 'worldremit.svg',
+        'WESTERN_UNION_LOGO.svg': 'western-union.svg',
+        'XE_LOGO.svg': 'xe-money.svg',
+      }
+      try {
+        await fs.mkdir(logosDestDir, { recursive: true })
+        const providerFiles = await fs.readdir(providersSourceDir)
+        for (const file of providerFiles) {
+          if (file.endsWith('.svg') && providerLogoMap[file]) {
+            const sourcePath = join(providersSourceDir, file)
+            const destPath = join(logosDestDir, providerLogoMap[file])
+            await fs.copyFile(sourcePath, destPath)
+          }
+        }
+      } catch {
+        // Providers directory doesn't exist or is empty - that's okay
+      }
+    },
+    'build:done': async () => {
+      await ensureClientPrecomputed()
+    },
+    'nitro:build:done': async () => {
+      await ensureClientPrecomputed()
+    },
+  },
 
   // App Head
   app: {
@@ -62,14 +129,14 @@ export default defineNuxtConfig({
   // Runtime Configuration
   runtimeConfig: {
     // Server-only backend base URL for BFF proxying (must be absolute).
-    apiBase: process.env.API_BASE || process.env.PUBLIC_API_BASE || '',
+    apiBase: process.env.API_BASE || 'http://localhost:4000/api/v1',
     public: {
       siteUrl:
         process.env.PUBLIC_SITE_URL ||
         (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
           : 'https://Remit-Scout.com'),
-      apiBase: process.env.PUBLIC_API_BASE || '/api/v1',
+      apiBase: process.env.PUBLIC_API_BASE || '/api',
       imageBase:
         process.env.PUBLIC_IMAGE_BASE ||
         (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
@@ -84,6 +151,16 @@ export default defineNuxtConfig({
         process.env.SUPABASE_PUBLISHABLE_KEY ||
         '',
       devControls: process.env.PUBLIC_DEV_CONTROLS === '1' && !isAwsEnvironment,
+      devAuthEnabled: process.env.PUBLIC_DEV_AUTH === '1' && !isAwsEnvironment,
+      devAuthToken:
+        process.env.PUBLIC_DEV_AUTH_TOKEN ||
+        process.env.SUPABASE_MOCK_ADMIN_TOKEN ||
+        process.env.SUPABASE_MOCK_TOKEN ||
+        'admin-token',
+      devSuperAdminEmail:
+        process.env.DEV_SUPER_ADMIN_EMAIL ||
+        process.env.PUBLIC_DEV_SUPER_ADMIN_EMAIL ||
+        'admin@remitscout.test',
     },
   },
 

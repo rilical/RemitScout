@@ -33,6 +33,11 @@ class PlaneAVolatilityRepository implements VolatilityRepository {
   }
 
   async calculateVolatilityScore(corridorId: string): Promise<VolatilityRecord | null> {
+    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    if (!allowOnDemand) {
+      return null
+    }
+
     const result = await query<{
       mean_rate: number | null
       stddev_rate: number | null
@@ -42,11 +47,13 @@ class PlaneAVolatilityRepository implements VolatilityRepository {
         AVG(implied_fx_rate) AS mean_rate,
         STDDEV(implied_fx_rate) AS stddev_rate,
         COUNT(*) AS sample_count
-       FROM silver.quote_record
-       WHERE corridor_id = $1
-         AND collected_at >= NOW() - INTERVAL '7 days'
-         AND status = 'ok'
-         AND implied_fx_rate > 0`,
+       FROM silver.quote_record qr
+       JOIN silver.ingestion_run ir ON ir.run_id = qr.ingestion_run_id
+       WHERE qr.corridor_id = $1
+         AND qr.collected_at >= NOW() - INTERVAL '7 days'
+         AND qr.status = 'ok'
+         AND qr.implied_fx_rate > 0
+         AND ir.collector_type LIKE 'b2b_%'`,
       [corridorId],
       this.pool,
     )

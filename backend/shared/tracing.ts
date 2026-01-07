@@ -299,6 +299,14 @@ let totalSpans = 0
 let errorSpans = 0
 const ERROR_RATE_WINDOW = 100
 
+export const resetTracingState = (): void => {
+  initialized = false
+  provider = null
+  errorRate = 0
+  totalSpans = 0
+  errorSpans = 0
+}
+
 const shouldSampleTrace = (): boolean => {
   if (process.env.TRACE_SAMPLE_RATE) {
     const sampleRate = Number(process.env.TRACE_SAMPLE_RATE)

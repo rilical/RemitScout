@@ -87,6 +87,7 @@ type RemitlyCollectorOptions = {
   freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
+  closePool?: boolean
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -156,7 +157,7 @@ const getLatestQuoteAgeMinutes = async (
 export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {}) => {
   const providerId = 'remitly'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
+  const shouldClose = options.closePool ?? !options.pool
   let corridors: string[]
 
   // Resolve corridors to collect: use provided list or filter supported corridors
@@ -629,7 +630,8 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
             http_status: fetchResult.status,
           })
           // Mark corridor as unsupported if 400 error (invalid corridor)
-          if (fetchResult.status === 400) {
+          const unsupportedCorridor = fetchResult.status === 400
+          if (unsupportedCorridor) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_http_400')
             logger.warn('corridor_marked_unsupported', {
               trace_id: traceId,
@@ -645,9 +647,9 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
             payinMethod,
             payoutMethod,
             success: false,
-            errorType: 'http_error',
+            errorType: unsupportedCorridor ? 'unsupported' : 'http_error',
             httpStatus: fetchResult.status,
-            errorMessage: 'non_200_response',
+            errorMessage: unsupportedCorridor ? 'corridor_unsupported' : 'non_200_response',
             bronzeObjectKey,
             requestFingerprint,
           })

@@ -17,7 +17,7 @@
       <!-- Country Slider/Carousel - 3 per slide -->
       <div
         v-if="hasCorridors"
-        class="relative overflow-hidden"
+        class="relative overflow-hidden -mx-4 px-4"
       >
         <div
           ref="sliderRef"
@@ -161,6 +161,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getCountryByCode } from '~/utils/countries-currencies'
 
 const router = useRouter()
 const sliderRef = ref<HTMLElement | null>(null)
@@ -188,8 +189,14 @@ const defaultCorridors = import.meta.dev
   : []
 
 const parseRoute = (route: string) => {
-  const [from, to] = route.split('→')
-  return { from, to }
+  if (!route) return { from: '', to: '' }
+  // Handle both → and -> arrow formats, and clean up whitespace
+  const normalized = route.trim().replace(/->/g, '→')
+  const parts = normalized.split('→').map(p => p.trim())
+  if (parts.length === 2) {
+    return { from: parts[0].toUpperCase(), to: parts[1].toUpperCase() }
+  }
+  return { from: '', to: '' }
 }
 
 type CorridorData = {
@@ -211,20 +218,28 @@ type ApiResponse = {
 const corridors = computed(() => {
   const apiData = data.value as ApiResponse | null
   
-  if (apiData?.corridors?.length) {
-    return apiData.corridors.map((c) => ({
-      ...c,
-      count24h: c.count_24h || 0,
-      ...parseRoute(c.route || ''),
-    }))
+  if (apiData?.data?.length) {
+    return apiData.data.map((c) => {
+      const parsed = parseRoute(c.route || '')
+      return {
+        ...c,
+        from: parsed.from || c.from || '',
+        to: parsed.to || c.to || '',
+        count24h: c.count24h || c.count_24h || 0,
+      }
+    }).filter(c => c.from && c.to) // Filter out invalid corridors
   }
   
-  if (apiData?.data?.length) {
-    return apiData.data.map((c) => ({
-      ...c,
-      count24h: c.count_24h || c.count24h || 0,
-      ...parseRoute(c.route || ''),
-    }))
+  if (apiData?.corridors?.length) {
+    return apiData.corridors.map((c) => {
+      const parsed = parseRoute(c.route || '')
+      return {
+        ...c,
+        from: parsed.from || c.from || '',
+        to: parsed.to || c.to || '',
+        count24h: c.count24h || c.count_24h || 0,
+      }
+    }).filter(c => c.from && c.to) // Filter out invalid corridors
   }
 
   if (import.meta.dev && config.public.devControls) {
@@ -240,28 +255,10 @@ const totalSlides = computed(() => {
   return Math.ceil(corridors.value.length / itemsPerSlide)
 })
 
-const countryFlags: Record<string, string> = {
-  US: '🇺🇸',
-  GB: '🇬🇧',
-  UK: '🇬🇧',
-  CA: '🇨🇦',
-  DE: '🇩🇪',
-  FR: '🇫🇷',
-  ES: '🇪🇸',
-  IT: '🇮🇹',
-  AE: '🇦🇪',
-  PH: '🇵🇭',
-  MX: '🇲🇽',
-  IN: '🇮🇳',
-  PK: '🇵🇰',
-  NG: '🇳🇬',
-  MA: '🇲🇦',
-  SN: '🇸🇳',
-  RO: '🇷🇴',
-}
-
 const getCountryFlag = (code: string): string => {
-  return countryFlags[code] || '🏳️'
+  if (!code) return '🏳️'
+  const country = getCountryByCode(code.toUpperCase())
+  return country?.flag || '🏳️'
 }
 
 const handleCorridorClick = (corridor: { from: string, to: string }) => {

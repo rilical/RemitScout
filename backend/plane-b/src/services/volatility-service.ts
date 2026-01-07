@@ -28,7 +28,10 @@ export class VolatilityService {
     corridorIds: string[],
   ): Promise<Map<string, CacheTtlResult>> {
     const volatilityMap = await this.repo.getVolatilityScores(corridorIds)
-    const missingCorridorIds = corridorIds.filter(id => !volatilityMap.has(id))
+    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    const missingCorridorIds = allowOnDemand
+      ? corridorIds.filter(id => !volatilityMap.has(id))
+      : []
 
     if (missingCorridorIds.length > 0) {
       const calculationPromises = missingCorridorIds.map(async (corridorId) => {
@@ -64,6 +67,10 @@ export class VolatilityService {
     }
 
     return resultMap
+  }
+
+  async refreshCacheForCorridors(corridorIds: string[]): Promise<number> {
+    return this.repo.upsertVolatilityForCorridors(corridorIds)
   }
 }
 

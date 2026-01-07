@@ -1,4 +1,6 @@
 .env
 .env.*
+!.env.staging.example
+!.env.local.example
 dist
 node_modules

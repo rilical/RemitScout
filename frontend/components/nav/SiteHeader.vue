@@ -3,17 +3,35 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useAuth } from '~/composables/useAuth'
 import { useEntitlements, type Plan } from '~/composables/useEntitlements'
+import { FEATURE_FLAGS } from '~/utils/constants'
 
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
+const logoError = ref(false)
 
 const { compareUrl } = useCompareForm()
 const { isAuthenticated, signIn, signOut } = useAuth()
 const { isPlus, plan, refreshPlan, getEffectivePlan } = useEntitlements()
 
+const logoPlusSrc = computed(() => {
+  // Route to SVG file in public/png/SVG directory
+  // Use LOGO_PLUS.svg (icon only, no text) for Plus accounts
+  return '/png/SVG/LOGO_PLUS.svg'
+})
+
+const logoRegularSrc = computed(() => {
+  // Use LOGO.svg (icon only, no text) for regular accounts
+  return '/png/SVG/LOGO.svg'
+})
+
+function handleLogoError() {
+  logoError.value = true
+}
+
 const runtimeConfig = useRuntimeConfig()
-type PublicDevConfig = { devControls?: boolean }
+type PublicDevConfig = { devControls?: boolean; devSuperAdminEmail?: string }
 const devControlsEnabled = computed(() => import.meta.dev || Boolean((runtimeConfig.public as unknown as PublicDevConfig).devControls))
+const devSuperAdminEmail = computed(() => (runtimeConfig.public as unknown as PublicDevConfig).devSuperAdminEmail || 'admin@remitscout.test')
 
 // Dev-only plan override state (shared with useEntitlements)
 const devPlanOverride = useState<Plan | null>('dev:plan-override', () => null)
@@ -37,33 +55,47 @@ const effectivePlan = computed(() => {
 })
 
 async function cycleDevStatus() {
-  if (!isAuthenticated.value) {
-    // Step 1: Sign in as Free user
-    signIn('dev@remitscout.test')
-    devPlanOverride.value = 'free'
-    await refreshPlan()
-    return
-  }
-
-  const currentPlan = devPlanOverride.value || plan.value
-
-  if (currentPlan === 'free') {
-    // Step 2: Upgrade to Plus (dev override)
-    devPlanOverride.value = 'plus'
-    // Also update the plan state directly for immediate UI update
-    const planState = useState<Plan>('entitlements:plan')
-    if (planState.value) {
-      planState.value = 'plus'
+  try {
+    if (!isAuthenticated.value) {
+      // Step 1: Sign in as super admin (if feature flag enabled) or dev user
+      const emailToUse = FEATURE_FLAGS.DEV_AUTO_LOGIN && devSuperAdminEmail.value 
+        ? devSuperAdminEmail.value 
+        : 'dev@remitscout.test'
+      
+      const result = await signIn(emailToUse)
+      if (result && result.ok) {
+        devPlanOverride.value = 'free'
+        await refreshPlan()
+      } else {
+        console.error('Dev sign in failed:', result?.error || 'Unknown error')
+      }
+      return
     }
-    return
-  }
 
-  if (currentPlan === 'plus') {
-    // Step 3: Sign out
-    devPlanOverride.value = null
-    signOut()
-    await refreshPlan()
-    return
+    const currentPlan = devPlanOverride.value || plan.value
+
+    if (currentPlan === 'free') {
+      // Step 2: Upgrade to Plus (dev override)
+      devPlanOverride.value = 'plus'
+      // Also update the plan state directly for immediate UI update
+      const planState = useState<Plan>('entitlements:plan')
+      if (planState.value) {
+        planState.value = 'plus'
+      }
+      return
+    }
+
+    if (currentPlan === 'plus') {
+      // Step 3: Sign out
+      devPlanOverride.value = null
+      const result = await signOut()
+      if (result && result.ok) {
+        await refreshPlan()
+      }
+      return
+    }
+  } catch (error) {
+    console.error('Dev status cycle error:', error)
   }
 }
 
@@ -125,22 +157,34 @@ watch(() => route.path, () => {
     >Skip to content</a>
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <!-- Left: Logo -->
-      <div class="flex items-center gap-8">
+      <!-- Left: Logo + Navigation -->
+      <div class="flex items-center gap-6">
         <NuxtLink
           to="/"
-          class="flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+          class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
         >
           <img
-            src="/logos/remit-scout.svg"
-            alt="RemitScout"
-            class="h-8 w-auto"
+            v-if="isPlus && !logoError"
+            :src="logoPlusSrc"
+            alt=""
+            class="h-10 w-10 object-contain flex-shrink-0"
+            @error="handleLogoError"
           >
+          <img
+            v-else
+            :src="logoRegularSrc"
+            alt=""
+            class="h-10 w-10 object-contain flex-shrink-0"
+          >
+            <span class="text-lg font-bold text-neutral-900 whitespace-nowrap">
+            Remit-Scout
+            <span v-if="isPlus && !logoError" class="text-brand-600"> Plus</span>
+          </span>
         </NuxtLink>
 
         <!-- Primary nav (Desktop) -->
         <nav
-          class="hidden md:flex items-center gap-2"
+          class="hidden md:flex items-center gap-1"
           aria-label="Primary navigation"
         >
           <!-- Dashboard -->
@@ -167,13 +211,14 @@ watch(() => route.path, () => {
             Providers
           </NuxtLink>
 
-          <!-- Pulse -->
-          <NuxtLink
+          <!-- Pulse (Hidden behind feature flag) -->
+          <!-- <NuxtLink
+            v-if="FEATURE_FLAGS.PULSE_ENABLED"
             to="/pulse"
             class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Pulse
-          </NuxtLink>
+          </NuxtLink> -->
 
           <!-- Guides -->
           <NuxtLink
@@ -183,13 +228,13 @@ watch(() => route.path, () => {
             Guides
           </NuxtLink>
 
-          <!-- Enterprise -->
-          <NuxtLink
+          <!-- Enterprise (Hidden - activate in future) -->
+          <!-- <NuxtLink
             to="/institutions"
             class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Enterprise
-          </NuxtLink>
+          </NuxtLink> -->
         </nav>
       </div>
 
@@ -198,7 +243,7 @@ watch(() => route.path, () => {
         <button
           v-if="devControlsEnabled"
           type="button"
-          class="hidden sm:inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          class="hidden sm:inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer"
           :title="`Dev: ${devStatusLabel} → ${devStatusNextLabel}`"
           @click="cycleDevStatus"
         >
@@ -224,39 +269,12 @@ watch(() => route.path, () => {
         <!-- Logged in state -->
         <template v-else>
           <NuxtLink
-            to="/dashboard"
-            class="md:hidden inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          >
-            Dashboard
-          </NuxtLink>
-          <NuxtLink
             v-if="effectivePlan !== 'plus'"
             to="/plus"
             class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Get Plus
           </NuxtLink>
-
-          <!-- Plus pill (if Plus member) -->
-          <span
-            v-if="effectivePlan === 'plus'"
-            class="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
-          >
-            <svg
-              class="h-3 w-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            Plus
-          </span>
 
           <!-- User Menu -->
           <UserMenu />
@@ -335,11 +353,29 @@ watch(() => route.path, () => {
           aria-label="Mobile navigation"
         >
           <div class="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-            <img
-              src="/logos/remit-scout.svg"
-              alt="RemitScout"
-              class="h-7 w-auto"
+            <NuxtLink
+              to="/"
+              class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+              @click="closeMobileMenu"
             >
+              <img
+                v-if="isPlus && !logoError"
+                :src="logoPlusSrc"
+                alt=""
+                class="h-10 w-10 object-contain flex-shrink-0"
+                @error="handleLogoError"
+              >
+              <img
+                v-else
+                :src="logoRegularSrc"
+                alt=""
+                class="h-10 w-10 object-contain flex-shrink-0"
+              >
+              <span class="text-base font-bold text-neutral-900 whitespace-nowrap">
+                Remit-Scout
+                <span v-if="isPlus && !logoError" class="text-brand-600"> Plus</span>
+              </span>
+            </NuxtLink>
             <button
               class="rounded-md p-2 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Close menu"
@@ -386,13 +422,15 @@ watch(() => route.path, () => {
               <span aria-hidden="true">→</span>
             </NuxtLink>
 
-            <NuxtLink
+            <!-- Pulse (Hidden behind feature flag) -->
+            <!-- <NuxtLink
+              v-if="FEATURE_FLAGS.PULSE_ENABLED"
               to="/pulse"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
             >
               <span>Pulse</span>
               <span aria-hidden="true">→</span>
-            </NuxtLink>
+            </NuxtLink> -->
 
             <NuxtLink
               to="/learn"
@@ -402,13 +440,14 @@ watch(() => route.path, () => {
               <span aria-hidden="true">→</span>
             </NuxtLink>
 
-            <NuxtLink
+            <!-- Enterprise (Hidden - activate in future) -->
+            <!-- <NuxtLink
               to="/institutions"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
             >
               <span>Enterprise</span>
               <span aria-hidden="true">→</span>
-            </NuxtLink>
+            </NuxtLink> -->
 
             <div class="my-3 border-t border-slate-200" />
 

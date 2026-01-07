@@ -6,7 +6,7 @@
         <div class="lg:col-span-1">
           <div class="mb-6">
             <img
-              src="/logos/remit-scout.svg"
+              src="/png/SVG/LOGO.svg"
               alt="RemitScout"
               class="h-8 w-auto mb-3"
             >
@@ -92,7 +92,7 @@
                 Money Transfers
               </NuxtLink>
             </li>
-            <li>
+            <li v-if="FEATURE_FLAGS.PULSE_ENABLED">
               <NuxtLink
                 to="/pulse"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
@@ -219,7 +219,7 @@
       </div>
 
       <!-- Institutional Section -->
-      <div class="border-t border-white/10 pt-8 mb-8">
+      <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="border-t border-white/10 pt-8 mb-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div class="flex items-center gap-3">
             <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10">
@@ -277,6 +277,8 @@
 </template>
 
 <script setup lang="ts">
+import { FEATURE_FLAGS } from '~/utils/constants'
+
 defineEmits<{
   'open-modal': []
 }>()

@@ -5,7 +5,7 @@ import { initErrorTracking } from '../../shared/error-tracker'
 import { initTracing, shutdownTracing } from '../../shared/tracing'
 import { buildApp } from './app'
 
-if (config.env === 'production' || process.env.STRICT_CONFIG === '1') {
+if (config.env === 'production' || config.env === 'staging' || process.env.STRICT_CONFIG === '1') {
   assertRuntimeConfig({
     requirePlaneC: true,
   })

@@ -30,6 +30,12 @@ type UserBehaviorParams = AnalyticsDateRange & {
   pattern_type?: 'search_frequency' | 'corridor_preferences' | 'amount_distribution'
 }
 
+type RevenueParams = AnalyticsDateRange & {
+  provider_id?: string
+  corridor_id?: string
+  limit?: number
+}
+
 export const useAnalytics = () => {
   const { request } = useApi()
   const loading = ref(false)
@@ -75,6 +81,9 @@ export const useAnalytics = () => {
   const getUserBehaviorPatterns = (params: UserBehaviorParams) =>
     withLoading(() => request('/analytics/users', { method: 'GET', query: params }))
 
+  const getRevenueMetrics = (params: RevenueParams) =>
+    withLoading(() => request('/analytics/revenue', { method: 'GET', query: params }))
+
   return {
     loading,
     error,
@@ -87,5 +96,6 @@ export const useAnalytics = () => {
     getHeatmapData,
     getSavingsMetrics,
     getUserBehaviorPatterns,
+    getRevenueMetrics,
   }
 }

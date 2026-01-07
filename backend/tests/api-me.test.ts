@@ -19,7 +19,7 @@ describe('GET /api/me', () => {
   }
 
   it('returns plan and entitlements for authenticated user', async () => {
-    const app = buildApp()
+    const app = await buildApp()
     const response = await app.inject({
       method: 'GET',
       url: '/api/me',

@@ -92,6 +92,14 @@ export const useWatchlist = () => {
 
   const count = computed(() => items.value.length)
 
+  const upsertItem = (next: WatchlistItem) => {
+    const nextKey = targetKey(normalizeTarget(next.target))
+    items.value = [
+      next,
+      ...items.value.filter(item => targetKey(normalizeTarget(item.target)) !== nextKey && item.id !== next.id),
+    ].sort(sortByUpdatedDesc)
+  }
+
   async function fetchFromBackend() {
     if (!isLoggedIn.value) {
       hydrated.value = true
@@ -117,6 +125,31 @@ export const useWatchlist = () => {
     }
   }
 
+  async function saveToBackend(target: WatchTarget, label?: string): Promise<SaveResult> {
+    const response = await request<WatchlistApiResponse>('/watchlist', {
+      method: 'POST',
+      body: {
+        target,
+        label: label ?? defaultLabel(target),
+      },
+    })
+
+    if (response.success && response.item) {
+      upsertItem(response.item)
+      return { status: response.status ?? 'saved', item: response.item }
+    }
+
+    if (response.error === 'limit_reached') {
+      return {
+        status: 'limit_reached',
+        limit: response.limit ?? 0,
+        message: response.message ?? 'Watchlist limit reached.',
+      }
+    }
+
+    throw new Error(response.message || response.error || 'Failed to save watchlist item')
+  }
+
   async function syncToBackend(operation: 'save' | 'update' | 'delete', item: WatchlistItem | WatchTarget, id?: string) {
     if (!isLoggedIn.value) {
       return
@@ -126,22 +159,7 @@ export const useWatchlist = () => {
       if (operation === 'save') {
         const target = item as WatchTarget
         const normalized = normalizeTarget(target)
-        const response = await request<WatchlistApiResponse>('/watchlist', {
-          method: 'POST',
-          body: {
-            target: normalized,
-            label: defaultLabel(normalized),
-          },
-        })
-
-        if (response.success && response.item) {
-          const existingIndex = items.value.findIndex(i => i.id === response.item!.id)
-          if (existingIndex >= 0) {
-            items.value[existingIndex] = response.item
-          } else {
-            items.value = [response.item, ...items.value].sort(sortByUpdatedDesc)
-          }
-        }
+        await saveToBackend(normalized)
       } else if (operation === 'update' && id) {
         const watchlistItem = item as WatchlistItem
         await request<WatchlistApiResponse>(`/watchlist/${id}`, {
@@ -192,6 +210,21 @@ export const useWatchlist = () => {
 
   async function save(target: WatchTarget, options?: { label?: string }): Promise<SaveResult> {
     const normalized = normalizeTarget(target)
+    const label = options?.label ?? defaultLabel(normalized)
+
+    if (isLoggedIn.value) {
+      try {
+        return await saveToBackend(normalized, label)
+      } catch (error) {
+        console.error('Error saving watchlist item to backend:', error)
+        return {
+          status: 'limit_reached',
+          limit: limits.value.watchlistItems === 'unlimited' ? 0 : limits.value.watchlistItems,
+          message: 'Unable to save watchlist item right now.',
+        }
+      }
+    }
+
     const existing = findByTarget(normalized)
     
     if (existing) {
@@ -215,7 +248,6 @@ export const useWatchlist = () => {
     }
 
     const now = new Date().toISOString()
-    const label = options?.label ?? defaultLabel(normalized)
     const next: WatchlistItem = {
       id: createId('wl'),
       target: normalized,

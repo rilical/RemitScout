@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createClient } from 'redis'
-import { getRedisClient } from '../shared/redis'
+import { getRedisClient, resetRedisState } from '../shared/redis'
 import * as configModule from '../shared/config'
 
 vi.mock('redis', () => ({
@@ -11,6 +11,14 @@ vi.mock('../shared/config', () => ({
   config: {
     redis: {
       url: 'redis://localhost:6379',
+    },
+    observability: {
+      cloudwatch: {
+        enabled: false,
+        namespace: 'RemitScout',
+        flushIntervalMs: 15000,
+        highCardinalityEnabled: false,
+      },
     },
   },
 }))
@@ -27,6 +35,7 @@ vi.mock('../shared/logger', () => ({
 describe('redis', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    resetRedisState()
   })
 
   describe('getRedisClient', () => {
@@ -44,13 +53,16 @@ describe('redis', () => {
       const mockClient = {
         connect: vi.fn().mockResolvedValue(undefined),
         on: vi.fn(),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
       const client = await getRedisClient()
 
       expect(client).toBe(mockClient)
-      expect(createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' })
+      expect(createClient).toHaveBeenCalledWith(
+        expect.objectContaining({ url: 'redis://localhost:6379' }),
+      )
       expect(mockClient.connect).toHaveBeenCalled()
     })
 
@@ -59,6 +71,7 @@ describe('redis', () => {
       const mockClient = {
         connect: vi.fn().mockResolvedValue(undefined),
         on: vi.fn(),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
@@ -76,6 +89,7 @@ describe('redis', () => {
           () => new Promise((resolve) => setTimeout(resolve, 100)),
         ),
         on: vi.fn(),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
@@ -91,6 +105,7 @@ describe('redis', () => {
       const mockClient = {
         connect: vi.fn().mockRejectedValue(error),
         on: vi.fn(),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
@@ -104,6 +119,7 @@ describe('redis', () => {
       const mockClient = {
         connect: vi.fn().mockResolvedValue(undefined),
         on: vi.fn(),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
@@ -121,6 +137,7 @@ describe('redis', () => {
             setTimeout(() => handler(new Error('Redis error')), 10)
           }
         }),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
@@ -136,6 +153,7 @@ describe('redis', () => {
       const mockClient = {
         connect: vi.fn().mockRejectedValue(error),
         on: vi.fn(),
+        ping: vi.fn().mockResolvedValue('PONG'),
       }
       vi.mocked(createClient).mockReturnValue(mockClient as any)
 
@@ -147,5 +165,4 @@ describe('redis', () => {
     })
   })
 })
-
 

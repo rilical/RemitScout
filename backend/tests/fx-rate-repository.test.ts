@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Pool } from 'pg'
 import { FxRateRepository } from '../plane-a/src/repositories/implementations/fx-rate-repository'
-import * as dbModule from '../../shared/db'
+import * as dbModule from '../shared/db'
+import { config } from '../shared/config'
+import { resetRedisState } from '../shared/redis'
+import { resetCircuitBreakers } from '../shared/repository-retry'
 
-vi.mock('../../shared/db', () => ({
+vi.mock('../shared/db', () => ({
   query: vi.fn(),
 }))
 
@@ -13,6 +16,12 @@ describe('FxRateRepository', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    resetRedisState()
+    resetCircuitBreakers()
+    config.redis.url = ''
+    if (config.fxRates) {
+      config.fxRates.oandaFallbackEnabled = false
+    }
     mockPool = {} as Pool
     repository = new FxRateRepository(mockPool)
   })
@@ -28,7 +37,7 @@ describe('FxRateRepository', () => {
 
       expect(rate).toBe(1.25)
       expect(dbModule.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT rate FROM gold.fx_rates'),
+        expect.stringContaining('FROM gold.fx_rates'),
         ['USD', 'EUR'],
         mockPool,
       )

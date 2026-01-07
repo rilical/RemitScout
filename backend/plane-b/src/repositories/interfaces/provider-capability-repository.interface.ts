@@ -16,7 +16,18 @@ export type ProviderCorridorPriorityRecord = {
   priority_tier: string | null
 }
 
+export type ProviderCapabilityRecord = {
+  provider_id: string
+  corridor_id: string
+  payin_methods: string[] | null
+  payout_methods: string[] | null
+  is_supported: boolean
+  last_verified_at: Date | null
+  source: string
+}
+
 export interface IProviderCapabilityRepository {
+  getCapability(providerId: string, corridorId: string): Promise<ProviderCapabilityRecord | null>
   loadObservedCorridors(providerId: string): Promise<ProviderCorridorRecord[]>
   loadUnsupportedCorridors(providerId: string): Promise<ProviderCorridorRecord[]>
   upsertCapability(input: ProviderCapabilityInput): Promise<void>

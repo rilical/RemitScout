@@ -6,6 +6,7 @@ import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
+import { upsertUsageSnapshot } from '../services/plan-usage'
 import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
@@ -18,8 +19,20 @@ const alertRepository = new AlertRepository(pool)
 const fxRateRepository = new FxRateRepository(pool)
 const watchlistRepository = new WatchlistRepository(pool)
 
+const updateAlertUsage = async (userId: string) => {
+  try {
+    const count = await alertRepository.countByUserId(userId)
+    await upsertUsageSnapshot(pool, userId, 'alerts_count', count)
+  } catch (error) {
+    logger.warn('alert_usage_update_failed', {
+      user_id: userId,
+      error: getErrorMessage(error),
+    })
+  }
+}
+
 const alertRuleSchema = z.object({
-  metric: z.enum(['rate', 'recipientGets', 'totalCost', 'fee', 'index', 'midMarketRate']),
+  metric: z.enum(['rate', 'recipientGets', 'totalCost', 'fee', 'index', 'midMarketRate', 'sendScore']),
   comparator: z.enum(['gt', 'gte', 'lt', 'lte', 'crosses_above', 'crosses_below']),
   value: z.number(),
   currency: z.string().optional(),
@@ -45,6 +58,17 @@ async function getAlertLimit(userId: string): Promise<number | 'unlimited'> {
   }
   const entitlements = getEntitlementsForPlan(plan.plan_code)
   return entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max
+}
+
+const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
+  return !!plan
+    && ['plus', 'enterprise'].includes(plan.plan_code)
+    && ['active', 'trialing'].includes(plan.status)
+}
+
+const isValidSendScore = (value: number) => {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) && numeric >= 0 && numeric <= 100
 }
 
 async function getAlertCount(userId: string): Promise<number> {
@@ -270,6 +294,33 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      if (body.rule.metric === 'sendScore') {
+        const plan = await getUserPlan(pool, user.user_id)
+        if (!isPlusEntitled(plan)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'forbidden',
+            message: 'Smart alerts are available for Plus members only.',
+          }
+        }
+
+        if (!isValidSendScore(body.rule.value)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+
+          reply.code(400)
+          return {
+            success: false,
+            error: 'validation_error',
+            message: 'Smart score alerts must be between 0 and 100.',
+          }
+        }
+      }
+
       // Check if alert already exists
       const existing = await alertRepository.findByWatchlistItemAndRule(
         body.watchlistItemId,
@@ -283,6 +334,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('POST', '/alerts', 200, durationSeconds)
 
+        await updateAlertUsage(user.user_id)
+
         return {
           success: true,
           status: 'already_exists',
@@ -292,6 +345,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
             rule: body.rule,
             frequency: body.frequency,
             enabled: body.enabled,
+            createdAt: existing.created_at.toISOString(),
+            updatedAt: existing.updated_at.toISOString(),
           },
         }
       }
@@ -344,6 +399,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
           error: getErrorMessage(error),
         })
       }
+
+      await updateAlertUsage(user.user_id)
 
       return {
         success: true,
@@ -439,6 +496,35 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      const nextMetric = updates.metric ?? existing.metric
+      const nextThreshold = updates.threshold ?? existing.threshold
+      if (nextMetric === 'sendScore') {
+        const plan = await getUserPlan(pool, user.user_id)
+        if (!isPlusEntitled(plan)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'forbidden',
+            message: 'Smart alerts are available for Plus members only.',
+          }
+        }
+
+        if (!isValidSendScore(nextThreshold)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+
+          reply.code(400)
+          return {
+            success: false,
+            error: 'validation_error',
+            message: 'Smart score alerts must be between 0 and 100.',
+          }
+        }
+      }
+
       if (body.frequency !== undefined) {
         updates.frequency = body.frequency
       }
@@ -502,6 +588,10 @@ export const alertsRoutes = async (app: FastifyInstance) => {
           user_id: user.user_id,
           error: getErrorMessage(error),
         })
+      }
+
+      if (body.enabled !== undefined) {
+        await updateAlertUsage(user.user_id)
       }
 
       return {
@@ -620,6 +710,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         })
       }
 
+      await updateAlertUsage(user.user_id)
+
       return {
         success: true,
       }
@@ -655,7 +747,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         return {
           success: false,
           error: 'forbidden',
-          message: 'Smart Notifier is available for Plus members only. Coming soon!',
+          message: 'Smart Notifier is available for Plus members only.',
         }
       }
 
@@ -664,7 +756,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
 
       return {
         success: true,
-        message: 'Smart Notifier is coming soon for Plus members!',
+        message: 'Smart Notifier is available for Plus members.',
         features: [
           'AI-powered rate predictions',
           'Optimal send time recommendations',

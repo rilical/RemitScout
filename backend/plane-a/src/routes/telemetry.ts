@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
@@ -85,6 +85,99 @@ const makeId = () => {
     return randomUUID()
   }
   return `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+}
+
+const getAnalyticsWindowHours = (hours?: number) => {
+  return Number.isFinite(hours) && hours ? hours : 24
+}
+
+const getAnalyticsBucket = async () => {
+  const result = await query<{ bucket: Date }>(
+    `SELECT date_trunc('hour', NOW()) AS bucket`,
+    [],
+    planeAPool,
+  )
+  return result.rows[0]?.bucket ?? new Date()
+}
+
+const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
+  if (metric === 'heatmap') {
+    const result = await query<{
+      from_country: string
+      to_country: string
+      search_count: number
+    }>(
+      `SELECT split_part(corridor_id, '-', 1) AS from_country,
+              split_part(corridor_id, '-', 2) AS to_country,
+              COUNT(*)::int AS search_count
+       FROM silver.telemetry_search_event
+       WHERE ts >= $1
+       GROUP BY 1, 2
+       ORDER BY search_count DESC
+       LIMIT 200`,
+      [since],
+      planeAPool,
+    )
+    return result.rows
+  }
+
+  if (metric === 'popular_corridors') {
+    const result = await query<{
+      corridor_id: string
+      search_count: number
+    }>(
+      `SELECT corridor_id,
+              COUNT(*)::int AS search_count
+       FROM silver.telemetry_search_event
+       WHERE ts >= $1
+       GROUP BY corridor_id
+       ORDER BY search_count DESC
+       LIMIT 100`,
+      [since],
+      planeAPool,
+    )
+    return result.rows
+  }
+
+  if (metric === 'provider_favorites') {
+    const result = await query<{
+      provider_id: string
+      corridor_id: string | null
+      click_count: number
+    }>(
+      `SELECT provider_id,
+              corridor_id,
+              COUNT(*)::int AS click_count
+       FROM silver.telemetry_outbound_click
+       WHERE ts >= $1
+       GROUP BY provider_id, corridor_id
+       ORDER BY click_count DESC
+       LIMIT 200`,
+      [since],
+      planeAPool,
+    )
+    return result.rows
+  }
+
+  if (metric === 'engagement') {
+    const result = await query<{
+      avg_engagement: number | null
+      session_count: number
+    }>(
+      `SELECT AVG(engagement_count)::float AS avg_engagement,
+              COUNT(*)::int AS session_count
+       FROM silver.telemetry_session
+       WHERE last_activity >= $1`,
+      [since],
+      planeAPool,
+    )
+    return {
+      avg_engagement: result.rows[0]?.avg_engagement ?? 0,
+      session_count: result.rows[0]?.session_count ?? 0,
+    }
+  }
+
+  return []
 }
 
 export const telemetryRoutes = async (app: FastifyInstance) => {
@@ -236,15 +329,30 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const since = parsed.data.hours
-      ? new Date(Date.now() - parsed.data.hours * 60 * 60 * 1000)
-      : undefined
+    const windowHours = getAnalyticsWindowHours(parsed.data.hours)
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000)
 
     try {
       const rows = await telemetryRepository.getAnalyticsAggregate({
         metric_name: parsed.data.metric,
-        since,
+        since: parsed.data.hours ? since : undefined,
       })
+
+      if (!rows.length) {
+        const timeBucket = await getAnalyticsBucket()
+        const liveValue = await fetchLiveTelemetryMetric(parsed.data.metric, since)
+        return {
+          data: [
+            {
+              metric: parsed.data.metric,
+              value: liveValue,
+              time_bucket: timeBucket.toISOString(),
+              dimensions: { window_hours: windowHours, source: 'live' },
+              computed_at: new Date().toISOString(),
+            },
+          ],
+        }
+      }
 
       return {
         data: rows.map((row) => ({

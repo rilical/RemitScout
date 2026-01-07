@@ -57,6 +57,14 @@ export interface ILatestQuoteRepository {
     amountBucket: number,
     payin: string,
     payout: string,
+    maxAgeSeconds?: number,
+  ): Promise<LatestQuoteByCorridorRecord[]>
+  listLatestByCorridorPayins(
+    corridorId: string,
+    amountBucket: number,
+    payins: string[],
+    payout: string,
+    maxAgeSeconds?: number,
   ): Promise<LatestQuoteByCorridorRecord[]>
 
   listLatestByProvider(

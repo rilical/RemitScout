@@ -36,7 +36,7 @@ const getConnectionErrorHelp = (error: unknown): string => {
     }
     
     help += `Current connection string: ${dbUrl.replace(/:[^:@]+@/, ':****@')}\n`
-    help += '\nFor more information, see: docs/aws/database-migrations.md\n'
+    help += '\nFor more information, see: README.md (or the internal runbook).\n'
     
     return help
   }
@@ -128,7 +128,7 @@ run().catch((error) => {
   if (help) {
     console.error(help)
   } else {
-    console.error('\nFor more information, see: docs/aws/database-migrations.md\n')
+    console.error('\nFor more information, see: README.md (or the internal runbook).\n')
   }
   process.exit(1)
 })

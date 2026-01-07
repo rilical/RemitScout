@@ -223,13 +223,16 @@ export const parseWesternUnionPayload = (
 ): WesternUnionParsedQuote | null => {
   const statusValue = payload.response_status?.status
   const statusNumber = statusValue === null || statusValue === undefined ? 0 : Number(statusValue)
-  if (Number.isFinite(statusNumber) && statusNumber !== 0) {
+  if (Number.isFinite(statusNumber) && statusNumber < 0) {
     return null
   }
 
   const options = buildOptions(payload)
   const { option, parse_flags } = chooseOption(options, request)
   if (!option) return null
+  if (Number.isFinite(statusNumber) && statusNumber > 0) {
+    parse_flags.push(qualityFlags.partial_data)
+  }
   const { sourceCurrency } = requireCorridorId(request.corridor_id)
 
   const sendAmount = option.send_amount ?? request.send_amount

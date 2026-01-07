@@ -23,3 +23,4 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON gold_export.corridor_rates TO plane_c;
 
 
 
+

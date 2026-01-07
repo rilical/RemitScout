@@ -12,7 +12,7 @@ export const verifySessionRoutes = async (app: FastifyInstance) => {
   app.post('/billing/verify-session', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
     
-    if (!config.billing.stripe.secretKey) {
+    if (!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) {
       reply.code(500)
       return { error: 'billing_not_configured' }
     }
@@ -53,4 +53,3 @@ export const verifySessionRoutes = async (app: FastifyInstance) => {
     }
   })
 }
-

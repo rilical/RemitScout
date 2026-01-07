@@ -11,3 +11,13 @@ export const getUsageForUser = async (pool: Pool, userId: string) => {
   }
   return usage
 }
+
+export const upsertUsageSnapshot = async (
+  pool: Pool,
+  userId: string,
+  scope: string,
+  count: number,
+) => {
+  const repo = new PlanUsageRepository(pool)
+  await repo.upsertUsageSnapshot(userId, scope, count, new Date())
+}

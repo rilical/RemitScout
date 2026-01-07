@@ -69,6 +69,16 @@ export const useAlerts = () => {
 
   const count = computed(() => alerts.value.length)
 
+  const upsertAlert = (next: Alert) => {
+    const existingIndex = alerts.value.findIndex(a => a.id === next.id)
+    if (existingIndex >= 0) {
+      alerts.value[existingIndex] = next
+      alerts.value = [...alerts.value].sort(sortByUpdatedDesc)
+      return
+    }
+    alerts.value = [next, ...alerts.value].sort(sortByUpdatedDesc)
+  }
+
   async function fetchFromBackend() {
     if (!isLoggedIn.value) {
       hydrated.value = true
@@ -94,6 +104,52 @@ export const useAlerts = () => {
     }
   }
 
+  async function createAlertInBackend(payload: {
+    watchlistItemId: string
+    rule: AlertRule
+    frequency: Alert['frequency']
+    enabled: boolean
+  }): Promise<CreateAlertResult> {
+    const response = await request<AlertsApiResponse>('/alerts', {
+      method: 'POST',
+      body: {
+        watchlistItemId: payload.watchlistItemId,
+        rule: payload.rule,
+        frequency: payload.frequency,
+        enabled: payload.enabled,
+      },
+    })
+
+    if (response.success && response.alert) {
+      upsertAlert(response.alert)
+      return {
+        status: response.status ?? 'created',
+        alert: response.alert,
+        watchlistItemId: payload.watchlistItemId,
+      }
+    }
+
+    if (response.error === 'limit_reached') {
+      return {
+        status: 'alert_limit_reached',
+        limit: response.limit ?? 0,
+        message: response.message ?? 'Alert limit reached.',
+        watchlistItemId: payload.watchlistItemId,
+      }
+    }
+
+    if (response.error === 'forbidden') {
+      return {
+        status: 'alert_limit_reached',
+        limit: limits.value.alerts === 'unlimited' ? 0 : limits.value.alerts,
+        message: response.message ?? 'Smart alerts are available for Plus members only.',
+        watchlistItemId: payload.watchlistItemId,
+      }
+    }
+
+    throw new Error(response.message || response.error || 'Failed to create alert')
+  }
+
   async function syncToBackend(operation: 'create' | 'update' | 'delete', alert: Alert | Partial<Alert>, id?: string) {
     if (!isLoggedIn.value) {
       return
@@ -102,24 +158,12 @@ export const useAlerts = () => {
     try {
       if (operation === 'create') {
         const fullAlert = alert as Alert
-        const response = await request<AlertsApiResponse>('/alerts', {
-          method: 'POST',
-          body: {
-            watchlistItemId: fullAlert.watchlistItemId,
-            rule: fullAlert.rule,
-            frequency: fullAlert.frequency,
-            enabled: fullAlert.enabled,
-          },
+        await createAlertInBackend({
+          watchlistItemId: fullAlert.watchlistItemId,
+          rule: fullAlert.rule,
+          frequency: fullAlert.frequency,
+          enabled: fullAlert.enabled,
         })
-
-        if (response.success && response.alert) {
-          const existingIndex = alerts.value.findIndex(a => a.id === response.alert!.id)
-          if (existingIndex >= 0) {
-            alerts.value[existingIndex] = response.alert
-          } else {
-            alerts.value = [response.alert, ...alerts.value].sort(sortByUpdatedDesc)
-          }
-        }
       } else if (operation === 'update' && id) {
         const patch = alert as Partial<Alert>
         const response = await request<AlertsApiResponse>(`/alerts/${id}`, {
@@ -132,11 +176,7 @@ export const useAlerts = () => {
         })
 
         if (response.success && response.alert) {
-          const index = alerts.value.findIndex(a => a.id === id)
-          if (index >= 0) {
-            alerts.value[index] = response.alert
-            alerts.value = [...alerts.value].sort(sortByUpdatedDesc)
-          }
+          upsertAlert(response.alert)
         }
       } else if (operation === 'delete' && id) {
         await request<AlertsApiResponse>(`/alerts/${id}`, {
@@ -208,23 +248,40 @@ export const useAlerts = () => {
       return { status: 'already_exists', alert: existing, watchlistItemId }
     }
 
-    const next: Alert = {
-      id: createId('al'),
+    const next = {
       watchlistItemId,
       rule: nextRule,
       frequency: draft?.frequency ?? 'daily',
       enabled: draft?.enabled ?? true,
+    }
+
+    if (isLoggedIn.value) {
+      try {
+        return await createAlertInBackend(next)
+      } catch (error) {
+        console.error('Error creating alert on backend:', error)
+        return {
+          status: 'alert_limit_reached',
+          limit: limit === 'unlimited' ? 0 : limit,
+          message: 'Unable to create alert right now.',
+          watchlistItemId,
+        }
+      }
+    }
+
+    const localAlert: Alert = {
+      id: createId('al'),
+      watchlistItemId,
+      rule: nextRule,
+      frequency: next.frequency,
+      enabled: next.enabled,
       createdAt: now,
       updatedAt: now,
     }
 
-    alerts.value = [next, ...alerts.value].sort(sortByUpdatedDesc)
+    alerts.value = [localAlert, ...alerts.value].sort(sortByUpdatedDesc)
 
-    if (isLoggedIn.value) {
-      await syncToBackend('create', next)
-    }
-
-    return { status: 'created', alert: next, watchlistItemId }
+    return { status: 'created', alert: localAlert, watchlistItemId }
   }
 
   async function createForTarget(

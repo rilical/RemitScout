@@ -11,6 +11,7 @@ describe('entitlements', () => {
         exports_enabled: false,
         alerts_max: 0,
         history_max_days: 30,
+        watchlist_items: 3,
       })
     })
 
@@ -22,6 +23,7 @@ describe('entitlements', () => {
         exports_enabled: true,
         alerts_max: 5,
         history_max_days: 365,
+        watchlist_items: null,
       })
     })
 
@@ -33,6 +35,7 @@ describe('entitlements', () => {
         exports_enabled: true,
         alerts_max: null,
         history_max_days: null,
+        watchlist_items: null,
       })
     })
 
@@ -44,6 +47,7 @@ describe('entitlements', () => {
         exports_enabled: false,
         alerts_max: 0,
         history_max_days: 30,
+        watchlist_items: 3,
       })
     })
 
@@ -55,6 +59,7 @@ describe('entitlements', () => {
         exports_enabled: false,
         alerts_max: 0,
         history_max_days: 30,
+        watchlist_items: 3,
       })
     })
 
@@ -66,6 +71,7 @@ describe('entitlements', () => {
         exports_enabled: false,
         alerts_max: 0,
         history_max_days: 30,
+        watchlist_items: 3,
       })
     })
 
@@ -109,14 +115,42 @@ describe('entitlements', () => {
       expect(enterprise.history_max_days).toBeNull()
     })
 
+    it('validates watchlist_items values', () => {
+      const free = getEntitlementsForPlan('free')
+      const plus = getEntitlementsForPlan('plus')
+      const enterprise = getEntitlementsForPlan('enterprise')
+
+      expect(free.watchlist_items).toBe(3)
+      expect(plus.watchlist_items).toBeNull()
+      expect(enterprise.watchlist_items).toBeNull()
+    })
+
     it('returns consistent structure for all plans', () => {
       const free = getEntitlementsForPlan('free')
       const plus = getEntitlementsForPlan('plus')
       const enterprise = getEntitlementsForPlan('enterprise')
 
-      expect(Object.keys(free)).toEqual(['pulse_access', 'exports_enabled', 'alerts_max', 'history_max_days'])
-      expect(Object.keys(plus)).toEqual(['pulse_access', 'exports_enabled', 'alerts_max', 'history_max_days'])
-      expect(Object.keys(enterprise)).toEqual(['pulse_access', 'exports_enabled', 'alerts_max', 'history_max_days'])
+      expect(Object.keys(free)).toEqual([
+        'pulse_access',
+        'exports_enabled',
+        'alerts_max',
+        'history_max_days',
+        'watchlist_items',
+      ])
+      expect(Object.keys(plus)).toEqual([
+        'pulse_access',
+        'exports_enabled',
+        'alerts_max',
+        'history_max_days',
+        'watchlist_items',
+      ])
+      expect(Object.keys(enterprise)).toEqual([
+        'pulse_access',
+        'exports_enabled',
+        'alerts_max',
+        'history_max_days',
+        'watchlist_items',
+      ])
     })
   })
 })

@@ -126,7 +126,6 @@ SELECT
       AND COALESCE(fs.stale_hours, 0) < 3
       THEN 'tier_1'
     WHEN COALESCE(pc.provider_count, 0) >= 1
-      AND COALESCE(pc.provider_count, 0) < 3
       THEN 'tier_2'
     ELSE 'tier_3'
   END AS corridor_tier

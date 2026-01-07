@@ -12,7 +12,7 @@ export const billingHistoryRoutes = async (app: FastifyInstance) => {
   app.get('/billing/history', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
 
-    if (!config.billing.stripe.secretKey) {
+    if (!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) {
       reply.code(500)
       return { error: 'billing_not_configured' }
     }

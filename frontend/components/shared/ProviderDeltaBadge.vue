@@ -34,22 +34,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 const badgeClasses = computed(() => {
   if (props.isBest) {
-    return 'bg-emerald-500 text-white'
+    return 'bg-brand-600 text-white'
   }
   
-  if (props.delta <= 0) {
-    return 'bg-emerald-100 text-emerald-700'
-  }
-  
-  if (props.delta < 5) {
-    return 'bg-amber-50 text-amber-700 border border-amber-200'
-  }
-  
-  if (props.delta < 20) {
-    return 'bg-orange-50 text-orange-700 border border-orange-200'
-  }
-  
-  return 'bg-rose-50 text-rose-700 border border-rose-200'
+  // All non-best options get dark blue styling to match footer
+  return 'bg-gray-900 text-white'
 })
 
 const formattedDelta = computed(() => {
@@ -62,7 +51,7 @@ const formattedDelta = computed(() => {
     return `${formatted} (${percent.toFixed(1)}%)`
   }
   
-  return `${formatted} more`
+  return `${formatted} more than best option`
 })
 </script>
 

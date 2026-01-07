@@ -3,6 +3,7 @@ import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
 import { countryCodeMap, currencyCodeMap } from './code-map'
+import { getUserAgentForCorridor } from '../../collectors/user-agent'
 
 const remitlyEndpoint = 'https://api.remitly.io/v3/calculator/estimate'
 
@@ -42,7 +43,7 @@ export const fetchRemitlyQuote = async (
       origin: 'https://www.remitly.com',
       referer: 'https://www.remitly.com/',
       'accept-language': 'en',
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(request.corridor_id),
     },
     jitterMs: options.jitterMs,
     proxyTier: options.proxyTier,

@@ -18,14 +18,15 @@
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left: Provider Info -->
           <div>
-            <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <img
-                  src="/logos/remitly.svg"
-                  alt="Remitly logo"
-                  class="w-full h-full object-contain"
-                  onerror="this.parentElement.innerHTML='<div class=\'w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold\'>R</div>'"
-                >
+            <div class="flex items-center gap-6 mb-6">
+              <!-- Large white box with Remit-Scout blue border for logo -->
+              <div class="w-40 h-40 flex items-center justify-center bg-white rounded-2xl border-4 border-brand-600 p-6 flex-shrink-0 shadow-2xl">
+                <ProviderLogo
+                  slug="remitly"
+                  alt="Remitly"
+                  size="xlarge"
+                  class="object-contain max-w-full max-h-full"
+                />
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
@@ -76,23 +77,15 @@
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
                 <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
-                <div class="relative inline-flex items-center justify-center">
-                  <svg class="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" stroke-width="12" />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      fill="none"
-                      stroke="#3b82f6"
-                      stroke-width="12"
-                      stroke-linecap="round"
-                      :stroke-dasharray="`${91 * 4.4} 440`"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">9.1</span>
-                    <span class="text-sm text-slate-500">/10</span>
+                <div class="flex justify-center">
+                  <div
+                    class="relative flex h-40 w-40 items-center justify-center rounded-full border-4 bg-white shadow-lg"
+                    :style="{ borderColor: scoreColor }"
+                  >
+                    <div class="text-center">
+                      <span :class="[scoreTextClass, 'text-5xl font-bold leading-none']">9.1</span>
+                      <span class="text-sm text-slate-500">/10</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -100,49 +93,39 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-400 rounded-full" style="width: 95%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 90%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
               </div>
 
@@ -919,6 +902,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 definePageMeta({
   alias: ['/reviews/remitly'],
 })
@@ -939,6 +924,22 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'Remitly Review', path: '/learn/providers/remitly' },
 ]
+
+const score = 9.1
+
+const scoreColor = computed(() => {
+  if (score >= 9.0) return '#10b981'
+  if (score >= 8.0) return '#2563eb'
+  if (score >= 7.0) return '#eab308'
+  return '#6b7280'
+})
+
+const scoreTextClass = computed(() => {
+  if (score >= 9.0) return 'text-green-600'
+  if (score >= 8.0) return 'text-brand-600'
+  if (score >= 7.0) return 'text-yellow-600'
+  return 'text-neutral-600'
+})
 </script>
 
 

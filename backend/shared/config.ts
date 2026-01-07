@@ -1,3 +1,5 @@
+import './load-env'
+
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
@@ -35,8 +37,9 @@ const isAwsRuntime = Boolean(
   process.env.ECS_CONTAINER_METADATA_URI_V4,
 )
 
+const isStaging = process.env.NODE_ENV === 'staging'
 const isStrictConfig =
-  process.env.NODE_ENV === 'production' || process.env.STRICT_CONFIG === '1'
+  process.env.NODE_ENV === 'production' || isStaging || process.env.STRICT_CONFIG === '1'
 
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 
@@ -55,6 +58,9 @@ const toList = (value: string | undefined) =>
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
+  runtime: {
+    readOnly: toBoolean(process.env.READ_ONLY_MODE),
+  },
   planeA: {
     port: toNumber(process.env.PLANE_A_PORT, 4000),
     rateLimitMax: toNumber(process.env.PLANE_A_RATE_LIMIT_MAX, 120),
@@ -73,6 +79,7 @@ export const config = {
       jitterMs: toNumber(process.env.PLANE_A_B2C_JITTER_MS, 300),
       fxRateCacheTtlSeconds: toNumber(process.env.PLANE_A_FX_RATE_CACHE_TTL_SECONDS, 300),
       latestQuoteCacheTtlSeconds: toNumber(process.env.PLANE_A_LATEST_QUOTE_CACHE_TTL_SECONDS, 15),
+      maxQuoteAgeSeconds: toNumber(process.env.PLANE_A_B2C_MAX_QUOTE_AGE_SECONDS, 1800),
     },
     cors: {
       origins: toList(process.env.PLANE_A_CORS_ORIGINS),
@@ -90,6 +97,7 @@ export const config = {
     b2bMinProviderCount: toNumber(process.env.PLANE_B_B2B_MIN_PROVIDER_COUNT, 0),
     b2bFullSweepDays: toNumber(process.env.PLANE_B_B2B_FULL_SWEEP_DAYS, 30),
     b2bTargetMinutes: toNumber(process.env.PLANE_B_B2B_TARGET_MINUTES, 0),
+    b2bTier1Enabled: toBoolean(process.env.PLANE_B_B2B_TIER1_ENABLED, false),
     b2bFreshnessSloMinutes: toNumber(process.env.PLANE_B_B2B_FRESHNESS_SLO_MINUTES, 30),
     b2bFreshnessSloEnabled: toBoolean(process.env.PLANE_B_B2B_FRESHNESS_SLO_ENABLED),
     circuitOpenMs: toNumber(process.env.PLANE_B_CIRCUIT_OPEN_MS, 300000),
@@ -172,7 +180,10 @@ export const config = {
     },
     b2cRefreshBatchLimit: toNumber(process.env.PLANE_B_B2C_REFRESH_BATCH_LIMIT, 25),
     b2cRefreshMaxRetries: toNumber(process.env.PLANE_B_B2C_REFRESH_MAX_RETRIES, 3),
-    b2cQueueInSweep: toBoolean(process.env.PLANE_B_B2C_QUEUE_IN_SWEEP),
+    b2cRefreshConcurrency: toNumber(process.env.PLANE_B_B2C_REFRESH_CONCURRENCY, 3),
+    b2cQueueInSweep: process.env.PLANE_B_B2C_QUEUE_IN_SWEEP !== undefined
+      ? toBoolean(process.env.PLANE_B_B2C_QUEUE_IN_SWEEP)
+      : process.env.NODE_ENV !== 'production' && !isStaging,
   },
   fxRates: {
     oandaFallbackEnabled: toBoolean(process.env.FX_RATE_OANDA_FALLBACK),
@@ -312,10 +323,21 @@ export const config = {
       jwksUrl: toSupabaseJwksUrl(process.env.SUPABASE_URL, process.env.SUPABASE_JWKS_URL),
       verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
       remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 30),
+      mock: {
+        enabled: toBoolean(process.env.SUPABASE_MOCK),
+        token: process.env.SUPABASE_MOCK_TOKEN || 'dev-token',
+        adminToken: process.env.SUPABASE_MOCK_ADMIN_TOKEN || 'admin-token',
+        userId: process.env.SUPABASE_MOCK_USER_ID || 'dev-user',
+        email: process.env.SUPABASE_MOCK_EMAIL || 'dev@example.com',
+        role: process.env.SUPABASE_MOCK_ROLE || 'authenticated',
+        adminEmail: process.env.SUPABASE_MOCK_ADMIN_EMAIL || 'admin@example.com',
+        planOverride: process.env.SUPABASE_MOCK_PLAN || undefined, // 'plus' or 'free' to override plan in dev mode
+      },
     },
   },
   billing: {
     stripe: {
+      mockEnabled: toBoolean(process.env.STRIPE_MOCK),
       secretKey: process.env.STRIPE_SECRET_KEY || '',
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
       priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || '',
@@ -362,7 +384,7 @@ export const assertRuntimeConfig = (
   if (requirements.requireRedis && !config.redis.url) {
     missing.push('REDIS_URL')
   }
-  if (requirements.requireSupabase) {
+  if (requirements.requireSupabase && !config.auth.supabase.mock.enabled) {
     if (!config.auth.supabase.url) {
       missing.push('SUPABASE_URL')
     }
@@ -370,7 +392,7 @@ export const assertRuntimeConfig = (
       missing.push('SUPABASE_PUBLISHABLE_KEY')
     }
   }
-  if (requirements.requireStripe) {
+  if (requirements.requireStripe && !config.billing.stripe.mockEnabled) {
     if (!config.billing.stripe.secretKey) {
       missing.push('STRIPE_SECRET_KEY')
     }

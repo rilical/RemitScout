@@ -5,7 +5,6 @@ import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { getErrorMessage } from '../types/errors'
-import { deleteAvatar } from './avatar-upload'
 import { getRequestContext, logAuditEvent } from './audit-log'
 import { deleteStripeCustomer } from './stripe-admin'
 import { deleteSupabaseAccount } from './supabase-admin'
@@ -182,16 +181,6 @@ export const deleteUserAccount = async (
   } catch (error) {
     warnings.push('export_delete_failed')
     logger.warn('export_delete_failed', {
-      user_id: userId,
-      error: getErrorMessage(error),
-    })
-  }
-
-  try {
-    await deleteAvatar(account.avatar_url)
-  } catch (error) {
-    warnings.push('avatar_delete_failed')
-    logger.warn('avatar_delete_failed', {
       user_id: userId,
       error: getErrorMessage(error),
     })

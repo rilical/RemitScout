@@ -464,12 +464,12 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         WHERE ts >= $1 AND ts <= $2
           AND ($3::text IS NULL OR corridor_id = $3)
       )
-      SELECT totals.total_searches,
+      SELECT COALESCE(MAX(totals.total_searches), 0) AS total_searches,
              COALESCE(SUM(fee_delta), 0)::float AS total_savings_fees,
              COALESCE(SUM(fee_delta), 0)::float AS total_savings_delta,
              CASE
-               WHEN totals.total_searches > 0
-               THEN COALESCE(SUM(fee_delta), 0)::float / totals.total_searches
+               WHEN COALESCE(MAX(totals.total_searches), 0) > 0
+               THEN COALESCE(SUM(fee_delta), 0)::float / COALESCE(MAX(totals.total_searches), 0)
                ELSE 0
              END AS avg_savings_per_search,
              COALESCE(SUM(fee_delta), 0)::float AS best_provider_savings,

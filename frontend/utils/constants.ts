@@ -252,3 +252,9 @@ export const BANK_VS_SPECIALIST_DATA = {
     recipientGets: 28150,
   },
 }
+
+export const FEATURE_FLAGS = {
+  PULSE_ENABLED: false,
+  ENTERPRISE_ENABLED: false,
+  DEV_AUTO_LOGIN: false,
+} as const

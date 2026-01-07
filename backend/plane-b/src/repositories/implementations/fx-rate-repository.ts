@@ -4,9 +4,8 @@ import { query } from '../../../../shared/db'
 import { createLogger } from '../../../../shared/logger'
 import { formatError, isError } from '../../../../shared/utils/error-handling'
 import { fxRateCache } from '../../../../shared/repository-cache'
-import { recordRepositoryMetric, recordFxRateChange } from '../../../../shared/repository-metrics'
+import { recordRepositoryMetric } from '../../../../shared/repository-metrics'
 import { withRetry, withCircuitBreaker } from '../../../../shared/repository-retry'
-import { triggerFxRateCacheRefresh } from '../../../../shared/eventbridge-cache-refresh'
 import { FxRateHistoryRepository } from './fx-rate-history-repository'
 import type {
   FxRateAggregationRow,
@@ -31,35 +30,39 @@ export class FxRateRepository implements IFxRateRepository {
     try {
       await withCircuitBreaker('fx-rate', async () => {
         await withRetry(async () => {
-          // Get old rate for change detection
-          const oldRate = await this.getRate(input.baseCurrency, input.quoteCurrency)
+          const providerCount = Number.isFinite(input.providerCount ?? Number.NaN)
+            ? Number(input.providerCount)
+            : null
+          const sampleCount = Number.isFinite(input.sampleCount ?? Number.NaN)
+            ? Number(input.sampleCount)
+            : null
+          const providerUpdatedAt = input.updatedAt ?? new Date()
 
-          await query(
-            `INSERT INTO gold.fx_rates (base_currency, quote_currency, rate)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (base_currency, quote_currency) DO UPDATE SET
-               rate = EXCLUDED.rate,
-               updated_at = NOW()`,
-            [input.baseCurrency, input.quoteCurrency, input.rate],
+          const result = await query(
+            `UPDATE gold.fx_rates
+             SET provider_agg_rate = $3,
+                 provider_agg_provider_count = $4,
+                 provider_agg_sample_count = $5,
+                 provider_agg_updated_at = $6,
+                 updated_at = NOW()
+             WHERE base_currency = $1 AND quote_currency = $2`,
+            [
+              input.baseCurrency,
+              input.quoteCurrency,
+              input.rate,
+              providerCount,
+              sampleCount,
+              providerUpdatedAt,
+            ],
             this.pool,
           )
 
-          // Invalidate cache
-          const cacheKey = `${input.baseCurrency}:${input.quoteCurrency}`
-          await fxRateCache.invalidate(cacheKey)
-
-          // Record rate change if significant
-          if (oldRate !== null) {
-            await recordFxRateChange(
-              input.baseCurrency,
-              input.quoteCurrency,
-              oldRate,
-              input.rate,
-            )
+          if (result.rowCount === 0) {
+            logger.debug('fx_rate_provider_agg_missing_base', {
+              base_currency: input.baseCurrency,
+              quote_currency: input.quoteCurrency,
+            })
           }
-
-          // Trigger EventBridge cache refresh
-          await triggerFxRateCacheRefresh()
         })
       })
 

@@ -49,6 +49,7 @@ const sleepWithJitter = async (jitterMs: number) => {
 }
 
 const MIN_SEND_AMOUNT = 50
+const MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
 
 const getFxRate = async (baseCurrency: string, quoteCurrency: string) => {
   const cacheKey = `${baseCurrency}:${quoteCurrency}`
@@ -235,6 +236,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
           amount_bucket,
           payin,
           payout,
+          MAX_QUOTE_AGE_SECONDS || undefined,
         )
 
         if (!Array.isArray(rows)) {

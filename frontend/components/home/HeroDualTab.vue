@@ -104,7 +104,7 @@
             :stroke-width="route.strokeWidth"
             class="route-line"
             :style="{
-              'opacity': route.opacity,
+              '--target-opacity': route.opacity,
               '--route-dur': route.dur,
               '--route-delay': route.delay,
             }"
@@ -117,7 +117,6 @@
             stroke-width="2.4"
             class="route-line route-line--active"
             :style="{
-              'opacity': 0.32,
               '--route-dur': activeRouteDur,
               '--route-delay': '0s',
             }"
@@ -136,8 +135,7 @@
             Send more home,<br><span class="text-brand-600">pay less</span> in fees.
           </h1>
           <p class="mb-8 text-lg leading-relaxed text-neutral-600 sm:text-xl">
-            Compare current quotes, total fees, and estimated delivery times across {{ SITE_STATS.providers.display }} licensed providers.
-            <span class="whitespace-nowrap">Built for expats, by expats.</span>
+            Compare current quotes, total fees, and estimated delivery times <span class="whitespace-nowrap">across {{ SITE_STATS.providers.display }} licensed providers.</span>
           </p>
 
           <div
@@ -240,6 +238,7 @@
                     id="from-currency"
                     v-model="moneyForm.fromCurrency"
                     :country-code="moneyForm.from"
+                    :currencies="availableFromCurrencies"
                     placeholder="Choose currency"
                   />
                 </div>
@@ -255,10 +254,11 @@
                     id="to-currency"
                     v-model="moneyForm.toCurrency"
                     :country-code="moneyForm.to"
+                    :currencies="availableToCurrencies"
                     :placeholder="
                       moneyForm.to ? 'Choose currency' : 'Select receiving country first'
                     "
-                    :disabled="!moneyForm.to"
+                    :disabled="!moneyForm.to || !availableToCurrencies.length"
                   />
                 </div>
 
@@ -297,12 +297,14 @@
                   id="amount"
                   v-model.number="moneyForm.amount"
                   type="number"
-                  min="1"
-                  step="1"
+                  :min="minAmount"
+                  :max="maxAmount"
+                  step="0.01"
                   class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
-                  placeholder="Enter amount (e.g., 500)"
+                  :placeholder="`Enter amount (min ${formatCurrency(minAmount, moneyForm.fromCurrency)})`"
                   @keydown="preventNegative"
                   @blur="handleAmountBlur"
+                  @input="sanitizeAmountInput"
                 >
                 <p class="mt-1.5 text-xs text-gray-500">
                   Enter the amount you want to send
@@ -320,9 +322,9 @@
                 </div>
               </div>
 
-              <!-- Error/Success Messages -->
+              <!-- Error/Success Messages (hidden for corridor unavailable errors - shown above button instead) -->
               <div
-                v-if="formError || formSuccess"
+                v-if="(formError || formSuccess) && !isCorridorUnavailableError"
                 role="alert"
                 aria-live="polite"
                 aria-atomic="true"
@@ -372,14 +374,66 @@
                 </div>
               </div>
 
+              <!-- Corridor Unavailable Error - shown directly above button -->
+              <div
+                v-if="isCorridorUnavailableError"
+                role="alert"
+                aria-live="polite"
+                aria-atomic="true"
+                class="mb-4"
+              >
+                <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+                  <div class="flex items-start gap-2">
+                    <svg
+                      class="h-5 w-5 flex-shrink-0 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>{{ formError }}</span>
+                  </div>
+                </div>
+              </div>
+
               <button
                 type="submit"
-                class="group min-h-btn w-full rounded-xl bg-brand-600 font-semibold text-white transition-all duration-200 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 flex items-center justify-center gap-2 mt-auto"
+                :disabled="isSubmitting || isWaitingForQuotes"
+                class="group min-h-btn w-full rounded-xl bg-brand-600 font-semibold text-white transition-all duration-200 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 flex items-center justify-center gap-2 mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 :class="{ 'hidden sm:flex': currentMobileStep !== 3 }"
                 aria-describedby="form-errors"
               >
-                Compare 30+ providers
                 <svg
+                  v-if="isSubmitting || isWaitingForQuotes"
+                  class="h-5 w-5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  />
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span v-if="isWaitingForQuotes && formInfo">{{ formInfo }}</span>
+                <span v-else-if="isSubmitting">Submitting...</span>
+                <span v-else>Compare providers</span>
+                <svg
+                  v-if="!isSubmitting && !isWaitingForQuotes"
                   class="h-5 w-5 transition-transform group-hover:translate-x-1"
                   fill="none"
                   stroke="currentColor"
@@ -431,7 +485,7 @@
                 <p class="mb-1 text-xs text-neutral-600">
                   Licensed providers compared
                 </p>
-                <p class="text-3xl font-bold text-neutral-900">
+                <p class="text-4xl font-bold text-brand-600">
                   {{ SITE_STATS.providers.display }}
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
@@ -444,7 +498,7 @@
                 <p class="mb-1 text-xs text-neutral-600">
                   Countries & corridors
                 </p>
-                <p class="text-3xl font-bold text-neutral-900">
+                <p class="text-4xl font-bold text-brand-600">
                   {{ SITE_STATS.corridors.display }}
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
@@ -457,8 +511,10 @@
                 <p class="mb-1 text-xs text-neutral-600">
                   Average savings vs banks
                 </p>
-                <p class="text-3xl font-bold text-brand-600">
-                  3–9%
+                <p class="text-4xl font-bold text-brand-600 tracking-tight">
+                  <span class="inline-block bg-gradient-to-r from-brand-600 to-brand-700 bg-clip-text text-transparent">
+                    9%
+                  </span>
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
                   On many transfers
@@ -481,6 +537,13 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Tagline -->
+              <div class="pt-6 border-t border-neutral-200">
+                <p class="text-sm font-medium text-brand-600">
+                  Money, made global.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -500,10 +563,12 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useApi } from '~/composables/useApi'
+import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import JsonLdWebSiteSearch from '~/components/seo/JsonLdWebSiteSearch.vue'
 import { SITE_STATS } from '~/config/stats'
-import { getAvailableCurrencies, getCountryByCode } from '~/utils/countries-currencies'
+import { getCountryByCode } from '~/utils/countries-currencies'
+import { getMinAmount, getMaxAmount, sanitizeAmount, isValidAmount, formatCurrency } from '~/utils/currency-limits'
 
 type PrefillFormData = Partial<{
   from: string
@@ -521,10 +586,20 @@ type LatLon = {
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
 
-const { form: moneyForm, submit: submitForm, validationError } = useCompareForm()
+const { form: moneyForm, submit: submitForm, validationError, statusMessage, isWaitingForQuotes } = useCompareForm()
 
 const formError = validationError
 const formSuccess = ref<string>('')
+const formInfo = statusMessage
+const isSubmitting = ref(false)
+
+// Computed min/max amounts based on selected currency
+const minAmount = computed(() => getMinAmount(moneyForm.value.fromCurrency || 'USD'))
+const maxAmount = computed(() => getMaxAmount(moneyForm.value.fromCurrency || 'USD'))
+
+const isCorridorUnavailableError = computed(() => {
+  return formError.value === 'Unavailable corridor. Please try another.'
+})
 
 const currentMobileStep = ref(1)
 
@@ -532,6 +607,118 @@ const { recordSearch, useRecentSearches } = useRemittanceApi()
 const { request } = useApi()
 
 const familiesHelped = ref(1250)
+
+const fromCurrencyRef = computed({
+  get: () => moneyForm.value.fromCurrency,
+  set: (value) => { moneyForm.value.fromCurrency = value },
+})
+
+const toCurrencyRef = computed({
+  get: () => moneyForm.value.toCurrency,
+  set: (value) => { moneyForm.value.toCurrency = value },
+})
+
+const { availableFromCurrencies, availableToCurrencies } = useCorridorCurrencies(
+  computed(() => moneyForm.value.from),
+  computed(() => moneyForm.value.to),
+  fromCurrencyRef,
+  toCurrencyRef,
+)
+
+watch(
+  () => moneyForm.value.from,
+  (newFrom) => {
+    if (!newFrom) return
+    
+    const country = getCountryByCode(newFrom)
+    if (!country?.currency) return
+    
+    const defaultCurrency = country.currency.toUpperCase()
+    
+    if (availableFromCurrencies.value.length > 0) {
+      if (availableFromCurrencies.value.includes(defaultCurrency)) {
+        moneyForm.value.fromCurrency = defaultCurrency
+      } else if (!moneyForm.value.fromCurrency || !availableFromCurrencies.value.includes(moneyForm.value.fromCurrency)) {
+        moneyForm.value.fromCurrency = availableFromCurrencies.value[0]
+      }
+    }
+  },
+  { immediate: false },
+)
+
+watch(
+  () => moneyForm.value.to,
+  (newTo) => {
+    if (!newTo) return
+    
+    const country = getCountryByCode(newTo)
+    if (!country?.currency) return
+    
+    const defaultCurrency = country.currency.toUpperCase()
+    
+    if (availableToCurrencies.value.length > 0) {
+      if (availableToCurrencies.value.includes(defaultCurrency)) {
+        moneyForm.value.toCurrency = defaultCurrency
+      } else if (!moneyForm.value.toCurrency || !availableToCurrencies.value.includes(moneyForm.value.toCurrency)) {
+        moneyForm.value.toCurrency = availableToCurrencies.value[0]
+      }
+    }
+  },
+  { immediate: false },
+)
+
+watch(
+  availableFromCurrencies,
+  (currencies) => {
+    if (!moneyForm.value.from || currencies.length === 0) return
+    
+    const country = getCountryByCode(moneyForm.value.from)
+    if (!country?.currency) return
+    
+    const defaultCurrency = country.currency.toUpperCase()
+    if (currencies.includes(defaultCurrency) && (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency))) {
+      moneyForm.value.fromCurrency = defaultCurrency
+    } else if (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency)) {
+      moneyForm.value.fromCurrency = currencies[0]
+    }
+  },
+  { immediate: false },
+)
+
+// Watch for currency changes to adjust amount limits
+watch(() => moneyForm.value.fromCurrency, () => {
+  const currency = moneyForm.value.fromCurrency || 'USD'
+  const currentAmount = moneyForm.value.amount || 0
+  const min = getMinAmount(currency)
+  const max = getMaxAmount(currency)
+  
+  // If current amount is below new minimum, set to minimum
+  if (currentAmount < min) {
+    moneyForm.value.amount = min
+  }
+  // If current amount is above new maximum, set to maximum
+  else if (currentAmount > max) {
+    moneyForm.value.amount = max
+  }
+})
+
+watch(
+  availableToCurrencies,
+  (currencies) => {
+    if (!moneyForm.value.to || currencies.length === 0) return
+    
+    const country = getCountryByCode(moneyForm.value.to)
+    if (!country?.currency) return
+    
+    const defaultCurrency = country.currency.toUpperCase()
+    if (currencies.includes(defaultCurrency) && (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency))) {
+      moneyForm.value.toCurrency = defaultCurrency
+    } else if (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency)) {
+      moneyForm.value.toCurrency = currencies[0]
+    }
+  },
+  { immediate: false },
+)
 
 defineExpose({
   prefillMoneyForm: (data: PrefillFormData) => {
@@ -806,51 +993,47 @@ const detectUserLocation = async () => {
   }
 }
 
-watch(
-  () => moneyForm.value.from,
-  (newCountry) => {
-    if (newCountry) {
-      const country = getCountryByCode(newCountry)
-      if (!country) return
-
-      const available = getAvailableCurrencies(newCountry)
-      if (!moneyForm.value.fromCurrency || !available.includes(moneyForm.value.fromCurrency)) {
-        moneyForm.value.fromCurrency = country.currency
-      }
-    }
-  },
-)
-
-watch(
-  () => moneyForm.value.to,
-  (newCountry) => {
-    if (newCountry) {
-      const country = getCountryByCode(newCountry)
-      if (!country) return
-
-      const available = getAvailableCurrencies(newCountry)
-      if (!moneyForm.value.toCurrency || !available.includes(moneyForm.value.toCurrency)) {
-        moneyForm.value.toCurrency = country.currency
-      }
-    }
-    else {
-      moneyForm.value.toCurrency = ''
-    }
-  },
-)
 
 const handleAmountBlur = (event: Event) => {
   const target = event.target as HTMLInputElement
-  const value = parseFloat(target.value)
+  const currency = moneyForm.value.fromCurrency || 'USD'
   
-  // Validate and fix on blur
-  if (isNaN(value) || value < 1) {
-    moneyForm.value.amount = 1
-    target.value = '1'
-  } else {
-    const intValue = Math.floor(value)
-    moneyForm.value.amount = intValue
-    target.value = String(intValue)
+  // Sanitize amount based on currency limits
+  const sanitized = sanitizeAmount(target.value, currency)
+  moneyForm.value.amount = sanitized
+  target.value = String(sanitized)
+}
+
+const sanitizeAmountInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  let value = target.value
+  const currency = moneyForm.value.fromCurrency || 'USD'
+  
+  // Remove any non-numeric characters except decimal point
+  value = value.replace(/[^\d.]/g, '')
+  
+  // Ensure only one decimal point
+  const parts = value.split('.')
+  if (parts.length > 2) {
+    value = parts[0] + '.' + parts.slice(1).join('')
+  }
+  
+  // Limit decimal places to 2
+  if (parts.length === 2 && parts[1].length > 2) {
+    value = parts[0] + '.' + parts[1].substring(0, 2)
+  }
+  
+  // Update the input value
+  if (target.value !== value) {
+    target.value = value
+  }
+  
+  // Update the model value (but don't clamp on input, only on blur)
+  const numValue = parseFloat(value)
+  if (!isNaN(numValue) && numValue >= 0) {
+    moneyForm.value.amount = numValue
+  } else if (value === '' || value === '.') {
+    moneyForm.value.amount = 0
   }
 }
 
@@ -866,38 +1049,57 @@ const handleMoneySubmit = async () => {
 
   formSuccess.value = ''
   formError.value = ''
-
-  // Validate form
-  if (!from || !to) {
-    formError.value = 'Please select both sending and receiving countries.'
-    return
-  }
-
-  if (!amount || amount < 1) {
-    formError.value = 'Please enter a valid amount (minimum 1).'
-    moneyForm.value.amount = 1
-    return
-  }
-
-  // Ensure amount is positive integer
-  moneyForm.value.amount = Math.max(1, Math.floor(amount))
+  isSubmitting.value = true
 
   try {
-    await recordSearch({
-      from,
-      to,
-      amount: moneyForm.value.amount,
-      method: method || 'bank',
-    })
-  }
-  catch {
-    // Ignore recordSearch errors
-  }
+    // Validate form
+    if (!from || !to) {
+      formError.value = 'Please select both sending and receiving countries.'
+      isSubmitting.value = false
+      return
+    }
 
-  // Submit form and navigate
-  const success = await submitForm()
-  if (!success && validationError.value) {
-    formError.value = validationError.value
+    // Sanitize and validate amount using currency-based limits
+    const currency = moneyForm.value.fromCurrency || 'USD'
+    const sanitizedAmount = sanitizeAmount(amount, currency)
+    
+    if (!isValidAmount(sanitizedAmount, currency)) {
+      const min = getMinAmount(currency)
+      const max = getMaxAmount(currency)
+      formError.value = `Please enter a valid amount between ${formatCurrency(min, currency)} and ${formatCurrency(max, currency)}.`
+      moneyForm.value.amount = sanitizedAmount
+      isSubmitting.value = false
+      return
+    }
+
+    // Ensure amount is within valid range
+    moneyForm.value.amount = sanitizedAmount
+
+    try {
+      await recordSearch({
+        from,
+        to,
+        amount: sanitizedAmount,
+        method: method || 'bank',
+      })
+    }
+    catch {
+      // Ignore recordSearch errors
+    }
+
+    // Submit form and navigate
+    const success = await submitForm()
+    if (!success) {
+      if (validationError.value) {
+        formError.value = validationError.value
+      }
+      isSubmitting.value = false
+    }
+    // Note: isSubmitting will be reset by navigation if successful
+  }
+  catch (error) {
+    formError.value = 'An error occurred. Please try again.'
+    isSubmitting.value = false
   }
 }
 
@@ -947,9 +1149,16 @@ onMounted(() => {
   stroke-linecap: butt;
   stroke-linejoin: round;
   stroke-dasharray: 0.28 0.72;
-  stroke-dashoffset: 0;
-  animation: routeFlow var(--route-dur, 14s) linear infinite;
-  animation-delay: var(--route-delay, 0s);
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: routeFadeIn 0.8s ease-out forwards, routeFlow var(--route-dur, 14s) linear infinite;
+  animation-delay: var(--route-delay, 0s), calc(var(--route-delay, 0s) + 0.8s);
+}
+
+.route-line--active {
+  opacity: 0;
+  animation: routeFadeInActive 0.8s ease-out forwards, routeFlowActive var(--route-dur, 14s) linear infinite;
+  animation-delay: var(--route-delay, 0s), calc(var(--route-delay, 0s) + 0.8s);
 }
 
 .route-line--active {
@@ -957,8 +1166,38 @@ onMounted(() => {
 }
 
 @keyframes routeFlow {
+  from {
+    stroke-dashoffset: 1;
+  }
   to {
-    stroke-dashoffset: -1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes routeFlowActive {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes routeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: var(--target-opacity, 0.28);
+  }
+}
+
+@keyframes routeFadeInActive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.32;
   }
 }
 

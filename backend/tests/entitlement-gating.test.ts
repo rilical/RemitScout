@@ -28,7 +28,7 @@ describe('entitlement gating', () => {
       current_period_end: null,
     })
 
-    const app = buildApp()
+    const app = await buildApp()
     app.addHook('preHandler', (request, _reply, done) => {
       request.user = { user_id: 'u-test', claims: {} }
       done()
@@ -52,7 +52,7 @@ describe('entitlement gating', () => {
       current_period_end: null,
     })
 
-    const app = buildApp()
+    const app = await buildApp()
     app.addHook('preHandler', (request, _reply, done) => {
       request.user = { user_id: 'u-test', claims: {} }
       done()

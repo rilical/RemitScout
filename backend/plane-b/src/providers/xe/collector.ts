@@ -70,6 +70,7 @@ import { extractXeMethodPairs, parseXePayload } from './parse'
 
 type XeCollectorOptions = {
   pool?: Pool
+  closePool?: boolean
   corridors?: string[]
   delayMs?: number
   jitterMs?: number
@@ -156,7 +157,7 @@ const getLatestQuoteAgeMinutes = async (
 export const runXeCollector = async (options: XeCollectorOptions = {}) => {
   const providerId = 'xe'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
+  const shouldClose = options.closePool ?? !options.pool
   let corridors: string[]
 
   if (options.corridors?.length) {
@@ -568,7 +569,8 @@ export const runXeCollector = async (options: XeCollectorOptions = {}) => {
             payout_method: payoutMethod,
             http_status: fetchResult.status,
           })
-          if (fetchResult.status === 400) {
+          const unsupportedCorridor = fetchResult.status === 400
+          if (unsupportedCorridor) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_http_400')
             logger.warn('corridor_marked_unsupported', {
               trace_id: traceId,
@@ -584,9 +586,9 @@ export const runXeCollector = async (options: XeCollectorOptions = {}) => {
             payinMethod,
             payoutMethod,
             success: false,
-            errorType: 'http_error',
+            errorType: unsupportedCorridor ? 'unsupported' : 'http_error',
             httpStatus: fetchResult.status,
-            errorMessage: 'non_200_response',
+            errorMessage: unsupportedCorridor ? 'corridor_unsupported' : 'non_200_response',
             bronzeObjectKey,
             requestFingerprint,
           })

@@ -4,14 +4,12 @@ export interface User {
   id: string
   email: string
   name: string
-  avatar?: string
 }
 
 type BackendProfile = {
   user_id: string
   email: string
   name?: string | null
-  avatar_url?: string | null
 }
 
 type AuthResult = {
@@ -34,13 +32,11 @@ const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
     metadata.name ||
     metadata.display_name ||
     (email ? email.split('@')[0] : 'User')
-  const avatar = metadata.avatar_url || metadata.avatar
 
   return {
     id: supabaseUser.id,
     email,
     name,
-    avatar,
   }
 }
 
@@ -379,7 +375,7 @@ export const useAuth = () => {
     return { ok: true }
   }
 
-  const updateProfile = async (updates: Partial<Pick<User, 'name' | 'avatar'>>): Promise<AuthResult> => {
+  const updateProfile = async (updates: Partial<Pick<User, 'name'>>): Promise<AuthResult> => {
     lastError.value = null
 
     if (!isConfigured.value) {
@@ -396,7 +392,6 @@ export const useAuth = () => {
     const { data, error } = await supabase.auth.updateUser({
       data: {
         full_name: updates.name,
-        avatar_url: updates.avatar,
       },
     })
 
@@ -412,24 +407,17 @@ export const useAuth = () => {
     return { ok: true }
   }
 
-  const updateAvatar = async (avatarUrl: string | undefined): Promise<AuthResult> => {
-    return updateProfile({ avatar: avatarUrl })
-  }
-
   const applyBackendProfile = (profile: BackendProfile) => {
     if (!profile) return
     const fallbackName =
       profile.email && profile.email.includes('@')
         ? profile.email.split('@')[0]
         : 'User'
-    const hasAvatar = Object.prototype.hasOwnProperty.call(profile, 'avatar_url')
-    const nextAvatar = hasAvatar ? profile.avatar_url ?? undefined : user.value?.avatar
 
     user.value = {
       id: profile.user_id,
       email: profile.email,
       name: profile.name ?? user.value?.name ?? fallbackName,
-      avatar: nextAvatar,
     }
   }
 
@@ -451,7 +439,6 @@ export const useAuth = () => {
     updatePassword,
     updatePasswordWithCurrent,
     updateProfile,
-    updateAvatar,
     applyBackendProfile,
   }
 }

@@ -21,9 +21,6 @@
     <!-- EEAT: Independence Badge -->
     <IndependenceBadge />
 
-    <!-- EEAT: Safety Notice -->
-    <SafetyNotice />
-
     <!-- 6. Popular corridor chips -->
     <CorridorsGridDynamic @corridor-selected="handleCorridorSelected" />
 
@@ -40,10 +37,10 @@
     <WhyPricesVary />
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
-    <PulseMiniTiles />
+    <PulseMiniTiles v-if="FEATURE_FLAGS.PULSE_ENABLED" />
 
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
-    <InstitutionalTeaser />
+    <InstitutionalTeaser v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" />
 
     <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
     <PlusTeaser />
@@ -93,8 +90,8 @@ import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
 import TransparencyStrip from '~/components/home/TransparencyStrip.vue'
 import WhyPricesVary from '~/components/home/WhyPricesVary.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
-import SafetyNotice from '~/components/home/SafetyNotice.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
+import { FEATURE_FLAGS } from '~/utils/constants'
 import PulseMiniTiles from '~/components/home/PulseMiniTiles.vue'
 import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
 import PlusTeaser from '~/components/home/PlusTeaser.vue'

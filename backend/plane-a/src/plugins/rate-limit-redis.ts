@@ -5,6 +5,25 @@ import { createLogger } from '../../../shared/logger'
 
 const logger = createLogger('plane-a.rate-limit-redis')
 
+const rateLimitBypassPrefixes = [
+  '/api/analytics',
+  '/api/v1/analytics',
+  '/api/audit',
+  '/api/v1/audit',
+  '/api/ops',
+  '/api/v1/ops',
+  '/api/telemetry/analytics',
+  '/api/v1/telemetry/analytics',
+]
+
+const shouldBypassRateLimit = (request: FastifyRequest): boolean => {
+  const path = request.url.split('?')[0]
+  if (!path) {
+    return false
+  }
+  return rateLimitBypassPrefixes.some((prefix) => path.startsWith(prefix))
+}
+
 interface RateLimitOptions {
   timeWindow: number // milliseconds
   max: number | ((request: FastifyRequest) => number)
@@ -35,6 +54,9 @@ export const registerRedisRateLimit = async (
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     // Skip rate limiting for OPTIONS requests
     if (request.method === 'OPTIONS') {
+      return
+    }
+    if (shouldBypassRateLimit(request)) {
       return
     }
 
@@ -111,6 +133,9 @@ export const registerMemoryRateLimit = (
 
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     if (request.method === 'OPTIONS') {
+      return
+    }
+    if (shouldBypassRateLimit(request)) {
       return
     }
 

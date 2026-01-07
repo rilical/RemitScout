@@ -12,7 +12,7 @@ describe('billing webhook idempotency', () => {
   }
 
   it('does not double-process the same event', async () => {
-    const app = buildApp()
+    const app = await buildApp()
     const payload = JSON.stringify({
       id: 'evt_test_1',
       type: 'checkout.session.completed',

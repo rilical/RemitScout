@@ -2,6 +2,9 @@ export type FxRateInput = {
   baseCurrency: string
   quoteCurrency: string
   rate: number
+  providerCount?: number
+  sampleCount?: number
+  updatedAt?: Date
 }
 
 export type FxRateAggregationRow = {

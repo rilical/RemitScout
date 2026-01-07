@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createShutdownHandler, isShutdownRequested } from '../shared/shutdown'
+import { createShutdownHandler, isShutdownRequested, resetShutdownState } from '../shared/shutdown'
 
 vi.mock('../shared/logger', () => ({
   createLogger: vi.fn(() => ({
@@ -20,6 +20,7 @@ describe('shutdown', () => {
     process.exit = vi.fn() as any
     process.on = vi.fn() as any
     process.listeners = vi.fn(() => []) as any
+    resetShutdownState()
   })
 
   afterEach(() => {

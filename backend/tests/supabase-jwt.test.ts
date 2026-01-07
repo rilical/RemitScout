@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { config } from '../shared/config'
 import { verifySupabaseJwt } from '../plane-a/src/auth/verify-supabase-jwt'
 import { fetchJwks } from '../plane-a/src/auth/jwks-fetch'
@@ -12,8 +12,17 @@ vi.mock('../plane-a/src/auth/jwks-verify', () => ({ verifyWithJwks: vi.fn() }))
 vi.mock('../plane-a/src/auth/remote-verify', () => ({ remoteVerify: vi.fn() }))
 
 describe('verifySupabaseJwt', () => {
+  const originalMockEnabled = config.auth.supabase.mock.enabled
+  const originalVerifyMode = config.auth.supabase.verifyMode
+
   beforeEach(() => {
     vi.resetAllMocks()
+    config.auth.supabase.mock.enabled = false
+  })
+
+  afterEach(() => {
+    config.auth.supabase.mock.enabled = originalMockEnabled
+    config.auth.supabase.verifyMode = originalVerifyMode
   })
 
   it('returns missing_token when header is missing', async () => {

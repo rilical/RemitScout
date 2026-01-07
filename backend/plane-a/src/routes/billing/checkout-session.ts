@@ -11,7 +11,7 @@ const planeAPool = getPool(config.db.planeAUrl)
 const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   const user = request.user!
 
-  if (!config.billing.stripe.secretKey || !config.billing.stripe.priceIdPlus) {
+  if ((!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) || !config.billing.stripe.priceIdPlus) {
     reply.code(500)
     return { error: 'billing_not_configured' }
   }

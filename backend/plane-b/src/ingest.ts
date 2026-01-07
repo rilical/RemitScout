@@ -1,5 +1,5 @@
 import type { Pool } from 'pg'
-import { createPool } from '../../shared/db'
+import { createPool, query } from '../../shared/db'
 import { assertRuntimeConfig, config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { initErrorTracking } from '../../shared/error-tracker'
@@ -16,8 +16,9 @@ import {
   ProviderCapabilityRepository,
   RightsMatrixRepository,
 } from './repositories'
+import { VolatilityService } from './services/volatility-service'
 
-if (config.env === 'production' || process.env.STRICT_CONFIG === '1') {
+if (config.env === 'production' || config.env === 'staging' || process.env.STRICT_CONFIG === '1') {
   assertRuntimeConfig({
     requirePlaneB: true,
     requireRedis: true,
@@ -133,6 +134,28 @@ const loadCoverageCorridors = async (pool: Pool, minProviders: number) => {
   return new Set(corridors)
 }
 
+const loadPriorityTierMap = async (pool: Pool) => {
+  const result = await query<{ corridor_id: string; priority_tier: string | null }>(
+    `SELECT corridor_id, priority_tier
+       FROM silver.corridor_priority`,
+    [],
+    pool,
+  )
+  const tierMap = new Map<string, string>()
+  const rows = Array.isArray(result.rows) ? result.rows : []
+  for (const row of rows) {
+    if (!row.corridor_id) continue
+    tierMap.set(row.corridor_id, row.priority_tier ?? 'tier_3_discovery')
+  }
+  return tierMap
+}
+
+const loadUnsupportedCorridorsForProvider = async (pool: Pool, providerId: string) => {
+  const repo = new ProviderCapabilityRepository(pool)
+  const rows = await repo.loadUnsupportedCorridors(providerId)
+  return new Set(rows.map(row => row.corridor_id).filter((id): id is string => Boolean(id)))
+}
+
 type PriorityQueues = {
   tier1: string[]
   tier2: string[]
@@ -164,6 +187,42 @@ const loadPriorityQueues = async (
       queues.tier3.push(row.corridor_id)
     }
   }
+  return queues
+}
+
+const buildExpandedQueues = (options: {
+  capabilityQueues: PriorityQueues
+  supportedCorridors: string[]
+  unsupportedCorridors: Set<string>
+  priorityTierMap: Map<string, string>
+}) => {
+  const { capabilityQueues, supportedCorridors, unsupportedCorridors, priorityTierMap } = options
+  const combined: string[] = []
+  const seen = new Set<string>()
+  const addCorridor = (corridorId: string) => {
+    if (!corridorId) return
+    if (unsupportedCorridors.has(corridorId)) return
+    if (seen.has(corridorId)) return
+    seen.add(corridorId)
+    combined.push(corridorId)
+  }
+
+  for (const corridorId of capabilityQueues.all) addCorridor(corridorId)
+  for (const corridorId of supportedCorridors) addCorridor(corridorId)
+
+  const queues: PriorityQueues = { tier1: [], tier2: [], tier3: [], all: [] }
+  for (const corridorId of combined) {
+    const tier = priorityTierMap.get(corridorId) ?? 'tier_3_discovery'
+    queues.all.push(corridorId)
+    if (tier === 'tier_1_alpha') {
+      queues.tier1.push(corridorId)
+    } else if (tier === 'tier_2_reference') {
+      queues.tier2.push(corridorId)
+    } else {
+      queues.tier3.push(corridorId)
+    }
+  }
+
   return queues
 }
 
@@ -371,6 +430,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
   if (!config.planeB.useSeedData) {
     const pool = options.pool ?? createPool(config.db.planeBUrl)
     const shouldClose = !options.pool
+    const volatilityService = new VolatilityService(pool)
 
     const healthEnabled = process.env.PLANE_B_HEALTH_ENABLED !== '0'
     let healthServer: { close: () => Promise<void> } | null = null
@@ -408,6 +468,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const b2bPayoutMethod = 'bank_deposit'
     const targetMinutes = config.planeB.b2bTargetMinutes
     const planMinutes = targetMinutes > 0 ? targetMinutes : 30
+    const tier1Enabled = config.planeB.b2bTier1Enabled
     const priorityTierConfig = {
       tier1: {
         label: 'tier_1_alpha',
@@ -454,6 +515,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const providers = providerRegistry
     const providerIds = providers.map(provider => provider.providerId)
     const rightsByProvider = await loadProviderRights(pool)
+    const priorityTierMap = await loadPriorityTierMap(pool)
     const queueEntries = await Promise.all(
       providerIds.map(async (providerId) => [
         providerId,
@@ -501,6 +563,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
       for (const provider of providers) {
         const providerId = provider.providerId
+        const sweptCorridors = new Set<string>()
 
         const rights = rightsByProvider.get(providerId)
         if (!rights) {
@@ -533,16 +596,24 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           tier3: [],
           all: [],
         }
-        const queues = queue.all.length
-          ? queue
-          : {
-            tier1: [],
-            tier2: [],
-            tier3: provider.supportedCorridors,
-            all: provider.supportedCorridors,
-          }
+        const unsupportedCorridors = await loadUnsupportedCorridorsForProvider(pool, providerId)
+        const queues = buildExpandedQueues({
+          capabilityQueues: queue,
+          supportedCorridors: provider.supportedCorridors,
+          unsupportedCorridors,
+          priorityTierMap,
+        })
 
-        const tier1Plan = await buildTierPlan(providerId, queues.tier1, 'tier1', planMinutes)
+        const emptyPlan: PriorityTierPlan = {
+          corridors: [],
+          eligibleCorridors: [],
+          freshness: { staleCorridors: [], freshCorridors: [], filteredCorridors: [] },
+          partitions: [],
+          targetShards: 0,
+        }
+        const tier1Plan = tier1Enabled
+          ? await buildTierPlan(providerId, queues.tier1, 'tier1', planMinutes)
+          : emptyPlan
         const tier2Plan = await buildTierPlan(providerId, queues.tier2, 'tier2', planMinutes)
         const tier3Plan = await buildTierPlan(providerId, queues.tier3, 'tier3', planMinutes)
 
@@ -561,6 +632,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           tier1_shards: tier1Plan.targetShards,
           tier2_shards: tier2Plan.targetShards,
           tier3_shards: tier3Plan.targetShards,
+          tier1_enabled: tier1Enabled,
           tier1_interval_seconds: priorityTierConfig.tier1.intervalSeconds,
           tier2_interval_seconds: priorityTierConfig.tier2.intervalSeconds,
           tier3_interval_seconds: priorityTierConfig.tier3.intervalSeconds,
@@ -580,6 +652,14 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
         let providerOk: boolean | null = null
         for (const tierKey of priorityTierOrder) {
+          if (!tier1Enabled && tierKey === 'tier1') {
+            logger.info('b2b_sweep_skipped', {
+              provider_id: providerId,
+              priority_tier: priorityTierConfig.tier1.label,
+              reason: 'tier1_disabled',
+            })
+            continue
+          }
           const tierConfig = priorityTierConfig[tierKey]
           const plan = tierPlans[tierKey]
           const corridorsPerShard = plan.partitions.map(partition => partition.length)
@@ -680,6 +760,9 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 rpmOverride: tierConfig.rpm,
                 perCorridorRpmOverride: tierConfig.perCorridorRpm,
               })
+              for (const corridorId of corridors) {
+                sweptCorridors.add(corridorId)
+              }
               tierOk = tierOk && ok
             }
             providerOk = providerOk === null ? tierOk : providerOk && tierOk
@@ -690,6 +773,24 @@ export const runIngestion = async (options: IngestOptions = {}) => {
               error,
             })
             providerOk = false
+          }
+        }
+
+        if (ingestFanoutMode !== 'queue' && sweptCorridors.size > 0) {
+          try {
+            const updated = await volatilityService.refreshCacheForCorridors(
+              Array.from(sweptCorridors),
+            )
+            logger.info('b2b_volatility_refreshed', {
+              provider_id: providerId,
+              corridors: sweptCorridors.size,
+              updated,
+            })
+          } catch (error) {
+            logger.warn('b2b_volatility_refresh_failed', {
+              provider_id: providerId,
+              error,
+            })
           }
         }
 

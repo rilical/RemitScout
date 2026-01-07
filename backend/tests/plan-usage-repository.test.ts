@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Pool } from 'pg'
 import { PlanUsageRepository } from '../plane-a/src/repositories/implementations/plan-usage-repository'
-import * as dbModule from '../../shared/db'
+import * as dbModule from '../shared/db'
 
-vi.mock('../../shared/db', () => ({
+vi.mock('../shared/db', () => ({
   query: vi.fn(),
 }))
 
@@ -78,5 +78,6 @@ describe('PlanUsageRepository', () => {
     })
   })
 })
+
 
 

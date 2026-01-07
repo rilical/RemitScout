@@ -5,6 +5,7 @@ import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
 import { countryCodeMap, currencyCodeMap, getPaymentCodeForPayin } from './code-map'
+import { getUserAgentForCorridor } from '../../collectors/user-agent'
 
 const catalogEndpoint = 'https://www.westernunion.com/wuconnect/prices/catalog'
 const startPageUrl = 'https://www.westernunion.com/us/en/web/send-money/start'
@@ -55,7 +56,7 @@ export const fetchWesternUnionQuote = async (
       'content-type': 'application/json',
       origin: 'https://www.westernunion.com',
       referer: startPageUrl,
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(request.corridor_id),
       'x-wu-correlation-id': randomUUID(),
       'x-wu-transaction-id': randomUUID(),
     },

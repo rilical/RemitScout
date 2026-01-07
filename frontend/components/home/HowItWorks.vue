@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-8">
         <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">
-          How It Works
+          How Remit-Scout Works
         </h2>
         <p class="text-base text-white/90 max-w-2xl mx-auto">
           Three steps to comparing your options, clearly
@@ -22,7 +22,7 @@
               1. Enter your details
             </h3>
             <p class="text-sm text-neutral-600">
-              Tell us where you're sending from, where the money’s going, and how much you want to send. We handle the comparison.
+              Just enter where you're sending from, where it's going, and the amount. We'll show you the options.
             </p>
           </div>
         </div>
@@ -38,7 +38,7 @@
               2. We pull current quotes
             </h3>
             <p class="text-sm text-neutral-600">
-              We gather quotes from 30+ providers, then normalize fees and FX so you can compare like for like. Quotes are timestamped and refreshed regularly (cadence varies).
+              We grab live quotes from 30+ providers and convert everything into comparable numbers—same amount in, same amount out. Rates are timestamped and updated throughout the day.
             </p>
           </div>
         </div>
@@ -54,7 +54,7 @@
               3. Complete your transfer
             </h3>
             <p class="text-sm text-neutral-600">
-              Click through to your preferred provider and complete your transfer on their site. Remit-Scout never handles your money.
+              Pick the provider that looks best, then finish your transfer on their site. Your money never touches our hands.
             </p>
           </div>
         </div>

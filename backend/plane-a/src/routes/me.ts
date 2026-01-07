@@ -8,7 +8,6 @@ import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { getUsageForUser } from '../services/plan-usage'
 import { getStripeClient } from '../services/stripe-client'
-import { deleteAvatar, resolveAvatarUrl, uploadAvatar } from '../services/avatar-upload'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
@@ -20,7 +19,6 @@ const userAccountRepository = new UserAccountRepository(planeAPool)
 
 const profileUpdateSchema = z.object({
   name: z.string().max(200).optional(),
-  avatar_url: z.string().max(2048).nullable().optional(),
 })
 
 const passwordUpdateSchema = z.object({
@@ -48,7 +46,7 @@ const toIsoFromSeconds = (value: number | null | undefined) => {
 }
 
 const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): Promise<BillingInfo> => {
-  if (!plan || !config.billing.stripe.secretKey || !plan.stripe_customer_id) {
+  if (!plan || (!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) || !plan.stripe_customer_id) {
     return {
       next_billing_date: null,
       amount: null,
@@ -136,6 +134,9 @@ const parseBearerToken = (header?: string) => {
 }
 
 const verifySupabasePassword = async (email: string, password: string): Promise<boolean> => {
+  if (config.auth.supabase.mock.enabled) {
+    return true
+  }
   const baseUrl = config.auth.supabase.url.replace(/\/$/, '')
   const key = config.auth.supabase.publishableKey
   const response = await fetch(`${baseUrl}/auth/v1/token?grant_type=password`, {
@@ -163,6 +164,9 @@ const verifySupabasePassword = async (email: string, password: string): Promise<
 }
 
 const updateSupabasePassword = async (accessToken: string, newPassword: string): Promise<void> => {
+  if (config.auth.supabase.mock.enabled) {
+    return
+  }
   const baseUrl = config.auth.supabase.url.replace(/\/$/, '')
   const key = config.auth.supabase.publishableKey
   const response = await fetch(`${baseUrl}/auth/v1/user`, {
@@ -204,7 +208,6 @@ export const meRoutes = async (app: FastifyInstance) => {
       const usage = await getUsageForUser(planeAPool, user.user_id)
       const billing = await buildBillingInfo(plan)
       const profile = await userAccountRepository.getProfile(user.user_id)
-      const avatarUrl = await resolveAvatarUrl(profile?.avatar_url ?? null)
 
       logger.debug('me_request_success', {
         user_id: user.user_id,
@@ -219,7 +222,7 @@ export const meRoutes = async (app: FastifyInstance) => {
           user_id: user.user_id,
           email: user.email,
           name: profile?.name ?? null,
-          avatar_url: avatarUrl,
+          avatar_url: null,
         },
         plan: {
           plan_code: plan.plan_code,
@@ -253,7 +256,6 @@ export const meRoutes = async (app: FastifyInstance) => {
       const updates: {
         user_id: string
         name?: string | null
-        avatar_url?: string | null
       } = { user_id: user.user_id }
 
       if (body.name !== undefined) {
@@ -261,13 +263,7 @@ export const meRoutes = async (app: FastifyInstance) => {
         updates.name = trimmed.length > 0 ? trimmed : null
       }
 
-      if (body.avatar_url !== undefined) {
-        const trimmed = body.avatar_url?.trim()
-        updates.avatar_url = trimmed ? trimmed : null
-      }
-
       const profile = await userAccountRepository.updateProfile(updates)
-      const avatarUrl = await resolveAvatarUrl(profile?.avatar_url ?? null)
 
       try {
         await logAuditEvent(planeAPool, {
@@ -279,11 +275,9 @@ export const meRoutes = async (app: FastifyInstance) => {
           entityId: user.user_id,
           beforeSnapshot: {
             name: beforeProfile?.name ?? null,
-            avatar_url: beforeProfile?.avatar_url ?? null,
           },
           afterSnapshot: {
             name: profile?.name ?? null,
-            avatar_url: profile?.avatar_url ?? null,
           },
           category: 'user_action',
           severity: 'info',
@@ -302,7 +296,7 @@ export const meRoutes = async (app: FastifyInstance) => {
           user_id: user.user_id,
           email: user.email,
           name: profile?.name ?? null,
-          avatar_url: avatarUrl,
+          avatar_url: null,
         },
       }
     } catch (error: unknown) {
@@ -321,131 +315,6 @@ export const meRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/me/avatar', { preHandler: requireAuth() }, async (request, reply) => {
-    const user = request.user!
-
-    if (!config.storage.userAssets.bucket) {
-      reply.code(500)
-      return { error: 'avatar_upload_unavailable' }
-    }
-
-    const file = await request.file()
-    if (!file) {
-      reply.code(400)
-      return { error: 'missing_file' }
-    }
-
-    await upsertUserAccount(planeAPool, user)
-    const existing = await userAccountRepository.getProfile(user.user_id)
-    let uploadedKey: string | null = null
-
-    try {
-      const buffer = await file.toBuffer()
-      const { key, url } = await uploadAvatar(user.user_id, buffer, file.mimetype)
-      uploadedKey = key
-
-      const beforeProfile = await userAccountRepository.getProfile(user.user_id)
-      await userAccountRepository.updateAvatar(user.user_id, key)
-
-      if (existing?.avatar_url && existing.avatar_url !== key) {
-        await deleteAvatar(existing.avatar_url)
-      }
-
-      try {
-        await logAuditEvent(planeAPool, {
-          actorId: user.user_id,
-          actorType: 'user',
-          actorRole: user.role ?? undefined,
-          action: 'avatar.upload',
-          entityType: 'user_account',
-          entityId: user.user_id,
-          beforeSnapshot: {
-            avatar_url: beforeProfile?.avatar_url ?? null,
-          },
-          afterSnapshot: {
-            avatar_url: key,
-          },
-          category: 'user_action',
-          severity: 'info',
-          ...getRequestContext(request),
-        })
-      } catch (error) {
-        logger.warn('audit_log_failed', {
-          user_id: user.user_id,
-          error: getErrorMessage(error),
-        })
-      }
-
-      return {
-        success: true,
-        avatar_url: url,
-      }
-    } catch (error: unknown) {
-      if (uploadedKey) {
-        await deleteAvatar(uploadedKey)
-      }
-
-      const message = getErrorMessage(error)
-      const isClientError =
-        message === 'unsupported_image_type' ||
-        message === 'image_too_large' ||
-        message === 'image_dimensions_exceeded'
-
-      reply.code(isClientError ? 400 : 500)
-      return {
-        error: isClientError ? message : 'internal_error',
-        message: isClientError ? message.replace(/_/g, ' ') : 'Failed to upload avatar',
-      }
-    }
-  })
-
-  app.delete('/me/avatar', { preHandler: requireAuth() }, async (request, reply) => {
-    const user = request.user!
-
-    try {
-      await upsertUserAccount(planeAPool, user)
-      const profile = await userAccountRepository.getProfile(user.user_id)
-      if (profile?.avatar_url) {
-        await deleteAvatar(profile.avatar_url)
-      }
-      await userAccountRepository.updateAvatar(user.user_id, null)
-
-      try {
-        await logAuditEvent(planeAPool, {
-          actorId: user.user_id,
-          actorType: 'user',
-          actorRole: user.role ?? undefined,
-          action: 'avatar.delete',
-          entityType: 'user_account',
-          entityId: user.user_id,
-          beforeSnapshot: {
-            avatar_url: profile?.avatar_url ?? null,
-          },
-          afterSnapshot: {
-            avatar_url: null,
-          },
-          category: 'user_action',
-          severity: 'info',
-          ...getRequestContext(request),
-        })
-      } catch (error) {
-        logger.warn('audit_log_failed', {
-          user_id: user.user_id,
-          error: getErrorMessage(error),
-        })
-      }
-
-      return { success: true }
-    } catch (error: unknown) {
-      logger.error('me_avatar_delete_failed', {
-        user_id: user.user_id,
-        error: getErrorMessage(error),
-        stack: getErrorStack(error),
-      })
-      reply.code(500)
-      return { error: 'internal_error', message: 'Failed to delete avatar' }
-    }
-  })
 
   app.post('/me/password', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
@@ -455,7 +324,7 @@ export const meRoutes = async (app: FastifyInstance) => {
       return { error: 'invalid_request', details: parsed.error.flatten() }
     }
 
-    if (!config.auth.supabase.url || !config.auth.supabase.publishableKey) {
+    if (!config.auth.supabase.mock.enabled && (!config.auth.supabase.url || !config.auth.supabase.publishableKey)) {
       reply.code(500)
       return { error: 'supabase_not_configured' }
     }

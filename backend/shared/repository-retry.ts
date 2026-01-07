@@ -193,4 +193,8 @@ export const withCircuitBreaker = async <T>(
   return breaker.execute(operation)
 }
 
+export const resetCircuitBreakers = (): void => {
+  circuitBreakers.clear()
+}
+
 

@@ -1,6 +1,7 @@
 import type { CollectorRequest, FetchResult } from '../../collectors/types'
 import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
+import { getUserAgentForCorridor } from '../../collectors/user-agent'
 import { requireCorridorId } from '../../../../shared/corridor'
 import { countryCodeMap, currencyCodeMap } from './code-map'
 
@@ -42,7 +43,7 @@ export const fetchWiseQuote = async (
       'accept-language': 'en-US,en;q=0.9',
       origin: 'https://wise.com',
       referer: 'https://wise.com/',
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(request.corridor_id),
     },
     body: payload,
     jitterMs: options.jitterMs,

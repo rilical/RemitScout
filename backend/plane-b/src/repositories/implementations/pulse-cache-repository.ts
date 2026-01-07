@@ -550,9 +550,17 @@ export class PulseCacheRepository implements IPulseCacheRepository {
     let errorType: string | undefined
 
     try {
-      const cached = await pulseCache.get<Map<string, unknown>>(cacheKey)
+      const cached = await pulseCache.get<unknown>(cacheKey)
       if (cached) {
-        return cached
+        if (cached instanceof Map) {
+          return cached
+        }
+        if (Array.isArray(cached)) {
+          return new Map(cached as Array<[string, unknown]>)
+        }
+        if (typeof cached === 'object') {
+          return new Map(Object.entries(cached as Record<string, unknown>))
+        }
       }
 
       const amount = normalizeAmount(filters.amount) ?? 1000
@@ -1198,7 +1206,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
         map.set(entry.key, entry.payload)
       }
 
-      await pulseCache.set(cacheKey, map)
+      await pulseCache.set(cacheKey, Object.fromEntries(map))
 
       const poolStats = {
         total: this.pool.totalCount,

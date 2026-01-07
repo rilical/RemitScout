@@ -40,7 +40,7 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
   }
 
   const setInMemory = (key: string, value: T, ttlMs: number) => {
-    const expiresAt = Date.now() + Math.max(0, ttlMs)
+    const expiresAt = ttlMs <= 0 ? Number.POSITIVE_INFINITY : Date.now() + ttlMs
     entries.set(key, { value, expiresAt })
   }
 
@@ -50,20 +50,30 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
       return getFromMemory(key)
     }
 
+    let raw: string | null
     try {
-      const raw = await redis.get(buildKey(namespace, key))
-      if (!raw) return null
-      return JSON.parse(raw) as T
+      raw = await redis.get(buildKey(namespace, key))
     } catch (error) {
       logger.warn('cache_get_failed', { error })
       return getFromMemory(key)
     }
+
+    if (!raw) {
+      return getFromMemory(key)
+    }
+
+    try {
+      return JSON.parse(raw) as T
+    } catch (error) {
+      logger.warn('cache_parse_failed', { error })
+      throw error
+    }
   }
 
   const set = async (key: string, value: T, ttlMs: number) => {
+    setInMemory(key, value, ttlMs)
     const redis = await getRedisClient()
     if (!redis) {
-      setInMemory(key, value, ttlMs)
       return
     }
 
@@ -74,7 +84,6 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
       })
     } catch (error) {
       logger.warn('cache_set_failed', { error })
-      setInMemory(key, value, ttlMs)
     }
   }
 

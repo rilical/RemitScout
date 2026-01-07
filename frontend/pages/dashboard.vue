@@ -230,10 +230,7 @@
       <div v-if="!isPlus" class="bg-blue-600 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <div class="flex items-center justify-center gap-3 text-sm">
-            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span><strong>Upgrade to Plus</strong> — Unlimited alerts, 365-day history, data exports, and ad-free experience</span>
+            <span><strong>Upgrade to Plus</strong> — Unlimited alerts, 90-day history, export, and ad-free experience</span>
             <NuxtLink to="/plus" class="inline-flex items-center gap-1 font-semibold text-white hover:text-blue-100 underline underline-offset-2">
               Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </NuxtLink>
@@ -246,28 +243,11 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <!-- Main Header Row -->
           <div class="flex items-center justify-between py-6">
-            <div class="flex items-center gap-4">
-              <!-- User Avatar -->
-              <div class="w-14 h-14 rounded-full overflow-hidden ring-4 ring-slate-100 flex-shrink-0">
-                <img
-                  v-if="user?.avatar"
-                  :src="user.avatar"
-                  :alt="user?.name || 'Profile'"
-                  class="w-full h-full object-cover"
-                />
-                <div
-                  v-else
-                  class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-semibold"
-                >
-                  {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
-                </div>
-              </div>
-              <div>
-                <h1 class="text-2xl font-bold text-slate-900">
-                  Welcome back, <span class="text-blue-600">{{ user?.name || 'User' }}</span>
-                </h1>
-                <p class="text-sm text-slate-500 mt-0.5">Manage your watchlist, alerts, and transfer history</p>
-              </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-900">
+                Welcome back, <span class="text-blue-600">{{ user?.name || 'User' }}</span>
+              </h1>
+              <p class="text-sm text-slate-500 mt-0.5">Manage your watchlist, alerts, and transfer history</p>
             </div>
             <div class="flex items-center gap-4">
               <!-- Plan Badge -->
@@ -297,22 +277,22 @@
           <div v-if="!isPlus" class="pb-4 flex items-center gap-6 text-sm">
             <div class="flex items-center gap-2">
               <span class="text-slate-500">Watchlist:</span>
-              <span class="font-medium" :class="watchlistLimitPercent >= 100 ? 'text-red-600' : 'text-slate-900'">{{ watchlistCount }}/{{ limits.watchlistItems }}</span>
+              <span class="font-medium" :class="watchlistLimitPercent >= 100 ? 'text-brand-600' : 'text-slate-900'">{{ watchlistCount }}/{{ limits.watchlistItems }}</span>
               <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                 <div
                   class="h-full rounded-full"
-                  :class="watchlistLimitPercent >= 100 ? 'bg-red-500' : 'bg-blue-500'"
+                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-600' : 'bg-blue-500'"
                   :style="{ width: `${Math.min(watchlistLimitPercent, 100)}%` }"
                 />
               </div>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-slate-500">Alerts:</span>
-              <span class="font-medium" :class="alertsLimitPercent >= 100 ? 'text-red-600' : 'text-slate-900'">{{ alertsCount }}/{{ limits.alerts }}</span>
+              <span class="font-medium" :class="alertsLimitPercent >= 100 ? 'text-brand-600' : 'text-slate-900'">{{ alertsCount }}/{{ limits.alerts }}</span>
               <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                 <div
                   class="h-full rounded-full"
-                  :class="alertsLimitPercent >= 100 ? 'bg-red-500' : 'bg-blue-500'"
+                  :class="alertsLimitPercent >= 100 ? 'bg-brand-600' : 'bg-blue-500'"
                   :style="{ width: `${Math.min(alertsLimitPercent, 100)}%` }"
                 />
               </div>
@@ -418,11 +398,12 @@
             <!-- Best Rate Stat -->
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
               <div class="text-sm text-white/90 mb-1">Best Rate Today</div>
-              <div class="text-2xl font-semibold text-white">{{ currentRate.rate }} <span class="text-sm text-white/80">{{ selectedCorridor.to }}</span></div>
+              <div class="text-2xl font-semibold text-white">
+                {{ currentRate.rate }}
+                <span class="text-sm text-white/80">{{ getCurrencyCode(selectedCorridor.to) }}</span>
+              </div>
               <div class="mt-2">
-                <span
-                  class="inline-flex items-center gap-1 text-xs font-medium text-white"
-                >
+                <span v-if="currentRate.change !== null" class="inline-flex items-center gap-1 text-xs font-medium text-white">
                   <svg
                     class="w-3 h-3"
                     :class="currentRate.change >= 0 ? '' : 'rotate-180'"
@@ -432,8 +413,9 @@
                   >
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                   </svg>
-                  {{ currentRate.change >= 0 ? '+' : '' }}{{ currentRate.change }}% vs yesterday
+                  {{ formatPercentValue(currentRate.change) }} vs previous
                 </span>
+                <span v-else class="text-xs text-white/70">No rate history yet</span>
               </div>
             </div>
           </div>
@@ -441,23 +423,16 @@
           <!-- Upgrade Banner for Free Users -->
           <div
             v-if="!isPlus && (watchlistLimitPercent >= 66 || alertsLimitPercent >= 66)"
-            class="mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white"
+            class="mb-8 bg-gradient-to-r from-gray-900 to-slate-900 rounded-xl p-6 text-white"
           >
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-lg">You're approaching your limits</h3>
-                  <p class="text-white/90 text-sm mt-1">Upgrade to Plus for unlimited watchlist items, alerts, extended history, and data exports.</p>
-                </div>
+              <div>
+                <h3 class="font-semibold text-lg">You're approaching your limits</h3>
+                <p class="text-white/90 text-sm mt-1">Upgrade to Plus for unlimited watchlist items, alerts, extended history, and export.</p>
               </div>
               <NuxtLink
                 to="/plus"
-                class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors flex-shrink-0"
+                class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors flex-shrink-0"
               >
                 Upgrade to Plus
               </NuxtLink>
@@ -495,84 +470,34 @@
                         <!-- Corridor Dropdown -->
                         <div
                           v-if="showCorridorSelector"
-                          class="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-lg z-20 max-h-[600px] overflow-hidden flex flex-col"
+                          class="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl border border-slate-200 shadow-lg z-20 p-4"
                         >
-                          <div class="p-3 border-b border-slate-100">
-                            <input
-                              v-model="corridorSearch"
-                              type="text"
-                              placeholder="Search corridors..."
-                              class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            />
-                          </div>
-
-                          <!-- Watchlist Corridors -->
-                          <div v-if="filteredWatchlistCorridors.length > 0" class="p-2 border-b border-slate-100">
-                            <div class="px-2 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">From Watchlist</div>
-                            <div class="space-y-1">
-                              <button
-                                v-for="item in filteredWatchlistCorridors"
-                                :key="item.id"
-                                type="button"
-                                class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-left"
-                                @click="selectCorridor(item.target.from, item.target.to)"
-                              >
-                                <span class="text-base">{{ getFlag(item.target.from) }}</span>
-                                <svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                                <span class="text-base">{{ getFlag(item.target.to) }}</span>
-                                <span class="text-sm text-slate-700 ml-1">{{ item.label }}</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          <!-- Popular Corridors -->
-                          <div v-if="filteredPopularCorridors.length > 0" class="p-2 max-h-48 overflow-y-auto border-b border-slate-100 flex-shrink-0">
-                            <div class="px-2 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Popular</div>
-                            <div class="space-y-1">
-                              <button
-                                v-for="corridor in filteredPopularCorridors"
-                                :key="`${corridor.from}-${corridor.to}`"
-                                type="button"
-                                class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-left"
-                                @click="selectCorridor(corridor.from, corridor.to)"
-                              >
-                                <span class="text-base">{{ getFlag(corridor.from) }}</span>
-                                <svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                                <span class="text-base">{{ getFlag(corridor.to) }}</span>
-                                <span class="text-sm text-slate-700 ml-1">{{ corridor.label }}</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          <!-- Custom Corridor -->
-                          <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex-shrink-0">
-                            <div class="text-xs font-medium text-slate-600 mb-3">Custom Corridor</div>
-                            <div class="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
+                          <div class="space-y-3">
+                            <div>
+                              <label class="block text-xs font-medium text-slate-700 mb-1.5">From</label>
                               <UniversalDropdown
                                 v-model="customCorridor.from"
                                 :options="inlineFromOptions"
-                                placeholder="From"
-                                button-class="text-xs py-1.5"
+                                placeholder="Select country"
+                                button-class="h-10 text-sm"
                               />
-                              <span class="text-slate-400 text-sm">→</span>
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-slate-700 mb-1.5">To</label>
                               <UniversalDropdown
                                 v-model="customCorridor.to"
                                 :options="inlineToOptions"
-                                placeholder="To"
-                                button-class="text-xs py-1.5"
+                                placeholder="Select country"
+                                button-class="h-10 text-sm"
                               />
-                              <button
-                                type="button"
-                                class="px-3 py-1.5 bg-brand-600 text-white text-xs font-semibold rounded-lg hover:bg-brand-700 transition-colors whitespace-nowrap"
-                                @click="selectCorridor(customCorridor.from, customCorridor.to)"
-                              >
-                                Go
-                              </button>
                             </div>
+                            <button
+                              type="button"
+                              class="w-full px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
+                              @click="selectCorridor(customCorridor.from, customCorridor.to)"
+                            >
+                              Select Corridor
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -585,12 +510,18 @@
                         :key="period.value"
                         type="button"
                         class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
-                        :class="graphTimeframe === period.value
-                          ? 'bg-white text-slate-900 shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'"
+                        :class="[
+                          graphTimeframe === period.value
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900',
+                          isTimeframeLocked(period.value) ? 'opacity-50 cursor-not-allowed' : '',
+                        ]"
+                        :disabled="isTimeframeLocked(period.value)"
+                        :title="isTimeframeLocked(period.value) ? 'Plus required' : undefined"
                         @click="graphTimeframe = period.value"
                       >
                         {{ period.label }}
+                        <span v-if="period.plusOnly && !isPlus" class="ml-1 text-[10px] text-slate-400">Plus</span>
                       </button>
                     </div>
                   </div>
@@ -610,8 +541,9 @@
                       </div>
                       <div class="flex items-baseline gap-3">
                         <span class="text-4xl font-semibold text-slate-900">{{ currentRate.rate }}</span>
-                        <span class="text-lg text-slate-500">{{ selectedCorridor.to }}</span>
+                        <span class="text-lg text-slate-500">{{ getCurrencyCode(selectedCorridor.to) }}</span>
                         <span
+                          v-if="currentRate.change !== null"
                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium"
                           :class="currentRate.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
                         >
@@ -624,10 +556,14 @@
                           >
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                           </svg>
-                          {{ currentRate.change >= 0 ? '+' : '' }}{{ currentRate.change }}%
+                          {{ formatPercentValue(currentRate.change) }}
                         </span>
                       </div>
-                      <div class="text-xs text-slate-400 mt-1">Last updated: {{ currentRate.lastUpdated }}</div>
+                      <div class="text-xs text-slate-400 mt-1">
+                        <span v-if="selectedHistoryLoading">Loading rate history...</span>
+                        <span v-else-if="!currentRate.isAvailable">No rate history yet</span>
+                        <span v-else>Last updated: {{ currentRate.lastUpdated }}</span>
+                      </div>
                     </div>
 
                     <!-- Rate Stats -->
@@ -653,7 +589,13 @@
 
                   <!-- Chart -->
                   <div class="h-56 relative">
-                    <svg class="w-full h-full" viewBox="0 0 400 180" preserveAspectRatio="none">
+                    <div v-if="selectedHistoryLoading" class="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
+                      Loading rate history...
+                    </div>
+                    <div v-else-if="graphData.length === 0" class="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
+                      No rate history yet
+                    </div>
+                    <svg v-else class="w-full h-full" viewBox="0 0 400 180" preserveAspectRatio="none">
                       <defs>
                         <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                           <stop offset="0%" style="stop-color:#2563eb;stop-opacity:0.15" />
@@ -700,6 +642,8 @@
                     <button
                       type="button"
                       class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
+                      :class="watchlistLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-slate-100 hover:text-slate-700' : ''"
+                      :disabled="watchlistLimitReached"
                       @click="handleAddToWatchlist"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -710,6 +654,8 @@
                     <button
                       type="button"
                       class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
+                      :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-slate-100 hover:text-slate-700' : ''"
+                      :disabled="alertsLimitReached"
                       @click="handleSetAlert"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -729,15 +675,32 @@
                       Export
                     </button>
                   </div>
-                  <NuxtLink
-                    :to="getCorridorUrl(selectedCorridor.from, selectedCorridor.to)"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  <button
+                    type="button"
+                    :disabled="comparingSelectedCorridor"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
+                    @click="handleCompareSelectedCorridor"
                   >
-                    Compare Providers
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      v-if="comparingSelectedCorridor"
+                      class="w-4 h-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <svg
+                      v-else
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
-                  </NuxtLink>
+                    {{ comparingSelectedCorridor ? 'Loading...' : 'Compare Corridor' }}
+                  </button>
                 </div>
               </div>
 
@@ -745,10 +708,10 @@
               <div class="grid sm:grid-cols-3 gap-4">
                 <NuxtLink
                   to="/send-money"
-                  class="flex items-center gap-4 bg-white rounded-xl border border-slate-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                  class="flex items-center gap-4 bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-md transition-all group"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+                    <svg class="w-5 h-5 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -759,12 +722,14 @@
                 </NuxtLink>
                 <button
                   type="button"
-                  class="flex items-center gap-4 bg-white rounded-xl border border-slate-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all text-left"
+                  class="flex items-center gap-4 bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-md transition-all text-left group"
+                  :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:border-slate-200 hover:shadow-none' : ''"
+                  :disabled="alertsLimitReached"
                   @click="openCreateAlert"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+                    <svg class="w-5 h-5 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </div>
                   <div>
@@ -774,10 +739,10 @@
                 </button>
                 <NuxtLink
                   to="/learn"
-                  class="flex items-center gap-4 bg-white rounded-xl border border-slate-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                  class="flex items-center gap-4 bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-md transition-all group"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+                    <svg class="w-5 h-5 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
@@ -786,34 +751,6 @@
                     <div class="text-xs text-slate-500">Learn more</div>
                   </div>
                 </NuxtLink>
-              </div>
-
-              <!-- Ad: Provider Spotlight (Free users only) -->
-              <div v-if="!isPlus" class="bg-white rounded-xl border border-slate-200 p-4">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-xs text-slate-400 uppercase tracking-wide">Sponsored</span>
-                  <NuxtLink to="/plus" class="text-xs text-blue-600 hover:text-blue-700 font-medium">Remove ads</NuxtLink>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="w-14 h-14 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">R</div>
-                  <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-slate-900">Remitly - Fast International Transfers</h4>
-                    <p class="text-sm text-slate-500 truncate">First transfer fee-free. Money delivered in minutes.</p>
-                    <div class="flex items-center gap-2 mt-1">
-                      <div class="flex">
-                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        <svg class="w-4 h-4 text-slate-300" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                      </div>
-                      <span class="text-xs text-slate-500">4.8 (125k reviews)</span>
-                    </div>
-                  </div>
-                  <a href="#" class="flex-shrink-0 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
-                    Compare Rates
-                  </a>
-                </div>
               </div>
 
               <!-- Watchlist Preview -->
@@ -872,128 +809,118 @@
 
             <!-- Right Column (1/3) -->
             <div class="space-y-6">
-              <!-- Add Corridor -->
+              <!-- Recent Searches -->
               <div class="bg-white rounded-xl border border-slate-200 p-6">
-                <h3 class="font-semibold text-slate-900 mb-4">Track a Corridor</h3>
-                <form @submit.prevent="handleAddWatchlist" class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">From</label>
-                    <UniversalDropdown
-                      v-model="newWatchlist.from"
-                      :options="watchlistFromOptions"
-                      placeholder="Select currency"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">To</label>
-                    <UniversalDropdown
-                      v-model="newWatchlist.to"
-                      :options="watchlistToOptions"
-                      placeholder="Select currency"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-                  >
-                    Add to Watchlist
-                  </button>
-                </form>
-              </div>
-
-              <!-- Recent Activity -->
-              <div class="bg-white rounded-xl border border-slate-200 p-6">
-                <h3 class="font-semibold text-slate-900 mb-4">Recent Activity</h3>
+                <h3 class="font-semibold text-slate-900 mb-4">Recent Searches</h3>
                 <div
-                  v-if="!compareHydrated || !watchlistHydrated || !alertsHydrated || recentSearchesPending"
+                  v-if="recentSearchesPending"
                   class="text-sm text-slate-500"
                 >
                   Loading...
                 </div>
                 <div
-                  v-else-if="!compareRuns[0] && !watchlistItems[0] && !alertItems[0] && !recentSearches[0]"
-                  class="text-sm text-slate-500"
+                  v-else-if="recentSearches.length === 0"
+                  class="text-center py-4"
                 >
-                  No activity yet. Start by comparing rates.
+                  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <p class="text-sm text-slate-500 mb-2">No searches yet</p>
+                  <NuxtLink to="/send-money" class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                    Compare rates →
+                  </NuxtLink>
                 </div>
-                <div v-else class="space-y-4">
-                  <div v-if="recentSearches[0]" class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <div v-else class="space-y-3">
+                  <NuxtLink
+                    v-for="(search, idx) in recentSearches.slice(0, 5)"
+                    :key="idx"
+                    :to="getCorridorUrl(search.from, search.to)"
+                    class="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-lg">{{ getFlag(search.from) }}</span>
+                      <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                       </svg>
+                      <span class="text-lg">{{ getFlag(search.to) }}</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-base">{{ getFlag(recentSearches[0].from) }}</span>
-                        <span class="text-xs text-slate-400">→</span>
-                        <span class="text-base">{{ getFlag(recentSearches[0].to) }}</span>
-                        <NuxtLink
-                          :to="getCorridorUrl(recentSearches[0].from, recentSearches[0].to)"
-                          class="text-sm font-medium text-slate-900 ml-1 truncate hover:text-blue-600"
-                        >
-                          {{ recentSearches[0].from }}/{{ recentSearches[0].to }}
-                        </NuxtLink>
-                      </div>
-                      <p class="text-xs text-slate-500">
-                        Searched {{ formatCurrency(recentSearches[0].amount, recentSearches[0].from) }} • {{ recentSearches[0].method }}
+                      <p class="text-sm font-medium text-slate-900">
+                        {{ getCountryName(search.from) }} → {{ getCountryName(search.to) }}
+                      </p>
+                      <p class="text-sm text-slate-500 font-medium">
+                        ${{ search.amount?.toLocaleString() || '500' }} • {{ formatMethod(search.method) }}
                       </p>
                     </div>
-                  </div>
-                  <div v-if="compareRuns[0]" class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-slate-900 truncate">{{ compareRuns[0].label }}</p>
-                      <p class="text-xs text-slate-500">Compared rates</p>
-                    </div>
-                  </div>
-                  <div v-if="alertItems[0]" class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                      </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-base">{{ getFlag(getAlertCorridor(alertItems[0]).from) }}</span>
-                        <span class="text-xs text-slate-400">→</span>
-                        <span class="text-base">{{ getFlag(getAlertCorridor(alertItems[0]).to) }}</span>
-                        <span class="text-sm font-medium text-slate-900 ml-1">{{ getAlertCorridor(alertItems[0]).from }}/{{ getAlertCorridor(alertItems[0]).to }}</span>
-                      </div>
-                      <p class="text-xs text-slate-500">{{ formatMetricLabel(alertItems[0].rule.metric) }} {{ formatComparator(alertItems[0].rule.comparator) }} {{ alertItems[0].rule.value }} {{ alertItems[0].rule.currency || getAlertCorridor(alertItems[0]).to }} • {{ alertItems[0].enabled ? 'Active' : 'Paused' }}</p>
-                    </div>
-                  </div>
+                  </NuxtLink>
                 </div>
               </div>
 
-              <!-- Top Movers -->
+              <!-- Top Movers from Watchlist -->
               <div class="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 class="font-semibold text-slate-900 mb-4">Top Movers Today</h3>
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="text-base">🇺🇸→🇵🇭</span>
-                      <span class="text-sm text-slate-700">USD/PHP</span>
-                    </div>
-                    <span class="text-sm font-medium text-emerald-600">+2.3%</span>
+                <div
+                  v-if="!watchlistHydrated"
+                  class="text-sm text-slate-500"
+                >
+                  Loading...
+                </div>
+                <div
+                  v-else-if="watchlistItems.length === 0"
+                  class="text-center py-4"
+                >
+                  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
                   </div>
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="text-base">🇨🇦→🇲🇽</span>
-                      <span class="text-sm text-slate-700">CAD/MXN</span>
-                    </div>
-                    <span class="text-sm font-medium text-emerald-600">+1.5%</span>
+                  <p class="text-sm text-slate-500 mb-2">No corridors tracked</p>
+                  <p class="text-xs text-slate-400">Add corridors to your watchlist to see their daily movements</p>
+                </div>
+                <div v-else-if="topMoversLoading" class="text-sm text-slate-500">
+                  Loading rate history...
+                </div>
+                <div v-else-if="topMoversFromWatchlist.length === 0" class="text-center py-4">
+                  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
                   </div>
-                  <div class="flex items-center justify-between">
+                  <p class="text-sm text-slate-500 mb-2">No rate history yet</p>
+                  <p class="text-xs text-slate-400">Once history is available, movers will appear here.</p>
+                </div>
+                <div v-else class="space-y-3">
+                  <NuxtLink
+                    v-for="item in topMoversFromWatchlist"
+                    :key="item.id"
+                    :to="getCorridorUrl(item.target.from, item.target.to)"
+                    class="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
                     <div class="flex items-center gap-2">
-                      <span class="text-base">🇬🇧→🇮🇳</span>
-                      <span class="text-sm text-slate-700">GBP/INR</span>
+                      <span class="text-lg">{{ getFlag(item.target.from) }}</span>
+                      <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                      <span class="text-lg">{{ getFlag(item.target.to) }}</span>
+                      <span class="text-sm text-slate-700">{{ item.target.from }}/{{ item.target.to }}</span>
                     </div>
-                    <span class="text-sm font-medium text-red-600">-1.8%</span>
+                    <span
+                      class="text-sm font-medium"
+                      :class="(item.change ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'"
+                    >
+                      {{ formatPercentValue(item.change) }}
+                    </span>
+                  </NuxtLink>
+                  <div v-if="watchlistItems.length > topMoversLimit" class="pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      class="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      @click="setTab('watchlist')"
+                    >
+                      View all {{ watchlistItems.length }} corridors →
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1026,21 +953,6 @@
                 </div>
               </div>
 
-              <!-- Ad: Sponsored Provider 2 (Free users only) -->
-              <div v-if="!isPlus" class="bg-white rounded-xl border border-slate-200 p-4">
-                <div class="text-xs text-slate-400 uppercase tracking-wide mb-3">Sponsored</div>
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center text-white font-bold">X</div>
-                  <div>
-                    <h4 class="font-semibold text-slate-900 text-sm">Xoom by PayPal</h4>
-                    <p class="text-xs text-slate-500">Trusted by millions</p>
-                  </div>
-                </div>
-                <a href="#" class="block w-full text-center rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors">
-                  Send Now
-                </a>
-              </div>
-
               <!-- Ad: Upgrade to Plus (Free users only) -->
               <div v-if="!isPlus" class="bg-blue-600 rounded-xl p-5 text-white">
                 <div class="flex items-start gap-3">
@@ -1051,7 +963,7 @@
                   </div>
                   <div class="flex-1">
                     <h4 class="font-semibold text-sm mb-1">Remove Ads with Plus</h4>
-                    <p class="text-xs text-white/90 mb-3">Get unlimited alerts, 365-day history, and an ad-free experience.</p>
+                    <p class="text-xs text-white/90 mb-3">Get unlimited alerts, 90-day history, and an ad-free experience.</p>
                     <NuxtLink to="/plus" class="inline-flex items-center gap-1 text-xs font-semibold text-white hover:text-blue-100">
                       Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </NuxtLink>
@@ -1071,7 +983,7 @@
                 <span
                   v-if="!isPlus"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  :class="watchlistLimitPercent >= 100 ? 'bg-red-100 text-red-700' : watchlistLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
+                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : watchlistLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
                 >
                   {{ watchlistCount }}/{{ limits.watchlistItems }} used
                 </span>
@@ -1091,11 +1003,8 @@
               <NuxtLink
                 v-if="!isPlus && watchlistLimitPercent >= 66"
                 to="/plus"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                class="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
               >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
                 Upgrade
               </NuxtLink>
               <button
@@ -1112,18 +1021,18 @@
           <!-- Limit Warning Banner -->
           <div
             v-if="!isPlus && watchlistLimitPercent >= 100"
-            class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+            class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"
           >
-            <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
             <div class="flex-1">
-              <h4 class="text-sm font-medium text-amber-800">Watchlist limit reached</h4>
-              <p class="text-sm text-amber-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist items. Upgrade to Plus for unlimited watchlist items.</p>
+              <h4 class="text-sm font-medium text-brand-600">Watchlist limit reached</h4>
+              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist items. Upgrade to Plus for unlimited watchlist items.</p>
             </div>
             <NuxtLink
               to="/plus"
-              class="flex-shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 transition-colors"
+              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
             >
               Upgrade
             </NuxtLink>
@@ -1202,8 +1111,8 @@
                       <span class="text-2xl">{{ getFlag(item.target.to) }}</span>
                     </div>
                     <div>
-                      <h3 class="font-semibold text-slate-900 text-base">{{ item.label }}</h3>
-                      <p class="text-xs text-slate-500 capitalize">{{ item.target.method || 'bank' }} transfer</p>
+                      <h3 class="font-semibold text-slate-900 text-base">{{ item.target.from }}→{{ item.target.to }}</h3>
+                      <p class="text-sm text-slate-500 font-medium">{{ formatMethod(item.target.method) }}</p>
                     </div>
                   </div>
                   <button
@@ -1220,26 +1129,30 @@
                 <!-- Current Rate -->
                 <div class="flex items-baseline justify-between">
                   <div>
-                    <div class="text-3xl font-bold text-slate-900">{{ getCorridorRate(item.target.from, item.target.to).rate }}</div>
-                    <div class="text-sm text-slate-500 mt-0.5">{{ item.target.to }} per {{ item.target.from }}</div>
+                    <div class="text-3xl font-bold text-slate-900">{{ getWatchlistSnapshot(item.id).rateLabel }}</div>
+                    <div class="text-sm text-slate-500 mt-0.5">
+                      {{ getCurrencyCode(item.target.to) }} per {{ getCurrencyCode(item.target.from) }}
+                    </div>
                   </div>
                   <div class="text-right">
                     <div
                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-semibold"
-                      :class="getCorridorRate(item.target.from, item.target.to).change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+                      :class="getWatchlistSnapshot(item.id).change === null
+                        ? 'bg-slate-100 text-slate-500'
+                        : (getWatchlistSnapshot(item.id).change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')"
                     >
                       <svg
                         class="w-4 h-4"
-                        :class="getCorridorRate(item.target.from, item.target.to).change >= 0 ? '' : 'rotate-180'"
+                        :class="getWatchlistSnapshot(item.id).change !== null && getWatchlistSnapshot(item.id).change < 0 ? 'rotate-180' : ''"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                       </svg>
-                      {{ getCorridorRate(item.target.from, item.target.to).change >= 0 ? '+' : '' }}{{ getCorridorRate(item.target.from, item.target.to).change }}%
+                      {{ formatPercentValue(getWatchlistSnapshot(item.id).change) }}
                     </div>
-                    <div class="text-xs text-slate-500 mt-1">24h change</div>
+                    <div class="text-xs text-slate-500 mt-1">1d change</div>
                   </div>
                 </div>
               </div>
@@ -1261,7 +1174,19 @@
                 
                 <!-- Enhanced Chart -->
                 <div class="relative h-32 mb-3">
-                  <svg class="w-full h-full" viewBox="0 0 400 120" preserveAspectRatio="none">
+                  <div
+                    v-if="isWatchlistHistoryLoading(item.id)"
+                    class="absolute inset-0 flex items-center justify-center text-xs text-slate-400"
+                  >
+                    Loading rate history...
+                  </div>
+                  <div
+                    v-else-if="getWatchlistSnapshot(item.id).history.length < 2"
+                    class="absolute inset-0 flex items-center justify-center text-xs text-slate-400"
+                  >
+                    No rate history yet
+                  </div>
+                  <svg v-else class="w-full h-full" viewBox="0 0 400 120" preserveAspectRatio="none">
                     <defs>
                       <linearGradient :id="`chartGradient-${item.id}`" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.2" />
@@ -1326,37 +1251,23 @@
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
-                    <span class="text-xs font-semibold text-slate-700 uppercase tracking-wide">Best Provider Today</span>
+                    <span class="text-xs font-semibold text-slate-700 uppercase tracking-wide">Best Provider (Latest)</span>
                   </div>
-                  <span
-                    v-if="getBestProviderStreak(item.target.from, item.target.to) > 0"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700"
-                  >
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                    </svg>
-                    {{ getBestProviderStreak(item.target.from, item.target.to) }} day streak
-                  </span>
                 </div>
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
-                    <span class="text-lg font-bold text-slate-700">{{ getBestProvider(item.target.from, item.target.to).name.charAt(0) }}</span>
+                <div v-if="getBestProviderForItem(item.id)" class="flex items-center gap-3">
+                  <div class="flex h-10 w-24 items-center justify-center flex-shrink-0">
+                    <ProviderLogo
+                      :slug="getBestProviderForItem(item.id)?.slug || ''"
+                      :alt="getBestProviderForItem(item.id)?.name"
+                      size="small"
+                      class="object-contain"
+                    />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1">
-                      <h4 class="font-semibold text-slate-900 text-sm">{{ getBestProvider(item.target.from, item.target.to).name }}</h4>
-                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">
-                        Best Value
-                      </span>
-                    </div>
-                    <div class="flex items-center gap-3 text-xs text-slate-600">
-                      <span>Fee: ${{ getBestProvider(item.target.from, item.target.to).fee }}</span>
-                      <span>•</span>
-                      <span>{{ getBestProvider(item.target.from, item.target.to).bestFor }}</span>
-                    </div>
+                    <h4 class="font-semibold text-slate-900 text-sm">{{ getBestProviderForItem(item.id)?.name }}</h4>
                   </div>
                   <NuxtLink
-                    :to="`/learn/providers/${getBestProvider(item.target.from, item.target.to).slug}`"
+                    :to="`/learn/providers/${getBestProviderForItem(item.id)?.slug}`"
                     class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
                   >
                     Learn more
@@ -1365,19 +1276,42 @@
                     </svg>
                   </NuxtLink>
                 </div>
+                <div v-else-if="isProviderRatesLoadingForItem(item.id)" class="text-sm text-slate-500">
+                  Loading provider quotes...
+                </div>
+                <div v-else class="text-sm text-slate-500">
+                  No provider quotes yet.
+                </div>
               </div>
 
               <!-- Quick Actions -->
               <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex gap-2">
-                <NuxtLink
-                  :to="getCorridorUrl(item.target.from, item.target.to)"
-                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                <button
+                  type="button"
+                  :disabled="comparingCorridor === item.id"
+                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
+                  @click="handleCompareClick(item)"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    v-if="comparingCorridor === item.id"
+                    class="w-4 h-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <svg
+                    v-else
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  Compare
-                </NuxtLink>
+                  {{ comparingCorridor === item.id ? 'Loading...' : 'Compare' }}
+                </button>
                 <button
                   type="button"
                   class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
@@ -1420,7 +1354,7 @@
                 <span
                   v-if="!isPlus"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  :class="alertsLimitPercent >= 100 ? 'bg-red-100 text-red-700' : alertsLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
+                  :class="alertsLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : alertsLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
                 >
                   {{ alertsCount }}/{{ limits.alerts }} used
                 </span>
@@ -1469,18 +1403,18 @@
           <!-- Limit Warning Banner -->
           <div
             v-if="!isPlus && alertsLimitPercent >= 100"
-            class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+            class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"
           >
-            <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
             <div class="flex-1">
-              <h4 class="text-sm font-medium text-amber-800">Alert limit reached</h4>
-              <p class="text-sm text-amber-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alert. Upgrade to Plus for unlimited alerts.</p>
+              <h4 class="text-sm font-medium text-brand-600">Alert limit reached</h4>
+              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alert. Upgrade to Plus for unlimited alerts.</p>
             </div>
             <NuxtLink
               to="/plus"
-              class="flex-shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 transition-colors"
+              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
             >
               Upgrade
             </NuxtLink>
@@ -1605,8 +1539,8 @@
                 <div class="flex items-center justify-between text-sm mb-3 p-2 bg-slate-50 rounded-lg">
                   <div class="text-center flex-1">
                     <div class="text-xs text-slate-400 mb-0.5">Current</div>
-                    <div class="font-semibold text-slate-900">{{ getCorridorRate(getAlertCorridor(alert).from, getAlertCorridor(alert).to).rate }}</div>
-                    <div class="text-xs text-slate-500">{{ getAlertCorridor(alert).to }}</div>
+                    <div class="font-semibold text-slate-900">{{ getAlertSnapshot(alert).rateLabel }}</div>
+                    <div class="text-xs text-slate-500">{{ getCurrencyCode(getAlertCorridor(alert).to) }}</div>
                   </div>
                   <div class="px-3">
                     <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1616,7 +1550,7 @@
                   <div class="text-center flex-1">
                     <div class="text-xs text-slate-400 mb-0.5">Target</div>
                     <div class="font-semibold" :class="getAlertProgress(alert) >= 100 ? 'text-emerald-600' : 'text-blue-600'">{{ alert.rule.value }}</div>
-                    <div class="text-xs text-slate-500">{{ alert.rule.currency || getAlertCorridor(alert).to }}</div>
+                    <div class="text-xs text-slate-500">{{ alert.rule.currency || getCurrencyCode(getAlertCorridor(alert).to) }}</div>
                   </div>
                 </div>
 
@@ -1767,119 +1701,80 @@
               </div>
 
               <!-- Export form for Plus users -->
-              <div v-else class="space-y-5">
+              <div v-else class="space-y-6">
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Data to Export</label>
-                  <div class="space-y-2">
-                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors" :class="exportSettings.dataType === 'history' ? 'border-blue-500 bg-blue-50' : ''">
+                  <label class="block text-sm font-semibold text-slate-900 mb-3">Data to Export</label>
+                  <div class="space-y-2.5">
+                    <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all" :class="exportSettings.dataType === 'history' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'">
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="history"
                         class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                       />
-                      <div>
-                        <div class="text-sm font-medium text-slate-900">Comparison History</div>
-                        <div class="text-xs text-slate-500">All your rate comparisons</div>
+                      <div class="flex-1">
+                        <div class="text-sm font-semibold text-slate-900">Comparison History</div>
+                        <div class="text-xs text-slate-500 mt-0.5">All your rate comparisons</div>
                       </div>
                     </label>
-                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors" :class="exportSettings.dataType === 'watchlist' ? 'border-blue-500 bg-blue-50' : ''">
+                    <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all" :class="exportSettings.dataType === 'watchlist' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'">
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="watchlist"
                         class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                       />
-                      <div>
-                        <div class="text-sm font-medium text-slate-900">Watchlist</div>
-                        <div class="text-xs text-slate-500">Saved corridors and rates</div>
+                      <div class="flex-1">
+                        <div class="text-sm font-semibold text-slate-900">Watchlist</div>
+                        <div class="text-xs text-slate-500 mt-0.5">Saved corridors and rates</div>
                       </div>
                     </label>
-                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors" :class="exportSettings.dataType === 'alerts' ? 'border-blue-500 bg-blue-50' : ''">
+                    <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all" :class="exportSettings.dataType === 'alerts' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'">
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="alerts"
                         class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                       />
-                      <div>
-                        <div class="text-sm font-medium text-slate-900">Alerts</div>
-                        <div class="text-xs text-slate-500">Alert rules and history</div>
+                      <div class="flex-1">
+                        <div class="text-sm font-semibold text-slate-900">Alerts</div>
+                        <div class="text-xs text-slate-500 mt-0.5">Alert rules and history</div>
                       </div>
                     </label>
-                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors" :class="exportSettings.dataType === 'all' ? 'border-blue-500 bg-blue-50' : ''">
+                    <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all" :class="exportSettings.dataType === 'all' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'">
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="all"
                         class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                       />
-                      <div>
-                        <div class="text-sm font-medium text-slate-900">All Data</div>
-                        <div class="text-xs text-slate-500">Complete export of all your data</div>
+                      <div class="flex-1">
+                        <div class="text-sm font-semibold text-slate-900">All Data</div>
+                        <div class="text-xs text-slate-500 mt-0.5">Complete export of all your data</div>
                       </div>
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Date Range</label>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs text-slate-500 mb-1">From</label>
-                      <input
-                        v-model="exportSettings.dateFrom"
-                        type="date"
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-xs text-slate-500 mb-1">To</label>
-                      <input
-                        v-model="exportSettings.dateTo"
-                        type="date"
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex gap-2 mt-2">
-                    <button
-                      type="button"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      @click="setExportDateRange('7d')"
-                    >
-                      Last 7 days
-                    </button>
-                    <button
-                      type="button"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      @click="setExportDateRange('30d')"
-                    >
-                      Last 30 days
-                    </button>
-                    <button
-                      type="button"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      @click="setExportDateRange('90d')"
-                    >
-                      Last 90 days
-                    </button>
-                    <button
-                      type="button"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      @click="setExportDateRange('all')"
-                    >
-                      All time
-                    </button>
-                  </div>
+                  <label class="block text-sm font-semibold text-slate-900 mb-3">Time Period</label>
+                  <select
+                    v-model="exportSettings.dateRange"
+                    class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all hover:border-slate-400"
+                    @change="setExportDateRange(exportSettings.dateRange)"
+                  >
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Format</label>
-                  <div class="flex gap-3">
+                  <label class="block text-sm font-semibold text-slate-900 mb-3">Export Format</label>
+                  <div class="grid grid-cols-2 gap-3">
                     <label
-                      class="flex-1 flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors"
-                      :class="exportSettings.format === 'csv' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                      class="flex items-center justify-center gap-2 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.format === 'csv' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'"
                     >
                       <input
                         v-model="exportSettings.format"
@@ -1890,11 +1785,11 @@
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span class="text-sm font-medium">CSV</span>
+                      <span class="text-sm font-semibold">CSV</span>
                     </label>
                     <label
-                      class="flex-1 flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors"
-                      :class="exportSettings.format === 'pdf' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                      class="flex items-center justify-center gap-2 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.format === 'pdf' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'"
                     >
                       <input
                         v-model="exportSettings.format"
@@ -1905,7 +1800,7 @@
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
-                      <span class="text-sm font-medium">PDF</span>
+                      <span class="text-sm font-semibold">PDF</span>
                     </label>
                   </div>
                 </div>
@@ -2087,17 +1982,17 @@
           </div>
 
           <!-- Ad: Extended History (Free users only) -->
-          <div v-if="!isPlus" class="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <div v-if="!isPlus" class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-5">
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div class="flex-1">
-                <h4 class="font-semibold text-amber-900 text-sm mb-1">Limited to 30-Day History</h4>
-                <p class="text-sm text-amber-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 365-day history and data exports.</p>
-                <NuxtLink to="/plus" class="inline-flex items-center gap-1 text-sm font-semibold text-amber-800 hover:text-amber-900">
+                <h4 class="font-semibold text-brand-600 text-sm mb-1">Limited to 30-Day History</h4>
+                <p class="text-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 90-day history and export.</p>
+                <NuxtLink to="/plus" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
                   Upgrade to Plus <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </NuxtLink>
               </div>
@@ -2267,6 +2162,215 @@
               </div>
             </div>
           </div>
+
+          <div class="mt-10 space-y-6">
+            <div class="grid gap-6 lg:grid-cols-3">
+              <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900">Admin Tools</h3>
+                    <p class="text-xs text-slate-500">Quick links to backend admin consoles.</p>
+                  </div>
+                </div>
+                <div class="mt-4 space-y-3">
+                  <NuxtLink
+                    v-for="link in opsAdminLinks"
+                    :key="link.label"
+                    :to="link.to"
+                    class="group flex items-start justify-between gap-4 rounded-lg border border-slate-100 px-3 py-2 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+                  >
+                    <div>
+                      <div class="text-sm font-semibold text-slate-900 group-hover:text-blue-700">{{ link.label }}</div>
+                      <div class="text-xs text-slate-500">{{ link.description }}</div>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </NuxtLink>
+                </div>
+                <div class="mt-4 text-xs text-slate-400">
+                  Admin endpoints: /analytics/*, /audit/*, /telemetry/analytics, /ops/*
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl border border-slate-200 p-6 lg:col-span-2">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900">Telemetry Analytics</h3>
+                    <p class="text-xs text-slate-500">Aggregated telemetry metrics from silver.telemetry_analytics_aggregate.</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    :disabled="telemetryLoading"
+                    @click="loadTelemetryAnalytics"
+                  >
+                    {{ telemetryLoading ? 'Refreshing...' : 'Refresh' }}
+                  </button>
+                </div>
+                <div class="mt-4 flex flex-wrap items-end gap-3">
+                  <label class="text-xs text-slate-500">
+                    Metric
+                    <select v-model="telemetryMetric" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                      <option v-for="metric in telemetryMetricOptions" :key="metric.id" :value="metric.id">{{ metric.label }}</option>
+                    </select>
+                  </label>
+                  <label class="text-xs text-slate-500">
+                    Window (hours)
+                    <select v-model.number="telemetryHours" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                      <option v-for="option in telemetryHourOptions" :key="option" :value="option">{{ option }}</option>
+                    </select>
+                  </label>
+                </div>
+                <p v-if="telemetryError" class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                  {{ telemetryError }}
+                </p>
+                <div v-else class="mt-4">
+                  <div v-if="telemetryLoading" class="text-sm text-slate-500">Loading telemetry analytics…</div>
+                  <div v-else-if="!telemetryLatest" class="text-sm text-slate-500">No telemetry aggregates yet.</div>
+                  <div v-else class="space-y-3">
+                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                      <span>Bucket: {{ formatOpsTimestamp(telemetryLatest.time_bucket) }}</span>
+                      <span v-if="telemetryWindowHours">Window: {{ telemetryWindowHours }}h</span>
+                      <span>Computed: {{ formatOpsTimestamp(telemetryLatest.computed_at) }}</span>
+                    </div>
+                    <div v-if="telemetryMetric === 'engagement'" class="grid gap-3 sm:grid-cols-2 text-sm text-slate-700">
+                      <div class="rounded-lg border border-slate-100 p-3">
+                        <div class="text-xs text-slate-400 uppercase tracking-wide">Avg engagement</div>
+                        <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(telemetryEngagement?.avg_engagement, 2) }}</div>
+                      </div>
+                      <div class="rounded-lg border border-slate-100 p-3">
+                        <div class="text-xs text-slate-400 uppercase tracking-wide">Sessions</div>
+                        <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(telemetryEngagement?.session_count, 0) }}</div>
+                      </div>
+                    </div>
+                    <div v-else class="overflow-auto">
+                      <table class="min-w-full text-sm">
+                        <thead class="text-xs uppercase text-slate-400">
+                          <tr>
+                            <th v-if="telemetryMetric === 'heatmap'" class="py-2 text-left">From</th>
+                            <th v-if="telemetryMetric === 'heatmap'" class="py-2 text-left">To</th>
+                            <th v-if="telemetryMetric === 'popular_corridors'" class="py-2 text-left">Corridor</th>
+                            <th v-if="telemetryMetric === 'provider_favorites'" class="py-2 text-left">Provider</th>
+                            <th v-if="telemetryMetric === 'provider_favorites'" class="py-2 text-left">Corridor</th>
+                            <th class="py-2 text-right">{{ telemetryMetric === 'provider_favorites' ? 'Clicks' : 'Searches' }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="row in telemetryListRows" :key="row.key" class="border-t border-slate-100">
+                            <td v-if="telemetryMetric === 'heatmap'" class="py-2 text-slate-700">{{ row.from || '—' }}</td>
+                            <td v-if="telemetryMetric === 'heatmap'" class="py-2 text-slate-700">{{ row.to || '—' }}</td>
+                            <td v-if="telemetryMetric === 'popular_corridors'" class="py-2 text-slate-700">{{ row.corridor || '—' }}</td>
+                            <td v-if="telemetryMetric === 'provider_favorites'" class="py-2 text-slate-700">{{ row.provider || '—' }}</td>
+                            <td v-if="telemetryMetric === 'provider_favorites'" class="py-2 text-slate-700">{{ row.corridor || '—' }}</td>
+                            <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.count, 0) }}</td>
+                          </tr>
+                          <tr v-if="telemetryListRows.length === 0">
+                            <td class="py-3 text-center text-xs text-slate-400" :colspan="telemetryMetric === 'heatmap' ? 3 : telemetryMetric === 'provider_favorites' ? 3 : 2">
+                              No telemetry rows yet.
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-2">
+              <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900">Analytics Snapshot</h3>
+                    <p class="text-xs text-slate-500">Top corridors and providers (last 7 days).</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    :disabled="opsAnalyticsLoading"
+                    @click="loadOpsAnalytics"
+                  >
+                    {{ opsAnalyticsLoading ? 'Refreshing...' : 'Refresh' }}
+                  </button>
+                </div>
+                <p v-if="opsAnalyticsError" class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                  {{ opsAnalyticsError }}
+                </p>
+                <div v-else class="mt-4 grid gap-6 md:grid-cols-2 text-sm">
+                  <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">Popular corridors</div>
+                    <ul class="mt-3 space-y-2">
+                      <li v-for="row in opsPopularCorridors" :key="row.corridor_id" class="flex items-center justify-between gap-4">
+                        <span class="text-slate-700">{{ row.from_country }} → {{ row.to_country }}</span>
+                        <span class="text-xs text-slate-500">{{ row.search_count }} searches</span>
+                      </li>
+                      <li v-if="!opsAnalyticsLoading && opsPopularCorridors.length === 0" class="text-xs text-slate-400">No corridor data yet.</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">Top providers</div>
+                    <ul class="mt-3 space-y-2">
+                      <li v-for="row in opsFavoriteProviders" :key="row.provider_id" class="flex items-center justify-between gap-4">
+                        <span class="text-slate-700">{{ row.provider_name || row.provider_id }}</span>
+                        <span class="text-xs text-slate-500">{{ row.click_through_rate }}% CTR</span>
+                      </li>
+                      <li v-if="!opsAnalyticsLoading && opsFavoriteProviders.length === 0" class="text-xs text-slate-400">No provider data yet.</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="mt-4 text-xs text-slate-500">
+                  <NuxtLink to="/admin/analytics" class="font-semibold text-blue-600 hover:text-blue-700">Open analytics console →</NuxtLink>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900">Audit Log Snapshot</h3>
+                    <p class="text-xs text-slate-500">Recent admin/security events (last 7 days).</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    :disabled="opsAuditLoading"
+                    @click="loadOpsAudit"
+                  >
+                    {{ opsAuditLoading ? 'Refreshing...' : 'Refresh' }}
+                  </button>
+                </div>
+                <p v-if="opsAuditError" class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                  {{ opsAuditError }}
+                </p>
+                <div v-else class="mt-4 overflow-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="text-xs uppercase text-slate-400">
+                      <tr>
+                        <th class="py-2 text-left">Time</th>
+                        <th class="py-2 text-left">Action</th>
+                        <th class="py-2 text-left">Actor</th>
+                        <th class="py-2 text-left">Severity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="log in opsAuditLogs" :key="log.event_id" class="border-t border-slate-100">
+                        <td class="py-2 text-slate-600">{{ formatOpsTimestamp(log.created_at) }}</td>
+                        <td class="py-2 text-slate-700">{{ log.action }}</td>
+                        <td class="py-2 text-slate-600">{{ log.actor_id }}</td>
+                        <td class="py-2 text-slate-600">{{ log.severity || 'info' }}</td>
+                      </tr>
+                      <tr v-if="!opsAuditLoading && opsAuditLogs.length === 0">
+                        <td colspan="4" class="py-3 text-center text-xs text-slate-400">No audit events found.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="mt-4 text-xs text-slate-500">
+                  <NuxtLink to="/admin/audit" class="font-semibold text-blue-600 hover:text-blue-700">Open audit console →</NuxtLink>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Account Tab -->
@@ -2301,59 +2405,15 @@
                 </div>
 
                 <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <!-- Profile Picture Upload -->
-                  <div class="flex items-start gap-6 mb-6">
-                    <div class="relative group">
-                      <div class="w-20 h-20 rounded-full overflow-hidden ring-4 ring-slate-100">
-                        <img
-                          v-if="user?.avatar"
-                          :src="user.avatar"
-                          :alt="user?.name || 'Profile'"
-                          class="w-full h-full object-cover"
-                        />
-                        <div
-                          v-else
-                          class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-semibold"
-                        >
-                          {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
-                        </div>
-                      </div>
-                      <label
-                        class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          class="sr-only"
-                          @change="handleAvatarUpload"
-                        />
-                      </label>
-                      <button
-                        v-if="user?.avatar"
-                        type="button"
-                        class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
-                        @click="removeAvatar"
-                      >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div class="flex-1">
-                      <h3 class="font-medium text-slate-900">{{ user?.name || 'User' }}</h3>
-                      <p class="text-sm text-slate-500">{{ user?.email }}</p>
-                      <span
-                        class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                        :class="isPlus ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
-                      >
-                        {{ isPlus ? 'Plus Member' : 'Free Plan' }}
-                      </span>
-                      <p class="text-xs text-slate-400 mt-2">Click on the photo to upload a new one</p>
-                    </div>
+                  <div class="mb-6">
+                    <h3 class="font-medium text-slate-900">{{ user?.name || 'User' }}</h3>
+                    <p class="text-sm text-slate-500">{{ user?.email }}</p>
+                    <span
+                      class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs font-medium"
+                      :class="isPlus ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+                    >
+                      {{ isPlus ? 'Plus Member' : 'Free Plan' }}
+                    </span>
                   </div>
 
                   <div class="space-y-4">
@@ -2467,7 +2527,7 @@
                       </div>
                       <div class="flex-1">
                         <h4 class="text-sm font-semibold text-slate-900">Upgrade to Plus</h4>
-                        <p class="text-xs text-slate-600 mt-0.5">Unlimited alerts, extended history, and data exports</p>
+                        <p class="text-xs text-slate-600 mt-0.5">Unlimited alerts, extended history, and export</p>
                       </div>
                       <button
                         type="button"
@@ -3007,8 +3067,12 @@ definePageMeta({ middleware: 'auth' })
 
 import type { AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { COUNTRIES } from '~/utils/countries-currencies'
+
+const { ensureHydrated } = useAuth()
+await ensureHydrated()
 
 type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
@@ -3078,7 +3142,7 @@ const {
   revokeSession,
   revokeAllSessions,
 } = useSessions()
-const { updateProfile, uploadAvatar, removeAvatar: removeAvatarApi } = useMe()
+const { updateProfile } = useMe()
 const { isPlus, limits, billing, refreshPlan } = useEntitlements()
 const billingActions = useBilling()
 const exportsApi = useExports()
@@ -3118,6 +3182,178 @@ const {
 
 const recentSearches = computed(() => recentSearchesData.value?.data ?? [])
 
+type RateHistoryEntry = {
+  date: string
+  rate: number
+  bid?: number | null
+  ask?: number | null
+  source?: string | null
+}
+
+type RateHistoryResponse = {
+  base: string
+  quote: string
+  history: RateHistoryEntry[]
+  lastUpdated: string | null
+}
+
+type ProviderRateEntry = {
+  name: string
+  rate: number
+  markupBps?: number
+  speed?: string
+  lastUpdated?: string | null
+}
+
+type ProviderRatesResponse = {
+  base: string
+  quote: string
+  midMarketRate: number | null
+  data: ProviderRateEntry[]
+}
+
+type RateSnapshot = {
+  rateLabel: string
+  rateValue: number | null
+  change: number | null
+  lastUpdated: string | null
+  history: RateHistoryEntry[]
+}
+
+type BestProviderSnapshot = ProviderRateEntry & {
+  slug: string
+}
+
+const historyDaysByTimeframe: Record<string, number> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '180d': 180,
+  '365d': 365,
+}
+
+const watchlistHistoryDays = 7
+
+const rateHistoryCache = ref<Record<string, RateHistoryResponse>>({})
+const rateHistoryLoading = ref<Record<string, boolean>>({})
+const rateHistoryErrors = ref<Record<string, string | null>>({})
+const providerRatesCache = ref<Record<string, ProviderRatesResponse>>({})
+const providerRatesLoading = ref<Record<string, boolean>>({})
+const providerRatesErrors = ref<Record<string, string | null>>({})
+
+const formatRateValue = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—'
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  })
+}
+
+const formatPercentValue = (value: number | null | undefined, includeSign = true) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—'
+  const sign = value > 0 && includeSign ? '+' : ''
+  return `${sign}${value.toFixed(2)}%`
+}
+
+const formatUpdatedTime = (value: string | null | undefined) => {
+  if (!value) return '—'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return '—'
+  return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatDateLabel = (value: string | null | undefined) => {
+  if (!value) return '—'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return '—'
+  return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+const countryOverrides: Record<string, { name: string; code: string; flag: string; currency: string }> = {
+  EU: { name: 'Eurozone', code: 'EU', flag: '🇪🇺', currency: 'EUR' },
+  UK: { name: 'United Kingdom', code: 'UK', flag: '🇬🇧', currency: 'GBP' },
+}
+
+const countryMap = [...COUNTRIES, ...Object.values(countryOverrides)].reduce((acc, c) => {
+  acc[c.code] = c
+  return acc
+}, {} as Record<string, typeof COUNTRIES[0]>)
+
+const getFlag = (code: string) => countryMap[code.toUpperCase()]?.flag || '🏳️'
+const getCountryName = (code: string) => countryMap[code.toUpperCase()]?.name || code
+const getCurrencyForCountry = (code: string) => countryMap[code.toUpperCase()]?.currency || null
+const getCurrencyCode = (code: string) => getCurrencyForCountry(code) || code.toUpperCase()
+
+const buildHistoryKey = (base: string, quote: string, days: number) => `${base}-${quote}-${days}`
+const buildProviderKey = (base: string, quote: string) => `${base}-${quote}`
+
+const getPairForCorridor = (from: string, to: string) => {
+  const base = getCurrencyForCountry(from.toUpperCase())
+  const quote = getCurrencyForCountry(to.toUpperCase())
+  if (!base || !quote) return null
+  return { base, quote }
+}
+
+const getPairForTarget = (target: WatchTarget) => {
+  if (target.type === 'corridor') {
+    return getPairForCorridor(target.from, target.to)
+  }
+  if (target.type === 'fxPair') {
+    return { base: target.base.toUpperCase(), quote: target.quote.toUpperCase() }
+  }
+  return null
+}
+
+const getRateHistory = (base: string, quote: string, days: number) => {
+  return rateHistoryCache.value[buildHistoryKey(base, quote, days)]?.history ?? []
+}
+
+const getRateHistoryMeta = (base: string, quote: string, days: number) => {
+  return rateHistoryCache.value[buildHistoryKey(base, quote, days)] ?? null
+}
+
+const loadRateHistory = async (base: string, quote: string, days: number) => {
+  const key = buildHistoryKey(base, quote, days)
+  if (rateHistoryLoading.value[key] || rateHistoryCache.value[key]) return
+  rateHistoryLoading.value[key] = true
+  rateHistoryErrors.value[key] = null
+  try {
+    const response = await request<RateHistoryResponse>('/rates/history', {
+      query: { base, quote, days },
+    })
+    rateHistoryCache.value = { ...rateHistoryCache.value, [key]: response }
+  } catch (error: any) {
+    rateHistoryErrors.value[key] = error?.message || 'Unable to load rate history.'
+    rateHistoryCache.value = {
+      ...rateHistoryCache.value,
+      [key]: { base, quote, history: [], lastUpdated: null },
+    }
+  } finally {
+    rateHistoryLoading.value[key] = false
+  }
+}
+
+const loadProviderRates = async (base: string, quote: string) => {
+  const key = buildProviderKey(base, quote)
+  if (providerRatesLoading.value[key] || providerRatesCache.value[key]) return
+  providerRatesLoading.value[key] = true
+  providerRatesErrors.value[key] = null
+  try {
+    const response = await request<ProviderRatesResponse>('/rates/providers', {
+      query: { base, quote },
+    })
+    providerRatesCache.value = { ...providerRatesCache.value, [key]: response }
+  } catch (error: any) {
+    providerRatesErrors.value[key] = error?.message || 'Unable to load provider rates.'
+    providerRatesCache.value = {
+      ...providerRatesCache.value,
+      [key]: { base, quote, midMarketRate: null, data: [] },
+    }
+  } finally {
+    providerRatesLoading.value[key] = false
+  }
+}
+
 const watchlistFindById = (id: string) => watchlistItems.value.find(i => i.id === id) ?? null
 
 const watchlistLimitPercent = computed(() => {
@@ -3129,6 +3365,9 @@ const alertsLimitPercent = computed(() => {
   if (limits.value.alerts === 'unlimited') return 0
   return (alertsCount.value / (limits.value.alerts as number)) * 100
 })
+
+const watchlistLimitReached = computed(() => !isPlus.value && watchlistLimitPercent.value >= 100)
+const alertsLimitReached = computed(() => !isPlus.value && alertsLimitPercent.value >= 100)
 
 const activeTab = computed<DashboardTab>(() => {
   const raw = route.query.tab
@@ -3212,6 +3451,48 @@ type OpsHealthResponse = {
   }
 }
 
+type TelemetryAggregateRow = {
+  metric: string
+  value: unknown
+  time_bucket: string
+  dimensions: Record<string, unknown> | null
+  computed_at: string
+}
+
+type TelemetryListRow = {
+  key: string
+  from?: string
+  to?: string
+  provider?: string
+  corridor?: string
+  count: number
+}
+
+type OpsAnalyticsCorridor = {
+  corridor_id: string
+  from_country: string
+  to_country: string
+  search_count: number
+  click_count?: number
+  trend?: string
+  trend_percentage?: number
+}
+
+type OpsAnalyticsProvider = {
+  provider_id: string
+  provider_name?: string | null
+  click_count?: number
+  click_through_rate: number
+}
+
+type OpsAuditLog = {
+  event_id: string
+  created_at: string
+  action: string
+  actor_id: string
+  severity?: string | null
+}
+
 type BillingInvoice = {
   id: string
   date: string | null
@@ -3227,6 +3508,19 @@ const opsProviders = [
   { id: 'worldremit', label: 'WorldRemit', endpoint: '/ops/worldremit/health' },
   { id: 'xe', label: 'XE', endpoint: '/ops/xe/health' },
   { id: 'wise', label: 'Wise', endpoint: '/ops/wise/health' },
+] as const
+
+const opsAdminLinks = [
+  {
+    label: 'Analytics Console',
+    description: 'Traffic, corridor demand, provider CTR, and savings metrics.',
+    to: '/admin/analytics',
+  },
+  {
+    label: 'Audit Log Console',
+    description: 'Security, compliance, and admin event trails.',
+    to: '/admin/audit',
+  },
 ] as const
 
 const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>({
@@ -3252,7 +3546,64 @@ const opsErrors = ref<Record<OpsProviderId, string | null>>({
 })
 const opsHasLoaded = ref(false)
 
+const telemetryMetricOptions = [
+  { id: 'popular_corridors', label: 'Popular Corridors' },
+  { id: 'provider_favorites', label: 'Provider Favorites' },
+  { id: 'heatmap', label: 'Heatmap' },
+  { id: 'engagement', label: 'Engagement' },
+] as const
+
+const telemetryHourOptions = [6, 24, 72, 168, 720] as const
+
+const telemetryMetric = ref<(typeof telemetryMetricOptions)[number]['id']>('popular_corridors')
+const telemetryHours = ref<number>(24)
+const telemetryRows = ref<TelemetryAggregateRow[]>([])
+const telemetryLoading = ref(false)
+const telemetryError = ref<string | null>(null)
+const telemetryHasLoaded = ref(false)
+
+const opsAnalyticsLoading = ref(false)
+const opsAnalyticsError = ref<string | null>(null)
+const opsPopularCorridors = ref<OpsAnalyticsCorridor[]>([])
+const opsFavoriteProviders = ref<OpsAnalyticsProvider[]>([])
+const opsAnalyticsHasLoaded = ref(false)
+
+const opsAuditLoading = ref(false)
+const opsAuditError = ref<string | null>(null)
+const opsAuditLogs = ref<OpsAuditLog[]>([])
+const opsAuditHasLoaded = ref(false)
+
 const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]))
+
+const opsAutoRefreshMs = 60_000
+const opsInsightsRefreshMs = 300_000
+let opsAutoRefreshTimer: ReturnType<typeof setInterval> | null = null
+let opsInsightsRefreshTimer: ReturnType<typeof setInterval> | null = null
+
+const startOpsAutoRefresh = () => {
+  if (opsAutoRefreshTimer || opsInsightsRefreshTimer) return
+  opsAutoRefreshTimer = setInterval(() => {
+    if (activeTab.value !== 'ops') return
+    void refreshAllOps()
+  }, opsAutoRefreshMs)
+  opsInsightsRefreshTimer = setInterval(() => {
+    if (activeTab.value !== 'ops') return
+    void loadTelemetryAnalytics()
+    void loadOpsAnalytics()
+    void loadOpsAudit()
+  }, opsInsightsRefreshMs)
+}
+
+const stopOpsAutoRefresh = () => {
+  if (opsAutoRefreshTimer) {
+    clearInterval(opsAutoRefreshTimer)
+    opsAutoRefreshTimer = null
+  }
+  if (opsInsightsRefreshTimer) {
+    clearInterval(opsInsightsRefreshTimer)
+    opsInsightsRefreshTimer = null
+  }
+}
 
 const formatOpsTimestamp = (value: string | null | undefined) => {
   if (!value) return 'n/a'
@@ -3295,18 +3646,68 @@ const toOpsErrorMessage = (error: unknown) => {
   const candidate = error as { statusCode?: number; status?: number; message?: string; data?: { message?: string } }
   const status = candidate?.statusCode ?? candidate?.status
   if (status === 401 || status === 403) {
-    return 'Admin access required to view ops health.'
+    return 'Admin access required to view ops data.'
   }
-  return candidate?.data?.message ?? candidate?.message ?? 'Unable to load ops health.'
+  return candidate?.data?.message ?? candidate?.message ?? 'Unable to load ops data.'
 }
+
+const telemetryLatest = computed(() => {
+  if (!telemetryRows.value.length) return null
+  return [...telemetryRows.value].sort((a, b) => new Date(b.time_bucket).getTime() - new Date(a.time_bucket).getTime())[0]
+})
+
+const telemetryWindowHours = computed(() => {
+  const dimensions = telemetryLatest.value?.dimensions
+  if (!dimensions || typeof dimensions !== 'object') return null
+  const value = (dimensions as Record<string, unknown>).window_hours
+  return typeof value === 'number' ? value : null
+})
+
+const telemetryEngagement = computed(() => {
+  if (telemetryMetric.value !== 'engagement') return null
+  const payload = telemetryLatest.value?.value
+  if (!payload || typeof payload !== 'object') return null
+  return payload as { avg_engagement?: number; session_count?: number }
+})
+
+const telemetryListRows = computed<TelemetryListRow[]>(() => {
+  if (!telemetryLatest.value) return []
+  const payload = telemetryLatest.value.value
+  if (!Array.isArray(payload)) return []
+  if (telemetryMetric.value === 'popular_corridors') {
+    return payload.slice(0, 12).map((row: any, index: number) => ({
+      key: `${row.corridor_id ?? 'corridor'}-${index}`,
+      corridor: row.corridor_id,
+      count: Number(row.search_count) || 0,
+    }))
+  }
+  if (telemetryMetric.value === 'provider_favorites') {
+    return payload.slice(0, 12).map((row: any, index: number) => ({
+      key: `${row.provider_id ?? 'provider'}-${index}`,
+      provider: row.provider_id,
+      corridor: row.corridor_id,
+      count: Number(row.click_count) || 0,
+    }))
+  }
+  if (telemetryMetric.value === 'heatmap') {
+    return payload.slice(0, 12).map((row: any, index: number) => ({
+      key: `${row.from_country ?? 'from'}-${row.to_country ?? 'to'}-${index}`,
+      from: row.from_country,
+      to: row.to_country,
+      count: Number(row.search_count) || 0,
+    }))
+  }
+  return []
+})
 
 const loadOpsHealth = async (providerId: OpsProviderId) => {
   const provider = opsProviders.find(item => item.id === providerId)
   if (!provider) return
+  if (opsLoading.value[providerId]) return
   opsLoading.value[providerId] = true
   opsErrors.value[providerId] = null
   try {
-    const response = await $fetch<OpsHealthResponse>(provider.endpoint)
+    const response = await request<OpsHealthResponse>(provider.endpoint)
     opsState.value[providerId] = response
   } catch (error) {
     opsErrors.value[providerId] = toOpsErrorMessage(error)
@@ -3320,10 +3721,101 @@ const refreshAllOps = async () => {
   await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
 }
 
+const buildOpsDateRange = (days: number) => {
+  const end = new Date()
+  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000)
+  return { start_date: start.toISOString(), end_date: end.toISOString() }
+}
+
+const loadTelemetryAnalytics = async () => {
+  if (telemetryLoading.value) return
+  telemetryHasLoaded.value = true
+  telemetryLoading.value = true
+  telemetryError.value = null
+  try {
+    const response = await request<{ data: TelemetryAggregateRow[] }>('/telemetry/analytics', {
+      query: {
+        metric: telemetryMetric.value,
+        hours: telemetryHours.value,
+      },
+    })
+    telemetryRows.value = response?.data ?? []
+  } catch (error) {
+    telemetryError.value = toOpsErrorMessage(error)
+    telemetryRows.value = []
+  } finally {
+    telemetryLoading.value = false
+  }
+}
+
+const loadOpsAnalytics = async () => {
+  if (opsAnalyticsLoading.value) return
+  opsAnalyticsHasLoaded.value = true
+  opsAnalyticsLoading.value = true
+  opsAnalyticsError.value = null
+  const range = buildOpsDateRange(7)
+  try {
+    const [corridors, providers] = await Promise.all([
+      request<{ corridors: OpsAnalyticsCorridor[] }>('/analytics/corridors', {
+        query: { ...range, limit: 6 },
+      }),
+      request<{ providers: OpsAnalyticsProvider[] }>('/analytics/providers', {
+        query: { ...range, limit: 6 },
+      }),
+    ])
+    opsPopularCorridors.value = corridors?.corridors ?? []
+    opsFavoriteProviders.value = providers?.providers ?? []
+  } catch (error) {
+    opsAnalyticsError.value = toOpsErrorMessage(error)
+    opsPopularCorridors.value = []
+    opsFavoriteProviders.value = []
+  } finally {
+    opsAnalyticsLoading.value = false
+  }
+}
+
+const loadOpsAudit = async () => {
+  if (opsAuditLoading.value) return
+  opsAuditHasLoaded.value = true
+  opsAuditLoading.value = true
+  opsAuditError.value = null
+  const range = buildOpsDateRange(7)
+  try {
+    const response = await request<{ logs: OpsAuditLog[] }>('/audit/logs', {
+      query: { ...range, limit: 8, offset: 0 },
+    })
+    opsAuditLogs.value = response?.logs ?? []
+  } catch (error) {
+    opsAuditError.value = toOpsErrorMessage(error)
+    opsAuditLogs.value = []
+  } finally {
+    opsAuditLoading.value = false
+  }
+}
+
 watch(() => activeTab.value, (tab) => {
+  if (tab === 'ops') {
+    startOpsAutoRefresh()
+  } else {
+    stopOpsAutoRefresh()
+  }
   if (tab === 'ops' && !opsHasLoaded.value) {
     void refreshAllOps()
   }
+  if (tab === 'ops' && !telemetryHasLoaded.value) {
+    void loadTelemetryAnalytics()
+  }
+  if (tab === 'ops' && !opsAnalyticsHasLoaded.value) {
+    void loadOpsAnalytics()
+  }
+  if (tab === 'ops' && !opsAuditHasLoaded.value) {
+    void loadOpsAudit()
+  }
+})
+
+watch([() => telemetryMetric.value, () => telemetryHours.value], () => {
+  if (activeTab.value !== 'ops') return
+  void loadTelemetryAnalytics()
 })
 
 // Form state
@@ -3332,150 +3824,246 @@ const graphTimeframe = ref('7d')
 
 // Rate Checker state
 const showCorridorSelector = ref(false)
-const corridorSearch = ref('')
 const selectedCorridor = ref({ from: 'US', to: 'PH' })
 const customCorridor = ref({ from: 'US', to: 'PH' })
 
 const timeframePeriods = [
   { label: '7D', value: '7d' },
   { label: '1M', value: '30d' },
-  { label: '3M', value: '90d' },
-  { label: '6M', value: '180d' },
-  { label: '1Y', value: '365d' },
+  { label: '3M', value: '90d', plusOnly: true },
+  { label: '6M', value: '180d', plusOnly: true },
+  { label: '1Y', value: '365d', plusOnly: true },
 ]
 
-const popularCorridors = [
-  { from: 'US', to: 'PH', label: 'USD → PHP' },
-  { from: 'US', to: 'MX', label: 'USD → MXN' },
-  { from: 'US', to: 'IN', label: 'USD → INR' },
-  { from: 'GB', to: 'IN', label: 'GBP → INR' },
-  { from: 'GB', to: 'PK', label: 'GBP → PKR' },
-  { from: 'CA', to: 'PH', label: 'CAD → PHP' },
-  { from: 'AU', to: 'PH', label: 'AUD → PHP' },
-  { from: 'EU', to: 'PH', label: 'EUR → PHP' },
-]
+const isTimeframeLocked = (value: string) => {
+  if (isPlus.value) return false
+  return value === '90d' || value === '180d' || value === '365d'
+}
 
-const fromCountries = [
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'EU', name: 'Eurozone' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-]
-
-const toCountries = [
-  { code: 'PH', name: 'Philippines' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'IN', name: 'India' },
-  { code: 'PK', name: 'Pakistan' },
-  { code: 'BD', name: 'Bangladesh' },
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'VN', name: 'Vietnam' },
-]
-
-const watchlistFromOptions = computed(() => [
-  { label: 'USD - US Dollar', value: 'US' },
-  { label: 'GBP - British Pound', value: 'GB' },
-  { label: 'EUR - Euro', value: 'EU' },
-  { label: 'CAD - Canadian Dollar', value: 'CA' },
-  { label: 'AUD - Australian Dollar', value: 'AU' },
-])
-
-const watchlistToOptions = computed(() => [
-  { label: 'PHP - Philippine Peso', value: 'PH' },
-  { label: 'MXN - Mexican Peso', value: 'MX' },
-  { label: 'INR - Indian Rupee', value: 'IN' },
-  { label: 'PKR - Pakistani Rupee', value: 'PK' },
-  { label: 'BDT - Bangladeshi Taka', value: 'BD' },
-])
-
-const inlineFromOptions = computed(() => {
-  return fromCountries.map(c => ({
-    label: `${getFlag(c.code)} ${c.code} - ${c.name}`,
-    value: c.code,
-    code: c.code,
-    flag: getFlag(c.code),
-    name: c.name,
-  }))
+const countryOptions = computed(() => {
+  return Object.values(countryMap)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({
+      label: `${getFlag(c.code)} ${c.code} - ${c.name}`,
+      value: c.code,
+      code: c.code,
+      flag: getFlag(c.code),
+      name: c.name,
+    }))
 })
 
-const inlineToOptions = computed(() => {
-  return toCountries.map(c => ({
-    label: `${getFlag(c.code)} ${c.code} - ${c.name}`,
-    value: c.code,
-    code: c.code,
-    flag: getFlag(c.code),
-    name: c.name,
-  }))
+const inlineFromOptions = computed(() => countryOptions.value)
+const inlineToOptions = computed(() => countryOptions.value)
+
+
+const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30)
+
+const selectedPair = computed(() => {
+  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
 })
 
-const filteredWatchlistCorridors = computed(() => {
-  if (!corridorSearch.value) return watchlistItems.value.slice(0, 3)
-  const search = corridorSearch.value.toLowerCase()
-  return watchlistItems.value.filter(item => 
-    item.label.toLowerCase().includes(search) ||
-    item.target.from.toLowerCase().includes(search) ||
-    item.target.to.toLowerCase().includes(search)
-  ).slice(0, 3)
+const selectedSnapshot = computed<RateSnapshot>(() => {
+  const pair = selectedPair.value
+  if (!pair) {
+    return { rateLabel: '—', rateValue: null, change: null, lastUpdated: null, history: [] }
+  }
+  const history = getRateHistory(pair.base, pair.quote, selectedHistoryDays.value)
+  if (!history.length) {
+    return { rateLabel: '—', rateValue: null, change: null, lastUpdated: null, history }
+  }
+  const latest = history[history.length - 1]
+  const previous = history.length > 1 ? history[history.length - 2] : null
+  const change = previous && previous.rate > 0
+    ? ((latest.rate - previous.rate) / previous.rate) * 100
+    : null
+  const meta = getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
+  return {
+    rateLabel: formatRateValue(latest.rate),
+    rateValue: latest.rate,
+    change,
+    lastUpdated: meta?.lastUpdated ?? latest.date,
+    history,
+  }
 })
 
-const filteredPopularCorridors = computed(() => {
-  if (!corridorSearch.value) return popularCorridors
-  const search = corridorSearch.value.toLowerCase()
-  return popularCorridors.filter(c => 
-    c.label.toLowerCase().includes(search) ||
-    c.from.toLowerCase().includes(search) ||
-    c.to.toLowerCase().includes(search)
-  )
+const selectedHistoryLoading = computed(() => {
+  const pair = selectedPair.value
+  if (!pair) return false
+  const key = buildHistoryKey(pair.base, pair.quote, selectedHistoryDays.value)
+  return Boolean(rateHistoryLoading.value[key])
 })
 
 const currentRate = computed(() => {
-  const rates: Record<string, { rate: string; change: number }> = {
-    'US-PH': { rate: '56.82', change: 2.3 },
-    'US-MX': { rate: '17.24', change: -0.8 },
-    'US-IN': { rate: '83.12', change: 0.5 },
-    'GB-IN': { rate: '105.42', change: 1.2 },
-    'GB-PK': { rate: '354.21', change: -1.5 },
-    'CA-PH': { rate: '41.23', change: 0.9 },
-    'AU-PH': { rate: '37.15', change: 1.8 },
-    'EU-PH': { rate: '61.45', change: 0.3 },
-  }
-  const key = `${selectedCorridor.value.from}-${selectedCorridor.value.to}`
-  const data = rates[key] || { rate: '1.00', change: 0 }
   return {
-    ...data,
-    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    rate: selectedSnapshot.value.rateLabel,
+    change: selectedSnapshot.value.change,
+    lastUpdated: formatUpdatedTime(selectedSnapshot.value.lastUpdated),
+    isAvailable: selectedSnapshot.value.rateValue !== null,
   }
 })
 
 const rateStats = computed(() => {
-  const baseRate = parseFloat(currentRate.value.rate)
+  const history = selectedSnapshot.value.history
+  if (!history.length) {
+    return { high: '—', low: '—', average: '—', volatility: '—', hasData: false }
+  }
+  const values = history.map(point => point.rate).filter(Number.isFinite)
+  if (!values.length) {
+    return { high: '—', low: '—', average: '—', volatility: '—', hasData: false }
+  }
+  const high = Math.max(...values)
+  const low = Math.min(...values)
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length
+  const variance = values.reduce((sum, value) => sum + Math.pow(value - average, 2), 0) / values.length
+  const volatility = average > 0 ? (Math.sqrt(variance) / average) * 100 : 0
   return {
-    high: (baseRate * 1.03).toFixed(2),
-    low: (baseRate * 0.97).toFixed(2),
-    average: (baseRate * 1.005).toFixed(2),
-    volatility: 'Low',
+    high: formatRateValue(high),
+    low: formatRateValue(low),
+    average: formatRateValue(average),
+    volatility: formatPercentValue(volatility, false),
+    hasData: true,
+  }
+})
+
+watch([selectedPair, selectedHistoryDays], ([pair, days]) => {
+  if (!pair) return
+  void loadRateHistory(pair.base, pair.quote, days)
+}, { immediate: true })
+
+watch(() => isPlus.value, (value) => {
+  if (!value && isTimeframeLocked(graphTimeframe.value)) {
+    graphTimeframe.value = '30d'
   }
 })
 
 function selectCorridor(from: string, to: string) {
   selectedCorridor.value = { from, to }
   showCorridorSelector.value = false
-  corridorSearch.value = ''
 }
 
 function getTimeframeStartLabel() {
-  const days = graphTimeframe.value === '7d' ? 7 
-    : graphTimeframe.value === '30d' ? 30 
-    : graphTimeframe.value === '90d' ? 90
-    : graphTimeframe.value === '180d' ? 180
-    : 365
+  if (selectedSnapshot.value.history.length > 0) {
+    return formatDateLabel(selectedSnapshot.value.history[0].date)
+  }
+  const days = selectedHistoryDays.value
   const date = new Date()
   date.setDate(date.getDate() - days)
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function handleAddToWatchlist() {
+const watchlistPairs = computed(() => {
+  const pairs = new Map<string, { base: string; quote: string }>()
+  watchlistItems.value.forEach((item) => {
+    const pair = getPairForTarget(item.target)
+    if (!pair) return
+    pairs.set(buildProviderKey(pair.base, pair.quote), pair)
+  })
+  return Array.from(pairs.values())
+})
+
+watch(watchlistPairs, (pairs) => {
+  pairs.forEach((pair) => {
+    void loadRateHistory(pair.base, pair.quote, watchlistHistoryDays)
+    void loadProviderRates(pair.base, pair.quote)
+  })
+}, { immediate: true })
+
+const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
+  const map: Record<string, RateSnapshot> = {}
+  watchlistItems.value.forEach((item) => {
+    const pair = getPairForTarget(item.target)
+    if (!pair) return
+    const history = getRateHistory(pair.base, pair.quote, watchlistHistoryDays)
+    if (!history.length) {
+      map[item.id] = { rateLabel: '—', rateValue: null, change: null, lastUpdated: null, history }
+      return
+    }
+    const latest = history[history.length - 1]
+    const previous = history.length > 1 ? history[history.length - 2] : null
+    const change = previous && previous.rate > 0
+      ? ((latest.rate - previous.rate) / previous.rate) * 100
+      : null
+    const meta = getRateHistoryMeta(pair.base, pair.quote, watchlistHistoryDays)
+    map[item.id] = {
+      rateLabel: formatRateValue(latest.rate),
+      rateValue: latest.rate,
+      change,
+      lastUpdated: meta?.lastUpdated ?? latest.date,
+      history,
+    }
+  })
+  return map
+})
+
+const getWatchlistSnapshot = (itemId: string) => {
+  return watchlistSnapshots.value[itemId] ?? {
+    rateLabel: '—',
+    rateValue: null,
+    change: null,
+    lastUpdated: null,
+    history: [],
+  }
+}
+
+const isWatchlistHistoryLoading = (itemId: string) => {
+  const item = watchlistItems.value.find(candidate => candidate.id === itemId)
+  if (!item) return false
+  const pair = getPairForTarget(item.target)
+  if (!pair) return false
+  const key = buildHistoryKey(pair.base, pair.quote, watchlistHistoryDays)
+  return Boolean(rateHistoryLoading.value[key])
+}
+
+const providerSlugOverrides: Record<string, string> = {
+  'western union': 'western-union',
+  'worldremit': 'worldremit',
+  'remitly': 'remitly',
+  'wise': 'wise',
+  'xe': 'xe-money',
+  'xe money': 'xe-money',
+  'xoom': 'xoom',
+  'moneygram': 'moneygram',
+  'ria': 'ria',
+}
+
+const slugifyProvider = (name: string) => {
+  const normalized = name.trim().toLowerCase()
+  if (providerSlugOverrides[normalized]) return providerSlugOverrides[normalized]
+  return normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
+const bestProviderByItemId = computed<Record<string, BestProviderSnapshot>>(() => {
+  const map: Record<string, BestProviderSnapshot> = {}
+  watchlistItems.value.forEach((item) => {
+    const pair = getPairForTarget(item.target)
+    if (!pair) return
+    const key = buildProviderKey(pair.base, pair.quote)
+    const data = providerRatesCache.value[key]?.data ?? []
+    if (!data.length) return
+    const best = data.reduce((top, next) => (next.rate > top.rate ? next : top))
+    map[item.id] = { ...best, slug: slugifyProvider(best.name) }
+  })
+  return map
+})
+
+const getBestProviderForItem = (itemId: string) => {
+  return bestProviderByItemId.value[itemId] ?? null
+}
+
+const isProviderRatesLoadingForItem = (itemId: string) => {
+  const item = watchlistItems.value.find(candidate => candidate.id === itemId)
+  if (!item) return false
+  const pair = getPairForTarget(item.target)
+  if (!pair) return false
+  const key = buildProviderKey(pair.base, pair.quote)
+  return Boolean(providerRatesLoading.value[key])
+}
+
+async function handleAddToWatchlist() {
+  if (watchlistLimitReached.value) {
+    alert('Watchlist limit reached. Upgrade to Plus for unlimited corridors.')
+    return
+  }
   const target: WatchTarget = {
     type: 'corridor',
     from: selectedCorridor.value.from,
@@ -3483,14 +4071,18 @@ function handleAddToWatchlist() {
     method: 'bank',
   }
   const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
-  const result = watchlistSave(target, { label })
+  const result = await watchlistSave(target, { label })
   
-  if (result.status === 'limit_reached') {
+  if (result.status === 'limit_reached' || result.status === 'error') {
     alert(result.message)
   }
 }
 
 function handleSetAlert() {
+  if (alertsLimitReached.value) {
+    alert('Alert limit reached. Upgrade to Plus for unlimited alerts.')
+    return
+  }
   const target: WatchTarget = {
     type: 'corridor',
     from: selectedCorridor.value.from,
@@ -3602,28 +4194,6 @@ watch(
     }
   },
 )
-
-async function handleAvatarUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-
-  try {
-    await uploadAvatar(file)
-  } catch (error) {
-    console.warn('Avatar upload failed', error)
-  } finally {
-    input.value = ''
-  }
-}
-
-async function removeAvatar() {
-  try {
-    await removeAvatarApi()
-  } catch (error) {
-    console.warn('Avatar removal failed', error)
-  }
-}
 
 async function saveProfile() {
   const trimmed = profileName.value.trim()
@@ -3742,7 +4312,7 @@ const fetchBillingHistory = async (force = false) => {
   }
 }
 
-const handleCheckoutNotice = async (value: unknown) => {
+async function handleCheckoutNotice(value: unknown) {
   if (value === 'success') {
     checkoutNotice.value = 'success'
     await refreshPlan()
@@ -3772,6 +4342,7 @@ const getDefaultDateFrom = () => {
 
 const exportSettings = ref({
   dataType: 'history' as 'history' | 'watchlist' | 'alerts' | 'all',
+  dateRange: '30d' as '7d' | '30d' | '90d',
   dateFrom: getDefaultDateFrom(),
   dateTo: new Date().toISOString().split('T')[0],
   format: 'csv' as 'csv' | 'pdf',
@@ -3791,6 +4362,7 @@ const clearExportPolling = () => {
 
 onBeforeUnmount(() => {
   clearExportPolling()
+  stopOpsAutoRefresh()
 })
 
 const triggerDownload = (url: string) => {
@@ -3828,21 +4400,23 @@ const pollExportStatus = async (jobId: string) => {
   }, 2000)
 }
 
-function setExportDateRange(range: '7d' | '30d' | '90d' | 'all') {
+function setExportDateRange(range: '7d' | '30d' | '90d') {
   const today = new Date()
   exportSettings.value.dateTo = today.toISOString().split('T')[0]
   
-  if (range === 'all') {
-    const yearAgo = new Date()
-    yearAgo.setFullYear(yearAgo.getFullYear() - 1)
-    exportSettings.value.dateFrom = yearAgo.toISOString().split('T')[0]
-  } else {
-    const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
-    const fromDate = new Date()
-    fromDate.setDate(fromDate.getDate() - days)
-    exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
-  }
+  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
+  const fromDate = new Date()
+  fromDate.setDate(fromDate.getDate() - days)
+  exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
+  exportSettings.value.dateRange = range
 }
+
+// Initialize date range when modal opens
+watch(() => showExportModal.value, (isOpen) => {
+  if (isOpen) {
+    setExportDateRange(exportSettings.value.dateRange || '30d')
+  }
+})
 
 async function handleExport() {
   exportErrorMessage.value = null
@@ -3933,35 +4507,59 @@ const handleDeleteAccount = async () => {
 
 // Graph data
 const graphData = computed(() => {
-  const days = graphTimeframe.value === '7d' ? 7 
-    : graphTimeframe.value === '30d' ? 30 
-    : graphTimeframe.value === '90d' ? 90
-    : graphTimeframe.value === '180d' ? 180
-    : 365
-  const baseRate = parseFloat(currentRate.value.rate) || 56.0
-  const data = []
-  const points = Math.min(days, 100)
-  for (let i = 0; i < points; i++) {
-    const variation = Math.sin(i * 0.3) * (baseRate * 0.02) + (Math.random() - 0.5) * (baseRate * 0.005)
-    const rate = baseRate + variation
-    const minRate = baseRate * 0.95
-    const maxRate = baseRate * 1.05
-    const y = 170 - ((rate - minRate) / (maxRate - minRate)) * 160
-    data.push({ x: (i / (points - 1)) * 400, y: Math.max(10, Math.min(170, y)) })
-  }
-  return data
+  const history = selectedSnapshot.value.history
+  if (!history.length) return []
+  const series = history.slice(-120)
+  const values = series.map(point => point.rate).filter(Number.isFinite)
+  if (!values.length) return []
+  const minRate = Math.min(...values)
+  const maxRate = Math.max(...values)
+  const range = maxRate - minRate || 1
+  return series.map((point, index) => {
+    const x = series.length === 1 ? 400 : (index / (series.length - 1)) * 400
+    const normalized = (point.rate - minRate) / range
+    const y = 170 - (normalized * 160)
+    return { x, y: Math.max(10, Math.min(170, y)) }
+  })
 })
 
 const graphPoints = computed(() => graphData.value.map(d => `${d.x},${d.y}`).join(' '))
 
-// Country flags
-const flagMap: Record<string, string> = {
-  US: '🇺🇸', GB: '🇬🇧', EU: '🇪🇺', CA: '🇨🇦', AU: '🇦🇺',
-  PH: '🇵🇭', MX: '🇲🇽', IN: '🇮🇳', PK: '🇵🇰', BD: '🇧🇩', NG: '🇳🇬', VN: '🇻🇳',
-}
-const getFlag = (code: string) => flagMap[code] || '🏳️'
+// Top Movers from Watchlist
+const topMoversLimit = computed(() => isPlus.value ? 5 : 3)
+const topMoversFromWatchlist = computed(() => {
+  if (!watchlistItems.value.length) return []
+  
+  // Deduplicate by corridor (from-to pair) to prevent showing the same corridor multiple times
+  const seen = new Set<string>()
+  const uniqueItems = watchlistItems.value.filter((item) => {
+    if (item.target.type !== 'corridor') return false
+    const key = `${item.target.from}-${item.target.to}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+  
+  return uniqueItems
+    .map((item) => {
+      const snapshot = getWatchlistSnapshot(item.id)
+      if (snapshot.change === null || snapshot.change === undefined) return null
+      return { ...item, change: snapshot.change }
+    })
+    .filter((item): item is WatchlistItem & { change: number } => Boolean(item) && Number.isFinite(item.change))
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+    .slice(0, topMoversLimit.value)
+})
 
-function handleAddWatchlist() {
+const topMoversLoading = computed(() => {
+  return watchlistItems.value.some(item => isWatchlistHistoryLoading(item.id))
+})
+
+async function handleAddWatchlist() {
+  if (watchlistLimitReached.value) {
+    alert('Watchlist limit reached. Upgrade to Plus for unlimited corridors.')
+    return
+  }
   const target: WatchTarget = {
     type: 'corridor',
     from: newWatchlist.value.from,
@@ -3969,12 +4567,46 @@ function handleAddWatchlist() {
     method: 'bank',
   }
   const label = `${newWatchlist.value.from} → ${newWatchlist.value.to}`
-  const result = watchlistSave(target, { label })
+  const result = await watchlistSave(target, { label })
   
   if (result.status === 'saved') {
     newWatchlist.value = { from: 'US', to: 'PH' }
-  } else if (result.status === 'limit_reached') {
+  } else if (result.status === 'already_saved') {
+    // Already in watchlist, just reset the form
+    newWatchlist.value = { from: 'US', to: 'PH' }
+  } else if (result.status === 'limit_reached' || result.status === 'error') {
     alert(result.message)
+  }
+}
+
+const comparingCorridor = ref<string | null>(null)
+const comparingSelectedCorridor = ref(false)
+
+async function handleCompareClick(item: WatchlistItem) {
+  if (comparingCorridor.value === item.id) return
+  
+  comparingCorridor.value = item.id
+  
+  const url = getCorridorUrl(item.target.from, item.target.to)
+  
+  try {
+    await navigateTo(url)
+  } finally {
+    comparingCorridor.value = null
+  }
+}
+
+async function handleCompareSelectedCorridor() {
+  if (comparingSelectedCorridor.value) return
+  
+  comparingSelectedCorridor.value = true
+  
+  const url = getCorridorUrl(selectedCorridor.from, selectedCorridor.to)
+  
+  try {
+    await navigateTo(url)
+  } finally {
+    comparingSelectedCorridor.value = false
   }
 }
 
@@ -3983,6 +4615,10 @@ function openAlert(item: WatchlistItem) {
 }
 
 function openCreateAlert() {
+  if (alertsLimitReached.value) {
+    alert('Alert limit reached. Upgrade to Plus for unlimited alerts.')
+    return
+  }
   const first = watchlistItems.value[0]
   const fallbackTarget: WatchTarget = { type: 'corridor', from: 'US', to: 'PH', method: 'bank' }
   modal.open({
@@ -3992,15 +4628,30 @@ function openCreateAlert() {
   })
 }
 
+function formatMethod(method: string | null | undefined): string {
+  if (!method) return 'Bank'
+  const methodMap: Record<string, string> = {
+    bank: 'Bank',
+    cash: 'Cash Pickup',
+    wallet: 'Mobile Wallet',
+    card: 'Card',
+    bank_deposit: 'Bank',
+    cash_pickup: 'Cash Pickup',
+    mobile_wallet: 'Mobile Wallet',
+  }
+  return methodMap[method.toLowerCase()] || method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ')
+}
+
 function formatTarget(target: WatchTarget) {
-  if (target.type === 'corridor') return `${target.from} → ${target.to} • ${target.method || 'bank'}`
+  if (target.type === 'corridor') return `${target.from} → ${target.to} • ${formatMethod(target.method)}`
   if (target.type === 'fxPair') return `${target.base}/${target.quote}`
   return ''
 }
 
 function formatRule(rule: AlertRule) {
   const op = rule.comparator === 'gte' ? '≥' : rule.comparator === 'lte' ? '≤' : rule.comparator === 'gt' ? '>' : '<'
-  return `${rule.metric} ${op} ${rule.value}${rule.currency ? ` ${rule.currency}` : ''}`
+  const currency = rule.metric === 'sendScore' ? '' : (rule.currency ? ` ${rule.currency}` : '')
+  return `${rule.metric} ${op} ${rule.value}${currency}`
 }
 
 function formatComparator(comparator: string) {
@@ -4023,8 +4674,7 @@ function formatFrequency(frequency: string) {
 }
 
 function formatCurrency(amount: number, countryCode: string): string {
-  const country = COUNTRIES.find(c => c.code === countryCode.toUpperCase())
-  const currency = country?.currency || 'USD'
+  const currency = getCurrencyForCountry(countryCode.toUpperCase()) || 'USD'
   try {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)
   } catch {
@@ -4038,6 +4688,8 @@ function formatMetricLabel(metric: string) {
     case 'totalCost': return 'Total cost'
     case 'fee': return 'Fee'
     case 'rate': return 'Exchange rate'
+    case 'midMarketRate': return 'Mid-market rate'
+    case 'sendScore': return 'Intelligent Alert'
     case 'index': return 'Index'
     default: return metric
   }
@@ -4047,48 +4699,17 @@ function getWatchlistAlertCount(watchlistItemId: string) {
   return alertItems.value.filter(a => a.watchlistItemId === watchlistItemId).length
 }
 
-function getCorridorRate(from: string, to: string) {
-  const rates: Record<string, { rate: string; change: number }> = {
-    'US-PH': { rate: '56.82', change: 2.3 },
-    'US-MX': { rate: '17.24', change: -0.8 },
-    'US-IN': { rate: '83.12', change: 0.5 },
-    'GB-IN': { rate: '105.42', change: 1.2 },
-    'GB-PK': { rate: '354.21', change: -1.5 },
-    'CA-PH': { rate: '41.23', change: 0.9 },
-    'AU-PH': { rate: '37.15', change: 1.8 },
-    'EU-PH': { rate: '61.45', change: 0.3 },
-  }
-  return rates[`${from}-${to}`] || { rate: '1.00', change: 0 }
-}
-
-function getSparklinePoints(itemId: string) {
-  const points = []
-  for (let i = 0; i < 20; i++) {
-    const hash = itemId.charCodeAt(0) + i
-    const y = 15 + Math.sin(hash * 0.3) * 10 + (Math.random() - 0.5) * 3
-    points.push(`${(i / 19) * 100},${y}`)
-  }
-  return points.join(' ')
+function getAlertSnapshot(alert: { watchlistItemId: string }) {
+  return getWatchlistSnapshot(alert.watchlistItemId)
 }
 
 function getWatchlistChartData(itemId: string) {
-  const baseRate = parseFloat(getCorridorRate(
-    watchlistItems.value.find(i => i.id === itemId)?.target.from || 'US',
-    watchlistItems.value.find(i => i.id === itemId)?.target.to || 'PH'
-  ).rate)
-  
-  const data = []
-  for (let i = 0; i < 7; i++) {
-    const hash = itemId.charCodeAt(0) + i * 3
-    const variation = Math.sin(hash * 0.5) * 0.03 + Math.cos(hash * 0.7) * 0.02
-    const rate = baseRate * (1 + variation)
-    data.push(rate)
-  }
-  return data
+  return getWatchlistSnapshot(itemId).history.map(point => point.rate)
 }
 
 function getWatchlistChartPoints(itemId: string) {
   const data = getWatchlistChartData(itemId)
+  if (data.length < 2) return ''
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1
@@ -4109,6 +4730,7 @@ function getWatchlistChartPoints(itemId: string) {
 
 function getWatchlistChartPath(itemId: string) {
   const data = getWatchlistChartData(itemId)
+  if (data.length < 2) return ''
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1
@@ -4138,6 +4760,7 @@ function getWatchlistChartPath(itemId: string) {
 
 function getWatchlistChartCurrentY(itemId: string) {
   const data = getWatchlistChartData(itemId)
+  if (data.length < 1) return 60
   const lastRate = data[data.length - 1]
   const min = Math.min(...data)
   const max = Math.max(...data)
@@ -4151,18 +4774,21 @@ function getWatchlistChartCurrentY(itemId: string) {
 
 function getWatchlistStats(itemId: string) {
   const data = getWatchlistChartData(itemId)
+  if (!data.length) {
+    return {
+      high: '—',
+      low: '—',
+      avg: '—',
+    }
+  }
   const min = Math.min(...data)
   const max = Math.max(...data)
   const avg = data.reduce((a, b) => a + b, 0) / data.length
-  
-  const item = watchlistItems.value.find(i => i.id === itemId)
-  const to = item?.target.to || 'PH'
-  
+
   return {
-    high: max.toFixed(2),
-    low: min.toFixed(2),
-    avg: avg.toFixed(2),
-    to,
+    high: formatRateValue(max),
+    low: formatRateValue(min),
+    avg: formatRateValue(avg),
   }
 }
 
@@ -4175,53 +4801,16 @@ function getAlertCorridor(alert: { watchlistItemId: string }) {
 }
 
 function getAlertProgress(alert: { rule: AlertRule; watchlistItemId: string }) {
-  const corridor = getAlertCorridor(alert)
-  const current = parseFloat(getCorridorRate(corridor.from, corridor.to).rate)
+  const snapshot = getAlertSnapshot(alert)
+  const current = snapshot.rateValue
   const target = alert.rule.value
-  
+  if (!current || !Number.isFinite(current) || !Number.isFinite(target) || target <= 0) {
+    return 0
+  }
   if (alert.rule.comparator === 'gte' || alert.rule.comparator === 'gt') {
     return (current / target) * 100
-  } else {
-    return (target / current) * 100
   }
-}
-
-function getBestProvider(from: string, to: string) {
-  const corridor = `${from}→${to}`
-  
-  const providerMap: Record<string, { name: string; slug: string; fee: number; bestFor: string }> = {
-    'US→PH': { name: 'Wise', slug: 'wise', fee: 2.99, bestFor: 'Highest bank payout' },
-    'US→MX': { name: 'Remitly', slug: 'remitly', fee: 3.99, bestFor: 'Fast cash pickup' },
-    'US→IN': { name: 'Wise', slug: 'wise', fee: 2.99, bestFor: 'Best INR rate' },
-    'US→PK': { name: 'Wise', slug: 'wise', fee: 3.49, bestFor: 'Best for education payments' },
-    'GB→PH': { name: 'Wise', slug: 'wise', fee: 1.99, bestFor: 'Lowest fees from UK' },
-    'GB→IN': { name: 'Wise', slug: 'wise', fee: 1.99, bestFor: 'Direct to Indian banks' },
-    'GB→PK': { name: 'Wise', slug: 'wise', fee: 2.49, bestFor: 'Best for tuition' },
-    'EU→PH': { name: 'Wise', slug: 'wise', fee: 1.50, bestFor: 'Best Euro rate' },
-    'CA→PH': { name: 'Remitly', slug: 'remitly', fee: 4.99, bestFor: 'Express delivery' },
-    'AU→PH': { name: 'Wise', slug: 'wise', fee: 3.50, bestFor: 'Transparent pricing' },
-  }
-  
-  return providerMap[corridor] || { name: 'Wise', slug: 'wise', fee: 2.99, bestFor: 'Best overall value' }
-}
-
-function getBestProviderStreak(from: string, to: string): number {
-  const corridor = `${from}→${to}`
-  
-  const streakMap: Record<string, number> = {
-    'US→PH': 5,
-    'US→MX': 3,
-    'US→IN': 7,
-    'US→PK': 2,
-    'GB→PH': 4,
-    'GB→IN': 6,
-    'GB→PK': 1,
-    'EU→PH': 3,
-    'CA→PH': 2,
-    'AU→PH': 4,
-  }
-  
-  return streakMap[corridor] || 0
+  return (target / current) * 100
 }
 
 function editAlert(alert: { id: string; watchlistItemId: string }) {

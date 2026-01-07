@@ -21,4 +21,17 @@ export class PlanUsageRepository implements IPlanUsageRepository {
 
     return result.rows
   }
+
+  async upsertUsageSnapshot(userId: string, scope: string, count: number, windowStart: Date): Promise<void> {
+    await query(
+      `
+      INSERT INTO silver.plan_usage_counter (user_id, scope, window_start, count)
+      VALUES ($1, $2, $3::date, $4)
+      ON CONFLICT (user_id, scope, window_start)
+      DO UPDATE SET count = EXCLUDED.count
+      `,
+      [userId, scope, windowStart.toISOString().slice(0, 10), count],
+      this.pool,
+    )
+  }
 }

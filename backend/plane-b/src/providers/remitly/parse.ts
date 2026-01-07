@@ -79,8 +79,10 @@ const mapPayin = (code?: string | null) => {
 }
 
 const mapPayout = (code?: string | null) => {
-  if (!code) return 'other'
-  return payoutMethodMap[code] ?? 'other'
+  if (!code) return 'bank_deposit'
+  const normalized = code.trim()
+  if (!normalized) return 'bank_deposit'
+  return payoutMethodMap[normalized] ?? 'other'
 }
 
 /**
@@ -166,6 +168,28 @@ const selectEstimate = (
       return payin === requestedPayin && payout === requestedPayout
     })
     if (match) return { estimate: match, parse_flags: flags }
+  }
+
+  if (requestedPayout) {
+    const match = estimates.find((item) => {
+      const payout = mapPayout(item.pay_out_method)
+      return payout === requestedPayout
+    })
+    if (match) {
+      flags.push(qualityFlags.partial_data)
+      return { estimate: match, parse_flags: flags }
+    }
+  }
+
+  if (requestedPayin) {
+    const match = estimates.find((item) => {
+      const payin = mapPayin(item.pay_in_method)
+      return payin === requestedPayin
+    })
+    if (match) {
+      flags.push(qualityFlags.partial_data)
+      return { estimate: match, parse_flags: flags }
+    }
   }
 
   flags.push(qualityFlags.partial_data)

@@ -19,6 +19,7 @@ type RedisClient = ReturnType<typeof createClient>
 let client: RedisClient | null = null
 let connecting: Promise<RedisClient | null> | null = null
 let lastHealthCheck: number = 0
+let connectionGeneration = 0
 const HEALTH_CHECK_INTERVAL_MS = 30000
 
 const isElastiCacheCluster = (url: string): boolean => {
@@ -64,35 +65,16 @@ const setupReconnection = (instance: RedisClient): void => {
   })
 }
 
-export const getRedisClient = async (): Promise<RedisClient | null> => {
-  if (!config.redis.url) return null
-
-  if (client) {
-    const now = Date.now()
-    if (now - lastHealthCheck > HEALTH_CHECK_INTERVAL_MS) {
-      const healthy = await checkConnectionHealth(client)
-      if (!healthy) {
-        logger.warn('redis_client_unhealthy_resetting')
-        try {
-          await client.quit().catch(() => {
-            client.disconnect()
-          })
-        } catch {
-        }
-        client = null
-      } else {
-        lastHealthCheck = now
-      }
-    }
-    if (client) {
-      return client
-    }
+const closeInstance = async (instance: RedisClient): Promise<void> => {
+  try {
+    await instance.quit().catch(() => {
+      instance.disconnect()
+    })
+  } catch {
   }
+}
 
-  if (connecting) {
-    return connecting
-  }
-
+const createConnection = (): Promise<RedisClient | null> => {
   const isCluster = isElastiCacheCluster(config.redis.url)
   logger.debug('creating_redis_client', {
     is_lambda: isLambda,
@@ -118,18 +100,23 @@ export const getRedisClient = async (): Promise<RedisClient | null> => {
 
   setupReconnection(instance)
 
+  const generation = ++connectionGeneration
   connecting = instance
     .connect()
     .then(async () => {
+      if (generation !== connectionGeneration) {
+        await closeInstance(instance)
+        return null
+      }
       const healthy = await checkConnectionHealth(instance)
       if (!healthy) {
         logger.error('redis_connect_health_check_failed')
         trackConnectionAttempt(false)
         trackConnectionFailure()
-        await instance.quit().catch(() => {
-          instance.disconnect()
-        })
-        connecting = null
+        await closeInstance(instance)
+        if (generation === connectionGeneration) {
+          connecting = null
+        }
         return null
       }
 
@@ -138,12 +125,18 @@ export const getRedisClient = async (): Promise<RedisClient | null> => {
       registerRedisClient(instance, 'default')
       trackConnectionAttempt(true)
       logger.info('redis_connected', {
-        is_lambda,
-        is_cluster,
+        is_lambda: isLambda,
+        is_cluster: isCluster,
       })
+      if (generation === connectionGeneration) {
+        connecting = null
+      }
       return instance
     })
     .catch((error) => {
+      if (generation !== connectionGeneration) {
+        return null
+      }
       logger.error('redis_connect_failed', { error })
       trackConnectionAttempt(false)
       trackConnectionFailure()
@@ -154,7 +147,51 @@ export const getRedisClient = async (): Promise<RedisClient | null> => {
   return connecting
 }
 
+export const getRedisClient = (): Promise<RedisClient | null> => {
+  if (!config.redis.url) return Promise.resolve(null)
+
+  if (client) {
+    const now = Date.now()
+    if (now - lastHealthCheck > HEALTH_CHECK_INTERVAL_MS) {
+      const instance = client
+      return checkConnectionHealth(instance)
+        .then(async (healthy) => {
+          if (!healthy) {
+            logger.warn('redis_client_unhealthy_resetting')
+            await closeInstance(instance)
+            client = null
+            connecting = null
+            lastHealthCheck = 0
+          } else {
+            lastHealthCheck = now
+          }
+
+          if (client) {
+            return client
+          }
+
+          if (connecting) {
+            return connecting
+          }
+
+          return createConnection()
+        })
+        .catch(() => {
+          return createConnection()
+        })
+    }
+    return Promise.resolve(client)
+  }
+
+  if (connecting) {
+    return connecting
+  }
+
+  return createConnection()
+}
+
 export const disconnectRedis = async (): Promise<void> => {
+  connectionGeneration += 1
   if (client) {
     try {
       await client.quit()
@@ -170,4 +207,12 @@ export const disconnectRedis = async (): Promise<void> => {
     client = null
     connecting = null
   }
+  lastHealthCheck = 0
+}
+
+export const resetRedisState = (): void => {
+  connectionGeneration += 1
+  client = null
+  connecting = null
+  lastHealthCheck = 0
 }

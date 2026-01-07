@@ -41,6 +41,7 @@ export type ProviderRunOptions = {
   freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
+  closePool?: boolean
 }
 
 export type ProviderRegistryEntry = {
@@ -85,6 +86,7 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       freshnessSloEnabled: options.freshnessSloEnabled,
       rpmOverride: options.rpmOverride,
       perCorridorRpmOverride: options.perCorridorRpmOverride,
+      closePool: false,
     }),
   },
   {
@@ -114,6 +116,7 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       freshnessSloEnabled: options.freshnessSloEnabled,
       rpmOverride: options.rpmOverride,
       perCorridorRpmOverride: options.perCorridorRpmOverride,
+      closePool: false,
     }),
   },
   {
@@ -143,6 +146,7 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       freshnessSloEnabled: options.freshnessSloEnabled,
       rpmOverride: options.rpmOverride,
       perCorridorRpmOverride: options.perCorridorRpmOverride,
+      closePool: false,
     }),
   },
   {
@@ -172,6 +176,7 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       freshnessSloEnabled: options.freshnessSloEnabled,
       rpmOverride: options.rpmOverride,
       perCorridorRpmOverride: options.perCorridorRpmOverride,
+      closePool: false,
     }),
   },
   {
@@ -201,6 +206,7 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       freshnessSloEnabled: options.freshnessSloEnabled,
       rpmOverride: options.rpmOverride,
       perCorridorRpmOverride: options.perCorridorRpmOverride,
+      closePool: false,
     }),
   },
   {
@@ -230,6 +236,7 @@ export const providerRegistry: ProviderRegistryEntry[] = [
       freshnessSloEnabled: options.freshnessSloEnabled,
       rpmOverride: options.rpmOverride,
       perCorridorRpmOverride: options.perCorridorRpmOverride,
+      closePool: false,
     }),
   },
 ]

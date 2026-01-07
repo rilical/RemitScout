@@ -125,15 +125,19 @@
 </template>
 
 <script setup lang="ts">
+import { getCountryFromSlug } from '~/utils/country-slugs'
+
 // Data
 const route = useRoute()
-const toCountry = ref(route.params.country as string)
+const countrySlug = computed(() => String(route.params.country || '').toLowerCase())
+const countryData = computed(() => getCountryFromSlug(countrySlug.value))
+const toCountry = computed(() => countryData.value?.code || '')
 const fromCountry = ref('US')
 const amount = ref(1000)
 
 // Country data
-const { data: countryInfo } = await useCountry(route.params.country as string)
-const countryName = computed(() => countryInfo.value?.name || route.params.country)
+const { data: countryInfo } = await useCountry(toCountry.value || (route.params.country as string))
+const countryName = computed(() => countryInfo.value?.name || countryData.value?.name || route.params.country)
 
 // Meta
 useHead({
@@ -153,5 +157,7 @@ const breadcrumbItems = computed(() => [
 ])
 
 // Top providers
-const { data: topProviders } = await useProviders()
+const { data: topProviders } = await useProviders(fromCountry.value, toCountry.value, amount.value, 'bank', {
+  key: `country-providers-${fromCountry.value}-${toCountry.value}-${amount.value}`,
+})
 </script>

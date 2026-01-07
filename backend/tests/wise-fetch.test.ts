@@ -8,6 +8,7 @@ vi.mock('../plane-b/src/collectors/http-client', () => ({
 
 import { httpRequest } from '../plane-b/src/collectors/http-client'
 import { fetchWiseQuote } from '../plane-b/src/providers/wise/fetch'
+import { getUserAgentForCorridor } from '../plane-b/src/collectors/user-agent'
 
 describe('fetchWiseQuote', () => {
   beforeEach(() => {
@@ -58,7 +59,7 @@ describe('fetchWiseQuote', () => {
       'content-type': 'application/json',
       origin: 'https://wise.com',
       referer: 'https://wise.com/',
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(request.corridor_id),
     })
   })
 

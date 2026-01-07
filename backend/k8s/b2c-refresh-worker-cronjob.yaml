@@ -1,4 +1,4 @@
-# ⚠️ DEPRECATED: This file is no longer used. See backend/k8s/DEPRECATED.md
+# ⚠️ DEPRECATED: This file is no longer used.
 # Migrated to AWS EventBridge + ECS Fargate (infrastructure/cdk/lib/scheduled-jobs.ts)
 # Schedule: Every 2 minutes (matches AWS configuration)
 
@@ -91,5 +91,4 @@ spec:
               limits:
                 memory: "256Mi"
                 cpu: "200m"
-
 

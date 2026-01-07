@@ -102,15 +102,19 @@ export function useCompareForm() {
   })
 
   const sendMoneyUrl = computed(() => {
-    const { from, to, amount, method } = form.value
+    const { from, to, amount, method, fromCurrency, toCurrency } = form.value
+    const fromCountry = getCountryByCode(from.toUpperCase())
+    const toCountry = getCountryByCode(to.toUpperCase())
 
-    if (!from || !to) {
+    if (!from || !to || !fromCountry || !toCountry) {
       return '/#hero-dual-tab'
     }
 
     const params = new URLSearchParams({
       amount: String(amount),
       method,
+      fromCurrency,
+      toCurrency,
     })
 
     return `${getCorridorUrl(from, to)}?${params.toString()}`
@@ -129,6 +133,18 @@ export function useCompareForm() {
       return false
     }
 
+    const fromCountry = getCountryByCode(form.value.from.toUpperCase())
+    if (!fromCountry) {
+      validationError.value = 'Please select a valid sending country'
+      return false
+    }
+
+    const toCountry = getCountryByCode(form.value.to.toUpperCase())
+    if (!toCountry) {
+      validationError.value = 'Please select a valid receiving country'
+      return false
+    }
+
     if (!form.value.fromCurrency) {
       validationError.value = 'Please select a sending currency'
       return false
@@ -136,6 +152,11 @@ export function useCompareForm() {
 
     if (!form.value.toCurrency) {
       validationError.value = 'Please select a receiving currency'
+      return false
+    }
+
+    if (form.value.fromCurrency.length !== 3 || form.value.toCurrency.length !== 3) {
+      validationError.value = 'Please select valid currencies'
       return false
     }
 

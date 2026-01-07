@@ -22,9 +22,27 @@ Every change must be evaluated against our core architectural and policy require
 - **Are Data Rights and Governance updated?**
   If you introduce a new data provider, feature, or change how data is used, update the Data Rights Matrix and any relevant policies. For example, if a new provider's data will be collected or published, ensure there are corresponding Allowed_Collect / Allowed_B2C / Allowed_B2B entries and they are approved. Any change to compliance-related configurations (entitlements, thresholds) might also require an ADR and review by the compliance officer.
 
-- **Security and Secrets:** If your change involves new secrets or credentials, do not hard-code them. Use AWS Secrets Manager/Parameter Store as described in `secrets/README.md`. Add any new secret rotation steps to the runbook if needed. Ensure IAM roles and permissions follow least privilege (e.g. a new Lambda should have access only to the specific resources it needs).
+- **Security and Secrets:** If your change involves new secrets or credentials, do not hard-code them. Use AWS Secrets Manager/Parameter Store. Add any new secret rotation steps to the runbook if needed. Ensure IAM roles and permissions follow least privilege (e.g. a new Lambda should have access only to the specific resources it needs).
 
 - **Testing:** Add or update tests to cover your changes. This includes boundary tests if you altered any plane boundaries or data flows. Remember, CI must enforce the Golden Rule and other invariants, so tests should exist to prevent regressions.
+
+## Secrets Policy (Summary)
+
+No secrets belong in Git. Store credentials in AWS Secrets Manager (preferred) or SSM Parameter Store (SecureString).
+
+### Where to store secrets
+- **AWS Secrets Manager:** Primary store for DB passwords and API keys. Supports rotation.
+- **AWS SSM Parameter Store:** For low-sensitivity configs or feature flags.
+- **Never in Git:** CI and reviews should catch accidental commits.
+
+### Rotation
+- Use automated rotation when possible.
+- Manual rotations must follow the security runbook (RBK-SEC-001) and be logged.
+
+### Developer guidelines
+- Do not commit `.env` files.
+- Use IAM roles to fetch secrets at runtime with least privilege.
+- Audit and alert on unusual access (CloudTrail).
 
 ## Coding Standards
 - Follow the established project structure (monorepo organized by plane and service). Place code in the correct directory for its plane/scope.

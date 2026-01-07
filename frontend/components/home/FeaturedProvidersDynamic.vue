@@ -11,43 +11,9 @@
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
             Compare money transfer providers for your corridor
           </h2>
-          <p class="text-base sm:text-lg text-neutral-600 max-w-4xl">
+          <p class="text-base sm:text-lg text-neutral-600 max-w-4xl leading-relaxed">
             We collect quotes, standardize fees and FX markup into comparable numbers, and rank by delivered outcome. Every quote is timestamped, and refresh cadence varies by corridor and data source.
           </p>
-          <div class="flex flex-wrap items-center gap-4 mt-4">
-            <p class="text-sm text-neutral-500">
-              Last updated: {{ lastUpdated }}
-            </p>
-            <div class="flex flex-wrap items-center gap-3 text-sm">
-              <NuxtLink
-                to="/methodology"
-                class="text-neutral-600 hover:text-neutral-900 font-medium"
-              >
-                Methodology
-              </NuxtLink>
-              <span class="text-neutral-300">•</span>
-              <NuxtLink
-                to="/how-we-make-money"
-                class="text-neutral-600 hover:text-neutral-900 font-medium"
-              >
-                How we make money
-              </NuxtLink>
-              <span class="text-neutral-300">•</span>
-              <NuxtLink
-                to="/contact"
-                class="text-neutral-600 hover:text-neutral-900 font-medium"
-              >
-                Report an issue
-              </NuxtLink>
-              <span class="text-neutral-300">•</span>
-              <NuxtLink
-                to="/contact"
-                class="text-neutral-600 hover:text-neutral-900 font-medium"
-              >
-                Contact
-              </NuxtLink>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -63,15 +29,23 @@
               :key="i"
               class="flex-shrink-0 w-[280px] sm:w-[320px] animate-pulse"
             >
-              <div class="h-[500px] bg-neutral-200 rounded-2xl" />
+              <div class="h-[320px] bg-neutral-200 rounded-2xl" />
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Error or empty state -->
+      <div
+        v-else-if="!providers.length || error"
+        class="rounded-2xl border border-neutral-200 bg-white p-8 text-center"
+      >
+        <p class="text-neutral-600">Provider information is temporarily unavailable. Please try again later.</p>
+      </div>
+
       <!-- Provider cards horizontal scroll -->
       <div
-        v-else
+        v-else-if="providers.length > 0"
         class="relative group/section"
       >
         <!-- Scroll container -->
@@ -82,173 +56,75 @@
         >
           <div class="flex gap-6 pb-4">
             <article
-              v-for="provider in sortedProviders"
+              v-for="provider in providers"
               :key="provider.id"
-              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col snap-start"
+              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl hover:border-brand-600 transition-all duration-300 flex flex-col snap-start"
             >
-              <!-- Score Badge at top center with circular progress -->
-              <div class="flex justify-center pt-6 pb-4">
-                <div class="relative w-16 h-16">
-                  <svg class="w-16 h-16 transform -rotate-90">
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="#e5e7eb"
-                      stroke-width="4"
-                      fill="none"
-                    />
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      :stroke="getScoreColor(provider.score || 0)"
-                      stroke-width="4"
-                      fill="none"
-                      :stroke-dasharray="`${((provider.score || 0) / 10) * 175.93} 175.93`"
-                      stroke-linecap="round"
-                      class="transition-all duration-500"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <span
-                      class="text-xl font-bold"
-                      :class="getScoreTextClass(provider.score || 0)"
-                    >
-                      {{ (provider.score || 0).toFixed(1) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Provider Logo -->
-              <div class="px-6 pb-6 text-center">
-                <img
-                  v-if="provider.logoUrl"
-                  :src="provider.logoUrl"
-                  :alt="provider.name"
-                  class="h-10 mx-auto object-contain"
-                >
-                <h3
-                  v-else
-                  class="text-lg font-bold text-neutral-900"
-                >
-                  {{ provider.name }}
-                </h3>
-              </div>
-
-              <!-- Find Out More Link -->
-              <div class="px-6 pb-6 text-center">
-                <NuxtLink
-                  :to="`/learn/providers/${getProviderReviewSlug(provider)}`"
-                  class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-md px-2 py-1"
-                >
-                  <span>Read Review</span>
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              <!-- Header: Logo and Score -->
+              <div class="px-6 pt-12 pb-10 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <img
+                    v-if="provider.logoUrl"
+                    :src="provider.logoUrl"
+                    :alt="provider.name"
+                    :class="[provider.logoSize || 'h-16 w-auto', 'object-contain flex-shrink-0']"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </NuxtLink>
-              </div>
-
-              <!-- Metrics with Progress Bars -->
-              <div class="px-6 pb-6 space-y-4 flex-1">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-neutral-700 font-medium">Delivered Value</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.cost || 0.8) * 10).toFixed(1) }}</span>
-                  </div>
-                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.cost || 0.8) * 100}%` }"
-                    />
-                  </div>
+                  <ProviderLogo
+                    v-else
+                    :slug="provider.slug"
+                    :alt="provider.name"
+                    :class="provider.logoSize || 'h-16 w-auto'"
+                  />
                 </div>
-
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-neutral-700 font-medium">Reliability & Success</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.reliability || 0.85) * 10).toFixed(1) }}</span>
-                  </div>
-                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.reliability || 0.85) * 100}%` }"
-                    />
-                  </div>
-                </div>
-
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-neutral-700 font-medium">Friction & Speed</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.speed || 0.85) * 10).toFixed(1) }}</span>
-                  </div>
-                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.speed || 0.85) * 100}%` }"
-                    />
-                  </div>
-                </div>
-
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-neutral-700 font-medium">Support & Refunds</span>
-                    <span class="font-bold text-neutral-900">{{ ((provider.scoreBreakdown?.coverage || 0.8) * 10).toFixed(1) }}</span>
-                  </div>
-                  <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                      :style="{ width: `${(provider.scoreBreakdown?.coverage || 0.8) * 100}%` }"
-                    />
-                  </div>
+                <div class="flex flex-col items-end gap-1">
+                  <ScoreBadge :score="provider.remitScore || 0" />
+                  <span class="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                    Remit-Score
+                  </span>
                 </div>
               </div>
 
-              <!-- CTAs -->
-              <div class="px-6 pb-6 space-y-3">
-                <a
-                  :href="`/go/${provider.id}`"
-                  target="_blank"
-                  rel="nofollow"
-                  @click="handleProviderClick(provider)"
-                  class="block w-full rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-3 text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+              <!-- Metrics Breakdown -->
+              <div class="px-6 pb-12 space-y-6 flex-1">
+                <div
+                  v-for="metric in provider.metrics"
+                  :key="metric.label"
+                  class="flex items-center justify-between border-b border-neutral-100 pb-5 text-sm last:border-b-0 last:pb-0"
                 >
-                  Go to {{ provider.name }}
-                </a>
-                <p class="text-xs text-neutral-500 text-center">
-                  We may earn a commission. Rankings are independent.
-                </p>
+                  <span class="text-neutral-600">
+                    {{ metric.label }}
+                  </span>
+                  <span class="font-semibold text-neutral-900">
+                    {{ metric.value }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- CTA -->
+              <div class="px-6 pb-12 mt-auto">
                 <NuxtLink
-                  :to="`/learn/providers/${getProviderReviewSlug(provider)}`"
-                  class="block w-full text-sm font-medium text-brand-600 hover:text-brand-700 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded"
+                  :to="`/learn/providers/${provider.slug}`"
+                  class="block w-full rounded-lg bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
                 >
-                  Read the full review
+                  Read Full Review
                 </NuxtLink>
               </div>
             </article>
           </div>
         </div>
 
-        <!-- Navigation arrows (visible on hover on desktop) -->
+      </div>
+
+      <!-- Navigation controls -->
+      <div class="flex items-center justify-center gap-4 mt-6">
         <button
           v-if="canScrollLeft"
-          class="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
+          class="p-2 rounded-full border border-neutral-300 hover:border-brand-600 hover:bg-brand-50 transition-colors"
           aria-label="Previous providers"
           @click="scrollLeft"
         >
           <svg
-            class="h-5 w-5 text-neutral-600"
+            class="w-5 h-5 text-neutral-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -262,14 +138,31 @@
           </svg>
         </button>
 
+        <!-- Pagination dots -->
+        <div class="flex items-center gap-2">
+          <button
+            v-for="(dot, index) in totalPages"
+            :key="index"
+            :aria-label="`Go to page ${index + 1}`"
+            :aria-current="currentPage === index + 1 ? 'true' : 'false'"
+            :class="[
+              'h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
+              currentPage === index + 1
+                ? 'w-8 bg-brand-600'
+                : 'w-2 bg-neutral-300 hover:bg-neutral-400',
+            ]"
+            @click="scrollToPage(index)"
+          />
+        </div>
+
         <button
           v-if="canScrollRight"
-          class="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
+          class="p-2 rounded-full border border-neutral-300 hover:border-brand-600 hover:bg-brand-50 transition-colors"
           aria-label="Next providers"
           @click="scrollRight"
         >
           <svg
-            class="h-5 w-5 text-neutral-600"
+            class="w-5 h-5 text-neutral-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -283,214 +176,243 @@
           </svg>
         </button>
       </div>
-
-      <!-- Pagination Indicators (Mobile) -->
-      <div
-        class="flex lg:hidden items-center justify-center gap-2 mt-6"
-        role="navigation"
-        aria-label="Provider carousel pagination"
-      >
-        <span class="text-xs text-neutral-600 font-medium">
-          {{ currentPage }}/{{ totalPages }}
-        </span>
-        <div class="flex items-center gap-1.5 mx-2">
-          <button
-            v-for="(dot, index) in totalPages"
-            :key="index"
-            :aria-label="`Go to page ${index + 1}`"
-            :aria-current="currentPage === index + 1 ? 'true' : 'false'"
-            :class="[
-              'w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
-              currentPage === index + 1
-                ? 'bg-brand-600 w-6'
-                : 'bg-neutral-300 hover:bg-neutral-400',
-            ]"
-            @click="scrollToPage(index)"
-          />
-        </div>
-      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRemittanceApi } from '~/composables/useRemittanceApi'
-import { useCompareForm } from '~/composables/useCompareForm'
-import { useTelemetry } from '~/composables/useTelemetry'
-import { getProviderScore } from '~/lib/providerScores'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { useApi } from '~/composables/useApi'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import ScoreBadge from '~/components/shared/ScoreBadge.vue'
 
-const props = defineProps<{
-  from?: string
-  to?: string
-  amount?: number
-  method?: 'bank' | 'cash' | 'wallet'
-}>()
+type ProviderMetadata = {
+  id: string
+  slug: string
+  name: string
+  type: string
+  remitScore: number
+  logo?: { sm?: string }
+  scoreBreakdown?: {
+    deliveredValue: number
+    reliability: number
+    frictionSpeed: number
+    supportRefunds: number
+    trustSafety: number
+  }
+}
 
-const { form } = useCompareForm()
+type MetricRow = {
+  label: string
+  value: string
+}
 
-const from = computed(() => props.from || form.value.from || 'US')
-const to = computed(() => props.to || form.value.to || 'PH')
-const amount = computed(() => props.amount || form.value.amount || 500)
-const method = computed(() => props.method || form.value.method || 'bank')
+const { request } = useApi()
 
-const sortBy = ref<'recipient' | 'fee' | 'speed' | 'rating'>('rating')
+const { data, pending, error } = await useAsyncData(
+  'provider-metadata-featured',
+  () => request<{ data: ProviderMetadata[] }>('/providers/metadata'),
+  { watch: false },
+)
+
+const labelForMetric = (
+  value: number | undefined,
+  kind: 'delivered' | 'reliability' | 'speed' | 'support' | 'trust',
+) => {
+  if (value === undefined) {
+    if (kind === 'delivered') return 'Competitive'
+    if (kind === 'speed' || kind === 'support') return 'Good'
+    return 'Strong'
+  }
+
+  if (kind === 'delivered') {
+    return value >= 0.85 ? 'Competitive' : value >= 0.75 ? 'Good' : 'Fair'
+  }
+
+  if (kind === 'speed' || kind === 'support') {
+    return value >= 0.85 ? 'Good' : value >= 0.75 ? 'Fair' : 'Limited'
+  }
+
+  return value >= 0.85 ? 'Strong' : value >= 0.75 ? 'Good' : 'Fair'
+}
+
+// Individual logo sizing based on aspect ratios
+const getLogoSize = (slug: string): string => {
+  const sizeMap: Record<string, string> = {
+    'wise': 'h-12 w-auto', // viewBox 219.7x50 (4.4:1) - wide
+    'remitly': 'h-14 w-auto', // viewBox 1000x428 (2.3:1) - moderate width
+    'worldremit': 'h-14 w-auto', // viewBox 1062x326 (3.3:1) - wide
+    'western-union': 'h-12 w-auto', // viewBox 299.7x70 (4.3:1) - very wide
+    'westernunion': 'h-12 w-auto', // same as above
+    'xe-money': 'h-16 w-auto', // viewBox 600x484 (1.24:1) - almost square
+    'xe': 'h-16 w-auto', // same as above
+  }
+  const normalizedSlug = slug.toLowerCase().trim()
+  return sizeMap[normalizedSlug] || 'h-14 w-auto'
+}
+
+const providers = computed(() => {
+  const list = data.value?.data || []
+  return [...list]
+    .filter((provider) => provider.id !== 'wellsfargo' && provider.slug !== 'wells-fargo')
+    .map((provider) => {
+      const breakdown = provider.scoreBreakdown
+      const metrics: MetricRow[] = [
+        { label: 'Delivered Value', value: labelForMetric(breakdown?.deliveredValue, 'delivered') },
+        { label: 'Reliability', value: labelForMetric(breakdown?.reliability, 'reliability') },
+        { label: 'Speed', value: labelForMetric(breakdown?.frictionSpeed, 'speed') },
+        { label: 'Support', value: labelForMetric(breakdown?.supportRefunds, 'support') },
+        { label: 'Trust & Safety', value: labelForMetric(breakdown?.trustSafety, 'trust') },
+      ]
+
+      return {
+        ...provider,
+        logoUrl: provider.logo?.sm,
+        logoSize: getLogoSize(provider.slug),
+        typeLabel: provider.type?.replace(/_/g, ' ') || 'Provider',
+        metrics,
+      }
+    })
+    .sort((a, b) => (b.remitScore || 0) - (a.remitScore || 0))
+    .slice(0, 12)
+})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
 const currentPage = ref(1)
-const totalPages = ref(1)
 
-const { useProviders, attachRatings } = useRemittanceApi()
-const { trackClick } = useTelemetry()
+const getCardWidth = () => {
+  if (typeof window === 'undefined') return 320
+  return window.innerWidth >= 640 ? 320 : 280
+}
 
-const { data, pending } = await useProviders(from.value, to.value, amount.value, method.value)
-
-const ratedProviders = computed(() => {
-  if (!data.value?.data) return []
-  const providers = attachRatings(data.value.data)
-  return providers.map(provider => {
-    const scoreData = getProviderScore(provider.id)
-    if (scoreData) {
-      return {
-        ...provider,
-        score: scoreData.remitScore,
-        scoreBreakdown: scoreData.scoreBreakdown ? {
-          cost: scoreData.scoreBreakdown.deliveredValue,
-          speed: scoreData.scoreBreakdown.frictionSpeed,
-          reliability: scoreData.scoreBreakdown.reliability,
-          coverage: scoreData.scoreBreakdown.supportRefunds,
-        } : provider.scoreBreakdown,
-      }
-    }
-    return provider
-  })
-})
-
-const sortedProviders = computed(() => {
-  const providers = [...ratedProviders.value]
-
-  switch (sortBy.value) {
-    case 'fee':
-      return providers.sort((a, b) => a.fee - b.fee)
-    case 'speed':
-      return providers.sort((a, b) => {
-        const getHours = (delivery: string) => {
-          if (delivery.includes('min')) return 0.5
-          if (delivery.includes('same day')) return 8
-          if (delivery.includes('day')) return 24
-          return 48
-        }
-        return getHours(a.delivery) - getHours(b.delivery)
-      })
-    case 'rating':
-      return providers.sort((a, b) => b.score - a.score)
-    default:
-      return providers.sort((a, b) => b.recipientGets - a.recipientGets)
-  }
+const totalPages = computed(() => {
+  if (!scrollContainer.value || providers.value.length === 0) return 1
+  const container = scrollContainer.value
+  const visibleWidth = container.clientWidth
+  
+  if (visibleWidth <= 0) return 1
+  
+  // Calculate based on card width + gap
+  // Cards are w-[280px] sm:w-[320px] with gap-6 (24px)
+  const cardWidth = getCardWidth()
+  const gap = 24
+  const cardWidthWithGap = cardWidth + gap
+  const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
+  const totalCards = providers.value.length
+  const pages = Math.ceil(totalCards / cardsPerPage)
+  
+  return Math.max(1, pages)
 })
 
 const handleScroll = () => {
   if (!scrollContainer.value) return
-
   const container = scrollContainer.value
   canScrollLeft.value = container.scrollLeft > 0
   canScrollRight.value = container.scrollLeft < container.scrollWidth - container.clientWidth - 10
 
-  // Calculate current page for pagination
-  const scrollPosition = container.scrollLeft
   const visibleWidth = container.clientWidth
-  const totalScrollWidth = container.scrollWidth
-
-  // Calculate total pages based on visible width
-  totalPages.value = Math.ceil(totalScrollWidth / visibleWidth)
-
-  // Calculate current page (add small buffer to handle snap scrolling)
-  currentPage.value = Math.min(
-    Math.round(scrollPosition / visibleWidth) + 1,
-    totalPages.value,
-  )
+  if (visibleWidth <= 0) return
+  
+  const cardWidth = getCardWidth()
+  const gap = 24
+  const cardWidthWithGap = cardWidth + gap
+  const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
+  const scrollAmountPerPage = cardsPerPage * cardWidthWithGap
+  
+  const scrollPosition = container.scrollLeft
+  const maxScroll = container.scrollWidth - container.clientWidth
+  const threshold = 10
+  
+  if (scrollPosition >= maxScroll - threshold) {
+    currentPage.value = totalPages.value
+  } else {
+    const currentPageIndex = Math.round(scrollPosition / scrollAmountPerPage)
+    currentPage.value = Math.min(Math.max(1, currentPageIndex + 1), totalPages.value)
+  }
 }
 
 const scrollLeft = () => {
   if (!scrollContainer.value) return
-  const cardWidth = 320 + 24
-  scrollContainer.value.scrollBy({ left: -cardWidth, behavior: 'smooth' })
+  const container = scrollContainer.value
+  const cardWidth = getCardWidth()
+  const gap = 24
+  const cardWidthWithGap = cardWidth + gap
+  const visibleWidth = container.clientWidth
+  const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
+  const scrollAmount = cardsPerPage * cardWidthWithGap
+  const currentScroll = container.scrollLeft
+  const targetScroll = Math.max(0, currentScroll - scrollAmount)
+  container.scrollTo({ left: targetScroll, behavior: 'smooth' })
 }
 
 const scrollRight = () => {
   if (!scrollContainer.value) return
-  const cardWidth = 320 + 24
-  scrollContainer.value.scrollBy({ left: cardWidth, behavior: 'smooth' })
-}
-
-const handleProviderClick = (provider: { id: string }) => {
-  if (!provider?.id) return
-  void trackClick({
-    provider_id: provider.id,
-    target_url: `/go/${provider.id}`,
-    is_affiliate: Boolean((provider as { affiliateUrl?: string | null }).affiliateUrl),
-  })
+  const container = scrollContainer.value
+  const cardWidth = getCardWidth()
+  const gap = 24
+  const cardWidthWithGap = cardWidth + gap
+  const visibleWidth = container.clientWidth
+  const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
+  const scrollAmount = cardsPerPage * cardWidthWithGap
+  const currentScroll = container.scrollLeft
+  const maxScroll = container.scrollWidth - container.clientWidth
+  const targetScroll = Math.min(maxScroll, currentScroll + scrollAmount)
+  container.scrollTo({ left: targetScroll, behavior: 'smooth' })
 }
 
 const scrollToPage = (pageIndex: number) => {
   if (!scrollContainer.value) return
   const container = scrollContainer.value
   const visibleWidth = container.clientWidth
+  const cardWidth = getCardWidth()
+  const gap = 24
+  const cardWidthWithGap = cardWidth + gap
+  const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
+  const scrollAmount = cardsPerPage * cardWidthWithGap
   const maxScroll = container.scrollWidth - container.clientWidth
-
-  // Calculate target scroll position, clamped to max scroll
-  const targetScroll = Math.min(pageIndex * visibleWidth, maxScroll)
-
+  const targetScroll = Math.min(Math.max(0, pageIndex * scrollAmount), maxScroll)
   container.scrollTo({ left: targetScroll, behavior: 'smooth' })
 }
 
-const getScoreColor = (score: number) => {
-  if (score >= 9.0) return '#10b981'
-  if (score >= 8.0) return '#3b82f6'
-  if (score >= 7.0) return '#eab308'
-  return '#ef4444'
-}
-
-const getScoreTextClass = (score: number) => {
-  if (score >= 9.0) return 'text-green-600'
-  if (score >= 8.0) return 'text-blue-600'
-  if (score >= 7.0) return 'text-yellow-600'
-  return 'text-red-600'
-}
-
-const getProviderReviewSlug = (provider: any) => {
-  const id = provider.id || provider.slug || provider.name?.toLowerCase().replace(/\s+/g, '-')
-  const slugMap: Record<string, string> = {
-    'xe-money': 'xe-money',
-    'xe': 'xe-money',
-    'western-union': 'western-union',
-    'worldremit': 'worldremit',
-  }
-  return slugMap[id] || id
-}
-
 const lastUpdated = computed(() => {
-  const now = new Date()
-  return now.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
+  if (!data.value) return 'recently'
+  const now = Date.now()
+  return 'recently'
+})
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      handleScroll()
+      
+      if (typeof ResizeObserver !== 'undefined') {
+        resizeObserver = new ResizeObserver(() => {
+          handleScroll()
+        })
+        resizeObserver.observe(scrollContainer.value)
+      }
+    }
   })
 })
 
-onMounted(() => {
-  if (scrollContainer.value) {
-    handleScroll()
+onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
   }
 })
 
-onUnmounted(() => {
-})
+watch(providers, () => {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      handleScroll()
+    }
+  })
+}, { immediate: false })
 </script>
 
 <style scoped>
@@ -503,3 +425,4 @@ onUnmounted(() => {
   display: none;
 }
 </style>
+

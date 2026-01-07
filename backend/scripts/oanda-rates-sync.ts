@@ -49,6 +49,13 @@ const toBoolean = (value: string | undefined): boolean => {
   return value === '1' || value === 'true' || value === 'yes'
 }
 
+const shouldIncludeCapabilityPairs = (): boolean => {
+  if (process.env.OANDA_SYNC_INCLUDE_CAPABILITY !== undefined) {
+    return toBoolean(process.env.OANDA_SYNC_INCLUDE_CAPABILITY)
+  }
+  return config.env !== 'production' && config.env !== 'staging'
+}
+
 const dedupePairs = (pairs: Array<{ base: string; quote: string }>) => {
   const seen = new Set<string>()
   const deduped: Array<{ base: string; quote: string }> = []
@@ -125,13 +132,61 @@ const fetchPriorityPairs = async (pool: ReturnType<typeof createPool>) => {
   return pairs
 }
 
+const fetchCapabilityPairs = async (pool: ReturnType<typeof createPool>) => {
+  const pairs: Array<{ base: string; quote: string }> = []
+
+  try {
+    const corridorPairs = await query<{ base_currency: string; quote_currency: string }>(
+      `SELECT DISTINCT c.source_currency AS base_currency, c.dest_currency AS quote_currency
+       FROM silver.provider_corridor_capability pcc
+       JOIN silver.corridor c ON c.corridor_id = pcc.corridor_id
+       WHERE pcc.is_supported = true`,
+      [],
+      pool,
+    )
+    pairs.push(...corridorPairs.rows.map(row => ({
+      base: row.base_currency,
+      quote: row.quote_currency,
+    })))
+
+    const currencyRows = await query<{ currency: string }>(
+      `SELECT DISTINCT c.source_currency AS currency
+       FROM silver.provider_corridor_capability pcc
+       JOIN silver.corridor c ON c.corridor_id = pcc.corridor_id
+       WHERE pcc.is_supported = true
+       UNION
+       SELECT DISTINCT c.dest_currency AS currency
+       FROM silver.provider_corridor_capability pcc
+       JOIN silver.corridor c ON c.corridor_id = pcc.corridor_id
+       WHERE pcc.is_supported = true`,
+      [],
+      pool,
+    )
+    for (const row of currencyRows.rows) {
+      const currency = row.currency?.toUpperCase()
+      if (!currency || currency === 'USD') continue
+      pairs.push({ base: currency, quote: 'USD' })
+      pairs.push({ base: 'USD', quote: currency })
+    }
+  } catch (error) {
+    logger.warn('capability_pairs_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+
+  return pairs
+}
+
 const buildCurrencyPairs = async (pool: ReturnType<typeof createPool>) => {
   const manualPairs = getCurrencyPairsFromEnv()
   const priorityPairs = await fetchPriorityPairs(pool)
+  const capabilityPairs = shouldIncludeCapabilityPairs()
+    ? await fetchCapabilityPairs(pool)
+    : []
 
   const pairs: Array<{ base: string; quote: string }> = []
 
-  for (const pair of [...priorityPairs, ...manualPairs]) {
+  for (const pair of [...priorityPairs, ...capabilityPairs, ...manualPairs]) {
     if (!pair.base || !pair.quote) continue
     if (pair.base === pair.quote) continue
     pairs.push({ base: pair.base.toUpperCase(), quote: pair.quote.toUpperCase() })
@@ -193,65 +248,76 @@ const syncRates = async (): Promise<void> => {
       use_authenticated_api: useAuthenticatedApi,
     })
 
-    for (const { base, quote } of pairs) {
-      if (isShutdownRequested()) {
-        logger.info('sync_interrupted', { reason: 'shutdown_requested' })
-        break
-      }
-
-      try {
-        const result = await fetcher.fetchRate(base, quote, false)
-        if (result.success && result.data) {
-          await fxRateRepository.upsertRate({
-            baseCurrency: base,
-            quoteCurrency: quote,
-            rate: result.data.rate,
-            bid: result.data.bid,
-            ask: result.data.ask,
-            source: result.data.source,
-            lastUpdated: result.data.last_updated,
-          })
-
-          if (result.historical_rates.length > 0) {
-            await fxRateHistoryRepository.upsertHistory(
-              result.historical_rates.map((row) => ({
-                baseCurrency: base,
-                quoteCurrency: quote,
-                rate: row.rate,
-                bid: row.bid,
-                ask: row.ask,
-                rateDate: row.date,
-                source: result.data?.source ?? 'OANDA',
-              })),
-            )
-          }
-
-          successCount++
-          logger.debug('rate_synced', {
-            base_currency: base,
-            quote_currency: quote,
-            rate: result.data.rate,
-            cached: result.cached,
-          })
-        } else {
-          failureCount++
-          logger.warn('rate_sync_failed', {
-            base_currency: base,
-            quote_currency: quote,
-            error: result.error,
-          })
+    const concurrency = Math.max(1, toNumber(process.env.OANDA_SYNC_CONCURRENCY, 2))
+    let index = 0
+    const workerCount = Math.min(concurrency, pairs.length)
+    const workers = Array.from({ length: workerCount }, async () => {
+      while (index < pairs.length) {
+        if (isShutdownRequested()) {
+          logger.info('sync_interrupted', { reason: 'shutdown_requested' })
+          return
         }
 
-        await new Promise(resolve => setTimeout(resolve, 100))
-      } catch (error) {
-        failureCount++
-        logger.error('rate_sync_error', {
-          base_currency: base,
-          quote_currency: quote,
-          error: error instanceof Error ? error.message : String(error),
-        })
+        const currentIndex = index
+        index += 1
+        const { base, quote } = pairs[currentIndex]
+
+        try {
+          const result = await fetcher.fetchRate(base, quote, false)
+          if (result.success && result.data) {
+            await fxRateRepository.upsertRate({
+              baseCurrency: base,
+              quoteCurrency: quote,
+              rate: result.data.rate,
+              bid: result.data.bid,
+              ask: result.data.ask,
+              source: result.data.source,
+              lastUpdated: result.data.last_updated,
+            })
+
+            if (result.historical_rates.length > 0) {
+              await fxRateHistoryRepository.upsertHistory(
+                result.historical_rates.map((row) => ({
+                  baseCurrency: base,
+                  quoteCurrency: quote,
+                  rate: row.rate,
+                  bid: row.bid,
+                  ask: row.ask,
+                  rateDate: row.date,
+                  source: result.data?.source ?? 'OANDA',
+                })),
+              )
+            }
+
+            successCount += 1
+            logger.debug('rate_synced', {
+              base_currency: base,
+              quote_currency: quote,
+              rate: result.data.rate,
+              cached: result.cached,
+            })
+          } else {
+            failureCount += 1
+            logger.warn('rate_sync_failed', {
+              base_currency: base,
+              quote_currency: quote,
+              error: result.error,
+            })
+          }
+        } catch (error) {
+          failureCount += 1
+          logger.error('rate_sync_error', {
+            base_currency: base,
+            quote_currency: quote,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        } finally {
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
       }
-    }
+    })
+
+    await Promise.all(workers)
 
     await fxRateCache.invalidatePattern('*')
     await fxRateHistoryCache.invalidatePattern('*')

@@ -118,15 +118,27 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
 ) => {
   const startTime = Date.now()
   const queryTimeout = timeoutMs ?? (Number(process.env.DB_QUERY_TIMEOUT_MS) || 30000)
-  
+
   try {
     // Set query timeout if pool client supports it
-    if ('query' in poolInstance && typeof (poolInstance as Pool).query === 'function') {
+    const canConnect = typeof (poolInstance as Pool).connect === 'function'
+    const isPoolClient = typeof (poolInstance as PoolClient).release === 'function'
+    const isMockedQuery =
+      typeof (poolInstance as Pool).query === 'function'
+      && 'mock' in (poolInstance as Pool).query
+    const shouldUseConnect = canConnect && !isMockedQuery && !isPoolClient
+    if (shouldUseConnect) {
       const pool = poolInstance as Pool
       const client = await pool.connect()
       try {
         await client.query(`SET statement_timeout = ${queryTimeout}`)
         const result = await client.query<T>(text, params)
+        try {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordQueryFromSql(text, durationSeconds, 'success')
+        } catch {
+          // Silently ignore metrics errors
+        }
         return result
       } finally {
         client.release()

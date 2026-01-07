@@ -6,6 +6,7 @@ import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
+import { upsertUsageSnapshot } from '../services/plan-usage'
 import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
@@ -14,6 +15,18 @@ import { WatchlistRepository } from '../repositories'
 const logger = createLogger('plane-a.watchlist')
 const pool = getPool(config.db.planeAUrl)
 const watchlistRepository = new WatchlistRepository(pool)
+
+const updateWatchlistUsage = async (userId: string) => {
+  try {
+    const count = await watchlistRepository.countByUserId(userId)
+    await upsertUsageSnapshot(pool, userId, 'watchlist_count', count)
+  } catch (error) {
+    logger.warn('watchlist_usage_update_failed', {
+      user_id: userId,
+      error: getErrorMessage(error),
+    })
+  }
+}
 
 const watchTargetSchema = z.discriminatedUnion('type', [
   z.object({
@@ -260,6 +273,8 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           })
         }
 
+        await updateWatchlistUsage(user.user_id)
+
         return {
           success: true,
           status: 'already_saved',
@@ -314,6 +329,8 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           error: getErrorMessage(error),
         })
       }
+
+      await updateWatchlistUsage(user.user_id)
 
       return {
         success: true,
@@ -515,6 +532,8 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           })
         }
       }
+
+      await updateWatchlistUsage(user.user_id)
 
       return {
         success: true,

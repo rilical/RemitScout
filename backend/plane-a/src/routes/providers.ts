@@ -1,13 +1,19 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { COUNTRIES } from '../../../shared/countries-currencies'
 import { createTtlCache } from '../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
+import {
+  FxRateRepository,
+  LatestQuoteRepository,
+} from '../repositories'
+import { getProviderMetadata } from '../services/provider-metadata'
+import type { LatestQuoteByCorridorRecord } from '../repositories/interfaces/latest-quote-repository.interface'
 const normalizeToken = (value: string): string => {
   if (!value || typeof value !== 'string') return ''
   return value
@@ -53,12 +59,14 @@ const toCanonicalPayoutMethod = (value?: string | null): string => {
   }
   return 'other'
 }
-import {
-  FxRateRepository,
-  LatestQuoteRepository,
-} from '../repositories'
-import { getProviderMetadata } from '../services/provider-metadata'
-import type { LatestQuoteByCorridorRecord } from '../repositories/interfaces/latest-quote-repository.interface'
+
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null
+  const parsed = typeof value === 'string' ? Number(value) : Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const toNumberOrZero = (value: unknown): number => toNumberOrNull(value) ?? 0
 
 const logger = createLogger('plane-a.providers')
 
@@ -153,6 +161,11 @@ type ProvidersResponse = {
   corridor: string
   amount: number
   method: string
+  bucketUsed?: number
+  approximate?: boolean
+  midMarketRate?: number | null
+  midMarketSource?: string | null
+  midMarketUpdatedAt?: string | null
 }
 
 const providersCache = createTtlCache<ProvidersResponse>({ namespace: 'plane_a:providers' })
@@ -160,6 +173,8 @@ const providersCache = createTtlCache<ProvidersResponse>({ namespace: 'plane_a:p
 const querySchema = z.object({
   from: z.string().min(2).max(2).optional(),
   to: z.string().min(2).max(2).optional(),
+  fromCurrency: z.string().min(3).max(3).optional(),
+  toCurrency: z.string().min(3).max(3).optional(),
   amount: z.coerce.number().optional(),
   method: z.enum(['bank', 'cash', 'wallet']).optional(),
   corridor_id: z.string().optional(),
@@ -169,6 +184,29 @@ const querySchema = z.object({
 })
 
 const MIN_SEND_AMOUNT = 50
+const MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
+
+const toIsoString = (value?: string | Date | null) => {
+  if (!value) return null
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
+const normalizeCurrencyCode = (value?: string | null) => {
+  if (!value) return null
+  const trimmed = value.trim().toUpperCase()
+  return /^[A-Z]{3}$/.test(trimmed) ? trimmed : null
+}
+
+const getBucketCandidates = (amount: number, fallback: number) => {
+  const sorted = [...DEFAULT_AMOUNT_BUCKETS]
+    .filter(bucket => Number.isFinite(bucket))
+    .sort((a, b) => Math.abs(amount - a) - Math.abs(amount - b))
+  if (!sorted.includes(fallback)) {
+    sorted.unshift(fallback)
+  }
+  return sorted
+}
 
 const getUsdEquivalent = async (amount: number, currency: string) => {
   if (!Number.isFinite(amount)) return null
@@ -195,6 +233,7 @@ const getUsdEquivalent = async (amount: number, currency: string) => {
 
   return null
 }
+
 
 const mapPayinMethod = (payin: string): string => {
   const mapping: Record<string, string> = {
@@ -248,14 +287,14 @@ const transformQuote = (
   const payin = mapPayinMethod(quote.payin)
   const payout = mapPayoutMethod(quote.payout)
   const transferTime = formatTransferTime(
-    quote.delivery_time_min_minutes,
-    quote.delivery_time_max_minutes,
+    toNumberOrNull(quote.delivery_time_min_minutes),
+    toNumberOrNull(quote.delivery_time_max_minutes),
   )
 
-  const sendAmount = quote.send_amount || 0
-  const feeAmount = quote.fee_amount || 0
-  const receiveAmount = quote.receive_amount || 0
-  const rate = quote.implied_fx_rate || 0
+  const sendAmount = toNumberOrZero(quote.send_amount)
+  const feeAmount = toNumberOrZero(quote.fee_amount)
+  const receiveAmount = toNumberOrZero(quote.receive_amount)
+  const rate = toNumberOrZero(quote.implied_fx_rate)
 
   const fee = {
     transfer: feeAmount,
@@ -268,8 +307,9 @@ const transformQuote = (
 
   const promos: ProviderQuoteResponse['quotes'][0]['promos'] = []
   if (quote.promotional_rate || quote.promotional_fee_amount) {
-    const promoRate = quote.promotional_rate || rate
-    const promoFee = quote.promotional_fee_amount || 0
+    const promoRateRaw = toNumberOrNull(quote.promotional_rate)
+    const promoRate = promoRateRaw && promoRateRaw > 0 ? promoRateRaw : rate
+    const promoFee = toNumberOrZero(quote.promotional_fee_amount)
     const promoReceiveAmount = sendAmount * promoRate - promoFee
 
     promos.push({
@@ -376,6 +416,13 @@ const groupQuotesByProvider = (
   }))
 }
 
+const selectBestQuote = (quotes: TransformedQuote[]) => {
+  if (quotes.length === 0) return null
+  return quotes.reduce((best, current) => {
+    return current.receivedAmount > best.receivedAmount ? current : best
+  })
+}
+
 export const providersRoutes = async (app: FastifyInstance) => {
   app.get('/providers', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
@@ -384,12 +431,28 @@ export const providersRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const { from, to, amount, method, corridor_id, amount_bucket, payin, payout } = parsed.data
+    const { from, to, fromCurrency, toCurrency, amount, method, corridor_id, amount_bucket, payin, payout } = parsed.data
+    const payinExplicit = Boolean(payin)
 
     let corridorId = corridor_id
     let amountBucket = amount_bucket
     let payinMethod = payin
     let payoutMethod = payout
+    let requestedAmount = amount
+    let approximate = false
+
+    const normalizedFromCurrency = normalizeCurrencyCode(fromCurrency)
+    const normalizedToCurrency = normalizeCurrencyCode(toCurrency)
+
+    if (fromCurrency && !normalizedFromCurrency) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] }
+    }
+
+    if (toCurrency && !normalizedToCurrency) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] }
+    }
 
     if (from && to && amount) {
       const sourceCountry = COUNTRIES.find(c => c.code === from.toUpperCase())
@@ -400,9 +463,11 @@ export const providersRoutes = async (app: FastifyInstance) => {
         return { error: 'bad_request', details: [{ message: 'invalid country codes' }] }
       }
 
-      corridorId = `${from.toUpperCase()}-${to.toUpperCase()}-${sourceCountry.currency}-${destCountry.currency}`
+      const sourceCurrency = normalizedFromCurrency ?? sourceCountry.currency
+      const destCurrency = normalizedToCurrency ?? destCountry.currency
+      corridorId = `${from.toUpperCase()}-${to.toUpperCase()}-${sourceCurrency}-${destCurrency}`
 
-      const usdEquivalent = await getUsdEquivalent(amount, sourceCountry.currency)
+      const usdEquivalent = await getUsdEquivalent(amount, sourceCurrency)
       if (usdEquivalent === null) {
         reply.code(503)
         return { error: 'fx_unavailable', details: [{ message: 'USD conversion unavailable' }] }
@@ -415,6 +480,8 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
       const bucketSelection = computeBucketSelection(amount)
       amountBucket = bucketSelection.bucket_used
+      approximate = bucketSelection.approximate
+      requestedAmount = amount
 
       if (method === 'bank') {
         payinMethod = 'bank_transfer'
@@ -441,19 +508,28 @@ export const providersRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: [{ message: 'invalid payin or payout method' }] }
     }
 
+    const payinCandidates = payinExplicit
+      ? [normalizedPayin]
+      : [normalizedPayin]
+    const payinKey = payinCandidates.join('|')
+    const amountKey = requestedAmount ?? amountBucket
+
     try {
-      const cacheKey = `providers:${corridorId}:${amountBucket}:${normalizedPayin}:${normalizedPayout}`
+      const cacheKey = `providers:${corridorId}:${amountBucket}:${amountKey}:${payinKey}:${normalizedPayout}`
       const cached = await providersCache.get(cacheKey)
       if (cached !== null) {
         logger.debug('providers_cache_hit', { cache_key: cacheKey })
         return cached
       }
 
-      const quotes = await latestQuoteRepository.listLatestByCorridor(
+      const corridorParts = parseCorridorId(corridorId)
+      let bucketUsed = amountBucket
+      let quotes = await latestQuoteRepository.listLatestByCorridorPayins(
         corridorId,
         amountBucket,
-        normalizedPayin,
+        payinCandidates,
         normalizedPayout,
+        MAX_QUOTE_AGE_SECONDS || undefined,
       )
 
       if (!Array.isArray(quotes)) {
@@ -461,79 +537,220 @@ export const providersRoutes = async (app: FastifyInstance) => {
         throw new Error('Invalid response from database')
       }
 
-      const corridorParts = parseCorridorId(corridorId)
+      if (!quotes.length && requestedAmount) {
+        const candidates = getBucketCandidates(requestedAmount, amountBucket)
+        for (const candidate of candidates) {
+          if (candidate === amountBucket) continue
+          const fallbackQuotes = await latestQuoteRepository.listLatestByCorridorPayins(
+            corridorId,
+            candidate,
+            payinCandidates,
+            normalizedPayout,
+            MAX_QUOTE_AGE_SECONDS || undefined,
+          )
+          if (Array.isArray(fallbackQuotes) && fallbackQuotes.length) {
+            quotes = fallbackQuotes
+            bucketUsed = candidate
+            approximate = true
+            break
+          }
+        }
+      }
+
       let midMarketRate: number | null = null
+      let midMarketSource: string | null = null
+      let midMarketUpdatedAt: string | null = null
+
       if (corridorParts) {
-        const rate = await fxRateRepository.getRate(
+        const rateRecord = await fxRateRepository.getRateRecord(
           corridorParts.sourceCurrency,
           corridorParts.destCurrency,
         )
-        midMarketRate = rate
+        const rate = toNumberOrNull(rateRecord?.rate)
+        if (rate && rate > 0) {
+          midMarketRate = rate
+          midMarketSource = rateRecord?.source ?? null
+          midMarketUpdatedAt = toIsoString(rateRecord?.last_updated ?? rateRecord?.updated_at)
+        }
+      }
+
+      if (!quotes.length) {
+        const supportResult = await query<{
+          payin_methods: string[] | null
+          payout_methods: string[] | null
+          is_supported: boolean
+        }>(
+          `SELECT payin_methods, payout_methods, is_supported
+           FROM silver.provider_corridor_capability
+           WHERE corridor_id = $1`,
+          [corridorId],
+          planeAPool,
+        )
+
+        if (supportResult.rows.length > 0) {
+          const supportedRows = supportResult.rows.filter(row => row.is_supported)
+
+          if (!supportedRows.length) {
+            reply.code(404)
+            return {
+              error: 'corridor_unsupported',
+              message: 'Providers explicitly mark this corridor as unsupported.',
+              corridor: corridorId,
+            }
+          }
+
+          const methodSupported = supportedRows.some((row) => {
+            const payinMethods = row.payin_methods
+            const payoutMethods = row.payout_methods
+            const payinOk = !Array.isArray(payinMethods) || payinMethods.length === 0
+              || payinMethods.includes(normalizedPayin)
+            const payoutOk = !Array.isArray(payoutMethods) || payoutMethods.length === 0
+              || payoutMethods.includes(normalizedPayout)
+            return payinOk && payoutOk
+          })
+
+          if (!methodSupported) {
+            reply.code(404)
+            return {
+              error: 'corridor_unavailable',
+              message: 'No providers currently support this corridor.',
+              corridor: corridorId,
+            }
+          }
+        }
       }
 
       const providerQuotes = groupQuotesByProvider(quotes)
 
+      if (!midMarketRate && providerQuotes.length >= 2) {
+        const bestQuotes = providerQuotes
+          .map(pq => selectBestQuote(pq.quotes))
+          .filter((quote): quote is TransformedQuote => Boolean(quote))
+          .filter((quote) => Number.isFinite(quote.rate) && quote.rate > 0)
+
+        if (bestQuotes.length >= 2) {
+          let weightedSum = 0
+          let weightTotal = 0
+          let latestCollectedAt = 0
+
+          for (const quote of bestQuotes) {
+            const sendAmount = Number(quote.originalQuote.send_amount ?? requestedAmount ?? amountBucket)
+            if (!Number.isFinite(sendAmount) || sendAmount <= 0) continue
+            weightedSum += quote.rate * sendAmount
+            weightTotal += sendAmount
+            const collectedAt = quote.originalQuote.collected_at
+              ? new Date(quote.originalQuote.collected_at).getTime()
+              : 0
+            if (Number.isFinite(collectedAt) && collectedAt > latestCollectedAt) {
+              latestCollectedAt = collectedAt
+            }
+          }
+
+          if (weightTotal > 0) {
+            midMarketRate = weightedSum / weightTotal
+            midMarketSource = 'provider_weighted'
+            midMarketUpdatedAt = latestCollectedAt
+              ? new Date(latestCollectedAt).toISOString()
+              : new Date().toISOString()
+          }
+        }
+      }
+
       const flattenedQuotes = providerQuotes.flatMap((pq) => {
-        return pq.quotes.map((quote) => {
-          const feeTotal = quote.fee.total
-          const receivedAmount = quote.receivedAmount
-          const fxRate = quote.rate
-          
-          const marginPct = midMarketRate && midMarketRate > 0 && fxRate > 0
-            ? ((midMarketRate - fxRate) / midMarketRate) * 100
-            : 0
+        const quote = selectBestQuote(pq.quotes)
+        if (!quote) return []
+        const feeTotal = quote.fee.total
+        const fxRate = quote.rate
+        
+        // Recalculate recipientGets for the requested amount using the stored rate
+        // If we have the original send_amount from the stored quote, use it to scale proportionally
+        // Otherwise, calculate using the rate formula
+        const storedSendAmount = Number(quote.originalQuote.send_amount ?? bucketUsed)
+        let receivedAmount = quote.receivedAmount
 
-          const deliveryLabel = quote.deliveryLabel
-
-          const methods: ('bank' | 'cash' | 'wallet')[] = []
-          if (quote.payout === 'BANK' || quote.payout === 'CARD') {
-            methods.push('bank')
-          } else if (quote.payout === 'CASH') {
-            methods.push('cash')
-          } else if (quote.payout === 'WALLET') {
-            methods.push('wallet')
+        if (requestedAmount && Number.isFinite(requestedAmount) && Number.isFinite(fxRate) && fxRate > 0) {
+          if (Number.isFinite(storedSendAmount) && storedSendAmount > 0 && Math.abs(storedSendAmount - requestedAmount) > 0.01) {
+            const fixedFee = Number.isFinite(feeTotal) ? feeTotal : 0
+            const proportionalFee = fixedFee > 0
+              ? (fixedFee / storedSendAmount) * requestedAmount
+              : 0
+            const byRate = requestedAmount * fxRate
+            const byFixedFee = Math.max(0, (requestedAmount - fixedFee)) * fxRate
+            const byProportionalFee = Math.max(0, (requestedAmount - proportionalFee)) * fxRate
+            receivedAmount = Math.max(0, Math.min(byRate, byFixedFee, byProportionalFee))
           }
-          
-          if (methods.length === 0) {
-            methods.push('bank')
-          }
+        }
+        
+        const marginPct = midMarketRate && midMarketRate > 0 && fxRate > 0
+          ? ((midMarketRate - fxRate) / midMarketRate) * 100
+          : 0
 
-          const bestFor = quote.payout === 'CASH'
-            ? 'Fast cash pickup'
-            : quote.payout === 'WALLET'
-            ? 'Mobile wallet delivery'
-            : 'Bank deposit'
+        const deliveryLabel = quote.deliveryLabel
 
-          const whyThisRanking = quote.promos.length > 0
-            ? 'Promotional rate available for new customers'
-            : bestFor
+        const methods: ('bank' | 'cash' | 'wallet')[] = []
+        if (quote.payout === 'BANK' || quote.payout === 'CARD') {
+          methods.push('bank')
+        } else if (quote.payout === 'CASH') {
+          methods.push('cash')
+        } else if (quote.payout === 'WALLET') {
+          methods.push('wallet')
+        }
+        
+        if (methods.length === 0) {
+          methods.push('bank')
+        }
 
-          return {
-            id: pq.psp.slug,
-            name: pq.psp.name,
-            logoUrl: pq.psp.logo.sm,
-            fee: feeTotal,
-            marginPct: Math.abs(marginPct),
-            fxRate,
-            recipientGets: receivedAmount,
-            delivery: deliveryLabel,
-            reliability: Math.min(1, Math.max(0, pq.psp.score.value / 10)),
-            methods,
-            bestFor,
-            whyThisRanking,
-            affiliateUrl: pq.psp.affiliateUrl ?? null,
-            outboundUrl: pq.psp.outboundUrl ?? pq.psp.url,
-            isAffiliate: pq.psp.affiliate,
-          }
-        })
+        const bestFor = quote.payout === 'CASH'
+          ? 'Fast cash pickup'
+          : quote.payout === 'WALLET'
+          ? 'Mobile wallet delivery'
+          : 'Bank deposit'
+
+        const whyThisRanking = quote.promos.length > 0
+          ? 'Promotional rate available for new customers'
+          : bestFor
+
+        const hasPromo = quote.promos.length > 0
+        const promoInfo = hasPromo && quote.promos[0] ? {
+          fee: quote.promos[0].fee.total,
+          rate: quote.promos[0].rate,
+          headline: quote.promos[0].headline,
+          details: quote.promos[0].details,
+          newCustomersOnly: quote.promos[0].newCustomersOnly,
+        } : null
+
+        return [{
+          id: pq.psp.slug,
+          name: pq.psp.name,
+          logoUrl: pq.psp.logo.sm,
+          fee: feeTotal,
+          marginPct: Math.abs(marginPct),
+          fxRate,
+          recipientGets: receivedAmount,
+          delivery: deliveryLabel,
+          reliability: Math.min(1, Math.max(0, pq.psp.score.value / 10)),
+          methods,
+          bestFor,
+          whyThisRanking,
+          affiliateUrl: pq.psp.affiliateUrl ?? null,
+          outboundUrl: pq.psp.outboundUrl ?? pq.psp.url,
+          isAffiliate: pq.psp.affiliate,
+          hasPromo,
+          promoInfo,
+        }]
       })
 
       const response = {
         data: flattenedQuotes,
         updatedAt: new Date().toISOString(),
         corridor: corridorId,
-        amount: amount || amountBucket,
+        amount: requestedAmount || amountBucket,
         method: method || 'bank',
+        bucketUsed,
+        approximate,
+        midMarketRate: midMarketRate ?? null,
+        midMarketSource: midMarketSource ?? null,
+        midMarketUpdatedAt,
       }
 
       // Tune cache TTL for production (longer) vs development (shorter)
@@ -542,7 +759,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
       try {
         if (corridorParts) {
-          recordQuoteRequest(corridorId, amountBucket)
+          recordQuoteRequest(corridorId, bucketUsed)
           recordSearch(corridorParts.sourceCountry, corridorParts.destCountry)
         }
       } catch {
@@ -551,7 +768,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
       logger.debug('providers_request_success', {
         corridor_id: corridorId,
-        amount_bucket: amountBucket,
+        amount_bucket: bucketUsed,
         count: providerQuotes.length,
       })
 

@@ -31,6 +31,15 @@ let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 
 export const isShutdownRequested = (): boolean => shutdownRequested
 
+export const resetShutdownState = (): void => {
+  shutdownRequested = false
+  shutdownHooks.length = 0
+  if (forceExitTimer) {
+    clearTimeout(forceExitTimer)
+    forceExitTimer = null
+  }
+}
+
 const getDefaultTimeout = (): number => {
   if (isLambda) {
     return 5000
@@ -242,5 +251,4 @@ export const flushMetricsBeforeLambdaTimeout = async (
     await flushCloudWatchMetrics()
   }
 }
-
 

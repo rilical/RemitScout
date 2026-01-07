@@ -26,6 +26,8 @@ import { billingRoutes } from './routes/billing'
 import { meRoutes } from './routes/me'
 import { quotesRoutes } from './routes/quotes'
 import { providersRoutes } from './routes/providers'
+import { providerMetadataRoutes } from './routes/provider-metadata'
+import { corridorCurrenciesRoutes } from './routes/corridor-currencies'
 import { ratesRoutes } from './routes/rates'
 import { pulseStatusRoutes } from './routes/pulse-status'
 import { pulseRoutes } from './routes/pulse'
@@ -72,6 +74,26 @@ export const buildApp = async () => {
     logger.warn('admin_emails_empty', {
       message: 'PLANE_A_ADMIN_EMAILS is not set or empty. Admin routes will be inaccessible.',
       env: config.env,
+    })
+  }
+
+  if (config.runtime.readOnly) {
+    const readOnlyAllowMethods = new Set(['GET', 'HEAD', 'OPTIONS'])
+    const readOnlyAllowPaths = new Set(['/healthz', '/readyz', '/metrics'])
+
+    app.addHook('preHandler', async (request, reply) => {
+      if (readOnlyAllowMethods.has(request.method)) {
+        return
+      }
+      const path = request.url.split('?')[0]
+      if (readOnlyAllowPaths.has(path)) {
+        return
+      }
+      reply.code(503)
+      return reply.send({
+        error: 'read_only',
+        message: 'Writes are disabled in this environment.',
+      })
     })
   }
 
@@ -284,6 +306,8 @@ export const buildApp = async () => {
 
   app.register(quotesRoutes, { prefix: '/api/v1' })
   app.register(providersRoutes, { prefix: '/api/v1' })
+  app.register(providerMetadataRoutes, { prefix: '/api/v1' })
+  app.register(corridorCurrenciesRoutes, { prefix: '/api/v1' })
   app.register(popularCorridorsRoutes, { prefix: '/api/v1' })
   app.register(meRoutes, { prefix: '/api/v1' })
   app.register(billingRoutes, { prefix: '/api/v1' })
@@ -310,6 +334,8 @@ export const buildApp = async () => {
 
   app.register(quotesRoutes, { prefix: '/api' })
   app.register(providersRoutes, { prefix: '/api' })
+  app.register(providerMetadataRoutes, { prefix: '/api' })
+  app.register(corridorCurrenciesRoutes, { prefix: '/api' })
   app.register(popularCorridorsRoutes, { prefix: '/api' })
   app.register(meRoutes, { prefix: '/api' })
   app.register(billingRoutes, { prefix: '/api' })

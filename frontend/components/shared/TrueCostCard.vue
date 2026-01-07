@@ -1,7 +1,16 @@
 <template>
   <div
-    class="rounded-xl border overflow-hidden"
-    :class="compact ? 'border-neutral-200 bg-neutral-50' : 'border-neutral-200 bg-white shadow-sm'"
+    class="rounded-xl border-2 overflow-hidden"
+    :class="[
+      compact ? '' : 'shadow-sm',
+      darkBackground
+        ? isBest
+          ? 'border-white/30 bg-white/10'
+          : 'border-white/20 bg-white/5'
+        : isBest 
+          ? 'border-brand-600 bg-brand-50/20'
+          : 'border-neutral-200 bg-neutral-50'
+    ]"
   >
     <!-- Header -->
     <div
@@ -49,21 +58,27 @@
     <div :class="compact ? 'p-4' : 'p-4'">
       <!-- Upfront Fee Row -->
       <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <span
-            class="h-2.5 w-2.5 rounded-sm bg-brand-600"
-            :class="compact ? '' : ''"
-          />
-          <span
-            class="font-medium text-neutral-700"
-            :class="compact ? 'text-sm' : 'text-sm'"
-          >
-            Upfront Fee
-          </span>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <span :class="['font-medium text-sm', darkBackground ? 'text-white' : 'text-neutral-900']">
+              Upfront Fee
+            </span>
+            <span v-if="hasPromo && promoInfo" :class="[
+              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
+              darkBackground ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/40' : 'bg-emerald-100 text-emerald-700'
+            ]">
+              <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              PROMO
+            </span>
+          </div>
+          <div :class="['text-[10px]', darkBackground ? 'text-white/60' : 'text-neutral-500']">
+            {{ hasPromo && promoInfo ? 'Promotional pricing applied' : 'What they charge you directly' }}
+          </div>
         </div>
         <span
-          class="font-bold text-neutral-900"
-          :class="compact ? 'text-base' : 'text-sm'"
+          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-base' : 'text-sm']"
         >
           {{ formatCurrency(upfrontFee) }}
         </span>
@@ -71,100 +86,36 @@
 
       <!-- Hidden Markup Row -->
       <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <span
-            class="rounded-sm"
-            :class="[
-              compact ? 'h-2.5 w-2.5' : 'h-3 w-3',
-              markupSeverityClass
-            ]"
-          />
-          <div class="flex items-center gap-2">
-            <span
-              class="font-medium text-neutral-700"
-              :class="compact ? 'text-sm' : 'text-sm'"
-            >
-              Hidden FX Markup
-            </span>
-            <span
-              class="rounded-md px-2 py-0.5 text-[10px] font-bold"
-              :class="markupBadgeClass"
-            >
-              {{ spreadBps }} bps
-            </span>
+        <div class="flex-1">
+          <div :class="['font-medium text-sm mb-0.5', darkBackground ? 'text-white' : 'text-neutral-900']">
+            Hidden FX Markup
+          </div>
+          <div :class="['text-[10px]', darkBackground ? 'text-white/60' : 'text-neutral-500']">
+            Money they make from worse exchange rates
           </div>
         </div>
         <span
-          class="font-bold"
-          :class="[
-            compact ? 'text-base' : 'text-sm',
-            hiddenMarkup > upfrontFee ? 'text-rose-600' : 'text-amber-600'
-          ]"
+          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-base' : 'text-sm']"
         >
           {{ formatCurrency(hiddenMarkup) }}
         </span>
       </div>
 
       <!-- Divider -->
-      <div class="border-t border-dashed border-neutral-300 my-3" />
+      <div :class="['border-t border-dashed my-3', darkBackground ? 'border-white/20' : 'border-neutral-300']" />
 
       <!-- Total Cost Row -->
       <div class="flex items-center justify-between mb-4">
         <span
-          class="font-bold text-neutral-900 uppercase tracking-wide"
-          :class="compact ? 'text-sm' : 'text-sm'"
+          :class="['font-bold uppercase tracking-wide', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-sm' : 'text-sm']"
         >
           Total Cost
         </span>
-        <div class="text-right">
-          <span
-            class="font-bold text-neutral-900"
-            :class="compact ? 'text-xl' : 'text-lg'"
-          >
-            {{ formatCurrency(totalCost) }}
-          </span>
-          <span
-            class="ml-2 font-semibold"
-            :class="[
-              compact ? 'text-xs' : 'text-xs',
-              costSeverityTextClass
-            ]"
-          >
-            ({{ totalCostPercent.toFixed(2) }}%)
-          </span>
-        </div>
-      </div>
-
-      <!-- Visual Cost Bar -->
-      <div class="mb-3">
-        <div class="h-3 w-full rounded-full bg-neutral-200 overflow-hidden flex">
-          <div
-            class="h-full bg-brand-600 transition-all duration-500"
-            :style="{ width: `${feeBarWidth}%` }"
-          />
-          <div
-            class="h-full transition-all duration-500"
-            :class="markupSeverityClass"
-            :style="{ width: `${markupBarWidth}%` }"
-          />
-        </div>
-        <div class="flex justify-between mt-1.5 text-[10px] text-neutral-500">
-          <span>Fee: {{ feePercent.toFixed(0) }}%</span>
-          <span>Markup: {{ markupPercent.toFixed(0) }}%</span>
-        </div>
-      </div>
-
-      <!-- Loss Aversion Message (Compact Version) -->
-      <div
-        v-if="hiddenMarkup > 0 && compact"
-        class="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2.5"
-      >
-        <p class="text-xs text-rose-700 leading-relaxed">
-          <span class="font-bold">{{ formatCurrency(hiddenMarkup) }}</span> is hidden in the exchange rate
-          <span v-if="hiddenMarkup > upfrontFee" class="font-semibold">
-            — that's {{ ((hiddenMarkup / totalCost) * 100).toFixed(0) }}% of your total cost.
-          </span>
-        </p>
+        <span
+          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-xl' : 'text-lg']"
+        >
+          {{ formatCurrency(totalCost) }}
+        </span>
       </div>
     </div>
   </div>
@@ -182,10 +133,29 @@ interface Props {
   spreadBps: number
   amount: number
   compact?: boolean
+  isBest?: boolean
+  averageCost?: number
+  worstCost?: number
+  bestCost?: number
+  currencyCode?: string
+  hasPromo?: boolean
+  promoInfo?: {
+    fee: number
+    rate: number
+    newCustomersOnly: boolean
+  } | null
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props & { darkBackground?: boolean }>(), {
   compact: false,
+  isBest: false,
+  averageCost: 0,
+  worstCost: 0,
+  bestCost: 0,
+  currencyCode: 'USD',
+  hasPromo: false,
+  promoInfo: null,
+  darkBackground: false,
 })
 
 const showTooltip = ref(false)
@@ -247,7 +217,17 @@ const markupBadgeClass = computed(() => {
 })
 
 function formatCurrency(value: number): string {
-  return `$${value.toFixed(2)}`
+  const currency = props.currencyCode || 'USD'
+  if (currency === 'USD') {
+    return `$${Math.abs(value).toFixed(2)}`
+  }
+  // For other currencies, use basic formatting
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(value))
 }
 </script>
 

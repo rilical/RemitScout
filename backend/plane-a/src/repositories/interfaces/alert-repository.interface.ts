@@ -1,6 +1,6 @@
 export type AlertRuleInput = {
   watchlist_item_id: string
-  metric: 'rate' | 'recipientGets' | 'totalCost' | 'fee' | 'index' | 'midMarketRate'
+  metric: 'rate' | 'recipientGets' | 'totalCost' | 'fee' | 'index' | 'midMarketRate' | 'sendScore'
   comparator: 'gt' | 'gte' | 'lt' | 'lte' | 'crosses_above' | 'crosses_below'
   threshold: number
   currency?: string | null
@@ -106,5 +106,4 @@ export interface IAlertRepository {
     state: AlertStateRow | null
   } | null>
 }
-
 

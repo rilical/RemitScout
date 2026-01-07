@@ -1,5 +1,5 @@
 /**
- * Gold FX Rates Batch Job - Aggregates weighted FX rates from recent quotes.
+ * Gold FX Rates Batch Job - Aggregates weighted provider FX rates for internal analytics.
  *
  * **Usage**:
  * ```bash
@@ -13,6 +13,7 @@
  * - Graceful shutdown (SIGTERM/SIGINT)
  * - Distributed locking (prevents concurrent runs)
  * - Comprehensive logging with metrics
+ * - Provider aggregate fields stored on gold.fx_rates (does not replace OANDA mid-market)
  */
 
 import { createPool } from '../shared/db'
@@ -150,6 +151,8 @@ export const runGoldFxRatesJob = async (
       const baseCurrency = row.base_currency?.toUpperCase()
       const quoteCurrency = row.quote_currency?.toUpperCase()
       const rate = toNumber(row.rate, null)
+      const providerCount = toNumber(row.provider_count, null)
+      const sampleCount = toNumber(row.sample_count, null)
 
       if (!baseCurrency || !quoteCurrency || !isValidCurrency(baseCurrency) || !isValidCurrency(quoteCurrency)) {
         logger.warn('rate_invalid_currency', {
@@ -174,6 +177,9 @@ export const runGoldFxRatesJob = async (
             baseCurrency,
             quoteCurrency,
             rate,
+            providerCount: providerCount ?? undefined,
+            sampleCount: sampleCount ?? undefined,
+            updatedAt: new Date(),
           }),
           {
             maxRetries: 2,

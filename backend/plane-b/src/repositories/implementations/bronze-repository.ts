@@ -36,11 +36,12 @@ export class BronzeRepository implements IBronzeRepository {
     }
 
     try {
+      const payloadJson = JSON.stringify(input.payload ?? null)
       const result = await query<{ id: number }>(
         `INSERT INTO bronze.provider_raw (provider_id, corridor, payload, s3_object_key)
-         VALUES ($1, $2, $3, $4)
+         VALUES ($1, $2, $3::jsonb, $4)
          RETURNING id`,
-        [input.providerId, input.corridorId, input.payload, s3ObjectKey],
+        [input.providerId, input.corridorId, payloadJson, s3ObjectKey],
         this.pool,
       )
       return result.rows[0]?.id ?? null

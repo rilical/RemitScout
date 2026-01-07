@@ -80,7 +80,8 @@ SELECT
 FROM corridors c
 LEFT JOIN provider_counts pc ON pc.corridor_id = c.corridor_id
 LEFT JOIN freshness f ON f.corridor_id = c.corridor_id
-LEFT JOIN rates r ON r.corridor_id = c.corridor_id;
+LEFT JOIN rates r ON r.corridor_id = c.corridor_id
+;
 
 GRANT SELECT ON silver.corridor_tier TO plane_b;
 GRANT SELECT ON silver.corridor_tier TO plane_c;

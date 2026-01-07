@@ -42,8 +42,8 @@ const DELIVERY_TO_CANONICAL: Record<string, string> = {
   ACCOUNT_DEPOSIT: 'bank_deposit',
   MOBILE_MONEY: 'mobile_wallet',
   WALLET_ACCOUNT: 'mobile_wallet',
-  CASH_HOME_DELIVERY: 'other',
-  UPI: 'other',
+  CASH_HOME_DELIVERY: 'cash_pickup',
+  UPI: 'bank_deposit',
   PREPAID_CARD: 'other',
   DIRECT_TO_CARD: 'other',
 }
@@ -55,12 +55,12 @@ const PAYMENT_TO_CANONICAL: Record<string, string> = {
   CASH: 'cash',
   APPLEPAY: 'apple_pay',
   GOOGLEPAY: 'google_pay',
-  PAYNOW: 'other',
-  PAY_BY_BANK: 'other',
-  INTERAC: 'other',
-  ONLINE_BANKING: 'other',
-  TRUSTLY: 'other',
-  SOFORT: 'other',
+  PAYNOW: 'bank_transfer',
+  PAY_BY_BANK: 'bank_transfer',
+  INTERAC: 'bank_transfer',
+  ONLINE_BANKING: 'bank_transfer',
+  TRUSTLY: 'bank_transfer',
+  SOFORT: 'bank_transfer',
 }
 
 export const payinMethodMap: Record<string, string> = Object.fromEntries(

@@ -5,6 +5,7 @@ import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
 import { countryCodeMap, currencyCodeMap, payoutMethodMap } from './code-map'
+import { getUserAgentForCorridor } from '../../collectors/user-agent'
 
 const graphqlEndpoint = 'https://api.worldremit.com/graphql'
 const startPageUrl = 'https://www.worldremit.com/'
@@ -251,7 +252,7 @@ const executeGraphQL = async <T>(
       'content-type': 'application/json',
       origin: 'https://www.worldremit.com',
       referer: startPageUrl,
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(corridorId),
       'x-wr-platform': 'Web',
       'x-wr-requestid': requestId,
     },

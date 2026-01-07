@@ -4,12 +4,35 @@ import { query } from '../../../../shared/db'
 import type {
   IProviderCapabilityRepository,
   ProviderCapabilityInput,
+  ProviderCapabilityRecord,
   ProviderCorridorPriorityRecord,
   ProviderCorridorRecord,
 } from '../interfaces/provider-capability-repository.interface'
 
 export class ProviderCapabilityRepository implements IProviderCapabilityRepository {
   constructor(private readonly pool: Pool) {}
+
+  async getCapability(
+    providerId: string,
+    corridorId: string,
+  ): Promise<ProviderCapabilityRecord | null> {
+    const result = await query<ProviderCapabilityRecord>(
+      `SELECT provider_id,
+              corridor_id,
+              payin_methods,
+              payout_methods,
+              is_supported,
+              last_verified_at,
+              source
+         FROM silver.provider_corridor_capability
+        WHERE provider_id = $1
+          AND corridor_id = $2
+        LIMIT 1`,
+      [providerId, corridorId],
+      this.pool,
+    )
+    return result.rows[0] ?? null
+  }
 
   async loadObservedCorridors(providerId: string): Promise<ProviderCorridorRecord[]> {
     const result = await query<ProviderCorridorRecord>(

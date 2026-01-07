@@ -87,6 +87,7 @@ type WiseCollectorOptions = {
   freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
+  closePool?: boolean
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -156,7 +157,7 @@ const getLatestQuoteAgeMinutes = async (
 export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
   const providerId = 'wise'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
+  const shouldClose = options.closePool ?? !options.pool
   let corridors: string[]
 
   if (options.corridors?.length) {
@@ -594,6 +595,47 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
             trace_id: traceId,
             status: 'error',
             stage: 'http',
+            total_duration_ms: attemptDurationMs,
+            fetch_duration_ms: fetchDurationMs,
+            bronze_duration_ms: bronzeDurationMs,
+          })
+          completed = true
+          continue
+        }
+
+        const responsePayload = fetchResult.payload as {
+          paymentOptions?: Array<{ disabled?: boolean | null } | null>
+        }
+        const paymentOptions = Array.isArray(responsePayload.paymentOptions) ? responsePayload.paymentOptions : null
+        const enabledOptions = paymentOptions?.filter(option => !option?.disabled) ?? []
+        if (paymentOptions && enabledOptions.length === 0) {
+          logger.warn('quote_no_enabled_payment_options', {
+            trace_id: traceId,
+            corridor_id: corridorId,
+            amount_bucket: amountBucket,
+            payin_method: payinMethod,
+            payout_method: payoutMethod,
+            payment_option_count: paymentOptions.length,
+          })
+          await markCorridorUnsupported(pool, providerId, corridorId, 'auto_no_payment_options')
+          skipCorridor = true
+          await insertAttempt(pool, providerId, {
+            corridorId,
+            amountBucket,
+            payinMethod,
+            payoutMethod,
+            success: false,
+            errorType: 'unsupported',
+            httpStatus: fetchResult.status,
+            errorMessage: 'no_enabled_payment_options',
+            bronzeObjectKey,
+            requestFingerprint,
+          })
+          const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
+          logger.info('quote_attempt_finish', {
+            trace_id: traceId,
+            status: 'error',
+            stage: 'parse',
             total_duration_ms: attemptDurationMs,
             fetch_duration_ms: fetchDurationMs,
             bronze_duration_ms: bronzeDurationMs,

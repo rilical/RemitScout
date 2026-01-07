@@ -71,6 +71,10 @@ export const requireAdmin = () => async (request: FastifyRequest, reply: Fastify
     return reply.send({ error: 'unauthorized' })
   }
 
+  if (config.auth.supabase.mock.enabled && config.env !== 'production') {
+    return
+  }
+
   const supabaseRole = request.user.role
   if (supabaseRole === 'admin' || supabaseRole === 'super_admin') {
     return

@@ -87,6 +87,7 @@ type WesternUnionCollectorOptions = {
   freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
+  closePool?: boolean
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -110,6 +111,10 @@ const upsertCapability = async (
   const payoutMethods = Array.from(new Set(pairs.map(pair => pair.payout_method))).filter(
     method => method !== 'other',
   )
+  if (!payinMethods.length && !payoutMethods.length) {
+    await markCorridorUnsupported(pool, 'westernunion', corridorId, 'auto_empty_methods')
+    return
+  }
   const payinValue = payinMethods.length ? payinMethods : null
   const payoutValue = payoutMethods.length ? payoutMethods : null
 
@@ -156,7 +161,7 @@ const getLatestQuoteAgeMinutes = async (
 export const runWesternUnionCollector = async (options: WesternUnionCollectorOptions = {}) => {
   const providerId = 'westernunion'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
+  const shouldClose = options.closePool ?? !options.pool
   let corridors: string[]
 
   if (options.corridors?.length) {
@@ -626,6 +631,7 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             const payGroups = group.pay_groups ?? []
             return count + (Array.isArray(payGroups) ? payGroups.length : 0)
           }, 0)
+          const responseMessage = (payload.response_status?.message ?? '').toLowerCase()
           const parseFailureReason = Number.isFinite(statusNumber) && statusNumber !== 0
             ? `response_status_${statusNumber}`
             : serviceGroups.length === 0
@@ -633,6 +639,13 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
               : payGroupCount === 0
                 ? 'no_pay_groups'
                 : 'unknown'
+          const shouldMarkUnsupported =
+            (Number.isFinite(statusNumber) && (statusNumber as number) < 0)
+            || parseFailureReason === 'no_service_groups'
+            || parseFailureReason === 'no_pay_groups'
+            || responseMessage.includes('not available')
+            || responseMessage.includes('pricing')
+            || responseMessage.includes('not supported')
           logger.warn('quote_parse_failed', {
             trace_id: traceId,
             corridor_id: corridorId,
@@ -648,13 +661,17 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             service_group_count: serviceGroups.length,
             pay_group_count: payGroupCount,
           })
+          if (shouldMarkUnsupported) {
+            await markCorridorUnsupported(pool, providerId, corridorId, 'auto_parse_unsupported')
+            skipCorridor = true
+          }
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
             payinMethod,
             payoutMethod,
             success: false,
-            errorType: 'parse_error',
+            errorType: shouldMarkUnsupported ? 'unsupported' : 'parse_error',
             httpStatus: fetchResult.status,
             errorMessage: `parse_failed:${parseFailureReason}`,
             bronzeObjectKey,

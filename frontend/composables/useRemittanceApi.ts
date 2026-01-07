@@ -1,10 +1,14 @@
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
+import type { Ref } from 'vue'
+import { isRef, unref } from 'vue'
 import { getProviderScore } from '~/lib/providerScores'
 import { useApi } from '~/composables/useApi'
+import { getCountryByCode } from '~/utils/countries-currencies'
 
 // API composables for dynamic data fetching
 export const useRemittanceApi = () => {
   const { request } = useApi()
+  const fallbackUpdatedAt = () => new Date().toISOString()
 
   const useRecentSearches = (limit = 12, options: Record<string, any> = {}) => {
     const key = options.key || `recent-searches-${limit}`
@@ -66,20 +70,97 @@ export const useRemittanceApi = () => {
   }
 
   const useProviders = (
-    from = 'US',
-    to = 'PH',
-    amount = 500,
-    method: string = 'bank',
+    from: string | Ref<string> = 'US',
+    to: string | Ref<string> = 'PH',
+    amount: number | Ref<number> = 500,
+    method: string | Ref<string> = 'bank',
     options: Record<string, any> = {},
   ) => {
-    const key = options.key || `providers-${from}-${to}-${amount}-${method}`
+    const {
+      watch: optionWatch,
+      fromCurrency,
+      toCurrency,
+      ...restOptions
+    } = options
+    const resolveCurrency = (value: unknown) => (isRef(value) ? unref(value) : value)
+    const key =
+      options.key ||
+      `providers-${unref(from)}-${unref(to)}-${resolveCurrency(fromCurrency) || 'auto'}-${resolveCurrency(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}`
+    const watchSources = [from, to, amount, method, fromCurrency, toCurrency].filter(isRef)
+    const watch = Array.isArray(optionWatch)
+      ? [...optionWatch, ...watchSources]
+      : optionWatch === false
+        ? false
+        : (watchSources.length ? watchSources : undefined)
     return useAsyncData(
       key,
-      () => request<{ data: ProviderQuote[], updatedAt: string, corridor: string, amount: number, method: string }>(
-        '/providers',
-        { query: { from, to, amount, method } },
-      ),
-      { watch: false, ...options },
+      async () => {
+        try {
+          const fromValue = String(unref(from) || '').trim().toUpperCase()
+          const toValue = String(unref(to) || '').trim().toUpperCase()
+          const resolvedFromCurrency = resolveCurrency(fromCurrency)
+          const resolvedToCurrency = resolveCurrency(toCurrency)
+          const fromValid = fromValue.length === 2 && !!getCountryByCode(fromValue)
+          const toValid = toValue.length === 2 && !!getCountryByCode(toValue)
+          if (!fromValid || !toValid) {
+            return {
+              data: [],
+              updatedAt: fallbackUpdatedAt(),
+              corridor: `${fromValue}-${toValue}`,
+              amount: unref(amount),
+              method: unref(method),
+              error: {
+                code: 'corridor_invalid',
+                message: 'Invalid corridor. Please try another combination.',
+              },
+            }
+          }
+          return await request<{
+            data: ProviderQuote[]
+            updatedAt: string
+            corridor: string
+            amount: number
+            method: string
+            bucketUsed?: number
+            approximate?: boolean
+            midMarketRate?: number | null
+            midMarketSource?: string | null
+            midMarketUpdatedAt?: string | null
+            error?: { code: string; message: string }
+          }>(
+            '/providers',
+            {
+              query: {
+                from: fromValue,
+                to: toValue,
+                amount: unref(amount),
+                method: unref(method),
+                fromCurrency: resolvedFromCurrency,
+                toCurrency: resolvedToCurrency,
+              },
+            },
+          )
+        } catch (error: any) {
+          if (import.meta.dev) {
+            console.warn('[remittance] providers unavailable', error)
+          }
+          const errorData = error?.data
+          const errorCode = errorData?.error || 'unavailable'
+          const errorMessage = errorData?.details?.[0]?.message || errorData?.message || 'Provider data unavailable.'
+          return {
+            data: [],
+            updatedAt: fallbackUpdatedAt(),
+            corridor: `${unref(from)}-${unref(to)}`,
+            amount: unref(amount),
+            method: unref(method),
+            error: {
+              code: errorCode,
+              message: errorMessage,
+            },
+          }
+        }
+      },
+      { ...restOptions, ...(watch !== undefined ? { watch } : {}) },
     )
   }
 
@@ -168,7 +249,7 @@ export const useRemittanceApi = () => {
   }
 
   const formatRate = (rate: number, from = 'USD', to = 'PHP') => {
-    return `1 ${from} -> ${rate.toFixed(4)} ${to}`
+    return `1 ${from} -> ${rate.toFixed(2)} ${to}`
   }
 
   const getRelativeTime = (date: string) => {

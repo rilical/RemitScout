@@ -5,6 +5,7 @@ import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
 import { countryCodeMap, currencyCodeMap } from './code-map'
+import { getUserAgentForCorridor } from '../../collectors/user-agent'
 
 const quotesEndpoint = 'https://launchpad-api.xe.com/v2/quotes'
 
@@ -47,7 +48,7 @@ export const fetchXeQuote = async (
       'sec-fetch-site': 'same-site',
       'sec-fetch-mode': 'cors',
       'sec-fetch-dest': 'empty',
-      'user-agent': 'RemitScoutCollector/1.0',
+      'user-agent': getUserAgentForCorridor(request.corridor_id),
       'x-correlation-id': `XECOM-${randomUUID()}`,
       deviceid: randomUUID(),
     },

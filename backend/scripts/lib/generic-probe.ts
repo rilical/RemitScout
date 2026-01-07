@@ -42,11 +42,25 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
   }
 
   const corridors = [...getHealthCorridors(providerId)]
+  const timeoutMs = options.timeoutMs ?? (Number(process.env.PROBE_TIMEOUT_MS) || 300000)
+  const retries = options.retries ?? (Number(process.env.PROBE_RETRIES) || 0)
+  const amountBucketsEnv = process.env.PROBE_AMOUNT_BUCKETS
+  const parsedAmountBuckets = amountBucketsEnv
+    ? amountBucketsEnv
+      .split(',')
+      .map(value => Number(value.trim()))
+      .filter(value => Number.isFinite(value) && value > 0)
+    : null
+  const amountBuckets = options.amountBuckets ?? parsedAmountBuckets ?? [100]
+  const payinMethod = options.payinMethod ?? process.env.PROBE_PAYIN_METHOD ?? 'bank_transfer'
+  const payoutMethod = options.payoutMethod ?? process.env.PROBE_PAYOUT_METHOD ?? 'bank_deposit'
+  const locale = options.locale ?? process.env.PROBE_LOCALE ?? 'en-US'
+
   const runner = createProbeRunner({
     providerId,
     corridors,
-    timeoutMs: options.timeoutMs ?? Number(process.env.PROBE_TIMEOUT_MS) || 300000,
-    retries: options.retries ?? Number(process.env.PROBE_RETRIES) || 0,
+    timeoutMs,
+    retries,
   })
 
   const pool = createPool(config.db.planeBUrl)
@@ -57,10 +71,10 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
         pool,
         collectorType: 'health_probe',
         corridors,
-        amountBuckets: options.amountBuckets ?? [100],
-        payinMethod: options.payinMethod ?? 'bank_transfer',
-        payoutMethod: options.payoutMethod ?? 'bank_deposit',
-        locale: options.locale ?? 'en-US',
+        amountBuckets,
+        payinMethod,
+        payoutMethod,
+        locale,
         rpmOverride: provider.baseRates.rpm,
         perCorridorRpmOverride: provider.baseRates.perCorridorRpm,
       })
@@ -82,5 +96,4 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
     await pool.end()
   }
 }
-
 

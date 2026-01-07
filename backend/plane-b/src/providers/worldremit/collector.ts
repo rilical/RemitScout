@@ -87,6 +87,7 @@ type WorldRemitCollectorOptions = {
   freshnessSloEnabled?: boolean
   rpmOverride?: number
   perCorridorRpmOverride?: number
+  closePool?: boolean
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -110,6 +111,10 @@ const upsertCapability = async (
   const payoutMethods = Array.from(new Set(pairs.map(pair => pair.payout_method))).filter(
     method => method !== 'other',
   )
+  if (!payinMethods.length && !payoutMethods.length) {
+    await markCorridorUnsupported(pool, 'worldremit', corridorId, 'auto_empty_methods')
+    return
+  }
   const payinValue = payinMethods.length ? payinMethods : null
   const payoutValue = payoutMethods.length ? payoutMethods : null
 
@@ -156,7 +161,7 @@ const getLatestQuoteAgeMinutes = async (
 export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions = {}) => {
   const providerId = 'worldremit'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
-  const shouldClose = !options.pool
+  const shouldClose = options.closePool ?? !options.pool
   let corridors: string[]
 
   if (options.corridors?.length) {
@@ -602,6 +607,46 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
           continue
         }
 
+        const responsePayload = fetchResult.payload as {
+          payoutMethods?: { payOutMethods?: Array<unknown> | null } | null
+          data?: { payOutMethods?: Array<unknown> | null } | null
+        }
+        const payoutMethods = responsePayload.payoutMethods?.payOutMethods ?? responsePayload.data?.payOutMethods ?? null
+        if (Array.isArray(payoutMethods) && payoutMethods.length === 0) {
+          logger.warn('quote_no_payout_methods', {
+            trace_id: traceId,
+            corridor_id: corridorId,
+            amount_bucket: amountBucket,
+            payin_method: payinMethod,
+            payout_method: payoutMethod,
+          })
+          await markCorridorUnsupported(pool, providerId, corridorId, 'auto_no_payout_methods')
+          skipCorridor = true
+          await insertAttempt(pool, providerId, {
+            corridorId,
+            amountBucket,
+            payinMethod,
+            payoutMethod,
+            success: false,
+            errorType: 'unsupported',
+            httpStatus: fetchResult.status,
+            errorMessage: 'no_payout_methods',
+            bronzeObjectKey,
+            requestFingerprint,
+          })
+          const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
+          logger.info('quote_attempt_finish', {
+            trace_id: traceId,
+            status: 'error',
+            stage: 'parse',
+            total_duration_ms: attemptDurationMs,
+            fetch_duration_ms: fetchDurationMs,
+            bronze_duration_ms: bronzeDurationMs,
+          })
+          completed = true
+          continue
+        }
+
         if (!capabilityUpdated.has(corridorId)) {
           await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
           capabilityUpdated.add(corridorId)
@@ -618,6 +663,13 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
           const payoutCount = payload.payoutMethods?.payOutMethods?.length ?? 0
           const payinCount = payload.calculation?.createCalculation?.calculation?.payInMethodsCalculations?.length ?? 0
           const errorMessages = payload.calculation?.createCalculation?.errors?.map(error => error.message).filter(Boolean) ?? []
+          const errorText = errorMessages.join(' ').toLowerCase()
+          const shouldMarkUnsupported =
+            payoutCount === 0
+            || payinCount === 0
+            || errorText.includes('not supported')
+            || errorText.includes('not available')
+            || errorText.includes('unsupported')
           logger.warn('quote_parse_failed', {
             trace_id: traceId,
             corridor_id: corridorId,
@@ -629,13 +681,17 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
             payin_method_count: payinCount,
             calculation_errors: errorMessages.length ? errorMessages : null,
           })
+          if (shouldMarkUnsupported) {
+            await markCorridorUnsupported(pool, providerId, corridorId, 'auto_parse_unsupported')
+            skipCorridor = true
+          }
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
             payinMethod,
             payoutMethod,
             success: false,
-            errorType: 'parse_error',
+            errorType: shouldMarkUnsupported ? 'unsupported' : 'parse_error',
             httpStatus: fetchResult.status,
             errorMessage: 'parse_failed',
             bronzeObjectKey,

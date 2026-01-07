@@ -80,6 +80,39 @@ CREATE INDEX IF NOT EXISTS notification_pref_unsubscribed_idx ON silver.notifica
 
 -- Grant permissions to plane_a
 GRANT SELECT, INSERT, UPDATE, DELETE ON silver.alert_rule, silver.alert_state, silver.alert_event, silver.notification_pref, silver.email_suppression TO plane_a;
-GRANT USAGE, SELECT ON SEQUENCE silver.alert_rule_id_seq, silver.alert_event_id_seq, silver.notification_pref_id_seq TO plane_a;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.relkind = 'S'
+       AND c.relname = 'alert_rule_id_seq'
+       AND n.nspname = 'silver'
+  ) THEN
+    GRANT USAGE, SELECT ON SEQUENCE silver.alert_rule_id_seq TO plane_a;
+  END IF;
 
+  IF EXISTS (
+    SELECT 1
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.relkind = 'S'
+       AND c.relname = 'alert_event_id_seq'
+       AND n.nspname = 'silver'
+  ) THEN
+    GRANT USAGE, SELECT ON SEQUENCE silver.alert_event_id_seq TO plane_a;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.relkind = 'S'
+       AND c.relname = 'notification_pref_id_seq'
+       AND n.nspname = 'silver'
+  ) THEN
+    GRANT USAGE, SELECT ON SEQUENCE silver.notification_pref_id_seq TO plane_a;
+  END IF;
+END $$;
 

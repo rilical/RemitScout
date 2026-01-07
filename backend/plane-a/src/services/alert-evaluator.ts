@@ -1,10 +1,74 @@
 import type { Pool } from 'pg'
 import { createLogger } from '../../../shared/logger'
+import { query } from '../../../shared/db'
+import { getCountryByCode } from '../../../shared/countries-currencies'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { AlertRepository, FxRateRepository, LatestQuoteRepository } from '../repositories'
 import { sendAlertEmail, sendAlertSms } from './alert-notifications'
+import { getUserPlan } from './user-plan'
 
 const logger = createLogger('plane-a.alert-evaluator')
+
+const getDefaultCurrency = (countryCode: string | null) => {
+  if (!countryCode) return null
+  return getCountryByCode(countryCode)?.currency ?? null
+}
+
+const resolveCorridorId = (payload: Record<string, unknown>): string | null => {
+  if (typeof payload.corridorId === 'string' && payload.corridorId.length > 0) {
+    return payload.corridorId.toUpperCase()
+  }
+
+  const from = typeof payload.from === 'string' ? payload.from.toUpperCase() : null
+  const to = typeof payload.to === 'string' ? payload.to.toUpperCase() : null
+  if (!from || !to) return null
+
+  const fromCurrency = typeof payload.fromCurrency === 'string'
+    ? payload.fromCurrency.toUpperCase()
+    : getDefaultCurrency(from)
+  const toCurrency = typeof payload.toCurrency === 'string'
+    ? payload.toCurrency.toUpperCase()
+    : getDefaultCurrency(to)
+
+  if (!fromCurrency || !toCurrency) return null
+
+  return `${from}-${to}-${fromCurrency}-${toCurrency}`
+}
+
+const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
+  return !!plan
+    && ['plus', 'enterprise'].includes(plan.plan_code)
+    && ['active', 'trialing'].includes(plan.status)
+}
+
+const formatMetricValue = (metric: string, rawValue: number) => {
+  const value = Number(rawValue)
+  if (!Number.isFinite(value)) return 'n/a'
+  if (metric === 'sendScore') return `${Math.round(value)}`
+  if (metric === 'rate' || metric === 'midMarketRate') return value.toFixed(4)
+  return value.toFixed(2)
+}
+
+const metricLabel = (metric: string) => {
+  switch (metric) {
+    case 'sendScore':
+      return 'Smart score'
+    case 'recipientGets':
+      return 'Recipient gets'
+    case 'totalCost':
+      return 'Total cost'
+    case 'fee':
+      return 'Fee'
+    case 'midMarketRate':
+      return 'Mid-market rate'
+    case 'rate':
+      return 'Rate'
+    case 'index':
+      return 'Index'
+    default:
+      return 'Value'
+  }
+}
 
 export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolean> {
   try {
@@ -20,6 +84,20 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
     const { alert, watchlist_item, state } = alertData
     const targetPayload = watchlist_item.target_payload
 
+    if (alert.metric === 'sendScore') {
+      const plan = await getUserPlan(pool, watchlist_item.user_id)
+      if (!isPlusEntitled(plan)) {
+        logger.warn('alert_metric_not_entitled', {
+          alert_id: alertId,
+          user_id: watchlist_item.user_id,
+          metric: alert.metric,
+          plan: plan?.plan_code ?? 'none',
+          status: plan?.status ?? 'unknown',
+        })
+        return false
+      }
+    }
+
     // Check if snoozed
     if (state?.snoozed_until) {
       const snoozedUntil = new Date(state.snoozed_until)
@@ -34,6 +112,7 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
 
     // Get current value based on metric
     let currentValue: number | null = null
+    let alertEligible = true
     const fxRateRepository = new FxRateRepository(pool)
     const latestQuoteRepository = new LatestQuoteRepository(pool)
 
@@ -49,7 +128,15 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
       }
     } else if (alert.metric === 'recipientGets' && watchlist_item.target_type === 'corridor') {
       // Get best quote for recipient amount
-      const corridorId = `${targetPayload.from}-${targetPayload.to}`
+      const corridorId = resolveCorridorId(targetPayload)
+      if (!corridorId) {
+        logger.warn('alert_corridor_unresolved', {
+          alert_id: alertId,
+          metric: alert.metric,
+          target_payload: targetPayload,
+        })
+        return false
+      }
       const amountBucket = (targetPayload.amountBucket as number) || 500
       const payin = (targetPayload.method as string) || 'bank'
       const payout = 'bank'
@@ -70,6 +157,30 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         })
         currentValue = parseFloat(bestQuote.recipient_gets || '0')
       }
+    } else if (alert.metric === 'sendScore' && watchlist_item.target_type === 'corridor') {
+      const corridorId = resolveCorridorId(targetPayload)
+      if (!corridorId) {
+        logger.warn('alert_corridor_unresolved', {
+          alert_id: alertId,
+          metric: alert.metric,
+          target_payload: targetPayload,
+        })
+        return false
+      }
+
+      const result = await query<{ send_score: number; alert_eligible: boolean }>(
+        `SELECT send_score::double precision AS send_score, alert_eligible
+         FROM silver.corridor_signals
+         WHERE corridor_id = $1`,
+        [corridorId],
+        pool,
+      )
+
+      const row = result.rows[0]
+      if (row) {
+        currentValue = parseFloat(String(row.send_score))
+        alertEligible = row.alert_eligible === true
+      }
     }
 
     if (currentValue === null) {
@@ -88,44 +199,56 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
     // Evaluate comparator
     let shouldTrigger = false
     let message = ''
+    const label = metricLabel(alert.metric)
+    const currentFormatted = formatMetricValue(alert.metric, currentValue)
+    const thresholdFormatted = formatMetricValue(alert.metric, threshold)
 
     switch (alert.comparator) {
       case 'gt':
         shouldTrigger = currentValue > threshold
         message = shouldTrigger
-          ? `Rate is now ${currentValue.toFixed(4)} (above ${threshold.toFixed(4)})`
-          : `Rate is ${currentValue.toFixed(4)} (below ${threshold.toFixed(4)})`
+          ? `${label} is now ${currentFormatted} (above ${thresholdFormatted})`
+          : `${label} is ${currentFormatted} (below ${thresholdFormatted})`
         break
       case 'gte':
         shouldTrigger = currentValue >= threshold
         message = shouldTrigger
-          ? `Rate is now ${currentValue.toFixed(4)} (at or above ${threshold.toFixed(4)})`
-          : `Rate is ${currentValue.toFixed(4)} (below ${threshold.toFixed(4)})`
+          ? `${label} is now ${currentFormatted} (at or above ${thresholdFormatted})`
+          : `${label} is ${currentFormatted} (below ${thresholdFormatted})`
         break
       case 'lt':
         shouldTrigger = currentValue < threshold
         message = shouldTrigger
-          ? `Rate is now ${currentValue.toFixed(4)} (below ${threshold.toFixed(4)})`
-          : `Rate is ${currentValue.toFixed(4)} (above ${threshold.toFixed(4)})`
+          ? `${label} is now ${currentFormatted} (below ${thresholdFormatted})`
+          : `${label} is ${currentFormatted} (above ${thresholdFormatted})`
         break
       case 'lte':
         shouldTrigger = currentValue <= threshold
         message = shouldTrigger
-          ? `Rate is now ${currentValue.toFixed(4)} (at or below ${threshold.toFixed(4)})`
-          : `Rate is ${currentValue.toFixed(4)} (above ${threshold.toFixed(4)})`
+          ? `${label} is now ${currentFormatted} (at or below ${thresholdFormatted})`
+          : `${label} is ${currentFormatted} (above ${thresholdFormatted})`
         break
       case 'crosses_above':
         shouldTrigger = lastValue !== null && lastValue <= threshold && currentValue > threshold
         message = shouldTrigger
-          ? `Rate crossed above ${threshold.toFixed(4)} (now ${currentValue.toFixed(4)})`
-          : `Rate is ${currentValue.toFixed(4)}`
+          ? `${label} crossed above ${thresholdFormatted} (now ${currentFormatted})`
+          : `${label} is ${currentFormatted}`
         break
       case 'crosses_below':
         shouldTrigger = lastValue !== null && lastValue >= threshold && currentValue < threshold
         message = shouldTrigger
-          ? `Rate crossed below ${threshold.toFixed(4)} (now ${currentValue.toFixed(4)})`
-          : `Rate is ${currentValue.toFixed(4)}`
+          ? `${label} crossed below ${thresholdFormatted} (now ${currentFormatted})`
+          : `${label} is ${currentFormatted}`
         break
+    }
+
+    if (alert.metric === 'sendScore' && !alertEligible) {
+      logger.debug('smart_alert_ineligible', {
+        alert_id: alertId,
+        current_value: currentValue,
+        threshold,
+      })
+      shouldTrigger = false
     }
 
     // Check cooldown

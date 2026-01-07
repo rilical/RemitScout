@@ -270,12 +270,17 @@ export const payinMethodMap: Record<string, string> = {
   CREDIT: 'credit_card',
   DEBIT: 'debit_card',
   GOOGLE_PAY: 'google_pay',
+  INTERAC: 'bank_transfer',
+  OPEN_BANKING: 'bank_transfer',
+  PAYTO: 'bank_transfer',
 }
 
 export const payoutMethodMap: Record<string, string> = {
   BANK_DEPOSIT: 'bank_deposit',
   CASH_PICKUP: 'cash_pickup',
   DIRECT_TO_PHONE: 'mobile_wallet',
+  HOME_DELIVERY: 'cash_pickup',
   MOBILE_WALLET: 'mobile_wallet',
   PUSH_TO_CARD: 'other',
+  UPI: 'bank_deposit',
 }

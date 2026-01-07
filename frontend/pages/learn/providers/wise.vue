@@ -19,7 +19,7 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
+              <div class="w-40 h-40 rounded-2xl bg-white p-3 shadow-xl">
                 <img
                   src="/logos/wise.svg"
                   alt="Wise logo"
@@ -76,23 +76,15 @@
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
                 <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
-                <div class="relative inline-flex items-center justify-center">
-                  <svg class="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" stroke-width="12" />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      fill="none"
-                      stroke="#3b82f6"
-                      stroke-width="12"
-                      stroke-linecap="round"
-                      :stroke-dasharray="`${93 * 4.4} 440`"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">9.3</span>
-                    <span class="text-sm text-slate-500">/10</span>
+                <div class="flex justify-center">
+                  <div
+                    class="relative flex h-40 w-40 items-center justify-center rounded-full border-4 bg-white shadow-lg"
+                    :style="{ borderColor: scoreColor }"
+                  >
+                    <div class="text-center">
+                      <span :class="[scoreTextClass, 'text-5xl font-bold leading-none']">9.3</span>
+                      <span class="text-sm text-slate-500">/10</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -100,49 +92,39 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-400 rounded-full" style="width: 95%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 85%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-amber-400 rounded-full" style="width: 75%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 90%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
               </div>
 
@@ -871,6 +853,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 definePageMeta({
   alias: ['/reviews/wise'],
 })
@@ -891,6 +874,21 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'Wise Review', path: '/learn/providers/wise' },
 ]
+const score = 9.3
+
+const scoreColor = computed(() => {
+  if (score >= 9.0) return '#10b981'
+  if (score >= 8.0) return '#2563eb'
+  if (score >= 7.0) return '#eab308'
+  return '#6b7280'
+})
+
+const scoreTextClass = computed(() => {
+  if (score >= 9.0) return 'text-green-600'
+  if (score >= 8.0) return 'text-brand-600'
+  if (score >= 7.0) return 'text-yellow-600'
+  return 'text-neutral-600'
+})
 </script>
 
 

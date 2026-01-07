@@ -9,8 +9,12 @@ import {
   addSpanEvent,
   shutdownTracing,
   SpanStatusCode,
+  resetTracingState,
 } from '../shared/tracing'
 import * as opentelemetry from '@opentelemetry/api'
+import * as sdkTraceNode from '@opentelemetry/sdk-trace-node'
+import * as sdkTraceBase from '@opentelemetry/sdk-trace-base'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 
 vi.mock('@opentelemetry/sdk-trace-node', () => ({
   NodeTracerProvider: vi.fn().mockImplementation(() => ({
@@ -29,12 +33,8 @@ vi.mock('@opentelemetry/resources', () => ({
   Resource: vi.fn().mockImplementation((attrs) => attrs),
 }))
 
-vi.mock('@opentelemetry/exporter-jaeger', () => ({
-  JaegerExporter: vi.fn().mockImplementation(() => ({})),
-}))
-
-vi.mock('@opentelemetry/exporter-aws-xray', () => ({
-  AWSXRayExporter: vi.fn().mockImplementation(() => ({})),
+vi.mock('@opentelemetry/exporter-trace-otlp-http', () => ({
+  OTLPTraceExporter: vi.fn().mockImplementation(() => ({})),
 }))
 
 vi.mock('@opentelemetry/propagator-aws-xray', () => ({
@@ -52,10 +52,13 @@ vi.mock('../shared/logger', () => ({
 
 vi.mock('@opentelemetry/api', () => ({
   trace: {
+    getTracer: vi.fn(),
     getSpan: vi.fn(),
+    setSpan: vi.fn(),
   },
   context: {
     active: vi.fn(),
+    with: vi.fn(),
   },
   SpanStatusCode: {
     OK: 1,
@@ -70,8 +73,15 @@ describe('tracing', () => {
     vi.clearAllMocks()
     process.env = { ...originalEnv }
     delete process.env.JAEGER_ENDPOINT
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://otel.local/v1/traces'
+    process.env.TRACING_EXPORTER = 'xray'
+    process.env.TRACE_SAMPLE_RATE = '1'
+    resetTracingState()
     vi.mocked(opentelemetry.trace.getSpan).mockReturnValue(undefined)
+    vi.mocked(opentelemetry.trace.getTracer).mockReturnValue({} as any)
     vi.mocked(opentelemetry.context.active).mockReturnValue({} as any)
+    vi.mocked(opentelemetry.context.with).mockImplementation((_ctx, fn) => fn())
+    vi.mocked(opentelemetry.trace.setSpan).mockReturnValue({} as any)
   })
 
   afterEach(() => {
@@ -82,15 +92,15 @@ describe('tracing', () => {
     it('initializes tracing with default endpoint', () => {
       initTracing('test-service')
 
-      expect(vi.mocked(require('@opentelemetry/sdk-trace-node').NodeTracerProvider)).toHaveBeenCalled()
+      expect(vi.mocked(sdkTraceNode.NodeTracerProvider)).toHaveBeenCalled()
     })
 
-    it('uses custom JAEGER_ENDPOINT when provided', () => {
-      process.env.JAEGER_ENDPOINT = 'http://custom:14268/api/traces'
+    it('uses custom OTLP endpoint when provided', () => {
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://custom:4318/v1/traces'
       initTracing('test-service')
 
-      expect(vi.mocked(require('@opentelemetry/exporter-jaeger').JaegerExporter)).toHaveBeenCalledWith({
-        endpoint: 'http://custom:14268/api/traces',
+      expect(vi.mocked(OTLPTraceExporter)).toHaveBeenCalledWith({
+        url: 'http://custom:4318/v1/traces',
       })
     })
 
@@ -98,25 +108,25 @@ describe('tracing', () => {
       process.env.NODE_ENV = 'production'
       initTracing('test-service')
 
-      expect(vi.mocked(require('@opentelemetry/sdk-trace-base').BatchSpanProcessor)).toHaveBeenCalled()
+      expect(vi.mocked(sdkTraceBase.BatchSpanProcessor)).toHaveBeenCalled()
     })
 
     it('uses SimpleSpanProcessor in development', () => {
       process.env.NODE_ENV = 'development'
       initTracing('test-service')
 
-      expect(vi.mocked(require('@opentelemetry/sdk-trace-base').SimpleSpanProcessor)).toHaveBeenCalled()
+      expect(vi.mocked(sdkTraceBase.SimpleSpanProcessor)).toHaveBeenCalled()
     })
 
     it('only initializes once', () => {
       initTracing('test-service')
       initTracing('test-service-2')
 
-      expect(vi.mocked(require('@opentelemetry/sdk-trace-node').NodeTracerProvider)).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(sdkTraceNode.NodeTracerProvider)).toHaveBeenCalledTimes(1)
     })
 
     it('handles initialization errors gracefully', () => {
-      vi.mocked(require('@opentelemetry/sdk-trace-node').NodeTracerProvider).mockImplementation(() => {
+      vi.mocked(sdkTraceNode.NodeTracerProvider).mockImplementation(() => {
         throw new Error('Init failed')
       })
 
@@ -140,17 +150,8 @@ describe('tracing', () => {
         recordException: vi.fn(),
       }
 
-      vi.spyOn(opentelemetry, 'trace').mockReturnValue({
-        getTracer: vi.fn(() => ({
-          startSpan: vi.fn(() => mockSpan),
-        })),
-        getSpan: vi.fn(),
-        setSpan: vi.fn(),
-      } as any)
-
-      vi.spyOn(opentelemetry, 'context').mockReturnValue({
-        active: vi.fn(() => ({})),
-        with: vi.fn((ctx, fn) => fn()),
+      vi.mocked(opentelemetry.trace.getTracer).mockReturnValue({
+        startSpan: vi.fn(() => mockSpan),
       } as any)
 
       const result = await startSpan('test-span', async () => {
@@ -169,17 +170,8 @@ describe('tracing', () => {
         recordException: vi.fn(),
       }
 
-      vi.spyOn(opentelemetry, 'trace').mockReturnValue({
-        getTracer: vi.fn(() => ({
-          startSpan: vi.fn(() => mockSpan),
-        })),
-        getSpan: vi.fn(),
-        setSpan: vi.fn(),
-      } as any)
-
-      vi.spyOn(opentelemetry, 'context').mockReturnValue({
-        active: vi.fn(() => ({})),
-        with: vi.fn((ctx, fn) => fn()),
+      vi.mocked(opentelemetry.trace.getTracer).mockReturnValue({
+        startSpan: vi.fn(() => mockSpan),
       } as any)
 
       const error = new Error('Test error')
@@ -205,17 +197,8 @@ describe('tracing', () => {
         recordException: vi.fn(),
       }
 
-      vi.spyOn(opentelemetry, 'trace').mockReturnValue({
-        getTracer: vi.fn(() => ({
-          startSpan: vi.fn(() => mockSpan),
-        })),
-        getSpan: vi.fn(),
-        setSpan: vi.fn(),
-      } as any)
-
-      vi.spyOn(opentelemetry, 'context').mockReturnValue({
-        active: vi.fn(() => ({})),
-        with: vi.fn((ctx, fn) => fn()),
+      vi.mocked(opentelemetry.trace.getTracer).mockReturnValue({
+        startSpan: vi.fn(() => mockSpan),
       } as any)
 
       await expect(
@@ -245,18 +228,10 @@ describe('tracing', () => {
         recordException: vi.fn(),
       }
 
-      vi.spyOn(opentelemetry, 'trace').mockReturnValue({
-        getTracer: vi.fn(() => ({
-          startSpan: vi.fn(() => mockChildSpan),
-        })),
-        getSpan: vi.fn(() => mockParentSpan),
-        setSpan: vi.fn(),
+      vi.mocked(opentelemetry.trace.getTracer).mockReturnValue({
+        startSpan: vi.fn(() => mockChildSpan),
       } as any)
-
-      vi.spyOn(opentelemetry, 'context').mockReturnValue({
-        active: vi.fn(() => ({})),
-        with: vi.fn((ctx, fn) => fn()),
-      } as any)
+      vi.mocked(opentelemetry.trace.getSpan).mockReturnValue(mockParentSpan as any)
 
       const result = await startChildSpan('child-span', async () => {
         return 'success'
@@ -360,7 +335,6 @@ describe('tracing', () => {
         shutdown: mockShutdown,
       }))
 
-      const sdkTraceNode = await import('@opentelemetry/sdk-trace-node')
       vi.mocked(sdkTraceNode.NodeTracerProvider).mockImplementation(NodeTracerProviderMock as any)
 
       initTracing('test-service')
@@ -377,7 +351,6 @@ describe('tracing', () => {
         shutdown: mockShutdown,
       }))
 
-      const sdkTraceNode = await import('@opentelemetry/sdk-trace-node')
       vi.mocked(sdkTraceNode.NodeTracerProvider).mockImplementation(NodeTracerProviderMock as any)
 
       initTracing('test-service')

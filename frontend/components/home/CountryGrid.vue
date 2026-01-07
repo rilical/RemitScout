@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
         <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-          Our comparisons cover 154 countries
+          Our comparisons cover <span class="text-brand-600">154+</span> countries
         </h2>
         <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
           Compare money transfer providers for any route worldwide. Find the best exchange rates, lowest fees, and fastest delivery options for your specific corridor.

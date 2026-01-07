@@ -19,7 +19,7 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
+              <div class="w-40 h-40 rounded-2xl bg-white p-3 shadow-xl">
                 <img
                   src="/logos/western-union.svg"
                   alt="Western Union logo"
@@ -76,23 +76,15 @@
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
                 <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
-                <div class="relative inline-flex items-center justify-center">
-                  <svg class="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" stroke-width="12" />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      fill="none"
-                      stroke="#3b82f6"
-                      stroke-width="12"
-                      stroke-linecap="round"
-                      :stroke-dasharray="`${82 * 4.4} 440`"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">8.2</span>
-                    <span class="text-sm text-slate-500">/10</span>
+                <div class="flex justify-center">
+                  <div
+                    class="relative flex h-40 w-40 items-center justify-center rounded-full border-4 bg-white shadow-lg"
+                    :style="{ borderColor: scoreColor }"
+                  >
+                    <div class="text-center">
+                      <span :class="[scoreTextClass, 'text-5xl font-bold leading-none']">8.2</span>
+                      <span class="text-sm text-slate-500">/10</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -100,49 +92,39 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Inconsistent</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-amber-400 rounded-full" style="width: 78%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-400 rounded-full" style="width: 85%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-400 rounded-full" style="width: 85%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 80%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 85%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
               </div>
 
@@ -190,7 +172,7 @@
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
+              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -201,7 +183,7 @@
                 </p>
               </div>
 
-              <div class="mb-12">
+              <div class="mb-22">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
                   Auditor Notes (Verbatim)
@@ -233,7 +215,7 @@
                     8.2
                   </div>
                   <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
                       <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
                       Western Union
                     </h3>
@@ -288,7 +270,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.2 (not 9.0+):</div>
+                      <div class="font-semibold text-slate-900 mb-2.5">Why 8.2 (not 9.0+):</div>
                       <div class="text-sm text-slate-700 leading-relaxed">Western Union is "elite" on Reliability & Success and Friction & Speed for cash pickup, but Delivered Value (40%) is held back by higher effective cost—fees plus an exchange rate that is explicitly interbank + margin, with prices varying by channel and corridor. You're often paying a premium for reach and immediacy.</div>
                     </div>
                   </div>
@@ -297,7 +279,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
@@ -365,7 +347,7 @@
                 </p>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
@@ -411,7 +393,7 @@
                 </div>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
@@ -469,7 +451,7 @@
                 </div>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
@@ -516,7 +498,7 @@
                 </div>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
@@ -624,7 +606,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="grid md:grid-cols-2 gap-8 mb-12">
+              <div class="grid md:grid-cols-2 gap-8 mb-22">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -686,7 +668,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -700,35 +682,35 @@
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Compare payout methods:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Compare payout methods:</strong>
                       <span class="text-slate-700">Cash pickup is convenient, but bank deposit or wallet (where available) can sometimes reduce the effective cost—check "receiver gets" before paying.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Compare funding methods:</strong>
                       <span class="text-slate-700">Card funding is convenient but can be pricier; check the final quote for both bank and card if you have the option.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Focus on the exchange rate, not just fees:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Focus on the exchange rate, not just fees:</strong>
                       <span class="text-slate-700">Western Union rates are interbank + margin; the margin is often the biggest cost driver.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Move quickly once you're happy with the quote:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Move quickly once you're happy with the quote:</strong>
                       <span class="text-slate-700">rates update several times daily; in some corridors the rate shown may be an estimate until payout.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
                     <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">If you made a mistake, cancel fast:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">If you made a mistake, cancel fast:</strong>
                       <span class="text-slate-700">in the US there's a 30‑minute cancellation window with a 3‑business‑day refund requirement (if funds haven't been picked up/deposited).</span>
                     </div>
                   </div>
@@ -737,7 +719,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -773,7 +755,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -936,6 +918,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 definePageMeta({
   alias: ['/reviews/western-union'],
 })
@@ -956,4 +939,19 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'Western Union Review', path: '/learn/providers/western-union' },
 ]
+const score = 8.2
+
+const scoreColor = computed(() => {
+  if (score >= 9.0) return '#10b981'
+  if (score >= 8.0) return '#2563eb'
+  if (score >= 7.0) return '#eab308'
+  return '#6b7280'
+})
+
+const scoreTextClass = computed(() => {
+  if (score >= 9.0) return 'text-green-600'
+  if (score >= 8.0) return 'text-brand-600'
+  if (score >= 7.0) return 'text-yellow-600'
+  return 'text-neutral-600'
+})
 </script>
