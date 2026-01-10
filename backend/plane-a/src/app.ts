@@ -28,6 +28,7 @@ import { quotesRoutes } from './routes/quotes'
 import { providersRoutes } from './routes/providers'
 import { providerMetadataRoutes } from './routes/provider-metadata'
 import { corridorCurrenciesRoutes } from './routes/corridor-currencies'
+import { corridorLimitsRoutes } from './routes/corridor-limits'
 import { ratesRoutes } from './routes/rates'
 import { pulseStatusRoutes } from './routes/pulse-status'
 import { pulseRoutes } from './routes/pulse'
@@ -49,6 +50,10 @@ import { accountRoutes } from './routes/account'
 import { providerVisitRoutes } from './routes/provider-visits'
 import { analyticsRoutes } from './routes/analytics'
 import { auditRoutes } from './routes/audit'
+import { adminRoutes } from './routes/admin'
+import { notificationsRoutes } from './routes/notifications'
+import { adsRoutes } from './routes/ads'
+import { marketingRoutes } from './routes/marketing'
 
 export const buildApp = async () => {
   const app = Fastify({
@@ -308,6 +313,7 @@ export const buildApp = async () => {
   app.register(providersRoutes, { prefix: '/api/v1' })
   app.register(providerMetadataRoutes, { prefix: '/api/v1' })
   app.register(corridorCurrenciesRoutes, { prefix: '/api/v1' })
+  app.register(corridorLimitsRoutes, { prefix: '/api/v1' })
   app.register(popularCorridorsRoutes, { prefix: '/api/v1' })
   app.register(meRoutes, { prefix: '/api/v1' })
   app.register(billingRoutes, { prefix: '/api/v1' })
@@ -329,6 +335,10 @@ export const buildApp = async () => {
   app.register(providerVisitRoutes, { prefix: '/api/v1' })
   app.register(analyticsRoutes, { prefix: '/api/v1' })
   app.register(auditRoutes, { prefix: '/api/v1' })
+  app.register(adminRoutes, { prefix: '/api/v1' })
+  app.register(notificationsRoutes, { prefix: '/api/v1' })
+  app.register(adsRoutes, { prefix: '/api/v1' })
+  app.register(marketingRoutes, { prefix: '/api/v1' })
   app.register(bankVsSpecialistRoutes, { prefix: '/api/v1' })
   app.register(geoRoutes, { prefix: '/api/v1' })
 
@@ -336,6 +346,7 @@ export const buildApp = async () => {
   app.register(providersRoutes, { prefix: '/api' })
   app.register(providerMetadataRoutes, { prefix: '/api' })
   app.register(corridorCurrenciesRoutes, { prefix: '/api' })
+  app.register(corridorLimitsRoutes, { prefix: '/api' })
   app.register(popularCorridorsRoutes, { prefix: '/api' })
   app.register(meRoutes, { prefix: '/api' })
   app.register(billingRoutes, { prefix: '/api' })
@@ -357,6 +368,10 @@ export const buildApp = async () => {
   app.register(providerVisitRoutes, { prefix: '/api' })
   app.register(analyticsRoutes, { prefix: '/api' })
   app.register(auditRoutes, { prefix: '/api' })
+  app.register(adminRoutes, { prefix: '/api' })
+  app.register(notificationsRoutes, { prefix: '/api' })
+  app.register(adsRoutes, { prefix: '/api' })
+  app.register(marketingRoutes, { prefix: '/api' })
   app.register(bankVsSpecialistRoutes, { prefix: '/api' })
   app.register(geoRoutes, { prefix: '/api' })
 

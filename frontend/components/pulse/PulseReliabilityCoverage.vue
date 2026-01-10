@@ -9,14 +9,20 @@
       <div class="space-y-4 lg:col-span-4 flex flex-col">
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-6 flex-1 flex flex-col justify-center">
           <div class="text-xs text-neutral-500 mb-2">Quote Success Rate</div>
-          <div class="text-3xl font-bold text-white mb-1">{{ quoteSuccessRate.toFixed(1) }}%</div>
+          <div class="text-3xl font-bold text-white mb-1">
+            {{ quoteSuccessRate !== null ? `${quoteSuccessRate.toFixed(1)}%` : 'n/a' }}
+          </div>
           <div class="text-xs text-neutral-400">{{ quoteSuccessDelta }}</div>
         </div>
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-6 flex-1 flex flex-col justify-center">
           <div class="text-xs text-neutral-500 mb-2">Data Freshness</div>
-          <div class="text-3xl font-bold text-white mb-1">{{ freshnessMedian }}m median</div>
-          <div class="text-xs text-neutral-400">p95 {{ freshnessP95 }}m | updated {{ store.lastUpdatedRelative }}</div>
+          <div class="text-3xl font-bold text-white mb-1">
+            {{ freshnessMedian !== null ? `${freshnessMedian}m median` : 'n/a' }}
+          </div>
+          <div class="text-xs text-neutral-400">
+            p95 {{ freshnessP95 !== null ? `${freshnessP95}m` : 'n/a' }} | updated {{ store.lastUpdatedRelative }}
+          </div>
         </div>
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-6 flex-1 flex flex-col justify-center">
@@ -25,7 +31,7 @@
             {{ coverage.providersIncluded }} providers
           </div>
           <div class="text-xs text-neutral-400">
-            Methods: {{ coverage.methodsIncluded.join(', ') || 'bank' }}
+            Methods: {{ coverage.methodsIncluded.length ? coverage.methodsIncluded.join(', ') : 'n/a' }}
           </div>
         </div>
       </div>
@@ -65,32 +71,59 @@ const coverage = ref<PulseCoverageSummary>({
   lastUpdated: '',
 })
 
-const quoteSuccessRate = ref(98.4)
-const quoteSuccessDelta = ref('+0.3% vs 7D avg')
-const freshnessMedian = ref(2)
-const freshnessP95 = ref(9)
+const quoteSuccessRate = ref<number | null>(null)
+const quoteSuccessDelta = ref('n/a')
+const freshnessMedian = ref<number | null>(null)
+const freshnessP95 = ref<number | null>(null)
 
 async function loadData() {
   loading.value = true
   try {
-    const [rows, successData, summary] = await Promise.all([
+    const [rows, successData, freshnessData, summary] = await Promise.all([
       getMethodCoverage(store.filtersForApi),
       getChartData('quote-success', store.filtersForApi),
+      getChartData('data-freshness', store.filtersForApi),
       getPulseCoverageSummary(store.corridor, store.timeframe),
     ])
 
     matrixRows.value = rows
     coverage.value = summary
 
-    const lastValues = successData?.series.map(s => s.points[s.points.length - 1]?.v || 0) || []
-    const average = lastValues.length ? lastValues.reduce((sum, v) => sum + v, 0) / lastValues.length : 98.4
-    quoteSuccessRate.value = average
+    const lastValues = successData?.series
+      .map(s => s.points[s.points.length - 1]?.v)
+      .filter((value): value is number => typeof value === 'number') || []
+    const firstValues = successData?.series
+      .map(s => s.points[0]?.v)
+      .filter((value): value is number => typeof value === 'number') || []
 
-    const delta = (Math.random() - 0.5) * 1
-    quoteSuccessDelta.value = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs 7D avg`
+    if (lastValues.length > 0) {
+      const average = lastValues.reduce((sum, v) => sum + v, 0) / lastValues.length
+      quoteSuccessRate.value = average
+      if (firstValues.length > 0) {
+        const firstAvg = firstValues.reduce((sum, v) => sum + v, 0) / firstValues.length
+        const delta = average - firstAvg
+        quoteSuccessDelta.value = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs window start`
+      } else {
+        quoteSuccessDelta.value = 'n/a'
+      }
+    } else {
+      quoteSuccessRate.value = null
+      quoteSuccessDelta.value = 'n/a'
+    }
 
-    freshnessMedian.value = 2 + Math.floor(Math.random() * 3)
-    freshnessP95.value = freshnessMedian.value + 6 + Math.floor(Math.random() * 5)
+    const freshnessValues = freshnessData?.series
+      .flatMap(s => s.points.map(p => p.v))
+      .filter((value): value is number => typeof value === 'number') || []
+    if (freshnessValues.length > 0) {
+      const sorted = [...freshnessValues].sort((a, b) => a - b)
+      const medianIndex = Math.floor(sorted.length / 2)
+      const p95Index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))
+      freshnessMedian.value = Math.round(sorted[medianIndex])
+      freshnessP95.value = Math.round(sorted[p95Index])
+    } else {
+      freshnessMedian.value = null
+      freshnessP95.value = null
+    }
   } catch (e) {
     console.error('Failed to load reliability data:', e)
   } finally {

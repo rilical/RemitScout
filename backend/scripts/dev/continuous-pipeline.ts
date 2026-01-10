@@ -8,6 +8,7 @@ import { runProviderCapabilityProbe } from '../provider-capability-probe'
 import { runSmartAlertsJob } from '../smart-alerts-job'
 import { runTelemetryAnalyticsJob } from '../telemetry-analytics-job'
 import { runContinuousSync } from '../oanda-rates-sync'
+import { runBankVsSpecialistRefresh } from '../bank-vs-specialist-refresh'
 import { createLogger } from '../../shared/logger'
 
 const logger = createLogger('script.dev-continuous-pipeline')
@@ -25,7 +26,7 @@ const toBoolean = (value: string | undefined, fallback = true) => {
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const ingestIntervalSeconds = toNumber(process.env.PIPELINE_INGEST_INTERVAL_SECONDS, 60)
-const b2cRefreshIntervalSeconds = toNumber(process.env.PIPELINE_B2C_REFRESH_INTERVAL_SECONDS, 15)
+const b2cRefreshIntervalSeconds = toNumber(process.env.PIPELINE_B2C_REFRESH_INTERVAL_SECONDS, 10)
 const goldFxRatesIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_FX_RATES_INTERVAL_MINUTES, 10)
 const goldPulseCacheIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_PULSE_CACHE_INTERVAL_MINUTES, 10)
 const goldPopularCorridorsIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_POPULAR_CORRIDORS_INTERVAL_MINUTES, 15)
@@ -33,6 +34,10 @@ const goldPublisherIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_PUBLISHE
 const capabilityProbeIntervalMinutes = toNumber(process.env.PIPELINE_CAPABILITY_PROBE_INTERVAL_MINUTES, 60)
 const smartAlertsIntervalMinutes = toNumber(process.env.PIPELINE_SMART_ALERTS_INTERVAL_MINUTES, 15)
 const telemetryAnalyticsIntervalMinutes = toNumber(process.env.PIPELINE_TELEMETRY_ANALYTICS_INTERVAL_MINUTES, 60)
+const bankVsSpecialistIntervalMinutes = toNumber(
+  process.env.PIPELINE_BANK_VS_SPECIALIST_REFRESH_INTERVAL_MINUTES,
+  240,
+)
 
 const enableIngestion = toBoolean(process.env.PIPELINE_INGEST_ENABLED, true)
 const enableB2cRefresh = toBoolean(process.env.PIPELINE_B2C_REFRESH_ENABLED, true)
@@ -44,6 +49,10 @@ const enableCapabilityProbe = toBoolean(process.env.PIPELINE_CAPABILITY_PROBE_EN
 const enableSmartAlerts = toBoolean(process.env.PIPELINE_SMART_ALERTS_ENABLED, true)
 const enableTelemetryAnalytics = toBoolean(process.env.PIPELINE_TELEMETRY_ANALYTICS_ENABLED, true)
 const enableOandaSync = toBoolean(process.env.PIPELINE_OANDA_SYNC_ENABLED, true)
+const enableBankVsSpecialistRefresh = toBoolean(
+  process.env.PIPELINE_BANK_VS_SPECIALIST_REFRESH_ENABLED,
+  true,
+)
 
 let shutdownRequested = false
 
@@ -108,6 +117,7 @@ const startContinuousPipeline = async () => {
     capability_probe_interval_minutes: capabilityProbeIntervalMinutes,
     smart_alerts_interval_minutes: smartAlertsIntervalMinutes,
     telemetry_analytics_interval_minutes: telemetryAnalyticsIntervalMinutes,
+    bank_vs_specialist_interval_minutes: bankVsSpecialistIntervalMinutes,
     enable_oanda_sync: enableOandaSync,
   })
 
@@ -119,6 +129,9 @@ const startContinuousPipeline = async () => {
         'plane-b-ingestion',
         ingestIntervalSeconds * 1000,
         async () => {
+          if (enableB2cRefresh) {
+            await runB2cRefreshWorker()
+          }
           await runIngestion()
         },
         true,
@@ -226,6 +239,19 @@ const startContinuousPipeline = async () => {
           await runTelemetryAnalyticsJob()
         },
         false,
+      ),
+    )
+  }
+
+  if (enableBankVsSpecialistRefresh) {
+    cleanupFns.push(
+      scheduleRecurring(
+        'bank-vs-specialist-refresh',
+        bankVsSpecialistIntervalMinutes * 60 * 1000,
+        async () => {
+          await runBankVsSpecialistRefresh()
+        },
+        true,
       ),
     )
   }

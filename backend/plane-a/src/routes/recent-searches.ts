@@ -19,7 +19,7 @@ const createSchema = z.object({
   from_country: z.string().length(2),
   to_country: z.string().length(2),
   amount: z.coerce.number().positive(),
-  method: z.enum(['bank', 'cash', 'wallet']),
+  method: z.enum(['bank', 'cash', 'wallet', 'airtime']),
   best_provider_name: z.string().optional(),
   best_provider_recipient: z.coerce.number().positive().optional(),
 })

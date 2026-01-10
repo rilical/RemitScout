@@ -20,6 +20,9 @@ vi.mock('../plane-a/src/repositories', () => ({
     recordProviderVisit: mockRecordProviderVisit,
     getAnalyticsAggregate: vi.fn(),
   })),
+  UserAccountRepository: vi.fn().mockImplementation(() => ({
+    getPrivacySettings: vi.fn().mockResolvedValue({ analytics_enabled: true }),
+  })),
 }))
 
 describe('telemetry click route', () => {

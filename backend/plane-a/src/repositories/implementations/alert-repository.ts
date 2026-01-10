@@ -93,7 +93,7 @@ export class AlertRepository implements IAlertRepository {
         input.currency || null,
         input.frequency,
         input.enabled,
-        input.cooldown_minutes || 360,
+        input.cooldown_minutes ?? 360,
         now,
       ],
       this.pool,
@@ -121,6 +121,7 @@ export class AlertRepository implements IAlertRepository {
       threshold?: number
       currency?: string | null
       frequency?: string
+      cooldown_minutes?: number
       enabled?: boolean
     },
   ): Promise<AlertRuleRow | null> {
@@ -147,6 +148,10 @@ export class AlertRepository implements IAlertRepository {
     if (updates.frequency !== undefined) {
       updateFields.push(`frequency = $${paramIndex++}`)
       values.push(updates.frequency)
+    }
+    if (updates.cooldown_minutes !== undefined) {
+      updateFields.push(`cooldown_minutes = $${paramIndex++}`)
+      values.push(updates.cooldown_minutes)
     }
     if (updates.enabled !== undefined) {
       updateFields.push(`enabled = $${paramIndex++}`)
@@ -426,4 +431,3 @@ export class AlertRepository implements IAlertRepository {
     }
   }
 }
-

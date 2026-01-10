@@ -8,13 +8,13 @@
             <img
               src="/png/SVG/LOGO.svg"
               alt="RemitScout"
-              class="h-8 w-auto mb-3"
+              class="h-20 w-auto mb-4"
             >
-            <p class="text-sm text-white/90 font-medium mb-4">
-              For expats, by expats.
+            <p class="text-base text-white font-bold mb-4">
+              Money, made global.
             </p>
-            <p class="text-sm text-white/70 leading-relaxed max-w-xs">
-              Independent comparison platform helping you find the best rates and lowest fees for international money transfers. Compare 30+ licensed providers in seconds.
+            <p class="text-sm text-white/80 leading-relaxed max-w-xs">
+              Compare rates and fees from 30+ licensed providers. Find the best deal for your international money transfer.
             </p>
           </div>
           <div class="flex space-x-5">
@@ -263,12 +263,14 @@
 
       <div class="pt-8 border-t border-white/20">
         <p class="text-xs text-white/60 leading-relaxed mb-6 max-w-3xl">
-          Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up. Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.
+          Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up.
+          <br>
+          Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.
         </p>
 
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p class="text-sm text-white/70">
-            © {{ new Date().getFullYear() }} Remit-Scout. All rights reserved.
+              © {{ new Date().getFullYear() }} Remit-Scout LLC. All rights reserved.
           </p>
         </div>
       </div>

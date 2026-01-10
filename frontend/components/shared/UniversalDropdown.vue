@@ -5,7 +5,7 @@
       :id="id"
       :disabled="disabled"
       :class="[
-        'w-full rounded-lg border px-3 py-2 text-sm text-left flex items-center justify-between transition-colors',
+        'w-full min-w-0 rounded-lg border px-3 py-2 text-sm text-left flex items-center justify-between transition-colors',
         'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
         isOpen ? 'border-blue-500 ring-2 ring-blue-500' : 'border-slate-300 hover:border-slate-400',
         disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-white text-slate-900',
@@ -21,7 +21,7 @@
       :aria-haspopup="true"
       :aria-labelledby="labelId"
     >
-      <span class="flex-1 truncate">
+      <span class="flex-1 min-w-0 truncate">
         <slot name="selected" :option="selectedOption.value?.option">
           {{ selectedLabel }}
         </slot>
@@ -60,18 +60,23 @@
             type="button"
             :class="[
               'w-full px-3 py-2 text-sm text-left flex items-center transition-all',
-              isSelected(option, index)
-                ? getOptionValue(option, index) === 'sendScore'
-                  ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 text-purple-900 font-semibold'
-                  : 'bg-blue-50 text-blue-600 font-medium'
-                : 'text-slate-900 hover:bg-slate-50',
-              index === highlightedIndex && !isSelected(option, index) ? 'bg-slate-50' : '',
-              getOptionValue(option, index) === 'sendScore' && !isSelected(option, index) ? 'hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50' : ''
+              isOptionDisabled(option)
+                ? 'text-slate-400 cursor-not-allowed'
+                : isSelected(option, index)
+                  ? getOptionValue(option, index) === 'sendScore'
+                    ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 text-purple-900 font-semibold'
+                    : 'bg-blue-50 text-blue-600 font-medium'
+                  : 'text-slate-900 hover:bg-slate-50',
+              index === highlightedIndex && !isSelected(option, index) && !isOptionDisabled(option) ? 'bg-slate-50' : '',
+              getOptionValue(option, index) === 'sendScore' && !isSelected(option, index) && !isOptionDisabled(option)
+                ? 'hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50'
+                : ''
             ]"
             role="option"
             :aria-selected="isSelected(option, index)"
-            @mousedown.prevent="selectOption(option, index)"
-            @touchstart.prevent="selectOption(option, index)"
+            :aria-disabled="isOptionDisabled(option)"
+            @mousedown.prevent="handleOptionClick(option, index)"
+            @touchstart.prevent="handleOptionClick(option, index)"
             @mouseenter="highlightedIndex = index"
           >
             <slot name="option" :option="option" :index="index">
@@ -157,6 +162,11 @@ const getOptionValue = (option: DropdownOption | string, index: number): string 
   return defaultGetValue(option, index)
 }
 
+const isOptionDisabled = (option: DropdownOption | string): boolean => {
+  if (typeof option === 'string') return false
+  return Boolean(option.disabled)
+}
+
 const selectedOption = computed(() => {
   if (!props.modelValue) return null
   
@@ -223,6 +233,11 @@ function selectOption(option: DropdownOption | string, index: number) {
   const value = getOptionValue(option, index)
   emit('update:modelValue', value)
   close()
+}
+
+function handleOptionClick(option: DropdownOption | string, index: number) {
+  if (isOptionDisabled(option)) return
+  selectOption(option, index)
 }
 
 function handleArrowDown() {

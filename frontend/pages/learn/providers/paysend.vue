@@ -904,18 +904,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/paysend'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Paysend Review 2024 - Remit-Score 8.1/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Paysend review with Remit-Score 8.1/10. Card-to-card convenience; predictable fees; FX spread can reduce delivered value; good speed. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent Paysend review with Remit-Score 8.1/10. Card-to-card convenience; predictable fees; FX spread can reduce delivered value; good speed. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/paysend`,
+  ogImage: `${siteUrl}/og-images/provider-paysend.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Paysend earns a Remit-Score of 8.1/10 based on our independent analysis. The provider offers card-to-card convenience with predictable fees, though FX spread can reduce delivered value. Good speed overall. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Paysend',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.1,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

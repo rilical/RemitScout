@@ -173,17 +173,31 @@ const corridor = computed(() => {
 
 const shareUrl = computed(() => {
   if (typeof window !== 'undefined') {
-    return window.location.href
+    const url = new URL(window.location.href)
+    url.searchParams.set('utm_source', 'remitscout')
+    url.searchParams.set('utm_medium', 'share')
+    
+    const path = window.location.pathname
+    if (path.includes('/send-money/')) {
+      url.searchParams.set('utm_campaign', 'corridor_comparison')
+    } else if (path.includes('/learn/providers/') || path.includes('/reviews/')) {
+      url.searchParams.set('utm_campaign', 'provider_review')
+    } else if (path.includes('/learn/')) {
+      url.searchParams.set('utm_campaign', 'guide')
+    } else {
+      url.searchParams.set('utm_campaign', 'share')
+    }
+    
+    return url.toString()
   }
   return ''
 })
 
 const shareText = computed(() => {
-  const base = `🌍 Check out the best money transfer rates from ${corridor.value} on Remit-Scout!`
   if (props.amount && props.currency) {
-    return `${base}\n\nCompare rates for sending ${props.amount} ${props.currency} and save on fees.`
+    return `Found the best ${props.currency} to ${props.toCountry || 'destination'} rates! Compare 10+ providers on Remit-Scout and save on fees.`
   }
-  return `${base}\n\nCompare multiple providers and find the best deal for your transfer.`
+  return `Found the best money transfer rates for ${corridor.value}! Compare 10+ providers on Remit-Scout and save on fees.`
 })
 
 const shareTitle = computed(() => {
@@ -198,7 +212,25 @@ function close() {
   emit('close')
 }
 
-function shareVia(platform: 'whatsapp' | 'twitter' | 'facebook' | 'email') {
+async function shareVia(platform: 'whatsapp' | 'twitter' | 'facebook' | 'email') {
+  // Use native Web Share API when available (prevents redirects)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: shareTitle.value,
+        text: shareText.value,
+        url: shareUrl.value,
+      })
+      return
+    } catch (error: any) {
+      // User cancelled or error occurred, fall through to URL-based sharing
+      if (error.name === 'AbortError') {
+        return
+      }
+    }
+  }
+  
+  // Fallback: Use platform-specific share URLs
   const text = encodeURIComponent(shareText.value)
   const url = encodeURIComponent(shareUrl.value)
   const title = encodeURIComponent(shareTitle.value)
@@ -210,28 +242,60 @@ function shareVia(platform: 'whatsapp' | 'twitter' | 'facebook' | 'email') {
     email: `mailto:?subject=${title}&body=${text}%0A%0A${url}`,
   }
   
+  // For email, use mailto which opens email client (not a redirect)
+  if (platform === 'email') {
+    window.location.href = urls[platform]
+    return
+  }
+  
+  // For other platforms, open in new window
   window.open(urls[platform], '_blank', 'noopener,noreferrer')
 }
 
 async function copyLink() {
+  if (!shareUrl.value) {
+    console.error('No URL to copy')
+    return
+  }
+  
   try {
-    await navigator.clipboard.writeText(shareUrl.value)
-    copied.value = true
-    setTimeout(() => {
-      copied.value = false
-    }, 2000)
-  } catch {
-    // Fallback for older browsers
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(shareUrl.value)
+      copied.value = true
+      setTimeout(() => {
+        copied.value = false
+      }, 2000)
+      return
+    }
+  } catch (error) {
+    console.warn('Clipboard API failed, trying fallback:', error)
+  }
+  
+  // Fallback for older browsers or when clipboard API fails
+  try {
     const textArea = document.createElement('textarea')
     textArea.value = shareUrl.value
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-999999px'
+    textArea.style.top = '-999999px'
     document.body.appendChild(textArea)
+    textArea.focus()
     textArea.select()
-    document.execCommand('copy')
+    
+    const successful = document.execCommand('copy')
     document.body.removeChild(textArea)
-    copied.value = true
-    setTimeout(() => {
-      copied.value = false
-    }, 2000)
+    
+    if (successful) {
+      copied.value = true
+      setTimeout(() => {
+        copied.value = false
+      }, 2000)
+    } else {
+      console.error('Fallback copy failed')
+    }
+  } catch (error) {
+    console.error('Copy failed:', error)
   }
 }
 

@@ -18,6 +18,10 @@ export type CreateAlertResult =
     message: string
     watchlistItemId: string
   }
+  | {
+    status: 'error'
+    message: string
+  }
 
 type AlertsApiResponse = {
   success: boolean
@@ -69,6 +73,8 @@ export const useAlerts = () => {
 
   const count = computed(() => alerts.value.length)
 
+  const alertKey = (watchlistItemId: string, rule: AlertRule) => `${watchlistItemId}:${ruleKey(rule)}`
+
   const upsertAlert = (next: Alert) => {
     const existingIndex = alerts.value.findIndex(a => a.id === next.id)
     if (existingIndex >= 0) {
@@ -102,6 +108,39 @@ export const useAlerts = () => {
     } finally {
       syncing.value = false
     }
+  }
+
+  async function syncLocalAlerts(localAlerts: Alert[], idMap: Record<string, string>) {
+    if (!localAlerts.length) return false
+
+    const serverKeys = new Set(alerts.value.map(alert => alertKey(alert.watchlistItemId, alert.rule)))
+    let created = false
+
+    for (const localAlert of localAlerts) {
+      const mappedWatchlistId = idMap[localAlert.watchlistItemId] || localAlert.watchlistItemId
+      if (!mappedWatchlistId) continue
+      const key = alertKey(mappedWatchlistId, localAlert.rule)
+      if (serverKeys.has(key)) {
+        continue
+      }
+
+      try {
+        const result = await createAlertInBackend({
+          watchlistItemId: mappedWatchlistId,
+          rule: localAlert.rule,
+          frequency: localAlert.frequency,
+          enabled: localAlert.enabled,
+        })
+        if (result.status === 'created' || result.status === 'already_exists') {
+          created = true
+          serverKeys.add(key)
+        }
+      } catch (error) {
+        console.error('Error syncing local alert to backend:', error)
+      }
+    }
+
+    return created
   }
 
   async function createAlertInBackend(payload: {
@@ -140,10 +179,8 @@ export const useAlerts = () => {
 
     if (response.error === 'forbidden') {
       return {
-        status: 'alert_limit_reached',
-        limit: limits.value.alerts === 'unlimited' ? 0 : limits.value.alerts,
-        message: response.message ?? 'Smart alerts are available for Plus members only.',
-        watchlistItemId: payload.watchlistItemId,
+        status: 'error',
+        message: response.message ?? 'This alert requires Plus.',
       }
     }
 
@@ -190,7 +227,13 @@ export const useAlerts = () => {
 
   onMounted(async () => {
     if (isLoggedIn.value) {
+      const localAlerts = [...alerts.value]
+      const { idMap } = await watchlist.syncToServer()
       await fetchFromBackend()
+      const created = await syncLocalAlerts(localAlerts, idMap)
+      if (created) {
+        await fetchFromBackend()
+      }
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -198,7 +241,13 @@ export const useAlerts = () => {
 
   watch(isLoggedIn, async (loggedIn) => {
     if (loggedIn) {
+      const localAlerts = [...alerts.value]
+      const { idMap } = await watchlist.syncToServer()
       await fetchFromBackend()
+      const created = await syncLocalAlerts(localAlerts, idMap)
+      if (created) {
+        await fetchFromBackend()
+      }
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -261,10 +310,8 @@ export const useAlerts = () => {
       } catch (error) {
         console.error('Error creating alert on backend:', error)
         return {
-          status: 'alert_limit_reached',
-          limit: limit === 'unlimited' ? 0 : limit,
           message: 'Unable to create alert right now.',
-          watchlistItemId,
+          status: 'error',
         }
       }
     }
@@ -296,6 +343,12 @@ export const useAlerts = () => {
       return {
         status: 'watchlist_limit_reached',
         limit: ensured.limit,
+        message: ensured.message,
+      }
+    }
+    if (ensured.status === 'error') {
+      return {
+        status: 'error',
         message: ensured.message,
       }
     }

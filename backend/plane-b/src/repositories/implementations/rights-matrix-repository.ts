@@ -3,6 +3,7 @@ import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
 import type {
   IRightsMatrixRepository,
+  RightsMatrixCountrySupportInput,
   RightsMatrixEntryRecord,
   RightsMatrixStatusRecord,
   RightsMatrixStoplistRecord,
@@ -76,6 +77,19 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
         input.allowedB2b,
         input.notes,
       ],
+      this.pool,
+    )
+  }
+
+  async upsertProviderCountrySupport(input: RightsMatrixCountrySupportInput): Promise<void> {
+    await query(
+      `INSERT INTO silver.rights_matrix (provider_id, source_countries, destination_countries)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (provider_id) DO UPDATE SET
+         source_countries = EXCLUDED.source_countries,
+         destination_countries = EXCLUDED.destination_countries,
+         updated_at = NOW()`,
+      [input.providerId, input.sourceCountries, input.destinationCountries],
       this.pool,
     )
   }

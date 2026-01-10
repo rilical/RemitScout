@@ -17,6 +17,9 @@ const rateLimitBypassPrefixes = [
 ]
 
 const shouldBypassRateLimit = (request: FastifyRequest): boolean => {
+  if (config.env !== 'production' && config.env !== 'staging') {
+    return true
+  }
   const path = request.url.split('?')[0]
   if (!path) {
     return false
@@ -184,5 +187,4 @@ export const registerMemoryRateLimit = (
     }
   })
 }
-
 

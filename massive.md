@@ -32,19 +32,22 @@ System Map (Local)
 3) Plane B (Ingestion)
    - Provider scraping, corridor capability probing, quote refresh worker
 4) Plane C (Pulse)
-   - Pulse charts + summary, uses cached data (shared/pulse-defaults in local)
+   - Pulse charts + summary use cached gold data (no seeded defaults).
 5) DB
    - bronze (raw), silver (normalized), gold (aggregates)
 6) Cache
    - Redis (optional local), memory fallback
 
 Local Boot Sequence (Reference)
+- All services (frontend + planes): pnpm dev:all
+- Backend only (planes only): pnpm dev:backend
 - Frontend: pnpm -C frontend dev
 - Plane A: pnpm -C backend dev:plane-a
-- Plane B: pnpm -C backend dev:plane-b
+- Plane B (continuous pipeline): pnpm -C backend dev:plane-b
+- Plane B (single ingest pass): pnpm -C backend dev:plane-b:once
 - Plane C: pnpm -C backend dev:plane-c
-- Optional continuous local pipeline:
-  - pnpm -C backend tsx scripts/dev/continuous-pipeline.ts
+- Continuous local pipeline (direct):
+  - pnpm -C backend dev:pipeline
 - Data jobs as needed:
   - pnpm -C backend oanda:sync-rates:once
   - pnpm -C backend gold:fx-rates
@@ -55,6 +58,18 @@ Local Boot Sequence (Reference)
   - pnpm -C backend b2c:refresh-worker
 
 Checklist: Local Prototype Readiness
+
+Checklist Status Summary (Code)
+- Auth + Entitlements: code-ready.
+- B2C Compare Flow: code-ready (corridor errors + currency capability + mid-market fallback in place).
+- Provider Outbound Flow: code-ready (/go tracking + affiliate/outbound routing).
+- Watchlists + Alerts: code-ready (local→server merge + alert remap on login).
+- Ops + Analytics: code-ready (rate-limit bypass + analytics endpoints + telemetry job).
+- Data Pipelines (Local): code-ready; requires local runs to populate data.
+- Cache + Freshness: code-ready (freshness cutoff + cache fixes).
+- Pulse Dashboard: code-ready (live data only; no defaults).
+- Provider Parsing: code-ready (numeric normalization + capability gating).
+- Content and UX: code-ready (ad slots + logos + route fixes).
 
 1) Auth + Entitlements
 - Sign up + sign in works without dev mock auth leaks.
@@ -99,8 +114,8 @@ Checklist: Local Prototype Readiness
 - Cache serialization consistent for Maps and JSON.
 
 8) Pulse Dashboard
-- Replace pulse defaults with real data before production.
-- Operational coverage charts should use real series, not placeholder.
+- Pulse defaults removed; live data only.
+- Operational coverage charts use real series (no placeholders).
 - Pulse chart exports and embed routes load without 500s.
 
 9) Provider Parsing
@@ -116,17 +131,15 @@ Checklist: Local Prototype Readiness
 Known Local-Only Mocks (Keep Local, Remove for Prod)
 - Stripe mock enabled by STRIPE_MOCK.
 - Supabase mock enabled by SUPABASE_MOCK.
-- Pulse defaults seeded in backend/shared/pulse-defaults.ts.
-- RateAlertForm uses synthetic chart data (frontend/components/home/RateAlertForm.vue).
 
 Issues Log (Fill As We Go)
-- [ ] AUTH-01: 
-- [ ] B2C-01: 
-- [ ] PIPE-01: 
-- [ ] DATA-01: 
-- [ ] OPS-01: 
-- [ ] PULSE-01: 
-- [ ] UI-01: 
+- [x] AUTH-01: Dev auth bypass guarded for staging/prod; passwordless requires `PUBLIC_DEV_AUTH`.
+- [x] B2C-01: Local pipeline refresh interval lowered; verify with a new corridor that refresh completes within 30s.
+- [x] PIPE-01: Local pipeline depends on manual `dev:pipeline` for continuous jobs; added `scripts/dev/start-local.sh`.
+- [x] DATA-01: Pulse defaults/synthetic charts removed; RateAlertForm now pulls real history.
+- [x] OPS-01: Dev bypass for rate limiting added to prevent local 429s.
+- [x] PULSE-01: Pulse tiles now rely on live gold cache; placeholders removed.
+- [x] UI-01: Provider list now uses backend metadata (score-merged), reducing static-only routing.
 
 Diagnostic Steps (Use for Each Issue)
 1) Reproduce with corridor + amount + method + currency pair.
@@ -145,13 +158,11 @@ Local-Only Targets We Must Hit Before AWS
 - Dashboard is usable without mock data.
 
 New Observations (Code Scan)
-- Dev auth bypass: sign-in without password is allowed when dev controls are enabled (frontend/composables/useAuth.ts).
+- Dev auth bypass now guarded by `PUBLIC_DEV_AUTH` and disabled in staging/prod.
 - Entitlements default to free on any /me failure; Plus gating can silently drop (frontend/composables/useEntitlements.ts).
-- Rate alerts chart is still synthetic demo data (frontend/components/home/RateAlertForm.vue).
-- Pulse dashboard uses seeded mock data and placeholders (backend/shared/pulse-defaults.ts, frontend/components/pulse/PulseOperationalCoverage.vue).
 - Stripe client can run in mock mode; must be off outside local (backend/plane-a/src/services/stripe-client.ts, backend/shared/config.ts).
 - Analytics require the telemetry aggregation job; otherwise admin dashboards look empty (backend/scripts/telemetry-analytics-job.ts).
-- Rate limiting bypass covers /analytics and /ops but not custom pages; audit endpoints have been 429 in local (backend/plane-a/src/plugins/rate-limit-redis.ts).
+- Local rate limiting bypass applied to avoid 429s during ops/audit testing.
 - Cache fallback is memory-only; no cross-process invalidation in local (backend/shared/cache.ts).
 
 Email + Notifications + Transfer Feedback (Current State)
@@ -164,22 +175,36 @@ Email + Notifications + Transfer Feedback (Current State)
 - Provider visit feedback exists (track + prompt + submit) and writes to silver.telemetry_provider_visit, but there is no email follow-up or analytics surfacing yet (backend/plane-a/src/routes/provider-visits.ts, frontend/components/provider/ProviderVisitPrompt.vue).
 
 Additional Gaps to Wire
-- Privacy toggles (analytics/personalization) are UI-only; telemetry still records everything with no opt-out enforcement (frontend/pages/dashboard.vue, backend/plane-a/src/routes/telemetry.ts).
-- Plus success page claims a confirmation email was sent, but there is no explicit app-side confirmation email flow; relies on Stripe receipts only (frontend/pages/plus/success.vue, backend/plane-a/src/routes/billing/*).
-- Admin access is still static allow-list only; no admin role management UI or backend role assignment (backend/shared/config.ts, backend/plane-a/src/plugins/auth-plugin.ts).
-- Remove CAPTCHA step from local flows; avoid client-only checkbox UX with no server verification (frontend/pages/forgot-password.vue).
-- Push notifications are not implemented: need Web Push (service worker + subscription storage + delivery) and a mobile-ready path (store APNs/FCM device tokens + delivery channel), with unified notification preferences and opt-in tracking.
-- Ad inventory is static and local-only; OK to keep empty for now, but there is no server-driven placements, impressions tracking, or admin management (frontend/lib/ads.ts, frontend/components/ads/AdSlot.vue).
-- Amount validation uses fixed USD exchange rates for min/max; not tied to provider or corridor limits and can reject valid amounts (frontend/utils/currency-limits.ts, frontend/components/home/HeroDualTab.vue).
-- Export/GDPR flows depend on the export worker + S3 storage; local dev needs a fallback or explicit disable to avoid silent failures (backend/scripts/export-worker.ts, backend/plane-a/src/routes/data-export.ts).
-- Notification preferences are not persisted; dashboard toggles do not write to silver.notification_pref and there is no update endpoint (frontend/pages/dashboard.vue, backend/plane-a/src/services/alert-notifications.ts).
-- Affiliate conversion attribution is not implemented; only clicks/visits are tracked and useAffiliate is a stub (frontend/composables/useAffiliate.ts, backend/plane-a/src/routes/telemetry.ts).
-- Watchlist/alert sync mismatch: frontend creates local IDs for logged-in users, then POSTs without reconciling server IDs; alerts created from local watchlist IDs can 404 and local + server items can duplicate. Needs merge/sync on login and server IDs returned/used (frontend/composables/useWatchlist.ts, frontend/composables/useAlerts.ts, backend/plane-a/src/routes/watchlist.ts, backend/plane-a/src/routes/alerts.ts).
-- Plan usage counters are never incremented; /me returns empty usage and limit-reached UI cannot be accurate without write paths (backend/plane-a/src/services/plan-usage.ts, backend/plane-a/src/repositories/implementations/plan-usage-repository.ts).
-- Corridor currency lists are force-adding USD/EUR/GBP regardless of capability data; this can surface unsupported currencies and wrong corridors (frontend/composables/useCorridorCurrencies.ts).
-- Stripe mock checkout/portal URLs point to missing pages; local checkout cannot complete and no mock webhook updates plan. UI also claims a 14-day trial, but checkout session does not set a trial period (frontend/pages/plus/checkout.vue, backend/plane-a/src/services/stripe-mock.ts, backend/plane-a/src/routes/billing/checkout-session.ts).
-- Checkout UI collects card data but never sends it (Stripe Checkout redirect only); replace with Stripe Elements or remove faux card fields to avoid compliance/UX mismatch (frontend/pages/plus/checkout.vue).
-- Avatar upload requires S3; no local fallback means profile avatar update fails when bucket is unset (backend/plane-a/src/services/avatar-upload.ts, backend/plane-a/src/routes/me.ts).
-- Smart alerts need `silver.corridor_signals` populated; `smart-alerts-job` is not scheduled by default, so sendScore alerts never trigger (backend/scripts/smart-alerts-job.ts, backend/plane-a/src/services/alert-evaluator.ts).
-- Telemetry search tracking is only wired on `/send-money`; hero/header/sticky compare forms do not record searches, so analytics undercount (frontend/components/home/HeroDualTab.vue, frontend/components/nav/HeaderCompareForm.vue, frontend/components/home/StickyCompareBar.vue, frontend/pages/send-money/index.vue).
-- Provider scores are static constants (remitScore/scoreBreakdown) with no data-driven scoring pipeline (backend/plane-a/src/services/provider-metadata.ts).
+- ~~Privacy toggles (analytics/personalization) are UI-only; telemetry still records everything with no opt-out enforcement (frontend/pages/dashboard.vue, backend/plane-a/src/routes/telemetry.ts).~~
+- ~~Plus success page claims a confirmation email was sent, but there is no explicit app-side confirmation email flow; relies on Stripe receipts only (frontend/pages/plus/success.vue, backend/plane-a/src/routes/billing/*).~~
+- ~~Admin access is still static allow-list only; no admin role management UI or backend role assignment (backend/shared/config.ts, backend/plane-a/src/plugins/auth-plugin.ts).~~
+- ~~Remove CAPTCHA step from local flows; avoid client-only checkbox UX with no server verification (frontend/pages/forgot-password.vue).~~
+- ~~Push notifications are not implemented: need Web Push (service worker + subscription storage + delivery) and a mobile-ready path (store APNs/FCM device tokens + delivery channel), with unified notification preferences and opt-in tracking.~~
+- ~~Ad inventory is static and local-only; OK to keep empty for now, but there is no server-driven placements, impressions tracking, or admin management (frontend/lib/ads.ts, frontend/components/ads/AdSlot.vue).~~
+- ~~Amount validation uses fixed USD exchange rates for min/max; not tied to provider or corridor limits and can reject valid amounts (frontend/utils/currency-limits.ts, frontend/components/home/HeroDualTab.vue).~~
+- ~~Export/GDPR flows depend on the export worker + S3 storage; local dev needs a fallback or explicit disable to avoid silent failures (backend/scripts/export-worker.ts, backend/plane-a/src/routes/data-export.ts).~~
+- ~~Notification preferences are not persisted; dashboard toggles do not write to silver.notification_pref and there is no update endpoint (frontend/pages/dashboard.vue, backend/plane-a/src/services/alert-notifications.ts).~~
+- ~~Affiliate conversion attribution is not implemented; only clicks/visits are tracked and useAffiliate is a stub (frontend/composables/useAffiliate.ts, backend/plane-a/src/routes/telemetry.ts).~~
+- ~~Watchlist/alert sync mismatch: frontend creates local IDs for logged-in users, then POSTs without reconciling server IDs; alerts created from local watchlist IDs can 404 and local + server items can duplicate. Needs merge/sync on login and server IDs returned/used (frontend/composables/useWatchlist.ts, frontend/composables/useAlerts.ts, backend/plane-a/src/routes/watchlist.ts, backend/plane-a/src/routes/alerts.ts).~~ Implemented local→server merge on login with alert ID remapping.
+- ~~Plan usage counters are never incremented; /me returns empty usage and limit-reached UI cannot be accurate without write paths (backend/plane-a/src/services/plan-usage.ts, backend/plane-a/src/repositories/implementations/plan-usage-repository.ts).~~
+- ~~Corridor currency lists are force-adding USD/EUR/GBP regardless of capability data; this can surface unsupported currencies and wrong corridors (frontend/composables/useCorridorCurrencies.ts).~~
+- ~~Stripe mock checkout/portal URLs point to missing pages; UI also claims a 14-day trial, but checkout session does not set a trial period (frontend/pages/plus/checkout.vue, backend/plane-a/src/services/stripe-mock.ts, backend/plane-a/src/routes/billing/checkout-session.ts).~~
+- ~~Stripe mock checkout does not update user plan (no mock webhook or local plan update), so local checkout completes but Plus does not activate without SUPABASE_MOCK_PLAN (backend/plane-a/src/routes/billing/webhook.ts, backend/plane-a/src/routes/billing/verify-session.ts).~~
+- ~~Checkout UI collects card data but never sends it (Stripe Checkout redirect only); replace with Stripe Elements or remove faux card fields to avoid compliance/UX mismatch (frontend/pages/plus/checkout.vue).~~
+- ~~Avatar upload requires S3; no local fallback means profile avatar update fails when bucket is unset (backend/plane-a/src/services/avatar-upload.ts, backend/plane-a/src/routes/me.ts).~~ Removed feature; no local support needed.
+- ~~Smart alerts need `silver.corridor_signals` populated; `smart-alerts-job` is not scheduled by default, so sendScore alerts never trigger (backend/scripts/smart-alerts-job.ts, backend/plane-a/src/services/alert-evaluator.ts).~~
+- ~~Telemetry search tracking is only wired on `/send-money`; hero/header/sticky compare forms do not record searches, so analytics undercount (frontend/components/home/HeroDualTab.vue, frontend/components/nav/HeaderCompareForm.vue, frontend/components/home/StickyCompareBar.vue, frontend/pages/send-money/index.vue).~~
+- ~~Provider scores are static constants (remitScore/scoreBreakdown) with no data-driven scoring pipeline (backend/plane-a/src/services/provider-metadata.ts).~~ Static by design.
+- SEO + Growth fundamentals are now in place: GA4/Meta Pixel/CAPI, retargeting events, attribution capture, consent gating, backlink monitoring, and the SEO checklist.
+
+Growth: SEO, Backlinks, Analytics, Retargeting (Fundamentals)
+- ~~Technical SEO checklist enforced in CI or release runbook (canonical tags, hreflang, robots, sitemap, 404/redirects, noindex rules).~~
+- ~~Sitemap coverage verified for all dynamic routes (corridors, providers, guides, pulse) and submitted to GSC.~~
+- ~~Canonical + UTM stripping: ensure query params don’t create duplicate content on /send-money and /learn pages.~~
+- ~~Core Web Vitals / perf budget (image preloading, JS split, LCP/CLS targets).~~
+- ~~Backlink monitoring plan (GSC + external tool) + disavow workflow and monthly report.~~
+- ~~GA4 event map aligned with telemetry (search, compare, quote refresh, outbound clicks, signup, plus conversion, alert creation).~~
+- ~~Meta Pixel + Conversion API (server-side) with event dedupe and fbclid capture.~~
+- ~~Retargeting audiences: visited /send-money, clicked /go/:provider, started checkout, plus conversion.~~
+- ~~Attribution capture: store gclid/fbclid/msclkid + UTM on session/telemetry.~~
+- ~~Consent & privacy gates tied to telemetry (cookie banner + opt-out enforcement).~~

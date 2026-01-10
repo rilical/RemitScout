@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "status": 404,
+  "json": {
+    "message": "Route GET:/providers?from=US&to=MX&amount=100&method=bank&fromCurrency=USD&toCurrency=MXN not found",
+    "error": "Not Found",
+    "statusCode": 404
+  }
+}

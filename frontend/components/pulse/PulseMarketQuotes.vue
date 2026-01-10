@@ -10,7 +10,7 @@
       </div>
       <div class="flex items-center gap-2 text-sm">
         <span class="text-neutral-400">Mid-market:</span>
-        <span class="font-mono font-bold text-white">{{ data?.midMarketRate.toFixed(4) }}</span>
+        <span class="font-mono font-bold text-white">{{ midMarketRateDisplay }}</span>
         <span class="text-neutral-500">{{ store.corridor.toCode }}/{{ store.corridor.fromCode }}</span>
       </div>
     </div>
@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div v-else-if="data?.quotes.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <div
           v-for="(quote, index) in data?.quotes"
           :key="quote.provider"
@@ -80,6 +80,9 @@
             </div>
           </div>
         </div>
+      </div>
+      <div v-else class="flex h-24 items-center justify-center text-sm text-neutral-500">
+        No live quotes yet.
       </div>
 
       <!-- Analyst View: Additional Details -->
@@ -160,6 +163,11 @@ function getMarkupClass(bps: number): string {
   return 'bg-danger-600/20 text-danger-600'
 }
 
+const midMarketRateDisplay = computed(() => {
+  if (!data.value) return 'n/a'
+  return data.value.midMarketRate.toFixed(4)
+})
+
 async function loadData() {
   loading.value = true
   try {
@@ -181,7 +189,6 @@ onMounted(() => {
   loadData()
 })
 </script>
-
 
 
 

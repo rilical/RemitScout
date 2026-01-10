@@ -217,14 +217,30 @@
 
                 <button
                   type="submit"
-                  :disabled="!isFormValid"
+                  :disabled="!isFormValid || isWaitingForQuotes"
                   class="w-full h-11 rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                 >
-                  <span>Compare Providers</span>
+                  <span v-if="isWaitingForQuotes">Checking...</span>
+                  <span v-else>Compare Providers</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </button>
+
+                <p
+                  v-if="formError"
+                  class="text-sm text-red-600"
+                  role="alert"
+                >
+                  {{ formError }}
+                </p>
+                <p
+                  v-else-if="formInfo"
+                  class="text-sm text-slate-600"
+                  role="status"
+                >
+                  {{ formInfo }}
+                </p>
 
                 <div class="pt-4 border-t border-slate-200">
                   <p class="text-center text-xs text-slate-500 mb-3">
@@ -638,7 +654,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { COUNTRIES, type Country, getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
@@ -649,11 +665,15 @@ import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useTelemetry } from '~/composables/useTelemetry'
+import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 
-const { form: moneyForm, validationError, submit: submitForm } = useCompareForm()
+const { form: moneyForm, validationError, submit: submitForm, statusMessage, isWaitingForQuotes } = useCompareForm()
 const formError = validationError
+const formInfo = statusMessage
 const { recordSearch } = useRemittanceApi()
 const { trackSearch } = useTelemetry()
+const { trackSendMoneyView } = useMarketingAnalytics()
+const route = useRoute()
 
 // Watch for country changes and reset currency if needed
 watch(() => moneyForm.value.to, (newCountry) => {
@@ -723,6 +743,10 @@ const handleMoneySubmit = async () => {
 
   await submitForm()
 }
+
+onMounted(() => {
+  void trackSendMoneyView({ pagePath: route.fullPath })
+})
 
 type RouteLink = {
   label: string

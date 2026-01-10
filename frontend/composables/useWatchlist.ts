@@ -11,6 +11,10 @@ export type SaveResult =
     limit: number
     message: string
   }
+  | {
+    status: 'error'
+    message: string
+  }
 
 type WatchlistApiResponse = {
   success: boolean
@@ -20,6 +24,10 @@ type WatchlistApiResponse = {
   error?: string
   message?: string
   limit?: number
+}
+
+export type WatchlistSyncResult = {
+  idMap: Record<string, string>
 }
 
 function normalizeTarget(target: WatchTarget): WatchTarget {
@@ -78,6 +86,7 @@ export const useWatchlist = () => {
   const { limits } = useEntitlements()
   const { isLoggedIn } = useAuth()
   const { request } = useApi()
+  let syncPromise: Promise<WatchlistSyncResult> | null = null
 
   const { state: items, hydrated: localStorageHydrated, reset: resetLocalStorage } = usePersistedState<WatchlistItem[]>(
     'watchlist:items',
@@ -122,6 +131,80 @@ export const useWatchlist = () => {
       hydrated.value = true
     } finally {
       syncing.value = false
+    }
+  }
+
+  async function syncLocalToServer(): Promise<WatchlistSyncResult> {
+    if (!isLoggedIn.value) {
+      hydrated.value = localStorageHydrated.value
+      return { idMap: {} }
+    }
+
+    if (syncPromise) {
+      return syncPromise
+    }
+
+    syncPromise = (async () => {
+      const idMap: Record<string, string> = {}
+      const localItems = [...items.value]
+      syncing.value = true
+
+      let serverItems: WatchlistItem[] = []
+      try {
+        const response = await request<WatchlistApiResponse>('/watchlist')
+        if (response.success && response.items) {
+          serverItems = response.items
+        } else {
+          console.warn('Failed to fetch watchlist from backend:', response)
+        }
+      } catch (error) {
+        console.error('Error fetching watchlist from backend:', error)
+        hydrated.value = true
+        syncing.value = false
+        return { idMap }
+      }
+
+      const serverByKey = new Map<string, WatchlistItem>()
+      for (const item of serverItems) {
+        serverByKey.set(targetKey(normalizeTarget(item.target)), item)
+      }
+
+      for (const localItem of localItems) {
+        const normalized = normalizeTarget(localItem.target)
+        const key = targetKey(normalized)
+        const existing = serverByKey.get(key)
+        if (existing) {
+          idMap[localItem.id] = existing.id
+          continue
+        }
+
+        try {
+          const response = await request<WatchlistApiResponse>('/watchlist', {
+            method: 'POST',
+            body: {
+              target: normalized,
+              label: localItem.label ?? defaultLabel(normalized),
+            },
+          })
+          if (response.success && response.item) {
+            serverByKey.set(key, response.item)
+            idMap[localItem.id] = response.item.id
+          }
+        } catch (error) {
+          console.error('Error syncing local watchlist item to backend:', error)
+        }
+      }
+
+      items.value = Array.from(serverByKey.values()).sort(sortByUpdatedDesc)
+      hydrated.value = true
+      syncing.value = false
+      return { idMap }
+    })()
+
+    try {
+      return await syncPromise
+    } finally {
+      syncPromise = null
     }
   }
 
@@ -180,7 +263,7 @@ export const useWatchlist = () => {
 
   onMounted(async () => {
     if (isLoggedIn.value) {
-      await fetchFromBackend()
+      await syncLocalToServer()
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -188,7 +271,7 @@ export const useWatchlist = () => {
 
   watch(isLoggedIn, async (loggedIn) => {
     if (loggedIn) {
-      await fetchFromBackend()
+      await syncLocalToServer()
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -218,9 +301,8 @@ export const useWatchlist = () => {
       } catch (error) {
         console.error('Error saving watchlist item to backend:', error)
         return {
-          status: 'limit_reached',
-          limit: limits.value.watchlistItems === 'unlimited' ? 0 : limits.value.watchlistItems,
           message: 'Unable to save watchlist item right now.',
+          status: 'error',
         }
       }
     }
@@ -329,5 +411,6 @@ export const useWatchlist = () => {
     reset,
     syncing: readonly(syncing),
     refresh: fetchFromBackend,
+    syncToServer: syncLocalToServer,
   }
 }

@@ -968,18 +968,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/singx'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'SingX Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent SingX review with Remit-Score 8.2/10. Good bank-transfer value; moderate speed; narrower breadth vs global leaders. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent SingX review with Remit-Score 8.2/10. Good bank-transfer value; moderate speed; narrower breadth vs global leaders. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/singx`,
+  ogImage: `${siteUrl}/og-images/provider-singx.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `SingX earns a Remit-Score of 8.2/10 based on our independent analysis. The provider offers good bank-transfer value with moderate speed, though with narrower breadth compared to global leaders. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'SingX',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.2,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

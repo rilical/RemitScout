@@ -3,6 +3,8 @@ import type { Pool } from 'pg'
 import type { CollectorRequest, FetchResult } from '../collectors/types'
 import { detectBlock } from '../collectors/block-detection'
 import { ensureCorridor } from '../collectors/base'
+import { parseCorridorId } from '../../../shared/corridor'
+import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { ProviderCapabilityRepository } from '../repositories'
 import type { ProxyTier } from '../lib/proxy-router'
 import { fetchRemitlyQuote } from '../providers/remitly/fetch'
@@ -104,6 +106,13 @@ const methodAllowed = (methods: string[] | null, requested: string) => {
   return normalized.includes(normalizeMethod(requested))
 }
 
+const isWiseCurrencyCorridor = (corridorId: string): boolean => {
+  const parts = parseCorridorId(corridorId)
+  if (!parts) return false
+  return isWiseSourceCurrency(parts.sourceCurrency.toUpperCase())
+    && isWiseDestinationCurrency(parts.destCurrency.toUpperCase())
+}
+
 const probeProviderCapability = async (
   pool: Pool,
   request: CollectorRequest,
@@ -183,7 +192,18 @@ export const resolveProviderSupport = async (
 ): Promise<ProviderSupportDecision> => {
   const allowProbe = options.allowProbe ?? true
   const catalogSet = catalogSupportedCorridors[request.provider_id]
-  if (catalogSet && !catalogSet.has(request.corridor_id)) {
+  if (request.provider_id === 'wise') {
+    if (!isWiseCurrencyCorridor(request.corridor_id)) {
+      await ensureCorridor(pool, request.corridor_id)
+      const repo = new ProviderCapabilityRepository(pool)
+      await repo.markCorridorUnsupported(
+        request.provider_id,
+        request.corridor_id,
+        'wise_currency_unsupported',
+      )
+      return { supported: false, reason: 'catalog_unsupported', source: 'cache' }
+    }
+  } else if (catalogSet && !catalogSet.has(request.corridor_id)) {
     await ensureCorridor(pool, request.corridor_id)
     const repo = new ProviderCapabilityRepository(pool)
     await repo.markCorridorUnsupported(

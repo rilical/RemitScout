@@ -1,4 +1,4 @@
-import { createError, getHeaders, getMethod, getQuery, readBody } from 'h3'
+import { createError, getHeaders, getMethod, getQuery, readBody, setResponseStatus } from 'h3'
 import { joinURL } from 'ufo'
 
 const FORWARDED_HEADERS = [
@@ -76,6 +76,14 @@ const buildForwardHeaders = (
 }
 
 const DEFAULT_TIMEOUT_MS = 30000
+const NON_BLOCKING_PATHS = new Set([
+  '/sessions/track',
+  '/telemetry/session',
+  '/telemetry/search',
+  '/telemetry/click',
+])
+
+const isNonBlockingPath = (path: string) => NON_BLOCKING_PATHS.has(path)
 
 const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
@@ -106,21 +114,26 @@ export const proxyToBackend = async (event: any, path: string) => {
   const query = getQuery(event)
   const headers = buildForwardHeaders(getHeaders(event))
   const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(event)
+  const nonBlocking = isNonBlockingPath(path)
 
   const timeoutMs =
     Number(process.env.BACKEND_PROXY_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS
 
   return await retryWithBackoff(async () => {
     try {
-  return await $fetch(joinURL(base, path), {
-    method,
-    query,
-    body,
-    headers,
+      return await $fetch(joinURL(base, path), {
+        method,
+        query,
+        body,
+        headers,
         timeout: timeoutMs,
       })
     } catch (error: any) {
       const statusCode = error?.statusCode || error?.response?.status
+      if (nonBlocking && (statusCode === 401 || statusCode === 403)) {
+        setResponseStatus(event, 204)
+        return { ok: false, status: statusCode }
+      }
       if (statusCode && statusCode >= 500) {
         throw error
       }

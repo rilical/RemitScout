@@ -4,4 +4,8 @@ export type RightsMatrixProviderRecord = {
 
 export interface IRightsMatrixRepository {
   listActiveB2cProviders(): Promise<RightsMatrixProviderRecord[]>
+  listActiveB2cProvidersByCountry(
+    sourceCountry: string,
+    destCountry: string,
+  ): Promise<RightsMatrixProviderRecord[]>
 }

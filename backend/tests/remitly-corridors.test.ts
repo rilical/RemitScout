@@ -58,9 +58,13 @@ const mapPayout = (code?: string | null) => {
 
 const getEstimates = (payload: RemitlyPayload): RemitlyEstimate[] => {
   const list = payload.pay_out_price_estimates?.estimates
-  if (Array.isArray(list) && list.length > 0) return list
-  if (payload.estimate) return [payload.estimate]
-  return []
+  const estimates: RemitlyEstimate[] = Array.isArray(list) && list.length > 0
+    ? [...list]
+    : []
+  if (payload.estimate) {
+    estimates.push(payload.estimate)
+  }
+  return estimates
 }
 
 const parseNumber = (value?: string | number | null): number => {

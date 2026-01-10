@@ -1,126 +1,68 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-white">
-    <div class="relative overflow-hidden">
-      <div class="absolute inset-0 opacity-70">
-        <div class="absolute -top-32 left-1/3 h-80 w-80 rounded-full bg-blue-600/30 blur-[140px]" />
-        <div class="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-emerald-500/20 blur-[120px]" />
+  <div class="min-h-screen bg-brand-600 flex items-center justify-center px-6 py-12">
+    <div class="max-w-md w-full text-center">
+      <div class="bg-white rounded-2xl p-8 shadow-xl">
+        <div class="flex flex-col items-center gap-6 mb-8">
+          <div class="flex flex-col items-center gap-4">
+            <ProviderLogo
+              v-if="provider?.slug"
+              :slug="provider.slug"
+              :alt="provider.name"
+              size="large"
+            />
+            <span v-else class="text-4xl font-bold text-slate-600">
+              {{ provider?.name?.slice(0, 1) || '?' }}
+            </span>
+            <div class="text-6xl font-bold text-slate-400 my-2">
+              X:
+            </div>
+            <div>
+              <img
+                src="/png/SVG/FULL_LOGO.svg"
+                alt="Remit-Scout"
+                class="h-16 w-auto mx-auto"
+              >
+            </div>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 mb-2">
+              Redirecting to {{ provider?.name || 'Provider' }}
+            </h1>
+            <p class="text-sm text-slate-600">
+              Opening in <span class="font-semibold">{{ secondsRemaining }}</span> seconds
+            </p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              class="h-full rounded-full bg-brand-600 transition-[width] duration-300 ease-out"
+              :style="{ width: `${progressPct}%` }"
+            />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <button
+            type="button"
+            class="w-full rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
+            :disabled="!targetUrl"
+            @click="redirectNow"
+          >
+            Continue now →
+          </button>
+          <NuxtLink
+            to="/send-money"
+            class="w-full rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Back to compare
+          </NuxtLink>
+        </div>
       </div>
 
-      <div class="relative mx-auto max-w-4xl px-6 py-14 sm:py-20">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <img src="/logos/remit-scout.svg" alt="Remit-Scout" class="h-8 w-auto" />
-            <div class="text-xs uppercase tracking-[0.2em] text-slate-300">Trusted handoff</div>
-          </div>
-          <div v-if="provider" class="text-xs text-slate-300">
-            Provider ID: <span class="font-semibold text-white">{{ provider.id }}</span>
-          </div>
-        </div>
-
-        <div class="mt-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div class="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_25px_60px_-30px_rgba(15,23,42,0.9)]">
-            <div class="flex items-center gap-4">
-              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
-                <ProviderLogo
-                  v-if="provider?.slug"
-                  :slug="provider.slug"
-                  :alt="provider.name"
-                  class="h-9 w-auto"
-                />
-                <span v-else class="text-2xl font-semibold text-white">
-                  {{ provider?.name?.slice(0, 1) || '?' }}
-                </span>
-              </div>
-              <div>
-                <p class="text-sm text-slate-300">Taking you to</p>
-                <h1 class="text-3xl font-semibold text-white">
-                  {{ provider?.name || 'the provider site' }}
-                </h1>
-              </div>
-            </div>
-
-            <p class="mt-6 text-sm leading-relaxed text-slate-300">
-              We are opening the provider site in <span class="font-semibold text-white">{{ secondsRemaining }}</span> seconds.
-              This transition page tracks outbound clicks so we can keep providers accountable and keep pricing transparent.
-            </p>
-
-            <div class="mt-6 rounded-2xl border border-white/10 bg-slate-900/40 p-5">
-              <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                <span v-if="corridorId">Corridor: <span class="text-white">{{ corridorId }}</span></span>
-                <span v-if="amountLabel">Amount: <span class="text-white">{{ amountLabel }}</span></span>
-                <span v-if="rateLabel">Rate: <span class="text-white">{{ rateLabel }}</span></span>
-                <span v-if="feeLabel">Fee: <span class="text-white">{{ feeLabel }}</span></span>
-              </div>
-              <div class="mt-3 flex items-center gap-2 text-xs text-slate-400">
-                <div class="h-2 w-2 rounded-full bg-emerald-400" />
-                <span v-if="affiliateFlag">Affiliate link detected</span>
-                <span v-else>Standard provider link</span>
-              </div>
-            </div>
-
-            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-                :disabled="!targetUrl"
-                @click="redirectNow"
-              >
-                Continue now
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-5-5 5 5-5 5" />
-                </svg>
-              </button>
-              <NuxtLink
-                to="/send-money"
-                class="inline-flex flex-1 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
-              >
-                Back to compare
-              </NuxtLink>
-            </div>
-
-            <p class="mt-4 text-xs text-slate-400">
-              If you are not redirected automatically, click "Continue now".
-            </p>
-          </div>
-
-          <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-8">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Transfer summary</p>
-                <h2 class="mt-2 text-xl font-semibold text-white">Quick handoff</h2>
-              </div>
-              <div class="flex h-12 w-12 items-center justify-center rounded-full border border-white/20">
-                <div class="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-              </div>
-            </div>
-
-            <div class="mt-6 space-y-4 text-sm text-slate-200">
-              <div class="flex items-center justify-between">
-                <span class="text-slate-400">Destination</span>
-                <span class="font-semibold text-white">{{ targetHost }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-slate-400">Status</span>
-                <span class="font-semibold text-emerald-300">{{ redirectStatus }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-slate-400">Session</span>
-                <span class="font-semibold text-white">{{ sessionLabel }}</span>
-              </div>
-            </div>
-
-            <div class="mt-8 rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-xs text-slate-300">
-              <p class="font-semibold text-white">Why this page?</p>
-              <p class="mt-2 text-slate-300">
-                We track outbound traffic and affiliate labels to keep provider rankings honest and help you compare offers fairly.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="!targetUrl" class="mt-8 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6 text-sm text-amber-100">
-          We could not determine a valid destination URL for this provider. Please go back and try another link.
-        </div>
+      <div v-if="!targetUrl" class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        We could not determine a valid destination URL for this provider. Please go back and try another link.
       </div>
     </div>
   </div>
@@ -171,6 +113,17 @@ const toNumber = (value?: string) => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+const readAttribution = () => {
+  if (!import.meta.client) return {}
+  try {
+    const raw = window.localStorage.getItem('rs:attribution')
+    if (!raw) return {}
+    return JSON.parse(raw) as { gclid?: string; fbclid?: string; msclkid?: string }
+  } catch {
+    return {}
+  }
+}
+
 const sanitizeTarget = (value?: string | null) => {
   if (!value) return null
   const trimmed = value.trim()
@@ -199,7 +152,7 @@ const affiliateFlag = computed(() => {
   if (affiliateParam.value === '1' || affiliateParam.value === 'true') return true
   if (affiliateParam.value === '0' || affiliateParam.value === 'false') return false
   if (provider.value?.affiliateUrl) return true
-  return Boolean(provider.value?.isAffiliate)
+  return false
 })
 
 const targetUrl = computed(() => {
@@ -234,7 +187,13 @@ const feeLabel = computed(() => {
   return `${quotedFee.value.toFixed(2)} ${fromCurrency.value}`
 })
 
-const secondsRemaining = ref(4)
+const totalSeconds = 2
+const secondsRemaining = ref(totalSeconds)
+const progressPct = computed(() => {
+  const elapsed = totalSeconds - secondsRemaining.value
+  const pct = (elapsed / totalSeconds) * 100
+  return Math.min(100, Math.max(0, pct))
+})
 const redirectStatus = computed(() => (hasRedirected.value ? 'Redirected' : 'Queued'))
 const sessionLabel = computed(() => {
   if (import.meta.server) return 'anonymous'
@@ -267,6 +226,7 @@ const trackOutbound = async () => {
   })
 
   const sessionIds = ensureSession()
+  const attribution = readAttribution()
   await trackProviderVisit({
     session_id: sessionIds.session_id,
     anon_id: sessionIds.anon_id ?? undefined,
@@ -275,6 +235,9 @@ const trackOutbound = async () => {
     target_url: targetUrl.value,
     page_path: route.fullPath,
     utm: extractUtmParams(route.query as Record<string, unknown>),
+    gclid: attribution.gclid,
+    fbclid: attribution.fbclid,
+    msclkid: attribution.msclkid,
     quoted_rate: quotedRate.value ?? undefined,
     quoted_fee: quotedFee.value ?? undefined,
   })
@@ -293,7 +256,7 @@ onMounted(() => {
 
   redirectTimer = window.setTimeout(() => {
     redirectNow()
-  }, secondsRemaining.value * 1000)
+  }, totalSeconds * 1000)
 })
 
 onBeforeUnmount(() => {

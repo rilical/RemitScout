@@ -18,6 +18,19 @@ const parseBearerToken = (header?: string) => {
   return token || null
 }
 
+const parseMockToken = (token: string, baseToken: string) => {
+  if (!baseToken) return null
+  if (token === baseToken) {
+    return { email: null }
+  }
+  const prefix = `${baseToken}:`
+  if (token.startsWith(prefix)) {
+    const email = token.slice(prefix.length).trim()
+    return { email: email || null }
+  }
+  return null
+}
+
 const makeError = (code: AuthError['code'], message: string): AuthError => ({ code, message })
 
 const uuidPattern =
@@ -49,15 +62,22 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
   if (config.auth.supabase.mock.enabled) {
     const { token: userToken, adminToken, userId, email, role, adminEmail } =
       config.auth.supabase.mock
-    const isAdmin = token === adminToken
-    const isUser = token === userToken
+    const adminMatch = parseMockToken(token, adminToken)
+    const userMatch = parseMockToken(token, userToken)
+    const isAdmin = !!adminMatch
+    const isUser = !!userMatch
 
     if (!isAdmin && !isUser) {
       return makeError('invalid_token', 'Invalid mock token')
     }
 
-    const resolvedUserId = resolveMockUserId(userId, userToken || adminToken || 'dev-user')
-    const resolvedEmail = isAdmin ? adminEmail : email
+    const tokenEmail = (adminMatch ?? userMatch)?.email
+    const fallbackIdSource = isAdmin ? adminToken : userToken
+    const resolvedUserId = resolveMockUserId(
+      tokenEmail || userId || fallbackIdSource || 'dev-user',
+      userId || fallbackIdSource || 'dev-user',
+    )
+    const resolvedEmail = tokenEmail || (isAdmin ? adminEmail : email)
     const resolvedRole = isAdmin ? 'admin' : role
     const claims = {
       sub: resolvedUserId,

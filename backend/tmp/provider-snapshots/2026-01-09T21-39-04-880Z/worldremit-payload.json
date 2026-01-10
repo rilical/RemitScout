@@ -1,0 +1,172 @@
+{
+  "payoutMethods": {
+    "payOutMethods": [
+      {
+        "code": "ATP",
+        "payOutTimeEstimate": "⚡ Within 5 minutes",
+        "correspondents": [
+          {
+            "id": "1332",
+            "name": "TransferTo Mexico MXN Zepz",
+            "payOutTime": null,
+            "__typename": "Correspondent"
+          }
+        ],
+        "__typename": "PayOutMethod"
+      },
+      {
+        "code": "BNK",
+        "payOutTimeEstimate": "Same day",
+        "correspondents": [
+          {
+            "id": "4128",
+            "name": "Any MXN account at any bank",
+            "payOutTime": null,
+            "__typename": "Correspondent"
+          }
+        ],
+        "__typename": "PayOutMethod"
+      },
+      {
+        "code": "CSH",
+        "payOutTimeEstimate": "⚡ Within 5 minutes",
+        "correspondents": [
+          {
+            "id": "4069",
+            "name": "Elektra | Banco Azteca",
+            "payOutTime": null,
+            "__typename": "Correspondent"
+          },
+          {
+            "id": "4065",
+            "name": "Banorte",
+            "payOutTime": null,
+            "__typename": "Correspondent"
+          },
+          {
+            "id": "4067",
+            "name": "Farmacias Guadalajara",
+            "payOutTime": null,
+            "__typename": "Correspondent"
+          },
+          {
+            "id": "4066",
+            "name": "Walmart",
+            "payOutTime": null,
+            "__typename": "Correspondent"
+          }
+        ],
+        "__typename": "PayOutMethod"
+      }
+    ]
+  },
+  "calculation": {
+    "createCalculation": {
+      "calculation": {
+        "id": "cf94d486-d707-4e07-8b00-7cf4fb2ab79d",
+        "isFree": false,
+        "informativeSummary": {
+          "fee": {
+            "value": {
+              "amount": 1.99,
+              "currency": "USD",
+              "__typename": "Money"
+            },
+            "type": "Uniform",
+            "__typename": "Fee"
+          },
+          "discount": null,
+          "appliedPromotions": null,
+          "totalToPay": {
+            "amount": 101.99,
+            "__typename": "Money"
+          },
+          "__typename": "InformativeSummary"
+        },
+        "payInMethodsCalculations": [
+          {
+            "totalToPay": {
+              "amount": 101.99,
+              "currency": "USD",
+              "__typename": "Money"
+            },
+            "payInMethod": {
+              "name": "Debit Card",
+              "transferRedirectionType": null,
+              "id": "debit-card",
+              "icon": {
+                "resolutions": {
+                  "1.5": "https://images.ctfassets.net/sb7j5o4oxtgv/77KXHmmUPgfFALY0IyLDdX/efce4fd5914aea68d948d79b78c5860a/credit-card-newbrand_1.5.png",
+                  "1.0": "https://images.ctfassets.net/sb7j5o4oxtgv/4YX9OnymFRpcKN6D6SDlAP/895463d5faddf75fdcf63a6d79f922f2/credit-card-newbrand_1.0.png",
+                  "2.0": "https://images.ctfassets.net/sb7j5o4oxtgv/24S5O3crvmBI9HxgMgl6FL/60e92711561db86217d4e9ec4b23ceae/credit-card-newbrand_2.0.png",
+                  "3.0": "https://images.ctfassets.net/sb7j5o4oxtgv/2LZQ2NJyQ90fxbDvyMSyN4/8310e87b74ea246d57a6a5404c2a000e/credit-card-newbrand_3.0.png",
+                  "4.0": "https://images.ctfassets.net/sb7j5o4oxtgv/6CQA92aBmGUW06GwgwMY7u/c4a098e3213afc69335e23dba8919473/credit-card-newbrand_4.0.png"
+                },
+                "__typename": "Icon"
+              },
+              "__typename": "PayInMethod"
+            },
+            "__typename": "PayInMethodCalculation"
+          },
+          {
+            "totalToPay": {
+              "amount": 104.99,
+              "currency": "USD",
+              "__typename": "Money"
+            },
+            "payInMethod": {
+              "name": "Credit Card",
+              "transferRedirectionType": null,
+              "id": "credit-card",
+              "icon": {
+                "resolutions": {
+                  "1.5": "https://images.ctfassets.net/sb7j5o4oxtgv/77KXHmmUPgfFALY0IyLDdX/efce4fd5914aea68d948d79b78c5860a/credit-card-newbrand_1.5.png",
+                  "1.0": "https://images.ctfassets.net/sb7j5o4oxtgv/4YX9OnymFRpcKN6D6SDlAP/895463d5faddf75fdcf63a6d79f922f2/credit-card-newbrand_1.0.png",
+                  "2.0": "https://images.ctfassets.net/sb7j5o4oxtgv/24S5O3crvmBI9HxgMgl6FL/60e92711561db86217d4e9ec4b23ceae/credit-card-newbrand_2.0.png",
+                  "3.0": "https://images.ctfassets.net/sb7j5o4oxtgv/2LZQ2NJyQ90fxbDvyMSyN4/8310e87b74ea246d57a6a5404c2a000e/credit-card-newbrand_3.0.png",
+                  "4.0": "https://images.ctfassets.net/sb7j5o4oxtgv/6CQA92aBmGUW06GwgwMY7u/c4a098e3213afc69335e23dba8919473/credit-card-newbrand_4.0.png"
+                },
+                "__typename": "Icon"
+              },
+              "__typename": "PayInMethod"
+            },
+            "__typename": "PayInMethodCalculation"
+          }
+        ],
+        "send": {
+          "currency": "USD",
+          "amount": 100,
+          "__typename": "Money"
+        },
+        "receive": {
+          "amount": 1756,
+          "currency": "MXN",
+          "__typename": "Money"
+        },
+        "rounding": null,
+        "exchangeRate": {
+          "value": 17.5582,
+          "crossedOutValue": null,
+          "__typename": "FxRate"
+        },
+        "__typename": "Calculation"
+      },
+      "errors": [],
+      "__typename": "CreateCalculationResult"
+    }
+  },
+  "mappedPayoutMethod": "bank_deposit",
+  "selectedPayoutMethod": {
+    "code": "BNK",
+    "payOutTimeEstimate": "Same day",
+    "correspondents": [
+      {
+        "id": "4128",
+        "name": "Any MXN account at any bank",
+        "payOutTime": null,
+        "__typename": "Correspondent"
+      }
+    ],
+    "__typename": "PayOutMethod"
+  }
+}

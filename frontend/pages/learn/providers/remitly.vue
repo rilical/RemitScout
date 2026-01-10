@@ -904,18 +904,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/remitly'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Remitly Review 2024 - Remit-Score 9.1/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Remitly review with Remit-Score 9.1/10. Very fast Express option, strong support, reliable execution. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent Remitly review with Remit-Score 9.1/10. Very fast Express option, strong support, reliable execution. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/remitly`,
+  ogImage: `${siteUrl}/og-images/provider-remitly.jpg`,
 })
 
 const breadcrumbItems = [
@@ -939,6 +942,20 @@ const scoreTextClass = computed(() => {
   if (score >= 8.0) return 'text-brand-600'
   if (score >= 7.0) return 'text-yellow-600'
   return 'text-neutral-600'
+})
+
+const { addReviewSchema } = useStructuredData()
+
+const reviewBody = `Remitly earns a Remit-Score of 9.1/10 based on our independent analysis. The provider offers very fast Express transfers with reliable execution and strong customer support. Delivered value is strong overall, with a tradeoff between Express (faster, potentially higher cost) and Economy (better value when speed isn't urgent). Multiple payout methods including bank transfer, cash pickup, mobile money, and home delivery. 24/7 customer support with clear refund policies.`
+
+addReviewSchema({
+  itemReviewed: 'Remitly',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 9.1,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 </script>
 

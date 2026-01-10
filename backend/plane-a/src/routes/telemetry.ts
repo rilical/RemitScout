@@ -7,11 +7,12 @@ import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { requireAdmin } from '../plugins/auth-plugin'
-import { TelemetryRepository } from '../repositories'
+import { TelemetryRepository, UserAccountRepository } from '../repositories'
 
 const logger = createLogger('plane-a.telemetry')
 const planeAPool = getPool(config.db.planeAUrl)
 const telemetryRepository = new TelemetryRepository(planeAPool)
+const userAccountRepository = new UserAccountRepository(planeAPool)
 
 const searchSchema = z.object({
   session_id: z.string().min(8),
@@ -22,6 +23,9 @@ const searchSchema = z.object({
   payin: z.string().min(1).optional(),
   payout: z.string().min(1).optional(),
   utm: z.record(z.string()).optional(),
+  gclid: z.string().optional(),
+  fbclid: z.string().optional(),
+  msclkid: z.string().optional(),
   page_path: z.string().optional(),
 })
 
@@ -33,9 +37,28 @@ const clickSchema = z.object({
   target_url: z.string().min(1),
   page_path: z.string().optional(),
   utm: z.record(z.string()).optional(),
+  gclid: z.string().optional(),
+  fbclid: z.string().optional(),
+  msclkid: z.string().optional(),
   quoted_rate: z.coerce.number().positive().optional(),
   quoted_fee: z.coerce.number().nonnegative().optional(),
   is_affiliate: z.coerce.boolean().optional(),
+})
+
+const conversionSchema = z.object({
+  session_id: z.string().min(8),
+  anon_id: z.string().optional(),
+  provider_id: z.string().min(1),
+  corridor_id: z.string().optional(),
+  conversion_value: z.coerce.number().positive().optional(),
+  conversion_currency: z.string().length(3).optional(),
+  offer_id: z.string().optional(),
+  source: z.string().optional(),
+  page_path: z.string().optional(),
+  utm: z.record(z.string()).optional(),
+  gclid: z.string().optional(),
+  fbclid: z.string().optional(),
+  msclkid: z.string().optional(),
 })
 
 const sessionSchema = z.object({
@@ -43,6 +66,10 @@ const sessionSchema = z.object({
   anon_id: z.string().optional(),
   referrer: z.string().optional(),
   first_page: z.string().optional(),
+  utm: z.record(z.string()).optional(),
+  gclid: z.string().optional(),
+  fbclid: z.string().optional(),
+  msclkid: z.string().optional(),
 })
 
 const analyticsSchema = z.object({
@@ -98,6 +125,20 @@ const getAnalyticsBucket = async () => {
     planeAPool,
   )
   return result.rows[0]?.bucket ?? new Date()
+}
+
+const shouldSkipTelemetry = async (userId?: string | null): Promise<boolean> => {
+  if (!userId) return false
+  try {
+    const settings = await userAccountRepository.getPrivacySettings(userId)
+    return settings?.analytics_enabled === false
+  } catch (error) {
+    logger.warn('telemetry_privacy_lookup_failed', {
+      user_id: userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
 }
 
 const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
@@ -204,11 +245,19 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     try {
+      if (await shouldSkipTelemetry(request.user?.user_id)) {
+        return { success: true, skipped: 'opt_out' }
+      }
+
       await telemetryRepository.createOrUpdateSession({
         session_id: input.session_id,
         anon_id: input.anon_id ?? null,
         user_id: request.user?.user_id ?? null,
         first_page: input.page_path ?? null,
+        utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
       })
 
       await telemetryRepository.recordSearchEvent({
@@ -219,6 +268,9 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         payin: input.payin ?? 'unknown',
         payout: input.payout ?? 'unknown',
         utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
         page_path: input.page_path ?? null,
       })
 
@@ -247,11 +299,19 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     try {
+      if (await shouldSkipTelemetry(request.user?.user_id)) {
+        return { success: true, skipped: 'opt_out' }
+      }
+
       await telemetryRepository.createOrUpdateSession({
         session_id: input.session_id,
         anon_id: input.anon_id ?? null,
         user_id: request.user?.user_id ?? null,
         first_page: input.page_path ?? null,
+        utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
       })
 
       await telemetryRepository.recordOutboundClick({
@@ -262,6 +322,9 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         target_url: sanitizeTargetUrl(input.target_url),
         page_path: input.page_path ?? null,
         utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
         is_affiliate: input.is_affiliate ?? false,
       })
 
@@ -274,6 +337,9 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         target_url: sanitizeTargetUrl(input.target_url),
         page_path: input.page_path ?? null,
         utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
         quoted_rate: input.quoted_rate ?? null,
         quoted_fee: input.quoted_fee ?? null,
       })
@@ -281,6 +347,62 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
       return { success: true }
     } catch (error) {
       logger.warn('telemetry_click_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.post('/telemetry/conversion', async (request, reply) => {
+    const parsed = conversionSchema.safeParse(request.body)
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    const input = parsed.data
+    const rateKey = `telemetry:conversion:${input.session_id}`
+    if (await checkRateLimit(rateKey, 40, 60)) {
+      reply.code(429)
+      return { error: 'rate_limited' }
+    }
+
+    try {
+      if (await shouldSkipTelemetry(request.user?.user_id)) {
+        return { success: true, skipped: 'opt_out' }
+      }
+
+      await telemetryRepository.createOrUpdateSession({
+        session_id: input.session_id,
+        anon_id: input.anon_id ?? null,
+        user_id: request.user?.user_id ?? null,
+        first_page: input.page_path ?? null,
+        utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
+      })
+
+      await telemetryRepository.recordAffiliateConversion({
+        session_id: input.session_id,
+        user_id: request.user?.user_id ?? null,
+        provider_id: input.provider_id,
+        corridor_id: input.corridor_id ?? null,
+        conversion_value: input.conversion_value ?? null,
+        conversion_currency: input.conversion_currency?.toUpperCase() ?? null,
+        offer_id: input.offer_id ?? null,
+        source: input.source ?? null,
+        page_path: input.page_path ?? null,
+        utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
+      })
+
+      return { success: true }
+    } catch (error) {
+      logger.warn('telemetry_conversion_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
       reply.code(500)
@@ -299,12 +421,20 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     const anonId = parsed.data.anon_id ?? makeId()
 
     try {
+      if (await shouldSkipTelemetry(request.user?.user_id)) {
+        return { success: true, skipped: 'opt_out' }
+      }
+
       const session = await telemetryRepository.createOrUpdateSession({
         session_id: sessionId,
         anon_id: anonId,
         user_id: request.user?.user_id ?? null,
         first_page: parsed.data.first_page ?? null,
         referrer: parsed.data.referrer ?? null,
+        utm: parsed.data.utm ?? null,
+        gclid: parsed.data.gclid ?? null,
+        fbclid: parsed.data.fbclid ?? null,
+        msclkid: parsed.data.msclkid ?? null,
       })
 
       return {

@@ -74,7 +74,7 @@
           @mousedown.prevent="selectCurrency(currency)"
           @touchstart.prevent="selectCurrency(currency)"
         >
-          {{ currency.label }}
+          {{ props.codeOnly ? currency.code : currency.label }}
         </button>
       </div>
     </Teleport>
@@ -142,7 +142,7 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const dropdownStyle = ref({})
 
 const availableCurrencyCodes = computed(() => {
-  if (props.currencies) {
+  if (props.currencies && props.currencies.length > 0) {
     console.log('Using provided currencies:', props.currencies)
     return props.currencies
   }
@@ -150,7 +150,7 @@ const availableCurrencyCodes = computed(() => {
   if (props.countryCode) {
     const codes = getAvailableCurrencies(props.countryCode)
     console.log('Country code:', props.countryCode, 'Available currencies:', codes)
-    return codes
+    return codes.length > 0 ? codes : BASE_CURRENCIES
   }
 
   console.log('Using base currencies:', BASE_CURRENCIES)
@@ -294,8 +294,7 @@ watch(
     console.log('isOpen:', isOpen.value)
 
     if (newValue && !isOpen.value) {
-      // Only update searchQuery when dropdown is closed
-      // Show just the code for brevity
+      // Always show just the code (regardless of codeOnly prop for input display)
       console.log('Setting searchQuery to:', newValue)
       searchQuery.value = newValue
     }
@@ -312,10 +311,13 @@ watch(
 
 onMounted(() => {
   isMounted.value = true
+  
+  // Initialize filtered currencies immediately
+  filteredCurrencies.value = [...allCurrencies.value]
   filterCurrencies()
 
   if (props.modelValue) {
-    // Show just the code
+    // Always show just the currency code in the input
     searchQuery.value = props.modelValue
   }
 

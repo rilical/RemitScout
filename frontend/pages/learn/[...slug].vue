@@ -93,14 +93,8 @@
           </div>
         </header>
 
-        <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <p class="font-semibold">Sponsored placement</p>
-              <p>Reserve a 300x250/336x280 display spot here. Keep links rel="sponsored"/nofollow and label as an ad.</p>
-            </div>
-            <span class="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-amber-700">Ad</span>
-          </div>
+        <div class="mb-6">
+          <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
         </div>
 
         <div class="prose prose-lg max-w-none">
@@ -161,6 +155,7 @@
 
         <!-- Sidebar Column -->
         <aside class="lg:col-span-4 space-y-6">
+          <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
           <!-- Data Sources & Methodology Box -->
           <div class="rounded-lg bg-slate-900 border border-slate-800 p-5 sticky top-4">
             <div class="flex items-center gap-2 mb-4">

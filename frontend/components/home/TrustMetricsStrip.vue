@@ -7,7 +7,7 @@
           Our Impact So Far
         </h2>
         <p :class="['text-lg max-w-3xl mx-auto leading-relaxed', isDarkBg ? 'text-white/90' : 'text-neutral-700']">
-          Built by an expat who got tired of watching money disappear to bank fees. We track <span class="font-semibold whitespace-nowrap">{{ SITE_STATS.providers.display }} providers</span> across <span class="font-semibold whitespace-nowrap">{{ SITE_STATS.corridors.display }} countries</span> in real time. <span class="font-semibold whitespace-nowrap">Providers cannot pay to rank higher</span>, we just show you which option gets the most money to your recipient.
+          We compare real-time quotes across <span class="font-semibold whitespace-nowrap">{{ SITE_STATS.corridors.display }} countries</span> to show you the best rates available right now. <span class="font-semibold whitespace-nowrap">Providers cannot pay to rank higher</span>. We just show you which option gets the most money to your recipient.
         </p>
       </div>
 

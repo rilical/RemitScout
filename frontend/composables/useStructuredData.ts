@@ -320,6 +320,162 @@ export const useStructuredData = () => {
     })
   }
 
+  // FinancialProduct schema for comparison pages
+  const addFinancialProductSchema = (params: {
+    name: string
+    description: string
+    url: string
+    provider: string
+    exchangeRate?: string
+    fees?: string
+    deliveryTime?: string
+    currency: string
+    amount?: string
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'FinancialProduct',
+      'name': params.name,
+      'description': params.description,
+      'url': params.url,
+      'provider': {
+        '@type': 'Organization',
+        'name': params.provider,
+      },
+      'offers': {
+        '@type': 'Offer',
+        'priceCurrency': params.currency,
+        ...(params.amount && { 'price': params.amount }),
+        ...(params.exchangeRate && { 'description': `Exchange rate: ${params.exchangeRate}` }),
+      },
+      ...(params.deliveryTime && { 'availabilityStarts': params.deliveryTime }),
+    }
+
+    useHead({
+      script: [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  // Review schema for provider review pages
+  const addReviewSchema = (params: {
+    itemReviewed: string
+    reviewBody: string
+    author: string
+    ratingValue: number
+    bestRating?: number
+    worstRating?: number
+    datePublished: string
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Review',
+      'itemReviewed': {
+        '@type': 'Organization',
+        'name': params.itemReviewed,
+      },
+      'reviewBody': params.reviewBody,
+      'author': {
+        '@type': 'Person',
+        'name': params.author,
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': params.ratingValue,
+        'bestRating': params.bestRating || 5,
+        'worstRating': params.worstRating || 1,
+      },
+      'datePublished': params.datePublished,
+      'publisher': {
+        '@type': 'Organization',
+        'name': siteName || 'Remit-Scout',
+        'logo': {
+          '@type': 'ImageObject',
+          'url': `${siteUrl}/logo.png`,
+        },
+      },
+    }
+
+    useHead({
+      script: [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  // HowTo schema for guide pages
+  const addHowToSchema = (params: {
+    name: string
+    description: string
+    steps: Array<{ name: string; text: string; image?: string }>
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'HowTo',
+      'name': params.name,
+      'description': params.description,
+      'step': params.steps.map((step, index) => ({
+        '@type': 'HowToStep',
+        'position': index + 1,
+        'name': step.name,
+        'text': step.text,
+        ...(step.image && {
+          'image': {
+            '@type': 'ImageObject',
+            'url': step.image,
+          },
+        }),
+      })),
+    }
+
+    useHead({
+      script: [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  // LocalBusiness schema (if applicable)
+  const addLocalBusinessSchema = (params: {
+    name: string
+    address: {
+      streetAddress?: string
+      addressLocality: string
+      addressRegion?: string
+      postalCode?: string
+      addressCountry: string
+    }
+    telephone?: string
+    openingHours?: string[]
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      'name': params.name,
+      'address': {
+        '@type': 'PostalAddress',
+        'streetAddress': params.address.streetAddress,
+        'addressLocality': params.address.addressLocality,
+        'addressRegion': params.address.addressRegion,
+        'postalCode': params.address.postalCode,
+        'addressCountry': params.address.addressCountry,
+      },
+      ...(params.telephone && { 'telephone': params.telephone }),
+      ...(params.openingHours && { 'openingHoursSpecification': params.openingHours }),
+    }
+
+    useHead({
+      script: [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
   return {
     addOrganizationSchema,
     addWebSiteSearchSchema,
@@ -330,6 +486,10 @@ export const useStructuredData = () => {
     addEsimProductSchema,
     addEsimAggregateOfferSchema,
     addRemittanceServiceSchema,
+    addFinancialProductSchema,
+    addReviewSchema,
+    addHowToSchema,
+    addLocalBusinessSchema,
   }
 }
 

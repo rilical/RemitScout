@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
-const { form, sendMoneyUrl, submit, DELIVERY_METHODS } = useCompareForm()
+const { form, submit, DELIVERY_METHODS, validationError, statusMessage, isWaitingForQuotes } = useCompareForm()
 
 const isVisible = ref(false)
 const sheetOpen = ref(false)
@@ -16,6 +17,26 @@ const defaultCurrencyByCountry: Record<string, string> = {
 
 const resolveCurrency = (countryCode: string): string => {
   return defaultCurrencyByCountry[countryCode] || 'USD'
+}
+
+const amountLimits = computed(() => {
+  const currency = (form.value.fromCurrency || resolveCurrency(form.value.from)).toUpperCase()
+  return {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+  }
+})
+
+const clampAmount = () => {
+  const currency = (form.value.fromCurrency || resolveCurrency(form.value.from)).toUpperCase()
+  const sanitized = sanitizeAmount(form.value.amount, currency, {
+    minAmount: amountLimits.value.minAmount,
+    maxAmount: amountLimits.value.maxAmount,
+    strict: true,
+  })
+  if (sanitized !== form.value.amount) {
+    form.value.amount = sanitized
+  }
 }
 
 function handleScroll() {
@@ -48,10 +69,15 @@ async function handleSheetSubmit() {
   }
 }
 
+async function handleQuickSubmit() {
+  await submit()
+}
+
 watch(() => form.value.from, (newCountry) => {
   if (newCountry && !form.value.fromCurrency) {
     form.value.fromCurrency = resolveCurrency(newCountry)
   }
+  clampAmount()
 })
 
 watch(() => form.value.to, (newCountry) => {
@@ -62,6 +88,16 @@ watch(() => form.value.to, (newCountry) => {
     form.value.toCurrency = ''
   }
 })
+
+watch(() => form.value.fromCurrency, () => {
+  clampAmount()
+})
+
+watch(() => form.value.amount, () => {
+  clampAmount()
+})
+
+clampAmount()
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
@@ -121,12 +157,15 @@ onBeforeUnmount(() => {
               <span>Compare Now</span>
             </button>
 
-            <NuxtLink
+            <button
               v-if="form.from && form.to"
-              :to="sendMoneyUrl"
-              class="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2"
+              type="button"
+              :disabled="isWaitingForQuotes"
+              class="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2 disabled:cursor-not-allowed disabled:opacity-70"
+              @click="handleQuickSubmit"
             >
-              <span>View details</span>
+              <span v-if="isWaitingForQuotes">Checking...</span>
+              <span v-else>View details</span>
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -140,7 +179,7 @@ onBeforeUnmount(() => {
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-            </NuxtLink>
+            </button>
           </div>
         </div>
       </div>
@@ -250,8 +289,9 @@ onBeforeUnmount(() => {
                 id="sheet-amount"
                 v-model.number="form.amount"
                 type="number"
-                min="1"
-                step="1"
+                :min="amountLimits.minAmount"
+                :max="amountLimits.maxAmount"
+                step="0.01"
                 class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 placeholder="500"
               >
@@ -283,9 +323,11 @@ onBeforeUnmount(() => {
 
             <button
               type="submit"
-              class="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 text-base font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              :disabled="isWaitingForQuotes"
+              class="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 text-base font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Compare 30+ providers
+              <span v-if="isWaitingForQuotes">Checking...</span>
+              <span v-else>Compare 30+ providers</span>
               <svg
                 class="h-5 w-5"
                 fill="none"
@@ -300,6 +342,21 @@ onBeforeUnmount(() => {
                 />
               </svg>
             </button>
+
+            <p
+              v-if="validationError"
+              class="text-sm text-red-600"
+              role="alert"
+            >
+              {{ validationError }}
+            </p>
+            <p
+              v-else-if="statusMessage"
+              class="text-sm text-slate-600"
+              role="status"
+            >
+              {{ statusMessage }}
+            </p>
           </form>
         </div>
       </div>

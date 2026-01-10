@@ -918,18 +918,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/sendwave'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Sendwave Review 2024 - Remit-Score 9.0/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Sendwave review with Remit-Score 9.0/10. Instant mobile money, very low friction, strong value in core corridors. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent Sendwave review with Remit-Score 9.0/10. Instant mobile money, very low friction, strong value in core corridors. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/sendwave`,
+  ogImage: `${siteUrl}/og-images/provider-sendwave.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Sendwave earns a Remit-Score of 9.0/10 based on our independent analysis. The provider offers instant mobile money transfers with very low friction and strong value in core corridors. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Sendwave',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 9.0,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

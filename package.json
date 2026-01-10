@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint backend",
-    "lint:compliance": "eslint backend"
+    "lint:compliance": "eslint backend",
+    "dev:all": "bash scripts/dev/start-local.sh",
+    "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh"
   },
   "devDependencies": {
     "eslint": "^8.50.0",

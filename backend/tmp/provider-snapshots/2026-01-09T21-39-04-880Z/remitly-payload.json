@@ -1,0 +1,154 @@
+{
+  "estimate": {
+    "conduit": {
+      "source_country": "USA",
+      "source_currency": {
+        "alpha3": "USD",
+        "decimal_count": 2,
+        "name": "United States Dollar",
+        "symbol": "$"
+      },
+      "target_country": "MEX",
+      "target_currency": {
+        "alpha3": "MXN",
+        "decimal_count": 2,
+        "name": "Mexican Peso",
+        "symbol": "$"
+      }
+    },
+    "discount": {
+      "fee_discount_amount": "1.99",
+      "send_discount_amount": "0.00"
+    },
+    "exchange_rate": {
+      "base_rate": "17.28",
+      "capped_promotional_exchange_rate_amount": "1000.00",
+      "promotional_exchange_rate": "18.10"
+    },
+    "fee": {
+      "total_fee_amount": "1.99"
+    },
+    "pay_in_method": "DEBIT",
+    "pay_out_method": "BANK_DEPOSIT",
+    "receive_amount": "1810.00",
+    "send_amount": "100.00",
+    "tax_details": null,
+    "total_charge_amount": "100.00",
+    "vet": null
+  },
+  "pay_out_price_estimates": {
+    "estimates": [
+      {
+        "conduit": {
+          "source_country": "USA",
+          "source_currency": {
+            "alpha3": "USD",
+            "decimal_count": 2,
+            "name": "United States Dollar",
+            "symbol": "$"
+          },
+          "target_country": "MEX",
+          "target_currency": {
+            "alpha3": "MXN",
+            "decimal_count": 2,
+            "name": "Mexican Peso",
+            "symbol": "$"
+          }
+        },
+        "discount": {
+          "fee_discount_amount": "1.99",
+          "send_discount_amount": "0.00"
+        },
+        "exchange_rate": {
+          "base_rate": "17.28",
+          "capped_promotional_exchange_rate_amount": "1000.00",
+          "promotional_exchange_rate": "18.10"
+        },
+        "fee": {
+          "total_fee_amount": "1.99"
+        },
+        "pay_in_method": "DEBIT",
+        "pay_out_method": "DIRECT_TO_PHONE",
+        "receive_amount": "1810.00",
+        "send_amount": "100.00",
+        "tax_details": null,
+        "total_charge_amount": "100.00",
+        "vet": null
+      },
+      {
+        "conduit": {
+          "source_country": "USA",
+          "source_currency": {
+            "alpha3": "USD",
+            "decimal_count": 2,
+            "name": "United States Dollar",
+            "symbol": "$"
+          },
+          "target_country": "MEX",
+          "target_currency": {
+            "alpha3": "MXN",
+            "decimal_count": 2,
+            "name": "Mexican Peso",
+            "symbol": "$"
+          }
+        },
+        "discount": {
+          "fee_discount_amount": "1.99",
+          "send_discount_amount": "0.00"
+        },
+        "exchange_rate": {
+          "base_rate": "17.28",
+          "capped_promotional_exchange_rate_amount": "1000.00",
+          "promotional_exchange_rate": "18.10"
+        },
+        "fee": {
+          "total_fee_amount": "1.99"
+        },
+        "pay_in_method": "DEBIT",
+        "pay_out_method": "PUSH_TO_CARD",
+        "receive_amount": "1810.00",
+        "send_amount": "100.00",
+        "tax_details": null,
+        "total_charge_amount": "100.00",
+        "vet": null
+      },
+      {
+        "conduit": {
+          "source_country": "USA",
+          "source_currency": {
+            "alpha3": "USD",
+            "decimal_count": 2,
+            "name": "United States Dollar",
+            "symbol": "$"
+          },
+          "target_country": "MEX",
+          "target_currency": {
+            "alpha3": "MXN",
+            "decimal_count": 2,
+            "name": "Mexican Peso",
+            "symbol": "$"
+          }
+        },
+        "discount": {
+          "fee_discount_amount": "3.99",
+          "send_discount_amount": "0.00"
+        },
+        "exchange_rate": {
+          "base_rate": "17.28",
+          "capped_promotional_exchange_rate_amount": "1000.00",
+          "promotional_exchange_rate": "18.10"
+        },
+        "fee": {
+          "total_fee_amount": "3.99"
+        },
+        "pay_in_method": "DEBIT",
+        "pay_out_method": "CASH_PICKUP",
+        "receive_amount": "1810.00",
+        "send_amount": "100.00",
+        "tax_details": null,
+        "total_charge_amount": "100.00",
+        "vet": null
+      }
+    ]
+  }
+}

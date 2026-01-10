@@ -304,6 +304,7 @@ export const createEcsTasks = (
     environment: {
       ...sharedEnv,
       B2C_REFRESH_LIMIT: '50',
+      B2C_REFRESH_CONCURRENCY: '5',
       B2C_REFRESH_HEALTH_ENABLED: '0',
       ...(quoteRefreshQueueUrl ? { QUOTE_REFRESH_QUEUE_URL: quoteRefreshQueueUrl } : {}),
     },

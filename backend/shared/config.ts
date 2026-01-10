@@ -40,6 +40,10 @@ const isAwsRuntime = Boolean(
 const isStaging = process.env.NODE_ENV === 'staging'
 const isStrictConfig =
   process.env.NODE_ENV === 'production' || isStaging || process.env.STRICT_CONFIG === '1'
+const supabaseMockEnabled = toBoolean(process.env.SUPABASE_MOCK)
+  || (!isStrictConfig && (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY))
+const stripeMockEnabled = toBoolean(process.env.STRIPE_MOCK)
+  || (!isStrictConfig && !process.env.STRIPE_SECRET_KEY)
 
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 
@@ -80,6 +84,9 @@ export const config = {
       fxRateCacheTtlSeconds: toNumber(process.env.PLANE_A_FX_RATE_CACHE_TTL_SECONDS, 300),
       latestQuoteCacheTtlSeconds: toNumber(process.env.PLANE_A_LATEST_QUOTE_CACHE_TTL_SECONDS, 15),
       maxQuoteAgeSeconds: toNumber(process.env.PLANE_A_B2C_MAX_QUOTE_AGE_SECONDS, 1800),
+      providerWeightedMidMarketEnabled: toBoolean(
+        process.env.PLANE_A_B2C_PROVIDER_WEIGHTED_MID_MARKET,
+      ),
     },
     cors: {
       origins: toList(process.env.PLANE_A_CORS_ORIGINS),
@@ -100,6 +107,8 @@ export const config = {
     b2bTier1Enabled: toBoolean(process.env.PLANE_B_B2B_TIER1_ENABLED, false),
     b2bFreshnessSloMinutes: toNumber(process.env.PLANE_B_B2B_FRESHNESS_SLO_MINUTES, 30),
     b2bFreshnessSloEnabled: toBoolean(process.env.PLANE_B_B2B_FRESHNESS_SLO_ENABLED),
+    b2bNativeCurrencyOnly: toBoolean(process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY ?? '1'),
+    b2bWiseCurrencyOverride: toBoolean(process.env.PLANE_B_B2B_WISE_CURRENCY_OVERRIDE),
     circuitOpenMs: toNumber(process.env.PLANE_B_CIRCUIT_OPEN_MS, 300000),
     circuitHalfOpenMs: toNumber(process.env.PLANE_B_CIRCUIT_HALF_OPEN_MS, 60000),
     blockCooldownMs: toNumber(process.env.PLANE_B_BLOCK_COOLDOWN_MS, 86400000),
@@ -178,12 +187,12 @@ export const config = {
       freshnessSloMinutes: toNumber(process.env.PLANE_B_WESTERNUNION_FRESHNESS_SLO_MINUTES, 30),
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_WESTERNUNION_FRESHNESS_SLO_ENABLED),
     },
-    b2cRefreshBatchLimit: toNumber(process.env.PLANE_B_B2C_REFRESH_BATCH_LIMIT, 25),
+    b2cRefreshBatchLimit: toNumber(process.env.PLANE_B_B2C_REFRESH_BATCH_LIMIT, 50),
     b2cRefreshMaxRetries: toNumber(process.env.PLANE_B_B2C_REFRESH_MAX_RETRIES, 3),
-    b2cRefreshConcurrency: toNumber(process.env.PLANE_B_B2C_REFRESH_CONCURRENCY, 3),
-    b2cQueueInSweep: process.env.PLANE_B_B2C_QUEUE_IN_SWEEP !== undefined
-      ? toBoolean(process.env.PLANE_B_B2C_QUEUE_IN_SWEEP)
-      : process.env.NODE_ENV !== 'production' && !isStaging,
+    b2cRefreshConcurrency: toNumber(process.env.PLANE_B_B2C_REFRESH_CONCURRENCY, 5),
+    b2cQueueInSweep: toBoolean(process.env.PLANE_B_B2C_QUEUE_IN_SWEEP, true),
+    b2cLiveRpm: toNumber(process.env.PLANE_B_B2C_LIVE_RPM, 0),
+    b2cLivePerCorridorRpm: toNumber(process.env.PLANE_B_B2C_LIVE_CORRIDOR_RPM, 0),
   },
   fxRates: {
     oandaFallbackEnabled: toBoolean(process.env.FX_RATE_OANDA_FALLBACK),
@@ -200,6 +209,7 @@ export const config = {
     quoteRefreshUrl: process.env.QUOTE_REFRESH_QUEUE_URL || '',
     quoteRefreshDlqUrl: process.env.QUOTE_REFRESH_DLQ_URL || '',
     quoteRefreshMode: toQueueMode(process.env.QUOTE_REFRESH_QUEUE_MODE),
+    quoteRefreshDbFallback: toBoolean(process.env.QUOTE_REFRESH_DB_FALLBACK),
     exports: {
       url: process.env.EXPORT_JOB_QUEUE_URL || '',
       mode: toQueueMode(process.env.EXPORT_JOB_QUEUE_MODE),
@@ -219,6 +229,13 @@ export const config = {
   },
   exports: {
     maxActivePerUser: toNumber(process.env.EXPORT_JOB_MAX_ACTIVE_PER_USER, 2),
+  },
+  marketing: {
+    meta: {
+      pixelId: process.env.META_PIXEL_ID || process.env.PUBLIC_META_PIXEL_ID || '',
+      accessToken: process.env.META_CAPI_ACCESS_TOKEN || '',
+      testEventCode: process.env.META_CAPI_TEST_EVENT_CODE || '',
+    },
   },
   alerts: {
     slackWebhookUrl: process.env.ALERT_SLACK_WEBHOOK_URL || '',
@@ -292,10 +309,6 @@ export const config = {
       bucket: process.env.EXPORTS_S3_BUCKET || '',
       prefix: process.env.EXPORTS_S3_PREFIX || 'exports',
     },
-    userAssets: {
-      bucket: process.env.USER_ASSETS_S3_BUCKET || '',
-      prefix: process.env.USER_ASSETS_S3_PREFIX || 'avatars',
-    },
   },
   auditLogs: {
     bucket: process.env.AUDIT_LOGS_S3_BUCKET || '',
@@ -324,7 +337,7 @@ export const config = {
       verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
       remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 30),
       mock: {
-        enabled: toBoolean(process.env.SUPABASE_MOCK),
+        enabled: supabaseMockEnabled,
         token: process.env.SUPABASE_MOCK_TOKEN || 'dev-token',
         adminToken: process.env.SUPABASE_MOCK_ADMIN_TOKEN || 'admin-token',
         userId: process.env.SUPABASE_MOCK_USER_ID || 'dev-user',
@@ -337,11 +350,13 @@ export const config = {
   },
   billing: {
     stripe: {
-      mockEnabled: toBoolean(process.env.STRIPE_MOCK),
+      mockEnabled: stripeMockEnabled,
       secretKey: process.env.STRIPE_SECRET_KEY || '',
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-      priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || '',
+      priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || (stripeMockEnabled ? 'price_mock' : ''),
+      priceIdPlusAnnual: process.env.STRIPE_PRICE_ID_PLUS_ANNUAL || '',
       frontendBaseUrl: process.env.FRONTEND_BASE_URL || 'http://localhost:3000',
+      trialDays: toNumber(process.env.STRIPE_TRIAL_DAYS, 14),
     },
   },
   newsletter: {

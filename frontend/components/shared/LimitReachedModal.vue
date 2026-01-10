@@ -14,7 +14,7 @@
         @click.self="close"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
         
         <!-- Modal -->
         <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
@@ -53,19 +53,49 @@
               <span class="text-sm font-bold text-slate-900">{{ currentCount }}/{{ limit }}</span>
             </div>
             <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
-              <div 
+              <div
                 class="h-full bg-brand-600 rounded-full transition-all"
                 :style="{ width: `${Math.min(100, (currentCount / limit) * 100)}%` }"
-              />
+              ></div>
             </div>
-            <p class="mt-3 text-xs text-slate-500">
+            <p v-if="showUpgrade" class="mt-3 text-xs text-slate-500">
               Upgrade to Remit-Scout Plus for unlimited {{ featureLabel.toLowerCase() }}.
             </p>
+          </div>
+
+          <div v-if="hasItems" class="mb-6 text-left">
+            <div class="text-sm font-semibold text-slate-800 mb-2">
+              {{ itemsTitle }}
+            </div>
+            <div class="max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white">
+              <div
+                v-for="item in items"
+                :key="item.id"
+                class="flex items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
+              >
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-slate-800 truncate">
+                    {{ item.label }}
+                  </div>
+                  <div v-if="item.meta" class="text-xs text-slate-500 truncate">
+                    {{ item.meta }}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                  @click="handleRemove(item.id)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Actions -->
           <div class="flex flex-col gap-3">
             <button
+              v-if="showUpgrade"
               type="button"
               class="w-full h-12 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-700 transition-colors flex items-center justify-center"
               @click="handleUpgrade"
@@ -75,9 +105,9 @@
             <button
               type="button"
               class="w-full h-12 rounded-xl border-2 border-slate-200 font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-              @click="close"
+              @click="handleManage"
             >
-              Maybe later
+              {{ manageLabel }}
             </button>
           </div>
         </div>
@@ -94,28 +124,63 @@ const props = withDefaults(defineProps<{
   feature?: 'watchlist' | 'alert'
   limit?: number
   currentCount?: number
+  showUpgrade?: boolean
+  manageLabel?: string
+  managePath?: string
+  items?: Array<{ id: string; label: string; meta?: string }>
+  itemsTitle?: string
 }>(), {
   title: 'Limit reached',
   message: 'You\'ve reached the maximum number of items for your plan.',
   feature: 'watchlist',
   limit: 3,
   currentCount: 3,
+  showUpgrade: true,
+  items: () => [],
 })
 
 const emit = defineEmits<{
   close: []
+  remove: [id: string]
 }>()
 
 const featureLabel = computed(() => {
   return props.feature === 'watchlist' ? 'Watchlist items' : 'Rate alerts'
 })
 
+const manageLabel = computed(() => {
+  if (props.manageLabel) return props.manageLabel
+  return props.feature === 'watchlist' ? 'Manage watchlist' : 'Manage alerts'
+})
+
+const managePath = computed(() => {
+  if (props.managePath) return props.managePath
+  return props.feature === 'watchlist'
+    ? '/dashboard?tab=watchlist'
+    : '/dashboard?tab=alerts'
+})
+
+const items = computed(() => props.items ?? [])
+const hasItems = computed(() => items.value.length > 0)
+const itemsTitle = computed(() => {
+  if (props.itemsTitle) return props.itemsTitle
+  return props.feature === 'watchlist' ? 'Remove a saved corridor' : 'Remove an alert'
+})
+
 function close() {
   emit('close')
 }
 
+function handleRemove(id: string) {
+  emit('remove', id)
+}
+
 async function handleUpgrade() {
-  await navigateTo('/pricing')
+  await navigateTo('/plus')
+}
+
+async function handleManage() {
+  await navigateTo(managePath.value)
+  close()
 }
 </script>
-

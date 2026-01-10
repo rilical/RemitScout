@@ -13,13 +13,13 @@
             Money Transfer Basics
           </div>
           <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
-            Why Your Checkout Price Can Differ from Remit‑Scout
+            Why Checkout Differs (and What to Do)
           </h1>
           <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
-            And What to Do About It
+            Why the final price at checkout might differ from the quote, what causes it (rate refresh, funding method, payout changes), and how to lock in the best outcome.
           </p>
           <p class="text-lg text-neutral-700 leading-relaxed mb-6">
-            Sometimes the amount you see at checkout differs from our quote. Here's why that happens and how to handle it.
+            If you've ever checked a quote, felt good about it, and then saw a different price at checkout—you're not alone. This doesn't automatically mean you're being scammed. It usually means you're seeing how real-time pricing works in money transfers. The key is knowing <strong class="font-semibold text-neutral-900">why it happens</strong> and <strong class="font-semibold text-neutral-900">how to protect yourself</strong>.
           </p>
           <div class="flex items-center gap-4 text-sm text-neutral-600">
             <span>6 min read</span>
@@ -34,158 +34,205 @@
     <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
-          <!-- Important Note -->
-          <div class="mb-12 rounded-3xl border-2 border-brand-700 bg-brand-600 p-8 text-white">
-            <div class="flex items-start gap-4">
-              <ExclamationTriangleIcon class="h-6 w-6 text-white flex-shrink-0 mt-1" />
-              <div>
-                <h3 class="text-xl font-bold mb-3">Important: Provider Checkout Is Final</h3>
-                <p class="text-base text-white/90 leading-relaxed">
-                  The amount shown on the provider's checkout screen is always the final source of truth. Our quotes are estimates based on data captured at a specific timestamp. Rates can change, and provider-specific rules may apply.
-                </p>
-              </div>
-            </div>
+          <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
+            <h2 class="text-xl font-bold text-neutral-900 mb-3">Quick takeaways</h2>
+            <ul class="space-y-2 text-base text-neutral-700">
+              <li class="flex items-start gap-2">
+                <span class="text-brand-600 mt-1">•</span>
+                <span>Rate refreshes and method changes are the top reasons checkout shifts.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-brand-600 mt-1">•</span>
+                <span>Lock the same amount, funding method, and payout method across quotes.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-brand-600 mt-1">•</span>
+                <span>Compare at the final step and verify promos and verification status.</span>
+              </li>
+            </ul>
           </div>
-
-          <!-- Why It Happens -->
+          <!-- Why Price Changes -->
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
-              Why Checkout Prices Can Differ
+              Why the price changes between quote and checkout
             </h2>
             <div class="space-y-6">
-              <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">💳 Payment Method Differences</h3>
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">1. Rate refresh (most common)</h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                  Card payments often cost more than bank transfers. Some providers charge 2–3% extra for credit/debit card funding. Our quote may show bank transfer pricing, but if you choose card at checkout, the price changes.
-                </p>
-                <div class="bg-neutral-50 rounded-lg p-4 text-sm text-neutral-700">
-                  <strong>Tip:</strong> Always check if the quote matches your intended payment method.
-                </div>
-              </div>
-              <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">🎁 Promotions & First-Time Offers</h3>
-                <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                  Many providers offer first-transfer promotions: fee waivers, better exchange rates, or bonus amounts. These may not be reflected in our standard quotes. If you're a new customer, you might get a better deal than shown.
-                </p>
-                <div class="bg-emerald-50 rounded-lg p-4 text-sm text-neutral-700">
-                  <strong>Good news:</strong> Promos usually make the final price better, not worse.
-                </div>
-              </div>
-              <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">🔐 KYC & Compliance Status</h3>
-                <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                  Your verification status can affect pricing. Unverified accounts may have higher fees or different rate tiers. Once you complete KYC, rates and fees may improve.
-                </p>
-              </div>
-              <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">⏰ Exchange Rate Movement</h3>
-                <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                  FX rates change minute-to-minute. If our quote was captured 30 minutes ago and rates moved, the provider's current rate will differ. This is normal market movement.
+                  Exchange rates move continuously. Many providers refresh rates every few seconds or minutes. If your quote isn't locked, the provider may update the rate at checkout.
                 </p>
                 <div class="bg-blue-50 rounded-lg p-4 text-sm text-neutral-700">
-                  <strong>Our quotes show timestamps</strong> so you know how fresh the data is.
+                  <strong>What to do:</strong> Compare providers at the <strong>final step</strong> before you pay. If the quote drifts, refresh both providers and compare again at the same time.
                 </div>
               </div>
-              <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">🌍 Corridor-Specific Rules</h3>
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">2. You changed the funding method without noticing</h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                  Some corridors have special pricing, limits, or requirements. For example, certain countries may require additional compliance checks that affect fees. Our quote may not capture all corridor-specific variations.
+                  A provider might default to bank funding in the quote tool, but switch to card funding at checkout (or vice versa). Funding method can change: fees, FX rate, verification requirements.
                 </p>
+                <div class="bg-blue-50 rounded-lg p-4 text-sm text-neutral-700">
+                  <strong>What to do:</strong> Choose your funding method early and keep it constant across all comparisons.
+                </div>
               </div>
-              <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">🏦 Bank Fees Outside Provider Control</h3>
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">3. You changed the payout method (or it changed you)</h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                  Your bank or the recipient's bank may charge outgoing/incoming wire fees. These aren't included in provider quotes and can add $10–$50 to the total cost.
+                  Selecting cash pickup vs bank deposit vs mobile money can change pricing and speed. Sometimes a payout method becomes temporarily unavailable and the app nudges you to another option.
                 </p>
+                <div class="bg-blue-50 rounded-lg p-4 text-sm text-neutral-700">
+                  <strong>What to do:</strong> Before comparing, decide the payout method your recipient will actually use—and stick to it.
+                </div>
+              </div>
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">4. Promotions not applied (or expired)</h3>
+                <p class="text-base text-neutral-700 leading-relaxed mb-3">
+                  Some promos only apply after login, only for first transfers, or only for specific payment methods.
+                </p>
+                <div class="bg-blue-50 rounded-lg p-4 text-sm text-neutral-700">
+                  <strong>What to do:</strong> Assume promos are unreliable until you see them applied on the final screen. Compare using the real checkout price.
+                </div>
+              </div>
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">5. Compliance / verification triggers</h3>
+                <p class="text-base text-neutral-700 leading-relaxed mb-3">
+                  Larger amounts, new recipients, new cards, or unusual patterns can trigger extra steps. This can delay the transfer or sometimes change what payment methods are allowed.
+                </p>
+                <div class="bg-blue-50 rounded-lg p-4 text-sm text-neutral-700">
+                  <strong>What to do:</strong> Do your verification early (before an urgent transfer). If you're in a rush, avoid last-minute new payment methods.
+                </div>
+              </div>
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">6. Card network / bank authorization behavior</h3>
+                <p class="text-base text-neutral-700 leading-relaxed mb-3">
+                  Card authorizations can behave differently than expected, especially with currency conversion and temporary holds. The provider may show one total, but your bank may temporarily show another due to authorization mechanics.
+                </p>
+                <div class="bg-blue-50 rounded-lg p-4 text-sm text-neutral-700">
+                  <strong>What to do:</strong> Use debit/bank transfer when you want fewer surprises. If you use a credit card, watch for issuer fees.
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- What to Do -->
+          <!-- Right Way to Compare -->
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
-              What to Do If Prices Differ
+              The right way to compare (so checkout doesn't surprise you)
             </h2>
             <div class="space-y-4">
-              <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center">
-                    <span class="text-xl font-bold text-brand-600">1</span>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-bold text-neutral-900 mb-2">Check the Quote Timestamp</h3>
-                    <p class="text-sm text-neutral-700">
-                      If the quote is more than 15 minutes old, rates may have moved. This is normal.
-                    </p>
-                  </div>
-                </div>
+              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #1: Checkout is the only quote that matters.</h3>
+                <p class="text-base text-neutral-700 leading-relaxed">
+                  Treat earlier screens as "estimates" unless clearly rate-locked.
+                </p>
               </div>
-              <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center">
-                    <span class="text-xl font-bold text-brand-600">2</span>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-bold text-neutral-900 mb-2">Verify Payment Method</h3>
-                    <p class="text-sm text-neutral-700">
-                      Make sure you selected the same payment method (bank vs card) that our quote assumed.
-                    </p>
-                  </div>
-                </div>
+              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #2: Compare two providers at the same moment.</h3>
+                <p class="text-base text-neutral-700 leading-relaxed">
+                  Rates move. Comparing one now and one five minutes later can mislead you.
+                </p>
               </div>
-              <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center">
-                    <span class="text-xl font-bold text-brand-600">3</span>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-bold text-neutral-900 mb-2">Look for Promotions</h3>
-                    <p class="text-sm text-neutral-700">
-                      Check if the provider is offering a first-time bonus or promo that improves the rate.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center">
-                    <span class="text-xl font-bold text-brand-600">4</span>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-bold text-neutral-900 mb-2">Report Significant Discrepancies</h3>
-                    <p class="text-sm text-neutral-700">
-                      If the difference is more than 2–3% and can't be explained by the above, please report it with a screenshot.
-                    </p>
-                  </div>
-                </div>
+              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #3: Match the same inputs.</h3>
+                <p class="text-base text-neutral-700 leading-relaxed mb-3">
+                  Same:
+                </p>
+                <ul class="space-y-2 text-base text-neutral-700">
+                  <li class="flex items-start gap-3">
+                    <span class="text-brand-600 mt-1">•</span>
+                    <span>send amount (or receive amount),</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="text-brand-600 mt-1">•</span>
+                    <span>funding method,</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="text-brand-600 mt-1">•</span>
+                    <span>payout method,</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="text-brand-600 mt-1">•</span>
+                    <span>recipient country and currency.</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
 
-          <!-- How to Report -->
-          <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
-            <h3 class="text-lg font-bold text-neutral-900 mb-3">
-              How to Report a Pricing Issue
-            </h3>
-            <p class="text-base text-neutral-700 leading-relaxed mb-4">
-              If you notice a significant discrepancy that can't be explained by rate movement or payment method, we want to know. Include:
+          <!-- What to Do When Checkout Differs -->
+          <div class="mb-12">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-6">
+              What to do when checkout differs
+            </h2>
+            <p class="text-base text-neutral-700 leading-relaxed mb-6">
+              If checkout is worse than you expected:
             </p>
-            <ul class="space-y-2 text-sm text-neutral-700 list-disc list-inside mb-4">
-              <li>Corridor (e.g., US → Mexico)</li>
-              <li>Send amount</li>
-              <li>Provider name</li>
-              <li>Quote timestamp from Remit-Scout</li>
-              <li>Checkout screenshot (if possible)</li>
+            <ol class="space-y-3 text-base text-neutral-700">
+              <li class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold">1</span>
+                <span><strong class="font-semibold text-neutral-900">Don't pay yet.</strong></span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold">2</span>
+                <span>Take a screenshot of the checkout screen (useful if you need support).</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold">3</span>
+                <span>Go back and confirm: funding method, payout method, fees, exchange rate</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold">4</span>
+                <span>Refresh the quote once.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold">5</span>
+                <span>Compare another provider's checkout price right now.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold">6</span>
+                <span>If the difference is meaningful, switch.</span>
+              </li>
+            </ol>
+          </div>
+
+          <!-- How to Lock In Best Outcome -->
+          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-8 lg:p-12">
+            <h2 class="text-2xl font-bold text-neutral-900 mb-6">
+              How to lock in the best outcome
+            </h2>
+            <p class="text-base text-neutral-700 leading-relaxed mb-6">
+              You can't control FX markets, but you can control process:
+            </p>
+            <ul class="space-y-3 text-base text-neutral-700">
+              <li class="flex items-start gap-3">
+                <span class="text-brand-600 mt-1">•</span>
+                <span><strong class="font-semibold text-neutral-900">Move quickly once you're ready</strong> (quotes can expire).</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-brand-600 mt-1">•</span>
+                <span><strong class="font-semibold text-neutral-900">Use the same device and logged-in state</strong> when comparing (some apps show different paths when logged out).</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-brand-600 mt-1">•</span>
+                <span><strong class="font-semibold text-neutral-900">Avoid last-minute changes</strong> to recipient details or payout method.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-brand-600 mt-1">•</span>
+                <span><strong class="font-semibold text-neutral-900">Prefer bank funding for cost-sensitive, non-urgent transfers</strong> (often more stable pricing than cards).</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-brand-600 mt-1">•</span>
+                <span><strong class="font-semibold text-neutral-900">If you need speed, pay for speed intentionally</strong>—don't accidentally pick a faster, pricier method at checkout.</span>
+              </li>
             </ul>
-            <NuxtLink
-              to="/contact"
-              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-md hover:bg-brand-700 transition-all"
-            >
-              Report an Issue
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </NuxtLink>
+          </div>
+
+          <!-- Simple Takeaway -->
+          <div class="mb-12 rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
+            <h3 class="text-lg font-bold text-neutral-900 mb-3">The simple takeaway</h3>
+            <p class="text-base text-neutral-700 leading-relaxed">
+              Checkout differs because <strong class="font-semibold text-neutral-900">real money rails are dynamic</strong>. The fix is not complicated: compare at checkout with identical inputs. If the final screen isn't good anymore, don't press pay—re-quote and compare again.
+            </p>
           </div>
         </div>
       </div>
@@ -238,7 +285,6 @@
 </template>
 
 <script setup lang="ts">
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
@@ -253,8 +299,8 @@ const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 
 setSeo({
-  title: 'Why Your Checkout Price Can Differ from Remit-Scout | Remit-Scout',
-  description: 'Learn why checkout prices may differ from our quotes: payment methods, promos, KYC status, rate movement, and what to do about it.',
+  title: 'Why Checkout Differs (and What to Do) | Remit-Scout',
+  description: 'Why the final price at checkout might differ from the quote, what causes it (rate refresh, funding method, payout changes), and how to lock in the best outcome.',
   canonical: `${siteUrl}/learn/why-checkout-price-differs`,
 })
 
@@ -264,7 +310,6 @@ jsonLdBreadcrumb([
   { name: 'Checkout Differences', url: `${siteUrl}/learn/why-checkout-price-differs` },
 ])
 </script>
-
 
 
 

@@ -26,91 +26,12 @@
             </h2>
 
             <form @submit.prevent="handleCheckout" class="space-y-6">
-              <!-- Email -->
-              <div>
-                <label for="email" class="block text-sm font-semibold text-slate-300 mb-2">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  class="w-full h-12 rounded-lg border-2 border-slate-600 bg-slate-900 px-4 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                  placeholder="you@example.com"
-                  required
-                >
-              </div>
-
-              <!-- Card Information -->
-              <div>
-                <label class="block text-sm font-semibold text-slate-300 mb-2">
-                  Card Information
-                </label>
-                <div class="space-y-3">
-                  <input
-                    v-model="form.cardNumber"
-                    type="text"
-                    class="w-full h-12 rounded-lg border-2 border-slate-600 bg-slate-900 px-4 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                    placeholder="1234 1234 1234 1234"
-                    maxlength="19"
-                    required
-                  >
-                  <div class="grid grid-cols-2 gap-3">
-                    <input
-                      v-model="form.expiry"
-                      type="text"
-                      class="h-12 rounded-lg border-2 border-slate-600 bg-slate-900 px-4 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                      placeholder="MM / YY"
-                      maxlength="7"
-                      required
-                    >
-                    <input
-                      v-model="form.cvc"
-                      type="text"
-                      class="h-12 rounded-lg border-2 border-slate-600 bg-slate-900 px-4 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                      placeholder="CVC"
-                      maxlength="3"
-                      required
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Billing Address -->
-              <div>
-                <label for="country" class="block text-sm font-semibold text-slate-300 mb-2">
-                  Country
-                </label>
-                <select
-                  id="country"
-                  v-model="form.country"
-                  class="w-full h-12 rounded-lg border-2 border-slate-600 bg-slate-900 px-4 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                  required
-                >
-                  <option value="">Select country</option>
-                  <option value="US">United States</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="CA">Canada</option>
-                  <option value="AU">Australia</option>
-                  <option value="DE">Germany</option>
-                  <option value="FR">France</option>
-                  <option value="ES">Spain</option>
-                  <option value="IT">Italy</option>
-                </select>
-              </div>
-
-              <div>
-                <label for="zip" class="block text-sm font-semibold text-slate-300 mb-2">
-                  ZIP / Postal Code
-                </label>
-                <input
-                  id="zip"
-                  v-model="form.zip"
-                  type="text"
-                  class="w-full h-12 rounded-lg border-2 border-slate-600 bg-slate-900 px-4 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                  placeholder="12345"
-                  required
-                >
+              <div class="rounded-lg border border-slate-700 bg-slate-900 p-4">
+                <div class="text-sm font-semibold text-slate-300">Signed in as</div>
+                <div class="text-white font-semibold">{{ userEmail || 'Account email' }}</div>
+                <p class="mt-2 text-xs text-slate-500">
+                  Payment details are entered securely on Stripe Checkout. We never collect or store card data on this page.
+                </p>
               </div>
 
               <!-- Submit Button -->
@@ -119,7 +40,7 @@
                 :disabled="processing"
                 class="w-full h-14 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <span v-if="!processing">Subscribe to Plus</span>
+                <span v-if="!processing">Continue to Stripe Checkout</span>
                 <span v-else>Processing...</span>
                 <svg v-if="!processing" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -167,7 +88,7 @@
               <div class="border-t border-slate-700 pt-4">
                 <div class="flex items-center justify-between">
                   <span class="text-white font-semibold">Total due today</span>
-                  <span class="text-2xl font-bold text-white">$9.00</span>
+                  <span class="text-2xl font-bold text-white">$0.00</span>
                 </div>
                 <p class="text-xs text-slate-500 mt-2">
                   14-day free trial • Cancel anytime
@@ -215,20 +136,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
-const form = ref({
-  email: '',
-  cardNumber: '',
-  expiry: '',
-  cvc: '',
-  country: '',
-  zip: '',
-})
+import { computed, ref } from 'vue'
+import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 
 const processing = ref(false)
-const { isAuthenticated } = useAuth()
+const { isAuthenticated, user } = useAuth()
 const billingActions = useBilling()
+const userEmail = computed(() => user.value?.email || '')
+const { trackCheckoutStart } = useMarketingAnalytics()
+const currentRoute = useRoute()
+const runtimeConfig = useRuntimeConfig()
+const devAutoUpgrade = computed(() => Boolean(runtimeConfig.public.devAuthEnabled) || import.meta.dev)
 
 async function handleCheckout() {
   if (!isAuthenticated.value) {
@@ -239,10 +157,26 @@ async function handleCheckout() {
   processing.value = true
 
   try {
+    void trackCheckoutStart({
+      value: 9,
+      currency: 'USD',
+      plan: 'plus',
+      pagePath: currentRoute.fullPath,
+    })
     const result = await billingActions.createCheckoutSession('plus')
-    if (result.ok && result.url) {
-      window.location.href = result.url
-      return
+    if (result.ok) {
+      if (devAutoUpgrade.value && result.sessionId) {
+        const verifyResult = await billingActions.verifyCheckoutSession(result.sessionId)
+        if (verifyResult.ok) {
+          await navigateTo('/plus/success')
+          return
+        }
+      }
+
+      if (result.url) {
+        window.location.href = result.url
+        return
+      }
     }
 
     throw new Error(result.error || 'No checkout URL returned')
@@ -266,11 +200,6 @@ useHead({
   ],
 })
 </script>
-
-
-
-
-
 
 
 

@@ -1,23 +1,24 @@
 <template>
   <div class="min-h-screen bg-white">
     <!-- Hero Section -->
-    <section class="py-16 sm:py-20 bg-slate-900">
+    <section class="py-16 sm:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-          <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-full mb-6">
-            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-sm font-semibold text-blue-400">Remit-Scout Plus</span>
+          <div class="flex justify-center mb-8">
+            <img
+              src="/png/SVG/FULL_LOGO_PLUS.svg"
+              alt="Remit-Scout Plus"
+              class="h-20 sm:h-24 object-contain"
+            />
           </div>
-          <h1 class="text-5xl sm:text-6xl font-bold text-white mb-6">
+          <h1 class="text-5xl sm:text-6xl font-bold text-slate-900 mb-6">
             Never Miss the Perfect Rate
           </h1>
-          <p class="text-xl text-slate-300 max-w-4xl mx-auto mb-4 leading-relaxed">
+          <p class="text-xl text-slate-700 max-w-4xl mx-auto mb-4 leading-relaxed">
             Plus tracks your corridors 24/7, sends instant alerts when rates improve, and keeps your complete transfer history. 
             Set your target rate once and let Plus monitor the market for you. When rates hit your target, we notify you immediately so you can transfer at the perfect moment.
           </p>
-          <p class="text-lg text-slate-400 max-w-3xl mx-auto">
+          <p class="text-lg text-slate-600 max-w-3xl mx-auto">
             Save time and money by letting Plus do the watching while you focus on what matters.
           </p>
 
@@ -39,20 +40,39 @@
     </section>
 
     <!-- Pricing Comparison -->
-    <section class="py-16 sm:py-20 bg-white">
+    <section class="py-16 sm:py-20 bg-slate-900">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="text-4xl font-bold text-slate-900 mb-4">
+          <h2 class="text-4xl font-bold text-white mb-4">
             Choose Your Plan
           </h2>
-          <p class="text-lg text-slate-600">
+          <p class="text-lg text-slate-300">
             Get the best rates automatically. Plus saves you time and money on every transfer.
           </p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Billing Toggle -->
+        <div class="flex items-center justify-center gap-4 mb-8">
+          <span class="text-sm font-medium text-white">Monthly</span>
+          <button
+            @click="billingInterval = billingInterval === 'month' ? 'year' : 'month'"
+            :class="['relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-slate-900', billingInterval === 'year' ? 'bg-blue-600' : 'bg-blue-700']"
+            role="switch"
+            :aria-checked="billingInterval === 'year'"
+          >
+            <span
+              :class="['inline-block h-5 w-5 transform rounded-full bg-white transition-transform', billingInterval === 'year' ? 'translate-x-8' : 'translate-x-1']"
+            />
+          </button>
+          <span class="text-sm font-medium text-white">Annual</span>
+          <span v-if="billingInterval === 'year'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            Save 56%
+          </span>
+        </div>
+
+        <div :class="['grid grid-cols-1 gap-8 max-w-6xl mx-auto', FEATURE_FLAGS.PULE_ENABLED ? 'lg:grid-cols-3' : 'lg:grid-cols-2']">
           <!-- Free Plan -->
-          <div class="bg-white rounded-3xl border-4 border-slate-300 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <div class="bg-white rounded-3xl border-4 border-slate-300 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full">
             <div class="text-center mb-6">
               <h3 class="text-2xl font-bold text-slate-900 mb-2">Free</h3>
               <p class="text-slate-600 mb-4">For occasional senders</p>
@@ -137,12 +157,12 @@
           </div>
 
           <!-- Plus Plan -->
-          <div class="bg-blue-600 rounded-3xl border-4 border-blue-400 p-8 relative flex flex-col shadow-2xl ring-4 ring-blue-200 ring-offset-4 ring-offset-white hover:ring-blue-300 hover:-translate-y-1 transition-all duration-300">
+          <div class="bg-blue-600 rounded-3xl border-4 border-blue-400 p-8 relative flex flex-col shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full">
             <div class="text-center mb-6">
               <h3 class="text-2xl font-bold text-white mb-2">Plus</h3>
               <p class="text-white/90 mb-4">For regular senders</p>
-              <div class="text-5xl font-bold text-white mb-1">$9</div>
-              <div class="text-sm text-white/80 font-medium">per month</div>
+              <div class="text-5xl font-bold text-white mb-1">{{ billingInterval === 'month' ? '$6' : '$32' }}</div>
+              <div class="text-sm text-white/80 font-medium">{{ billingInterval === 'month' ? 'per month' : 'per year' }}</div>
             </div>
 
             <ul class="space-y-4 mb-8 flex-grow">
@@ -223,7 +243,7 @@
           </div>
 
           <!-- Enterprise Plan -->
-          <div class="bg-slate-900 rounded-3xl border-4 border-slate-600 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <div v-if="FEATURE_FLAGS.PULE_ENABLED" class="bg-slate-900 rounded-3xl border-4 border-slate-600 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
             <div class="text-center mb-6">
               <h3 class="text-2xl font-bold text-white mb-2">Enterprise</h3>
               <p class="text-slate-300 mb-4">For businesses</p>
@@ -295,64 +315,14 @@
           </div>
         </div>
 
-        <p class="text-center text-sm text-slate-500 mt-8">
+        <p class="text-center text-sm text-slate-300 mt-8">
           All plans include access to compare 30+ providers across 150+ corridors • Cancel anytime
         </p>
       </div>
     </section>
 
     <!-- Our Impact -->
-    <section class="py-16 bg-slate-900">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-white mb-4">
-            Our Impact So Far
-          </h2>
-          <p class="text-lg text-slate-400">
-            Trusted by thousands of people sending money worldwide
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div class="text-center">
-            <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div class="text-5xl font-bold text-blue-400 mb-2">30+</div>
-            <div class="text-slate-400">Providers Tracked</div>
-          </div>
-          <div class="text-center">
-            <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="text-5xl font-bold text-blue-400 mb-2">150+</div>
-            <div class="text-slate-400">Corridors Monitored</div>
-          </div>
-          <div class="text-center">
-            <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <div class="text-5xl font-bold text-blue-400 mb-2">10K+</div>
-            <div class="text-slate-400">Rate Alerts Sent</div>
-          </div>
-          <div class="text-center">
-            <div class="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="text-5xl font-bold text-blue-400 mb-2">$2M+</div>
-            <div class="text-slate-400">Saved in Fees</div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <TrustMetricsStrip bg-class="bg-blue-600" />
 
     <!-- Features Breakdown -->
     <section class="py-16 bg-slate-900">
@@ -368,7 +338,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+            <div class="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center mb-4">
               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
@@ -570,9 +540,16 @@
 </template>
 
 <script setup lang="ts">
+import { FEATURE_FLAGS } from '~/utils/constants'
+import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+
 const { isAuthenticated } = useAuth()
 const { plan, isPlus } = useEntitlements()
 const billingActions = useBilling()
+const runtimeConfig = useRuntimeConfig()
+
+const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'month')
+const devAutoUpgrade = computed(() => Boolean(runtimeConfig.public.devAuthEnabled) || import.meta.dev)
 
 async function handleUpgrade() {
   if (!isAuthenticated.value) {
@@ -588,10 +565,20 @@ async function handleUpgrade() {
     return
   }
 
-  const checkoutResult = await billingActions.createCheckoutSession('plus')
-  if (checkoutResult.ok && checkoutResult.url && process.client) {
-    window.location.href = checkoutResult.url
-    return
+  const checkoutResult = await billingActions.createCheckoutSession('plus', billingInterval.value)
+  if (checkoutResult.ok) {
+    if (devAutoUpgrade.value && checkoutResult.sessionId) {
+      const verifyResult = await billingActions.verifyCheckoutSession(checkoutResult.sessionId)
+      if (verifyResult.ok) {
+        await navigateTo('/plus/success')
+        return
+      }
+    }
+
+    if (checkoutResult.url && process.client) {
+      window.location.href = checkoutResult.url
+      return
+    }
   }
 
   alert(checkoutResult.error || 'Unable to start checkout.')

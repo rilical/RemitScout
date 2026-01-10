@@ -119,7 +119,7 @@ export const getCanonicalCorridorUrl = (fromInput: string, toInput: string): str
  * Popular corridors for sitemap and internal linking
  * These are used for generating static pages and sitemap entries
  */
-export const POPULAR_CORRIDORS = [
+export const POPULAR_CORRIDOR_CODES = [
   // US Outbound (top remittance destinations)
   { from: 'US', to: 'IN' },
   { from: 'US', to: 'MX' },
@@ -172,7 +172,7 @@ export const POPULAR_CORRIDORS = [
 
 // Generate all corridor URLs for sitemap
 export const getAllCorridorUrls = (): string[] => {
-  return POPULAR_CORRIDORS.map(({ from, to }) => getCorridorUrl(from, to))
+  return POPULAR_CORRIDOR_CODES.map(({ from, to }) => getCorridorUrl(from, to))
 }
 
 // Generate corridor URL with full-name slugs from codes

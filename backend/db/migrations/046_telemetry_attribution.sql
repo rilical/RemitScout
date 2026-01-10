@@ -1,0 +1,25 @@
+ALTER TABLE silver.telemetry_session
+  ADD COLUMN IF NOT EXISTS utm JSONB,
+  ADD COLUMN IF NOT EXISTS gclid TEXT,
+  ADD COLUMN IF NOT EXISTS fbclid TEXT,
+  ADD COLUMN IF NOT EXISTS msclkid TEXT;
+
+ALTER TABLE silver.telemetry_search_event
+  ADD COLUMN IF NOT EXISTS gclid TEXT,
+  ADD COLUMN IF NOT EXISTS fbclid TEXT,
+  ADD COLUMN IF NOT EXISTS msclkid TEXT;
+
+ALTER TABLE silver.telemetry_outbound_click
+  ADD COLUMN IF NOT EXISTS gclid TEXT,
+  ADD COLUMN IF NOT EXISTS fbclid TEXT,
+  ADD COLUMN IF NOT EXISTS msclkid TEXT;
+
+ALTER TABLE silver.telemetry_affiliate_conversion
+  ADD COLUMN IF NOT EXISTS gclid TEXT,
+  ADD COLUMN IF NOT EXISTS fbclid TEXT,
+  ADD COLUMN IF NOT EXISTS msclkid TEXT;
+
+ALTER TABLE silver.telemetry_provider_visit
+  ADD COLUMN IF NOT EXISTS gclid TEXT,
+  ADD COLUMN IF NOT EXISTS fbclid TEXT,
+  ADD COLUMN IF NOT EXISTS msclkid TEXT;

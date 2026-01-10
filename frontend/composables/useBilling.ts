@@ -3,6 +3,7 @@ import type { Plan } from '~/composables/useEntitlements'
 export type BillingCheckoutResult = {
   ok: boolean
   url?: string
+  sessionId?: string
   error?: string
 }
 
@@ -14,16 +15,16 @@ export const useBilling = () => {
   const portalLoading = useState<boolean>('billing:portal:loading', () => false)
   const error = useState<string | null>('billing:error', () => null)
 
-  const createCheckoutSession = async (planCode: Plan): Promise<BillingCheckoutResult> => {
+  const createCheckoutSession = async (planCode: Plan, billingInterval: 'month' | 'year' = 'month'): Promise<BillingCheckoutResult> => {
     error.value = null
     checkoutLoading.value = true
 
     try {
-      const response = await request<{ url?: string; error?: string; message?: string }>(
+      const response = await request<{ url?: string; session_id?: string; error?: string; message?: string }>(
         '/billing/checkout-session',
         {
           method: 'POST',
-          body: { plan_code: planCode },
+          body: { plan_code: planCode, billing_interval: billingInterval },
         },
       )
 
@@ -33,7 +34,7 @@ export const useBilling = () => {
         return { ok: false, error: message }
       }
 
-      return { ok: true, url: response.url }
+      return { ok: true, url: response.url, sessionId: response.session_id }
     } catch (err: any) {
       const message = err?.message || 'Unable to start checkout'
       error.value = message
@@ -77,12 +78,29 @@ export const useBilling = () => {
     await refreshPlan()
   }
 
+  const verifyCheckoutSession = async (sessionId: string): Promise<BillingCheckoutResult> => {
+    error.value = null
+    try {
+      await request('/billing/verify-session', {
+        method: 'POST',
+        body: { sessionId },
+      })
+      await refreshPlan()
+      return { ok: true }
+    } catch (err: any) {
+      const message = err?.message || 'Unable to verify checkout'
+      error.value = message
+      return { ok: false, error: message }
+    }
+  }
+
   return {
     checkoutLoading,
     portalLoading,
     error,
     createCheckoutSession,
     openBillingPortal,
+    verifyCheckoutSession,
     refreshBillingInfo,
   }
 }

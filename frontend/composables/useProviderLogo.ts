@@ -14,8 +14,9 @@ export function getProviderLogoPath(slug: string): string {
     'westernunion': 'western-union.svg',
     'xe': 'xe-money.svg',
     'xe-money': 'xe-money.svg',
+    'sendwave': 'sendwave.svg',
   }
-  
+
   const normalizedSlug = slug.toLowerCase().trim()
   const logoFile = slugMap[normalizedSlug] || `${normalizedSlug}.svg`
   return `/logos/${logoFile}`
@@ -27,47 +28,51 @@ export function getProviderLogoPath(slug: string): string {
  */
 export function getProviderLogoSize(slug: string, context: 'default' | 'large' | 'small' | 'xlarge' = 'default'): string {
   const normalizedSlug = slug.toLowerCase().trim()
-  
+
   // Base sizes for different contexts
-  const contextSizes = {
+  const contextSizes: Record<string, Record<string, string>> = {
     small: {
-      'wise': 'h-10 w-auto',           // viewBox 219.7x50 (4.4:1) - very wide
-      'remitly': 'h-12 w-auto',        // viewBox 1000x428 (2.3:1)
-      'worldremit': 'h-12 w-auto',     // viewBox 1062x326 (3.3:1)
-      'western-union': 'h-10 w-auto',  // viewBox 299.7x70 (4.3:1) - very wide
-      'westernunion': 'h-10 w-auto',
-      'xe-money': 'h-14 w-auto',       // viewBox 600x484 (1.24:1) - almost square
-      'xe': 'h-14 w-auto',
+      'wise': 'h-12 w-auto', // viewBox 219.7x50 (4.4:1) - very wide (15% bigger: h-10 -> h-12)
+      'remitly': 'h-16 w-auto', // viewBox 1000x428 (2.3:1) (bigger on cards: h-14 -> h-16)
+      'worldremit': 'h-14 w-auto', // viewBox 1062x326 (3.3:1) (15% bigger: h-12 -> h-14)
+      'western-union': 'h-12 w-auto', // viewBox 299.7x70 (4.3:1) - very wide (15% bigger: h-10 -> h-12)
+      'westernunion': 'h-12 w-auto',
+      'xe-money': 'h-16 w-auto', // viewBox 600x484 (1.24:1) - almost square (15% bigger: h-14 -> h-16)
+      'xe': 'h-16 w-auto',
+      'sendwave': 'h-16 w-auto',
     },
     default: {
-      'wise': 'h-14 w-auto',           // viewBox 219.7x50 (4.4:1)
-      'remitly': 'h-16 w-auto',        // viewBox 1000x428 (2.3:1)
-      'worldremit': 'h-16 w-auto',     // viewBox 1062x326 (3.3:1)
-      'western-union': 'h-14 w-auto',  // viewBox 299.7x70 (4.3:1)
-      'westernunion': 'h-14 w-auto',
-      'xe-money': 'h-20 w-auto',       // viewBox 600x484 (1.24:1)
-      'xe': 'h-20 w-auto',
+      'wise': 'h-18 w-auto', // viewBox 219.7x50 (4.4:1) (30% bigger: h-14 -> h-18)
+      'remitly': 'h-22 w-auto', // viewBox 1000x428 (2.3:1) (35% bigger: h-16 -> h-22)
+      'worldremit': 'h-16 w-auto', // viewBox 1062x326 (3.3:1)
+      'western-union': 'h-18 w-auto', // viewBox 299.7x70 (4.3:1) (30% bigger: h-14 -> h-18)
+      'westernunion': 'h-18 w-auto',
+      'xe-money': 'h-22 w-auto', // viewBox 600x484 (1.24:1) (10% bigger: h-20 -> h-22)
+      'xe': 'h-22 w-auto',
+      'sendwave': 'h-20 w-auto',
     },
     large: {
-      'wise': 'h-20 w-auto',           // viewBox 219.7x50 (4.4:1)
-      'remitly': 'h-24 w-auto',        // viewBox 1000x428 (2.3:1)
-      'worldremit': 'h-24 w-auto',     // viewBox 1062x326 (3.3:1)
-      'western-union': 'h-20 w-auto',  // viewBox 299.7x70 (4.3:1)
+      'wise': 'h-20 w-auto', // viewBox 219.7x50 (4.4:1)
+      'remitly': 'h-24 w-auto', // viewBox 1000x428 (2.3:1)
+      'worldremit': 'h-24 w-auto', // viewBox 1062x326 (3.3:1)
+      'western-union': 'h-20 w-auto', // viewBox 299.7x70 (4.3:1)
       'westernunion': 'h-20 w-auto',
-      'xe-money': 'h-28 w-auto',       // viewBox 600x484 (1.24:1)
+      'xe-money': 'h-28 w-auto', // viewBox 600x484 (1.24:1)
       'xe': 'h-28 w-auto',
+      'sendwave': 'h-24 w-auto',
     },
     xlarge: {
-      'wise': 'h-28 w-auto',           // viewBox 219.7x50 (4.4:1)
-      'remitly': 'h-32 w-auto',        // viewBox 1000x428 (2.3:1)
-      'worldremit': 'h-32 w-auto',     // viewBox 1062x326 (3.3:1)
-      'western-union': 'h-28 w-auto',  // viewBox 299.7x70 (4.3:1)
+      'wise': 'h-28 w-auto', // viewBox 219.7x50 (4.4:1)
+      'remitly': 'h-32 w-auto', // viewBox 1000x428 (2.3:1)
+      'worldremit': 'h-32 w-auto', // viewBox 1062x326 (3.3:1)
+      'western-union': 'h-28 w-auto', // viewBox 299.7x70 (4.3:1)
       'westernunion': 'h-28 w-auto',
-      'xe-money': 'h-36 w-auto',       // viewBox 600x484 (1.24:1)
+      'xe-money': 'h-36 w-auto', // viewBox 600x484 (1.24:1)
       'xe': 'h-36 w-auto',
+      'sendwave': 'h-32 w-auto',
     },
   }
-  
+
   const sizeMap = contextSizes[context]
   return sizeMap[normalizedSlug] || 'h-16 w-auto'
 }
@@ -84,4 +89,3 @@ export function normalizeProviderSlug(name: string): string {
     .replace(/world-?remit/gi, 'worldremit')
     .trim()
 }
-

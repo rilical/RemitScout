@@ -939,18 +939,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/ria'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Ria Review 2024 - Remit-Score 8.0/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Ria review with Remit-Score 8.0/10. Very large cash network; reliable; speed good for cash pickup; delivered value varies; support can be uneven. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent Ria review with Remit-Score 8.0/10. Very large cash network; reliable; speed good for cash pickup; delivered value varies; support can be uneven. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/ria`,
+  ogImage: `${siteUrl}/og-images/provider-ria.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `RIA earns a Remit-Score of 8.0/10 based on our independent analysis. The provider offers a very large cash network with reliable execution. Speed is good for cash pickup, though delivered value varies and support can be uneven. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'RIA',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.0,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

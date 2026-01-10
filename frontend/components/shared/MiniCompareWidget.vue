@@ -40,9 +40,11 @@
               <input
                 v-model.number="amount"
                 type="number"
-                min="1"
+                :min="amountLimits.minAmount"
+                :max="amountLimits.maxAmount"
                 class="h-10 w-full bg-transparent text-gray-900 focus:outline-none"
                 placeholder="e.g. 500"
+                @blur="clampAmount"
               >
               <span class="text-sm font-semibold text-gray-600 ml-2">{{ fromCurrency }}</span>
             </div>
@@ -62,6 +64,7 @@
             <CurrencySelect
               v-model="fromCurrency"
               label="Send currency"
+              :country-code="from"
               select-class="h-11"
             />
           </div>
@@ -70,6 +73,7 @@
             <CurrencySelect
               v-model="toCurrency"
               label="Receive currency"
+              :country-code="to"
               select-class="h-11"
             />
           </div>
@@ -83,7 +87,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getAvailableCurrencies, getCountryByCode } from '~/utils/countries-currencies'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
 const from = ref('US')
 const to = ref('IN')
@@ -93,8 +100,88 @@ const toCurrency = ref('INR')
 
 const router = useRouter()
 
+const normalizeCurrency = (value: string) => value.trim().toUpperCase()
+
+const resolveCurrency = (countryCode: string) => {
+  const country = getCountryByCode(countryCode.toUpperCase())
+  return country?.currency?.toUpperCase() || 'USD'
+}
+
+const resolveAllowedCurrency = (countryCode: string, candidate: string) => {
+  const allowed = getAvailableCurrencies(countryCode).map(normalizeCurrency)
+  const normalizedCandidate = normalizeCurrency(candidate || resolveCurrency(countryCode))
+  if (allowed.length === 0) {
+    return normalizedCandidate
+  }
+  if (allowed.includes(normalizedCandidate)) {
+    return normalizedCandidate
+  }
+  const fallback = resolveCurrency(countryCode)
+  if (allowed.includes(fallback)) {
+    return fallback
+  }
+  return allowed[0]
+}
+
+const amountLimits = computed(() => {
+  const currency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+  return {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+  }
+})
+
+const clampAmount = () => {
+  const currency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+  const sanitized = sanitizeAmount(amount.value, currency, {
+    minAmount: amountLimits.value.minAmount,
+    maxAmount: amountLimits.value.maxAmount,
+    strict: true,
+  })
+  if (sanitized !== amount.value) {
+    amount.value = sanitized
+  }
+}
+
+watch(from, (newVal) => {
+  if (!newVal) return
+  fromCurrency.value = resolveAllowedCurrency(newVal, fromCurrency.value || resolveCurrency(newVal))
+  clampAmount()
+})
+
+watch(to, (newVal) => {
+  if (!newVal) return
+  toCurrency.value = resolveAllowedCurrency(newVal, toCurrency.value || resolveCurrency(newVal))
+})
+
+watch(fromCurrency, (value) => {
+  if (!from.value) return
+  const next = resolveAllowedCurrency(from.value, value || resolveCurrency(from.value))
+  if (normalizeCurrency(value || '') !== next) {
+    fromCurrency.value = next
+  }
+  clampAmount()
+})
+
+watch(toCurrency, (value) => {
+  if (!to.value) return
+  const next = resolveAllowedCurrency(to.value, value || resolveCurrency(to.value))
+  if (normalizeCurrency(value || '') !== next) {
+    toCurrency.value = next
+  }
+})
+
+watch(amount, () => {
+  clampAmount()
+})
+
+fromCurrency.value = resolveAllowedCurrency(from.value, fromCurrency.value || resolveCurrency(from.value))
+toCurrency.value = resolveAllowedCurrency(to.value, toCurrency.value || resolveCurrency(to.value))
+clampAmount()
+
 const handleCompare = () => {
   if (!from.value || !to.value) return
+  clampAmount()
   router.push({
     path: getCorridorUrl(from.value, to.value),
     query: { amount: amount.value, fromCurrency: fromCurrency.value, toCurrency: toCurrency.value },

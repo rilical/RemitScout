@@ -12,6 +12,11 @@ export type QuoteRefreshRequestRecord = {
 
 export interface IQuoteRefreshRepository {
   claimPendingRequests(limit: number, maxRetries: number): Promise<QuoteRefreshRequestRecord[]>
+  claimRequestById(
+    requestId: string,
+    maxRetries: number,
+    retryCount?: number,
+  ): Promise<QuoteRefreshRequestRecord | null>
   markRequestStatus(
     requestId: string,
     status: QuoteRefreshStatusValue,
@@ -26,6 +31,5 @@ export interface IQuoteRefreshRepository {
   getQueueDepth(): Promise<number>
   cleanupRequests(statuses: QuoteRefreshStatusValue[], olderThanHours: number): Promise<number>
 }
-
 
 

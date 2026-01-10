@@ -133,10 +133,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getAvailableCurrencies, getCountryByCode } from '~/utils/countries-currencies'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
 const router = useRouter()
 
@@ -150,27 +152,79 @@ const form = ref({
   toCurrency: '', // Will be updated based on destination
 })
 
-// Currency mapping for auto-detection
-const defaultCurrencyByCountry: Record<string, string> = {
-  US: 'USD', UK: 'GBP', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
-  IN: 'INR', MX: 'MXN', PH: 'PHP', NG: 'NGN', KE: 'KES',
-  GB: 'GBP', IE: 'EUR', FR: 'EUR', DE: 'EUR', IT: 'EUR',
-  ES: 'EUR', PT: 'EUR', BR: 'BRL', CN: 'CNY', JP: 'JPY',
-  PK: 'PKR', BD: 'BDT', VN: 'VND', TH: 'THB', MY: 'MYR',
-  ID: 'IDR', ZA: 'ZAR', EG: 'EGP', JO: 'JOD', AE: 'AED',
-  KW: 'KWD', SA: 'SAR', QA: 'QAR', BH: 'BHD', OM: 'OMR',
+const normalizeCurrency = (value: string) => value.trim().toUpperCase()
+
+const resolveCurrency = (countryCode: string) => {
+  const country = getCountryByCode(countryCode.toUpperCase())
+  return country?.currency?.toUpperCase() || 'USD'
+}
+
+const resolveAllowedCurrency = (countryCode: string, candidate: string) => {
+  const allowed = getAvailableCurrencies(countryCode).map(normalizeCurrency)
+  const normalizedCandidate = normalizeCurrency(candidate || resolveCurrency(countryCode))
+  if (allowed.length === 0) {
+    return normalizedCandidate
+  }
+  if (allowed.includes(normalizedCandidate)) {
+    return normalizedCandidate
+  }
+  const fallback = resolveCurrency(countryCode)
+  if (allowed.includes(fallback)) {
+    return fallback
+  }
+  return allowed[0]
+}
+
+const clampAmount = () => {
+  const currency = normalizeCurrency(form.value.fromCurrency || resolveCurrency(form.value.from))
+  const sanitized = sanitizeAmount(form.value.amount, currency, {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+    strict: true,
+  })
+  if (sanitized !== form.value.amount) {
+    form.value.amount = sanitized
+  }
 }
 
 // Auto-set currencies when countries change
 watch(() => form.value.from, (newFrom) => {
-  form.value.fromCurrency = defaultCurrencyByCountry[newFrom] || 'USD'
+  if (!newFrom) return
+  form.value.fromCurrency = resolveAllowedCurrency(newFrom, form.value.fromCurrency || resolveCurrency(newFrom))
+  clampAmount()
 })
 
 watch(() => form.value.to, (newTo) => {
-  if (newTo) {
-    form.value.toCurrency = defaultCurrencyByCountry[newTo] || 'USD'
+  if (!newTo) return
+  form.value.toCurrency = resolveAllowedCurrency(newTo, form.value.toCurrency || resolveCurrency(newTo))
+})
+
+watch(() => form.value.fromCurrency, (value) => {
+  if (!form.value.from) return
+  const next = resolveAllowedCurrency(form.value.from, value || resolveCurrency(form.value.from))
+  if (normalizeCurrency(value || '') !== next) {
+    form.value.fromCurrency = next
+  }
+  clampAmount()
+})
+
+watch(() => form.value.toCurrency, (value) => {
+  if (!form.value.to) return
+  const next = resolveAllowedCurrency(form.value.to, value || resolveCurrency(form.value.to))
+  if (normalizeCurrency(value || '') !== next) {
+    form.value.toCurrency = next
   }
 })
+
+watch(() => form.value.amount, () => {
+  clampAmount()
+})
+
+form.value.fromCurrency = resolveAllowedCurrency(form.value.from, form.value.fromCurrency || resolveCurrency(form.value.from))
+if (form.value.to) {
+  form.value.toCurrency = resolveAllowedCurrency(form.value.to, form.value.toCurrency || resolveCurrency(form.value.to))
+}
+clampAmount()
 
 // Form validation
 const isValid = computed(() => {
@@ -183,9 +237,15 @@ const isValid = computed(() => {
 
 const handleCompare = () => {
   if (isValid.value) {
+    clampAmount()
     // Redirect to send-money page with full-name slugs and default amount
     const corridorUrl = getCorridorUrl(form.value.from, form.value.to)
-    router.push(`${corridorUrl}?amount=${form.value.amount}`)
+    const params = new URLSearchParams({
+      amount: String(form.value.amount),
+      fromCurrency: form.value.fromCurrency,
+      toCurrency: form.value.toCurrency,
+    })
+    router.push(`${corridorUrl}?${params.toString()}`)
   }
 }
 </script>

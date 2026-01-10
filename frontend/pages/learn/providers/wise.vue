@@ -854,18 +854,21 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/wise'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Wise Review 2024 - Remit-Score 9.3/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Wise review with Remit-Score 9.3/10. Detailed breakdown of fees, speed, reliability, and delivered value based on real transfer data.',
-    },
-  ],
+  description: 'Independent Wise review with Remit-Score 9.3/10. Detailed breakdown of fees, speed, reliability, and delivered value based on real transfer data.',
+  canonical: `${siteUrl}/learn/providers/wise`,
+  ogImage: `${siteUrl}/og-images/provider-wise.jpg`,
 })
 
 const breadcrumbItems = [
@@ -888,6 +891,19 @@ const scoreTextClass = computed(() => {
   if (score >= 8.0) return 'text-brand-600'
   if (score >= 7.0) return 'text-yellow-600'
   return 'text-neutral-600'
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Wise earns a Remit-Score of 9.3/10 based on our independent analysis. The provider offers excellent delivered value with transparent fees and competitive exchange rates. Strong reliability and fast transfers with multiple payout methods. Detailed breakdown of fees, speed, reliability, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Wise',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 9.3,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 </script>
 

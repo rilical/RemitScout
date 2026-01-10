@@ -952,18 +952,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/transfergo'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'TransferGo Review 2024 - Remit-Score 8.6/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent TransferGo review with Remit-Score 8.6/10. European strength, good speed tiers, strong value in-core. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent TransferGo review with Remit-Score 8.6/10. European strength, good speed tiers, strong value in-core. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/transfergo`,
+  ogImage: `${siteUrl}/og-images/provider-transfergo.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `TransferGo earns a Remit-Score of 8.6/10 based on our independent analysis. The provider shows European strength with good speed tiers and strong value in core corridors. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'TransferGo',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.6,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

@@ -919,18 +919,34 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/western-union'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Western Union Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Western Union review with Remit-Score 8.2/10. Elite reliability + instant cash pickup reach; delivered value inconsistent due to higher effective cost. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent Western Union review with Remit-Score 8.2/10. Elite reliability + instant cash pickup reach; delivered value inconsistent due to higher effective cost. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/western-union`,
+  ogImage: `${siteUrl}/og-images/provider-western-union.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Western Union earns a Remit-Score of 8.2/10 based on our independent analysis. The provider offers elite reliability with instant cash pickup reach across the largest global network. Delivered value can be inconsistent due to higher effective costs, but reliability and convenience are strong. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Western Union',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.2,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

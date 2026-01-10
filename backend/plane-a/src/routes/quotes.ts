@@ -6,13 +6,16 @@ import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { parseCorridorId } from '../../../shared/corridor'
+import { isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
+import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { createTtlCache } from '../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
 import { VolatilityService } from '../services/volatility-service'
 import { getProviderMetadata } from '../services/provider-metadata'
 import {
-  FxRateRepository,
+  CorridorPriorityRepository,
   LatestQuoteRepository,
   QuoteRefreshRepository,
   RightsMatrixRepository,
@@ -21,12 +24,11 @@ import {
 const logger = createLogger('plane-a.quotes')
 
 const planeAPool = getPool(config.db.planeAUrl)
-const fxRateRepository = new FxRateRepository(planeAPool)
 const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 const quoteRefreshRepository = new QuoteRefreshRepository(planeAPool)
 const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
+const corridorPriorityRepository = new CorridorPriorityRepository(planeAPool)
 
-const fxRateCache = createTtlCache<number>({ namespace: 'plane_a:fx_rate' })
 const latestQuoteCache = createTtlCache<any[]>({ namespace: 'plane_a:latest_quote' })
 
 const querySchema = z.object({
@@ -36,6 +38,10 @@ const querySchema = z.object({
   payin: z.string().min(1),
   payout: z.string().min(1),
   live: z.coerce.boolean().optional(),
+})
+
+const refreshStatusSchema = z.object({
+  request_ids: z.union([z.string(), z.array(z.string())]),
 })
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -48,38 +54,50 @@ const sleepWithJitter = async (jitterMs: number) => {
   }
 }
 
-const MIN_SEND_AMOUNT = 50
-const MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
-
-const getFxRate = async (baseCurrency: string, quoteCurrency: string) => {
-  const cacheKey = `${baseCurrency}:${quoteCurrency}`
-  const cached = await fxRateCache.get(cacheKey)
-  if (cached !== null) return cached
-
-  const rate = await fxRateRepository.getRate(baseCurrency, quoteCurrency)
-  if (rate && Number.isFinite(rate)) {
-    const ttlMs = config.planeA.b2c.fxRateCacheTtlSeconds * 1000
-    await fxRateCache.set(cacheKey, rate, ttlMs)
-    return rate
-  }
-  return null
+const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
+const TIER2_FRESHNESS_SECONDS = 120 * 60
+const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
+const TIER_JITTER_MS: Record<string, number> = {
+  tier_1_alpha: 0,
+  tier_2_reference: 200,
+  tier_3_discovery: 500,
 }
 
-const getUsdEquivalent = async (amount: number, currency: string) => {
-  if (!Number.isFinite(amount)) return null
-  if (currency === 'USD') return amount
 
-  const direct = await getFxRate(currency, 'USD')
-  if (direct && direct !== 0 && Number.isFinite(direct)) {
-    return amount * direct
+const getCorridorJitterMs = async (corridorId: string) => {
+  try {
+    const tier = await corridorPriorityRepository.getPriorityTier(corridorId)
+    if (tier && tier in TIER_JITTER_MS) {
+      return TIER_JITTER_MS[tier]
+    }
+  } catch (error) {
+    logger.warn('corridor_priority_jitter_failed', {
+      corridor_id: corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
-  const inverse = await getFxRate('USD', currency)
-  if (inverse && inverse !== 0 && Number.isFinite(inverse)) {
-    return amount / inverse
-  }
+  return config.planeA.b2c.jitterMs
+}
 
-  return null
+const loadSupportedProviderIds = async (
+  sourceCountry: string,
+  destCountry: string,
+): Promise<string[]> => {
+  try {
+    const rows = await rightsMatrixRepository.listActiveB2cProvidersByCountry(
+      sourceCountry,
+      destCountry,
+    )
+    return rows.map((row) => row.provider_id).filter(Boolean)
+  } catch (error) {
+    logger.warn('supported_provider_lookup_failed', {
+      source_country: sourceCountry,
+      dest_country: destCountry,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return []
+  }
 }
 
 const getNewestCollectedAt = (rows: Array<{ collected_at: string | Date | null }>) => {
@@ -97,6 +115,17 @@ const getNewestCollectedAt = (rows: Array<{ collected_at: string | Date | null }
 const getCacheAgeSeconds = (newestCollectedAt: number) => {
   if (!newestCollectedAt) return null
   return Math.max(0, Math.round((Date.now() - newestCollectedAt) / 1000))
+}
+
+const isCurrencyAllowedForRequest = (
+  countryCode: string,
+  currency: string,
+  direction: 'source' | 'destination',
+) => {
+  if (isCurrencyAllowedForCountry(countryCode, currency)) return true
+  return direction === 'source'
+    ? isWiseSourceCurrency(currency)
+    : isWiseDestinationCurrency(currency)
 }
 
 const buildAffiliateInfo = (providerId: string) => {
@@ -147,17 +176,6 @@ const enqueueRefreshRequest = async (input: {
   return requestId ?? undefined
 }
 
-const DEFAULT_B2C_PROVIDERS = ['remitly', 'westernunion', 'worldremit', 'xe', 'wise']
-
-const loadB2cProviders = async () => {
-  try {
-    const rows = await rightsMatrixRepository.listActiveB2cProviders()
-    return rows.map(row => row.provider_id).filter(Boolean)
-  } catch {
-    return []
-  }
-}
-
 export const quotesRoutes = async (app: FastifyInstance) => {
   app.get('/quotes/current', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
@@ -170,11 +188,24 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     const amountBucketInput = parsed.data.amount_bucket
     const amountInput = parsed.data.amount
     const allowLive = parsed.data.live ?? amountInput !== undefined
+    const bypassCache = parsed.data.live === true
 
     const corridorParts = parseCorridorId(corridor_id)
     if (!corridorParts) {
       reply.code(400)
       return { error: 'bad_request', details: [{ message: 'invalid corridor_id' }] }
+    }
+    const sourceCountry = corridorParts.sourceCountry.toUpperCase()
+    const destCountry = corridorParts.destCountry.toUpperCase()
+    const sourceCurrency = corridorParts.sourceCurrency.toUpperCase()
+    const destCurrency = corridorParts.destCurrency.toUpperCase()
+    if (!isCurrencyAllowedForRequest(sourceCountry, sourceCurrency, 'source')) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'invalid source currency' }] }
+    }
+    if (!isCurrencyAllowedForRequest(destCountry, destCurrency, 'destination')) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'invalid destination currency' }] }
     }
 
     if (amountBucketInput === undefined && amountInput === undefined) {
@@ -193,15 +224,26 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     }
 
     const amountForCheck = amountInput ?? amountBucketInput ?? 0
-    const usdEquivalent = await getUsdEquivalent(amountForCheck, corridorParts.sourceCurrency)
-    if (usdEquivalent === null) {
-      reply.code(503)
-      return { error: 'fx_unavailable', details: [{ message: 'USD conversion unavailable' }] }
+    if (!Number.isFinite(amountForCheck) || amountForCheck <= 0) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'amount must be a positive number' }] }
     }
 
-    if (usdEquivalent < MIN_SEND_AMOUNT) {
+    const minAmount = getMinAmount(sourceCurrency)
+    const maxAmount = getMaxAmount(sourceCurrency)
+    if (amountForCheck < minAmount) {
       reply.code(400)
-      return { error: 'bad_request', details: [{ message: `amount must be >= ${MIN_SEND_AMOUNT} USD equivalent` }] }
+      return {
+        error: 'bad_request',
+        details: [{ message: `amount must be >= ${minAmount} ${sourceCurrency}` }],
+      }
+    }
+    if (amountForCheck > maxAmount) {
+      reply.code(400)
+      return {
+        error: 'bad_request',
+        details: [{ message: `amount must be <= ${maxAmount} ${sourceCurrency}` }],
+      }
     }
 
     let amount_bucket = amountBucketInput ?? 0
@@ -218,9 +260,32 @@ export const quotesRoutes = async (app: FastifyInstance) => {
 
       // Get dynamic TTL once before fetching
       const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
+      const freshnessSeconds = Math.min(dynamicCacheTtlSeconds, MAX_B2C_QUOTE_AGE_SECONDS)
+      const maxAgeSeconds = Math.min(
+        Math.max(dynamicCacheTtlSeconds, TIER2_FRESHNESS_SECONDS, DEFAULT_MAX_QUOTE_AGE_SECONDS),
+        MAX_B2C_QUOTE_AGE_SECONDS,
+      )
 
       const fetchLatest = async (ttlSeconds: number) => {
-        const cacheKey = `${corridor_id}:${amount_bucket}:${payin}:${payout}`
+        if (bypassCache) {
+          const rows = await latestQuoteRepository.listLatestByCorridor(
+            corridor_id,
+            amount_bucket,
+            payin,
+            payout,
+            maxAgeSeconds || undefined,
+          )
+          if (!Array.isArray(rows)) {
+            logger.error('quotes_invalid_response', {
+              corridor_id,
+              type: typeof rows,
+            })
+            throw new Error('Invalid response from database')
+          }
+          return { rows, rowCount: rows.length, fromCache: false }
+        }
+
+        const cacheKey = `${corridor_id}:${amount_bucket}:${payin}:${payout}:${maxAgeSeconds}`
         const cached = await latestQuoteCache.get(cacheKey)
         if (cached !== null) {
           logger.debug('quotes_cache_hit', {
@@ -228,7 +293,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
             amount_bucket,
             cache_key: cacheKey,
           })
-          return { rows: cached, rowCount: cached.length }
+          return { rows: cached, rowCount: cached.length, fromCache: true }
         }
 
         const rows = await latestQuoteRepository.listLatestByCorridor(
@@ -236,7 +301,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
           amount_bucket,
           payin,
           payout,
-          MAX_QUOTE_AGE_SECONDS || undefined,
+          maxAgeSeconds || undefined,
         )
 
         if (!Array.isArray(rows)) {
@@ -247,9 +312,16 @@ export const quotesRoutes = async (app: FastifyInstance) => {
           throw new Error('Invalid response from database')
         }
 
-        const result = { rows, rowCount: rows.length }
-        const ttlMs = ttlSeconds * 1000
-        await latestQuoteCache.set(cacheKey, result.rows, ttlMs)
+        const result = { rows, rowCount: rows.length, fromCache: false }
+        if (rows.length > 0) {
+          const ttlMs = ttlSeconds * 1000
+          await latestQuoteCache.set(cacheKey, result.rows, ttlMs)
+        } else {
+          const emptyTtlSeconds = Math.min(config.planeA.b2c.latestQuoteCacheTtlSeconds, ttlSeconds)
+          if (emptyTtlSeconds > 0) {
+            await latestQuoteCache.set(cacheKey, result.rows, emptyTtlSeconds * 1000)
+          }
+        }
         logger.debug('quotes_cache_miss', {
           corridor_id,
           amount_bucket,
@@ -258,140 +330,166 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         return result
       }
 
-      let result = await fetchLatest(dynamicCacheTtlSeconds)
+      let result = await fetchLatest(freshnessSeconds)
       let newestCollectedAt = getNewestCollectedAt(result.rows)
       let cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
-      let cacheFresh = cacheAgeSeconds !== null && cacheAgeSeconds <= dynamicCacheTtlSeconds
 
-    let refreshAttempted = false
-    let refreshEnqueued = false
-    let refreshRequestId: string | null = null
-    let refreshRequestIds: string[] = []
-    let refreshProviderIds: string[] = []
+      const supportedProviderIds = allowLive
+        ? await loadSupportedProviderIds(sourceCountry, destCountry)
+        : []
 
-    if (allowLive && !cacheFresh) {
-      refreshAttempted = true
-      await sleepWithJitter(config.planeA.b2c.jitterMs)
-      const providerIds = new Set(
-        result.rows.map(row => row.provider_id).filter(Boolean),
-      )
-      if (providerIds.size === 0) {
-        const fallbackProviders = await loadB2cProviders()
-        if (!fallbackProviders.length) {
-          fallbackProviders.push(...DEFAULT_B2C_PROVIDERS)
-        }
-        for (const providerId of fallbackProviders) {
-          providerIds.add(providerId)
+      const expectedProviders = Array.from(new Set(supportedProviderIds))
+
+      const providerCollectedAt = new Map<string, number>()
+      for (const row of result.rows) {
+        if (!row.provider_id || !row.collected_at) continue
+        const ts = new Date(row.collected_at).getTime()
+        if (!Number.isFinite(ts)) continue
+        const existing = providerCollectedAt.get(row.provider_id)
+        if (!existing || ts > existing) {
+          providerCollectedAt.set(row.provider_id, ts)
         }
       }
-      refreshProviderIds = Array.from(providerIds)
-      // Enqueue refresh requests in parallel (non-blocking)
-      // Don't await - these are fire-and-forget operations
-      const enqueuePromises = refreshProviderIds.map(async (providerId) => {
-        try {
-          const requestId = await enqueueRefreshRequest({
-            providerId,
-            corridorId: corridor_id,
-            amountBucket: amount_bucket,
-            payinMethod: payin,
-            payoutMethod: payout,
-          })
-          return requestId
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error)
-          logger.warn('refresh_enqueue_failed', {
-            provider_id: providerId,
-            corridor_id,
-            error: errorMessage,
-          })
-          return null
-        }
-      })
-      
-      // Wait for all enqueue operations to complete (but don't block response)
-      // Use Promise.allSettled to handle partial failures gracefully
-      const enqueueResults = await Promise.allSettled(enqueuePromises)
-      for (const result of enqueueResults) {
-        if (result.status === 'fulfilled' && result.value) {
-          refreshRequestIds.push(result.value)
-        }
-      }
-      refreshRequestId = refreshRequestIds[0] ?? null
-      refreshEnqueued = refreshRequestIds.length > 0
 
-      if (refreshEnqueued) {
-        logger.info('quotes_refresh_enqueued', {
-          corridor_id,
-          amount_bucket,
-          provider_count: refreshProviderIds.length,
-          request_ids: refreshRequestIds,
+      const now = Date.now()
+      const isProviderFresh = (providerId: string) => {
+        const collectedAt = providerCollectedAt.get(providerId)
+        if (!collectedAt) return false
+        const ageSeconds = Math.round((now - collectedAt) / 1000)
+        return ageSeconds <= freshnessSeconds
+      }
+
+      const cacheFresh = expectedProviders.length
+        ? expectedProviders.every(isProviderFresh)
+        : cacheAgeSeconds !== null && cacheAgeSeconds <= freshnessSeconds
+
+      let refreshAttempted = false
+      let refreshEnqueued = false
+      let refreshRequestId: string | null = null
+      let refreshRequestIds: string[] = []
+      let refreshProviderIds: string[] = expectedProviders
+
+      if (allowLive && !cacheFresh && expectedProviders.length > 0) {
+        refreshAttempted = true
+        const jitterMs = await getCorridorJitterMs(corridor_id)
+        await sleepWithJitter(jitterMs)
+        const refreshRequests = expectedProviders.map((providerId) => ({
+          providerId,
+          payinMethod: payin,
+          payoutMethod: payout,
+        }))
+
+        refreshProviderIds = Array.from(
+          new Set(refreshRequests.map(request => request.providerId)),
+        )
+        // Enqueue refresh requests in parallel (non-blocking)
+        // Don't await - these are fire-and-forget operations
+        const enqueuePromises = refreshRequests.map(async (request) => {
+          try {
+            const requestId = await enqueueRefreshRequest({
+              providerId: request.providerId,
+              corridorId: corridor_id,
+              amountBucket: amount_bucket,
+              payinMethod: request.payinMethod,
+              payoutMethod: request.payoutMethod,
+            })
+            return requestId
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            logger.warn('refresh_enqueue_failed', {
+              provider_id: request.providerId,
+              corridor_id,
+              error: errorMessage,
+            })
+            return null
+          }
         })
+
+        // Wait for all enqueue operations to complete (but don't block response)
+        // Use Promise.allSettled to handle partial failures gracefully
+        const enqueueResults = await Promise.allSettled(enqueuePromises)
+        for (const result of enqueueResults) {
+          if (result.status === 'fulfilled' && result.value) {
+            refreshRequestIds.push(result.value)
+          }
+        }
+        refreshRequestId = refreshRequestIds[0] ?? null
+        refreshEnqueued = refreshRequestIds.length > 0
+
+        if (refreshEnqueued) {
+          logger.info('quotes_refresh_enqueued', {
+            corridor_id,
+            amount_bucket,
+            provider_count: refreshProviderIds.length,
+            request_count: refreshRequestIds.length,
+            request_ids: refreshRequestIds,
+          })
+        }
       }
-    }
 
-    const requestedAmount = amountInput ?? amountBucketInput ?? bucketSelection.bucket_used
-    const isAdmin =
-      request.user?.role === 'admin' ||
-      request.user?.role === 'super_admin' ||
-      (request.user?.email &&
-        config.planeA.adminEmails.includes(request.user.email.toLowerCase()))
-    const quotesWithAffiliate = result.rows.map((row) => ({
-      ...row,
-      ...buildAffiliateInfo(row.provider_id),
-      is_admin: Boolean(isAdmin),
-    }))
+      const requestedAmount = amountInput ?? amountBucketInput ?? bucketSelection.bucket_used
+      const isAdmin =
+        request.user?.role === 'admin' ||
+        request.user?.role === 'super_admin' ||
+        (request.user?.email &&
+          config.planeA.adminEmails.includes(request.user.email.toLowerCase()))
+      const quotesWithAffiliate = result.rows.map((row) => ({
+        ...row,
+        ...buildAffiliateInfo(row.provider_id),
+        is_admin: Boolean(isAdmin),
+      }))
 
-    const responsePayload = {
-      success: true,
-      timestamp: new Date().toISOString(),
-      count: result.rowCount,
-      requested_amount: requestedAmount,
-      bucket_used: bucketSelection.bucket_used,
-      fee_bucket_used: bucketSelection.fee_bucket_used,
-      approximate: bucketSelection.approximate,
-      cache: {
-        ttl_seconds: dynamicCacheTtlSeconds,
-        age_seconds: cacheAgeSeconds,
-        fresh: cacheFresh,
-      },
-      refresh: {
-        attempted: refreshAttempted,
-        enqueued: refreshEnqueued,
-        request_id: refreshRequestId,
-        request_ids: refreshRequestIds,
-        providers: refreshProviderIds,
-      },
-      quotes: quotesWithAffiliate,
-    }
+      const responsePayload = {
+        success: true,
+        timestamp: new Date().toISOString(),
+        count: result.rowCount,
+        requested_amount: requestedAmount,
+        bucket_used: bucketSelection.bucket_used,
+        fee_bucket_used: bucketSelection.fee_bucket_used,
+        approximate: bucketSelection.approximate,
+        cache: {
+          ttl_seconds: freshnessSeconds,
+          age_seconds: cacheAgeSeconds,
+          fresh: cacheFresh,
+        },
+        refresh: {
+          attempted: refreshAttempted,
+          enqueued: refreshEnqueued,
+          request_id: refreshRequestId,
+          request_ids: refreshRequestIds,
+          providers: refreshProviderIds,
+        },
+        quotes: quotesWithAffiliate,
+      }
 
-    const cachePayload = JSON.stringify(responsePayload)
-    const etag = `"${createHash('sha256').update(cachePayload).digest('hex')}"`
-    reply.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60')
-    reply.header('ETag', etag)
+      const cachePayload = JSON.stringify(responsePayload)
+      const etag = `"${createHash('sha256').update(cachePayload).digest('hex')}"`
+      reply.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60')
+      reply.header('ETag', etag)
 
-    const clientEtag = request.headers['if-none-match']
-    if (clientEtag && clientEtag.toLowerCase() === etag.toLowerCase()) {
-      logger.debug('quotes_cache_hit', { etag })
-      reply.code(304)
-      return ''
-    }
+      const clientEtag = request.headers['if-none-match']
+      if (clientEtag && clientEtag.toLowerCase() === etag.toLowerCase()) {
+        logger.debug('quotes_cache_hit', { etag })
+        reply.code(304)
+        return ''
+      }
 
-    try {
-      recordQuoteRequest(corridor_id, amount_bucket)
-      recordSearch(corridorParts.sourceCountry, corridorParts.destCountry)
-    } catch {
-      // Silently ignore metrics errors
-    }
+      try {
+        recordQuoteRequest(corridor_id, amount_bucket)
+        recordSearch(sourceCountry, destCountry)
+      } catch {
+        // Silently ignore metrics errors
+      }
 
-    logger.debug('quotes_request_success', {
-      corridor_id,
-      amount_bucket,
-      count: result.rowCount,
-      cache_fresh: cacheFresh,
-      refresh_enqueued: refreshEnqueued,
-    })
+      logger.debug('quotes_request_success', {
+        corridor_id,
+        amount_bucket,
+        count: result.rowCount,
+        cache_fresh: cacheFresh,
+        refresh_enqueued: refreshEnqueued,
+      })
 
-    return responsePayload
+      return responsePayload
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       const errorStack = error instanceof Error ? error.stack : undefined
@@ -406,6 +504,63 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         error: 'internal_error',
         message: 'Failed to fetch quotes',
       }
+    }
+  })
+
+  app.get('/quotes/refresh-status', async (request, reply) => {
+    const parsed = refreshStatusSchema.safeParse(request.query)
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    const raw = parsed.data.request_ids
+    const rawIds = Array.isArray(raw)
+      ? raw
+      : raw.split(',').map((item) => item.trim())
+
+    const ids = rawIds.filter(Boolean)
+    if (!ids.length) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'request_ids is required' }] }
+    }
+
+    const invalidIds = ids.filter((id) => !z.string().uuid().safeParse(id).success)
+    if (invalidIds.length) {
+      reply.code(400)
+      return { error: 'bad_request', details: [{ message: 'invalid request_ids' }] }
+    }
+
+    const result = await quoteRefreshRepository.listStatusCounts(ids)
+
+    const counts = {
+      pending: 0,
+      processing: 0,
+      completed: 0,
+      failed: 0,
+      blocked: 0,
+      skipped: 0,
+    }
+
+    let found = 0
+    for (const row of result) {
+      const status = row.status
+      const count = row.count ?? 0
+      if (status in counts) {
+        counts[status as keyof typeof counts] += count
+      }
+      found += count
+    }
+
+    const pendingTotal = counts.pending + counts.processing
+    const missing = Math.max(0, ids.length - found)
+
+    return {
+      total: ids.length,
+      found,
+      missing,
+      ...counts,
+      done: pendingTotal === 0 && missing === 0,
     }
   })
 }

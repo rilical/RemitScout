@@ -24,11 +24,18 @@ export type RightsMatrixUpsertInput = {
   notes: string | null
 }
 
+export type RightsMatrixCountrySupportInput = {
+  providerId: string
+  sourceCountries: string[]
+  destinationCountries: string[]
+}
+
 export interface IRightsMatrixRepository {
   pauseProvider(providerId: string, notes: string): Promise<void>
   getProviderStatus(providerId: string): Promise<RightsMatrixStatusRecord | null>
   setProviderActive(providerId: string): Promise<void>
   loadProviderRights(): Promise<RightsMatrixEntryRecord[]>
   upsertProviderRights(input: RightsMatrixUpsertInput): Promise<void>
+  upsertProviderCountrySupport(input: RightsMatrixCountrySupportInput): Promise<void>
   loadStoplistStatuses(): Promise<RightsMatrixStoplistRecord[]>
 }

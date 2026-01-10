@@ -29,8 +29,8 @@
               Affiliate
             </Badge>
             <a
-              v-if="provider?.affiliateUrl || provider?.url"
-              :href="provider?.affiliateUrl || provider?.url"
+              v-if="outboundUrl"
+              :href="outboundUrl"
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-brand-500 hover:text-brand-600"
@@ -168,6 +168,9 @@ import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useProvider } from '~/composables/useProvider'
 import { getCountryByCode } from '~/utils/countries-currencies'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
 
 const route = useRoute()
 const isReviewPath = computed(() => route.path.startsWith('/reviews'))
@@ -176,8 +179,10 @@ definePageMeta({
   alias: ['/reviews/:slug'],
 })
 
+const slug = route.params.slug as string
+
 // Provider data
-const { data: provider } = await useProvider(route.params.slug as string)
+const { data: provider } = await useProvider(slug)
 
 const { form } = useCompareForm()
 const { useProviders, formatMoney, formatRate, getRelativeTime } = useRemittanceApi()
@@ -272,6 +277,19 @@ const providerTypeLabel = computed(() => {
   return type.replace(/_/g, ' ')
 })
 
+const outboundUrl = computed(() => {
+  const providerId = provider.value?.id || provider.value?.slug
+  const targetUrl = provider.value?.affiliateUrl || provider.value?.url || null
+  if (!providerId || !targetUrl) return ''
+  return buildOutboundUrl({
+    providerId,
+    targetUrl,
+    isAffiliate: Boolean(provider.value?.affiliateUrl),
+    source: 'provider-profile',
+    utm: extractUtmParams(route.query as Record<string, unknown>),
+  })
+})
+
 const scoreBreakdownItems = computed(() => {
   const breakdown = provider.value?.scoreBreakdown
   if (!breakdown) return []
@@ -287,14 +305,16 @@ const scoreBreakdownItems = computed(() => {
 const amountDisplay = computed(() => formatMoney(amount.value, fromCurrency.value))
 
 // Meta
-useHead({
-  title: `${provider.value?.name || 'Provider'} | Remit-Scout`,
-  meta: [
-    {
-      name: 'description',
-      content: `Compare ${provider.value?.name || 'this provider'} on Remit-Scout and see live rates across providers.`,
-    },
-  ],
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
+  title: `${provider.value?.name || 'Provider'} Review | Remit-Scout`,
+  description: `Compare ${provider.value?.name || 'this provider'} on Remit-Scout and see live rates across providers.`,
+  canonical: `${siteUrl}${route.path}`,
+  ogImage: provider.value?.slug 
+    ? `${siteUrl}/og-images/provider-${provider.value.slug}.jpg`
+    : `${siteUrl}/og-image.jpg`,
 })
 
 // Breadcrumbs
@@ -304,4 +324,21 @@ const breadcrumbItems = computed(() => [
   { name: isReviewPath.value ? 'Reviews' : 'Providers', path: isReviewPath.value ? '/reviews' : '/learn/providers' },
   { name: provider.value?.name || 'Provider', path: route.path },
 ])
+
+// Review schema
+const { addReviewSchema } = useStructuredData()
+
+if (provider.value?.remitScore && typeof provider.value.remitScore === 'number') {
+  const reviewBody = `${provider.value.name} earns a Remit-Score of ${provider.value.remitScore.toFixed(1)}/10 based on our independent analysis of delivered value, reliability, speed, support, and trust factors.`
+  
+  addReviewSchema({
+    itemReviewed: provider.value.name || 'Provider',
+    reviewBody,
+    author: 'Remit-Scout Editorial Team',
+    ratingValue: provider.value.remitScore,
+    bestRating: 10,
+    worstRating: 1,
+    datePublished: new Date().toISOString().split('T')[0],
+  })
+}
 </script>

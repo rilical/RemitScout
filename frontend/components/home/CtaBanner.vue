@@ -2,19 +2,19 @@
   <section class="py-16 sm:py-20 bg-brand-600">
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-        What are you waiting for?
+        Ready to save on your next transfer?
       </h2>
-      <p class="text-xl sm:text-2xl text-white/90 mb-8">
-        <span class="font-semibold">Save today</span> on your next transfer
+      <p class="text-xl sm:text-2xl text-white/90 mb-4">
+        Compare live rates from top providers and find the best deal
       </p>
       <p class="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
-        Compare rates and send money with confidence in just a few clicks
+        Enter your transfer details above to see real-time rates and save money on fees and exchange rates.
       </p>
-      <button
+      <NuxtLink
+        to="/compare"
         class="inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-600 font-bold text-lg rounded-xl hover:bg-neutral-50 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-        @click="scrollToTop"
       >
-        <span>Get Started</span>
+        <span>Compare Rates Now</span>
         <svg
           class="w-5 h-5"
           fill="none"
@@ -28,16 +28,10 @@
             d="M9 5l7 7-7 7"
           />
         </svg>
-      </button>
+      </NuxtLink>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth',
-  })
-}
 </script>

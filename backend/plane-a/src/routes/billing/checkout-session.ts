@@ -17,6 +17,9 @@ const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyRepl
   }
 
   try {
+    const body = request.body as { plan_code?: string; billing_interval?: 'month' | 'year' }
+    const billingInterval = body.billing_interval || 'month'
+
     await ensureUserPlan(planeAPool, user.user_id)
     const plan = await getUserPlan(planeAPool, user.user_id)
     if (!plan) {
@@ -61,15 +64,30 @@ const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyRepl
     }
 
     try {
+      const priceId = billingInterval === 'year' 
+        ? (config.billing.stripe.priceIdPlusAnnual || config.billing.stripe.priceIdPlus)
+        : config.billing.stripe.priceIdPlus
+
+      if (!priceId) {
+        reply.code(500)
+        return { 
+          error: 'price_not_configured', 
+          message: `Price ID not configured for ${billingInterval} billing` 
+        }
+      }
+
+      const trialDays = config.billing.stripe.trialDays
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         customer: customerId,
-        line_items: [{ price: config.billing.stripe.priceIdPlus, quantity: 1 }],
-        success_url: `${config.billing.stripe.frontendBaseUrl}/dashboard?tab=account&checkout=success`,
-        cancel_url: `${config.billing.stripe.frontendBaseUrl}/dashboard?tab=account&checkout=cancel`,
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${config.billing.stripe.frontendBaseUrl}/plus/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${config.billing.stripe.frontendBaseUrl}/plus/failed?checkout=cancel`,
+        ...(trialDays > 0 ? { subscription_data: { trial_period_days: trialDays } } : {}),
         metadata: {
           user_id: user.user_id,
           plan_code: 'plus',
+          billing_interval: billingInterval,
         },
       })
 

@@ -7,6 +7,7 @@ import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { createTtlCache } from '../../../shared/cache'
+import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { getProviderMetadata } from '../services/provider-metadata'
 import { FxRateRepository } from '../repositories'
 import { getErrorMessage, getErrorStack } from '../types/errors'
@@ -55,7 +56,7 @@ type ProviderQuote = {
   recipientGets: number
   delivery: string
   reliability: number
-  methods: Array<'bank' | 'cash' | 'wallet'>
+  methods: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
   bestFor: string
 }
 
@@ -101,16 +102,18 @@ const formatTransferTime = (minMinutes: number | null, maxMinutes: number | null
   return `${minHrs}-${maxHrs} ${maxHrs === 1 ? 'hour' : 'hours'}`
 }
 
-const mapPayoutMethod = (payout: string): 'bank' | 'cash' | 'wallet' => {
+const mapPayoutMethod = (payout: string): 'bank' | 'cash' | 'wallet' | 'airtime' => {
   const normalized = payout.toLowerCase()
   if (normalized.includes('cash')) return 'cash'
-  if (normalized.includes('wallet') || normalized.includes('airtime')) return 'wallet'
+  if (normalized.includes('airtime')) return 'airtime'
+  if (normalized.includes('wallet')) return 'wallet'
   return 'bank'
 }
 
-const getBestFor = (method: 'bank' | 'cash' | 'wallet') => {
+const getBestFor = (method: 'bank' | 'cash' | 'wallet' | 'airtime') => {
   if (method === 'cash') return 'Fast cash pickup'
   if (method === 'wallet') return 'Mobile wallet delivery'
+  if (method === 'airtime') return 'Airtime top up'
   return 'Bank deposit'
 }
 
@@ -239,6 +242,17 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
     if (!Number.isFinite(amount) || amount <= 0) {
       reply.code(400)
       return { error: 'bad_request', message: 'amount must be positive' }
+    }
+
+    const minAmount = getMinAmount('USD')
+    const maxAmount = getMaxAmount('USD')
+    if (amount < minAmount) {
+      reply.code(400)
+      return { error: 'bad_request', message: `amount must be >= ${minAmount} USD` }
+    }
+    if (amount > maxAmount) {
+      reply.code(400)
+      return { error: 'bad_request', message: `amount must be <= ${maxAmount} USD` }
     }
 
     const amountBucket = computeBucketSelection(amount).bucket_used

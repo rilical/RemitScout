@@ -11,6 +11,7 @@ export type LatestQuoteByCorridorRecord = {
   collected_at: string | Date | null
   send_amount: number | null
   fee_amount: number | null
+  total_debit_amount: number | null
   promotional_fee_amount: number | null
   receive_amount: number | null
   implied_fx_rate: number | null
@@ -64,6 +65,11 @@ export interface ILatestQuoteRepository {
     amountBucket: number,
     payins: string[],
     payout: string,
+    maxAgeSeconds?: number,
+  ): Promise<LatestQuoteByCorridorRecord[]>
+  listLatestByCorridorAllMethods(
+    corridorId: string,
+    amountBucket: number,
     maxAgeSeconds?: number,
   ): Promise<LatestQuoteByCorridorRecord[]>
 

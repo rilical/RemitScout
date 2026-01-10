@@ -243,11 +243,16 @@ const spreadBps = computed(() => {
   return Math.round(45 + (100 - data.value.percentile) * 0.5)
 })
 
-const dataLatency = computed(() => Math.round(Math.random() * 200 + 100))
+const dataLatency = computed(() => {
+  if (!data.value?.lastUpdated) return 0
+  const updatedAt = new Date(data.value.lastUpdated).getTime()
+  return Math.max(0, Math.round(Date.now() - updatedAt))
+})
 
 const lastTick = computed(() => {
-  const now = new Date()
-  return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
+  if (!data.value?.lastUpdated) return 'n/a'
+  const updatedAt = new Date(data.value.lastUpdated)
+  return `${updatedAt.getHours().toString().padStart(2, '0')}:${updatedAt.getMinutes().toString().padStart(2, '0')}:${updatedAt.getSeconds().toString().padStart(2, '0')}`
 })
 
 const analystRecommendation = computed(() => {
@@ -387,7 +392,6 @@ onMounted(() => {
   loadData()
 })
 </script>
-
 
 
 

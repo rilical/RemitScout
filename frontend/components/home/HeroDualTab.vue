@@ -297,12 +297,12 @@
                   id="amount"
                   v-model.number="moneyForm.amount"
                   type="number"
-                  :min="minAmount"
-                  :max="maxAmount"
+                  :min="inputMin"
+                  :max="inputMax"
                   step="0.01"
                   class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
-                  :placeholder="`Enter amount (min ${formatCurrency(minAmount, moneyForm.fromCurrency)})`"
-                  @keydown="preventNegative"
+                  :placeholder="amountPlaceholder"
+                  @keydown="handleAmountKeydown"
                   @blur="handleAmountBlur"
                   @input="sanitizeAmountInput"
                 >
@@ -559,8 +559,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
+import type { Method } from '~/types/remit'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useApi } from '~/composables/useApi'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
@@ -574,7 +575,7 @@ type PrefillFormData = Partial<{
   from: string
   to: string
   amount: number
-  method: 'bank' | 'cash' | 'wallet'
+  method: Method
   fromCurrency: string
   toCurrency: string
 }>
@@ -593,9 +594,8 @@ const formSuccess = ref<string>('')
 const formInfo = statusMessage
 const isSubmitting = ref(false)
 
-// Computed min/max amounts based on selected currency
-const minAmount = computed(() => getMinAmount(moneyForm.value.fromCurrency || 'USD'))
-const maxAmount = computed(() => getMaxAmount(moneyForm.value.fromCurrency || 'USD'))
+const fallbackMinAmount = computed(() => getMinAmount(moneyForm.value.fromCurrency || 'USD'))
+const fallbackMaxAmount = computed(() => getMaxAmount(moneyForm.value.fromCurrency || 'USD'))
 
 const isCorridorUnavailableError = computed(() => {
   return formError.value === 'Unavailable corridor. Please try another.'
@@ -624,6 +624,20 @@ const { availableFromCurrencies, availableToCurrencies } = useCorridorCurrencies
   fromCurrencyRef,
   toCurrencyRef,
 )
+
+const minAmount = computed(() => fallbackMinAmount.value)
+const maxAmount = computed(() => fallbackMaxAmount.value)
+const inputMin = computed(() => minAmount.value)
+const inputMax = computed(() => maxAmount.value)
+const amountPlaceholder = computed(() => {
+  const currency = moneyForm.value.fromCurrency || 'USD'
+  return `Enter amount (min ${formatCurrency(minAmount.value, currency)})`
+})
+const amountLimits = computed(() => ({
+  minAmount: minAmount.value,
+  maxAmount: maxAmount.value,
+  strict: true,
+}))
 
 watch(
   () => moneyForm.value.from,
@@ -686,21 +700,22 @@ watch(
 )
 
 // Watch for currency changes to adjust amount limits
-watch(() => moneyForm.value.fromCurrency, () => {
-  const currency = moneyForm.value.fromCurrency || 'USD'
-  const currentAmount = moneyForm.value.amount || 0
-  const min = getMinAmount(currency)
-  const max = getMaxAmount(currency)
-  
-  // If current amount is below new minimum, set to minimum
-  if (currentAmount < min) {
-    moneyForm.value.amount = min
-  }
-  // If current amount is above new maximum, set to maximum
-  else if (currentAmount > max) {
-    moneyForm.value.amount = max
-  }
-})
+watch(
+  () => [moneyForm.value.fromCurrency, amountLimits.value.minAmount, amountLimits.value.maxAmount],
+  () => {
+    const currentAmount = moneyForm.value.amount || 0
+    const min = amountLimits.value.minAmount
+    const max = amountLimits.value.maxAmount
+
+    if (min !== null && currentAmount < min) {
+      moneyForm.value.amount = min
+      return
+    }
+    if (max !== null && currentAmount > max) {
+      moneyForm.value.amount = max
+    }
+  },
+)
 
 watch(
   availableToCurrencies,
@@ -729,6 +744,12 @@ defineExpose({
 const { data: recentData } = await useRecentSearches(100)
 
 const mapPreserveAspectRatio = ref('xMidYMid slice')
+
+useHead({
+  link: [
+    { rel: 'preload', as: 'image', href: '/world.webp', type: 'image/webp' },
+  ],
+})
 
 const updateMapPreserveAspectRatio = () => {
   if (typeof window === 'undefined') return
@@ -999,17 +1020,37 @@ const handleAmountBlur = (event: Event) => {
   const currency = moneyForm.value.fromCurrency || 'USD'
   
   // Sanitize amount based on currency limits
-  const sanitized = sanitizeAmount(target.value, currency)
+  const sanitized = sanitizeAmount(target.value, currency, amountLimits.value)
   moneyForm.value.amount = sanitized
   target.value = String(sanitized)
 }
 
 const sanitizeAmountInput = (event: Event) => {
   const target = event.target as HTMLInputElement
+  
+  // Check if all text is currently selected (user likely just pressed Cmd+A)
+  const isAllSelected = target.selectionStart === 0 && target.selectionEnd === target.value.length && target.value.length > 0
+  
+  // Skip sanitization if user just selected all text - let them delete/replace it first
+  if (isSelecting.value || isAllSelected) {
+    // Don't reset isSelecting immediately - let it reset on next keydown
+    // Still update the model value
+    const numValue = parseFloat(target.value)
+    if (!isNaN(numValue) && numValue >= 0) {
+      moneyForm.value.amount = numValue
+    }
+    return
+  }
+  
+  // Preserve selection/cursor position
+  const selectionStart = target.selectionStart ?? 0
+  const selectionEnd = target.selectionEnd ?? 0
+  const hadSelection = selectionStart !== selectionEnd
+  
   let value = target.value
-  const currency = moneyForm.value.fromCurrency || 'USD'
   
   // Remove any non-numeric characters except decimal point
+  const originalValue = value
   value = value.replace(/[^\d.]/g, '')
   
   // Ensure only one decimal point
@@ -1023,17 +1064,65 @@ const sanitizeAmountInput = (event: Event) => {
     value = parts[0] + '.' + parts[1].substring(0, 2)
   }
   
-  // Update the input value
-  if (target.value !== value) {
+  // Only update if value actually changed
+  if (originalValue !== value) {
+    const lengthDiff = value.length - originalValue.length
+    
+    // Calculate new cursor position
+    let newCursorPos = selectionStart
+    if (lengthDiff < 0) {
+      // Characters were removed, cursor might need adjustment
+      const removedBeforeCursor = originalValue.slice(0, selectionStart).replace(/[^\d.]/g, '').length
+      const validCharsBeforeCursor = value.slice(0, removedBeforeCursor).length
+      newCursorPos = Math.max(0, Math.min(validCharsBeforeCursor, value.length))
+    } else {
+      newCursorPos = Math.max(0, Math.min(selectionStart + lengthDiff, value.length))
+    }
+    
     target.value = value
+    
+    // Restore selection or cursor position
+    nextTick(() => {
+      if (hadSelection && !isSelecting.value) {
+        // Try to preserve selection if it existed (but not if we just selected all)
+        const endPos = Math.max(newCursorPos, Math.min(selectionEnd + lengthDiff, value.length))
+        target.setSelectionRange(newCursorPos, endPos)
+      } else if (!isSelecting.value) {
+        target.setSelectionRange(newCursorPos, newCursorPos)
+      }
+    })
   }
   
   // Update the model value (but don't clamp on input, only on blur)
-  const numValue = parseFloat(value)
+  const numValue = parseFloat(value || target.value)
   if (!isNaN(numValue) && numValue >= 0) {
     moneyForm.value.amount = numValue
-  } else if (value === '' || value === '.') {
+  } else if (value === '' || target.value === '') {
     moneyForm.value.amount = 0
+  }
+}
+
+const isSelecting = ref(false)
+
+const handleAmountKeydown = (event: KeyboardEvent) => {
+  // Check if user is selecting all text (Cmd+A or Ctrl+A)
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
+    isSelecting.value = true
+    // Allow default behavior (select all)
+    return
+  }
+  
+  // Check for other selection shortcuts (Cmd+C, Cmd+V, Cmd+X, etc.)
+  if ((event.metaKey || event.ctrlKey) && ['c', 'v', 'x', 'a'].includes(event.key.toLowerCase())) {
+    // Allow these shortcuts, don't interfere
+    return
+  }
+  
+  // Only prevent specific problematic keys
+  if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
+    event.preventDefault()
+  } else {
+    isSelecting.value = false
   }
 }
 
@@ -1061,12 +1150,18 @@ const handleMoneySubmit = async () => {
 
     // Sanitize and validate amount using currency-based limits
     const currency = moneyForm.value.fromCurrency || 'USD'
-    const sanitizedAmount = sanitizeAmount(amount, currency)
+    const sanitizedAmount = sanitizeAmount(amount, currency, amountLimits.value)
     
-    if (!isValidAmount(sanitizedAmount, currency)) {
-      const min = getMinAmount(currency)
-      const max = getMaxAmount(currency)
-      formError.value = `Please enter a valid amount between ${formatCurrency(min, currency)} and ${formatCurrency(max, currency)}.`
+    if (!isValidAmount(sanitizedAmount, currency, amountLimits.value)) {
+      const min = amountLimits.value.minAmount
+      const max = amountLimits.value.maxAmount
+      if (min !== null && max !== null) {
+        formError.value = `Please enter a valid amount between ${formatCurrency(min, currency)} and ${formatCurrency(max, currency)}.`
+      } else if (min !== null) {
+        formError.value = `Please enter an amount of at least ${formatCurrency(min, currency)}.`
+      } else {
+        formError.value = 'Please enter a valid amount.'
+      }
       moneyForm.value.amount = sanitizedAmount
       isSubmitting.value = false
       return

@@ -22,7 +22,7 @@
               1. Enter your details
             </h3>
             <p class="text-sm text-neutral-600">
-              Just enter where you're sending from, where it's going, and the amount. We'll show you the options.
+              Enter where you're sending from, where it's going, and the amount. We show you the options.
             </p>
           </div>
         </div>
@@ -38,7 +38,7 @@
               2. We pull current quotes
             </h3>
             <p class="text-sm text-neutral-600">
-              We grab live quotes from 30+ providers and convert everything into comparable numbers—same amount in, same amount out. Rates are timestamped and updated throughout the day.
+              We pull live quotes and convert everything into comparable numbers using the same amount. Rates are timestamped and updated throughout the day.
             </p>
           </div>
         </div>
@@ -54,7 +54,7 @@
               3. Complete your transfer
             </h3>
             <p class="text-sm text-neutral-600">
-              Pick the provider that looks best, then finish your transfer on their site. Your money never touches our hands.
+              Choose your provider and complete the transfer on their site. Your money never touches our hands.
             </p>
           </div>
         </div>

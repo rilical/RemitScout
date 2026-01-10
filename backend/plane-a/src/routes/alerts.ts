@@ -18,6 +18,12 @@ const pool = getPool(config.db.planeAUrl)
 const alertRepository = new AlertRepository(pool)
 const fxRateRepository = new FxRateRepository(pool)
 const watchlistRepository = new WatchlistRepository(pool)
+const PLUS_ALERTS_SOFT_LIMIT = 16
+const ALERT_COOLDOWN_MINUTES: Record<'realtime' | 'hourly' | 'daily', number> = {
+  realtime: 15,
+  hourly: 60,
+  daily: 1440,
+}
 
 const updateAlertUsage = async (userId: string) => {
   try {
@@ -51,19 +57,26 @@ const updateAlertSchema = z.object({
   enabled: z.boolean().optional(),
 })
 
-async function getAlertLimit(userId: string): Promise<number | 'unlimited'> {
-  const plan = await getUserPlan(pool, userId)
+const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
+  return !!plan
+    && ['plus', 'enterprise'].includes(plan.plan_code)
+    && ['active', 'trialing'].includes(plan.status)
+}
+
+const isActivePlusPlan = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
+  return !!plan && plan.plan_code === 'plus' && ['active', 'trialing'].includes(plan.status)
+}
+
+const resolveAlertLimit = (plan: Awaited<ReturnType<typeof getUserPlan>> | null): number | 'unlimited' => {
   if (!plan) {
-    return 1 // Default free plan limit
+    return 3 // Default free plan limit
   }
   const entitlements = getEntitlementsForPlan(plan.plan_code)
   return entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max
 }
 
-const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
-  return !!plan
-    && ['plus', 'enterprise'].includes(plan.plan_code)
-    && ['active', 'trialing'].includes(plan.status)
+const resolveCooldownMinutes = (frequency: 'realtime' | 'hourly' | 'daily') => {
+  return ALERT_COOLDOWN_MINUTES[frequency] ?? 360
 }
 
 const isValidSendScore = (value: number) => {
@@ -276,51 +289,6 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      // Check quota
-      const limit = await getAlertLimit(user.user_id)
-      if (limit !== 'unlimited') {
-        const count = await getAlertCount(user.user_id)
-        if (count >= limit) {
-          const durationSeconds = (Date.now() - startTime) / 1000
-          recordRequest('POST', '/alerts', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'limit_reached',
-            message: `Free plan supports up to ${limit} alert${limit === 1 ? '' : 's'}.`,
-            limit,
-          }
-        }
-      }
-
-      if (body.rule.metric === 'sendScore') {
-        const plan = await getUserPlan(pool, user.user_id)
-        if (!isPlusEntitled(plan)) {
-          const durationSeconds = (Date.now() - startTime) / 1000
-          recordRequest('POST', '/alerts', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'forbidden',
-            message: 'Smart alerts are available for Plus members only.',
-          }
-        }
-
-        if (!isValidSendScore(body.rule.value)) {
-          const durationSeconds = (Date.now() - startTime) / 1000
-          recordRequest('POST', '/alerts', 400, durationSeconds)
-
-          reply.code(400)
-          return {
-            success: false,
-            error: 'validation_error',
-            message: 'Smart score alerts must be between 0 and 100.',
-          }
-        }
-      }
-
       // Check if alert already exists
       const existing = await alertRepository.findByWatchlistItemAndRule(
         body.watchlistItemId,
@@ -351,6 +319,78 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      const plan = await getUserPlan(pool, user.user_id)
+
+      if ((body.frequency === 'hourly' || body.frequency === 'realtime') && !isPlusEntitled(plan)) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('POST', '/alerts', 403, durationSeconds)
+
+        reply.code(403)
+        return {
+          success: false,
+          error: 'forbidden',
+          message: 'Hourly and real-time alerts are available for Plus members only.',
+        }
+      }
+
+      if (body.rule.metric === 'sendScore') {
+        if (!isPlusEntitled(plan)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'forbidden',
+            message: 'Smart alerts are available for Plus members only.',
+          }
+        }
+
+        if (!isValidSendScore(body.rule.value)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+
+          reply.code(400)
+          return {
+            success: false,
+            error: 'validation_error',
+            message: 'Smart score alerts must be between 0 and 100.',
+          }
+        }
+      }
+
+      // Check quota
+      const limit = resolveAlertLimit(plan)
+      if (limit !== 'unlimited') {
+        const count = await getAlertCount(user.user_id)
+        if (count >= limit) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'limit_reached',
+            message: `Free plan supports up to ${limit} alert${limit === 1 ? '' : 's'}.`,
+            limit,
+          }
+        }
+      } else if (isActivePlusPlan(plan)) {
+        const count = await getAlertCount(user.user_id)
+        if (count >= PLUS_ALERTS_SOFT_LIMIT) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'limit_reached',
+            message: `Plus alerts are capped at ${PLUS_ALERTS_SOFT_LIMIT} for now. Remove one to add another.`,
+            limit: PLUS_ALERTS_SOFT_LIMIT,
+          }
+        }
+      }
+
       // Create alert
       const row = await alertRepository.create({
         watchlist_item_id: body.watchlistItemId,
@@ -360,6 +400,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         currency: body.rule.currency || null,
         frequency: body.frequency,
         enabled: body.enabled,
+        cooldown_minutes: resolveCooldownMinutes(body.frequency),
       })
 
       const durationSeconds = (Date.now() - startTime) / 1000
@@ -478,6 +519,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         threshold?: number
         currency?: string | null
         frequency?: string
+        cooldown_minutes?: number
         enabled?: boolean
       } = {}
 
@@ -498,8 +540,26 @@ export const alertsRoutes = async (app: FastifyInstance) => {
 
       const nextMetric = updates.metric ?? existing.metric
       const nextThreshold = updates.threshold ?? existing.threshold
+      const nextFrequency = body.frequency ?? existing.frequency
+      const requiresPlus = nextMetric === 'sendScore'
+        || nextFrequency === 'hourly'
+        || nextFrequency === 'realtime'
+
+      const plan = requiresPlus ? await getUserPlan(pool, user.user_id) : null
+
+      if ((nextFrequency === 'hourly' || nextFrequency === 'realtime') && !isPlusEntitled(plan)) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
+
+        reply.code(403)
+        return {
+          success: false,
+          error: 'forbidden',
+          message: 'Hourly and real-time alerts are available for Plus members only.',
+        }
+      }
+
       if (nextMetric === 'sendScore') {
-        const plan = await getUserPlan(pool, user.user_id)
         if (!isPlusEntitled(plan)) {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
@@ -527,6 +587,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
 
       if (body.frequency !== undefined) {
         updates.frequency = body.frequency
+        updates.cooldown_minutes = resolveCooldownMinutes(body.frequency)
       }
 
       if (body.enabled !== undefined) {

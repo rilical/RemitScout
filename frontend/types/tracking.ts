@@ -33,7 +33,7 @@ export type AlertComparator = 'gt' | 'gte' | 'lt' | 'lte'
 export type AlertFrequency = 'realtime' | 'hourly' | 'daily'
 
 export type AlertRule = {
-  metric: 'rate' | 'recipientGets' | 'totalCost' | 'fee' | 'index'
+  metric: 'rate' | 'midMarketRate' | 'recipientGets' | 'totalCost' | 'fee' | 'index' | 'sendScore'
   comparator: AlertComparator
   value: number
   currency?: string

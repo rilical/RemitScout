@@ -51,7 +51,7 @@ describe('PopularCorridorRepository', () => {
       expect(result).toHaveLength(2)
       expect(dbModule.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT route'),
-        [],
+        [6],
         mockPool,
       )
     })
@@ -140,6 +140,5 @@ describe('PopularCorridorRepository', () => {
     })
   })
 })
-
 
 

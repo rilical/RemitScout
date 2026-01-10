@@ -96,22 +96,22 @@ export const SAMPLE_PROVIDERS = [
 
 export const TESTIMONIALS = [
   {
-    name: 'Sarah DeAngelo',
-    corridor: '🇺🇸 US → Italy 🇮🇹',
-    useCase: 'Family Christmas treats',
-    quote: 'My parents got €120 more when I sent them holiday money last Christmas. I had no idea banks were charging that much in hidden fees until I compared here.',
+    name: 'Marco Rodriguez',
+    corridor: '🇺🇸 US → Mexico 🇲🇽',
+    useCase: 'Monthly family support',
+    quote: 'I send $400 to my mom monthly. My bank was taking $25-30 in fees and bad rates. Found a better option here—she gets 800 pesos more each month.',
   },
   {
-    name: 'Mars Kapadia',
-    corridor: '🇺🇸 US → India 🇮🇳',
-    useCase: 'Student tuition',
-    quote: 'Saved almost $200 on my sister\'s tuition payment by switching from Western Union. That\'s huge for us. The side-by-side comparison made it so obvious which one to pick.',
+    name: 'Priya Patel',
+    corridor: '🇬🇧 UK → India 🇮🇳',
+    useCase: 'Supporting parents',
+    quote: 'Saved almost ₹3,000 on a £500 transfer for my dad\'s medical expenses. Can\'t believe I almost went with my bank\'s expensive option.',
   },
   {
-    name: 'Kareem Jubair',
-    corridor: '🇵🇱 Poland → Jordan 🇯🇴',
-    useCase: 'Family support',
-    quote: 'I send money back home every month and was just using whatever app I knew. Turns out I was losing like 50-60 złoty each time. Been using the better option for 6 months now.',
+    name: 'Ahmed Hassan',
+    corridor: '🇨🇦 Canada → Egypt 🇪🇬',
+    useCase: 'Regular remittances',
+    quote: 'Used to lose about 200 Egyptian pounds each transfer. Comparing rates here showed me a much better option. Saved over 1,500 pounds in the last few months.',
   },
 ]
 
@@ -257,4 +257,5 @@ export const FEATURE_FLAGS = {
   PULSE_ENABLED: false,
   ENTERPRISE_ENABLED: false,
   DEV_AUTO_LOGIN: false,
+  PULE_ENABLED: false,
 } as const

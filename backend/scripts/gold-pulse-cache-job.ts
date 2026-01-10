@@ -19,7 +19,6 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
-import { pulseDefaults } from '../shared/pulse-defaults'
 import {
   buildPulseCacheKey,
   PULSE_AMOUNTS,
@@ -86,16 +85,6 @@ const { isShutdownRequested } = createShutdownHandler({
       await pool.end()
     }
   },
-})
-
-const buildDefaultEntries = () => ({
-  'pulse:smart-send': pulseDefaults.smartSend,
-  'pulse:market-snapshot': pulseDefaults.marketSnapshot,
-  'pulse:true-cost': pulseDefaults.trueCost,
-  'pulse:market-depth': pulseDefaults.marketDepth,
-  'pulse:arbitrage': pulseDefaults.arbitrage,
-  'pulse:bank-comparison': pulseDefaults.bankComparison,
-  'pulse:cost-trend': pulseDefaults.costTrend,
 })
 
 export const runGoldPulseCacheJob = async (
@@ -186,7 +175,6 @@ export const runGoldPulseCacheJob = async (
       }),
     )
 
-    const defaultEntries = buildDefaultEntries()
     const entries = new Map<string, unknown>()
 
     entries.set('pulse:corridors', corridors)
@@ -254,12 +242,6 @@ export const runGoldPulseCacheJob = async (
       }
 
       filtersProcessed += 1
-    }
-
-    for (const [key, payload] of Object.entries(defaultEntries)) {
-      if (!entries.has(key)) {
-        entries.set(key, payload)
-      }
     }
 
     let upserted = 0

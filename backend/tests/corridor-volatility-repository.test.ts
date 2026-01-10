@@ -9,6 +9,7 @@ describe('CorridorVolatilityRepository', () => {
   let pool: Pool
   let repo: CorridorVolatilityRepository
   let ingestionRunId: string
+  let previousOnDemand: string | undefined
 
   const providerId = 'remitly'
   const corridorId = 'US-PE-USD-PEN'
@@ -34,6 +35,8 @@ describe('CorridorVolatilityRepository', () => {
   }
 
   beforeEach(async () => {
+    previousOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND
+    process.env.VOLATILITY_CACHE_ON_DEMAND = '1'
     pool = createPool(config.db.planeBUrl)
     repo = new CorridorVolatilityRepository(pool)
 
@@ -49,7 +52,7 @@ describe('CorridorVolatilityRepository', () => {
       `INSERT INTO silver.ingestion_run (provider_id, collector_type, status)
        VALUES ($1, $2, $3)
        RETURNING run_id`,
-      [providerId, 'test', 'success'],
+      [providerId, 'b2b_sweep', 'success'],
     )
     ingestionRunId = result.rows[0].run_id
   })
@@ -61,10 +64,25 @@ describe('CorridorVolatilityRepository', () => {
     )
     await pool.query('DELETE FROM silver.quote_record WHERE corridor_id = $1', [corridorId])
     await pool.end()
+    if (previousOnDemand === undefined) {
+      delete process.env.VOLATILITY_CACHE_ON_DEMAND
+    } else {
+      process.env.VOLATILITY_CACHE_ON_DEMAND = previousOnDemand
+    }
   })
 
   it('returns null when corridor has no quote data', async () => {
-    const result = await repo.calculateVolatilityScore('US-MX-USD-MXN')
+    const emptyCorridorId = 'US-MX-USD-MXN'
+    await pool.query(
+      'DELETE FROM silver.quote_record WHERE corridor_id = $1',
+      [emptyCorridorId],
+    )
+    await pool.query(
+      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = $1',
+      [emptyCorridorId],
+    )
+
+    const result = await repo.calculateVolatilityScore(emptyCorridorId)
     expect(result).toBeNull()
   })
 

@@ -222,7 +222,6 @@ export const meRoutes = async (app: FastifyInstance) => {
           user_id: user.user_id,
           email: user.email,
           name: profile?.name ?? null,
-          avatar_url: null,
         },
         plan: {
           plan_code: plan.plan_code,
@@ -296,7 +295,6 @@ export const meRoutes = async (app: FastifyInstance) => {
           user_id: user.user_id,
           email: user.email,
           name: profile?.name ?? null,
-          avatar_url: null,
         },
       }
     } catch (error: unknown) {

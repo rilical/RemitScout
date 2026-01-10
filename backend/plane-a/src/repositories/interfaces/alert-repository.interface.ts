@@ -71,6 +71,7 @@ export interface IAlertRepository {
       threshold?: number
       currency?: string | null
       frequency?: string
+      cooldown_minutes?: number
       enabled?: boolean
     },
   ): Promise<AlertRuleRow | null>
@@ -106,4 +107,3 @@ export interface IAlertRepository {
     state: AlertStateRow | null
   } | null>
 }
-

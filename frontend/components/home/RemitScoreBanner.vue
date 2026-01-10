@@ -26,10 +26,10 @@
                 How We Score Providers
               </h3>
               <p class="text-sm text-neutral-700 mb-3 max-w-3xl leading-relaxed">
-                <span class="font-semibold">Remit‑Score</span> (0–10) is a standardized score designed to summarize value and usability in a single number. It prioritizes what matters most for senders: delivered value and transparency.
+                <span class="font-semibold">Remit‑Score</span> (0–10) shows how much money your recipient actually gets after fees and exchange rates. We look at real quotes—not marketing claims—to calculate each score.
               </p>
               <p class="text-sm text-neutral-600 mb-3 max-w-3xl leading-relaxed">
-                Scores are computed from our quote dataset (fees, implied FX rate vs a mid‑market reference, delivered amount) and other measurable signals where available (e.g., stated ETA, method support, quote availability). Providers cannot pay to rank higher. Affiliate relationships do not influence score calculation.
+                Providers cannot pay to rank higher. Affiliate relationships do not influence scores. Every score reflects real transfer outcomes.
               </p>
               <p class="text-sm text-neutral-600 mb-3 max-w-2xl">
                 <NuxtLink

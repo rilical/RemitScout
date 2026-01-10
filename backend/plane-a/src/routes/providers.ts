@@ -1,16 +1,20 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool, query } from '../../../shared/db'
+import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
-import { COUNTRIES } from '../../../shared/countries-currencies'
+import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
+import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
+import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { createTtlCache } from '../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
 import {
+  CorridorPriorityRepository,
   FxRateRepository,
   LatestQuoteRepository,
+  RightsMatrixRepository,
 } from '../repositories'
 import { getProviderMetadata } from '../services/provider-metadata'
 import type { LatestQuoteByCorridorRecord } from '../repositories/interfaces/latest-quote-repository.interface'
@@ -24,40 +28,26 @@ const normalizeToken = (value: string): string => {
     .replace(/^_|_$/g, '')
 }
 
-const canonicalPayinMethods: readonly string[] = [
-  'bank_transfer',
-  'debit_card',
-  'credit_card',
-  'apple_pay',
-  'google_pay',
+const METHOD_ORDER: Array<'bank' | 'cash' | 'wallet' | 'airtime'> = [
+  'bank',
   'cash',
-  'other',
-]
-
-const canonicalPayoutMethods: readonly string[] = [
-  'bank_deposit',
-  'cash_pickup',
-  'mobile_wallet',
+  'wallet',
   'airtime',
-  'other',
 ]
 
-const toCanonicalPayinMethod = (value?: string | null): string => {
-  if (!value) return 'other'
+const toAvailableMethod = (value?: string | null): 'bank' | 'cash' | 'wallet' | 'airtime' | null => {
+  if (!value) return null
   const token = normalizeToken(value)
-  if (canonicalPayinMethods.includes(token)) {
-    return token
-  }
-  return 'other'
+  if (token === 'bank_deposit') return 'bank'
+  if (token === 'cash_pickup') return 'cash'
+  if (token === 'mobile_wallet') return 'wallet'
+  if (token === 'airtime') return 'airtime'
+  return null
 }
 
-const toCanonicalPayoutMethod = (value?: string | null): string => {
-  if (!value) return 'other'
-  const token = normalizeToken(value)
-  if (canonicalPayoutMethods.includes(token)) {
-    return token
-  }
-  return 'other'
+const orderMethods = (methods: Iterable<'bank' | 'cash' | 'wallet' | 'airtime'>) => {
+  const set = new Set(methods)
+  return METHOD_ORDER.filter((method) => set.has(method))
 }
 
 const toNumberOrNull = (value: unknown): number | null => {
@@ -73,6 +63,8 @@ const logger = createLogger('plane-a.providers')
 const planeAPool = getPool(config.db.planeAUrl)
 const fxRateRepository = new FxRateRepository(planeAPool)
 const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
+const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
+const corridorPriorityRepository = new CorridorPriorityRepository(planeAPool)
 
 type ProviderQuoteResponse = {
   psp: {
@@ -144,7 +136,7 @@ type FrontendProviderQuote = {
   recipientGets: number
   delivery: string
   reliability: number
-  methods: ('bank' | 'cash' | 'wallet')[]
+  methods: ('bank' | 'cash' | 'wallet' | 'airtime')[]
   bestFor: string
   whyThisRanking?: string
   limits?: string
@@ -166,6 +158,18 @@ type ProvidersResponse = {
   midMarketRate?: number | null
   midMarketSource?: string | null
   midMarketUpdatedAt?: string | null
+  availableMethods?: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
+  indices?: CorridorIndices
+}
+
+type CorridorIndices = {
+  teer: number | null
+  rvi: number | null
+  rci: number | null
+  providerCount: number
+  amount: number
+  midMarketRate: number | null
+  weights: 'equal'
 }
 
 const providersCache = createTtlCache<ProvidersResponse>({ namespace: 'plane_a:providers' })
@@ -176,15 +180,31 @@ const querySchema = z.object({
   fromCurrency: z.string().min(3).max(3).optional(),
   toCurrency: z.string().min(3).max(3).optional(),
   amount: z.coerce.number().optional(),
-  method: z.enum(['bank', 'cash', 'wallet']).optional(),
+  method: z.enum(['bank', 'cash', 'wallet', 'airtime']).optional(),
   corridor_id: z.string().optional(),
   amount_bucket: z.coerce.number().int().optional(),
   payin: z.string().optional(),
   payout: z.string().optional(),
+  live: z.coerce.boolean().optional(),
 })
 
-const MIN_SEND_AMOUNT = 50
-const MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
+const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
+const TIER2_FRESHNESS_SECONDS = 120 * 60
+const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
+const loadActiveB2cProviderIdsByCountry = async (
+  sourceCountry: string,
+  destCountry: string,
+): Promise<string[]> => {
+  try {
+    const rows = await rightsMatrixRepository.listActiveB2cProvidersByCountry(
+      sourceCountry,
+      destCountry,
+    )
+    return rows.map(row => row.provider_id).filter(Boolean)
+  } catch {
+    return []
+  }
+}
 
 const toIsoString = (value?: string | Date | null) => {
   if (!value) return null
@@ -198,6 +218,87 @@ const normalizeCurrencyCode = (value?: string | null) => {
   return /^[A-Z]{3}$/.test(trimmed) ? trimmed : null
 }
 
+const isCurrencyAllowedForRequest = (
+  countryCode: string,
+  currency: string,
+  direction: 'source' | 'destination',
+) => {
+  if (isCurrencyAllowedForCountry(countryCode, currency)) return true
+  return direction === 'source'
+    ? isWiseSourceCurrency(currency)
+    : isWiseDestinationCurrency(currency)
+}
+
+const computeCorridorIndices = (
+  quotes: Array<{
+    fxRate: number
+    fee: number
+    hasPromo?: boolean
+    promoInfo?: { fee: number; rate: number } | null
+  }>,
+  amount: number,
+  midMarketRate: number | null,
+): CorridorIndices => {
+  const effectiveRates: number[] = []
+  const costRatios: number[] = []
+
+  for (const quote of quotes) {
+    const promoRate = quote.hasPromo && quote.promoInfo && Number.isFinite(quote.promoInfo.rate)
+      ? Number(quote.promoInfo.rate)
+      : null
+    const promoFee = quote.hasPromo && quote.promoInfo && Number.isFinite(quote.promoInfo.fee)
+      ? Number(quote.promoInfo.fee)
+      : null
+    const rate = promoRate ?? Number(quote.fxRate)
+    const fee = promoFee ?? Number(quote.fee)
+
+    if (!Number.isFinite(amount) || amount <= 0) continue
+    if (!Number.isFinite(rate) || rate <= 0) continue
+    if (!Number.isFinite(fee) || fee < 0) continue
+
+    const amountAfterFee = Math.max(amount - fee, 0)
+    const effectiveRate = (amountAfterFee * rate) / amount
+    if (Number.isFinite(effectiveRate)) {
+      effectiveRates.push(effectiveRate)
+    }
+
+    if (midMarketRate && midMarketRate > 0) {
+      const hiddenMarkup = (amountAfterFee * (midMarketRate - rate)) / midMarketRate
+      const totalCost = fee + (Number.isFinite(hiddenMarkup) ? hiddenMarkup : 0)
+      const ratio = totalCost / amount
+      if (Number.isFinite(ratio)) {
+        costRatios.push(ratio)
+      }
+    }
+  }
+
+  const providerCount = effectiveRates.length
+  let rvi: number | null = null
+  if (providerCount >= 2) {
+    const mean = effectiveRates.reduce((sum, value) => sum + value, 0) / providerCount
+    const variance = effectiveRates.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (providerCount - 1)
+    rvi = Number.isFinite(variance) ? Math.sqrt(variance) : null
+  }
+
+  let rci: number | null = null
+  let teer: number | null = null
+  if (midMarketRate && midMarketRate > 0 && costRatios.length > 0) {
+    rci = costRatios.reduce((sum, value) => sum + value, 0) / costRatios.length
+    const rawTeer = midMarketRate * (1 - rci)
+    teer = Number.isFinite(rawTeer) ? Math.max(0, rawTeer) : null
+  }
+
+  return {
+    teer,
+    rvi,
+    rci,
+    providerCount,
+    amount,
+    midMarketRate: midMarketRate ?? null,
+    weights: 'equal',
+  }
+}
+
 const getBucketCandidates = (amount: number, fallback: number) => {
   const sorted = [...DEFAULT_AMOUNT_BUCKETS]
     .filter(bucket => Number.isFinite(bucket))
@@ -208,30 +309,28 @@ const getBucketCandidates = (amount: number, fallback: number) => {
   return sorted
 }
 
-const getUsdEquivalent = async (amount: number, currency: string) => {
-  if (!Number.isFinite(amount)) return null
-  if (currency === 'USD') return amount
 
-  const fxRateCache = createTtlCache<number>({ namespace: 'plane_a:fx_rate' })
-  const cacheKey = `${currency}:USD`
-  const cached = await fxRateCache.get(cacheKey)
-  if (cached !== null) return amount * cached
-
-  const rate = await fxRateRepository.getRate(currency, 'USD')
-  if (rate && rate !== 0 && Number.isFinite(rate)) {
-    const ttlMs = config.planeA.b2c.fxRateCacheTtlSeconds * 1000
-    await fxRateCache.set(cacheKey, rate, ttlMs)
-    return amount * rate
+const getCorridorMaxAgeSeconds = async (corridorId: string) => {
+  try {
+    const minutes = await corridorPriorityRepository.getFreshnessSloMinutes(corridorId)
+    if (Number.isFinite(minutes)) {
+      const seconds = Math.round(Number(minutes) * 60)
+      return Math.min(
+        Math.max(seconds, TIER2_FRESHNESS_SECONDS),
+        MAX_B2C_QUOTE_AGE_SECONDS,
+      )
+    }
+  } catch (error) {
+    logger.warn('corridor_priority_lookup_failed', {
+      corridor_id: corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
-  const inverse = await fxRateRepository.getRate('USD', currency)
-  if (inverse && inverse !== 0 && Number.isFinite(inverse)) {
-    const ttlMs = config.planeA.b2c.fxRateCacheTtlSeconds * 1000
-    await fxRateCache.set(cacheKey, 1 / inverse, ttlMs)
-    return amount / inverse
-  }
-
-  return null
+  return Math.min(
+    Math.max(DEFAULT_MAX_QUOTE_AGE_SECONDS, TIER2_FRESHNESS_SECONDS),
+    MAX_B2C_QUOTE_AGE_SECONDS,
+  )
 }
 
 
@@ -253,10 +352,18 @@ const mapPayoutMethod = (payout: string): string => {
     'bank_deposit': 'BANK',
     'cash_pickup': 'CASH',
     'mobile_wallet': 'WALLET',
-    'airtime': 'WALLET',
+    'airtime': 'AIRTIME',
     'other': 'BANK',
   }
   return mapping[payout.toLowerCase()] || 'BANK'
+}
+
+const resolveRequestedMethod = (method?: string | null, payout?: string | null) => {
+  if (method && METHOD_ORDER.includes(method as 'bank' | 'cash' | 'wallet' | 'airtime')) {
+    return method as 'bank' | 'cash' | 'wallet' | 'airtime'
+  }
+  const fallback = toAvailableMethod(payout)
+  return fallback ?? 'bank'
 }
 
 const formatTransferTime = (minMinutes: number | null, maxMinutes: number | null) => {
@@ -431,13 +538,11 @@ export const providersRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const { from, to, fromCurrency, toCurrency, amount, method, corridor_id, amount_bucket, payin, payout } = parsed.data
-    const payinExplicit = Boolean(payin)
+    const { from, to, fromCurrency, toCurrency, amount, method, corridor_id, amount_bucket, payout, live } = parsed.data
+    const bypassCache = live === true
 
     let corridorId = corridor_id
     let amountBucket = amount_bucket
-    let payinMethod = payin
-    let payoutMethod = payout
     let requestedAmount = amount
     let approximate = false
 
@@ -454,82 +559,110 @@ export const providersRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] }
     }
 
-    if (from && to && amount) {
-      const sourceCountry = COUNTRIES.find(c => c.code === from.toUpperCase())
-      const destCountry = COUNTRIES.find(c => c.code === to.toUpperCase())
+    if (from && to && amount !== undefined) {
+      const sourceCountry = getCountryByCode(from.toUpperCase())
+      const destCountry = getCountryByCode(to.toUpperCase())
       
       if (!sourceCountry || !destCountry) {
         reply.code(400)
         return { error: 'bad_request', details: [{ message: 'invalid country codes' }] }
       }
 
+      if (normalizedFromCurrency && !isCurrencyAllowedForRequest(sourceCountry.code, normalizedFromCurrency, 'source')) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] }
+      }
+
+      if (normalizedToCurrency && !isCurrencyAllowedForRequest(destCountry.code, normalizedToCurrency, 'destination')) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] }
+      }
+
       const sourceCurrency = normalizedFromCurrency ?? sourceCountry.currency
       const destCurrency = normalizedToCurrency ?? destCountry.currency
       corridorId = `${from.toUpperCase()}-${to.toUpperCase()}-${sourceCurrency}-${destCurrency}`
 
-      const usdEquivalent = await getUsdEquivalent(amount, sourceCurrency)
-      if (usdEquivalent === null) {
-        reply.code(503)
-        return { error: 'fx_unavailable', details: [{ message: 'USD conversion unavailable' }] }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'amount must be a positive number' }] }
       }
 
-      if (usdEquivalent < MIN_SEND_AMOUNT) {
+      const minAmount = getMinAmount(sourceCurrency)
+      const maxAmount = getMaxAmount(sourceCurrency)
+      if (amount < minAmount) {
         reply.code(400)
-        return { error: 'bad_request', details: [{ message: `amount must be >= ${MIN_SEND_AMOUNT} USD equivalent` }] }
+        return { error: 'bad_request', details: [{ message: `amount must be >= ${minAmount} ${sourceCurrency}` }] }
+      }
+      if (amount > maxAmount) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: `amount must be <= ${maxAmount} ${sourceCurrency}` }] }
       }
 
       const bucketSelection = computeBucketSelection(amount)
       amountBucket = bucketSelection.bucket_used
       approximate = bucketSelection.approximate
       requestedAmount = amount
-
-      if (method === 'bank') {
-        payinMethod = 'bank_transfer'
-        payoutMethod = 'bank_deposit'
-      } else if (method === 'cash') {
-        payinMethod = 'bank_transfer'
-        payoutMethod = 'cash_pickup'
-      } else if (method === 'wallet') {
-        payinMethod = 'bank_transfer'
-        payoutMethod = 'mobile_wallet'
-      }
     }
 
-    if (!corridorId || amountBucket === undefined || !payinMethod || !payoutMethod) {
+    if (!corridorId || amountBucket === undefined) {
       reply.code(400)
       return { error: 'bad_request', details: [{ message: 'missing required parameters' }] }
     }
 
-    const normalizedPayin = toCanonicalPayinMethod(payinMethod)
-    const normalizedPayout = toCanonicalPayoutMethod(payoutMethod)
-
-    if (normalizedPayin === 'other' || normalizedPayout === 'other') {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'invalid payin or payout method' }] }
-    }
-
-    const payinCandidates = payinExplicit
-      ? [normalizedPayin]
-      : [normalizedPayin]
-    const payinKey = payinCandidates.join('|')
     const amountKey = requestedAmount ?? amountBucket
+    const requestedMethod = resolveRequestedMethod(method, payout)
+    const availableMethods = new Set<'bank' | 'cash' | 'wallet' | 'airtime'>()
+    const methodsByProvider = new Map<string, Set<'bank' | 'cash' | 'wallet' | 'airtime'>>()
 
     try {
-      const cacheKey = `providers:${corridorId}:${amountBucket}:${amountKey}:${payinKey}:${normalizedPayout}`
-      const cached = await providersCache.get(cacheKey)
-      if (cached !== null) {
-        logger.debug('providers_cache_hit', { cache_key: cacheKey })
-        return cached
+      const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
+      const cacheKey = `providers:${corridorId}:${amountBucket}:${amountKey}:${requestedMethod}:${maxAgeSeconds}`
+      if (!bypassCache) {
+        const cached = await providersCache.get(cacheKey)
+        if (cached !== null) {
+          logger.debug('providers_cache_hit', { cache_key: cacheKey })
+          return cached
+        }
       }
 
       const corridorParts = parseCorridorId(corridorId)
+      if (!corridorParts) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'invalid corridor_id' }] }
+      }
+      const sourceCountry = corridorParts.sourceCountry.toUpperCase()
+      const destCountry = corridorParts.destCountry.toUpperCase()
+      const sourceCurrency = corridorParts.sourceCurrency.toUpperCase()
+      const destCurrency = corridorParts.destCurrency.toUpperCase()
+      if (!isCurrencyAllowedForRequest(sourceCountry, sourceCurrency, 'source')) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] }
+      }
+      if (!isCurrencyAllowedForRequest(destCountry, destCurrency, 'destination')) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] }
+      }
+
+      if (!Number.isFinite(amountKey) || amountKey <= 0) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: 'amount must be a positive number' }] }
+      }
+      const minAmount = getMinAmount(sourceCurrency)
+      const maxAmount = getMaxAmount(sourceCurrency)
+      if (amountKey < minAmount) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: `amount must be >= ${minAmount} ${sourceCurrency}` }] }
+      }
+      if (amountKey > maxAmount) {
+        reply.code(400)
+        return { error: 'bad_request', details: [{ message: `amount must be <= ${maxAmount} ${sourceCurrency}` }] }
+      }
+
       let bucketUsed = amountBucket
-      let quotes = await latestQuoteRepository.listLatestByCorridorPayins(
+      let quotes = await latestQuoteRepository.listLatestByCorridorAllMethods(
         corridorId,
         amountBucket,
-        payinCandidates,
-        normalizedPayout,
-        MAX_QUOTE_AGE_SECONDS || undefined,
+        maxAgeSeconds || undefined,
       )
 
       if (!Array.isArray(quotes)) {
@@ -541,12 +674,10 @@ export const providersRoutes = async (app: FastifyInstance) => {
         const candidates = getBucketCandidates(requestedAmount, amountBucket)
         for (const candidate of candidates) {
           if (candidate === amountBucket) continue
-          const fallbackQuotes = await latestQuoteRepository.listLatestByCorridorPayins(
+          const fallbackQuotes = await latestQuoteRepository.listLatestByCorridorAllMethods(
             corridorId,
             candidate,
-            payinCandidates,
-            normalizedPayout,
-            MAX_QUOTE_AGE_SECONDS || undefined,
+            maxAgeSeconds || undefined,
           )
           if (Array.isArray(fallbackQuotes) && fallbackQuotes.length) {
             quotes = fallbackQuotes
@@ -557,14 +688,32 @@ export const providersRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      for (const quote of quotes) {
+        const methodValue = toAvailableMethod(quote.payout)
+        if (!methodValue) continue
+        availableMethods.add(methodValue)
+        const metadata = getProviderMetadata(quote.provider_id)
+        if (!metadata) continue
+        const key = metadata.slug
+        if (!methodsByProvider.has(key)) {
+          methodsByProvider.set(key, new Set())
+        }
+        methodsByProvider.get(key)!.add(methodValue)
+      }
+
+      const filteredQuotes = quotes.filter((quote) => {
+        const methodValue = toAvailableMethod(quote.payout)
+        return methodValue === requestedMethod
+      })
+
       let midMarketRate: number | null = null
       let midMarketSource: string | null = null
       let midMarketUpdatedAt: string | null = null
 
       if (corridorParts) {
         const rateRecord = await fxRateRepository.getRateRecord(
-          corridorParts.sourceCurrency,
-          corridorParts.destCurrency,
+          sourceCurrency,
+          destCurrency,
         )
         const rate = toNumberOrNull(rateRecord?.rate)
         if (rate && rate > 0) {
@@ -574,55 +723,26 @@ export const providersRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      if (!quotes.length) {
-        const supportResult = await query<{
-          payin_methods: string[] | null
-          payout_methods: string[] | null
-          is_supported: boolean
-        }>(
-          `SELECT payin_methods, payout_methods, is_supported
-           FROM silver.provider_corridor_capability
-           WHERE corridor_id = $1`,
-          [corridorId],
-          planeAPool,
+      if (!filteredQuotes.length) {
+        const supportedProviders = await loadActiveB2cProviderIdsByCountry(
+          sourceCountry,
+          destCountry,
         )
-
-        if (supportResult.rows.length > 0) {
-          const supportedRows = supportResult.rows.filter(row => row.is_supported)
-
-          if (!supportedRows.length) {
-            reply.code(404)
-            return {
-              error: 'corridor_unsupported',
-              message: 'Providers explicitly mark this corridor as unsupported.',
-              corridor: corridorId,
-            }
-          }
-
-          const methodSupported = supportedRows.some((row) => {
-            const payinMethods = row.payin_methods
-            const payoutMethods = row.payout_methods
-            const payinOk = !Array.isArray(payinMethods) || payinMethods.length === 0
-              || payinMethods.includes(normalizedPayin)
-            const payoutOk = !Array.isArray(payoutMethods) || payoutMethods.length === 0
-              || payoutMethods.includes(normalizedPayout)
-            return payinOk && payoutOk
-          })
-
-          if (!methodSupported) {
-            reply.code(404)
-            return {
-              error: 'corridor_unavailable',
-              message: 'No providers currently support this corridor.',
-              corridor: corridorId,
-            }
+        if (supportedProviders.length === 0) {
+          reply.code(404)
+          return {
+            error: 'corridor_unsupported',
+            message: 'No providers currently support this corridor.',
+            corridor: corridorId,
+            availableMethods: orderMethods(availableMethods),
           }
         }
       }
 
-      const providerQuotes = groupQuotesByProvider(quotes)
+      const providerQuotes = groupQuotesByProvider(filteredQuotes)
 
-      if (!midMarketRate && providerQuotes.length >= 2) {
+      const allowProviderWeightedMidMarket = config.planeA.b2c.providerWeightedMidMarketEnabled
+      if (!midMarketRate && allowProviderWeightedMidMarket && providerQuotes.length >= 2) {
         const bestQuotes = providerQuotes
           .map(pq => selectBestQuote(pq.quotes))
           .filter((quote): quote is TransformedQuote => Boolean(quote))
@@ -687,23 +807,20 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
         const deliveryLabel = quote.deliveryLabel
 
-        const methods: ('bank' | 'cash' | 'wallet')[] = []
-        if (quote.payout === 'BANK' || quote.payout === 'CARD') {
-          methods.push('bank')
-        } else if (quote.payout === 'CASH') {
-          methods.push('cash')
-        } else if (quote.payout === 'WALLET') {
-          methods.push('wallet')
-        }
-        
-        if (methods.length === 0) {
-          methods.push('bank')
-        }
+        const providerMethods = methodsByProvider.get(pq.psp.slug)
+        const methods = providerMethods && providerMethods.size
+          ? orderMethods(providerMethods)
+          : (() => {
+              const fallback = toAvailableMethod(quote.originalQuote.payout)
+              return fallback ? [fallback] : ['bank']
+            })()
 
         const bestFor = quote.payout === 'CASH'
           ? 'Fast cash pickup'
           : quote.payout === 'WALLET'
           ? 'Mobile wallet delivery'
+          : quote.payout === 'AIRTIME'
+          ? 'Airtime top up'
           : 'Bank deposit'
 
         const whyThisRanking = quote.promos.length > 0
@@ -740,28 +857,55 @@ export const providersRoutes = async (app: FastifyInstance) => {
         }]
       })
 
+      for (const quote of flattenedQuotes) {
+        if (!Array.isArray(quote.methods)) continue
+        for (const method of quote.methods) {
+          availableMethods.add(method)
+        }
+      }
+
+      let latestCollectedAt: string | null = null
+      if (filteredQuotes.length) {
+        let latestTs = 0
+        for (const quote of filteredQuotes) {
+          if (!quote.collected_at) continue
+          const ts = new Date(quote.collected_at).getTime()
+          if (Number.isFinite(ts) && ts > latestTs) {
+            latestTs = ts
+          }
+        }
+        if (latestTs > 0) {
+          latestCollectedAt = new Date(latestTs).toISOString()
+        }
+      }
+
+      const amountForIndices = requestedAmount || amountBucket
+      const indices = computeCorridorIndices(flattenedQuotes, amountForIndices, midMarketRate ?? null)
+
       const response = {
         data: flattenedQuotes,
-        updatedAt: new Date().toISOString(),
+        updatedAt: latestCollectedAt ?? new Date().toISOString(),
         corridor: corridorId,
         amount: requestedAmount || amountBucket,
-        method: method || 'bank',
+        method: requestedMethod,
         bucketUsed,
         approximate,
         midMarketRate: midMarketRate ?? null,
         midMarketSource: midMarketSource ?? null,
         midMarketUpdatedAt,
+        availableMethods: orderMethods(availableMethods),
+        indices,
       }
 
-      // Tune cache TTL for production (longer) vs development (shorter)
-      const ttlMs = config.env === 'production' ? 120 * 1000 : 30 * 1000
-      await providersCache.set(cacheKey, response, ttlMs)
+      if (!bypassCache) {
+        // Tune cache TTL for production (longer) vs development (shorter)
+        const ttlMs = config.env === 'production' ? 120 * 1000 : 30 * 1000
+        await providersCache.set(cacheKey, response, ttlMs)
+      }
 
       try {
-        if (corridorParts) {
-          recordQuoteRequest(corridorId, bucketUsed)
-          recordSearch(corridorParts.sourceCountry, corridorParts.destCountry)
-        }
+        recordQuoteRequest(corridorId, bucketUsed)
+        recordSearch(sourceCountry, destCountry)
       } catch {
         // Silently ignore metrics errors
       }

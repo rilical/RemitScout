@@ -7,6 +7,8 @@ type MockSession = {
   customer: string
   status: string
   payment_status: string
+  success_url?: string
+  cancel_url?: string
 }
 
 type MockSubscription = {
@@ -75,14 +77,19 @@ export const createMockStripeClient = (): Stripe => {
     },
     checkout: {
       sessions: {
-        create: async (params: { customer: string }) => {
+        create: async (params: { customer: string; success_url?: string; cancel_url?: string }) => {
           const id = makeId('cs')
+          const rawSuccessUrl = params.success_url || `${frontendBase}/plus/success?session_id=${id}`
+          const successUrl = rawSuccessUrl.replace('{CHECKOUT_SESSION_ID}', id)
+          const cancelUrl = params.cancel_url || `${frontendBase}/plus/failed?checkout=cancel`
           const session: MockSession = {
             id,
-            url: `${frontendBase}/mock-stripe/checkout?session_id=${id}`,
+            url: `${frontendBase}/mock-stripe/checkout?session_id=${id}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`,
             customer: params.customer,
             status: 'complete',
             payment_status: 'paid',
+            success_url: successUrl,
+            cancel_url: cancelUrl,
           }
           sessions.set(id, session)
           return session
@@ -114,8 +121,8 @@ export const createMockStripeClient = (): Stripe => {
     },
     billingPortal: {
       sessions: {
-        create: async () => ({
-          url: `${frontendBase}/mock-stripe/portal`,
+        create: async (params?: { return_url?: string }) => ({
+          url: `${frontendBase}/mock-stripe/portal${params?.return_url ? `?return_url=${encodeURIComponent(params.return_url)}` : ''}`,
         }),
       },
     },

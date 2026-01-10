@@ -18,6 +18,9 @@ const trackSchema = z.object({
   target_url: z.string().min(1),
   page_path: z.string().optional(),
   utm: z.record(z.string()).optional(),
+  gclid: z.string().optional(),
+  fbclid: z.string().optional(),
+  msclkid: z.string().optional(),
   quoted_rate: z.coerce.number().positive().optional(),
   quoted_fee: z.coerce.number().nonnegative().optional(),
 })
@@ -72,6 +75,9 @@ export const providerVisitRoutes = async (app: FastifyInstance) => {
         target_url: sanitizeTargetUrl(input.target_url),
         page_path: input.page_path ?? null,
         utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
         quoted_rate: input.quoted_rate ?? null,
         quoted_fee: input.quoted_fee ?? null,
       })

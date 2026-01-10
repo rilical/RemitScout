@@ -6,6 +6,12 @@ export type QuoteRefreshRequestInput = {
   payoutMethod: string
 }
 
+export type QuoteRefreshStatusCount = {
+  status: string
+  count: number
+}
+
 export interface IQuoteRefreshRepository {
   enqueueRequest(input: QuoteRefreshRequestInput): Promise<string | null>
+  listStatusCounts(requestIds: string[]): Promise<QuoteRefreshStatusCount[]>
 }

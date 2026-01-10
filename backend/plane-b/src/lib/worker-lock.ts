@@ -7,9 +7,11 @@
  */
 
 import { getRedisClient } from '../../../shared/redis'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 
 const logger = createLogger('plane-b.worker-lock')
+const localLocks = new Map<string, { value: string; expiresAt: number }>()
 
 /**
  * Distributed lock for worker processes.
@@ -46,6 +48,17 @@ export class WorkerLock {
     try {
       this.client = await getRedisClient()
       if (!this.client) {
+        if (config.env !== 'production') {
+          const now = Date.now()
+          const existing = localLocks.get(this.lockKey)
+          if (existing && existing.expiresAt > now) {
+            logger.warn('lock_already_held', { lock_key: this.lockKey, mode: 'local' })
+            return false
+          }
+          localLocks.set(this.lockKey, { value: this.lockValue, expiresAt: now + this.ttlSeconds * 1000 })
+          logger.info('lock_acquired', { lock_key: this.lockKey, ttl_seconds: this.ttlSeconds, mode: 'local' })
+          return true
+        }
         logger.error('lock_acquire_failed', {
           lock_key: this.lockKey,
           reason: 'redis_unavailable',
@@ -82,7 +95,22 @@ export class WorkerLock {
    * Returns true if the lock was extended, false otherwise.
    */
   async extend(ttlSeconds = this.ttlSeconds): Promise<boolean> {
-    if (!this.client) return false
+    if (!this.client) {
+      if (config.env === 'production') return false
+      const current = localLocks.get(this.lockKey)
+      if (!current || current.value !== this.lockValue) {
+        logger.warn('lock_extend_skipped', {
+          lock_key: this.lockKey,
+          current_value: current?.value,
+          expected_value: this.lockValue,
+          mode: 'local',
+        })
+        return false
+      }
+      localLocks.set(this.lockKey, { value: this.lockValue, expiresAt: Date.now() + ttlSeconds * 1000 })
+      logger.debug('lock_extended', { lock_key: this.lockKey, ttl_seconds: ttlSeconds, mode: 'local' })
+      return true
+    }
 
     if (!Number.isFinite(ttlSeconds) || ttlSeconds <= 0) {
       logger.warn('lock_extend_invalid_ttl', {
@@ -126,7 +154,15 @@ export class WorkerLock {
    * Only releases if the lock value matches (prevents releasing another process's lock).
    */
   async release(): Promise<void> {
-    if (!this.client) return
+    if (!this.client) {
+      if (config.env === 'production') return
+      const current = localLocks.get(this.lockKey)
+      if (current?.value === this.lockValue) {
+        localLocks.delete(this.lockKey)
+        logger.info('lock_released', { lock_key: this.lockKey, mode: 'local' })
+      }
+      return
+    }
 
     try {
       const current = await this.client.get(this.lockKey)
@@ -148,4 +184,3 @@ export class WorkerLock {
     }
   }
 }
-

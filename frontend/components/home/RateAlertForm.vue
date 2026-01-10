@@ -65,7 +65,7 @@
             </div>
 
             <div class="flex items-baseline gap-2 mb-4">
-              <span class="text-3xl font-bold text-neutral-900">1 {{ fromCurrencyDisplay }} = {{ currentRate.toFixed(4) }} {{ toCurrencyDisplay }}</span>
+              <span class="text-3xl font-bold text-neutral-900">1 {{ fromCurrencyDisplay }} = {{ currentRateDisplay }} {{ toCurrencyDisplay }}</span>
               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-700">
                 <svg
                   class="h-3 w-3 mr-1"
@@ -86,10 +86,10 @@
 
             <div class="grid grid-cols-2 gap-4 text-xs text-neutral-600 mb-4">
               <div>
-                <span class="block">Bid: {{ (currentRate - 0.001).toFixed(4) }}</span>
+                <span class="block">Bid: {{ bidRateDisplay }}</span>
               </div>
               <div>
-                <span class="block">Ask: {{ (currentRate + 0.001).toFixed(4) }}</span>
+                <span class="block">Ask: {{ askRateDisplay }}</span>
               </div>
             </div>
           </div>
@@ -107,7 +107,14 @@
               </div>
             </div>
 
+            <div v-if="historyLoading" class="flex h-48 items-center justify-center text-xs text-neutral-500">
+              Loading rate history...
+            </div>
+            <div v-else-if="historicalData.length === 0" class="flex h-48 items-center justify-center text-xs text-neutral-500">
+              No rate history yet.
+            </div>
             <svg
+              v-else
               :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
               class="w-full h-48"
               preserveAspectRatio="none"
@@ -158,7 +165,7 @@
               </circle>
             </svg>
 
-            <div class="flex justify-between text-xs text-neutral-500 mt-2">
+            <div v-if="historicalData.length > 0" class="flex justify-between text-xs text-neutral-500 mt-2">
               <span>{{ chartDateLabels[0] }}</span>
               <span>{{ chartDateLabels[Math.floor(chartDateLabels.length / 2)] }}</span>
               <span>{{ chartDateLabels[chartDateLabels.length - 1] }}</span>
@@ -167,8 +174,8 @@
 
           <div class="mt-4 text-xs text-neutral-500">
             <p>Last updated: {{ lastUpdatedText }}</p>
-            <p class="mt-1 italic">
-              Historical trends for illustration purposes
+            <p v-if="historyError" class="mt-1 italic">
+              {{ historyError }}
             </p>
           </div>
         </div>
@@ -244,7 +251,7 @@
                   id="target-rate"
                   v-model="targetRate"
                   type="text"
-                  :placeholder="`e.g. ${currentRate.toFixed(4)}`"
+                  :placeholder="`e.g. ${currentRateDisplay}`"
                   class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
                   :class="errors.targetRate ? 'border-danger-600' : ''"
                   @blur="validateRate"
@@ -331,33 +338,11 @@ const chartWidth = 800
 const chartHeight = 180
 const chartPadding = 10
 
-// TODO: Replace with real historical rate data from API (e.g., OANDA, XE, or similar provider)
-// Current implementation uses illustrative data for demonstration purposes only
-const generateHistoricalData = (days = 30) => {
-  const data = []
-  // Using a deterministic seed based on currency pair for consistent demo data
-  const seed = (selectedFromCountry.value + selectedToCountry.value).length
-  const baseRate = 0.85 + (seed % 10) / 100
-  const today = new Date()
-
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-
-    // Deterministic variation instead of random for consistency
-    const variation = (Math.sin(i / 5) * 0.02) + (Math.sin(i / 3) * 0.01)
-    const rate = Math.max(0.01, baseRate + variation)
-
-    data.push({
-      date: date.toISOString().split('T')[0],
-      rate: rate,
-    })
-  }
-
-  return data
-}
-
-const historicalData = ref(generateHistoricalData(30))
+const { request } = useApi()
+const historicalData = ref<Array<{ date: string; rate: number }>>([])
+const historyLoading = ref(false)
+const historyError = ref<string | null>(null)
+const historyLastUpdated = ref<string | null>(null)
 
 const fromCountryData = computed(() => getCountry(selectedFromCountry.value))
 const toCountryData = computed(() => getCountry(selectedToCountry.value))
@@ -372,16 +357,29 @@ const currentRate = computed(() => {
   if (historicalData.value.length > 0) {
     return historicalData.value[historicalData.value.length - 1].rate
   }
-  return 0.85
+  return 0
 })
 
-const minRate = computed(() => Math.min(...historicalData.value.map(d => d.rate)))
-const maxRate = computed(() => Math.max(...historicalData.value.map(d => d.rate)))
+const hasHistory = computed(() => historicalData.value.length > 0)
+const currentRateDisplay = computed(() => (hasHistory.value ? currentRate.value.toFixed(4) : 'n/a'))
+const bidRateDisplay = computed(() => (hasHistory.value ? (currentRate.value - 0.001).toFixed(4) : 'n/a'))
+const askRateDisplay = computed(() => (hasHistory.value ? (currentRate.value + 0.001).toFixed(4) : 'n/a'))
+
+const minRate = computed(() => {
+  if (historicalData.value.length === 0) return 0
+  return Math.min(...historicalData.value.map(d => d.rate))
+})
+const maxRate = computed(() => {
+  if (historicalData.value.length === 0) return 0
+  return Math.max(...historicalData.value.map(d => d.rate))
+})
 
 const chartPoints = computed(() => {
+  if (historicalData.value.length === 0) return []
   return historicalData.value.map((d, idx) => {
     const x = chartPadding + (idx / (historicalData.value.length - 1)) * (chartWidth - 2 * chartPadding)
-    const normalizedY = (d.rate - minRate.value) / (maxRate.value - minRate.value)
+    const range = maxRate.value - minRate.value || 1
+    const normalizedY = (d.rate - minRate.value) / range
     const y = chartHeight - chartPadding - (normalizedY * (chartHeight - 2 * chartPadding))
 
     return {
@@ -434,8 +432,33 @@ const formatChartTooltip = (rate: number, date: string) => {
   return `${formatDateLabel(date)}: ${rate.toFixed(4)}`
 }
 
+const loadHistory = async () => {
+  historyLoading.value = true
+  historyError.value = null
+  try {
+    const base = fromCurrencyDisplay.value
+    const quote = toCurrencyDisplay.value
+    const response = await request<{ history?: Array<{ date: string; rate: number }>; lastUpdated?: string }>(
+      '/rates/history',
+      {
+        query: { base, quote, days: 30 },
+      },
+    )
+    historicalData.value = Array.isArray(response.history)
+      ? response.history.map(entry => ({ date: entry.date, rate: Number(entry.rate) }))
+      : []
+    historyLastUpdated.value = response.lastUpdated || null
+  } catch (error) {
+    historyError.value = 'Rate history unavailable.'
+    historicalData.value = []
+    historyLastUpdated.value = null
+  } finally {
+    historyLoading.value = false
+  }
+}
+
 const lastUpdatedText = computed(() => {
-  const date = new Date()
+  const date = historyLastUpdated.value ? new Date(historyLastUpdated.value) : new Date()
   return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -506,8 +529,11 @@ const handleSubmit = async () => {
   }
 }
 
+watch([fromCurrencyDisplay, toCurrencyDisplay], () => {
+  void loadHistory()
+}, { immediate: true })
+
 watch([selectedFromCountry, selectedToCountry], () => {
-  historicalData.value = generateHistoricalData(30)
   submitted.value = false
   email.value = ''
   targetRate.value = ''

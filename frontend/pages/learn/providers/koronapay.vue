@@ -861,20 +861,11 @@
 
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 definePageMeta({
   alias: ['/reviews/koronapay'],
-})
-
-useHead({
-  title: 'KoronaPay Review 2024 - Remit-Score 8.3/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent KoronaPay review with Remit-Score 8.3/10. Cash pickup strength, good speed, delivered value varies by corridor. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
 })
 
 const breadcrumbItems = [
@@ -885,12 +876,26 @@ const breadcrumbItems = [
 ]
 
 const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 setSeo({
   title: 'KoronaPay Review 2024 - Remit-Score 8.3/10 | Remit-Scout',
   description: 'Independent KoronaPay review with Remit-Score 8.3/10. Cash pickup strength, good speed, delivered value varies by corridor. Detailed breakdown of fees, speed, and delivered value.',
   canonical: `${siteUrl}/learn/providers/koronapay`,
+  ogImage: `${siteUrl}/og-images/provider-koronapay.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `KoronaPay earns a Remit-Score of 8.3/10 based on our independent analysis. The provider shows cash pickup strength with good speed, though delivered value varies by corridor. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'KoronaPay',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.3,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 jsonLdBreadcrumb([

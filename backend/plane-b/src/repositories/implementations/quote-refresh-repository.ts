@@ -58,6 +58,51 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
     return result.rows
   }
 
+  async claimRequestById(
+    requestId: string,
+    maxRetries: number,
+    retryCount?: number,
+  ): Promise<QuoteRefreshRequestRecord | null> {
+    const result = await query<QuoteRefreshRequestRecord>(
+      `WITH next AS (
+         SELECT request_id
+           FROM silver.quote_refresh_request
+          WHERE request_id = $1
+            AND (
+              status = $2
+              OR (status = $3 AND retry_count < $4)
+            )
+          FOR UPDATE
+       )
+       UPDATE silver.quote_refresh_request AS req
+          SET status = $5,
+              locked_at = NOW(),
+              retry_count = CASE
+                WHEN $6 IS NULL THEN req.retry_count
+                ELSE GREATEST(req.retry_count, $6)
+              END
+        FROM next
+        WHERE req.request_id = next.request_id
+        RETURNING req.request_id,
+                  req.provider_id,
+                  req.corridor_id,
+                  req.amount_bucket,
+                  req.payin_method,
+                  req.payout_method,
+                  req.retry_count`,
+      [
+        requestId,
+        QuoteRefreshStatus.PENDING,
+        QuoteRefreshStatus.FAILED,
+        maxRetries,
+        QuoteRefreshStatus.PROCESSING,
+        retryCount ?? null,
+      ],
+      this.pool,
+    )
+    return result.rows[0] ?? null
+  }
+
   async markRequestStatus(
     requestId: string,
     status: QuoteRefreshStatusValue,

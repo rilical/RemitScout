@@ -23,7 +23,6 @@ export type AccountDeletionResult = {
 
 type UserAccountRow = {
   email: string | null
-  avatar_url: string | null
 }
 
 const deleteExportObjects = async (keys: string[], warnings: string[]) => {
@@ -73,7 +72,7 @@ export const deleteUserAccount = async (
   const warnings: string[] = []
 
   const accountResult = await query<UserAccountRow>(
-    `SELECT email, avatar_url
+    `SELECT email
      FROM silver.user_account
      WHERE user_id = $1`,
     [userId],
@@ -103,7 +102,6 @@ export const deleteUserAccount = async (
 
   const beforeSnapshot = {
     email: account.email,
-    avatar_url: account.avatar_url,
     plan_code: plan?.plan_code ?? null,
   }
 

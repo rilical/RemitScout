@@ -34,6 +34,23 @@
     <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
+          <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
+            <h2 class="text-xl font-bold text-neutral-900 mb-3">Quick takeaways</h2>
+            <ul class="space-y-2 text-base text-neutral-700">
+              <li class="flex items-start gap-2">
+                <span class="text-brand-600 mt-1">•</span>
+                <span>Payout method is the biggest speed lever—mobile and cash tend to be fastest.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-brand-600 mt-1">•</span>
+                <span>Weekends, holidays, and verification checks add delays.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-brand-600 mt-1">•</span>
+                <span>Faster usually costs more; match speed to urgency.</span>
+              </li>
+            </ul>
+          </div>
           <!-- Speed Buckets -->
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -214,7 +231,6 @@ jsonLdBreadcrumb([
   { name: 'Transfer Speed', url: `${siteUrl}/learn/how-fast-is-international-money-transfer` },
 ])
 </script>
-
 
 
 

@@ -37,6 +37,7 @@ import {
 import { dispatchSignal } from '../../notifications/dispatcher'
 import { writeBronzePayload } from '../../collectors/bronze-writer'
 import { createScheduler } from '../../collectors/scheduler'
+import { resolveRateLimitScope } from '../../collectors/rate-limit-scope'
 import type { CollectorRequest } from '../../collectors/types'
 import { LatestQuoteRepository, ProviderCapabilityRepository } from '../../repositories'
 import { normalizeQuote } from '../../normalize/quote-normalizer'
@@ -162,6 +163,7 @@ export const runWellsFargoCollector = async (options: WellsFargoCollectorOptions
     globalEnabled: Boolean(config.redis.url),
     locale,
     perLocale: httpLimits.perLocale,
+    scope: resolveRateLimitScope(collectorType),
   })
   let attemptCount = 0
   let successCount = 0

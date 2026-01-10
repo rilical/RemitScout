@@ -2,9 +2,9 @@
 import { ref, computed, watch } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
-import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
-const { form, validationError, submit, DELIVERY_METHODS } = useCompareForm()
+const { form, validationError, submit, DELIVERY_METHODS, statusMessage, isWaitingForQuotes } = useCompareForm()
 
 const defaultCurrencyByCountry: Record<string, string> = {
   US: 'USD', UK: 'GBP', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
@@ -47,6 +47,26 @@ const availableToCurrencies = computed(() => {
     })
 })
 
+const amountLimits = computed(() => {
+  const currency = (form.value.fromCurrency || resolveCurrency(form.value.from)).toUpperCase()
+  return {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+  }
+})
+
+const clampAmount = () => {
+  const currency = (form.value.fromCurrency || resolveCurrency(form.value.from)).toUpperCase()
+  const sanitized = sanitizeAmount(form.value.amount, currency, {
+    minAmount: amountLimits.value.minAmount,
+    maxAmount: amountLimits.value.maxAmount,
+    strict: true,
+  })
+  if (sanitized !== form.value.amount) {
+    form.value.amount = sanitized
+  }
+}
+
 watch(() => form.value.from, (newCountry) => {
   if (newCountry) {
     const newCurrency = resolveCurrency(newCountry)
@@ -54,6 +74,7 @@ watch(() => form.value.from, (newCountry) => {
       form.value.fromCurrency = newCurrency
     }
   }
+  clampAmount()
 })
 
 watch(() => form.value.to, (newCountry) => {
@@ -67,6 +88,16 @@ watch(() => form.value.to, (newCountry) => {
     form.value.toCurrency = ''
   }
 })
+
+watch(() => form.value.fromCurrency, () => {
+  clampAmount()
+})
+
+watch(() => form.value.amount, () => {
+  clampAmount()
+})
+
+clampAmount()
 
 const handleSubmit = async () => {
   await submit()
@@ -121,8 +152,9 @@ const handleSubmit = async () => {
             id="header-amount"
             v-model.number="form.amount"
             type="number"
-            min="1"
-            step="1"
+            :min="amountLimits.minAmount"
+            :max="amountLimits.maxAmount"
+            step="0.01"
             class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
             placeholder="500"
           >
@@ -149,9 +181,11 @@ const handleSubmit = async () => {
 
         <button
           type="submit"
-          class="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          :disabled="isWaitingForQuotes"
+          class="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Compare
+          <span v-if="isWaitingForQuotes">Checking...</span>
+          <span v-else>Compare</span>
           <svg
             class="h-4 w-4"
             fill="none"
@@ -175,6 +209,15 @@ const handleSubmit = async () => {
         class="mt-3 text-sm text-red-600"
       >
         {{ validationError }}
+      </div>
+
+      <div
+        v-else-if="statusMessage"
+        role="status"
+        aria-live="polite"
+        class="mt-3 text-sm text-slate-600"
+      >
+        {{ statusMessage }}
       </div>
     </div>
   </div>

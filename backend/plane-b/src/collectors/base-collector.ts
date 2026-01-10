@@ -28,6 +28,7 @@ import { resolveProviderRates } from './rate-config'
 import { applyRpmRamp } from './rpm-ramp'
 import { writeBronzePayload } from './bronze-writer'
 import { createScheduler, type Scheduler } from './scheduler'
+import { resolveRateLimitScope } from './rate-limit-scope'
 import { checkCircuitState, closeCircuit, openCircuit, penalizeRpmImmediately } from '../lib/redis-circuit-breaker'
 import { getDefaultProxyTierForCollector, getProxyTierForCorridor, type ProxyTier } from '../lib/proxy-router'
 import { dispatchSignal } from '../notifications/dispatcher'
@@ -329,6 +330,7 @@ export abstract class BaseCollector {
       globalEnabled: Boolean(config.redis.url),
       locale: this.locale,
       perLocale: options.perLocale ?? false,
+      scope: resolveRateLimitScope(this.collectorType),
     })
 
     // Create ingestion run
@@ -647,4 +649,3 @@ export type FetchOptions = {
   jitterMs: number
   proxyTier: ProxyTier
 }
-

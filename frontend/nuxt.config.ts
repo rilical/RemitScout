@@ -4,11 +4,39 @@ import { join } from 'node:path'
 const isAwsEnvironment = Boolean(
   process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
 )
+const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+const projectRoot = process.cwd()
+const localNodeModules = join(projectRoot, 'node_modules')
+const workspaceNodeModules = join(projectRoot, '..', 'node_modules')
+const workspacePnpmStore = join(workspaceNodeModules, '.pnpm')
+const defaultWatchIgnored = [
+  '**/node_modules/**',
+  '**/.pnpm/**',
+  '**/.pnpm-store/**',
+  '**/.git/**',
+  '**/dist/**',
+  '**/.nuxt/**',
+  '**/coverage/**',
+  localNodeModules,
+  workspaceNodeModules,
+  workspacePnpmStore,
+]
+const watchIgnored = process.env.NUXT_DISABLE_WATCH === '1'
+  ? ['**/*']
+  : defaultWatchIgnored
+const usePolling = process.env.NUXT_USE_POLLING === '1'
+  || process.env.CHOKIDAR_USEPOLLING === '1'
+const watchOptions = {
+  followSymlinks: false,
+  ignored: watchIgnored,
+  ...(usePolling ? { usePolling: true, interval: 1000 } : {}),
+}
+const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt']
+if (isStagingOrProd) {
+  nuxtModules.push('@nuxtjs/robots')
+}
 
 const ensureClientPrecomputed = async () => {
-  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
-    return
-  }
   const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
   await fs.mkdir(serverDist, { recursive: true })
   const precomputedPath = join(serverDist, 'client.precomputed.mjs')
@@ -23,7 +51,7 @@ export default defineNuxtConfig({
   // Development
 
   // Modules
-  modules: ['@nuxtjs/tailwindcss', '@nuxt/image', '@nuxtjs/robots', '@pinia/nuxt'],
+  modules: nuxtModules,
 
   components: {
     dirs: [
@@ -34,7 +62,7 @@ export default defineNuxtConfig({
       '~/components/pulse',
   ],
   },
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   hooks: {
     'build:before': async () => {
       // Copy SVG files from frontend/png/SVG to public/png/SVG for proper routing
@@ -54,6 +82,23 @@ export default defineNuxtConfig({
         // Source directory doesn't exist or is empty - that's okay
       }
 
+      // Copy PROVIDERS SVG files to public/png/SVG/PROVIDERS
+      const providersSourceDirForPublic = join(process.cwd(), 'frontend', 'png', 'SVG', 'PROVIDERS')
+      const providersDestDir = join(process.cwd(), 'frontend', 'public', 'png', 'SVG', 'PROVIDERS')
+      try {
+        await fs.mkdir(providersDestDir, { recursive: true })
+        const providerFiles = await fs.readdir(providersSourceDirForPublic)
+        for (const file of providerFiles) {
+          if (file.endsWith('.svg')) {
+            const sourcePath = join(providersSourceDirForPublic, file)
+            const destPath = join(providersDestDir, file)
+            await fs.copyFile(sourcePath, destPath)
+          }
+        }
+      } catch (error) {
+        // Providers directory doesn't exist or is empty - that's okay
+      }
+
       // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
       const providersSourceDir = join(process.cwd(), 'frontend', 'png', 'SVG', 'PROVIDERS')
       const logosDestDir = join(process.cwd(), 'frontend', 'public', 'logos')
@@ -63,6 +108,7 @@ export default defineNuxtConfig({
         'WORLD_REMIT_LOGO.svg': 'worldremit.svg',
         'WESTERN_UNION_LOGO.svg': 'western-union.svg',
         'XE_LOGO.svg': 'xe-money.svg',
+        'WELLS_FARGO_LOGO.svg': 'wellsfargo.svg',
       }
       try {
         await fs.mkdir(logosDestDir, { recursive: true })
@@ -104,15 +150,40 @@ export default defineNuxtConfig({
         {
           name: 'keywords',
           content:
-            'money transfer, remittance, international payments, compare rates, send money abroad',
+            'money transfer, remittance, international payments, compare rates, send money abroad, wire transfer, foreign exchange',
         },
-        { name: 'robots', content: 'index, follow' },
-        { name: 'googlebot', content: 'index, follow' },
+        { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
+        { name: 'googlebot', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { name: 'author', content: 'Remit-Scout' },
+        { name: 'language', content: 'English' },
+        { name: 'geo.region', content: 'US' },
+        { name: 'geo.placename', content: 'United States' },
+        // Open Graph defaults
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'Remit-Scout' },
+        { property: 'og:locale', content: 'en_US' },
+        // Twitter Card defaults
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:site', content: '@RemitScout' },
+        // Verification tags (can be overridden by env vars)
+        ...(process.env.GOOGLE_SITE_VERIFICATION
+          ? [{ name: 'google-site-verification', content: process.env.GOOGLE_SITE_VERIFICATION }]
+          : []),
+        ...(process.env.BING_SITE_VERIFICATION
+          ? [{ name: 'msvalidate.01', content: process.env.BING_SITE_VERIFICATION }]
+          : []),
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        // Favicon - using Remit-Scout logo
+        { rel: 'icon', type: 'image/svg+xml', href: '/png/SVG/LOGO.svg' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/png/SVG/LOGO.svg' },
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/png/SVG/LOGO.svg' },
+        // Apple touch icons
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/png/SVG/LOGO.svg' },
+        { rel: 'manifest', href: '/site.webmanifest' },
+        // DNS prefetch for performance
         ...(process.env.PUBLIC_IMAGE_BASE
           ? [
               { rel: 'preconnect', href: process.env.PUBLIC_IMAGE_BASE },
@@ -137,6 +208,8 @@ export default defineNuxtConfig({
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
           : 'https://Remit-Scout.com'),
       apiBase: process.env.PUBLIC_API_BASE || '/api',
+      b2cRefreshPollMs: Number(process.env.PUBLIC_B2C_REFRESH_POLL_MS) || 1500,
+      b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 750,
       imageBase:
         process.env.PUBLIC_IMAGE_BASE ||
         (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
@@ -150,8 +223,8 @@ export default defineNuxtConfig({
         process.env.PUBLIC_SUPABASE_ANON_KEY ||
         process.env.SUPABASE_PUBLISHABLE_KEY ||
         '',
-      devControls: process.env.PUBLIC_DEV_CONTROLS === '1' && !isAwsEnvironment,
-      devAuthEnabled: process.env.PUBLIC_DEV_AUTH === '1' && !isAwsEnvironment,
+      devControls: process.env.PUBLIC_DEV_CONTROLS === '1' && !isAwsEnvironment && !isStagingOrProd,
+      devAuthEnabled: process.env.PUBLIC_DEV_AUTH === '1' && !isAwsEnvironment && !isStagingOrProd,
       devAuthToken:
         process.env.PUBLIC_DEV_AUTH_TOKEN ||
         process.env.SUPABASE_MOCK_ADMIN_TOKEN ||
@@ -161,6 +234,9 @@ export default defineNuxtConfig({
         process.env.DEV_SUPER_ADMIN_EMAIL ||
         process.env.PUBLIC_DEV_SUPER_ADMIN_EMAIL ||
         'admin@remitscout.test',
+      pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
+      ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
+      metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
     },
   },
 
@@ -185,6 +261,7 @@ export default defineNuxtConfig({
   experimental: {
     payloadExtraction: false,
     viewTransition: true,
+    watcher: 'chokidar-granular',
   },
 
   // Nitro Configuration
@@ -211,6 +288,15 @@ export default defineNuxtConfig({
       hmr: {
         overlay: false,
       },
+      watch: {
+        ...watchOptions,
+      },
+    },
+  },
+
+  watchers: {
+    chokidar: {
+      ...watchOptions,
     },
   },
 
@@ -253,7 +339,11 @@ export default defineNuxtConfig({
 
   // Robots Configuration
   robots: {
+    // In production, use the static robots.txt, otherwise block all crawlers in dev/staging
     disallow: process.env.NODE_ENV !== 'production' ? ['/'] : undefined,
-    sitemap: process.env.NODE_ENV === 'production' ? [`${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/sitemap.xml`] : undefined,
+    // Reference the dynamic sitemap
+    sitemap: process.env.NODE_ENV === 'production'
+      ? [`${process.env.PUBLIC_SITE_URL || 'https://remitscout.com'}/sitemap.xml`]
+      : undefined,
   },
 })

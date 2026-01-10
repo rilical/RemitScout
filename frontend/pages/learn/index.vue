@@ -84,7 +84,7 @@
         <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-700">
           <div class="flex items-center gap-2">
             <svg
-              class="h-5 w-5 text-emerald-600"
+              class="h-5 w-5 text-brand-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -100,7 +100,7 @@
           </div>
           <div class="flex items-center gap-2">
             <svg
-              class="h-5 w-5 text-emerald-600"
+              class="h-5 w-5 text-brand-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -116,7 +116,7 @@
           </div>
           <div class="flex items-center gap-2">
             <svg
-              class="h-5 w-5 text-emerald-600"
+              class="h-5 w-5 text-brand-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -236,12 +236,10 @@
             @click="scrollToSection(cat.key)"
           >
             <div
-              class="mx-auto mb-4 w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center"
-              :class="`from-${cat.color}-50 to-${cat.color}-100`"
+              class="mx-auto mb-4 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center"
             >
               <svg
-                class="w-8 h-8"
-                :class="`text-${cat.color}-600`"
+                class="w-8 h-8 text-brand-600"
                 :fill="cat.icon === 'star' ? 'currentColor' : 'none'"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -289,9 +287,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-emerald-600"
+                class="w-8 h-8 text-brand-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -376,9 +374,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-amber-600"
+                class="w-8 h-8 text-brand-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -466,9 +464,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-yellow-600"
+                class="w-8 h-8 text-brand-600"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -543,7 +541,7 @@
               <div class="flex flex-wrap gap-4 text-sm">
                 <div class="flex items-center gap-2 text-neutral-700">
                   <svg
-                    class="h-5 w-5 text-emerald-600"
+                    class="h-5 w-5 text-brand-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -559,7 +557,7 @@
                 </div>
                 <div class="flex items-center gap-2 text-neutral-700">
                   <svg
-                    class="h-5 w-5 text-emerald-600"
+                    class="h-5 w-5 text-brand-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -575,7 +573,7 @@
                 </div>
                 <div class="flex items-center gap-2 text-neutral-700">
                   <svg
-                    class="h-5 w-5 text-emerald-600"
+                    class="h-5 w-5 text-brand-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -649,93 +647,6 @@
       </div>
     </section>
 
-    <!-- Head-to-Head Comparisons Section -->
-    <section
-      id="comparisons"
-      class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20"
-    >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-10">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center">
-              <svg
-                class="w-8 h-8 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
-                Head-to-Head Comparisons
-              </h2>
-              <p class="text-neutral-600 mt-1">
-                Capture "Wise vs Remitly vs..." intent. General comparisons and corridor-specific comparisons.
-              </p>
-            </div>
-          </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
-        </div>
-
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <article
-            v-for="guide in getArticlesByCategory('comparisons')"
-            :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
-          >
-            <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-                Comparison
-              </span>
-              <span class="text-xs text-neutral-500">
-                {{ guide.readTime || '8 min' }}
-              </span>
-            </div>
-            <NuxtLink
-              :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
-            >
-              {{ guide.title }}
-            </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
-              {{ guide.excerpt }}
-            </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
-              <NuxtLink
-                :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
-              >
-                Read
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </NuxtLink>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <!-- Corridor Playbooks Section -->
     <section
       id="corridor-playbooks"
@@ -744,9 +655,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-blue-600"
+                class="w-8 h-8 text-brand-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -831,9 +742,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-orange-600"
+                class="w-8 h-8 text-brand-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -918,9 +829,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
               <svg
-                class="w-8 h-8 text-green-600"
+                class="w-8 h-8 text-brand-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1396,7 +1307,6 @@ const filters = [
   { key: 'speed', label: 'Speed' },
   { key: 'safety', label: 'Safety' },
   { key: 'reviews', label: 'Reviews' },
-  { key: 'comparisons', label: 'Comparisons' },
   { key: 'corridors', label: 'Corridors' },
   { key: 'exchange-rates', label: 'Exchange Rates' },
 ]
@@ -1419,12 +1329,6 @@ const categories = [
     name: 'Provider Reviews',
     icon: 'star',
     color: 'yellow',
-  },
-  {
-    key: 'comparisons',
-    name: 'Comparisons',
-    icon: 'scale',
-    color: 'purple',
   },
   {
     key: 'corridor-playbooks',
@@ -1485,6 +1389,8 @@ const articleMapping: Record<string, string[]> = {
     'why-compare-before-every-transfer',
     'bank-transfer-vs-card-vs-cash-pickup',
     'how-to-read-remittance-quote',
+    'bank-transfer-vs-card-funding',
+    'choose-right-delivery-method',
   ],
   'fees-hidden-costs': [
     'hidden-exchange-rate-fees-explained',
@@ -1546,6 +1452,24 @@ const staticArticles = [
     lastUpdated: 'December 2024',
   },
   {
+    slug: 'bank-transfer-vs-card-funding',
+    title: 'Bank Transfer vs Card Funding: Which Is Cheaper (and When)?',
+    excerpt: 'Understand when bank transfer funding is cheaper than card funding, and when speed matters more than cost.',
+    categoryKey: 'money-transfer-basics',
+    readTime: '6 min read',
+    level: 'Beginner',
+    lastUpdated: 'December 2024',
+  },
+  {
+    slug: 'choose-right-delivery-method',
+    title: 'Choose the Right Delivery Method: Bank Deposit vs Cash Pickup vs Mobile Money',
+    excerpt: 'Learn which payout method works best for your needs: bank deposit, cash pickup, or mobile money.',
+    categoryKey: 'money-transfer-basics',
+    readTime: '7 min read',
+    level: 'Beginner',
+    lastUpdated: 'December 2024',
+  },
+  {
     slug: 'how-fast-is-international-money-transfer',
     title: 'How Long Transfers Take (Speed Buckets)',
     excerpt: 'Understand transfer speed buckets: instant, same-day, next-day, and multi-day transfers.',
@@ -1598,6 +1522,8 @@ const getTitleFromSlug = (slug: string): string => {
     'how-to-read-remittance-quote': 'How to Read a Quote ("Recipient Gets")',
     'why-checkout-price-differs': 'Why Checkout Differs and What to Do',
     'bank-transfer-vs-card-vs-cash-pickup': 'Bank Transfer vs Card vs Cash Pickup',
+    'bank-transfer-vs-card-funding': 'Bank Transfer vs Card Funding: Which Is Cheaper (and When)?',
+    'choose-right-delivery-method': 'Choose the Right Delivery Method: Bank Deposit vs Cash Pickup vs Mobile Money',
     'how-fast-is-international-money-transfer': 'How Long Transfers Take (Speed Buckets)',
     'best-time-to-send-money': 'Best Time to Send Money',
     'promo-codes-intro-rates': 'Promo Rates and "$0 Fee" Traps',
@@ -1612,6 +1538,8 @@ const getExcerptFromSlug = (slug: string): string => {
     'how-to-read-remittance-quote': 'Understand what "Recipient Gets" really means and how to compare quotes effectively.',
     'why-checkout-price-differs': 'Why the final price at checkout might differ from the quote, and what you can do about it.',
     'bank-transfer-vs-card-vs-cash-pickup': 'Compare different transfer methods: bank transfer, card payment, and cash pickup options.',
+    'bank-transfer-vs-card-funding': 'Understand when bank transfer funding is cheaper than card funding, and when speed matters more than cost.',
+    'choose-right-delivery-method': 'Learn which payout method works best for your needs: bank deposit, cash pickup, or mobile money.',
     'how-fast-is-international-money-transfer': 'Understand transfer speed buckets: instant, same-day, next-day, and multi-day transfers.',
     'best-time-to-send-money': 'Practical guidance on when to send money, without over-optimizing for rate movements.',
     'promo-codes-intro-rates': 'Understand promotional rates, introductory offers, and "$0 fee" marketing traps.',
@@ -1655,7 +1583,6 @@ const filteredGuides = computed(() => {
       'speed': ['speed-delivery'],
       'safety': ['safety-scams'],
       'reviews': ['provider-reviews'],
-      'comparisons': ['comparisons'],
       'corridors': ['corridor-playbooks'],
       'exchange-rates': ['exchange-rates-timing'],
     }

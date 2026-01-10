@@ -19,12 +19,13 @@
           </button>
         </div>
         <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-          <span class="inline-flex items-center gap-1">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Live
+          <span class="inline-flex items-center gap-1.5">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span>Updated {{ lastUpdated }}</span>
           </span>
-          <span>·</span>
-          <span>{{ lastUpdated }}</span>
         </div>
       </div>
     </div>

@@ -136,13 +136,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '~/composables/useApi'
+import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 
 const route = useRoute()
 const _sessionId = route.query.session_id as string | undefined
 const { request } = useApi()
+const { trackPlusPurchase } = useMarketingAnalytics()
 
 if (_sessionId) {
   try {
@@ -165,6 +167,15 @@ const nextBillingDate = computed(() => {
   })
 })
 
+onMounted(() => {
+  void trackPlusPurchase({
+    value: 9,
+    currency: 'USD',
+    plan: 'plus',
+    pagePath: route.fullPath,
+  })
+})
+
 useHead({
   title: 'Success - Remit-Scout Plus',
   meta: [
@@ -172,7 +183,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

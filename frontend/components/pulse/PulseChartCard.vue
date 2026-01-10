@@ -119,24 +119,18 @@ const sparklineColor = computed(() => {
   return '#2563EB'
 })
 
-const sparklinePoints = computed(() => {
-  if (props.sparklineData.length === 0) {
-    return Array.from({ length: 30 }, (_, i) => ({
-      t: i,
-      v: 50 + Math.sin(i * 0.3) * 20 + Math.random() * 10,
-    }))
-  }
-  return props.sparklineData
-})
+const sparklinePoints = computed(() => props.sparklineData)
 
 const normalizedPoints = computed(() => {
+  if (sparklinePoints.value.length === 0) return []
   const values = sparklinePoints.value.map(p => p.v)
   const min = Math.min(...values)
   const max = Math.max(...values)
   const range = max - min || 1
   
+  const denom = Math.max(1, sparklinePoints.value.length - 1)
   return sparklinePoints.value.map((p, i) => ({
-    x: (i / (sparklinePoints.value.length - 1)) * 200,
+    x: (i / denom) * 200,
     y: 55 - ((p.v - min) / range) * 50,
   }))
 })
@@ -154,7 +148,5 @@ const areaPath = computed(() => {
   return `${start} ${line} ${end}`
 })
 </script>
-
-
 
 

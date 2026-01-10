@@ -6,15 +6,84 @@ import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { deleteUserAccount } from '../services/account-deletion'
 import { getErrorMessage, getErrorStack } from '../types/errors'
+import { UserAccountRepository } from '../repositories'
 
 const logger = createLogger('plane-a.account')
 const planeAPool = getPool(config.db.planeAUrl)
+const userAccountRepository = new UserAccountRepository(planeAPool)
 
 const deleteAccountSchema = z.object({
   confirm: z.literal(true),
 })
 
+const privacySchema = z.object({
+  analytics: z.boolean(),
+  personalization: z.boolean(),
+})
+
 export const accountRoutes = async (app: FastifyInstance) => {
+  app.get('/account/privacy', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    try {
+      await userAccountRepository.upsertUserAccount({
+        user_id: user.user_id,
+        email: user.email || null,
+      })
+      const settings = await userAccountRepository.getPrivacySettings(user.user_id)
+      return {
+        settings: {
+          analytics: settings?.analytics_enabled ?? true,
+          personalization: settings?.personalization_enabled ?? true,
+          updated_at: settings?.updated_at ?? null,
+        },
+      }
+    } catch (error) {
+      logger.error('privacy_settings_fetch_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.put('/account/privacy', { preHandler: requireAuth() }, async (request, reply) => {
+    const parsed = privacySchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    const user = request.user!
+    try {
+      await userAccountRepository.upsertUserAccount({
+        user_id: user.user_id,
+        email: user.email || null,
+      })
+      const settings = await userAccountRepository.updatePrivacySettings({
+        user_id: user.user_id,
+        analytics_enabled: parsed.data.analytics,
+        personalization_enabled: parsed.data.personalization,
+      })
+      return {
+        settings: {
+          analytics: settings?.analytics_enabled ?? parsed.data.analytics,
+          personalization: settings?.personalization_enabled ?? parsed.data.personalization,
+          updated_at: settings?.updated_at ?? new Date().toISOString(),
+        },
+      }
+    } catch (error) {
+      logger.error('privacy_settings_update_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
   app.delete('/account', { preHandler: requireAuth() }, async (request, reply) => {
     const parsed = deleteAccountSchema.safeParse(request.body ?? {})
     if (!parsed.success) {

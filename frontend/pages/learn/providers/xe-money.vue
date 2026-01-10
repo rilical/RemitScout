@@ -954,18 +954,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/xe-money'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'XE Money Review 2024 - Remit-Score 8.7/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent XE Money review with Remit-Score 8.7/10. Reliable all-rounder with competitive pricing, predictable quoting, bank-timed delivery. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent XE Money review with Remit-Score 8.7/10. Reliable all-rounder with competitive pricing, predictable quoting, bank-timed delivery. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/xe-money`,
+  ogImage: `${siteUrl}/og-images/provider-xe-money.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `XE Money earns a Remit-Score of 8.7/10 based on our independent analysis. The provider is a reliable all-rounder with competitive pricing and predictable quoting. Bank-timed delivery with good overall value. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'XE Money',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.7,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

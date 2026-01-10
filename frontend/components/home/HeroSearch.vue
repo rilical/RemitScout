@@ -72,6 +72,7 @@
               label="Amount"
               :from="from"
               :to="to"
+              :currency-code="fromCurrency"
               :error="errors.amount ? 'Enter amount' : ''"
               :input-class="errors.amount ? 'border-red-500' : 'border-gray-300'"
             />
@@ -86,6 +87,7 @@
               id="from-currency"
               v-model="fromCurrency"
               label="From currency"
+              :country-code="from"
               :error="errors.fromCurrency ? 'Select currency' : ''"
               :select-class="errors.fromCurrency ? 'border-red-500' : 'border-gray-300'"
             />
@@ -100,6 +102,7 @@
               id="to-currency"
               v-model="toCurrency"
               label="To currency"
+              :country-code="to"
               :error="errors.toCurrency ? 'Select currency' : ''"
               :select-class="errors.toCurrency ? 'border-red-500' : 'border-gray-300'"
             />
@@ -151,11 +154,13 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import AmountInput from '~/components/shared/AmountInput.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getAvailableCurrencies } from '~/utils/countries-currencies'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
 interface Props {
   defaultFrom?: string
@@ -196,6 +201,23 @@ const defaultCurrencyByCountry: Record<string, string> = {
 }
 
 const resolveCurrency = (country?: string) => defaultCurrencyByCountry[country || ''] || currencyFallback
+const normalizeCurrency = (value: string) => value.trim().toUpperCase()
+
+const resolveAllowedCurrency = (countryCode: string, candidate: string, fallback: string) => {
+  const allowed = getAvailableCurrencies(countryCode).map(normalizeCurrency)
+  const normalizedCandidate = normalizeCurrency(candidate || fallback)
+  if (allowed.length === 0) {
+    return normalizedCandidate
+  }
+  if (allowed.includes(normalizedCandidate)) {
+    return normalizedCandidate
+  }
+  const normalizedFallback = normalizeCurrency(fallback)
+  if (allowed.includes(normalizedFallback)) {
+    return normalizedFallback
+  }
+  return allowed[0]
+}
 
 const from = ref(props.defaultFrom)
 const to = ref(props.defaultTo)
@@ -224,6 +246,27 @@ const setError = (key: keyof FormErrors, value: boolean) => {
   updateFormError()
 }
 
+const amountLimits = computed(() => {
+  const currency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+  return {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+  }
+})
+
+const clampAmount = () => {
+  const currency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+  const sanitized = sanitizeAmount(amount.value, currency, {
+    minAmount: amountLimits.value.minAmount,
+    maxAmount: amountLimits.value.maxAmount,
+    strict: true,
+  })
+  if (sanitized !== amount.value) {
+    amount.value = sanitized
+  }
+  setError('amount', !sanitized || sanitized <= 0)
+}
+
 watch(
   () => props.defaultFrom,
   (value) => {
@@ -247,6 +290,7 @@ watch(
   (value) => {
     if (typeof value === 'number' && !Number.isNaN(value)) {
       amount.value = value
+      clampAmount()
     }
   },
 )
@@ -263,9 +307,12 @@ watch(
     const previousDefaultCurrency = resolveCurrency(previousCountry)
     const nextDefaultCurrency = resolveCurrency(newCountry)
 
-    if (!fromCurrency.value || fromCurrency.value === previousDefaultCurrency) {
-      fromCurrency.value = nextDefaultCurrency
+    if (!fromCurrency.value || normalizeCurrency(fromCurrency.value) === normalizeCurrency(previousDefaultCurrency)) {
+      fromCurrency.value = resolveAllowedCurrency(newCountry, nextDefaultCurrency, nextDefaultCurrency)
+    } else {
+      fromCurrency.value = resolveAllowedCurrency(newCountry, fromCurrency.value, nextDefaultCurrency)
     }
+    clampAmount()
   },
 )
 
@@ -281,28 +328,51 @@ watch(
     const previousDefaultCurrency = resolveCurrency(previousCountry)
     const nextDefaultCurrency = resolveCurrency(newCountry)
 
-    if (!toCurrency.value || toCurrency.value === previousDefaultCurrency) {
-      toCurrency.value = nextDefaultCurrency
+    if (!toCurrency.value || normalizeCurrency(toCurrency.value) === normalizeCurrency(previousDefaultCurrency)) {
+      toCurrency.value = resolveAllowedCurrency(newCountry, nextDefaultCurrency, nextDefaultCurrency)
+    } else {
+      toCurrency.value = resolveAllowedCurrency(newCountry, toCurrency.value, nextDefaultCurrency)
     }
   },
 )
 
-watch(amount, (value) => {
-  setError('amount', !value || value <= 0)
+watch(amount, () => {
+  clampAmount()
 })
 
 watch(fromCurrency, (value) => {
-  setError('fromCurrency', !value)
+  if (!from.value) {
+    setError('fromCurrency', !value)
+    return
+  }
+  const fallback = resolveCurrency(from.value)
+  const next = resolveAllowedCurrency(from.value, value || fallback, fallback)
+  if (normalizeCurrency(value || '') !== next) {
+    fromCurrency.value = next
+  }
+  setError('fromCurrency', !next)
+  clampAmount()
 })
 
 watch(toCurrency, (value) => {
-  setError('toCurrency', !value)
+  if (!to.value) {
+    setError('toCurrency', !value)
+    return
+  }
+  const fallback = resolveCurrency(to.value)
+  const next = resolveAllowedCurrency(to.value, value || fallback, fallback)
+  if (normalizeCurrency(value || '') !== next) {
+    toCurrency.value = next
+  }
+  setError('toCurrency', !next)
 })
+
+clampAmount()
 
 const validateForm = () => {
   setError('from', !from.value)
   setError('to', !to.value)
-  setError('amount', !amount.value || amount.value <= 0)
+  clampAmount()
   setError('fromCurrency', !fromCurrency.value)
   setError('toCurrency', !toCurrency.value)
 
@@ -316,8 +386,11 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     const corridorUrl = getCorridorUrl(from.value, to.value)
+    const safeFromCurrency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+    const safeToCurrency = normalizeCurrency(toCurrency.value || resolveCurrency(to.value))
+    clampAmount()
     await navigateTo(
-      `${corridorUrl}?amount=${amount.value}&fromCurrency=${fromCurrency.value}&toCurrency=${toCurrency.value}`,
+      `${corridorUrl}?amount=${amount.value}&fromCurrency=${safeFromCurrency}&toCurrency=${safeToCurrency}`,
     )
   }
   catch (error) {

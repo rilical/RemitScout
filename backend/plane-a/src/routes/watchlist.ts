@@ -15,6 +15,7 @@ import { WatchlistRepository } from '../repositories'
 const logger = createLogger('plane-a.watchlist')
 const pool = getPool(config.db.planeAUrl)
 const watchlistRepository = new WatchlistRepository(pool)
+const PLUS_WATCHLIST_SOFT_LIMIT = 16
 
 const updateWatchlistUsage = async (userId: string) => {
   try {
@@ -137,13 +138,20 @@ function defaultLabel(target: z.infer<typeof watchTargetSchema>): string {
   }
 }
 
-async function getWatchlistLimit(userId: string): Promise<number | 'unlimited'> {
+const isActivePlusPlan = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
+  return !!plan && plan.plan_code === 'plus' && ['active', 'trialing'].includes(plan.status)
+}
+
+async function getWatchlistLimit(
+  userId: string,
+): Promise<{ limit: number | 'unlimited'; plan: Awaited<ReturnType<typeof getUserPlan>> | null }> {
   const plan = await getUserPlan(pool, userId)
   if (!plan) {
-    return 3 // Default free plan limit
+    return { limit: 3, plan: null } // Default free plan limit
   }
   const entitlements = getEntitlementsForPlan(plan.plan_code)
-  return entitlements.watchlist_items === null ? 'unlimited' : entitlements.watchlist_items
+  const limit = entitlements.watchlist_items === null ? 'unlimited' : entitlements.watchlist_items
+  return { limit, plan }
 }
 
 async function getWatchlistCount(userId: string): Promise<number> {
@@ -210,24 +218,6 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       const body = createWatchlistItemSchema.parse(request.body)
       const target = body.target
 
-      // Check quota
-      const limit = await getWatchlistLimit(user.user_id)
-      if (limit !== 'unlimited') {
-        const count = await getWatchlistCount(user.user_id)
-        if (count >= limit) {
-          const durationSeconds = (Date.now() - startTime) / 1000
-          recordRequest('POST', '/watchlist', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'limit_reached',
-            message: `Free plan supports up to ${limit} saved item${limit === 1 ? '' : 's'}.`,
-            limit,
-          }
-        }
-      }
-
       // Check if item already exists
       const targetPayload = targetToPayload(target)
       const existing = await watchlistRepository.findByTarget(user.user_id, target.type, targetPayload)
@@ -285,6 +275,38 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
             createdAt: updated.created_at.toISOString(),
             updatedAt: updated.updated_at.toISOString(),
           },
+        }
+      }
+
+      // Check quota
+      const { limit, plan } = await getWatchlistLimit(user.user_id)
+      if (limit !== 'unlimited') {
+        const count = await getWatchlistCount(user.user_id)
+        if (count >= limit) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/watchlist', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'limit_reached',
+            message: `Free plan supports up to ${limit} saved item${limit === 1 ? '' : 's'}.`,
+            limit,
+          }
+        }
+      } else if (isActivePlusPlan(plan)) {
+        const count = await getWatchlistCount(user.user_id)
+        if (count >= PLUS_WATCHLIST_SOFT_LIMIT) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/watchlist', 403, durationSeconds)
+
+          reply.code(403)
+          return {
+            success: false,
+            error: 'limit_reached',
+            message: `Plus watchlists are capped at ${PLUS_WATCHLIST_SOFT_LIMIT} items for now. Remove one to add another.`,
+            limit: PLUS_WATCHLIST_SOFT_LIMIT,
+          }
         }
       }
 

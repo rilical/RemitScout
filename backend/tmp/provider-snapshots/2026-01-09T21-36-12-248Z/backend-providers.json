@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "status": 200,
+  "json": {
+    "data": [],
+    "updatedAt": "2026-01-09T21:36:12.709Z",
+    "corridor": "US-MX-USD-MXN",
+    "amount": 100,
+    "method": "bank",
+    "bucketUsed": 100,
+    "approximate": false,
+    "midMarketRate": 18.1958,
+    "midMarketSource": "OANDA",
+    "midMarketUpdatedAt": "2026-01-09T19:28:13.982Z",
+    "availableMethods": []
+  }
+}

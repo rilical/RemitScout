@@ -61,7 +61,10 @@
             <div class="text-2xl font-bold text-success-600">
               Save {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}+
             </div>
-            <div class="text-sm text-neutral-600">
+            <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-neutral-600">
+              ≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD saved by choosing the right provider
+            </div>
+            <div v-else class="text-sm text-neutral-600">
               by choosing the right provider
             </div>
           </div>
@@ -127,21 +130,24 @@
           <div class="flex items-center gap-4 mb-6">
             <div
               v-if="comparison.bank.logoUrl"
-              class="w-16 h-16 bg-white rounded-full flex items-center justify-center border-2 border-red-200 overflow-hidden flex-shrink-0"
+              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
             >
               <img
                 :src="comparison.bank.logoUrl"
                 :alt="comparison.bank.name"
-                class="w-full h-full object-contain p-2"
+                class="h-full w-full object-contain"
               />
             </div>
             <div
               v-else
-              class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0"
+              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
             >
-              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
+              <img
+                src="/logos/wellsfargo.svg"
+                alt="Wells Fargo"
+                class="h-full w-full object-contain"
+                loading="lazy"
+              />
             </div>
             <div>
               <h3 class="text-2xl font-bold text-neutral-900">
@@ -176,11 +182,8 @@
               <div class="text-4xl font-bold text-neutral-900 mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
               </div>
-              <div class="flex items-center gap-2 text-sm text-neutral-600">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{{ comparison.bank.delivery }}</span>
+              <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-neutral-600">
+                ≈ {{ formatMoney(Math.round(comparison.bank.recipientGets / comparison.midRate), comparison.corridor.sendCurrency) }} USD
               </div>
             </div>
           </div>
@@ -188,26 +191,22 @@
 
         <!-- Best Specialist Box -->
         <div class="bg-white rounded-3xl border-3 border-emerald-500 p-8 shadow-2xl relative overflow-hidden">
-          <div class="absolute top-4 right-4 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full z-10">
-            BEST DEAL
-          </div>
-          
           <div class="flex items-center gap-4 mb-6">
             <div
               v-if="comparison.top.logoUrl"
-              class="w-16 h-16 bg-white rounded-full flex items-center justify-center border-2 border-emerald-200 overflow-hidden flex-shrink-0"
+              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
             >
               <img
                 :src="comparison.top.logoUrl"
                 :alt="comparison.top.name"
-                class="w-full h-full object-contain p-2"
+                class="h-full w-full object-contain"
               />
             </div>
             <div
               v-else
-              class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0"
+              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
             >
-              <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-full w-full text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
             </div>
@@ -244,6 +243,9 @@
               <div class="text-4xl font-bold mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
               </div>
+              <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm opacity-90 mb-3">
+                ≈ {{ formatMoney(Math.round(comparison.top.recipientGets / comparison.midRate), comparison.corridor.sendCurrency) }} USD
+              </div>
               <div
                 v-if="comparison.savings"
                 class="bg-white/20 backdrop-blur rounded-lg px-4 py-2 mt-3"
@@ -252,14 +254,8 @@
                   +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} more
                 </div>
                 <div class="text-sm opacity-90 mt-1">
-                  vs {{ comparison.bank.name }}
+                  <span v-if="comparison.midRate && comparison.midRate > 0">≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD </span>vs {{ comparison.bank.name }}
                 </div>
-              </div>
-              <div class="flex items-center gap-2 text-sm opacity-90 mt-3">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>{{ comparison.top.delivery }}</span>
               </div>
             </div>
           </div>
@@ -270,7 +266,7 @@
   </section>
 
   <!-- Understanding Hidden Costs Section -->
-  <section class="w-screen py-20 sm:py-28 bg-gray-900 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style="color: var(--tw-ring-offset-color);">
+  <section class="w-screen py-20 sm:py-28 bg-gray-900 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Section Header -->
       <div class="text-center mb-16">
@@ -414,10 +410,10 @@
               The Bottom Line
             </h4>
             <p class="text-neutral-700 text-lg leading-relaxed mb-4">
-              Here's the thing: banks make more money when you don't shop around. They count on you using their service out of habit. But if you compare rates—which takes maybe two minutes—you'll often find better options that save you hundreds per year. That's money that could be going to your family instead of bank profits.
+              Banks make more money when you don't compare. They rely on customers using their service out of habit. Comparing rates takes a few minutes and often finds better options that save hundreds per year. That money can go to your family instead of bank profits.
             </p>
             <p class="text-neutral-600 text-base leading-relaxed">
-              Remit-Scout is free and shows you real rates from dozens of providers. Give it a try next time you send money—you might be surprised how much you can save.
+              Remit-Scout is free and shows real rates from multiple providers. Try it next time you send money and see how much you can save.
             </p>
           </div>
         </div>

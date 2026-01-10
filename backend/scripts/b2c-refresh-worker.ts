@@ -11,8 +11,12 @@
  * ```
  *
  * **Environment Variables**:
- * - `B2C_REFRESH_LIMIT`: Maximum requests to process per run (default: 25)
+ * - `B2C_REFRESH_LIMIT`: Maximum requests to process per run (default: 50)
+ * - `B2C_REFRESH_CONCURRENCY`: Parallel requests to process per run (default: 5)
  * - `PLANE_B_B2C_REFRESH_MAX_RETRIES`: Max retries for failed requests (default: 3)
+ * - `B2C_REFRESH_LOOP`: Set to `1` to keep the worker running continuously
+ * - `B2C_REFRESH_LOOP_DELAY_MS`: Delay between runs when work was processed (default: 250)
+ * - `B2C_REFRESH_IDLE_DELAY_MS`: Delay between runs when no work was processed (default: 750)
  * - `B2C_REFRESH_HEALTH_ENABLED`: Set to `0` to disable health/metrics server
  * - `HEALTH_PORT`: Health/metrics port (default: 8080)
  *
@@ -35,8 +39,16 @@ const toNumber = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+const toBoolean = (value: string | undefined, fallback = false) => {
+  if (value === undefined) return fallback
+  return value === '1' || value === 'true' || value === 'yes'
+}
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 const limit = toNumber(process.env.B2C_REFRESH_LIMIT, config.planeB.b2cRefreshBatchLimit)
 const maxRetries = config.planeB.b2cRefreshMaxRetries
+const concurrency = toNumber(process.env.B2C_REFRESH_CONCURRENCY, config.planeB.b2cRefreshConcurrency)
 const logger = createLogger('script.b2c-refresh-worker')
 const lockTtlSeconds = 300
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
@@ -45,6 +57,20 @@ const healthEnabled = process.env.B2C_REFRESH_HEALTH_ENABLED !== '0'
 const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
 
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+const lockModeRaw = (process.env.B2C_REFRESH_LOCK_MODE || 'auto').toLowerCase()
+const lockMode =
+  lockModeRaw === 'none' || lockModeRaw === 'off'
+    ? 'none'
+    : lockModeRaw === 'single'
+      ? 'single'
+      : 'auto'
+const queueMode = config.queues.quoteRefreshMode
+const queueUrl = config.queues.quoteRefreshUrl
+const useQueue = queueMode === 'queue' && Boolean(queueUrl)
+const useLock = lockMode === 'single' || (lockMode === 'auto' && !useQueue)
+const loopEnabled = toBoolean(process.env.B2C_REFRESH_LOOP)
+const loopDelayMs = Math.max(50, toNumber(process.env.B2C_REFRESH_LOOP_DELAY_MS, 250))
+const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.B2C_REFRESH_IDLE_DELAY_MS, 750))
 
 let shutdownRequested = false
 let lock: WorkerLock | null = null
@@ -91,35 +117,45 @@ export const runB2cRefreshWorker = async (): Promise<number> => {
     return 0
   }
 
-  lock = new WorkerLock('b2c-refresh-worker', lockTtlSeconds)
-  const acquired = await lock.acquire()
+  logger.info('worker_lock_mode', {
+    lock_mode: lockMode,
+    lock_enabled: useLock,
+    queue_mode: queueMode,
+    queue_url_set: Boolean(queueUrl),
+  })
 
-  if (!acquired) {
-    logger.info('worker_skipped', { reason: 'lock_already_held' })
-    return 0
-  }
+  if (useLock) {
+    lock = new WorkerLock('b2c-refresh-worker', lockTtlSeconds)
+    const acquired = await lock.acquire()
 
-  lockRefreshTimer = setInterval(() => {
-    if (!lock) return
-    lock.extend()
-      .then((extended) => {
-        if (!extended && config.redis.url) {
-          logger.warn('lock_extend_failed', { lock_key: 'b2c-refresh-worker' })
-        }
-      })
-      .catch((error) => {
-        logger.warn('lock_extend_failed', {
-          lock_key: 'b2c-refresh-worker',
-          error: error instanceof Error ? error.message : String(error),
+    if (!acquired) {
+      logger.info('worker_skipped', { reason: 'lock_already_held' })
+      return 0
+    }
+
+    lockRefreshTimer = setInterval(() => {
+      if (!lock) return
+      lock.extend()
+        .then((extended) => {
+          if (!extended && config.redis.url) {
+            logger.warn('lock_extend_failed', { lock_key: 'b2c-refresh-worker' })
+          }
         })
-      })
-  }, lockRefreshMs)
+        .catch((error) => {
+          logger.warn('lock_extend_failed', {
+            lock_key: 'b2c-refresh-worker',
+            error: error instanceof Error ? error.message : String(error),
+          })
+        })
+    }, lockRefreshMs)
+  }
 
   const startTime = Date.now()
   try {
     const count = await processQuoteRefreshQueue({
       limit,
       maxRetries,
+      concurrency,
       onRequestFinished: handleRequestFinished,
       onQueueDepth: handleQueueDepth,
     })
@@ -175,7 +211,18 @@ const main = async (options: { enableHealthServer?: boolean } = {}) => {
 
   let exitCode = 0
   try {
-    await runB2cRefreshWorker()
+    if (loopEnabled) {
+      while (!shutdownRequested) {
+        const processed = await runB2cRefreshWorker()
+        if (shutdownRequested) {
+          break
+        }
+        const delayMs = processed > 0 ? loopDelayMs : idleDelayMs
+        await sleep(delayMs)
+      }
+    } else {
+      await runB2cRefreshWorker()
+    }
   } catch (error) {
     exitCode = 1
     logger.error('worker_fatal_error', {

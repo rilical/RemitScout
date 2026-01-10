@@ -1,13 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool, query } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { getCountryByCode } from '../../../shared/countries-currencies'
+import { getAvailableCurrenciesForCountry, getCountryByCode } from '../../../shared/countries-currencies'
 
 const logger = createLogger('plane-a.corridor-currencies')
-const planeAPool = getPool(config.db.planeAUrl)
-
 const querySchema = z.object({
   from: z.string().min(2).max(2),
   to: z.string().min(2).max(2),
@@ -41,47 +37,25 @@ export const corridorCurrenciesRoutes = async (app: FastifyInstance) => {
     const from = normalizeCountry(parsed.data.from)
     const to = normalizeCountry(parsed.data.to)
 
+    const fromCountry = getCountryByCode(from)
+    const toCountry = getCountryByCode(to)
+    if (!fromCountry || !toCountry) {
+      reply.code(400)
+      return { error: 'bad_request', message: 'Invalid corridor countries.' }
+    }
+
     try {
-      const result = await query<{
-        source_currency: string
-        dest_currency: string
-      }>(
-        `SELECT DISTINCT c.source_currency, c.dest_currency
-           FROM silver.provider_corridor_capability pcc
-           JOIN silver.corridor c ON c.corridor_id = pcc.corridor_id
-          WHERE c.source_country = $1
-            AND c.dest_country = $2
-            AND pcc.is_supported = true`,
-        [from, to],
-        planeAPool,
+      const fromCurrencies = getAvailableCurrenciesForCountry(from)
+      const toCurrencies = getAvailableCurrenciesForCountry(to)
+      const pairs = fromCurrencies.flatMap((fromCurrency) =>
+        toCurrencies.map((toCurrency) => ({ fromCurrency, toCurrency })),
       )
-
-      const pairs: CorridorCurrencyPair[] = result.rows
-        .filter(row => row.source_currency && row.dest_currency)
-        .map(row => ({
-          fromCurrency: row.source_currency.toUpperCase(),
-          toCurrency: row.dest_currency.toUpperCase(),
-        }))
-
-      const fromCurrencies = unique(pairs.map(pair => pair.fromCurrency))
-      const toCurrencies = unique(pairs.map(pair => pair.toCurrency))
-
-      const fromFallback = getCountryByCode(from)?.currency
-      const toFallback = getCountryByCode(to)?.currency
 
       const response: CorridorCurrencyResponse = {
         from,
         to,
-        fromCurrencies: fromCurrencies.length
-          ? fromCurrencies
-          : fromFallback
-            ? [fromFallback]
-            : [],
-        toCurrencies: toCurrencies.length
-          ? toCurrencies
-          : toFallback
-            ? [toFallback]
-            : [],
+        fromCurrencies: unique(fromCurrencies),
+        toCurrencies: unique(toCurrencies),
         pairs,
       }
 

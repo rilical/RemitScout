@@ -14,12 +14,18 @@ export function calculateSpreadPercent(midMarketRate: number, providerRate: numb
 export function calculateHiddenMarkup(
   amount: number,
   midMarketRate: number,
-  providerRate: number
+  providerRate: number,
+  upfrontFee: number = 0
 ): number {
   if (midMarketRate === 0) return 0
-  const midMarketReceive = amount * midMarketRate
-  const providerReceive = amount * providerRate
+  // Fee is deducted upfront, so only (amount - fee) is available for conversion
+  const amountAfterFee = Math.max(amount - upfrontFee, 0)
+  if (amountAfterFee === 0) return 0
+  // Calculate what recipient would get at mid-market vs provider rate
+  const midMarketReceive = amountAfterFee * midMarketRate
+  const providerReceive = amountAfterFee * providerRate
   const lossInRecvCurrency = midMarketReceive - providerReceive
+  // Convert loss back to send currency
   const lossInSendCurrency = lossInRecvCurrency / midMarketRate
   return Math.round(lossInSendCurrency * 100) / 100
 }
@@ -49,7 +55,7 @@ export function buildTrueCostBreakdown(
   providerRate: number,
   bestTotalCost: number = 0
 ): TrueCostBreakdown {
-  const hiddenMarkup = calculateHiddenMarkup(amount, midMarketRate, providerRate)
+  const hiddenMarkup = calculateHiddenMarkup(amount, midMarketRate, providerRate, upfrontFee)
   const hiddenMarkupPercent = calculateSpreadPercent(midMarketRate, providerRate)
   const totalCost = calculateTrueCost(upfrontFee, hiddenMarkup)
   const totalCostPercent = calculateTotalCostPercent(totalCost, amount)
@@ -128,10 +134,10 @@ export function buildBankComparison(
   bestSpecialistFee: number,
   bestSpecialistName: string
 ): BankComparisonData {
-  const bankMarkup = calculateHiddenMarkup(amount, midMarketRate, bankRate)
+  const bankMarkup = calculateHiddenMarkup(amount, midMarketRate, bankRate, bankFee)
   const bankTotalCost = calculateTrueCost(bankFee, bankMarkup)
 
-  const bestSpecialistMarkup = calculateHiddenMarkup(amount, midMarketRate, bestSpecialistRate)
+  const bestSpecialistMarkup = calculateHiddenMarkup(amount, midMarketRate, bestSpecialistRate, bestSpecialistFee)
   const bestSpecialistTotalCost = calculateTrueCost(bestSpecialistFee, bestSpecialistMarkup)
 
   const savings = bankTotalCost - bestSpecialistTotalCost
@@ -187,6 +193,5 @@ export function getMarkupSeverity(spreadBps: number): 'excellent' | 'good' | 'fa
   if (spreadBps < 200) return 'fair'
   return 'poor'
 }
-
 
 

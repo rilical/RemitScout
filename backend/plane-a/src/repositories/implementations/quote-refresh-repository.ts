@@ -1,5 +1,4 @@
 import type { Pool } from 'pg'
-import { randomUUID } from 'crypto'
 import { query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
@@ -7,6 +6,7 @@ import { sendJsonMessage } from '../../../../shared/sqs'
 import type {
   IQuoteRefreshRepository,
   QuoteRefreshRequestInput,
+  QuoteRefreshStatusCount,
 } from '../interfaces/quote-refresh-repository.interface'
 
 export class QuoteRefreshRepository implements IQuoteRefreshRepository {
@@ -19,26 +19,6 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
     const queueUrl = config.queues.quoteRefreshUrl
     const queueEnabled = queueMode !== 'off' && Boolean(queueUrl)
 
-    if (queueMode === 'queue' && queueEnabled) {
-      const requestId = randomUUID()
-      try {
-        await sendJsonMessage(queueUrl, {
-          requestId,
-          providerId: input.providerId,
-          corridorId: input.corridorId,
-          amountBucket: input.amountBucket,
-          payinMethod: input.payinMethod,
-          payoutMethod: input.payoutMethod,
-        })
-        return requestId
-      } catch (error) {
-        this.logger.warn('queue_enqueue_failed', {
-          request_id: requestId,
-          error: error instanceof Error ? error.message : String(error),
-        })
-        return null
-      }
-    }
     if (queueMode === 'queue' && !queueEnabled) {
       this.logger.warn('queue_mode_without_url', {
         mode: queueMode,
@@ -88,5 +68,18 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
     }
 
     return requestId
+  }
+
+  async listStatusCounts(requestIds: string[]): Promise<QuoteRefreshStatusCount[]> {
+    if (!requestIds.length) return []
+    const result = await query<QuoteRefreshStatusCount>(
+      `SELECT status, COUNT(*)::int AS count
+         FROM silver.quote_refresh_request
+        WHERE request_id = ANY($1::uuid[])
+        GROUP BY status`,
+      [requestIds],
+      this.pool,
+    )
+    return result.rows
   }
 }

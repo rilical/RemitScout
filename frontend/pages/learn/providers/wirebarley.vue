@@ -920,18 +920,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/wirebarley'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'WireBarley Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent WireBarley review with Remit-Score 8.2/10. Korea-corridor strength; good value/speed in-core; narrower corridor footprint. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent WireBarley review with Remit-Score 8.2/10. Korea-corridor strength; good value/speed in-core; narrower corridor footprint. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/wirebarley`,
+  ogImage: `${siteUrl}/og-images/provider-wirebarley.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `WireBarley earns a Remit-Score of 8.2/10 based on our independent analysis. The provider shows Korea-corridor strength with good value and speed in core routes, though with a narrower corridor footprint. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'WireBarley',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.2,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

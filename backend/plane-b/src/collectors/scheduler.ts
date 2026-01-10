@@ -10,6 +10,7 @@ type SchedulerOptions = {
   globalEnabled?: boolean
   locale?: string
   perLocale?: boolean
+  scope?: string | null
   burstMultiplier?: number
   maxBuckets?: number
 }
@@ -112,6 +113,7 @@ export const createScheduler = (options: SchedulerOptions) => {
     globalEnabled = false,
     locale,
     perLocale = false,
+    scope,
     burstMultiplier = DEFAULT_BURST_MULTIPLIER,
     maxBuckets = DEFAULT_MAX_BUCKETS,
   } = options
@@ -123,10 +125,12 @@ export const createScheduler = (options: SchedulerOptions) => {
   const tokenBuckets = new Map<string, RedisTokenBucket>()
 
   const localeSuffix = perLocale && locale ? `:${locale}` : ''
-  const providerKey = `token_bucket:${providerId}${localeSuffix}`
+  const scopeSuffix = scope ? `:${scope}` : ''
+  const providerScoped = `${providerId}${scopeSuffix}`
+  const providerKey = `token_bucket:${providerScoped}${localeSuffix}`
 
   const buildCorridorKey = (corridorId: string) =>
-    `token_bucket:corridor:${providerId}:${corridorId}${localeSuffix}`
+    `token_bucket:corridor:${providerScoped}:${corridorId}${localeSuffix}`
 
   const getBucket = (key: string, currentRpm: number) => {
     const existing = tokenBuckets.get(key)
@@ -140,6 +144,7 @@ export const createScheduler = (options: SchedulerOptions) => {
     tokenBuckets.set(key, bucket)
     logger.debug('scheduler_bucket_created', {
       provider_id: providerId,
+      scope,
       key,
       rpm: currentRpm,
       burst_multiplier: burstMultiplier,
@@ -157,15 +162,16 @@ export const createScheduler = (options: SchedulerOptions) => {
     }
 
     const corridorBucketCount = Array.from(tokenBuckets.keys()).filter((key) =>
-      key.startsWith(`token_bucket:corridor:${providerId}:`),
+      key.startsWith(`token_bucket:corridor:${providerScoped}:`),
     ).length
 
     if (corridorBucketCount >= maxBuckets) {
-      logger.warn('scheduler_corridor_bucket_skipped', {
-        provider_id: providerId,
-        corridor_key: corridorKey,
-        max_buckets: maxBuckets,
-      })
+    logger.warn('scheduler_corridor_bucket_skipped', {
+      provider_id: providerId,
+      scope,
+      corridor_key: corridorKey,
+      max_buckets: maxBuckets,
+    })
       return null
     }
 
@@ -275,7 +281,7 @@ export const createScheduler = (options: SchedulerOptions) => {
 
     if (perCorridorRpmChanged) {
       for (const [key, bucket] of tokenBuckets.entries()) {
-        if (key.startsWith(`token_bucket:corridor:${providerId}:`)) {
+        if (key.startsWith(`token_bucket:corridor:${providerScoped}:`)) {
           bucket.updateRpm(perCorridorRpm)
         }
       }
@@ -283,6 +289,7 @@ export const createScheduler = (options: SchedulerOptions) => {
 
     logger.info('scheduler_rates_updated', {
       provider_id: providerId,
+      scope,
       prev_rpm: prevRpm,
       next_rpm: rpm,
       prev_per_corridor_rpm: prevPerCorridorRpm,
@@ -302,6 +309,7 @@ export const createScheduler = (options: SchedulerOptions) => {
     tokenBuckets.clear()
     logger.info('scheduler_cleanup', {
       provider_id: providerId,
+      scope,
       buckets_cleared: bucketCount,
     })
   }

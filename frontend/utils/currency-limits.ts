@@ -104,7 +104,6 @@ export const FIXED_EXCHANGE_RATES: Record<string, number> = {
   GMD: 67.0,
   LRD: 190.0,
   GNF: 8600,
-  XCD: 2.7,
   CVE: 102.0,
   // South Asia
   INR: 83.5,
@@ -177,6 +176,21 @@ export const MIN_AMOUNT_USD = 50
  */
 export const MAX_AMOUNT_USD = 15000
 
+export type AmountLimitOverrides = {
+  minAmount?: number | null
+  maxAmount?: number | null
+  strict?: boolean
+}
+
+const resolveAmountLimits = (currencyCode: string, overrides?: AmountLimitOverrides) => {
+  const hasMin = overrides && Object.prototype.hasOwnProperty.call(overrides, 'minAmount')
+  const hasMax = overrides && Object.prototype.hasOwnProperty.call(overrides, 'maxAmount')
+  const min = hasMin ? (overrides?.minAmount ?? null) : getMinAmount(currencyCode)
+  const max = hasMax ? (overrides?.maxAmount ?? null) : getMaxAmount(currencyCode)
+  const strict = overrides?.strict ?? true
+  return { min, max, strict }
+}
+
 /**
  * Get the minimum amount for a given currency
  * Converts $50 USD to the target currency using fixed rates
@@ -229,10 +243,13 @@ export function getMaxAmount(currencyCode: string): number {
  * Validate and sanitize amount based on currency limits
  * Returns the sanitized amount (clamped between min and max)
  */
-export function sanitizeAmount(amount: number | string, currencyCode: string): number {
+export function sanitizeAmount(
+  amount: number | string,
+  currencyCode: string,
+  overrides?: AmountLimitOverrides,
+): number {
   const currency = currencyCode.toUpperCase()
-  const minAmount = getMinAmount(currency)
-  const maxAmount = getMaxAmount(currency)
+  const { min: minAmount, max: maxAmount, strict } = resolveAmountLimits(currency, overrides)
   
   let numAmount: number
   if (typeof amount === 'string') {
@@ -245,20 +262,33 @@ export function sanitizeAmount(amount: number | string, currencyCode: string): n
   
   // Ensure positive number
   if (numAmount < 0 || isNaN(numAmount)) {
-    return minAmount
+    return strict && minAmount !== null ? minAmount : 0
   }
   
   // Clamp between min and max
-  return Math.max(minAmount, Math.min(maxAmount, numAmount))
+  if (!strict) {
+    return numAmount
+  }
+  let clamped = numAmount
+  if (minAmount !== null) {
+    clamped = Math.max(minAmount, clamped)
+  }
+  if (maxAmount !== null) {
+    clamped = Math.min(maxAmount, clamped)
+  }
+  return clamped
 }
 
 /**
  * Check if an amount is valid for a given currency
  */
-export function isValidAmount(amount: number | string, currencyCode: string): boolean {
+export function isValidAmount(
+  amount: number | string,
+  currencyCode: string,
+  overrides?: AmountLimitOverrides,
+): boolean {
   const currency = currencyCode.toUpperCase()
-  const minAmount = getMinAmount(currency)
-  const maxAmount = getMaxAmount(currency)
+  const { min: minAmount, max: maxAmount, strict } = resolveAmountLimits(currency, overrides)
   
   let numAmount: number
   if (typeof amount === 'string') {
@@ -267,7 +297,19 @@ export function isValidAmount(amount: number | string, currencyCode: string): bo
     numAmount = amount || 0
   }
   
-  return numAmount >= minAmount && numAmount <= maxAmount && !isNaN(numAmount)
+  if (!Number.isFinite(numAmount) || numAmount <= 0) {
+    return false
+  }
+  if (!strict) {
+    return true
+  }
+  if (minAmount !== null && numAmount < minAmount) {
+    return false
+  }
+  if (maxAmount !== null && numAmount > maxAmount) {
+    return false
+  }
+  return true
 }
 
 /**

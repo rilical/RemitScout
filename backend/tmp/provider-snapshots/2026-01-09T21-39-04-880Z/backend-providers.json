@@ -1,0 +1,141 @@
+{
+  "ok": true,
+  "status": 200,
+  "json": {
+    "data": [
+      {
+        "id": "remitly",
+        "name": "Remitly",
+        "logoUrl": "/logos/remitly.svg",
+        "fee": 1.99,
+        "marginPct": 0.5264951252486674,
+        "fxRate": 18.1,
+        "recipientGets": 1810,
+        "delivery": "0-1 hour",
+        "reliability": 0.9099999999999999,
+        "methods": [
+          "bank"
+        ],
+        "bestFor": "Bank deposit",
+        "whyThisRanking": "Promotional rate available for new customers",
+        "affiliateUrl": null,
+        "outboundUrl": "https://www.remitly.com",
+        "isAffiliate": false,
+        "hasPromo": true,
+        "promoInfo": {
+          "fee": 1.99,
+          "rate": 18.1,
+          "headline": "h-preferential-fees-rate-1st",
+          "details": [
+            "d-only-1st-transfer"
+          ],
+          "newCustomersOnly": true
+        }
+      },
+      {
+        "id": "xe-money",
+        "name": "XE Money",
+        "logoUrl": "/logos/xe-money.svg",
+        "fee": 4,
+        "marginPct": 2.1202695127446978,
+        "fxRate": 17.81,
+        "recipientGets": 1781,
+        "delivery": "72 hours",
+        "reliability": 0.8699999999999999,
+        "methods": [
+          "bank"
+        ],
+        "bestFor": "Bank deposit",
+        "whyThisRanking": "Bank deposit",
+        "affiliateUrl": null,
+        "outboundUrl": "https://www.xe.com/money-transfer",
+        "isAffiliate": false,
+        "hasPromo": false,
+        "promoInfo": null
+      },
+      {
+        "id": "western-union",
+        "name": "Western Union",
+        "logoUrl": "/logos/western-union.svg",
+        "fee": 1.99,
+        "marginPct": 3.2188746853669485,
+        "fxRate": 17.6101,
+        "recipientGets": 1762,
+        "delivery": "1-24 hours",
+        "reliability": 0.82,
+        "methods": [
+          "bank"
+        ],
+        "bestFor": "Bank deposit",
+        "whyThisRanking": "Bank deposit",
+        "affiliateUrl": null,
+        "outboundUrl": "https://www.westernunion.com",
+        "isAffiliate": false,
+        "hasPromo": false,
+        "promoInfo": null
+      },
+      {
+        "id": "worldremit",
+        "name": "WorldRemit",
+        "logoUrl": "/logos/worldremit.svg",
+        "fee": 1.99,
+        "marginPct": 3.504105342991235,
+        "fxRate": 17.5582,
+        "recipientGets": 1756,
+        "delivery": "0-24 hours",
+        "reliability": 0.82,
+        "methods": [
+          "bank"
+        ],
+        "bestFor": "Bank deposit",
+        "whyThisRanking": "Promotional rate available for new customers",
+        "affiliateUrl": null,
+        "outboundUrl": "https://www.worldremit.com",
+        "isAffiliate": false,
+        "hasPromo": true,
+        "promoInfo": {
+          "fee": 1.9899999999999949,
+          "rate": 17.5582,
+          "headline": "h-preferential-fees-rate-1st",
+          "details": [
+            "d-only-1st-transfer"
+          ],
+          "newCustomersOnly": true
+        }
+      },
+      {
+        "id": "wise",
+        "name": "Wise",
+        "logoUrl": "/logos/wise.svg",
+        "fee": 7.64,
+        "marginPct": 1.24204486749689,
+        "fxRate": 17.9698,
+        "recipientGets": 1659.69,
+        "delivery": "Instant",
+        "reliability": 0.93,
+        "methods": [
+          "bank"
+        ],
+        "bestFor": "Bank deposit",
+        "whyThisRanking": "Bank deposit",
+        "affiliateUrl": null,
+        "outboundUrl": "https://wise.com",
+        "isAffiliate": false,
+        "hasPromo": false,
+        "promoInfo": null
+      }
+    ],
+    "updatedAt": "2026-01-09T21:36:18.100Z",
+    "corridor": "US-MX-USD-MXN",
+    "amount": 100,
+    "method": "bank",
+    "bucketUsed": 100,
+    "approximate": false,
+    "midMarketRate": 18.1958,
+    "midMarketSource": "OANDA",
+    "midMarketUpdatedAt": "2026-01-09T21:38:30.335Z",
+    "availableMethods": [
+      "bank"
+    ]
+  }
+}

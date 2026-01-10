@@ -146,6 +146,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
+import { getCostTrendData } from '~/lib/pulseApi'
+import type { CostTrendData } from '~/types/remit'
 
 const store = usePulseStore()
 
@@ -155,6 +157,7 @@ const selectedRange = ref('7D')
 const lastUpdated = ref(new Date().toISOString())
 
 const trendData = ref<number[]>([])
+const costTrendRows = ref<CostTrendData[]>([])
 const providerPerformance = ref<{ name: string; winDays: number }[]>([])
 
 const selectedDays = computed(() => {
@@ -229,35 +232,24 @@ const areaPath = computed(() => {
 async function loadData() {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    const days = selectedDays.value
-    const baseAvg = 4.5
-    
-    trendData.value = Array.from({ length: days }, (_, i) => {
-      const trend = -0.02 * (i / days)
-      const noise = (Math.random() - 0.5) * 0.5
-      return baseAvg + trend + noise
-    })
-    
-    const providers = ['Wise', 'Remitly', 'XE', 'Xoom']
-    const totalDays = days
-    let remainingDays = totalDays
-    
-    providerPerformance.value = providers.map((name, index) => {
-      let winDays: number
-      if (index === 0) {
-        winDays = Math.floor(totalDays * (0.4 + Math.random() * 0.2))
-      } else if (index === providers.length - 1) {
-        winDays = remainingDays
-      } else {
-        winDays = Math.floor(remainingDays * (0.3 + Math.random() * 0.2))
-      }
-      remainingDays -= winDays
-      return { name, winDays: Math.max(0, winDays) }
-    }).sort((a, b) => b.winDays - a.winDays)
-    
-    lastUpdated.value = new Date().toISOString()
+    const rows = await getCostTrendData(store.corridor, store.timeframe, store.amount)
+    const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date))
+    const windowed = sorted.slice(-selectedDays.value)
+
+    costTrendRows.value = windowed
+    trendData.value = windowed.map(row => row.averageHiddenFee)
+
+    const winCounts = new Map<string, number>()
+    for (const row of windowed) {
+      if (!row.bestProvider) continue
+      winCounts.set(row.bestProvider, (winCounts.get(row.bestProvider) || 0) + 1)
+    }
+    providerPerformance.value = Array.from(winCounts.entries())
+      .map(([name, winDays]) => ({ name, winDays }))
+      .sort((a, b) => b.winDays - a.winDays)
+
+    const lastDate = windowed[windowed.length - 1]?.date
+    lastUpdated.value = lastDate ? new Date(lastDate).toISOString() : new Date().toISOString()
   } catch (e) {
     console.error('Failed to load cost trend:', e)
   } finally {
@@ -266,7 +258,7 @@ async function loadData() {
 }
 
 watch(
-  () => [store.corridor, selectedRange.value],
+  () => [store.corridor, store.timeframe, store.amount, selectedRange.value],
   () => loadData(),
   { deep: true }
 )
@@ -275,7 +267,5 @@ onMounted(() => {
   loadData()
 })
 </script>
-
-
 
 

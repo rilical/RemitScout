@@ -50,10 +50,41 @@ const exportJobTypeMap: Record<string, Record<string, ExportJobType>> = {
 
 const getBucket = () => config.storage.exports?.bucket || ''
 
-const enqueueExportJob = async (jobId: string, jobType: ExportJobType, userId: string) => {
+const getQueueConfig = () => {
   const queueMode = config.queues.exports?.mode ?? 'off'
   const queueUrl = config.queues.exports?.url ?? ''
   const queueEnabled = queueMode !== 'off' && Boolean(queueUrl)
+  return { queueMode, queueUrl, queueEnabled }
+}
+
+const getExportPipelineStatus = () => {
+  const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
+  if (!queueEnabled) {
+    return {
+      ok: false,
+      error: 'exports_queue_disabled',
+      message: queueMode === 'off'
+        ? 'Exports are disabled in this environment.'
+        : 'Exports queue is missing a URL.',
+      meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
+    }
+  }
+
+  const bucket = getBucket()
+  if (!bucket) {
+    return {
+      ok: false,
+      error: 'exports_bucket_not_configured',
+      message: 'Exports bucket is not configured.',
+      meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
+    }
+  }
+
+  return { ok: true }
+}
+
+const enqueueExportJob = async (jobId: string, jobType: ExportJobType, userId: string) => {
+  const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
 
   if (!queueEnabled) {
     if (queueMode === 'queue') {
@@ -85,6 +116,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
 
     const user = request.user!
+    const pipeline = getExportPipelineStatus()
+    if (!pipeline.ok) {
+      reply.code(503)
+      return {
+        error: pipeline.error,
+        message: pipeline.message,
+      }
+    }
     const { dataType, format } = parsed.data
     const jobType = exportJobTypeMap[dataType][format]
     const dateFrom = toDateOrNull(parsed.data.dateFrom)

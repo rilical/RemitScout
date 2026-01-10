@@ -19,11 +19,14 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">{{ quoteSuccessRate.toFixed(1) }}%</div>
+          <div class="text-2xl font-bold text-white mb-1">
+            {{ quoteSuccessRate !== null ? `${quoteSuccessRate.toFixed(1)}%` : 'n/a' }}
+          </div>
           <div class="text-xs text-neutral-400">{{ quoteSuccessDelta }}</div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <div class="text-xs text-neutral-500">Chart placeholder</div>
+          <PulseLineChart v-if="successSeries.length" :series="successSeries" unit="percent" :show-area="false" />
+          <div v-else class="text-xs text-neutral-500">No data yet</div>
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">View</button>
@@ -39,11 +42,14 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">Average availability {{ providerAvailability.toFixed(1) }} providers</div>
+          <div class="text-2xl font-bold text-white mb-1">
+            Average availability {{ providerAvailability !== null ? providerAvailability.toFixed(1) : 'n/a' }} providers
+          </div>
           <div class="text-xs text-neutral-400">Providers returning quotes per interval</div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <div class="text-xs text-neutral-500">Chart placeholder</div>
+          <PulseLineChart v-if="availabilitySeries.length" :series="availabilitySeries" :show-area="false" />
+          <div v-else class="text-xs text-neutral-500">No data yet</div>
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">View</button>
@@ -59,11 +65,14 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">p95 freshness {{ freshnessP95 }} min</div>
+          <div class="text-2xl font-bold text-white mb-1">
+            p95 freshness {{ freshnessP95 !== null ? freshnessP95 : 'n/a' }} min
+          </div>
           <div class="text-xs text-neutral-400">Quote age distribution in minutes</div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <div class="text-xs text-neutral-500">Chart placeholder</div>
+          <PulseLineChart v-if="freshnessSeries.length" :series="freshnessSeries" :show-area="false" />
+          <div v-else class="text-xs text-neutral-500">No data yet</div>
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">View</button>
@@ -79,11 +88,14 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">Liquidity index {{ liquidityIndex }}</div>
+          <div class="text-2xl font-bold text-white mb-1">
+            Liquidity index {{ liquidityIndex !== null ? liquidityIndex : 'n/a' }}
+          </div>
           <div class="text-xs text-neutral-400">Based on quote density and provider coverage</div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <div class="text-xs text-neutral-500">Chart placeholder</div>
+          <PulseLineChart v-if="liquiditySeries.length" :series="liquiditySeries" :show-area="false" />
+          <div v-else class="text-xs text-neutral-500">No data yet</div>
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">View</button>
@@ -99,14 +111,20 @@
 import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getChartData } from '~/lib/pulseApi'
+import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
+import type { ChartSeries } from '~/types/pulse'
 
 const store = usePulseStore()
 
-const quoteSuccessRate = ref(98.4)
-const quoteSuccessDelta = ref('+0.3% vs 7d avg')
-const providerAvailability = ref(5.0)
-const freshnessP95 = ref(9)
-const liquidityIndex = ref(59)
+const quoteSuccessRate = ref<number | null>(null)
+const quoteSuccessDelta = ref('n/a')
+const providerAvailability = ref<number | null>(null)
+const freshnessP95 = ref<number | null>(null)
+const liquidityIndex = ref<number | null>(null)
+const successSeries = ref<ChartSeries[]>([])
+const availabilitySeries = ref<ChartSeries[]>([])
+const freshnessSeries = ref<ChartSeries[]>([])
+const liquiditySeries = ref<ChartSeries[]>([])
 
 async function loadData() {
   try {
@@ -117,31 +135,56 @@ async function loadData() {
       getChartData('corridor-liquidity', store.filtersForApi),
     ])
 
-    if (successData?.series) {
-      const lastValues = successData.series.map(s => s.points[s.points.length - 1]?.v || 0) || []
-      const average = lastValues.length ? lastValues.reduce((sum, v) => sum + v, 0) / lastValues.length : 98.4
+    successSeries.value = successData?.series || []
+    availabilitySeries.value = availabilityData?.series || []
+    freshnessSeries.value = freshnessData?.series || []
+    liquiditySeries.value = liquidityData?.series || []
+
+    const successLast = successSeries.value
+      .map(s => s.points[s.points.length - 1]?.v)
+      .filter((value): value is number => typeof value === 'number')
+    const successFirst = successSeries.value
+      .map(s => s.points[0]?.v)
+      .filter((value): value is number => typeof value === 'number')
+    if (successLast.length > 0) {
+      const average = successLast.reduce((sum, v) => sum + v, 0) / successLast.length
       quoteSuccessRate.value = average
-      const delta = (Math.random() - 0.5) * 1
-      quoteSuccessDelta.value = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs 7d avg`
+      if (successFirst.length > 0) {
+        const firstAvg = successFirst.reduce((sum, v) => sum + v, 0) / successFirst.length
+        const delta = average - firstAvg
+        quoteSuccessDelta.value = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs window start`
+      } else {
+        quoteSuccessDelta.value = 'n/a'
+      }
+    } else {
+      quoteSuccessRate.value = null
+      quoteSuccessDelta.value = 'n/a'
     }
 
-    if (availabilityData?.series) {
-      const lastValues = availabilityData.series.map(s => s.points[s.points.length - 1]?.v || 0) || []
-      const average = lastValues.length ? lastValues.reduce((sum, v) => sum + v, 0) / lastValues.length : 5.0
-      providerAvailability.value = average
+    const availabilityLast = availabilitySeries.value
+      .map(s => s.points[s.points.length - 1]?.v)
+      .filter((value): value is number => typeof value === 'number')
+    providerAvailability.value = availabilityLast.length
+      ? availabilityLast.reduce((sum, v) => sum + v, 0) / availabilityLast.length
+      : null
+
+    const freshnessValues = freshnessSeries.value
+      .flatMap(s => s.points.map(p => p.v))
+      .filter((value): value is number => typeof value === 'number')
+    if (freshnessValues.length > 0) {
+      const sorted = [...freshnessValues].sort((a, b) => a - b)
+      const p95Index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))
+      freshnessP95.value = Math.round(sorted[p95Index])
+    } else {
+      freshnessP95.value = null
     }
 
-    if (freshnessData?.series) {
-      const lastValues = freshnessData.series.map(s => s.points[s.points.length - 1]?.v || 0) || []
-      const p95 = lastValues.length ? Math.max(...lastValues) : 9
-      freshnessP95.value = Math.round(p95)
-    }
-
-    if (liquidityData?.series) {
-      const lastValues = liquidityData.series.map(s => s.points[s.points.length - 1]?.v || 0) || []
-      const average = lastValues.length ? lastValues.reduce((sum, v) => sum + v, 0) / lastValues.length : 59
-      liquidityIndex.value = Math.round(average)
-    }
+    const liquidityLast = liquiditySeries.value
+      .map(s => s.points[s.points.length - 1]?.v)
+      .filter((value): value is number => typeof value === 'number')
+    liquidityIndex.value = liquidityLast.length
+      ? Math.round(liquidityLast.reduce((sum, v) => sum + v, 0) / liquidityLast.length)
+      : null
   } catch (e) {
     console.error('Failed to load operational coverage data:', e)
   }
@@ -157,7 +200,6 @@ onMounted(() => {
   loadData()
 })
 </script>
-
 
 
 

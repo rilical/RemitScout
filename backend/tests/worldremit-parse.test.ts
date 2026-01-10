@@ -71,4 +71,15 @@ describe('worldremit parse', () => {
     expect(parsed.payin_method).toBe('debit_card')
     expect(parsed.total_debit_amount).toBe(100)
   })
+
+  it('uses the selected payin total when fees differ', () => {
+    const payload = loadPayload(corridorId)
+    const parsed = parseWorldRemitPayload(payload, buildRequest('credit_card', 'bank_deposit'))
+    expect(parsed).not.toBeNull()
+    if (!parsed) return
+
+    expect(parsed.payin_method).toBe('credit_card')
+    expect(parsed.fee_amount).toBe(3)
+    expect(parsed.total_debit_amount).toBe(103)
+  })
   })

@@ -106,35 +106,18 @@ export const useCorridorCurrencies = (
     if (fromFallback.value) {
       result.push(fromFallback.value)
     }
-    
-    // Always include common major currencies (USD, EUR, GBP)
-    if (!result.includes('USD')) {
-      result.push('USD')
-    }
-    if (!result.includes('EUR')) {
-      result.push('EUR')
-    }
-    if (!result.includes('GBP')) {
-      result.push('GBP')
-    }
-    
+
     // Get unique list
     const uniqueList = unique(result)
     
-    // Sort: fallback first, then USD, EUR, GBP, then alphabetically
+    // Sort: fallback first, then alphabetically
     const sorted = uniqueList.sort((a, b) => {
       if (a === fromFallback.value) return -1
       if (b === fromFallback.value) return 1
-      if (a === 'USD') return -1
-      if (b === 'USD') return 1
-      if (a === 'EUR') return -1
-      if (b === 'EUR') return 1
-      if (a === 'GBP') return -1
-      if (b === 'GBP') return 1
       return a.localeCompare(b)
     })
     
-    return sorted.length ? sorted : (fromFallback.value ? [fromFallback.value, 'USD', 'EUR', 'GBP'] : ['USD', 'EUR', 'GBP'])
+    return sorted.length ? sorted : (fromFallback.value ? [fromFallback.value] : [])
   })
 
   const availableToCurrencies = computed(() => {
@@ -161,30 +144,18 @@ export const useCorridorCurrencies = (
     if (toFallback.value) {
       result.push(toFallback.value)
     }
-    
-    // Ensure USD and EUR are always included (they're commonly used)
-    if (!result.includes('USD')) {
-      result.push('USD')
-    }
-    if (!result.includes('EUR')) {
-      result.push('EUR')
-    }
-    
+
     // Get unique list
     const uniqueList = unique(result)
     
-    // Sort: fallback first, then USD, EUR, then alphabetically
+    // Sort: fallback first, then alphabetically
     const sorted = uniqueList.sort((a, b) => {
       if (a === toFallback.value) return -1
       if (b === toFallback.value) return 1
-      if (a === 'USD') return -1
-      if (b === 'USD') return 1
-      if (a === 'EUR') return -1
-      if (b === 'EUR') return 1
       return a.localeCompare(b)
     })
     
-    return sorted.length ? sorted : (toFallback.value ? [toFallback.value, 'USD', 'EUR'] : ['USD', 'EUR'])
+    return sorted.length ? sorted : (toFallback.value ? [toFallback.value] : [])
   })
 
   if (fromCurrency) {

@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import type { ChartSeries, ChartPoint } from '~/types/pulse'
 
 interface Props {
@@ -208,18 +208,21 @@ function toggleSeries(id: string) {
 }
 
 const renderedSeries = computed(() => {
+  if (props.series.length === 0) return []
+  const allValues = props.series
+    .filter(x => visibleSeries.has(x.id))
+    .flatMap(x => x.points.map(p => p.v))
+  if (allValues.length === 0) return []
+  const minVal = Math.min(...allValues)
+  const maxVal = Math.max(...allValues)
+  const range = maxVal - minVal || 1
+
   return props.series
     .filter(s => visibleSeries.has(s.id))
     .map(s => {
-      const allValues = props.series
-        .filter(x => visibleSeries.has(x.id))
-        .flatMap(x => x.points.map(p => p.v))
-      const minVal = Math.min(...allValues)
-      const maxVal = Math.max(...allValues)
-      const range = maxVal - minVal || 1
-
+      const denom = Math.max(1, s.points.length - 1)
       const normalizedPoints = s.points.map((p, i) => ({
-        x: padding.left + (i / (s.points.length - 1)) * chartWidth,
+        x: padding.left + (i / denom) * chartWidth,
         y: padding.top + chartHeight - ((p.v - minVal) / range) * chartHeight,
         value: p.v,
         timestamp: p.t,
@@ -228,6 +231,15 @@ const renderedSeries = computed(() => {
       return { ...s, normalizedPoints }
     })
 })
+
+watch(
+  () => props.series,
+  (next) => {
+    visibleSeries.clear()
+    next.forEach(series => visibleSeries.add(series.id))
+  },
+  { deep: true },
+)
 
 const gridLines = computed(() => {
   const count = 5
@@ -352,7 +364,5 @@ function getAreaPath(points: { x: number; y: number }[]): string {
   return `${start} ${line} ${end}`
 }
 </script>
-
-
 
 

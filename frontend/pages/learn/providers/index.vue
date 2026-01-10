@@ -256,6 +256,7 @@ import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
 import HomeFaq from '~/components/home/HomeFaq.vue'
 import { PROVIDER_SCORES } from '~/lib/providerScores'
+import { useProviderMetadata } from '~/composables/useProviderMetadata'
 import { setSeo, jsonLdBreadcrumb, jsonLdSiteNavigation } from '~/composables/useSeo'
 
 definePageMeta({
@@ -294,17 +295,75 @@ jsonLdSiteNavigation([
   { name: 'FAQ', url: `${siteUrl}/faq` },
 ])
 
-// Providers data - use static list from provider scores
+const { data: providerMetadata } = await useProviderMetadata()
+
+// Providers data - merge backend metadata with frontend scores to ensure all providers are shown
 const allProviders = computed(() => {
-  return Object.values(PROVIDER_SCORES)
-    .map(provider => ({
-      id: provider.id,
-      slug: provider.slug,
-      name: provider.name,
-      score: provider.remitScore,
-      scoreBreakdown: provider.scoreBreakdown,
-    }))
-    .filter(p => p.score > 0) // Only show providers with scores
+  const metadata = providerMetadata.value || []
+  const scoreLookup = new Map(
+    Object.values(PROVIDER_SCORES).map(provider => [provider.id, provider]),
+  )
+  const scoreBySlug = new Map(
+    Object.values(PROVIDER_SCORES).map(provider => [provider.slug, provider]),
+  )
+
+  // Create a map of providers from metadata (with backend data)
+  const metadataMap = new Map(
+    metadata.map(provider => [
+      provider.id,
+      {
+        id: provider.id,
+        slug: provider.slug,
+        name: provider.displayName || provider.name,
+        score: provider.remitScore ?? 0,
+        scoreBreakdown: provider.scoreBreakdown,
+        affiliateUrl: provider.affiliateUrl || undefined,
+        url: provider.url || undefined,
+      },
+    ]),
+  )
+
+  // Add all providers from PROVIDER_SCORES, merging with metadata when available
+  const allProvidersMap = new Map()
+  
+  Object.values(PROVIDER_SCORES).forEach(scoreProvider => {
+    const existing = metadataMap.get(scoreProvider.id)
+    if (existing) {
+      // Use metadata version, but ensure score is from PROVIDER_SCORES (most up-to-date)
+      allProvidersMap.set(scoreProvider.id, {
+        ...existing,
+        score: scoreProvider.remitScore,
+        scoreBreakdown: scoreProvider.scoreBreakdown || existing.scoreBreakdown,
+      })
+    } else {
+      // Provider not in metadata, use score data
+      allProvidersMap.set(scoreProvider.id, {
+        id: scoreProvider.id,
+        slug: scoreProvider.slug,
+        name: scoreProvider.name,
+        score: scoreProvider.remitScore,
+        scoreBreakdown: scoreProvider.scoreBreakdown,
+      })
+    }
+  })
+
+  // Also add any metadata providers that might not be in PROVIDER_SCORES yet
+  metadata.forEach(provider => {
+    if (!allProvidersMap.has(provider.id)) {
+      const scoreSource = scoreLookup.get(provider.id) || scoreBySlug.get(provider.slug)
+      allProvidersMap.set(provider.id, {
+        id: provider.id,
+        slug: provider.slug,
+        name: provider.displayName || provider.name,
+        score: provider.remitScore ?? scoreSource?.remitScore ?? 0,
+        scoreBreakdown: provider.scoreBreakdown ?? scoreSource?.scoreBreakdown,
+        affiliateUrl: provider.affiliateUrl || undefined,
+        url: provider.url || undefined,
+      })
+    }
+  })
+
+  return Array.from(allProvidersMap.values()).filter(p => p.score > 0)
 })
 
 const filteredProviders = computed(() => {

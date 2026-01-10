@@ -957,18 +957,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/remitbee'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'RemitBee Review 2024 - Remit-Score 8.3/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent RemitBee review with Remit-Score 8.3/10. Canada-focused with competitive value in core lanes, bank speed dependencies, solid reliability. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent RemitBee review with Remit-Score 8.3/10. Canada-focused with competitive value in core lanes, bank speed dependencies, solid reliability. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/remitbee`,
+  ogImage: `${siteUrl}/og-images/provider-remitbee.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `RemitBee earns a Remit-Score of 8.3/10 based on our independent analysis. The provider is Canada-focused with competitive value in core lanes, though speed depends on bank processing times. Solid reliability overall. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'RemitBee',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.3,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

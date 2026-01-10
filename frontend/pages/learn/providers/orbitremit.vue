@@ -917,18 +917,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/orbitremit'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'OrbitRemit Review 2024 - Remit-Score 8.1/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent OrbitRemit review with Remit-Score 8.1/10. AU/NZ specialist; fixed-fee value good in-core; speed often bank-timed; narrower reach. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent OrbitRemit review with Remit-Score 8.1/10. AU/NZ specialist; fixed-fee value good in-core; speed often bank-timed; narrower reach. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/orbitremit`,
+  ogImage: `${siteUrl}/og-images/provider-orbitremit.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `OrbitRemit earns a Remit-Score of 8.1/10 based on our independent analysis. The provider is an AU/NZ specialist with good fixed-fee value in core corridors, though speed is often bank-timed and reach is narrower. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'OrbitRemit',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.1,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

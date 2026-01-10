@@ -107,10 +107,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useProviderVisits } from '~/composables/useProviderVisits'
+import { useAffiliate } from '~/composables/useAffiliate'
 import { useAuth } from '~/composables/useAuth'
 
 const { isAuthenticated } = useAuth()
 const { pendingVisits, fetchPendingFeedback, submitFeedback } = useProviderVisits()
+const { trackConversion } = useAffiliate()
 
 const showPrompt = ref(false)
 const completedTransfer = ref<boolean | null>(null)
@@ -125,6 +127,13 @@ const submitting = ref(false)
 const hasFetched = ref(false)
 
 const activeVisit = computed(() => pendingVisits.value[0])
+
+const getCorridorCurrency = (corridorId?: string | null) => {
+  if (!corridorId) return null
+  const parts = corridorId.split('-')
+  if (parts.length !== 4) return null
+  return parts[2] || null
+}
 
 const resetForm = () => {
   completedTransfer.value = null
@@ -164,6 +173,17 @@ const submit = async () => {
       feedback_rating: feedbackRating.value ? Number(feedbackRating.value) : undefined,
       feedback_notes: feedbackNotes.value || undefined,
     })
+    if (completedTransfer.value) {
+      const amount = transferAmount.value ? Number(transferAmount.value) : undefined
+      const currency = getCorridorCurrency(activeVisit.value.corridor_id)
+      void trackConversion({
+        providerId: activeVisit.value.provider_id,
+        corridorId: activeVisit.value.corridor_id ?? undefined,
+        amount,
+        currency: currency ?? undefined,
+        source: 'provider_visit',
+      })
+    }
     resetForm()
     showPrompt.value = pendingVisits.value.length > 0
   } catch (error: any) {

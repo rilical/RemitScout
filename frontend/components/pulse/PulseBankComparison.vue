@@ -49,16 +49,16 @@
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Hidden markup</span>
-                <span class="font-semibold text-danger-600">${{ data?.bankMarkup.toFixed(2) }}</span>
+                <span class="font-semibold text-danger-600">{{ data ? `$${data.bankMarkup.toFixed(2)}` : 'n/a' }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Wire fee</span>
-                <span class="font-semibold text-white">${{ data?.bankFee.toFixed(2) }}</span>
+                <span class="font-semibold text-white">{{ data ? `$${data.bankFee.toFixed(2)}` : 'n/a' }}</span>
               </div>
               <div class="border-t border-danger-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
                   <span class="text-sm font-semibold text-white">Total cost</span>
-                  <span class="text-lg font-bold text-danger-600">${{ data?.bankTotalCost.toFixed(2) }}</span>
+                  <span class="text-lg font-bold text-danger-600">{{ data ? `$${data.bankTotalCost.toFixed(2)}` : 'n/a' }}</span>
                 </div>
               </div>
             </div>
@@ -70,21 +70,21 @@
               <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span class="text-sm font-semibold text-white">{{ data?.bestSpecialistName }}</span>
+              <span class="text-sm font-semibold text-white">{{ data?.bestSpecialistName || 'n/a' }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Hidden markup</span>
-                <span class="font-semibold text-brand-600">${{ data?.bestSpecialistMarkup.toFixed(2) }}</span>
+                <span class="font-semibold text-brand-600">{{ data ? `$${data.bestSpecialistMarkup.toFixed(2)}` : 'n/a' }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Transfer fee</span>
-                <span class="font-semibold text-white">${{ data?.bestSpecialistFee.toFixed(2) }}</span>
+                <span class="font-semibold text-white">{{ data ? `$${data.bestSpecialistFee.toFixed(2)}` : 'n/a' }}</span>
               </div>
               <div class="border-t border-brand-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
                   <span class="text-sm font-semibold text-white">Total cost</span>
-                  <span class="text-lg font-bold text-brand-600">${{ data?.bestSpecialistTotalCost.toFixed(2) }}</span>
+                  <span class="text-lg font-bold text-brand-600">{{ data ? `$${data.bestSpecialistTotalCost.toFixed(2)}` : 'n/a' }}</span>
                 </div>
               </div>
             </div>
@@ -93,9 +93,9 @@
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4 text-center">
           <div class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Benchmark Gap</div>
-          <div class="text-3xl font-bold text-white">${{ data?.savings.toFixed(2) }}</div>
+          <div class="text-3xl font-bold text-white">{{ data ? `$${data.savings.toFixed(2)}` : 'n/a' }}</div>
           <div class="text-xs text-neutral-400">
-            Bank all-in cost is {{ data?.savingsPercent }}% higher than specialist leader
+            Bank all-in cost is {{ data ? data.savingsPercent : 'n/a' }}% higher than specialist leader
           </div>
         </div>
       </div>
@@ -120,7 +120,7 @@ const lastUpdated = ref(new Date().toISOString())
 async function loadData() {
   loading.value = true
   try {
-    data.value = await getBankComparisonData(store.corridor, store.amount)
+    data.value = await getBankComparisonData(store.corridor, store.timeframe, store.amount)
     lastUpdated.value = new Date().toISOString()
   } catch (e) {
     console.error('Failed to load bank comparison:', e)
@@ -130,7 +130,7 @@ async function loadData() {
 }
 
 watch(
-  () => [store.corridor, store.amount],
+  () => [store.corridor, store.timeframe, store.amount],
   () => loadData(),
   { deep: true }
 )
@@ -139,7 +139,5 @@ onMounted(() => {
   loadData()
 })
 </script>
-
-
 
 

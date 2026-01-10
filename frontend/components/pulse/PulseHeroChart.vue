@@ -16,7 +16,7 @@
         <!-- Loss Indicator -->
         <div class="text-right">
           <div class="text-sm text-neutral-400">Markup cost on ${{ store.amount.toLocaleString() }}</div>
-          <div class="text-xl font-bold text-danger-600">${{ data?.lossOn1000.toFixed(2) }}</div>
+          <div class="text-xl font-bold text-danger-600">{{ lossOn1000Display }}</div>
         </div>
       </div>
     </div>
@@ -152,6 +152,11 @@ const tooltipPosition = ref({ x: 0, y: 0 })
 const currentSpreadBps = computed(() => {
   if (!data.value) return 0
   return Math.round(data.value.currentSpreadPercent * 100)
+})
+
+const lossOn1000Display = computed(() => {
+  if (!data.value) return 'n/a'
+  return `$${data.value.lossOn1000.toFixed(2)}`
 })
 
 const midLabel = computed(() => (props.metric === 'markup' ? 'Baseline (0 bps)' : 'Mid-Market Rate'))
@@ -408,7 +413,6 @@ onMounted(() => {
   loadData()
 })
 </script>
-
 
 
 

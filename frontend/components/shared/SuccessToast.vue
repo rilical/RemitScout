@@ -12,9 +12,9 @@
         v-if="isVisible"
         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 rounded-xl bg-slate-900 px-5 py-3 shadow-2xl"
       >
-        <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="iconBgClass">
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="iconPath" />
           </svg>
         </div>
         <div>
@@ -36,11 +36,14 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string
   message?: string
   duration?: number
-}>()
+  variant?: 'success' | 'error' | 'warning'
+}>(), {
+  variant: 'success',
+})
 
 const emit = defineEmits<{
   hide: []
@@ -48,6 +51,17 @@ const emit = defineEmits<{
 
 const isVisible = ref(false)
 let timeoutId: ReturnType<typeof setTimeout> | null = null
+const iconBgClass = computed(() => {
+  if (props.variant === 'error') return 'bg-rose-500'
+  if (props.variant === 'warning') return 'bg-amber-500'
+  return 'bg-emerald-500'
+})
+const iconPath = computed(() => {
+  if (props.variant === 'success') {
+    return 'M5 13l4 4L19 7'
+  }
+  return 'M12 8v4m0 4h.01m-7.071-4a7.071 7.071 0 1114.142 0A7.071 7.071 0 014.929 12z'
+})
 
 function show() {
   isVisible.value = true
@@ -64,4 +78,3 @@ function hide() {
 
 defineExpose({ show, hide })
 </script>
-

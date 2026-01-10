@@ -101,7 +101,19 @@
                     <span class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
                       {{ option?.label }}
                     </span>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-1.5 py-0.5 text-xs font-bold text-white ml-auto">
+                    <span
+                      v-if="option?.locked"
+                      class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 ml-auto"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4" />
+                      </svg>
+                      Locked
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-1.5 py-0.5 text-xs font-bold text-white ml-auto"
+                    >
                       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
@@ -120,7 +132,19 @@
                         {{ option.label }}
                       </span>
                     </div>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-2 py-0.5 text-xs font-bold text-white">
+                    <span
+                      v-if="option.locked"
+                      class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4" />
+                      </svg>
+                      Locked
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-2 py-0.5 text-xs font-bold text-white"
+                    >
                       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
@@ -142,6 +166,7 @@
                   :options="comparatorOptions"
                   placeholder="Select condition"
                   button-class="h-11"
+                  :disabled="formLocked"
                 />
               </div>
 
@@ -152,12 +177,15 @@
                 <input
                   v-model.number="value"
                   type="number"
-                  step="0.01"
-                  class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                  :step="valueStep"
+                  :min="valueMin"
+                  :max="valueMax"
+                  :disabled="formLocked"
+                  class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                 >
               </div>
 
-              <div>
+              <div v-if="showCurrency">
                 <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
                   Currency
                 </label>
@@ -166,7 +194,18 @@
                   :options="currencyOptions"
                   placeholder="Select currency"
                   button-class="h-11"
+                  :disabled="formLocked"
                 />
+              </div>
+              <div v-else>
+                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                  Currency
+                </label>
+                <div
+                  class="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 flex items-center"
+                >
+                  Not required
+                </div>
               </div>
             </div>
 
@@ -179,9 +218,10 @@
                 :options="frequencyOptions"
                 placeholder="Select frequency"
                 button-class="h-11"
+                :disabled="formLocked"
               />
               <p class="mt-2 text-xs text-slate-500">
-                Frequency gating (Plus) can be enforced later via entitlements.
+                Hourly and real-time alerts require Plus.
               </p>
             </div>
 
@@ -190,6 +230,56 @@
               class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
             >
               {{ error }}
+            </div>
+
+            <div
+              v-if="limitState"
+              class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-slate-800">{{ limitTitle }}</span>
+                <span class="text-xs text-slate-500">{{ limitCount }}/{{ limitState.limit }}</span>
+              </div>
+              <div v-if="limitItems.length" class="mb-3 rounded-lg border border-slate-200 bg-white max-h-40 overflow-y-auto">
+                <div
+                  v-for="item in limitItems"
+                  :key="item.id"
+                  class="flex items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
+                >
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-slate-800 truncate">
+                      {{ item.label }}
+                    </div>
+                    <div v-if="item.meta" class="text-xs text-slate-500 truncate">
+                      {{ item.meta }}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                    @click="handleLimitRemove(item.id)"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <button
+                  v-if="!isPlus"
+                  type="button"
+                  class="h-10 flex-1 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors"
+                  @click="handleUpgrade"
+                >
+                  Upgrade to Plus
+                </button>
+                <button
+                  type="button"
+                  class="h-10 flex-1 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition-colors"
+                  @click="handleManage"
+                >
+                  {{ manageLabel }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -203,7 +293,8 @@
             </button>
             <button
               type="button"
-              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              :disabled="formLocked"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
               @click="save"
             >
               {{ isEditing ? 'Update alert' : 'Create alert' }}
@@ -213,6 +304,12 @@
       </div>
     </Transition>
   </Teleport>
+
+  <SuccessToast
+    ref="successToastRef"
+    :title="toastTitle"
+    :message="toastMessage"
+  />
 </template>
 
 <script setup lang="ts">
@@ -221,11 +318,13 @@ import type { AlertComparator, AlertFrequency, AlertRule, WatchTarget } from '~/
 import type { Method } from '~/types/remit'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
+import SuccessToast from '~/components/shared/SuccessToast.vue'
 import { COUNTRIES, getCountryByCode, getCurrencyDisplay } from '~/utils/countries-currencies'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
 
 const { isOpen, context, close: closeModal } = useSaveAlertModal()
 const alerts = useAlerts()
+const watchlist = useWatchlist()
 const { isPlus } = useEntitlements()
 const { request } = useApi()
 const route = useRoute()
@@ -240,6 +339,10 @@ watch(() => route.fullPath, () => {
 const modalContent = ref<HTMLElement | null>(null)
 const error = ref<string>('')
 const initializing = ref(false)
+const successToastRef = ref<{ show: () => void; hide: () => void } | null>(null)
+const toastTitle = ref('')
+const toastMessage = ref('')
+const limitState = ref<{ feature: 'watchlist' | 'alert'; limit: number } | null>(null)
 
 const metric = ref<AlertRule['metric']>('rate')
 const comparator = ref<AlertComparator>('gte')
@@ -374,9 +477,12 @@ const metricOptions = computed(() => {
         { value: 'totalCost' as const, label: 'Total cost' },
         { value: 'fee' as const, label: 'Fee' },
       )
-      if (isPlus.value) {
-        options.push({ value: 'sendScore' as const, label: 'Intelligent Alert' })
-      }
+      options.push({
+        value: 'sendScore' as const,
+        label: 'Intelligent Alert',
+        disabled: !isPlus.value,
+        locked: !isPlus.value,
+      })
       break
     case 'fxPair':
       options.push({ value: 'rate' as const, label: 'FX rate' })
@@ -391,6 +497,22 @@ const metricOptions = computed(() => {
       options.push({ value: 'rate' as const, label: 'Rate' })
   }
   return options
+})
+
+const firstEnabledMetric = computed<AlertRule['metric']>(() => {
+  for (const option of metricOptions.value) {
+    if (typeof option === 'string') return option as AlertRule['metric']
+    if (!option.disabled) return option.value as AlertRule['metric']
+  }
+  return 'rate'
+})
+
+const metricReady = computed(() => {
+  if (!metric.value) return false
+  return metricOptions.value.some((option) => {
+    const optionValue = typeof option === 'string' ? option : option.value
+    return optionValue === metric.value
+  })
 })
 
 const comparatorOptions = computed(() => [
@@ -423,15 +545,105 @@ const currencyOptions = computed(() => {
 
 const frequencyOptions = computed(() => [
   { value: 'daily' as const, label: 'Daily' },
-  { value: 'hourly' as const, label: 'Hourly' },
-  { value: 'realtime' as const, label: 'Real-time' },
+  { value: 'hourly' as const, label: 'Hourly', disabled: !isPlus.value },
+  { value: 'realtime' as const, label: 'Real-time', disabled: !isPlus.value },
 ])
+
+const limitTitle = computed(() => {
+  if (!limitState.value) return ''
+  return limitState.value.feature === 'watchlist' ? 'Watchlist limit reached' : 'Alert limit reached'
+})
+
+const limitCount = computed(() => {
+  if (!limitState.value) return 0
+  return limitState.value.feature === 'watchlist'
+    ? watchlist.count.value
+    : alerts.count.value
+})
+
+const manageLabel = computed(() => {
+  if (!limitState.value) return ''
+  return limitState.value.feature === 'watchlist' ? 'Manage watchlist' : 'Manage alerts'
+})
+
+const managePath = computed(() => {
+  if (!limitState.value) return ''
+  return limitState.value.feature === 'watchlist'
+    ? '/dashboard?tab=watchlist'
+    : '/dashboard?tab=alerts'
+})
+
+const limitMetricLabels: Record<string, string> = {
+  recipientGets: 'Recipient gets',
+  totalCost: 'Total cost',
+  fee: 'Fee',
+  midMarketRate: 'Mid-market rate',
+  rate: 'Rate',
+  sendScore: 'Intelligent alert',
+  index: 'Index',
+}
+
+const limitComparatorLabels: Record<string, string> = {
+  gt: '>',
+  gte: '≥',
+  lt: '<',
+  lte: '≤',
+  crosses_above: 'crosses above',
+  crosses_below: 'crosses below',
+}
+
+const formatLimitAlertValue = (metric: string, threshold: number) => {
+  if (!Number.isFinite(threshold)) return '—'
+  if (metric === 'sendScore') return Math.round(threshold).toString()
+  if (metric === 'rate' || metric === 'midMarketRate') return threshold.toFixed(4)
+  return threshold.toFixed(2)
+}
+
+const limitItems = computed(() => {
+  if (!limitState.value) return []
+  const limit = limitState.value.limit
+  if (limitState.value.feature === 'alert') {
+    const items = alerts.alerts.value.map((alert) => {
+      const label = watchlist.findById(alert.watchlistItemId)?.label || 'Alert'
+      const metricLabel = limitMetricLabels[alert.rule.metric] || 'Alert'
+      const comparatorLabel = limitComparatorLabels[alert.rule.comparator] || alert.rule.comparator
+      const valueLabel = formatLimitAlertValue(alert.rule.metric, alert.rule.value)
+      const currencyLabel = alert.rule.currency ? ` ${alert.rule.currency}` : ''
+      return {
+        id: alert.id,
+        label,
+        meta: `${metricLabel} ${comparatorLabel} ${valueLabel}${currencyLabel}`.trim(),
+      }
+    })
+    return limit > 0 ? items.slice(0, limit) : items
+  }
+
+  const items = watchlist.items.value.map(item => ({
+    id: item.id,
+    label: item.label,
+  }))
+  return limit > 0 ? items.slice(0, limit) : items
+})
+
+const handleLimitRemove = async (id: string) => {
+  if (!limitState.value) return
+  if (limitState.value.feature === 'watchlist') {
+    await watchlist.remove(id)
+  } else {
+    await alerts.remove(id)
+  }
+
+  if (limitState.value.limit > 0 && limitCount.value < limitState.value.limit) {
+    limitState.value = null
+  }
+}
 
 const isSmartMetric = computed(() => metric.value === 'sendScore')
 const showCurrency = computed(() => target.value.type === 'corridor' && !isSmartMetric.value)
 const valueStep = computed(() => (isSmartMetric.value ? 1 : 0.01))
 const valueMin = computed(() => (isSmartMetric.value ? 0 : undefined))
 const valueMax = computed(() => (isSmartMetric.value ? 100 : undefined))
+const formLocked = computed(() => !metricReady.value)
 
 const defaultValueForMetric = (metricValue: AlertRule['metric']) => {
   if (metricValue === 'sendScore') return 90
@@ -451,6 +663,20 @@ function close() {
   closeModal()
 }
 
+async function handleUpgrade() {
+  await navigateTo('/plus')
+  close()
+}
+
+async function handleManage() {
+  if (!managePath.value) {
+    close()
+    return
+  }
+  await navigateTo(managePath.value)
+  close()
+}
+
 const isEditing = computed(() => !!context.value?.alertId)
 const shouldDefaultToSmartAlert = computed(() => (
   context.value?.source === 'alerts'
@@ -460,6 +686,7 @@ const shouldDefaultToSmartAlert = computed(() => (
 
 async function save() {
   error.value = ''
+  limitState.value = null
 
   if (isEditing.value && context.value?.alertId) {
     await alerts.update(context.value.alertId, {
@@ -472,6 +699,9 @@ async function save() {
       },
     })
     close()
+    toastTitle.value = 'Alert updated'
+    toastMessage.value = `${contextLabel.value} updated`
+    successToastRef.value?.show()
     return
   }
 
@@ -487,12 +717,35 @@ async function save() {
     },
   })
 
-  if (res.status === 'watchlist_limit_reached' || res.status === 'alert_limit_reached' || res.status === 'error') {
+  if (res.status === 'watchlist_limit_reached') {
+    limitState.value = { feature: 'watchlist', limit: res.limit }
+    error.value = res.message
+    return
+  }
+
+  if (res.status === 'alert_limit_reached') {
+    limitState.value = { feature: 'alert', limit: res.limit }
+    error.value = res.message
+    return
+  }
+
+  if (res.status === 'error') {
+    limitState.value = null
     error.value = res.message
     return
   }
 
   close()
+  limitState.value = null
+  if (res.status === 'created') {
+    toastTitle.value = 'Rate alert created!'
+    toastMessage.value = `We'll notify you about ${contextLabel.value}`
+    successToastRef.value?.show()
+  } else if (res.status === 'already_exists') {
+    toastTitle.value = 'Alert exists'
+    toastMessage.value = 'You already have an alert for this item'
+    successToastRef.value?.show()
+  }
 }
 
 const syncCurrency = () => {
@@ -515,6 +768,7 @@ watch(
   async (open) => {
     if (!open) {
       error.value = ''
+      limitState.value = null
       document.body.style.overflow = ''
       return
     }
@@ -539,7 +793,7 @@ watch(
     } else {
       const defaultMetric = shouldDefaultToSmartAlert.value
         ? 'sendScore'
-        : (metricOptions.value[0]?.value ?? 'rate')
+        : firstEnabledMetric.value
       metric.value = defaultMetric
       comparator.value = 'gte'
       value.value = defaultValueForMetric(metric.value)
@@ -574,12 +828,23 @@ watch(currentRateValue, (rate) => {
 
 watch(metric, (nextMetric) => {
   if (initializing.value) return
+  if (nextMetric === 'sendScore' && !isPlus.value) {
+    error.value = 'Smart alerts are available on Plus plans.'
+    metric.value = firstEnabledMetric.value
+    return
+  }
   value.value = defaultValueForMetric(nextMetric)
   if (nextMetric === 'sendScore') {
     currency.value = ''
     return
   }
   syncCurrency()
+})
+
+watch([isPlus, frequency], ([plus, nextFrequency]) => {
+  if (!plus && (nextFrequency === 'hourly' || nextFrequency === 'realtime')) {
+    frequency.value = 'daily'
+  }
 })
 </script>
 

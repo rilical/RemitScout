@@ -61,22 +61,24 @@
               class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl hover:border-brand-600 transition-all duration-300 flex flex-col snap-start"
             >
               <!-- Header: Logo and Score -->
-              <div class="px-6 pt-12 pb-10 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
+              <div class="px-6 pt-12 pb-10 flex items-center gap-4">
+                <!-- Logo: 50% left -->
+                <div class="w-1/2 flex items-center justify-start">
                   <img
                     v-if="provider.logoUrl"
                     :src="provider.logoUrl"
                     :alt="provider.name"
-                    :class="[provider.logoSize || 'h-16 w-auto', 'object-contain flex-shrink-0']"
+                    :class="[provider.logoSize || 'h-18 w-auto', 'object-contain flex-shrink-0']"
                   >
                   <ProviderLogo
                     v-else
                     :slug="provider.slug"
                     :alt="provider.name"
-                    :class="provider.logoSize || 'h-16 w-auto'"
+                    :class="provider.logoSize || 'h-18 w-auto'"
                   />
                 </div>
-                <div class="flex flex-col items-end gap-1">
+                <!-- Score: 50% right -->
+                <div class="w-1/2 flex flex-col items-end justify-center gap-1">
                   <ScoreBadge :score="provider.remitScore || 0" />
                   <span class="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
                     Remit-Score
@@ -240,15 +242,15 @@ const labelForMetric = (
 const getLogoSize = (slug: string): string => {
   const sizeMap: Record<string, string> = {
     'wise': 'h-12 w-auto', // viewBox 219.7x50 (4.4:1) - wide
-    'remitly': 'h-14 w-auto', // viewBox 1000x428 (2.3:1) - moderate width
-    'worldremit': 'h-14 w-auto', // viewBox 1062x326 (3.3:1) - wide
+    'remitly': 'h-18 w-auto', // viewBox 1000x428 (2.3:1) - moderate width
+    'worldremit': 'h-18 w-auto', // viewBox 1062x326 (3.3:1) - wide
     'western-union': 'h-12 w-auto', // viewBox 299.7x70 (4.3:1) - very wide
     'westernunion': 'h-12 w-auto', // same as above
     'xe-money': 'h-16 w-auto', // viewBox 600x484 (1.24:1) - almost square
     'xe': 'h-16 w-auto', // same as above
   }
   const normalizedSlug = slug.toLowerCase().trim()
-  return sizeMap[normalizedSlug] || 'h-14 w-auto'
+  return sizeMap[normalizedSlug] || 'h-18 w-auto'
 }
 
 const providers = computed(() => {

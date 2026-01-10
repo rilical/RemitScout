@@ -3,7 +3,7 @@
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <NuxtLink to="/" class="inline-block">
-          <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-10 w-auto mx-auto mb-4">
+          <img src="/png/SVG/LOGO.svg" alt="RemitScout" class="h-10 w-auto mx-auto mb-4">
         </NuxtLink>
         <h1 class="text-3xl font-bold text-slate-900">
           Set a new password

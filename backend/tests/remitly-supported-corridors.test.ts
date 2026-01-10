@@ -7,16 +7,8 @@ describe('remitly supported corridors include base currency variants', () => {
     expect(REMITLY_SUPPORTED_CORRIDORS).toContain('US-MX-USD-MXN')
   })
 
-  it('includes US-MX USD -> USD', () => {
-    expect(REMITLY_SUPPORTED_CORRIDORS).toContain('US-MX-USD-USD')
-  })
-
   it('includes US-MX EUR -> MXN', () => {
     expect(REMITLY_SUPPORTED_CORRIDORS).toContain('US-MX-EUR-MXN')
-  })
-
-  it('includes US-MX EUR -> USD', () => {
-    expect(REMITLY_SUPPORTED_CORRIDORS).toContain('US-MX-EUR-USD')
   })
 
   it('includes US-MX GBP -> MXN', () => {
@@ -27,10 +19,6 @@ describe('remitly supported corridors include base currency variants', () => {
     expect(REMITLY_SUPPORTED_CORRIDORS).toContain('CA-IN-CAD-INR')
   })
 
-  it('includes CA-IN CAD -> USD', () => {
-    expect(REMITLY_SUPPORTED_CORRIDORS).toContain('CA-IN-CAD-USD')
-  })
-
   it('includes CA-IN USD -> INR', () => {
     expect(REMITLY_SUPPORTED_CORRIDORS).toContain('CA-IN-USD-INR')
   })
@@ -39,7 +27,7 @@ describe('remitly supported corridors include base currency variants', () => {
     expect(REMITLY_SUPPORTED_CORRIDORS).toContain('CA-IN-EUR-INR')
   })
 
-  it('includes CA-IN GBP -> USD', () => {
-    expect(REMITLY_SUPPORTED_CORRIDORS).toContain('CA-IN-GBP-USD')
+  it('includes CA-IN GBP -> INR', () => {
+    expect(REMITLY_SUPPORTED_CORRIDORS).toContain('CA-IN-GBP-INR')
   })
 })

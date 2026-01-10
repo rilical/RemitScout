@@ -12,14 +12,14 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
   free: {
     pulse_access: 'none',
     exports_enabled: false,
-    alerts_max: 0,
+    alerts_max: 3,
     history_max_days: 30,
     watchlist_items: 3,
   },
   plus: {
     pulse_access: 'full',
     exports_enabled: true,
-    alerts_max: 5,
+    alerts_max: null,
     history_max_days: 365,
     watchlist_items: null,
   },

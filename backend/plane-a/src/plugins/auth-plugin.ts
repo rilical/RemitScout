@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { config } from '../../../shared/config'
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { getEntitlementsForPlan } from '../services/entitlements'
@@ -35,7 +35,6 @@ export const authPlugin = (app: FastifyInstance) => {
             ...getRequestContext(request),
           })
         } catch (error) {
-          const logger = createLogger('plane-a.auth-plugin')
           logger.warn('audit_log_failed', {
             error: getErrorMessage(error),
           })
@@ -85,11 +84,29 @@ export const requireAdmin = () => async (request: FastifyRequest, reply: Fastify
     return
   }
 
+  try {
+    const result = await query<{ app_role: string | null }>(
+      `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
+      [request.user.user_id],
+      planeAPool,
+    )
+    const appRole = result.rows[0]?.app_role
+    if (appRole === 'admin' || appRole === 'super_admin') {
+      return
+    }
+  } catch (error) {
+    logger.warn('admin_role_lookup_failed', {
+      user_id: request.user.user_id,
+      error: getErrorMessage(error),
+    })
+  }
+
   reply.code(403)
   return reply.send({ error: 'forbidden' })
 }
 
 const planeAPool = getPool(config.db.planeAUrl)
+const logger = createLogger('plane-a.auth-plugin')
 
 const isEntitled = (entitlement: EntitlementType, entitlements: ReturnType<typeof getEntitlementsForPlan>) => {
   if (entitlement === 'pulse') {

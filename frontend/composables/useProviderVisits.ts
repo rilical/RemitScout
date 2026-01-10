@@ -60,6 +60,9 @@ export const useProviderVisits = () => {
     target_url: string
     page_path?: string
     utm?: Record<string, string>
+    gclid?: string
+    fbclid?: string
+    msclkid?: string
     quoted_rate?: number
     quoted_fee?: number
   }) => {

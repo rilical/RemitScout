@@ -242,9 +242,11 @@
 
               <button
                 type="submit"
-                class="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-bold text-white transition-all hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+                :disabled="isWaitingForQuotes"
+                class="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-bold text-white transition-all hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Compare Rates
+                <span v-if="isWaitingForQuotes">Checking...</span>
+                <span v-else>Compare Rates</span>
                 <svg
                   class="h-5 w-5"
                   fill="none"
@@ -259,6 +261,21 @@
                   />
                 </svg>
               </button>
+
+              <p
+                v-if="formError"
+                class="text-sm text-red-600"
+                role="alert"
+              >
+                {{ formError }}
+              </p>
+              <p
+                v-else-if="formInfo"
+                class="text-sm text-slate-600"
+                role="status"
+              >
+                {{ formInfo }}
+              </p>
             </form>
 
             <div class="border-t border-blue-100 bg-blue-50 px-6 py-4">
@@ -985,8 +1002,9 @@ import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useS
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 
-const { form: moneyForm, validationError, submit: submitForm } = useCompareForm()
+const { form: moneyForm, validationError, submit: submitForm, statusMessage, isWaitingForQuotes } = useCompareForm()
 const formError = validationError
+const formInfo = statusMessage
 const { recordSearch } = useRemittanceApi()
 
 const handleMoneySubmit = async () => {

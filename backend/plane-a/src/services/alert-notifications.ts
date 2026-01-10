@@ -1,11 +1,12 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import { SNSClient } from '@aws-sdk/client-sns'
 import { createHash } from 'crypto'
 import type { Pool } from 'pg'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { formatError } from '../../../shared/utils/error-handling'
 import { generateAlertUnsubscribeToken } from './alert-unsubscribe'
+import { sendPushNotification } from './push-delivery'
 
 const logger = createLogger('plane-a.alert-notifications')
 
@@ -43,6 +44,44 @@ const getSnsClient = (): SNSClient | null => {
   return snsClient
 }
 
+type NotificationSettings = {
+  emailEnabled: boolean
+  smsEnabled: boolean
+  pushEnabled: boolean
+  rateAlertsEnabled: boolean
+  weeklySummaryEnabled: boolean
+  marketUpdatesEnabled: boolean
+  productUpdatesEnabled: boolean
+  promotionalEnabled: boolean
+}
+
+type NotificationPref = {
+  unsubscribed: boolean
+  digestEnabled: boolean
+  marketingOptIn: boolean
+  timezone: string
+  dailySendHour: number
+}
+
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  emailEnabled: true,
+  smsEnabled: false,
+  pushEnabled: false,
+  rateAlertsEnabled: true,
+  weeklySummaryEnabled: true,
+  marketUpdatesEnabled: false,
+  productUpdatesEnabled: true,
+  promotionalEnabled: false,
+}
+
+const DEFAULT_NOTIFICATION_PREF: NotificationPref = {
+  unsubscribed: false,
+  digestEnabled: true,
+  marketingOptIn: false,
+  timezone: 'UTC',
+  dailySendHour: 9,
+}
+
 function hashEmail(email: string): string {
   return createHash('sha256').update(email.toLowerCase().trim()).digest('hex')
 }
@@ -56,38 +95,90 @@ async function isEmailSuppressed(pool: Pool, email: string): Promise<boolean> {
   return result.rows.length > 0
 }
 
-async function getUserNotificationPrefs(pool: Pool, userId: string): Promise<{
-  email?: string
-  sms?: string
-  unsubscribed: boolean
-  digestEnabled: boolean
-} | null> {
+const toNotificationSettings = (row?: {
+  email_enabled: boolean
+  sms_enabled: boolean
+  push_enabled: boolean
+  rate_alerts_enabled: boolean
+  weekly_summary_enabled: boolean
+  market_updates_enabled: boolean
+  product_updates_enabled: boolean
+  promotional_enabled: boolean
+} | null): NotificationSettings => {
+  if (!row) return { ...DEFAULT_NOTIFICATION_SETTINGS }
+  return {
+    emailEnabled: row.email_enabled,
+    smsEnabled: row.sms_enabled,
+    pushEnabled: row.push_enabled,
+    rateAlertsEnabled: row.rate_alerts_enabled,
+    weeklySummaryEnabled: row.weekly_summary_enabled,
+    marketUpdatesEnabled: row.market_updates_enabled,
+    productUpdatesEnabled: row.product_updates_enabled,
+    promotionalEnabled: row.promotional_enabled,
+  }
+}
+
+const getNotificationSettings = async (pool: Pool, userId: string): Promise<NotificationSettings> => {
   const result = await pool.query(
-    `SELECT channel, unsubscribed, digest_enabled
-     FROM silver.notification_pref
-     WHERE user_id = $1 AND owner_type = 'user' AND unsubscribed = FALSE
-     ORDER BY created_at DESC
-     LIMIT 1`,
+    `SELECT email_enabled,
+            sms_enabled,
+            push_enabled,
+            rate_alerts_enabled,
+            weekly_summary_enabled,
+            market_updates_enabled,
+            product_updates_enabled,
+            promotional_enabled
+     FROM silver.notification_settings
+     WHERE user_id = $1`,
     [userId],
   )
+  return toNotificationSettings(result.rows[0] ?? null)
+}
 
-  if (result.rows.length === 0) {
-    return null
+const getNotificationPref = async (
+  pool: Pool,
+  userId: string,
+  channel: 'email' | 'sms' | 'push',
+): Promise<NotificationPref> => {
+  const result = await pool.query(
+    `SELECT unsubscribed,
+            digest_enabled,
+            marketing_opt_in,
+            timezone,
+            daily_send_hour
+     FROM silver.notification_pref
+     WHERE user_id = $1 AND owner_type = 'user' AND channel = $2
+     ORDER BY updated_at DESC, created_at DESC
+     LIMIT 1`,
+    [userId, channel],
+  )
+
+  const row = result.rows[0]
+  if (!row) return { ...DEFAULT_NOTIFICATION_PREF }
+  return {
+    unsubscribed: row.unsubscribed,
+    digestEnabled: row.digest_enabled,
+    marketingOptIn: row.marketing_opt_in,
+    timezone: row.timezone || DEFAULT_NOTIFICATION_PREF.timezone,
+    dailySendHour: Number.isFinite(row.daily_send_hour)
+      ? row.daily_send_hour
+      : DEFAULT_NOTIFICATION_PREF.dailySendHour,
   }
+}
 
-  const pref = result.rows[0]
-  
-  // Get user email from user_account
-  const userResult = await pool.query(
+const getUserEmail = async (pool: Pool, userId: string): Promise<string | null> => {
+  const result = await pool.query(
     `SELECT email FROM silver.user_account WHERE user_id = $1`,
     [userId],
   )
+  return result.rows[0]?.email ?? null
+}
 
-  return {
-    email: userResult.rows[0]?.email,
-    unsubscribed: pref.unsubscribed,
-    digestEnabled: pref.digest_enabled,
-  }
+const isChannelEnabled = (settings: NotificationSettings, channel: 'email' | 'sms' | 'push') => {
+  if (channel === 'email') return settings.emailEnabled
+  if (channel === 'sms') return settings.smsEnabled
+  if (channel === 'push') return settings.pushEnabled
+  return false
 }
 
 export async function sendAlertEmail(
@@ -99,17 +190,35 @@ export async function sendAlertEmail(
   context?: Record<string, unknown>,
 ): Promise<boolean> {
   try {
-    const prefs = await getUserNotificationPrefs(pool, userId)
-    if (!prefs || prefs.unsubscribed || !prefs.email) {
+    const settings = await getNotificationSettings(pool, userId)
+    if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'email')) {
       logger.debug('alert_email_skipped', {
         user_id: userId,
         alert_id: alertId,
-        reason: !prefs ? 'no_prefs' : prefs.unsubscribed ? 'unsubscribed' : 'no_email',
+        reason: !settings.rateAlertsEnabled ? 'rate_alerts_disabled' : 'email_disabled',
       })
       return false
     }
 
-    const email = prefs.email
+    const pref = await getNotificationPref(pool, userId, 'email')
+    if (pref.unsubscribed) {
+      logger.debug('alert_email_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        reason: 'unsubscribed',
+      })
+      return false
+    }
+
+    const email = (await getUserEmail(pool, userId)) ?? undefined
+    if (!email) {
+      logger.debug('alert_email_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        reason: 'no_email',
+      })
+      return false
+    }
     if (await isEmailSuppressed(pool, email)) {
       logger.debug('alert_email_suppressed', {
         user_id: userId,
@@ -225,6 +334,26 @@ export async function sendAlertSms(
   message: string,
 ): Promise<boolean> {
   try {
+    const settings = await getNotificationSettings(pool, userId)
+    if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'sms')) {
+      logger.debug('alert_sms_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        reason: !settings.rateAlertsEnabled ? 'rate_alerts_disabled' : 'sms_disabled',
+      })
+      return false
+    }
+
+    const pref = await getNotificationPref(pool, userId, 'sms')
+    if (pref.unsubscribed) {
+      logger.debug('alert_sms_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        reason: 'unsubscribed',
+      })
+      return false
+    }
+
     const client = getSnsClient()
     if (!client) {
       logger.debug('alert_sms_not_configured', {
@@ -254,6 +383,71 @@ export async function sendAlertSms(
   }
 }
 
+export async function sendAlertPush(
+  pool: Pool,
+  userId: string,
+  alertId: string,
+  title: string,
+  message: string,
+): Promise<boolean> {
+  try {
+    const settings = await getNotificationSettings(pool, userId)
+    if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'push')) {
+      logger.debug('alert_push_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        reason: !settings.rateAlertsEnabled ? 'rate_alerts_disabled' : 'push_disabled',
+      })
+      return false
+    }
+
+    const pref = await getNotificationPref(pool, userId, 'push')
+    if (pref.unsubscribed) {
+      logger.debug('alert_push_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        reason: 'unsubscribed',
+      })
+      return false
+    }
+
+    const baseUrl = config.alerts.unsubscribe.baseUrl || 'http://localhost:3000'
+    const result = await sendPushNotification(pool, userId, {
+      title,
+      body: message,
+      url: `${baseUrl.replace(/\/$/, '')}/dashboard?tab=alerts`,
+      icon: '/icons/icon-192.png',
+    })
+
+    if (result.delivered > 0) {
+      logger.info('alert_push_sent', {
+        user_id: userId,
+        alert_id: alertId,
+        delivered: result.delivered,
+        failed: result.failed,
+      })
+      return true
+    }
+
+    logger.debug('alert_push_not_sent', {
+      user_id: userId,
+      alert_id: alertId,
+      delivered: result.delivered,
+      failed: result.failed,
+      skipped: result.skipped,
+    })
+    return false
+  } catch (error: unknown) {
+    const { message } = formatError(error)
+    logger.error('alert_push_send_failed', {
+      user_id: userId,
+      alert_id: alertId,
+      error: message,
+    })
+    return false
+  }
+}
+
 export async function suppressEmail(pool: Pool, email: string, reason: 'bounce' | 'complaint' | 'manual'): Promise<void> {
   const emailHash = hashEmail(email)
   await pool.query(
@@ -267,4 +461,3 @@ export async function suppressEmail(pool: Pool, email: string, reason: 'bounce' 
     reason,
   })
 }
-

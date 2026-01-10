@@ -826,20 +826,11 @@
 
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 definePageMeta({
   alias: ['/reviews/mukuru'],
-})
-
-useHead({
-  title: 'Mukuru Review 2024 - Remit-Score 8.4/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Mukuru review with Remit-Score 8.4/10. Africa-focused rails with strong in-core reliability, good for cash/mobile money use cases. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
 })
 
 const breadcrumbItems = [
@@ -850,12 +841,26 @@ const breadcrumbItems = [
 ]
 
 const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 setSeo({
   title: 'Mukuru Review 2024 - Remit-Score 8.4/10 | Remit-Scout',
   description: 'Independent Mukuru review with Remit-Score 8.4/10. Africa-focused rails with strong in-core reliability, good for cash/mobile money use cases. Detailed breakdown of fees, speed, and delivered value.',
   canonical: `${siteUrl}/learn/providers/mukuru`,
+  ogImage: `${siteUrl}/og-images/provider-mukuru.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Mukuru earns a Remit-Score of 8.4/10 based on our independent analysis. The provider offers Africa-focused rails with strong in-core reliability, making it good for cash and mobile money use cases. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Mukuru',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.4,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 jsonLdBreadcrumb([

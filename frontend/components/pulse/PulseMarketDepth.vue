@@ -46,7 +46,7 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-brand-600">{{ data?.bestRate.toFixed(4) }}</div>
+              <div class="text-lg font-mono font-bold text-brand-600">{{ formatRate(data?.bestRate) }}</div>
             </div>
           </div>
 
@@ -62,7 +62,7 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-white">{{ data?.secondBestRate.toFixed(4) }}</div>
+              <div class="text-lg font-mono font-bold text-white">{{ formatRate(data?.secondBestRate) }}</div>
             </div>
           </div>
 
@@ -75,7 +75,7 @@
               <div class="text-sm text-neutral-400">Median Rate</div>
             </div>
             <div class="text-right">
-              <div class="font-mono text-neutral-300">{{ data?.medianRate.toFixed(4) }}</div>
+              <div class="font-mono text-neutral-300">{{ formatRate(data?.medianRate) }}</div>
             </div>
           </div>
 
@@ -93,7 +93,7 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-danger-600">{{ data?.worstRate.toFixed(4) }}</div>
+              <div class="text-lg font-mono font-bold text-danger-600">{{ formatRate(data?.worstRate) }}</div>
             </div>
           </div>
         </div>
@@ -103,18 +103,18 @@
           <div class="flex items-center justify-between">
             <div>
               <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">Market Spread</div>
-              <div class="text-2xl font-bold text-white">{{ data?.spreadRangeBps }} bps</div>
+              <div class="text-2xl font-bold text-white">{{ spreadRangeBpsDisplay }}</div>
             </div>
             <div class="text-right">
               <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">Range</div>
-              <div class="text-lg font-mono text-neutral-300">{{ data?.spreadRange.toFixed(4) }}</div>
+              <div class="text-lg font-mono text-neutral-300">{{ formatRate(data?.spreadRange) }}</div>
             </div>
           </div>
           <div class="mt-3">
             <div class="h-2 w-full rounded-full bg-neutral-700 overflow-hidden">
               <div
                 class="h-full rounded-full bg-gradient-to-r from-brand-600 to-danger-600"
-                :style="{ width: `${Math.min(data?.spreadRangeBps / 5, 100)}%` }"
+                :style="{ width: `${spreadBarWidth}%` }"
               />
             </div>
             <div class="mt-1 flex justify-between text-[10px] text-neutral-500">
@@ -153,6 +153,14 @@ const store = usePulseStore()
 const loading = ref(true)
 const data = ref<MarketDepth | null>(null)
 const lastUpdated = ref(new Date().toISOString())
+const spreadBarWidth = computed(() => {
+  if (!data.value) return 0
+  return Math.min((data.value.spreadRangeBps || 0) / 5, 100)
+})
+const spreadRangeBpsDisplay = computed(() => {
+  if (!data.value) return 'n/a'
+  return `${data.value.spreadRangeBps} bps`
+})
 
 const analystInsight = computed(() => {
   if (!data.value) return ''
@@ -168,6 +176,11 @@ const analystInsight = computed(() => {
     return 'Extreme dispersion detected. Expect aggressive leader shifts and higher price sensitivity.'
   }
 })
+
+const formatRate = (value?: number | null) => {
+  if (typeof value !== 'number') return 'n/a'
+  return value.toFixed(4)
+}
 
 async function loadData() {
   loading.value = true
@@ -191,7 +204,6 @@ onMounted(() => {
   loadData()
 })
 </script>
-
 
 
 

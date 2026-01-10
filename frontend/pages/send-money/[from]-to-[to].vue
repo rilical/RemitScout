@@ -57,14 +57,17 @@
                 Recipient gets (on {{ formatMoney(displayAmount, fromCurrencyCode) }})
               </p>
               <p class="text-4xl font-black tracking-tight mb-2 text-white">
-                <template v-if="isExactRecipientAmount">
+                <template v-if="!hasRecipientQuotes">
+                  -- <span class="text-2xl text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
+                </template>
+                <template v-else-if="isExactRecipientAmount">
                   {{ recipientRange.min }} <span class="text-2xl text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
                 </template>
                 <template v-else>
                   {{ recipientRange.min }} – {{ recipientRange.max }} <span class="text-2xl text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
                 </template>
               </p>
-              <p v-if="!isExactRecipientAmount" class="text-sm text-white/80 leading-relaxed">
+              <p v-if="hasRecipientQuotes && !isExactRecipientAmount" class="text-sm text-white/80 leading-relaxed">
                 The spread shows how provider rates differ. Find the best deal below.
               </p>
             </div>
@@ -101,30 +104,8 @@
               <div class="flex items-start justify-between">
                 <div>
                   <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mid-Market Rate</p>
-                  <p class="text-3xl font-black text-slate-900 tracking-tight">{{ content.rateWidget.midMarket }}</p>
+                  <p class="text-3xl font-black text-brand-600 tracking-tight">{{ content.rateWidget.midMarket }}</p>
                   <p class="text-xs text-slate-500 mt-1">The real exchange rate — anything worse costs you</p>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                  <span
-                    v-for="change in content.rateWidget.changes"
-                    :key="change.label"
-                    :class="[
-                      'inline-flex items-center justify-end gap-1 rounded-lg px-2.5 py-1 text-xs font-bold',
-                      change.value === '+0.00%' || change.value === '0.00%' || change.value === '+0.0%' || change.value === '0.0%'
-                        ? 'bg-slate-100 text-slate-600'
-                        : change.value.startsWith('-')
-                          ? 'bg-rose-100 text-rose-700'
-                          : 'bg-emerald-100 text-emerald-700',
-                    ]"
-                  >
-                    <svg v-if="!change.value.startsWith('-') && change.value !== '+0.00%' && change.value !== '0.00%' && change.value !== '+0.0%' && change.value !== '0.0%'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    <svg v-else-if="change.value.startsWith('-')" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
-                    {{ change.value }} <span class="text-[10px] font-semibold opacity-70">{{ change.label }}</span>
-                  </span>
                 </div>
               </div>
             </div>
@@ -224,15 +205,16 @@
                 
                 <!-- X-axis labels -->
                 <div class="absolute bottom-2 left-14 right-2 flex justify-between text-[10px] text-slate-400 font-semibold">
-                  <span>{{ chartLabels[0] }}</span>
-                  <span class="text-slate-600">{{ chartLabels[1] }}</span>
+                  <template v-for="(label, index) in chartLabels" :key="index">
+                    <span :class="{ 'text-slate-600': index === chartLabels.length - 1 }">{{ label }}</span>
+                  </template>
                 </div>
               </div>
               
               <!-- Chart Stats Row -->
               <div v-if="chartStats" class="mt-4 grid grid-cols-3 gap-3">
                 <div class="text-center p-3 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">30D Low</p>
+                  <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">7D Low</p>
                   <p class="text-sm font-bold text-slate-900">{{ chartStats.minRate.toFixed(4) }}</p>
                 </div>
                 <div class="text-center p-3 bg-brand-50 rounded-lg border border-brand-100">
@@ -240,7 +222,7 @@
                   <p class="text-sm font-bold text-brand-700">{{ (isSameCurrency ? 1.0 : latestHistoryRate)?.toFixed(4) || '—' }}</p>
                 </div>
                 <div class="text-center p-3 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">30D High</p>
+                  <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">7D High</p>
                   <p class="text-sm font-bold text-slate-900">{{ chartStats.maxRate.toFixed(4) }}</p>
                 </div>
               </div>
@@ -270,7 +252,7 @@
     <CorridorMiniNav :last-updated="mostRecentUpdateLabel" />
 
     <!-- ZONE A: Compare -->
-    <section id="compare" class="bg-white">
+    <section id="compare" class="bg-white scroll-mt-20">
       <div class="mx-auto max-w-6xl px-4 py-8">
         <!-- Query Builder Card -->
         <div class="mb-8">
@@ -285,7 +267,7 @@
             :available-to-currencies="availableToCurrencies"
             :available-from-currencies="availableFromCurrencies"
             :available-methods="availableMethods"
-            :methods-loading="quotesPending || methodsDiscoveryPending"
+            :methods-loading="isRefreshQueued"
             @update="handleBarUpdate"
             @sort="handleSort"
             @save="handleSave"
@@ -295,99 +277,110 @@
           />
         </div>
 
-        <!-- Refresh Status -->
+        <!-- Refresh Gate -->
         <div
-          v-if="isRefreshQueued"
-          class="mb-6 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-blue-50 p-5 shadow-sm"
+          v-if="showRefreshGate"
+          class="mb-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
         >
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-brand-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <div class="flex flex-col items-center justify-center gap-6 text-center mx-auto">
+            <div class="relative flex h-28 w-28 items-center justify-center mx-auto">
+              <svg class="absolute h-28 w-28 text-slate-200" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" fill="none" />
+              </svg>
+              <svg class="absolute h-28 w-28 animate-spin text-brand-600" viewBox="0 0 64 64">
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-dasharray="6 50"
+                />
               </svg>
             </div>
-            <div class="flex-1">
-              <p class="text-base font-semibold text-brand-900">Getting fresh quotes</p>
-              <p v-if="refreshStatus?.providers?.length" class="text-sm text-brand-700 mt-1">
-                Comparing {{ refreshStatus.providers.length }} providers to find you the best rate right now.
+            <div class="flex flex-col items-center justify-center mx-auto">
+              <span class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+                <span class="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
+                Live refresh
+              </span>
+              <h2 class="mt-4 text-2xl font-black text-slate-900 text-center">Collecting live quotes</h2>
+              <p class="mt-2 text-sm text-slate-600 max-w-2xl text-center mx-auto">
+                We query every available provider for this corridor. Results appear together once all providers respond
+                or after {{ refreshTimeoutSeconds }} seconds.
               </p>
             </div>
           </div>
         </div>
 
-        <!-- Section Header -->
-        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">
-              Compare <span class="text-brand-600">{{ providerCount }}</span> {{ providerCount === 1 ? 'Provider' : 'Providers' }}
-            </h2>
-            <p class="text-sm text-slate-600 max-w-xl break-words">
-              Independent rankings based on total cost vs. mid-market rates, not just fees.
-            </p>
+        <template v-else>
+          <!-- Section Header -->
+          <div v-if="hasApiQuotes" class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">
+                Compare <span class="text-brand-600">{{ providerCount }}</span> {{ providerCount === 1 ? 'Provider' : 'Providers' }}
+              </h2>
+              <p class="text-sm text-slate-600 max-w-xl break-words">
+                Independent rankings based on total cost vs. mid-market rates, not just fees.
+              </p>
+            </div>
+            <div v-if="hasApiQuotes" class="flex items-center gap-4">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-xs font-medium text-slate-600">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                </svg>
+                Sorted by {{ sortLabels[sortBy] }}
+              </span>
+              <NuxtLink to="/how-we-make-money" class="text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors underline underline-offset-2">
+                How we rank
+              </NuxtLink>
+            </div>
           </div>
-          <div class="flex items-center gap-4">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-xs font-medium text-slate-600">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-              </svg>
-              Sorted by {{ sortLabels[sortBy] }}
-            </span>
-            <NuxtLink to="/how-we-make-money" class="text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors underline underline-offset-2">
-              How we rank
-            </NuxtLink>
-          </div>
-        </div>
 
-        <div v-if="isQuotesLoading" class="space-y-4">
           <div
-            v-for="i in 3"
-            :key="`quote-skeleton-${i}`"
-            class="rounded-xl border-2 border-slate-200 bg-white p-5 animate-pulse"
+            v-if="corridorUnsupported"
+            class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
           >
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div class="flex items-center gap-4">
-                <div class="h-14 w-14 rounded-xl bg-slate-200" />
-                <div class="space-y-2">
-                  <div class="h-4 w-36 rounded bg-slate-200" />
-                  <div class="h-3 w-24 rounded bg-slate-100" />
-                </div>
-              </div>
-              <div class="space-y-2 text-right">
-                <div class="h-3 w-24 rounded bg-slate-200 ml-auto" />
-                <div class="h-6 w-28 rounded bg-slate-200 ml-auto" />
-                <div class="h-3 w-20 rounded bg-slate-100 ml-auto" />
-              </div>
-            </div>
-            <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div class="lg:col-span-2 h-20 rounded-lg bg-slate-100" />
-              <div class="h-20 rounded-lg bg-slate-100" />
-            </div>
+            Unsupported corridor. Please try another combination.
           </div>
-        </div>
 
-        <div
-          v-else-if="corridorUnsupported"
-          class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
-        >
-          Unsupported corridor. Please try another combination.
-        </div>
+          <div
+            v-else-if="corridorUnavailable"
+            class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
+          >
+            This corridor is unavailable right now. Please try another combination.
+          </div>
 
-        <div
-          v-else-if="corridorUnavailable"
-          class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
-        >
-          This corridor is unavailable right now. Please try another combination.
-        </div>
+          <div
+            v-else-if="hasApiError"
+            class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+          >
+            Live quotes are unavailable right now. Please try again shortly.
+          </div>
 
-        <div
-          v-else-if="hasApiError"
-          class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
-        >
-          Live quotes are unavailable right now. Please try again shortly.
-        </div>
+          <div
+            v-else-if="refreshTimedOut && !hasApiQuotes"
+            class="rounded-xl border-2 border-slate-200 bg-slate-50 p-8 text-center"
+          >
+            <p class="text-base font-semibold text-slate-900">
+              This corridor looks empty right now
+            </p>
+            <p class="text-sm text-slate-500 mt-2">
+              We didn't receive live quotes within {{ refreshTimeoutSeconds }} seconds.
+              Try another combination of countries, amount, or method.
+            </p>
+            <button
+              type="button"
+              class="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+              :disabled="quotesPending || quoteRefreshPending"
+              @click="handleRefreshQuotes"
+            >
+              Refresh quotes
+            </button>
+          </div>
 
-        <div v-else-if="content.table.rows.length" class="space-y-4">
+          <div v-else-if="content.table.rows.length" class="space-y-4">
           <template v-for="(row, index) in sortedProviders" :key="row.provider">
             <div
               :id="`provider-${row.provider.toLowerCase().replace(/\s+/g, '-')}`"
@@ -440,9 +433,9 @@
                     <!-- Promotional Info -->
                     <div
                       v-if="row.hasPromo && row.promoInfo"
-                      class="mt-2 flex items-center gap-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 px-3 py-1.5 w-full"
+                      class="mt-2 flex items-center gap-2 rounded-lg bg-brand-600/20 border border-brand-500/30 px-3 py-1.5 w-full"
                     >
-                      <svg class="h-4 w-4 text-emerald-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="h-4 w-4 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -451,10 +444,10 @@
                         />
                       </svg>
                       <div class="flex flex-col gap-0.5">
-                        <span class="text-xs font-semibold text-emerald-200">
+                        <span class="text-xs font-semibold text-brand-100">
                           Promotional Offer
                         </span>
-                        <span class="text-xs text-emerald-300">
+                        <span class="text-xs text-brand-200">
                           {{ row.promoInfo.newCustomersOnly ? 'New customers only' : 'Special rate' }} · 
                           Fee: {{ formatMoney(row.promoInfo.fee, fromCurrencyCode) }}
                         </span>
@@ -474,23 +467,17 @@
                     <div class="text-xs">
                       <span 
                         :class="[
-                          'font-semibold',
+                          'font-semibold px-2 py-1 rounded bg-white',
                           getRateComparison(row.fxRate).isBetter 
-                            ? index === 0 ? 'text-emerald-200' : 'text-emerald-300'
+                            ? index === 0 ? 'text-emerald-600' : 'text-emerald-700'
                             : getRateComparison(row.fxRate).isWorse
-                              ? index === 0 ? 'text-rose-200' : 'text-rose-300'
-                              : 'text-white/80'
+                              ? index === 0 ? 'text-rose-600' : 'text-rose-700'
+                              : 'text-gray-700'
                         ]"
                       >
                         {{ getRateComparison(row.fxRate).text }}
                       </span>
                     </div>
-                  </div>
-                  <div
-                    v-if="index !== 0"
-                    class="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold bg-white/10 border border-white/20 text-white"
-                  >
-                    <span>+{{ formatMoney(getProviderTrueCost(row, index).deltaFromBest, fromCurrencyCode) }} more than best option</span>
                   </div>
                 </div>
               </div>
@@ -518,22 +505,28 @@
                     compact
                   />
                 </div>
-                <div class="flex flex-col justify-between">
+                <div class="lg:col-span-2 flex flex-col justify-between">
                   <div class="mb-3">
-                    <div class="flex flex-wrap gap-1.5 mb-2">
-                      <!-- Only show delivery method (payOut), not payment method (payIn) -->
-                      <span v-if="row.payOut?.includes('Cash')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                        Cash pickup
-                      </span>
-                      <span v-else-if="row.payOut?.includes('Bank')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
-                        Bank deposit
-                      </span>
-                      <span v-else-if="row.payOut?.includes('Wallet') || row.payOut?.includes('wallet')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                        Mobile wallet
-                      </span>
+                    <div v-if="row.methods && row.methods.length > 0" class="mb-3">
+                      <p class="text-xs font-semibold text-white/70 mb-1.5">Supported:</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        <span v-if="row.methods.includes('bank') || row.methods.includes('bank_deposit')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
+                          Bank Deposit
+                        </span>
+                        <span v-if="row.methods.includes('cash') || row.methods.includes('cash_pickup')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                          Cash Pickup
+                        </span>
+                        <span v-if="row.methods.includes('wallet') || row.methods.includes('mobile_wallet')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                          Mobile Wallet
+                        </span>
+                        <span v-if="row.methods.includes('airtime')" class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 21h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2zM12 17h.01M7 5h10" /></svg>
+                          Airtime
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div class="space-y-2">
@@ -544,106 +537,219 @@
                     >
                       Go to {{ row.provider.split(' ')[0] }} →
                     </button>
-                    <p v-if="row.isAffiliate !== false" class="text-center text-[10px] text-white/50 flex items-center justify-center gap-1">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      We may earn a commission
-                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div
+            <AdSlot
               v-if="!isPlus && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
-              class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4"
-            >
-              <div class="flex items-center justify-center gap-2 text-xs text-slate-500">
-                <span class="font-semibold uppercase tracking-wider">Advertisement</span>
-              </div>
-              <div class="text-center py-4 text-sm text-slate-400">
-                <p>Ad placeholder (728×90 or responsive)</p>
-              </div>
-              <div class="text-center">
-                <NuxtLink to="/plus" class="text-xs text-brand-600 hover:underline">
-                  Remove ads with Plus →
-                </NuxtLink>
-              </div>
-            </div>
+              placement="compare_inline"
+              :corridor-id="corridorId"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </template>
         </div>
 
-        <div v-else class="rounded-xl border-2 border-dashed border-slate-300 p-8 text-center">
-          <p class="text-lg font-semibold text-neutral-700 mb-2">No live quotes yet</p>
-          <p class="text-sm text-neutral-500 mb-4">
-            We're pulling fresh quotes from providers for this corridor. Please try again shortly.
-          </p>
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
-            :disabled="quotesPending || quoteRefreshPending"
-            @click="handleRefreshQuotes"
-          >
-            Refresh quotes
-          </button>
-        </div>
+          <div v-else-if="!hasApiQuotes && !isRefreshQueued" class="rounded-xl border-2 border-dashed border-slate-300 p-8 text-center">
+            <p class="text-lg font-semibold text-neutral-700 mb-2">No live quotes yet</p>
+            <p class="text-sm text-neutral-500 mb-4">
+              We're pulling fresh quotes from providers for this corridor. Please try again shortly.
+            </p>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+              :disabled="quotesPending || quoteRefreshPending"
+              @click="handleRefreshQuotes"
+            >
+              Refresh quotes
+            </button>
+          </div>
 
-        <p class="mt-4 text-xs text-neutral-500">
-          Last updated {{ content.lastUpdated }}. We source data from providers and cannot guarantee accuracy.
-          <span v-if="quotesData?.approximate && quotesData?.bucketUsed">
-            Using the nearest available amount bucket: ${{ Number(quotesData.bucketUsed).toLocaleString() }}.
-          </span>
-        </p>
+          <p v-if="hasApiQuotes" class="mt-4 text-xs text-neutral-500">
+            Last updated {{ content.lastUpdated }}. We source data from providers and cannot guarantee accuracy.
+            <span v-if="quotesData?.approximate && quotesData?.bucketUsed">
+              Using the nearest available amount bucket: ${{ Number(quotesData.bucketUsed).toLocaleString() }}.
+            </span>
+          </p>
+
+        </template>
       </div>
     </section>
 
     <!-- ZONE B: Insights -->
-    <section id="insights" class="bg-white border-b border-slate-200">
+    <section v-if="hasApiQuotes && !showRefreshGate" id="insights" class="bg-white border-b border-slate-200 scroll-mt-20">
       <div class="mx-auto max-w-6xl px-4 py-10">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <div class="mb-4">
-              <h2 class="text-2xl font-bold text-neutral-900 mb-2">Rate Volatility & Market Insights</h2>
-              <p class="text-sm text-neutral-600">
-                See how rates have moved and what that means for your recipient's final amount.
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-neutral-900 mb-3">Corridor Insights</h2>
+          <p class="text-lg text-neutral-700 max-w-3xl">
+            Based on live quotes from <strong>{{ providerCount }}</strong> providers for {{ content.from }} → {{ content.to }}, 
+            here's what our proprietary indices reveal about this corridor right now.
+          </p>
+        </div>
+
+        <div
+          v-if="corridorIndices"
+          class="mb-10"
+        >
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- TEER Card -->
+            <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-6 shadow-sm">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">TEER</p>
+                  <p class="text-sm font-medium text-slate-600">Total Effective Exchange Rate</p>
+                </div>
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100">
+                  <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+              </div>
+              <p class="text-3xl font-bold text-slate-900 mb-2">{{ teerDisplay }}</p>
+              <p class="text-xs text-slate-500 mb-4">{{ indexRateUnit }}</p>
+              <p class="text-sm text-slate-700 mb-4">
+                <strong>What you actually get</strong> after all fees and hidden costs are factored in. Higher is better—this tells you the real exchange rate you'll receive.
               </p>
+              <details class="group">
+                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  <span>Learn more</span>
+                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2">
+                  <p>TEER is calculated by taking the mid-market rate and subtracting the average hidden costs (RCI). It represents the effective rate you'll actually receive after all fees and FX markups. A TEER closer to the mid-market rate means providers in this corridor charge less in hidden fees.</p>
+                </div>
+              </details>
             </div>
-            <p class="text-sm text-neutral-500">{{ content.from }} → {{ content.to }}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <select
-              v-model="insightTimeframe"
-              class="h-9 px-3 pr-8 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none appearance-none bg-white"
-            >
-              <option value="7d">7 days</option>
-              <option value="30d" :disabled="!isPlus">30 days {{ !isPlus ? '(Plus)' : '' }}</option>
-              <option value="90d" :disabled="!isPlus">90 days {{ !isPlus ? '(Plus)' : '' }}</option>
-              <option value="365d" :disabled="!isPlus">1 year {{ !isPlus ? '(Plus)' : '' }}</option>
-            </select>
+
+            <!-- RVI Card -->
+            <div class="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">RVI</p>
+                  <p class="text-sm font-medium text-slate-600">Rate Volatility Index</p>
+                </div>
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                  <svg class="h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+              </div>
+              <p class="text-3xl font-bold text-slate-900 mb-2">{{ rviDisplay }}</p>
+              <p class="text-xs text-slate-500 mb-4">{{ indexRateUnit }}</p>
+              <p class="text-sm text-slate-700 mb-4">
+                <strong>How much providers' rates vary.</strong> Lower RVI means more consistency—you're likely to get a similar deal regardless of which provider you choose. Higher RVI means shopping around matters more.
+              </p>
+              <details class="group">
+                <summary class="cursor-pointer text-xs font-semibold text-slate-600 hover:text-slate-700 flex items-center gap-1">
+                  <span>Learn more</span>
+                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2">
+                  <p>RVI is the standard deviation of effective rates across all providers. It measures rate dispersion. A low RVI (under 0.01) suggests providers offer similar value, so convenience or speed might matter more than price. A high RVI means comparison shopping could save you significantly.</p>
+                </div>
+              </details>
+            </div>
+
+            <!-- RCI Card -->
+            <div class="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-1">RCI</p>
+                  <p class="text-sm font-medium text-slate-600">Remittance Cost Index</p>
+                </div>
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+                  <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <p class="text-3xl font-bold text-slate-900 mb-2">{{ rciDisplay }}</p>
+              <p class="text-xs text-slate-500 mb-4">of amount sent</p>
+              <p class="text-sm text-slate-700 mb-4">
+                <strong>Average total cost</strong> as a percentage of your transfer. This includes both upfront fees and hidden FX markups. Lower is better—the industry average is typically 2-5%.
+              </p>
+              <details class="group">
+                <summary class="cursor-pointer text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                  <span>Learn more</span>
+                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2">
+                  <p>RCI represents the weighted average of total costs (upfront fees + hidden FX markups) as a percentage of the transfer amount. Unlike advertised fees, RCI includes the "hidden cost" providers build into their exchange rates. This is why a "$0 fee" offer can still cost you 3% of your money.</p>
+                </div>
+              </details>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          <div
-            v-for="insight in content.insights"
-            :key="insight.label"
-            class="rounded-lg border border-slate-200 bg-slate-50 p-4"
-          >
-            <p class="text-xs font-medium text-neutral-500 mb-1">{{ insight.label }}</p>
-            <p class="text-lg font-bold text-neutral-900">{{ insight.value }}</p>
-            <p class="text-xs text-neutral-500">{{ insight.helper }}</p>
+        <!-- Live Insights Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <p class="text-xs font-medium text-slate-500 mb-1">Providers Checked</p>
+            <p class="text-2xl font-bold text-slate-900">{{ providerCount }}</p>
+            <p class="text-xs text-slate-500 mt-1">Live quotes</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <p class="text-xs font-medium text-slate-500 mb-1">Cost Spread</p>
+            <p class="text-2xl font-bold text-slate-900">{{ costSpread }}</p>
+            <p class="text-xs text-slate-500 mt-1">Best vs worst</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <p class="text-xs font-medium text-slate-500 mb-1">Average Cost</p>
+            <p class="text-2xl font-bold text-slate-900">{{ averageCostPercent }}</p>
+            <p class="text-xs text-slate-500 mt-1">Total cost %</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <p class="text-xs font-medium text-slate-500 mb-1">Best Provider</p>
+            <p class="text-lg font-bold text-slate-900 truncate">{{ bestProviderName }}</p>
+            <p class="text-xs text-slate-500 mt-1">Lowest total cost</p>
           </div>
         </div>
 
+        <!-- What These Numbers Mean -->
+        <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 mb-8">
+          <h3 class="text-xl font-bold text-slate-900 mb-4">What These Numbers Mean for Your Transfer</h3>
+          <div class="prose prose-sm max-w-none">
+            <p class="text-slate-700 mb-4">
+              <strong>TEER of {{ teerDisplay }}</strong> means that after all fees and hidden costs, you can expect to get approximately 
+              <strong>{{ indexRateUnit }}</strong> for every dollar you send. This corridor's TEER is 
+              <span v-if="corridorIndices?.midMarketRate">{{ getTeerVsMidMarket }}</span>
+              <span v-else>calculated from live provider quotes</span>.
+            </p>
+            <p class="text-slate-700 mb-4">
+              <strong>RCI of {{ rciDisplay }}</strong> indicates that on average, providers in this corridor charge 
+              <strong>{{ rciDisplay }} of your transfer amount</strong> in total costs (fees + FX markup). 
+              <span v-if="corridorIndices?.rci !== null && corridorIndices?.rci !== undefined">
+                <span v-if="corridorIndices.rci < 0.02">This is excellent—below the 2-5% industry average.</span>
+                <span v-else-if="corridorIndices.rci < 0.03">This is good—at or slightly below industry average.</span>
+                <span v-else>This is typical for the industry, though shopping around can still save you money.</span>
+              </span>
+              <span v-else>Compare providers above to see how total costs vary.</span>
+            </p>
+            <p class="text-slate-700">
+              <strong>RVI of {{ rviDisplay }}</strong> suggests 
+              <span v-if="providerConsistency === 'high'">providers offer very similar rates—comparison shopping matters less, so you can choose based on speed, convenience, or trust.</span>
+              <span v-else>rates vary significantly between providers—comparison shopping could save you {{ costSavingsPotential }} on this transfer.</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Provider Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="rounded-xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-base font-semibold text-slate-900">True Cost vs Mid-Market</h3>
+              <h3 class="text-base font-semibold text-slate-900">True Cost Comparison</h3>
               <span class="text-xs text-slate-500">On ${{ displayAmount.toLocaleString() }}</span>
             </div>
             <div class="space-y-3">
-              <div v-for="(row, index) in content.table.rows.slice(0, 4)" :key="row.provider" class="flex items-center gap-3">
+              <div v-for="(row, index) in content.table.rows.slice(0, 5)" :key="row.provider" class="flex items-center gap-3">
                 <span class="w-24 text-sm font-medium text-slate-700 truncate">{{ row.provider }}</span>
                 <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
@@ -661,7 +767,7 @@
 
           <div class="rounded-xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-base font-semibold text-slate-900">Provider Availability</h3>
+              <h3 class="text-base font-semibold text-slate-900">Payout Methods Available</h3>
             </div>
             <div class="space-y-3">
               <div class="flex items-center justify-between text-sm">
@@ -676,74 +782,17 @@
                 <span class="text-slate-600">Mobile Wallet</span>
                 <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('wallet')).length }} providers</span>
               </div>
+              <div
+                v-if="content.table.rows.some(r => r.payOut?.includes('Airtime'))"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-slate-600">Airtime</span>
+                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('Airtime')).length }} providers</span>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div v-if="FEATURE_FLAGS.PULSE_ENABLED && !isPlus" class="lg:col-span-2 rounded-xl border-2 border-blue-600/30 bg-slate-900 p-6 relative overflow-hidden">
-            <div class="relative z-10">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base font-semibold text-white">Advanced Analytics</h3>
-                <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-600/20 text-blue-400 text-xs font-semibold rounded">
-                  Plus
-                </span>
-              </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-                <div>
-                  <span class="text-sm text-slate-400">Avg Spread</span>
-                  <p class="text-lg font-bold text-white blur-sm select-none">45 bps</p>
-                </div>
-                <div>
-                  <span class="text-sm text-slate-400">Volatility Index</span>
-                  <p class="text-lg font-bold text-white blur-sm select-none">2.1%</p>
-                </div>
-                <div>
-                  <span class="text-sm text-slate-400">Provider Uptime</span>
-                  <p class="text-lg font-bold text-white blur-sm select-none">99.2%</p>
-                </div>
-                <div>
-                  <span class="text-sm text-slate-400">Best Window</span>
-                  <p class="text-lg font-bold text-white blur-sm select-none">8-11AM</p>
-                </div>
-              </div>
-              <NuxtLink to="/plus" class="inline-flex items-center gap-2 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-semibold transition-all">
-                Unlock with Plus
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </NuxtLink>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent pointer-events-none" />
-          </div>
-
-          <div v-if="FEATURE_FLAGS.PULSE_ENABLED && isPlus" class="lg:col-span-2 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 to-slate-800 p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-base font-semibold text-white">Advanced Analytics</h3>
-              <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Plus Active
-              </span>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div>
-                <span class="text-sm text-slate-400">Avg Spread</span>
-                <p class="text-lg font-bold text-white">45 bps</p>
-              </div>
-              <div>
-                <span class="text-sm text-slate-400">Volatility Index</span>
-                <p class="text-lg font-bold text-white">2.1%</p>
-              </div>
-              <div>
-                <span class="text-sm text-slate-400">Provider Uptime</span>
-                <p class="text-lg font-bold text-emerald-400">99.2%</p>
-              </div>
-              <div>
-                <span class="text-sm text-slate-400">Best Window</span>
-                <p class="text-lg font-bold text-white">8-11AM EST</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -836,8 +885,16 @@
       </div>
     </section>
 
+    <!-- Provider Reviews -->
+    <section id="providers" class="scroll-mt-20">
+      <FeaturedProvidersDynamic />
+    </section>
+
+    <!-- Popular Corridors -->
+    <CorridorsGridDynamic dark />
+
     <!-- FAQs -->
-    <section id="faqs" class="bg-gradient-to-b from-brand-50 to-white border-t border-brand-100">
+    <section id="faqs" class="bg-gradient-to-b from-brand-50 to-white border-t border-brand-100 scroll-mt-20">
       <div class="mx-auto max-w-4xl px-4 py-10">
         <h2 class="text-2xl font-bold text-brand-900 text-center mb-6">
           Frequently Asked Questions
@@ -955,11 +1012,12 @@
       :feature="limitModalFeature"
       :limit="limitModalLimit"
       :current-count="limitModalCount"
+      :show-upgrade="!isPlus"
       :title="limitModalFeature === 'watchlist' ? 'Watchlist limit reached' : 'Alert limit reached'"
-      :message="limitModalFeature === 'watchlist'
-        ? `You've saved ${limitModalCount} corridors, the maximum for free accounts.`
-        : `You've created ${limitModalCount} alerts, the maximum for free accounts.`"
+      :message="limitMessage"
+      :items="limitModalItems"
       @close="limitModalOpen = false"
+      @remove="handleLimitRemove"
     />
 
     <!-- Share Modal -->
@@ -977,6 +1035,7 @@
       ref="successToastRef"
       :title="toastTitle"
       :message="toastMessage"
+      :variant="toastVariant"
     />
   </div>
 </template>
@@ -985,8 +1044,10 @@
 import { ref, computed, watch } from 'vue'
 import { FEATURE_FLAGS } from '~/utils/constants'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useApi } from '~/composables/useApi'
+import AdSlot from '~/components/ads/AdSlot.vue'
 import TrueCostCard from '~/components/shared/TrueCostCard.vue'
 import ProviderDeltaBadge from '~/components/shared/ProviderDeltaBadge.vue'
 import ScoreBadge from '~/components/shared/ScoreBadge.vue'
@@ -1000,28 +1061,38 @@ import { normalizeProviderSlug } from '~/composables/useProviderLogo'
 import CorridorMiniNav from '~/components/corridor/CorridorMiniNav.vue'
 import CorridorStickyBar from '~/components/corridor/CorridorStickyBar.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
+import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
 import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
 import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { useProviderVisits } from '~/composables/useProviderVisits'
+import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
 import { useSession } from '~/composables/useSession'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
+import { BASE_CURRENCIES } from '~/utils/countries-currencies'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 import { useWatchlist } from '~/composables/useWatchlist'
 import { useAlerts } from '~/composables/useAlerts'
 import { useAuth } from '~/composables/useAuth'
+import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 
 const { isPlus } = useEntitlements()
 const { isAuthenticated } = useAuth()
 const watchlist = useWatchlist()
 const alerts = useAlerts()
+const saveAlertModal = useSaveAlertModal()
 const { request } = useApi()
 const { attachRatings, formatMoney, formatRate, getRelativeTime, useProviders } = useRemittanceApi()
 const { trackClick } = useTelemetry()
+const { trackSendMoneyView } = useMarketingAnalytics()
 const { fetchPendingFeedback } = useProviderVisits()
 const { ensureSession } = useSession()
 const currentRoute = useRoute()
+const sendMoneyTracked = ref(false)
 
 type ProviderHighlight = {
   label: string
@@ -1055,6 +1126,7 @@ type TableRow = {
   fxRate?: number
   feeAmount?: number
   hasPromo?: boolean
+  methods?: string[]
   promoInfo?: {
     fee: number
     rate: number
@@ -1068,6 +1140,16 @@ type Insight = {
   label: string
   value: string
   helper: string
+}
+
+type CorridorIndices = {
+  teer: number | null
+  rvi: number | null
+  rci: number | null
+  providerCount: number
+  amount: number
+  midMarketRate: number | null
+  weights: 'equal'
 }
 
 type Guide = {
@@ -1149,6 +1231,14 @@ const normalizeCurrencyParam = (value: string | string[] | undefined) => {
   return /^[A-Z]{3}$/.test(upper) ? upper : ''
 }
 
+const isAllowedCurrency = (slug: string, currency: string) => {
+  const country = getCountryFromSlug(slug)
+  const allowed = new Set(
+    [...BASE_CURRENCIES, country?.currency].filter(Boolean).map(code => code.toUpperCase()),
+  )
+  return allowed.has(currency)
+}
+
 const resolveCountryName = (slug: string) => {
   const country = getCountryFromSlug(slug)
   return country?.name || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
@@ -1180,8 +1270,16 @@ const toCurrencyParam = computed(() => (
     ? currentRoute.query.toCurrency[0]
     : currentRoute.query.toCurrency
 ))
-const fromCurrencyOverride = computed(() => normalizeCurrencyParam(fromCurrencyParam.value))
-const toCurrencyOverride = computed(() => normalizeCurrencyParam(toCurrencyParam.value))
+const fromCurrencyOverride = computed(() => {
+  const candidate = normalizeCurrencyParam(fromCurrencyParam.value)
+  if (!candidate) return ''
+  return isAllowedCurrency(canonicalFrom.value, candidate) ? candidate : ''
+})
+const toCurrencyOverride = computed(() => {
+  const candidate = normalizeCurrencyParam(toCurrencyParam.value)
+  if (!candidate) return ''
+  return isAllowedCurrency(canonicalTo.value, candidate) ? candidate : ''
+})
 const fromCurrencyCode = computed(() => {
   if (fromCurrencyOverride.value) return fromCurrencyOverride.value
   const fallback = resolveCurrency(canonicalFrom.value) || 'USD'
@@ -1193,24 +1291,79 @@ const toCurrencyCode = computed(() => {
   return fallback.toUpperCase()
 })
 const initialAmount = Number(amountParam) || 1000
-const supportedMethods: Method[] = ['bank', 'cash', 'wallet']
+const supportedMethods: Method[] = ['bank', 'cash', 'wallet', 'airtime']
 const initialMethod = supportedMethods.includes(methodParam as Method) ? (methodParam as Method) : 'bank'
 const displayAmount = ref(initialAmount)
+const amountLimits = computed(() => ({
+  minAmount: getMinAmount(fromCurrencyCode.value),
+  maxAmount: getMaxAmount(fromCurrencyCode.value),
+  strict: true,
+}))
 const payoutMethod = ref<Method>(initialMethod)
+const searchInitiated = ref(false)
 const quoteRefreshPending = ref(false)
+const providersLive = ref(false)
 const lastRefreshKey = ref<string | null>(null)
+const refreshPollTimer = ref<number | null>(null)
+const refreshAttempts = ref(0)
+const refreshStatusPollTimer = ref<number | null>(null)
+const refreshCompletion = ref<{ done: boolean; pending: number; total: number } | null>(null)
+const refreshTimedOut = ref(false)
+const refreshFinalizing = ref(false)
+const refreshGateStartedAt = ref<number | null>(null)
+const refreshGateTimer = ref<number | null>(null)
+const refreshElapsedSeconds = ref(0)
 const refreshStatus = ref<{
   enqueued: boolean
   requestId: string | null
+  requestIds: string[]
   providers: string[]
   requestedAt: string
 } | null>(null)
+const refreshGateActive = computed(() => {
+  if (refreshTimedOut.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
+  if (!refreshStatus.value?.enqueued) return false
+  if (!refreshStatus.value.requestIds?.length) return false
+  if (refreshCompletion.value?.done) return false
+  return true
+})
+const shouldBlockResults = computed(() => {
+  if (refreshTimedOut.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
+
+  const hasRefresh = Boolean(refreshStatus.value?.enqueued && refreshStatus.value.requestIds?.length)
+  if (hasRefresh) {
+    if (!refreshCompletion.value?.done) return true
+    if (refreshFinalizing.value) return true
+    if (quotesPending.value) return true
+    if (!hasApiQuotes.value) return true
+  }
+
+  if (quoteRefreshPending.value) return true
+  if (providersLive.value) return true
+  if (quotesPending.value && !hasApiQuotes.value) return true
+  if (searchInitiated.value && !hasApiQuotes.value) return true
+  return false
+})
+const showRefreshGate = computed(() => shouldBlockResults.value)
 const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
 const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
 const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
 const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
 const flagFrom = computed(() => resolveFlag(canonicalFrom.value))
 const flagTo = computed(() => resolveFlag(canonicalTo.value))
+
+const clampDisplayAmount = (value: number) => (
+  sanitizeAmount(value, fromCurrencyCode.value, amountLimits.value)
+)
+
+watch([fromCurrencyCode, displayAmount], () => {
+  const sanitized = clampDisplayAmount(displayAmount.value)
+  if (sanitized !== displayAmount.value) {
+    displayAmount.value = sanitized
+  }
+}, { immediate: true })
 
 if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) {
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
@@ -1223,13 +1376,84 @@ const { data: quotesData, pending: quotesPending, error: quotesError, refresh: r
   payoutMethod,
   {
     key: `${currentRoute.fullPath}-${payoutMethod.value}`, // Include method in key for caching per method
-    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod],
+    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod, providersLive],
     server: true,
     lazy: false,
     fromCurrency: fromCurrencyCode,
     toCurrency: toCurrencyCode,
+    live: providersLive,
   },
 )
+
+const toPositiveMs = (value: unknown, fallback: number) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+const REFRESH_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMs, 1500)
+const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 750)
+const REFRESH_STATUS_TIMEOUT_MS = 60000
+const MAX_REFRESH_ATTEMPTS = Math.max(1, Math.ceil(REFRESH_STATUS_TIMEOUT_MS / REFRESH_POLL_MS))
+const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
+const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000
+const refreshRingRadius = 28
+const refreshRingCircumference = 2 * Math.PI * refreshRingRadius
+const refreshProgress = computed(() => {
+  if (!showRefreshGate.value || refreshTimeoutSeconds <= 0) return 0
+  const raw = Math.round((refreshElapsedSeconds.value / refreshTimeoutSeconds) * 100)
+  return Math.min(100, Math.max(0, raw))
+})
+const refreshRingOffset = computed(() => (
+  refreshRingCircumference - (refreshRingCircumference * refreshProgress.value) / 100
+))
+const refreshSecondsRemaining = computed(() => (
+  Math.max(0, refreshTimeoutSeconds - refreshElapsedSeconds.value)
+))
+const refreshQueueLabel = computed(() => {
+  const pending = refreshCompletion.value?.pending
+  const total = refreshCompletion.value?.total
+  if (pending === undefined || total === undefined || total === 0) {
+    return 'Waiting for providers to respond...'
+  }
+  if (pending === 0) {
+    return 'Finalizing results...'
+  }
+  return `${pending} of ${total} providers still responding`
+})
+
+const clearRefreshPoll = () => {
+  if (!import.meta.client) return
+  if (refreshPollTimer.value !== null) {
+    window.clearTimeout(refreshPollTimer.value)
+    refreshPollTimer.value = null
+  }
+}
+
+const clearRefreshGateTimer = () => {
+  if (!import.meta.client) return
+  if (refreshGateTimer.value !== null) {
+    window.clearInterval(refreshGateTimer.value)
+    refreshGateTimer.value = null
+  }
+}
+
+const updateRefreshElapsed = () => {
+  if (!import.meta.client) return
+  const startedAt = refreshStatus.value?.requestedAt
+    ? Date.parse(refreshStatus.value.requestedAt)
+    : refreshGateStartedAt.value
+  if (!startedAt || !Number.isFinite(startedAt)) {
+    refreshElapsedSeconds.value = 0
+    return
+  }
+  const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+  refreshElapsedSeconds.value = Math.min(refreshTimeoutSeconds, Math.max(0, elapsed))
+}
+
+const startRefreshGateTimer = () => {
+  updateRefreshElapsed()
+  if (refreshGateTimer.value !== null) return
+  refreshGateTimer.value = window.setInterval(updateRefreshElapsed, 1000)
+}
 
 const corridorContent: Record<string, CorridorContent> = {
   'united-states-jordan': {
@@ -1401,96 +1625,69 @@ const fallbackContent: CorridorContent = {
 }
 
 const baseContent = computed(() => corridorContent[corridorKey.value] || fallbackContent)
-// Collect all available methods from quotes - returns empty array while loading
-// Query all methods to discover what's available for this corridor
-const discoverMethods = async () => {
-  const [bankRes, cashRes, walletRes] = await Promise.all([
-    request<{ data: ProviderQuote[] }>('/providers', {
-      query: {
-        from: fromCountryCode.value,
-        to: toCountryCode.value,
-        amount: displayAmount.value,
-        method: 'bank',
-        fromCurrency: fromCurrencyCode.value,
-        toCurrency: toCurrencyCode.value,
-      },
-    }).catch(() => ({ data: [] })),
-    request<{ data: ProviderQuote[] }>('/providers', {
-      query: {
-        from: fromCountryCode.value,
-        to: toCountryCode.value,
-        amount: displayAmount.value,
-        method: 'cash',
-        fromCurrency: fromCurrencyCode.value,
-        toCurrency: toCurrencyCode.value,
-      },
-    }).catch(() => ({ data: [] })),
-    request<{ data: ProviderQuote[] }>('/providers', {
-      query: {
-        from: fromCountryCode.value,
-        to: toCountryCode.value,
-        amount: displayAmount.value,
-        method: 'wallet',
-        fromCurrency: fromCurrencyCode.value,
-        toCurrency: toCurrencyCode.value,
-      },
-    }).catch(() => ({ data: [] })),
-  ])
-  
-  const methods = new Set<string>()
-  if (bankRes.data && bankRes.data.length > 0) methods.add('bank')
-  if (cashRes.data && cashRes.data.length > 0) methods.add('cash')
-  if (walletRes.data && walletRes.data.length > 0) methods.add('wallet')
-  
-  discoveredMethods.value = methods.size > 0 ? Array.from(methods) : ['bank']
-}
+const providerMethodsMap = ref<Map<string, Set<Method>>>(new Map())
 
-const discoveredMethods = ref<string[]>(['bank'])
-const methodsDiscoveryPending = ref(false)
+watch([fromCountryCode, toCountryCode], () => {
+  providerMethodsMap.value = new Map()
+})
 
-// Discover methods when corridor changes
-watch([fromCountryCode, toCountryCode, displayAmount], () => {
-  if (fromCountryCode.value && toCountryCode.value) {
-    methodsDiscoveryPending.value = true
-    discoverMethods().finally(() => {
-      methodsDiscoveryPending.value = false
-    })
+const availableMethods = computed<Method[]>(() => {
+  if (refreshGateActive.value) {
+    return []
   }
-}, { immediate: true })
 
-const availableMethods = computed(() => {
-  // While discovering, return empty array (CorridorStickyBar will show loading)
-  if (methodsDiscoveryPending.value || quotesPending.value) {
+  const responseMethods = Array.isArray((quotesData.value as { availableMethods?: Method[] } | null)?.availableMethods)
+    ? (quotesData.value as { availableMethods?: Method[] }).availableMethods ?? []
+    : []
+  const quoteMethods = (quotesData.value?.data || [])
+    .flatMap((quote) => (Array.isArray(quote.methods) ? quote.methods : []))
+    .filter((method): method is Method => typeof method === 'string')
+
+  const combined = new Set<Method>([...responseMethods, ...quoteMethods])
+  if (combined.size === 0) {
+    return quotesPending.value ? [] : ['bank']
+  }
+
+  const ordered = supportedMethods.filter(method => combined.has(method))
+  return ordered.length ? ordered : Array.from(combined)
+})
+
+const providerQuotes = computed(() => {
+  if (refreshGateActive.value) {
     return []
   }
   
-  // Use discovered methods, but also check current quotes
-  const methodSet = new Set<string>(discoveredMethods.value)
-  
   const allQuotes = (quotesData.value?.data || []) as ProviderQuote[]
-  allQuotes.forEach(quote => {
-    if (quote.methods && Array.isArray(quote.methods)) {
-      quote.methods.forEach(method => {
-        if (method) methodSet.add(method)
+  
+  // Update provider methods map with methods from current quotes
+  // This ensures we capture all methods even if discovery hasn't completed
+  allQuotes.forEach((quote) => {
+    if (!quote.id) return
+    if (!providerMethodsMap.value.has(quote.id)) {
+      providerMethodsMap.value.set(quote.id, new Set())
+    }
+    // Add all methods from this quote
+    if (Array.isArray(quote.methods)) {
+      quote.methods.forEach((method) => {
+        if (method) providerMethodsMap.value.get(quote.id)!.add(method as Method)
       })
     }
   })
   
-  // If no methods found, default to bank
-  if (methodSet.size === 0) {
-    return ['bank']
-  }
-  
-  return Array.from(methodSet).sort() // Sort for consistent ordering
-})
-
-const providerQuotes = computed(() => {
-  const allQuotes = (quotesData.value?.data || []) as ProviderQuote[]
   // Filter by selected payout method - only show providers that support this method
   return allQuotes.filter(quote => quote.methods?.includes(payoutMethod.value))
 })
 const ratedQuotes = computed(() => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>)
 const apiUpdatedAt = computed(() => quotesData.value?.updatedAt)
+const apiUpdatedAtMs = computed(() => {
+  if (!apiUpdatedAt.value) return null
+  const ts = new Date(apiUpdatedAt.value).getTime()
+  return Number.isFinite(ts) ? ts : null
+})
+const isQuoteStale = computed(() => {
+  if (!apiUpdatedAtMs.value) return false
+  return Date.now() - apiUpdatedAtMs.value > MAX_B2C_STALE_MS
+})
 const apiUpdatedLabel = computed(() => (apiUpdatedAt.value ? getRelativeTime(apiUpdatedAt.value) : ''))
 const providerError = computed(() => (quotesData.value as { error?: { code: string; message: string } } | null)?.error ?? null)
 const corridorUnsupported = computed(() => providerError.value?.code === 'corridor_unsupported')
@@ -1501,7 +1698,25 @@ const corridorUnavailable = computed(() => {
 const hasApiError = computed(() => (quotesError.value || providerError.value) && !corridorUnavailable.value && !corridorUnsupported.value)
 const corridorId = computed(() => `${fromCountryCode.value}-${toCountryCode.value}-${fromCurrencyCode.value}-${toCurrencyCode.value}`)
 const quoteRefreshKey = computed(() => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`)
-const historyRangeDays = 30
+
+watch(availableMethods, (methods) => {
+  if (quotesPending.value) return
+  if (!methods.length) return
+  if (!methods.includes(payoutMethod.value)) {
+    payoutMethod.value = methods[0]
+  }
+})
+
+watch(
+  corridorId,
+  (value) => {
+    if (!value || sendMoneyTracked.value) return
+    sendMoneyTracked.value = true
+    void trackSendMoneyView({ corridorId: value, pagePath: currentRoute.fullPath })
+  },
+  { immediate: true },
+)
+const historyRangeDays = 7
 const shouldFetchHistory = computed(() => {
   if (fromCurrencyCode.value === toCurrencyCode.value) {
     return false
@@ -1724,7 +1939,19 @@ const chartStats = computed(() => {
     }
   }
   if (!rateHistory.value.length) return null
-  const rates = rateHistory.value.map(point => point.rate)
+  
+  // Only use last 7 days of data
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const recentHistory = rateHistory.value.filter(point => {
+    const pointDate = new Date(point.date)
+    return pointDate >= sevenDaysAgo
+  })
+  
+  const rates = recentHistory.length > 0 
+    ? recentHistory.map(point => point.rate)
+    : rateHistory.value.map(point => point.rate)
+    
   const minRate = Math.min(...rates)
   const maxRate = Math.max(...rates)
   const avgRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length
@@ -1752,9 +1979,31 @@ const chartLabels = computed(() => {
   if (!rateHistory.value.length) {
     return [`${historyRangeDays}D`, 'Now']
   }
-  const start = formatChartDate(rateHistory.value[0].date)
-  const end = formatChartDate(rateHistory.value[rateHistory.value.length - 1].date)
-  return [start || `${historyRangeDays}D`, end || 'Now']
+  
+  // Show more intermediate dates - show start, middle points, and end
+  const historyLength = rateHistory.value.length
+  if (historyLength <= 2) {
+    const start = formatChartDate(rateHistory.value[0].date)
+    const end = formatChartDate(rateHistory.value[historyLength - 1].date)
+    return [start || `${historyRangeDays}D`, end || 'Now']
+  }
+  
+  // Calculate indices for evenly spaced labels
+  const indices: number[] = []
+  if (historyLength <= 4) {
+    // For short histories, show all points
+    for (let i = 0; i < historyLength; i++) {
+      indices.push(i)
+    }
+  } else {
+    // Show start, 1/3, 2/3, and end
+    indices.push(0)
+    indices.push(Math.floor(historyLength / 3))
+    indices.push(Math.floor((historyLength * 2) / 3))
+    indices.push(historyLength - 1)
+  }
+  
+  return indices.map(i => formatChartDate(rateHistory.value[i].date))
 })
 
 const chartStatusLabel = computed(() => {
@@ -1828,6 +2077,7 @@ const methodLabelMap: Record<string, string> = {
   bank: 'Bank',
   cash: 'Cash pickup',
   wallet: 'Mobile wallet',
+  airtime: 'Airtime',
   card: 'Card',
 }
 
@@ -1933,6 +2183,12 @@ const apiRows = computed<TableRow[]>(() => {
   return ratedQuotes.value.map((quote, index) => {
     const score = Number.isFinite(quote.score) ? Number(quote.score).toFixed(1) : '0.0'
     const methodsLabel = formatMethodLabels(quote.methods as string[])
+    
+    // Get all methods for this provider from the map, fallback to quote methods
+    const allProviderMethods = providerMethodsMap.value.get(quote.id)
+    const methodsArray = allProviderMethods 
+      ? Array.from(allProviderMethods) 
+      : (quote.methods as string[] || [])
 
     return {
       provider: quote.name,
@@ -1954,12 +2210,36 @@ const apiRows = computed<TableRow[]>(() => {
       fxRate: quote.fxRate,
       feeAmount: quote.fee,
       hasPromo: quote.hasPromo ?? false,
+      methods: methodsArray,
       promoInfo: quote.promoInfo ?? null,
     }
   })
 })
 
 const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
+
+const corridorIndices = computed(() => {
+  return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
+})
+
+const formatIndexRate = (value: number | null) => {
+  if (!Number.isFinite(value ?? Number.NaN)) return '—'
+  return Number(value).toFixed(4)
+}
+
+const formatIndexPercent = (value: number | null) => {
+  if (!Number.isFinite(value ?? Number.NaN)) return '—'
+  return `${(Number(value) * 100).toFixed(2)}%`
+}
+
+const indexRateUnit = computed(() => {
+  if (!fromCurrencyCode.value || !toCurrencyCode.value) return ''
+  return `${toCurrencyCode.value} per ${fromCurrencyCode.value}`
+})
+
+const teerDisplay = computed(() => formatIndexRate(corridorIndices.value?.teer ?? null))
+const rviDisplay = computed(() => formatIndexRate(corridorIndices.value?.rvi ?? null))
+const rciDisplay = computed(() => formatIndexPercent(corridorIndices.value?.rci ?? null))
 
 const content = computed(() => {
   const base = baseContent.value
@@ -2041,13 +2321,34 @@ const handleProviderOutbound = async (row: TableRow) => {
     }, 1000)
   }
 
-  window.open(targetUrl, '_blank', 'noopener,noreferrer')
+  const providerId = row.providerId || row.provider
+  const { payin, payout } = getQuoteRefreshMethods(payoutMethod.value)
+  const outboundUrl = buildOutboundUrl({
+    providerId,
+    targetUrl,
+    corridorId: quotesData.value?.corridor || corridorKey.value,
+    amount: displayAmount.value,
+    payin,
+    payout,
+    quotedRate: row.fxRate,
+    quotedFee: row.feeAmount,
+    isAffiliate: row.isAffiliate ?? Boolean(row.affiliateUrl),
+    from: fromCountryCode.value,
+    to: toCountryCode.value,
+    fromCurrency: fromCurrencyCode.value,
+    toCurrency: toCurrencyCode.value,
+    source: 'send-money-compare',
+    utm: extractUtmParams(currentRoute.query as Record<string, unknown>),
+  })
+
+  window.open(outboundUrl, '_blank', 'noopener,noreferrer')
 }
 
 setSeo({
   title: seoTitle.value,
   description: seoDescription.value,
   canonical: `${normalizedSiteUrl}${canonicalPath.value}`,
+  ogImage: `${normalizedSiteUrl}/og-images/corridor-${fromCountryCode.value.toLowerCase()}-${toCountryCode.value.toLowerCase()}.jpg`,
 })
 
 jsonLdBreadcrumb(breadcrumbItems.value.map(item => ({ name: item.name, url: `${normalizedSiteUrl}${item.path}` })))
@@ -2056,9 +2357,31 @@ if (content.value.faqs.length) {
   jsonLdFaq(content.value.faqs)
 }
 
-const displayCurrency = ref(fromCurrencyCode.value)
+// Add FinancialProduct schema for the best quote
+const { addFinancialProductSchema } = useStructuredData()
+if (bestQuote.value && hasApiQuotes.value) {
+  const quote = bestQuote.value
+  addFinancialProductSchema({
+    name: `Money Transfer from ${content.value.from} to ${content.value.to}`,
+    description: `Send ${displayAmount.value} ${fromCurrencyCode.value} to ${content.value.to} with ${quote.name}. Get ${quote.recipientGets.toFixed(2)} ${toCurrencyCode.value} in return.`,
+    url: `${normalizedSiteUrl}${canonicalPath.value}`,
+    provider: quote.name,
+    exchangeRate: bestRateLabel.value,
+    fees: quote.feeAmount ? `${formatMoney(quote.feeAmount, fromCurrencyCode.value)}` : undefined,
+    deliveryTime: quote.speed || undefined,
+    currency: fromCurrencyCode.value,
+    amount: String(displayAmount.value),
+  })
+}
+
+const displayCurrency = ref(toCurrencyCode.value)
+
+watch(toCurrencyCode, (value) => {
+  if (value && value !== displayCurrency.value) {
+    displayCurrency.value = value
+  }
+})
 const sortBy = ref('recipient')
-const insightTimeframe = ref('7d')
 
 const sortLabels: Record<string, string> = {
   recipient: 'recipient gets',
@@ -2094,15 +2417,17 @@ const recipientRange = computed(() => {
   const minNum = Math.min(...amounts)
   const maxNum = Math.max(...amounts)
   return {
-    min: minNum.toLocaleString(),
-    max: maxNum.toLocaleString(),
+    min: minNum.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+    max: maxNum.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
     minNum,
     maxNum,
   }
 })
 
+const hasRecipientQuotes = computed(() => content.value.table.rows.length > 0)
+
 const isExactRecipientAmount = computed(() => {
-  return recipientRange.value.minNum === recipientRange.value.maxNum
+  return hasRecipientQuotes.value && recipientRange.value.minNum === recipientRange.value.maxNum
 })
 
 const corridorWatchTarget = computed(() => ({
@@ -2118,15 +2443,23 @@ const bestTotalCost = computed(() => {
   if (!midMarketRate.value) return 0
   const costs = content.value.table.rows
     .map((row) => {
-      const providerRate = row.fxRate
-      if (!Number.isFinite(providerRate ?? NaN)) return null
-      const upfrontFee = Number.isFinite(row.feeAmount ?? NaN) ? Number(row.feeAmount) : 0
+      // Use promo fee/rate if available, otherwise use regular fee/rate (same logic as getProviderTrueCost)
+      const hasPromo = row.hasPromo && row.promoInfo
+      const providerRate = hasPromo && Number.isFinite(row.promoInfo?.rate)
+        ? Number(row.promoInfo.rate)
+        : Number.isFinite(row.fxRate ?? NaN) ? Number(row.fxRate) : 0
+      const upfrontFee = hasPromo && Number.isFinite(row.promoInfo?.fee)
+        ? Number(row.promoInfo.fee)
+        : Number.isFinite(row.feeAmount ?? NaN) ? Number(row.feeAmount) : 0
+      
+      if (!Number.isFinite(providerRate) || providerRate === 0) return null
+      
       return buildTrueCostBreakdown(
         displayAmount.value,
         upfrontFee,
         midMarketRate.value,
-        Number(providerRate),
-        0,
+        providerRate,
+        0, // Don't pass bestTotalCost here to avoid circular dependency
       ).totalCost
     })
     .filter((value): value is number => value !== null)
@@ -2150,6 +2483,58 @@ const worstCost = computed(() => {
   const costs = providerCosts.value
   if (costs.length === 0) return 0
   return Math.max(...costs)
+})
+
+const costSpread = computed(() => {
+  if (providerCosts.value.length === 0) return '—'
+  const best = Math.min(...providerCosts.value)
+  const worst = Math.max(...providerCosts.value)
+  const spread = worst - best
+  if (spread === 0) return '$0'
+  return `$${spread.toFixed(2)}`
+})
+
+const averageCostPercent = computed(() => {
+  if (!corridorIndices.value?.rci) {
+    if (providerCosts.value.length === 0) return '—'
+    const avg = averageCost.value / displayAmount.value * 100
+    return `${avg.toFixed(2)}%`
+  }
+  return rciDisplay.value
+})
+
+const bestProviderName = computed(() => {
+  if (sortedProviders.value.length === 0) return '—'
+  return sortedProviders.value[0]?.provider || '—'
+})
+
+const providerConsistency = computed(() => {
+  const rvi = corridorIndices.value?.rvi
+  if (!rvi || !Number.isFinite(rvi)) return 'unknown'
+  const rviValue = Number(rvi)
+  if (rviValue < 0.01) return 'high'
+  return 'low'
+})
+
+const costSavingsPotential = computed(() => {
+  if (providerCosts.value.length < 2) return '$0'
+  const best = Math.min(...providerCosts.value)
+  const worst = Math.max(...providerCosts.value)
+  const savings = worst - best
+  if (savings <= 0) return '$0'
+  return `$${savings.toFixed(2)}`
+})
+
+const getTeerVsMidMarket = computed(() => {
+  if (!corridorIndices.value?.teer || !corridorIndices.value?.midMarketRate) return ''
+  const teer = corridorIndices.value.teer
+  const midMarket = corridorIndices.value.midMarketRate
+  if (!Number.isFinite(teer) || !Number.isFinite(midMarket) || midMarket === 0) return ''
+  const diff = ((teer - midMarket) / midMarket) * 100
+  const diffAbs = Math.abs(diff)
+  if (diffAbs < 0.01) return 'very close to'
+  if (diff > 0) return `${diff.toFixed(2)}% better than`
+  return `${diffAbs.toFixed(2)}% below`
 })
 
 function getProviderTrueCost(row: TableRow, _index: number): TrueCostBreakdown {
@@ -2178,6 +2563,9 @@ const getQuoteRefreshMethods = (method: Method) => {
   if (method === 'wallet') {
     return { payin: 'bank_transfer', payout: 'mobile_wallet' }
   }
+  if (method === 'airtime') {
+    return { payin: 'bank_transfer', payout: 'airtime' }
+  }
   return { payin: 'bank_transfer', payout: 'bank_deposit' }
 }
 
@@ -2186,19 +2574,127 @@ type QuoteRefreshResponse = {
     attempted?: boolean
     enqueued?: boolean
     request_id?: string | null
+    request_ids?: string[]
     providers?: string[]
   }
+}
+
+const scheduleRefreshPoll = () => {
+  if (!import.meta.client) return
+  if (refreshAttempts.value >= MAX_REFRESH_ATTEMPTS) return
+
+  clearRefreshPoll()
+  refreshPollTimer.value = window.setTimeout(async () => {
+    refreshAttempts.value += 1
+    await refreshQuotes()
+    const timedOut = refreshAttempts.value >= MAX_REFRESH_ATTEMPTS
+    if (timedOut && !hasApiQuotes.value && !refreshTimedOut.value) {
+      refreshTimedOut.value = true
+      searchInitiated.value = false
+      providersLive.value = false
+      refreshStatus.value = null
+      refreshFinalizing.value = false
+      lastRefreshKey.value = null
+      clearRefreshStatusPoll()
+    }
+
+    const shouldContinue = !timedOut
+      && !hasApiError.value
+      && !corridorUnavailable.value
+      && !corridorUnsupported.value
+      && !hasApiQuotes.value
+      && !refreshTimedOut.value
+    if (shouldContinue) {
+      scheduleRefreshPoll()
+      return
+    }
+    clearRefreshPoll()
+  }, REFRESH_POLL_MS)
+}
+
+const clearRefreshStatusPoll = () => {
+  if (refreshStatusPollTimer.value !== null) {
+    window.clearTimeout(refreshStatusPollTimer.value)
+    refreshStatusPollTimer.value = null
+  }
+  refreshCompletion.value = null
+  refreshFinalizing.value = false
+}
+
+const startRefreshStatusPoll = (requestIds: string[]) => {
+  if (!import.meta.client || !requestIds.length) return
+  refreshTimedOut.value = false
+  const startedAt = Date.now()
+  refreshCompletion.value = {
+    done: false,
+    pending: requestIds.length,
+    total: requestIds.length,
+  }
+
+  const poll = async () => {
+    const elapsed = Date.now() - startedAt
+    if (elapsed >= REFRESH_STATUS_TIMEOUT_MS) {
+      refreshTimedOut.value = true
+      searchInitiated.value = false
+      refreshCompletion.value = {
+        done: true,
+        pending: 0,
+        total: requestIds.length,
+      }
+      refreshFinalizing.value = false
+      return
+    }
+
+    try {
+      const status = await request<{
+        done?: boolean
+        pending?: number
+        processing?: number
+        missing?: number
+        total?: number
+      }>('/quotes/refresh-status', {
+        query: { request_ids: requestIds.join(',') },
+        retries: 0,
+        timeoutMs: 5000,
+      })
+      const pending = Number(status?.pending ?? 0) + Number(status?.processing ?? 0)
+      const missing = Number(status?.missing ?? 0)
+      const remaining = pending + missing
+      refreshCompletion.value = {
+        done: status?.done || remaining === 0,
+        pending: remaining,
+        total: Number(status?.total ?? requestIds.length),
+      }
+      if (refreshCompletion.value.done) {
+        refreshFinalizing.value = true
+      }
+      if (!refreshCompletion.value.done) {
+        refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
+        return
+      }
+    } catch {
+      refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
+      return
+    }
+  }
+
+  clearRefreshStatusPoll()
+  refreshStatusPollTimer.value = window.setTimeout(poll, 0)
 }
 
 const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
   if (!import.meta.client || displayAmount.value <= 0) return
   if (corridorUnavailable.value || corridorUnsupported.value) return
   const refreshKey = quoteRefreshKey.value
-  if (source === 'auto' && lastRefreshKey.value === refreshKey) {
-    return
+  if (source === 'auto') {
+    if (refreshTimedOut.value) return
+    if (quoteRefreshPending.value || refreshGateActive.value) return
+    if (lastRefreshKey.value === refreshKey) return
   }
-  lastRefreshKey.value = refreshKey
+  refreshTimedOut.value = false
   quoteRefreshPending.value = true
+  refreshAttempts.value = 0
+  refreshFinalizing.value = false
 
   try {
     const { payin, payout } = getQuoteRefreshMethods(payoutMethod.value)
@@ -2213,12 +2709,24 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
       retries: 0,
     })
     if (response?.refresh?.enqueued) {
+      const requestIds = Array.isArray(response.refresh.request_ids)
+        ? response.refresh.request_ids
+        : []
+      if (requestIds.length) {
+        lastRefreshKey.value = refreshKey
+        providersLive.value = true
+      }
       refreshStatus.value = {
         enqueued: true,
         requestId: response.refresh.request_id ?? null,
+        requestIds,
         providers: response.refresh.providers ?? [],
         requestedAt: new Date().toISOString(),
       }
+      if (requestIds.length) {
+        startRefreshStatusPoll(requestIds)
+      }
+      scheduleRefreshPoll()
     }
   } catch (error) {
     if (import.meta.dev) {
@@ -2236,14 +2744,45 @@ const handleRefreshQuotes = async () => {
 
 const isRefreshQueued = computed(() => {
   if (corridorUnavailable.value || corridorUnsupported.value) return false
-  if (hasApiQuotes.value) return false
-  return quoteRefreshPending.value || Boolean(refreshStatus.value?.enqueued)
+  if (refreshTimedOut.value) return false
+  if (shouldBlockResults.value) return true
+  if (quoteRefreshPending.value) return true
+  if (!hasApiQuotes.value && quotesPending.value) return true
+  return false
 })
 
+watch(showRefreshGate, (active) => {
+  if (!import.meta.client) return
+  if (active) {
+    if (!refreshGateStartedAt.value) {
+      refreshGateStartedAt.value = Date.now()
+    }
+    startRefreshGateTimer()
+    return
+  }
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
+}, { immediate: true })
+
+watch(refreshStatus, () => {
+  if (!showRefreshGate.value) return
+  updateRefreshElapsed()
+})
+
+watch(quotesPending, (pending) => {
+  if (!pending && searchInitiated.value) {
+    searchInitiated.value = false
+  }
+}, { immediate: true })
+
 watch(
-  [quoteRefreshKey, quotesPending, hasApiQuotes, hasApiError, corridorUnavailable, corridorUnsupported],
-  ([, pending, hasQuotes, hasError, unavailable, unsupported]) => {
-    if (!import.meta.client || pending || hasQuotes || hasError || unavailable || unsupported) {
+  [quoteRefreshKey, quotesPending, hasApiQuotes, hasApiError, corridorUnavailable, corridorUnsupported, isQuoteStale, refreshTimedOut],
+  ([, pending, hasQuotes, hasError, unavailable, unsupported, stale, timedOut]) => {
+    if (!import.meta.client || pending || hasError || unavailable || unsupported || timedOut) {
+      return
+    }
+    if (hasQuotes && !stale) {
       return
     }
     void requestQuoteRefresh('auto')
@@ -2252,15 +2791,105 @@ watch(
 )
 
 watch(
-  [hasApiQuotes, corridorUnavailable, corridorUnsupported],
-  ([hasQuotes, unavailable, unsupported]) => {
-    if (hasQuotes || unavailable || unsupported) {
+  [corridorUnavailable, corridorUnsupported, hasApiError],
+  ([unavailable, unsupported, hasError]) => {
+    if (!unavailable && !unsupported && !hasError) {
+      return
+    }
+    refreshTimedOut.value = false
+    refreshFinalizing.value = false
+    lastRefreshKey.value = null
+    providersLive.value = false
+    refreshStatus.value = null
+    refreshAttempts.value = 0
+    clearRefreshPoll()
+    clearRefreshStatusPoll()
+    clearRefreshGateTimer()
+    refreshGateStartedAt.value = null
+    refreshElapsedSeconds.value = 0
+  },
+)
+
+watch(
+  refreshCompletion,
+  async (completion) => {
+    if (!completion?.done) return
+    refreshFinalizing.value = true
+    try {
+      await refreshQuotes()
+    } catch {
+      // Ignore refresh errors; we'll surface API errors in the UI.
+    } finally {
+      refreshFinalizing.value = false
+    }
+    if (hasApiQuotes.value || refreshTimedOut.value) {
+      providersLive.value = false
       refreshStatus.value = null
+      refreshFinalizing.value = false
+      lastRefreshKey.value = null
+      refreshAttempts.value = 0
+      clearRefreshPoll()
+      clearRefreshStatusPoll()
+      clearRefreshGateTimer()
+      refreshGateStartedAt.value = null
+      refreshElapsedSeconds.value = 0
     }
   },
 )
 
-const { availableToCurrencies } = useCorridorCurrencies(
+watch(hasApiQuotes, (hasQuotes) => {
+  if (hasQuotes) {
+    refreshTimedOut.value = false
+    if (refreshStatus.value?.enqueued) {
+      providersLive.value = false
+      refreshStatus.value = null
+      refreshFinalizing.value = false
+      lastRefreshKey.value = null
+      refreshAttempts.value = 0
+      clearRefreshPoll()
+      clearRefreshStatusPoll()
+      clearRefreshGateTimer()
+      refreshGateStartedAt.value = null
+      refreshElapsedSeconds.value = 0
+    }
+  }
+})
+
+watch(quoteRefreshKey, () => {
+  refreshAttempts.value = 0
+  refreshTimedOut.value = false
+  refreshFinalizing.value = false
+  lastRefreshKey.value = null
+  providersLive.value = false
+  refreshStatus.value = null
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
+})
+
+watch(payoutMethod, async () => {
+  refreshTimedOut.value = false
+  refreshStatus.value = null
+  refreshAttempts.value = 0
+  refreshFinalizing.value = false
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
+  try {
+    await refreshQuotes()
+  } catch {
+    // Ignore refresh errors; the auto refresh queue handles retries.
+  }
+  if ((!hasApiQuotes.value || isQuoteStale.value) && !hasApiError.value && !corridorUnavailable.value && !corridorUnsupported.value) {
+    void requestQuoteRefresh('auto')
+  }
+})
+
+const { availableToCurrencies, availableFromCurrencies } = useCorridorCurrencies(
   fromCountryCode,
   toCountryCode,
   computed(() => fromCurrencyCode.value),
@@ -2268,25 +2897,34 @@ const { availableToCurrencies } = useCorridorCurrencies(
 )
 
 function handleBarUpdate(data: { amount: number; payoutMethod: string; currency: string; fromCurrency: string; fromCountry?: string; toCountry?: string }) {
-  if (data.amount && data.amount > 0) {
-  displayAmount.value = data.amount
-  }
+  const currency = data.fromCurrency || fromCurrencyCode.value
+  displayAmount.value = sanitizeAmount(data.amount, currency, {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+    strict: true,
+  })
   payoutMethod.value = data.payoutMethod as Method
   displayCurrency.value = data.currency
-  if (data.fromCurrency && data.fromCurrency !== fromCurrencyCode.value) {
-    fromCurrencyCode.value = data.fromCurrency
-  }
 }
 
-function handleNewQuery(data: { fromCountry: string; toCountry: string; amount: number; currency: string; fromCurrency: string; payoutMethod: string }) {
+async function handleNewQuery(data: { fromCountry: string; toCountry: string; amount: number; currency: string; fromCurrency: string; payoutMethod: string }) {
+  searchInitiated.value = true
   const newUrl = getCorridorUrl(data.fromCountry, data.toCountry)
+  const sanitizedAmount = sanitizeAmount(data.amount, data.fromCurrency || fromCurrencyCode.value, {
+    minAmount: getMinAmount(data.fromCurrency || fromCurrencyCode.value),
+    maxAmount: getMaxAmount(data.fromCurrency || fromCurrencyCode.value),
+    strict: true,
+  })
   const params = new URLSearchParams()
-  if (data.amount !== 1000) params.set('amount', String(data.amount))
+  if (sanitizedAmount !== 1000) params.set('amount', String(sanitizedAmount))
   if (data.payoutMethod !== 'bank') params.set('method', data.payoutMethod)
   if (data.fromCurrency) params.set('fromCurrency', data.fromCurrency)
   if (data.currency && data.currency !== toCurrencyCode.value) params.set('toCurrency', data.currency)
   const queryString = params.toString()
-  navigateTo(`${newUrl}${queryString ? `?${queryString}` : ''}`)
+  const fullUrl = `${newUrl}${queryString ? `?${queryString}` : ''}`
+  
+  // Navigate immediately - no waiting for quotes
+  await navigateTo(fullUrl)
 }
 
 function handleSort(newSort: string) {
@@ -2308,16 +2946,22 @@ async function handleSave() {
   if (result.status === 'saved') {
     toastTitle.value = 'Added to watchlist!'
     toastMessage.value = `${content.value.from} → ${content.value.to} saved`
+    toastVariant.value = 'success'
     successToastRef.value?.show()
   } else if (result.status === 'already_saved') {
     toastTitle.value = 'Already saved'
     toastMessage.value = 'This corridor is already in your watchlist'
+    toastVariant.value = 'success'
     successToastRef.value?.show()
   } else if (result.status === 'limit_reached') {
     limitModalFeature.value = 'watchlist'
     limitModalLimit.value = result.limit
-    limitModalCount.value = result.limit
     limitModalOpen.value = true
+  } else if (result.status === 'error') {
+    toastTitle.value = 'Unable to save'
+    toastMessage.value = result.message
+    toastVariant.value = 'error'
+    successToastRef.value?.show()
   }
 }
 
@@ -2327,31 +2971,11 @@ async function handleAlert() {
     authModalOpen.value = true
     return
   }
-  const result = await alerts.createForTarget({
-    type: 'corridor',
-    from: fromCountryCode.value,
-    to: toCountryCode.value,
-    method: payoutMethod.value,
+  saveAlertModal.open({
+    target: corridorWatchTarget.value,
+    label: corridorWatchLabel.value,
+    source: 'compare',
   })
-  if (result.status === 'created') {
-    toastTitle.value = 'Rate alert created!'
-    toastMessage.value = `We'll notify you when rates change for ${content.value.from} → ${content.value.to}`
-    successToastRef.value?.show()
-  } else if (result.status === 'already_exists') {
-    toastTitle.value = 'Alert exists'
-    toastMessage.value = 'You already have an alert for this corridor'
-    successToastRef.value?.show()
-  } else if (result.status === 'watchlist_limit_reached') {
-    limitModalFeature.value = 'watchlist'
-    limitModalLimit.value = result.limit
-    limitModalCount.value = result.limit
-    limitModalOpen.value = true
-  } else if (result.status === 'alert_limit_reached') {
-    limitModalFeature.value = 'alert'
-    limitModalLimit.value = result.limit
-    limitModalCount.value = result.limit
-    limitModalOpen.value = true
-  }
 }
 
 function handleShare() {
@@ -2366,11 +2990,93 @@ const authModalFeature = ref<'watchlist' | 'alert'>('watchlist')
 const limitModalOpen = ref(false)
 const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
 const limitModalLimit = ref(3)
-const limitModalCount = ref(3)
 const shareModalOpen = ref(false)
 const successToastRef = ref<{ show: () => void; hide: () => void } | null>(null)
 const toastTitle = ref('')
 const toastMessage = ref('')
+const toastVariant = ref<'success' | 'error'>('success')
+
+const limitModalCount = computed(() => {
+  return limitModalFeature.value === 'watchlist'
+    ? watchlist.count.value
+    : alerts.count.value
+})
+
+const limitMessage = computed(() => {
+  if (limitModalFeature.value === 'watchlist') {
+    if (isPlus.value) {
+      return `You've saved ${limitModalCount.value} corridors, the current Plus limit. Remove one to add another.`
+    }
+    return `You've saved ${limitModalCount.value} corridors, the maximum for free accounts.`
+  }
+  if (isPlus.value) {
+    return `You've created ${limitModalCount.value} alerts, the current Plus limit. Remove one to add another.`
+  }
+  return `You've created ${limitModalCount.value} alerts, the maximum for free accounts.`
+})
+
+const metricLabels: Record<string, string> = {
+  recipientGets: 'Recipient gets',
+  totalCost: 'Total cost',
+  fee: 'Fee',
+  midMarketRate: 'Mid-market rate',
+  rate: 'Rate',
+  sendScore: 'Intelligent alert',
+  index: 'Index',
+}
+
+const comparatorLabels: Record<string, string> = {
+  gt: '>',
+  gte: '≥',
+  lt: '<',
+  lte: '≤',
+  crosses_above: 'crosses above',
+  crosses_below: 'crosses below',
+}
+
+const formatAlertValue = (metric: string, value: number) => {
+  if (!Number.isFinite(value)) return '—'
+  if (metric === 'sendScore') return Math.round(value).toString()
+  if (metric === 'rate' || metric === 'midMarketRate') return value.toFixed(4)
+  return value.toFixed(2)
+}
+
+const limitModalItems = computed(() => {
+  const sliceLimit = limitModalLimit.value || 0
+  if (limitModalFeature.value === 'alert') {
+    const items = alerts.alerts.value.map((alert) => {
+      const label = watchlist.findById(alert.watchlistItemId)?.label || 'Alert'
+      const metricLabel = metricLabels[alert.rule.metric] || 'Alert'
+      const comparatorLabel = comparatorLabels[alert.rule.comparator] || alert.rule.comparator
+      const valueLabel = formatAlertValue(alert.rule.metric, alert.rule.value)
+      const currencyLabel = alert.rule.currency ? ` ${alert.rule.currency}` : ''
+      return {
+        id: alert.id,
+        label,
+        meta: `${metricLabel} ${comparatorLabel} ${valueLabel}${currencyLabel}`.trim(),
+      }
+    })
+    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+  }
+
+  const items = watchlist.items.value.map(item => ({
+    id: item.id,
+    label: item.label,
+  }))
+  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+})
+
+const handleLimitRemove = async (id: string) => {
+  if (limitModalFeature.value === 'watchlist') {
+    await watchlist.remove(id)
+  } else {
+    await alerts.remove(id)
+  }
+
+  if (limitModalLimit.value > 0 && limitModalCount.value < limitModalLimit.value) {
+    limitModalOpen.value = false
+  }
+}
 
 function openScoreModal(row: TableRow) {
   selectedProvider.value = {

@@ -65,7 +65,7 @@
             </span>
             <span v-if="hasPromo && promoInfo" :class="[
               'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
-              darkBackground ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/40' : 'bg-emerald-100 text-emerald-700'
+              darkBackground ? 'bg-emerald-500/30 text-emerald-200 border border-white' : 'bg-emerald-100 text-emerald-700'
             ]">
               <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -114,7 +114,7 @@
         <span
           :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-xl' : 'text-lg']"
         >
-          {{ formatCurrency(totalCost) }}
+          {{ formatCurrency(displayTotalCost) }}
         </span>
       </div>
     </div>
@@ -160,14 +160,22 @@ const props = withDefaults(defineProps<Props & { darkBackground?: boolean }>(), 
 
 const showTooltip = ref(false)
 
+// Ensure totalCost is always upfrontFee + hiddenMarkup (defensive check to fix math issues)
+const displayTotalCost = computed(() => {
+  // Always calculate from the source values to ensure math is correct
+  return Math.round((props.upfrontFee + props.hiddenMarkup) * 100) / 100
+})
+
 const feePercent = computed(() => {
-  if (props.totalCost === 0) return 0
-  return (props.upfrontFee / props.totalCost) * 100
+  const total = displayTotalCost.value
+  if (total === 0) return 0
+  return (props.upfrontFee / total) * 100
 })
 
 const markupPercent = computed(() => {
-  if (props.totalCost === 0) return 0
-  return (props.hiddenMarkup / props.totalCost) * 100
+  const total = displayTotalCost.value
+  if (total === 0) return 0
+  return (props.hiddenMarkup / total) * 100
 })
 
 const feeBarWidth = computed(() => {
@@ -219,7 +227,8 @@ const markupBadgeClass = computed(() => {
 function formatCurrency(value: number): string {
   const currency = props.currencyCode || 'USD'
   if (currency === 'USD') {
-    return `$${Math.abs(value).toFixed(2)}`
+    const absValue = Math.abs(value).toFixed(2)
+    return value < 0 ? `-$${absValue}` : `$${absValue}`
   }
   // For other currencies, use basic formatting
   return new Intl.NumberFormat('en-US', {
@@ -227,10 +236,9 @@ function formatCurrency(value: number): string {
     currency: currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Math.abs(value))
+  }).format(value)
 }
 </script>
-
 
 
 

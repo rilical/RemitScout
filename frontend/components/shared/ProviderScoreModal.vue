@@ -12,19 +12,19 @@
         >
           <div class="flex-shrink-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
-              <div class="flex h-12 w-12 items-center justify-center flex-shrink-0">
+              <div class="flex h-16 w-16 items-center justify-center flex-shrink-0">
                 <ProviderLogo
                   :slug="providerSlug || ''"
                   :alt="providerName"
                   size="default"
-                  class="object-contain"
+                  class="object-contain max-h-full max-w-full"
                 />
               </div>
               <div>
                 <h2 class="text-xl font-bold text-neutral-900">
                   {{ providerName }}
                 </h2>
-                <p class="text-sm text-neutral-500">
+                <p class="text-sm text-brand-600 font-semibold">
                   Remit-Score: {{ score.toFixed(1) }}
                 </p>
               </div>

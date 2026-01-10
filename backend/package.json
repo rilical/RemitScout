@@ -5,7 +5,8 @@
   "scripts": {
     "dev:plane-a": "tsx watch plane-a/src/server.ts",
     "dev:plane-c": "tsx watch plane-c/src/server.ts",
-    "dev:plane-b": "tsx plane-b/src/ingest.ts",
+    "dev:plane-b": "tsx scripts/dev/continuous-pipeline.ts",
+    "dev:plane-b:once": "tsx plane-b/src/ingest.ts",
     "build": "tsc -b plane-a plane-c plane-b scripts",
     "start:plane-a": "node dist/plane-a/server.js",
     "start:plane-c": "node dist/plane-c/server.js",
@@ -46,6 +47,7 @@
     "sessions:cleanup": "tsx scripts/session-cleanup-worker.ts",
     "audit:cleanup": "tsx scripts/audit-log-cleanup-worker.ts",
     "telemetry:analytics": "tsx scripts/telemetry-analytics-job.ts",
+    "bank-vs-specialist:refresh": "tsx scripts/bank-vs-specialist-refresh.ts",
     "gold:popular-corridors": "tsx scripts/gold-popular-corridors-job.ts",
     "gold:fx-rates": "tsx scripts/gold-fx-rates-job.ts",
     "gold:pulse-cache": "tsx scripts/gold-pulse-cache-job.ts",
@@ -54,7 +56,11 @@
     "volatility:backfill": "tsx scripts/volatility-backfill.ts",
     "tiers:seed": "tsx scripts/seed-manual-corridor-tiers.ts",
     "smart-alerts:refresh": "tsx scripts/smart-alerts-job.ts",
-    "capability:probe": "tsx scripts/provider-capability-probe.ts"
+    "capability:probe": "tsx scripts/provider-capability-probe.ts",
+    "ci:api-smoke": "tsx scripts/ci/api-smoke.ts",
+    "ci:seed-sanity": "tsx scripts/ci/seed-sanity.ts",
+    "ci:config-validate": "tsx scripts/ci/validate-runtime-config.ts",
+    "ci:observability": "tsx scripts/ci/observability-check.ts"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.620.0",
@@ -93,6 +99,7 @@
     "sharp": "^0.33.4",
     "stripe": "^20.1.0",
     "undici": "^7.16.0",
+    "web-push": "^3.6.7",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -101,6 +108,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/pdfkit": "^0.13.6",
     "@types/pg": "^8.11.10",
+    "@types/web-push": "^3.6.3",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitest/coverage-v8": "^2.1.9",

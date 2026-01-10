@@ -1,4 +1,4 @@
-export type Method = 'bank' | 'cash' | 'wallet'
+export type Method = 'bank' | 'cash' | 'wallet' | 'airtime'
 
 export type Corridor = {
   from: string // ISO alpha-2

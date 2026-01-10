@@ -846,20 +846,11 @@
 
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 definePageMeta({
   alias: ['/reviews/instarem'],
-})
-
-useHead({
-  title: 'Instarem Review 2024 - Remit-Score 8.4/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Instarem review with Remit-Score 8.4/10. Asia corridor specialist with strong value where focused, good speed. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
 })
 
 const breadcrumbItems = [
@@ -870,12 +861,26 @@ const breadcrumbItems = [
 ]
 
 const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 setSeo({
   title: 'Instarem Review 2024 - Remit-Score 8.4/10 | Remit-Scout',
   description: 'Independent Instarem review with Remit-Score 8.4/10. Asia corridor specialist with strong value where focused, good speed. Detailed breakdown of fees, speed, and delivered value.',
   canonical: `${siteUrl}/learn/providers/instarem`,
+  ogImage: `${siteUrl}/og-images/provider-instarem.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Instarem earns a Remit-Score of 8.4/10 based on our independent analysis. The provider is an Asia corridor specialist with strong value where focused and good speed. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Instarem',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 8.4,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 jsonLdBreadcrumb([

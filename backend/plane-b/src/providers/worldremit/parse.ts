@@ -170,6 +170,24 @@ const parseDeliveryTime = (estimate?: string): { min: number | null; max: number
     return { min: 0, max: 1440 }
   }
   
+  // Handle ranges like "1-3 days", "2-4 hours", etc.
+  if (estimate.includes('-')) {
+    const rangeMatch = estimate.match(/(\d+)\s*-\s*(\d+)\s*(days?|hours?|minutes?)/i)
+    if (rangeMatch) {
+      const minVal = parseInt(rangeMatch[1], 10)
+      const maxVal = parseInt(rangeMatch[2], 10)
+      const unit = rangeMatch[3].toLowerCase()
+      
+      if (unit.startsWith('day')) {
+        return { min: minVal * 24 * 60, max: maxVal * 24 * 60 }
+      } else if (unit.startsWith('hour')) {
+        return { min: minVal * 60, max: maxVal * 60 }
+      } else if (unit.startsWith('minute')) {
+        return { min: minVal, max: maxVal }
+      }
+    }
+  }
+  
   if (estimate.includes('minutes')) {
     const match = estimate.match(/(\d+)\s*minutes?/i)
     if (match) {
@@ -285,7 +303,7 @@ export const parseWorldRemitPayload = (
   
   const sendAmount = parseNumber(calculation.send?.amount)
   const receiveAmount = parseNumber(calculation.receive?.amount)
-  const totalToPay = parseNumber(calculation.informativeSummary?.totalToPay?.amount)
+  const summaryTotalToPay = parseNumber(calculation.informativeSummary?.totalToPay?.amount)
   const feeAmountRaw = parseNumber(calculation.informativeSummary?.fee?.value?.amount)
   const discountAmount = parseNumber(calculation.informativeSummary?.discount?.value?.amount)
   const exchangeRateValue = parseNumber(calculation.exchangeRate?.value)
@@ -295,16 +313,27 @@ export const parseWorldRemitPayload = (
   const payinMethod = selectedPayin.payin_method
   const selectedTotalToPay = Number.isFinite(selectedPayin.total_to_pay)
     ? selectedPayin.total_to_pay
-    : totalToPay
+    : summaryTotalToPay
   const feeFromTotal = Number.isFinite(selectedTotalToPay) && Number.isFinite(sendAmount)
     ? selectedTotalToPay - sendAmount
     : Number.NaN
+  const feeDelta = Number.isFinite(feeAmountRaw) && Number.isFinite(feeFromTotal)
+    ? Math.abs(feeFromTotal - feeAmountRaw)
+    : Number.NaN
+  const feeFromTotalDiscounted = Number.isFinite(feeAmountRaw)
+    && Number.isFinite(feeFromTotal)
+    && feeFromTotal < feeAmountRaw - 0.005
+  const payinOverridesSummary = Number.isFinite(selectedPayin.total_to_pay)
+    && Number.isFinite(summaryTotalToPay)
+    && Math.abs(selectedPayin.total_to_pay - summaryTotalToPay) > 0.0001
 
-  const feeAmount = Number.isFinite(feeAmountRaw)
-    ? feeAmountRaw
-    : Number.isFinite(feeFromTotal)
-      ? feeFromTotal
-      : Number.NaN
+  const feeAmount = payinOverridesSummary && Number.isFinite(feeFromTotal)
+    ? feeFromTotal
+    : Number.isFinite(feeAmountRaw)
+      ? feeAmountRaw
+      : Number.isFinite(feeFromTotal)
+        ? feeFromTotal
+        : Number.NaN
 
   const payoutMethodCode =
     payload.selectedPayoutMethod?.code ??
@@ -316,7 +345,17 @@ export const parseWorldRemitPayload = (
   const deliveryTimeEstimate =
     payload.selectedPayoutMethod?.payOutTimeEstimate ??
     payload.payoutMethods?.payOutMethods?.[0]?.payOutTimeEstimate
-  const { min: deliveryTimeMin, max: deliveryTimeMax } = parseDeliveryTime(deliveryTimeEstimate)
+  let { min: deliveryTimeMin, max: deliveryTimeMax } = parseDeliveryTime(deliveryTimeEstimate)
+  
+  // If delivery time is unknown and payout method is bank deposit, default to 1-3 days
+  if (deliveryTimeMin === null && deliveryTimeMax === null) {
+    const isBankDeposit = payoutMethod === 'bank' || payoutMethod === 'bank_deposit'
+    if (isBankDeposit) {
+      deliveryTimeMin = 1440 // 1 day in minutes
+      deliveryTimeMax = 4320 // 3 days in minutes
+      flags.push(qualityFlags.partial_data) // Flag as partial data since we're using a default
+    }
+  }
   
   if (!Number.isFinite(sendAmount) || !Number.isFinite(receiveAmount)) {
     flags.push(qualityFlags.parse_error)
@@ -343,9 +382,17 @@ export const parseWorldRemitPayload = (
     ? exchangeRateValue
     : null
 
-  const promotionalFeeAmount = Number.isFinite(feeAmount) && Number.isFinite(discountAmount) && discountAmount > 0
-    ? Math.max(feeAmount - discountAmount, 0)
-    : Number.isFinite(feeAmount) && Number.isFinite(feeFromTotal) && feeFromTotal >= 0 && feeFromTotal < feeAmount
+  const promotionalFeeAmount = !payinOverridesSummary
+    && Number.isFinite(feeAmountRaw)
+    && Number.isFinite(discountAmount)
+    && discountAmount > 0
+    ? Math.max(feeAmountRaw - discountAmount, 0)
+    : !payinOverridesSummary
+      && Number.isFinite(feeAmountRaw)
+      && Number.isFinite(feeFromTotal)
+      && feeFromTotal >= 0
+      && feeFromTotalDiscounted
+      && !(Number.isFinite(feeDelta) && feeDelta <= 0.005)
       ? feeFromTotal
       : null
   

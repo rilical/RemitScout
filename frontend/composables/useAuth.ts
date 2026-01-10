@@ -58,6 +58,45 @@ export const useAuth = () => {
     config.public.supabaseUrl && config.public.supabaseAnonKey,
   ))
 
+  const isDevAuthEnabled = () => {
+    return Boolean(config.public.devAuthEnabled) || (import.meta.dev && !isConfigured.value)
+  }
+
+  const resolveDevEmail = (value: string) => {
+    const trimmed = value.trim()
+    if (trimmed) return trimmed
+    return config.public.devSuperAdminEmail || 'dev@example.com'
+  }
+
+  const buildDevSession = (email: string, name?: string): Session => {
+    const normalizedEmail = resolveDevEmail(email)
+    const fallbackName = normalizedEmail.includes('@')
+      ? normalizedEmail.split('@')[0]
+      : 'Dev User'
+    const displayName = name?.trim() || fallbackName
+    const now = new Date().toISOString()
+    const accessTokenValue = `${config.public.devAuthToken || 'admin-token'}:${normalizedEmail}`
+    const devUser = {
+      id: `dev_${normalizedEmail}`,
+      email: normalizedEmail,
+      role: 'authenticated',
+      aud: 'authenticated',
+      created_at: now,
+      updated_at: now,
+      app_metadata: { provider: 'dev' },
+      user_metadata: { full_name: displayName },
+    } as SupabaseUser
+
+    return {
+      access_token: accessTokenValue,
+      refresh_token: 'dev-refresh',
+      token_type: 'bearer',
+      expires_in: 60 * 60 * 24 * 365,
+      expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365,
+      user: devUser,
+    } as Session
+  }
+
   const setSession = (nextSession: Session | null) => {
     session.value = nextSession
     user.value = mapSupabaseUser(nextSession?.user ?? null)
@@ -137,21 +176,14 @@ export const useAuth = () => {
   const signIn = async (email: string, password?: string): Promise<AuthResult> => {
     lastError.value = null
 
-    if (!password) {
-      const devControls = Boolean(config.public.devControls) || import.meta.dev
-      if (!devControls) {
-        lastError.value = 'Password is required.'
-        return { ok: false, error: lastError.value }
-      }
-
-      user.value = {
-        id: `dev_${email || 'user'}`,
-        email,
-        name: email ? email.split('@')[0] : 'Dev User',
-      }
-      session.value = null
-      hydrated.value = true
+    if (isDevAuthEnabled()) {
+      setSession(buildDevSession(email))
       return { ok: true }
+    }
+
+    if (!password) {
+      lastError.value = 'Password is required.'
+      return { ok: false, error: lastError.value }
     }
 
     if (!isConfigured.value) {
@@ -177,6 +209,11 @@ export const useAuth = () => {
 
   const signUp = async (input: SignUpInput): Promise<AuthResult> => {
     lastError.value = null
+
+    if (isDevAuthEnabled()) {
+      setSession(buildDevSession(input.email, input.name))
+      return { ok: true }
+    }
 
     if (!isConfigured.value) {
       lastError.value = 'Supabase is not configured.'

@@ -7,6 +7,9 @@ export type ProviderVisitCreateInput = {
   target_url?: string | null
   page_path?: string | null
   utm?: Record<string, unknown> | null
+  gclid?: string | null
+  fbclid?: string | null
+  msclkid?: string | null
   quoted_rate?: number | null
   quoted_fee?: number | null
 }
@@ -23,6 +26,9 @@ export type ProviderVisitRow = {
   target_url: string | null
   page_path: string | null
   utm: unknown | null
+  gclid?: string | null
+  fbclid?: string | null
+  msclkid?: string | null
   quoted_rate: number | null
   quoted_fee: number | null
   completed_transfer: boolean | null

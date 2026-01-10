@@ -26,6 +26,17 @@ const logger = createLogger('shared.sqs')
 
 let client: SQSClient | null = null
 
+const toNumber = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getLongPollSeconds = () => {
+  const raw = toNumber(process.env.SQS_LONG_POLL_SECONDS, 20)
+  if (!Number.isFinite(raw) || raw < 0) return 0
+  return Math.min(20, Math.floor(raw))
+}
+
 const getClient = (): SQSClient => {
   if (!client) {
     client = new SQSClient({})
@@ -354,12 +365,13 @@ export const receiveJsonMessages = async <T>(
   maxMessages: number,
 ): Promise<SqsMessage<T>[]> => {
   try {
+    const waitTimeSeconds = getLongPollSeconds()
     const sqs = getClient()
     const response = await sqs.send(
       new ReceiveMessageCommand({
         QueueUrl: queueUrl,
         MaxNumberOfMessages: Math.min(maxMessages, 10),
-        WaitTimeSeconds: 2,
+        WaitTimeSeconds: waitTimeSeconds,
         MessageAttributeNames: ['All'],
         AttributeNames: ['All'],
       }),

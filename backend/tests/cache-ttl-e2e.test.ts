@@ -10,6 +10,7 @@ describe('Cache TTL End-to-End', () => {
   let pool: Pool
   let volatilityService: VolatilityService
   let volatilityRepo: CorridorVolatilityRepository
+  let previousOnDemand: string | undefined
   const corridorIds = ['US-CL-USD-CLP', 'US-CO-USD-COP', 'GB-KE-GBP-KES']
 
   const ensureProvider = async (providerId: string) => {
@@ -37,12 +38,14 @@ describe('Cache TTL End-to-End', () => {
       `INSERT INTO silver.ingestion_run (provider_id, collector_type, status)
        VALUES ($1, $2, $3)
        RETURNING run_id`,
-      [providerId, 'test', 'success'],
+      [providerId, 'b2b_sweep', 'success'],
     )
     return result.rows[0].run_id
   }
 
   beforeEach(async () => {
+    previousOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND
+    process.env.VOLATILITY_CACHE_ON_DEMAND = '1'
     pool = createPool(config.db.planeBUrl)
     volatilityService = new VolatilityService(pool)
     volatilityRepo = new CorridorVolatilityRepository(pool)
@@ -75,6 +78,11 @@ describe('Cache TTL End-to-End', () => {
       [corridorIds],
     )
     await pool.end()
+    if (previousOnDemand === undefined) {
+      delete process.env.VOLATILITY_CACHE_ON_DEMAND
+    } else {
+      process.env.VOLATILITY_CACHE_ON_DEMAND = previousOnDemand
+    }
   })
 
   it('calculates volatility from quote_record and assigns correct TTL', async () => {

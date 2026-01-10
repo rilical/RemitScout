@@ -4,6 +4,8 @@ export type Country = {
   currency: string
 }
 
+export const BASE_CURRENCIES = ['USD', 'EUR', 'GBP'] as const
+
 export const COUNTRIES: Country[] = [
   { name: 'Afghanistan', code: 'AF', currency: 'AFN' },
   { name: 'Albania', code: 'AL', currency: 'ALL' },
@@ -225,6 +227,22 @@ const countryCodeSet = new Set(COUNTRIES.map((country) => country.code));
 
 export const getCountryByCode = (code: string) => {
   return COUNTRIES.find((country) => country.code === code) || null
+}
+
+export const getAvailableCurrenciesForCountry = (countryCode: string) => {
+  const country = getCountryByCode(countryCode)
+  const base = BASE_CURRENCIES.map((currency) => currency.toUpperCase())
+  if (!country) {
+    return base
+  }
+  const currencies = new Set([...base, country.currency.toUpperCase()])
+  return Array.from(currencies.values())
+}
+
+export const isCurrencyAllowedForCountry = (countryCode: string, currencyCode: string) => {
+  if (!currencyCode) return false
+  const normalized = currencyCode.toUpperCase()
+  return getAvailableCurrenciesForCountry(countryCode).includes(normalized)
 }
 
 export const isValidCountryCode = (code: string) => {

@@ -29,8 +29,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     displayName: 'Wise',
     type: 'ONLINE_MTO',
     url: 'https://wise.com',
-    affiliateUrl: null,
-    isAffiliate: false,
+    affiliateUrl: 'https://wise.prf.hn/click/camref:1110ldhTx/[p_id:1110l11228]',
+    isAffiliate: true,
     logo: {
       sm: '/logos/wise.svg',
       ico: '/logos/wise.svg',
@@ -51,8 +51,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     displayName: 'Remitly',
     type: 'ONLINE_MTO',
     url: 'https://www.remitly.com',
-    affiliateUrl: null,
-    isAffiliate: false,
+    affiliateUrl: 'https://remitly.tod8mp.net/3J6JYM',
+    isAffiliate: true,
     logo: {
       sm: '/logos/remitly.svg',
       ico: '/logos/remitly.svg',
@@ -117,8 +117,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     displayName: 'XE Money',
     type: 'ONLINE_MTO',
     url: 'https://www.xe.com/money-transfer',
-    affiliateUrl: null,
-    isAffiliate: false,
+    affiliateUrl: 'https://xe-money-transfer.sjv.io/yqJqW3',
+    isAffiliate: true,
     logo: {
       sm: '/logos/xe-money.svg',
       ico: '/logos/xe-money.svg',
@@ -176,6 +176,28 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
       trustSafety: 0.85,
     },
   },
+  sendwave: {
+    id: 'sendwave',
+    slug: 'sendwave',
+    name: 'Sendwave',
+    displayName: 'Sendwave',
+    type: 'ONLINE_MTO',
+    url: 'https://www.sendwave.com',
+    affiliateUrl: 'https://sendwave.pxf.io/MAGAgq',
+    isAffiliate: true,
+    logo: {
+      sm: '/logos/sendwave.svg',
+      ico: '/logos/sendwave.svg',
+    },
+    remitScore: 8.8,
+    scoreBreakdown: {
+      deliveredValue: 0.9,
+      reliability: 0.85,
+      frictionSpeed: 0.9,
+      supportRefunds: 0.8,
+      trustSafety: 0.85,
+    },
+  },
 }
 
 export function getProviderMetadata(providerId: string): ProviderMetadata | null {
@@ -191,4 +213,3 @@ export function getProviderMetadataBySlug(slug: string): ProviderMetadata | null
   const entry = Object.values(PROVIDER_METADATA).find(p => p.slug === slug)
   return entry || null
 }
-

@@ -881,18 +881,34 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
 definePageMeta({
   alias: ['/reviews/al-ansari-exchange'],
 })
 
-useHead({
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
   title: 'Al Ansari Exchange Review 2024 - Remit-Score 7.9/10 | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Independent Al Ansari Exchange review with Remit-Score 7.9/10. Trust/reliability strong; more friction (branch workflows) and less competitive delivered value vs app-first leaders. Detailed breakdown of fees, speed, and delivered value.',
-    },
-  ],
+  description: 'Independent Al Ansari Exchange review with Remit-Score 7.9/10. Trust/reliability strong; more friction (branch workflows) and less competitive delivered value vs app-first leaders. Detailed breakdown of fees, speed, and delivered value.',
+  canonical: `${siteUrl}/learn/providers/al-ansari-exchange`,
+  ogImage: `${siteUrl}/og-images/provider-al-ansari-exchange.jpg`,
+})
+
+const { addReviewSchema } = useStructuredData()
+const reviewBody = `Al Ansari Exchange earns a Remit-Score of 7.9/10 based on our independent analysis. The provider shows strong trust and reliability, though with more friction due to branch workflows and less competitive delivered value compared to app-first leaders. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+
+addReviewSchema({
+  itemReviewed: 'Al Ansari Exchange',
+  reviewBody,
+  author: 'Remit-Scout Editorial Team',
+  ratingValue: 7.9,
+  bestRating: 10,
+  worstRating: 1,
+  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [

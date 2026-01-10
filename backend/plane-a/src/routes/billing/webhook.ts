@@ -5,6 +5,7 @@ import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { getStripeClient } from '../../services/stripe-client'
+import { sendPlusConfirmationEmail } from '../../services/billing-email'
 import { BillingWebhookEventRepository, UserPlanRepository } from '../../repositories'
 
 const logger = createLogger('plane-a.billing.webhook')
@@ -98,6 +99,10 @@ export const webhookRoutes = async (app: FastifyInstance) => {
     }
 
     const userId = await extractUserId(event, userPlanRepo)
+    const existingPlan = userId ? await userPlanRepo.getUserPlan(userId) : null
+    const wasPlus =
+      existingPlan?.plan_code === 'plus' &&
+      (existingPlan.status === 'active' || existingPlan.status === 'trialing')
 
     let processingSucceeded = false
 
@@ -117,6 +122,13 @@ export const webhookRoutes = async (app: FastifyInstance) => {
             status: 'active',
             stripe_subscription_id: subscriptionId,
           })
+
+          if (!wasPlus) {
+            await sendPlusConfirmationEmail(planeAPool, userId, {
+              planName: 'Remit-Scout Plus',
+              trialDays: config.billing.stripe.trialDays || null,
+            })
+          }
           
           logger.info('webhook_checkout_completed', {
             eventId: event.id,

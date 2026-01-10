@@ -2,9 +2,10 @@ import type { Pool } from 'pg'
 import { createLogger } from '../../../shared/logger'
 import { query } from '../../../shared/db'
 import { getCountryByCode } from '../../../shared/countries-currencies'
+import { parseCorridorId } from '../../../shared/corridor'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { AlertRepository, FxRateRepository, LatestQuoteRepository } from '../repositories'
-import { sendAlertEmail, sendAlertSms } from './alert-notifications'
+import { sendAlertEmail, sendAlertPush, sendAlertSms } from './alert-notifications'
 import { getUserPlan } from './user-plan'
 
 const logger = createLogger('plane-a.alert-evaluator')
@@ -68,6 +69,41 @@ const metricLabel = (metric: string) => {
     default:
       return 'Value'
   }
+}
+
+const resolveCorridorCurrencies = (payload: Record<string, unknown>): { base: string; quote: string } | null => {
+  const directBase = typeof payload.fromCurrency === 'string' ? payload.fromCurrency.toUpperCase() : null
+  const directQuote = typeof payload.toCurrency === 'string' ? payload.toCurrency.toUpperCase() : null
+  if (directBase && directQuote) {
+    return { base: directBase, quote: directQuote }
+  }
+
+  const corridorId = typeof payload.corridorId === 'string' ? payload.corridorId : null
+  if (corridorId) {
+    const parts = parseCorridorId(corridorId)
+    if (parts) {
+      return {
+        base: parts.sourceCurrency.toUpperCase(),
+        quote: parts.destCurrency.toUpperCase(),
+      }
+    }
+  }
+
+  const from = typeof payload.from === 'string' ? payload.from.toUpperCase() : null
+  const to = typeof payload.to === 'string' ? payload.to.toUpperCase() : null
+  if (!from || !to) return null
+
+  const fromCurrency = getDefaultCurrency(from)
+  const toCurrency = getDefaultCurrency(to)
+  if (!fromCurrency || !toCurrency) return null
+
+  return { base: fromCurrency.toUpperCase(), quote: toCurrency.toUpperCase() }
+}
+
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null
+  const parsed = typeof value === 'string' ? Number(value) : Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolean> {
@@ -151,11 +187,92 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
       if (quotes.length > 0) {
         // Get best recipient amount
         const bestQuote = quotes.reduce((best, quote) => {
-          const recipient = parseFloat(quote.recipient_gets || '0')
-          const bestRecipient = parseFloat(best.recipient_gets || '0')
+          const recipient =
+            toNumberOrNull((quote as { receive_amount?: unknown }).receive_amount)
+            ?? toNumberOrNull((quote as { recipient_gets?: unknown }).recipient_gets)
+            ?? 0
+          const bestRecipient =
+            toNumberOrNull((best as { receive_amount?: unknown }).receive_amount)
+            ?? toNumberOrNull((best as { recipient_gets?: unknown }).recipient_gets)
+            ?? 0
           return recipient > bestRecipient ? quote : best
         })
-        currentValue = parseFloat(bestQuote.recipient_gets || '0')
+        currentValue =
+          toNumberOrNull((bestQuote as { receive_amount?: unknown }).receive_amount)
+          ?? toNumberOrNull((bestQuote as { recipient_gets?: unknown }).recipient_gets)
+          ?? 0
+      }
+    } else if ((alert.metric === 'totalCost' || alert.metric === 'fee') && watchlist_item.target_type === 'corridor') {
+      const corridorId = resolveCorridorId(targetPayload)
+      if (!corridorId) {
+        logger.warn('alert_corridor_unresolved', {
+          alert_id: alertId,
+          metric: alert.metric,
+          target_payload: targetPayload,
+        })
+        return false
+      }
+      const amountBucket = (targetPayload.amountBucket as number) || 500
+      const payin = (targetPayload.method as string) || 'bank'
+      const payout = 'bank'
+
+      const quotes = await latestQuoteRepository.listLatestByCorridor(
+        corridorId,
+        amountBucket,
+        payin,
+        payout,
+      )
+
+      if (quotes.length > 0) {
+        const currencyPair = resolveCorridorCurrencies(targetPayload)
+        const midMarketRate = currencyPair
+          ? await fxRateRepository.getRate(currencyPair.base, currencyPair.quote)
+          : null
+
+        if (alert.metric === 'totalCost' && (!midMarketRate || midMarketRate <= 0)) {
+          logger.warn('alert_midmarket_unavailable', {
+            alert_id: alertId,
+            metric: alert.metric,
+            target_payload: targetPayload,
+          })
+          return false
+        }
+
+        let bestValue: number | null = null
+
+        for (const quote of quotes) {
+          const sendAmount = toNumberOrNull(quote.send_amount) ?? amountBucket
+          if (!Number.isFinite(sendAmount) || sendAmount <= 0) continue
+
+          const promoRate = toNumberOrNull(quote.promotional_rate)
+          const promoFee = toNumberOrNull(quote.promotional_fee_amount)
+          const feeAmount = promoFee !== null ? promoFee : (toNumberOrNull(quote.fee_amount) ?? 0)
+
+          if (!Number.isFinite(feeAmount) || feeAmount < 0) continue
+
+          if (alert.metric === 'fee') {
+            const nextFee = feeAmount
+            if (bestValue === null || nextFee < bestValue) {
+              bestValue = nextFee
+            }
+            continue
+          }
+
+          const providerRate = promoRate !== null ? promoRate : (toNumberOrNull(quote.implied_fx_rate) ?? 0)
+          if (!Number.isFinite(providerRate) || providerRate <= 0) continue
+
+          const amountAfterFee = Math.max(sendAmount - feeAmount, 0)
+          const hiddenMarkup = (amountAfterFee * (midMarketRate as number - providerRate)) / (midMarketRate as number)
+          const totalCost = Math.max(0, feeAmount + (Number.isFinite(hiddenMarkup) ? hiddenMarkup : 0))
+
+          if (bestValue === null || totalCost < bestValue) {
+            bestValue = totalCost
+          }
+        }
+
+        if (bestValue !== null) {
+          currentValue = bestValue
+        }
       }
     } else if (alert.metric === 'sendScore' && watchlist_item.target_type === 'corridor') {
       const corridorId = resolveCorridorId(targetPayload)
@@ -306,10 +423,19 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
       )
 
       // SMS prepared for future (not active yet)
-      await sendAlertSms(pool, watchlist_item.user_id, alertId, message)
+      const smsSent = await sendAlertSms(pool, watchlist_item.user_id, alertId, message)
+
+      const pushSent = await sendAlertPush(
+        pool,
+        watchlist_item.user_id,
+        alertId,
+        `Rate Alert: ${message}`,
+        message,
+      )
 
       // Update event notification status
-      await alertRepository.updateAlertEventStatus(event.id, emailSent ? 'sent' : 'failed')
+      const notificationSent = emailSent || smsSent || pushSent
+      await alertRepository.updateAlertEventStatus(event.id, notificationSent ? 'sent' : 'failed')
 
       logger.info('alert_triggered', {
         alert_id: alertId,
@@ -318,6 +444,8 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         current_value: currentValue,
         threshold: threshold,
         email_sent: emailSent,
+        sms_sent: smsSent,
+        push_sent: pushSent,
       })
     }
 
@@ -356,7 +484,7 @@ export async function evaluateAlertsForFrequency(
 
     if (frequency === 'daily') {
       joins += ` LEFT JOIN silver.notification_pref np
-        ON np.user_id = wi.user_id AND np.owner_type = 'user'`
+        ON np.user_id = wi.user_id AND np.owner_type = 'user' AND np.channel = 'email'`
       conditions.push('COALESCE(np.unsubscribed, FALSE) = FALSE')
       conditions.push(
         `EXTRACT(HOUR FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))

@@ -66,6 +66,7 @@
                   label="Amount"
                   :from="from"
                   :to="to"
+                  :currency-code="fromCurrency"
                   :error="errors.amount ? 'Enter amount' : ''"
                   :input-class="errors.amount ? 'border-danger-600' : 'border-neutral-300'"
                 />
@@ -171,9 +172,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { DELIVERY_METHODS } from '~/composables/useCompareForm'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { getAvailableCurrencies, getCountryByCode } from '~/utils/countries-currencies'
+import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
 const { STR } = useStrings()
 
@@ -200,6 +203,8 @@ interface FormErrors {
 const from = ref(props.defaultFrom)
 const to = ref(props.defaultTo)
 const amount = ref(props.defaultAmount)
+const fromCurrency = ref('')
+const toCurrency = ref('')
 const selectedMethod = ref(props.defaultMethod)
 const isSubmitting = ref(false)
 const formError = ref('')
@@ -222,18 +227,87 @@ const setError = (key: keyof FormErrors, value: boolean) => {
   updateFormError()
 }
 
-watch(from, newVal => setError('from', !newVal))
-watch(to, newVal => setError('to', !newVal))
-watch(amount, newVal => setError('amount', !newVal || newVal <= 0))
+const normalizeCurrency = (value: string) => value.trim().toUpperCase()
+
+const resolveCurrency = (countryCode: string) => {
+  const country = getCountryByCode(countryCode.toUpperCase())
+  return country?.currency?.toUpperCase() || 'USD'
+}
+
+const resolveAllowedCurrency = (countryCode: string, candidate: string) => {
+  const allowed = getAvailableCurrencies(countryCode).map(normalizeCurrency)
+  const normalizedCandidate = normalizeCurrency(candidate || resolveCurrency(countryCode))
+  if (allowed.length === 0) {
+    return normalizedCandidate
+  }
+  if (allowed.includes(normalizedCandidate)) {
+    return normalizedCandidate
+  }
+  const fallback = resolveCurrency(countryCode)
+  if (allowed.includes(fallback)) {
+    return fallback
+  }
+  return allowed[0]
+}
+
+const amountLimits = computed(() => {
+  const currency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+  return {
+    minAmount: getMinAmount(currency),
+    maxAmount: getMaxAmount(currency),
+  }
+})
+
+const clampAmount = () => {
+  const currency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+  const sanitized = sanitizeAmount(amount.value, currency, {
+    minAmount: amountLimits.value.minAmount,
+    maxAmount: amountLimits.value.maxAmount,
+    strict: true,
+  })
+  if (sanitized !== amount.value) {
+    amount.value = sanitized
+  }
+  setError('amount', !sanitized || sanitized <= 0)
+}
+
+fromCurrency.value = resolveAllowedCurrency(from.value, fromCurrency.value || resolveCurrency(from.value))
+toCurrency.value = resolveAllowedCurrency(to.value, toCurrency.value || resolveCurrency(to.value))
+clampAmount()
+
+watch(from, (newVal) => {
+  setError('from', !newVal)
+  if (!newVal) return
+  fromCurrency.value = resolveAllowedCurrency(newVal, fromCurrency.value || resolveCurrency(newVal))
+  clampAmount()
+})
+
+watch(to, (newVal) => {
+  setError('to', !newVal)
+  if (!newVal) return
+  toCurrency.value = resolveAllowedCurrency(newVal, toCurrency.value || resolveCurrency(newVal))
+})
+
+watch(amount, () => {
+  clampAmount()
+})
 
 watch(
   () => props.defaultFrom,
-  (value) => { if (value) from.value = value },
+  (value) => {
+    if (value) {
+      from.value = value
+    }
+  },
 )
 
 watch(
   () => props.defaultTo,
-  (value) => { if (value) to.value = value },
+  (value) => {
+    if (value) {
+      to.value = value
+    }
+  },
 )
 
 watch(
@@ -241,6 +315,7 @@ watch(
   (value) => {
     if (typeof value === 'number' && !Number.isNaN(value)) {
       amount.value = value
+      clampAmount()
     }
   },
 )
@@ -248,7 +323,7 @@ watch(
 const validateForm = () => {
   setError('from', !from.value)
   setError('to', !to.value)
-  setError('amount', !amount.value || amount.value <= 0)
+  clampAmount()
 
   return !Object.values(errors.value).some(Boolean)
 }
@@ -259,8 +334,11 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     const corridorUrl = getCorridorUrl(from.value, to.value)
+    const safeFromCurrency = normalizeCurrency(fromCurrency.value || resolveCurrency(from.value))
+    const safeToCurrency = normalizeCurrency(toCurrency.value || resolveCurrency(to.value))
+    clampAmount()
     await navigateTo(
-      `${corridorUrl}?amount=${amount.value}&method=${selectedMethod.value}`,
+      `${corridorUrl}?amount=${amount.value}&method=${selectedMethod.value}&fromCurrency=${safeFromCurrency}&toCurrency=${safeToCurrency}`,
     )
   }
   catch (error) {

@@ -10,6 +10,7 @@
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">From</label>
             <div class="relative w-full">
             <CountrySelect
+              id="corridor-from-country"
               v-model="localFromCountry"
               placeholder="Sending from"
               @country-selected="emitUpdate"
@@ -21,6 +22,7 @@
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">To</label>
             <div class="relative w-full">
             <CountrySelect
+              id="corridor-to-country"
               v-model="localToCountry"
               placeholder="Receiving in"
               @country-selected="emitUpdate"
@@ -30,22 +32,21 @@
         </div>
 
         <!-- Amount & Currency -->
-        <div class="flex gap-3">
+        <div class="flex items-end gap-3">
           <div class="w-32">
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">You send</label>
             <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium z-10">
-                {{ fromCurrencySymbol }}
-              </span>
               <input
                 id="amount-input"
                 v-model.number="localAmount"
                 type="number"
-                min="1"
-                step="1"
-                class="h-12 w-full rounded-lg border border-gray-300 bg-white pl-7 pr-3 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                @input="emitUpdate"
-                @blur="emitUpdate"
+                :min="inputMin"
+                :max="inputMax"
+                step="0.01"
+                class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                @blur="handleAmountBlur"
+                @input="sanitizeAmountInput"
+                @keydown="preventNegative"
               >
             </div>
           </div>
@@ -54,6 +55,7 @@
           <div class="w-24 sm:w-28">
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Currency</label>
             <CurrencySelect
+              id="corridor-from-currency"
               v-model="localFromCurrency"
               :currencies="availableFromCurrenciesArray"
               :country-code="localFromCountry"
@@ -67,6 +69,7 @@
           <div class="w-24 sm:w-28">
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Receive</label>
             <CurrencySelect
+              id="corridor-to-currency"
               v-model="localToCurrency"
               :currencies="availableToCurrenciesArray"
               :country-code="localToCountry"
@@ -75,38 +78,38 @@
               @currency-selected="emitUpdate"
             />
           </div>
-        </div>
 
-        <!-- Compare Button -->
-        <div class="flex-shrink-0">
-          <label class="block text-xs font-semibold text-transparent uppercase tracking-wider mb-2">Action</label>
-          <button
-            type="button"
-            :disabled="isSearching"
-            class="h-12 flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white hover:bg-brand-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            @click="handleSearch"
-          >
-            <svg
-              v-if="isSearching"
-              class="h-5 w-5 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
+          <!-- Compare Button -->
+          <div class="flex-shrink-0">
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Action</label>
+            <button
+              type="button"
+              :disabled="isSearching"
+              class="h-12 flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white hover:bg-brand-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              @click="handleSearch"
             >
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            <span v-if="isSearching">Searching...</span>
-            <span v-else>Compare</span>
-            <svg
-              v-if="!isSearching"
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
+              <svg
+                v-if="isSearching"
+                class="h-5 w-5 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span v-if="isSearching">Searching...</span>
+              <span v-else>Compare</span>
+              <svg
+                v-if="!isSearching"
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -150,15 +153,14 @@
           <!-- Sort Dropdown -->
           <div class="flex items-center gap-2">
             <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sort</span>
-            <select
-              v-model="localSortBy"
-              class="h-9 rounded-lg border border-brand-600 bg-white px-3 pr-8 text-sm font-semibold text-slate-900 focus:border-brand-600 focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 transition-all cursor-pointer"
-              @change="$emit('sort', localSortBy)"
-            >
-              <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+            <div class="w-[200px] flex-shrink-0">
+              <UniversalDropdown
+                :model-value="localSortBy"
+                :options="sortOptions"
+                button-class="h-12 rounded-lg border border-gray-300 bg-white px-4 pr-10 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                @update:model-value="(value) => { localSortBy = value as string; $emit('sort', localSortBy) }"
+              />
+            </div>
           </div>
 
           <!-- Divider -->
@@ -207,6 +209,9 @@
 import { ref, computed, watch, h } from 'vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
+import { getCountryByCode } from '~/utils/countries-currencies'
+import { sanitizeAmount, getMinAmount, getMaxAmount } from '~/utils/currency-limits'
 
 const BankIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' })
@@ -216,6 +221,9 @@ const CashIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox:
 ])
 const WalletIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' })
+])
+const AirtimeIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 21h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2zM12 17h.01M7 5h10' })
 ])
 const CardIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' })
@@ -290,6 +298,7 @@ const methodConfig: Record<string, { label: string; value: string; icon: ReturnT
   bank: { label: 'Bank deposit', value: 'bank', icon: BankIcon() },
   cash: { label: 'Cash Pickup', value: 'cash', icon: CashIcon() },
   wallet: { label: 'Mobile Wallet', value: 'wallet', icon: WalletIcon() },
+  airtime: { label: 'Airtime', value: 'airtime', icon: AirtimeIcon() },
   card: { label: 'Card', value: 'card', icon: CardIcon() },
 }
 
@@ -318,8 +327,78 @@ const currencySymbols: Record<string, string> = {
 
 const fromCurrencySymbol = computed(() => currencySymbols[localFromCurrency.value] || localFromCurrency.value)
 
+const minAmount = computed(() => getMinAmount(localFromCurrency.value))
+const maxAmount = computed(() => getMaxAmount(localFromCurrency.value))
+const inputMin = computed(() => minAmount.value)
+const inputMax = computed(() => maxAmount.value)
+
+const amountLimits = computed(() => ({
+  minAmount: minAmount.value,
+  maxAmount: maxAmount.value,
+  strict: true,
+}))
+
+const preventNegative = (event: KeyboardEvent) => {
+  if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
+    event.preventDefault()
+  }
+}
+
+const sanitizeAmountInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  let value = target.value
+  
+  // Remove any non-numeric characters except decimal point
+  value = value.replace(/[^\d.]/g, '')
+  
+  // Ensure only one decimal point
+  const parts = value.split('.')
+  if (parts.length > 2) {
+    value = parts[0] + '.' + parts.slice(1).join('')
+  }
+  
+  // Limit decimal places to 2
+  if (parts.length === 2 && parts[1].length > 2) {
+    value = parts[0] + '.' + parts[1].substring(0, 2)
+  }
+  
+  // Update the input value
+  if (target.value !== value) {
+    target.value = value
+  }
+  
+  // Update the model value (but don't clamp on input, only on blur)
+  const numValue = parseFloat(value)
+  if (!isNaN(numValue) && numValue >= 0) {
+    localAmount.value = numValue
+  } else if (value === '' || value === '.') {
+    localAmount.value = 0
+  }
+}
+
+const handleAmountBlur = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const currency = localFromCurrency.value || 'USD'
+  
+  const numValue = parseFloat(target.value) || 0
+  const sanitized = sanitizeAmount(numValue, currency, amountLimits.value)
+  localAmount.value = sanitized
+  target.value = String(sanitized)
+  // Don't emit update on blur - user must click Compare button to refresh quotes
+}
+
 watch(() => props.amount, (val) => {
-  if (val && val > 0) localAmount.value = val
+  // Only sync from props if the user hasn't actively changed the input
+  // This prevents the input from being overwritten when the user is typing
+  // Allow small tolerance to avoid rounding issues (within 0.01)
+  if (val && val > 0 && Math.abs(localAmount.value - val) > 0.01) {
+    // Only update if the difference is significant (user likely changed it from outside)
+    // But don't override if user just typed a different value
+    const inputElement = document.getElementById('amount-input') as HTMLInputElement
+    if (!inputElement || document.activeElement !== inputElement) {
+      localAmount.value = val
+    }
+  }
 })
 watch(() => props.payoutMethod, (val) => {
   if (val) localPayoutMethod.value = val
@@ -334,17 +413,153 @@ watch(() => props.fromCurrency, (val) => {
   if (val) localFromCurrency.value = val
 })
 watch(() => props.fromCountry, (val) => {
-  if (val) localFromCountry.value = val
-})
-watch(() => props.toCountry, (val) => {
-  if (val) localToCountry.value = val
-})
-
-watch(() => props.methodsLoading, (loading) => {
-  if (!loading) {
-    isSearching.value = false
+  if (val) {
+    localFromCountry.value = val
+    // Trigger currency update when country prop changes
+    const country = getCountryByCode(val)
+    if (country?.currency) {
+      const defaultCurrency = country.currency.toUpperCase()
+      if (localFromCurrency.value !== defaultCurrency) {
+        localFromCurrency.value = defaultCurrency
+      }
+    }
   }
 })
+watch(() => props.toCountry, (val) => {
+  if (val) {
+    localToCountry.value = val
+    // Trigger currency update when country prop changes
+    const country = getCountryByCode(val)
+    if (country?.currency) {
+      const defaultCurrency = country.currency.toUpperCase()
+      if (localToCurrency.value !== defaultCurrency) {
+        localToCurrency.value = defaultCurrency
+      }
+    }
+  }
+})
+
+watch(localFromCurrency, (value) => {
+  if (!value) return
+  const sanitized = sanitizeAmount(localAmount.value, value, amountLimits.value)
+  if (sanitized !== localAmount.value) {
+    localAmount.value = sanitized
+  }
+})
+
+// Auto-update currencies when countries change
+watch(localFromCountry, (newCountry) => {
+  if (!newCountry) {
+    localFromCurrency.value = ''
+    return
+  }
+  
+  const country = getCountryByCode(newCountry)
+  if (!country?.currency) return
+  
+  const defaultCurrency = country.currency.toUpperCase()
+  
+  // Always set to country's default currency when country changes
+  // The available currencies watcher will adjust if needed when the list loads
+  if (localFromCurrency.value !== defaultCurrency) {
+    localFromCurrency.value = defaultCurrency
+    emitUpdate()
+  }
+}, { immediate: true })
+
+watch(localToCountry, (newCountry) => {
+  if (!newCountry) {
+    localToCurrency.value = ''
+    return
+  }
+  
+  const country = getCountryByCode(newCountry)
+  if (!country?.currency) return
+  
+  const defaultCurrency = country.currency.toUpperCase()
+  
+  // Always set to country's default currency when country changes
+  // The available currencies watcher will adjust if needed when the list loads
+  if (localToCurrency.value !== defaultCurrency) {
+    localToCurrency.value = defaultCurrency
+    emitUpdate()
+  }
+}, { immediate: true })
+
+// Watch available currencies and update if current currency is not available
+watch(availableFromCurrenciesArray, (available) => {
+  if (!localFromCountry.value) return
+  
+  const country = getCountryByCode(localFromCountry.value)
+  if (!country?.currency) return
+  
+  const defaultCurrency = country.currency.toUpperCase()
+  
+  // If available currencies list is empty, keep the default currency
+  if (available.length === 0) {
+    if (!localFromCurrency.value || localFromCurrency.value !== defaultCurrency) {
+      localFromCurrency.value = defaultCurrency
+      emitUpdate()
+    }
+    return
+  }
+  
+  // Update to default currency if it's available and current currency is invalid
+  if (available.includes(defaultCurrency)) {
+    if (!localFromCurrency.value || !available.includes(localFromCurrency.value)) {
+      localFromCurrency.value = defaultCurrency
+      emitUpdate()
+    }
+  } else if (!localFromCurrency.value || !available.includes(localFromCurrency.value)) {
+    // Default currency not available, use first available
+    localFromCurrency.value = available[0]
+    emitUpdate()
+  }
+})
+
+watch(availableToCurrenciesArray, (available) => {
+  if (!localToCountry.value) return
+  
+  const country = getCountryByCode(localToCountry.value)
+  if (!country?.currency) return
+  
+  const defaultCurrency = country.currency.toUpperCase()
+  
+  // If available currencies list is empty, keep the default currency
+  if (available.length === 0) {
+    if (!localToCurrency.value || localToCurrency.value !== defaultCurrency) {
+      localToCurrency.value = defaultCurrency
+      emitUpdate()
+    }
+    return
+  }
+  
+  // Update to default currency if it's available and current currency is invalid
+  if (available.includes(defaultCurrency)) {
+    if (!localToCurrency.value || !available.includes(localToCurrency.value)) {
+      localToCurrency.value = defaultCurrency
+      emitUpdate()
+    }
+  } else if (!localToCurrency.value || !available.includes(localToCurrency.value)) {
+    // Default currency not available, use first available
+    localToCurrency.value = available[0]
+    emitUpdate()
+  }
+})
+
+// Don't automatically update when amount changes - user must click Compare button
+
+watch(() => props.methodsLoading, (loading) => {
+  if (!loading && isSearching.value) {
+    // Add a small delay to ensure smooth transition
+    setTimeout(() => {
+      isSearching.value = false
+    }, 500)
+  } else if (loading && !isSearching.value) {
+    // If loading starts again (e.g., after navigation), set searching state
+    isSearching.value = true
+  }
+}, { immediate: true })
 
 watch(() => availableMethodsArray.value, (available) => {
   if (available.length && !available.includes(localPayoutMethod.value)) {
@@ -361,9 +576,17 @@ function selectMethod(method: string) {
 }
 
 function emitUpdate() {
-  const amount = localAmount.value && localAmount.value > 0 ? localAmount.value : props.amount
+  const currency = localFromCurrency.value || 'USD'
+  const sanitized = sanitizeAmount(
+    localAmount.value && localAmount.value > 0 ? localAmount.value : props.amount,
+    currency,
+    amountLimits.value,
+  )
+  if (sanitized !== localAmount.value) {
+    localAmount.value = sanitized
+  }
   emit('update', {
-    amount,
+    amount: sanitized,
     payoutMethod: localPayoutMethod.value,
     currency: localToCurrency.value,
     fromCurrency: localFromCurrency.value,
@@ -374,10 +597,15 @@ function handleSearch() {
   if (!localFromCountry.value || !localToCountry.value) return
   
   isSearching.value = true
+  const currency = localFromCurrency.value || 'USD'
+  const sanitized = sanitizeAmount(localAmount.value || props.amount, currency, amountLimits.value)
+  if (sanitized !== localAmount.value) {
+    localAmount.value = sanitized
+  }
   emit('new-query', {
     fromCountry: localFromCountry.value,
     toCountry: localToCountry.value,
-    amount: localAmount.value || props.amount,
+    amount: sanitized,
     currency: localToCurrency.value,
     fromCurrency: localFromCurrency.value,
     payoutMethod: localPayoutMethod.value,

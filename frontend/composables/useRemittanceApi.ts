@@ -80,13 +80,15 @@ export const useRemittanceApi = () => {
       watch: optionWatch,
       fromCurrency,
       toCurrency,
+      live,
       ...restOptions
     } = options
-    const resolveCurrency = (value: unknown) => (isRef(value) ? unref(value) : value)
+    const resolveOption = (value: unknown) => (isRef(value) ? unref(value) : value)
+    const resolvedLive = resolveOption(live) === true
     const key =
       options.key ||
-      `providers-${unref(from)}-${unref(to)}-${resolveCurrency(fromCurrency) || 'auto'}-${resolveCurrency(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}`
-    const watchSources = [from, to, amount, method, fromCurrency, toCurrency].filter(isRef)
+      `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}-${resolvedLive ? 'live' : 'cached'}`
+    const watchSources = [from, to, amount, method, fromCurrency, toCurrency, live].filter(isRef)
     const watch = Array.isArray(optionWatch)
       ? [...optionWatch, ...watchSources]
       : optionWatch === false
@@ -98,8 +100,8 @@ export const useRemittanceApi = () => {
         try {
           const fromValue = String(unref(from) || '').trim().toUpperCase()
           const toValue = String(unref(to) || '').trim().toUpperCase()
-          const resolvedFromCurrency = resolveCurrency(fromCurrency)
-          const resolvedToCurrency = resolveCurrency(toCurrency)
+          const resolvedFromCurrency = resolveOption(fromCurrency)
+          const resolvedToCurrency = resolveOption(toCurrency)
           const fromValid = fromValue.length === 2 && !!getCountryByCode(fromValue)
           const toValid = toValue.length === 2 && !!getCountryByCode(toValue)
           if (!fromValid || !toValid) {
@@ -126,6 +128,16 @@ export const useRemittanceApi = () => {
             midMarketRate?: number | null
             midMarketSource?: string | null
             midMarketUpdatedAt?: string | null
+            availableMethods?: string[]
+            indices?: {
+              teer: number | null
+              rvi: number | null
+              rci: number | null
+              providerCount: number
+              amount: number
+              midMarketRate: number | null
+              weights: 'equal'
+            }
             error?: { code: string; message: string }
           }>(
             '/providers',
@@ -137,6 +149,7 @@ export const useRemittanceApi = () => {
                 method: unref(method),
                 fromCurrency: resolvedFromCurrency,
                 toCurrency: resolvedToCurrency,
+                ...(resolvedLive ? { live: true } : {}),
               },
             },
           )
@@ -241,11 +254,20 @@ export const useRemittanceApi = () => {
   }
 
   const formatMoney = (amount: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(amount)
+    // Ensure currency is uppercase and valid
+    const currencyCode = currency?.toUpperCase().trim() || 'USD'
+    
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode,
+        maximumFractionDigits: 2,
+      }).format(amount)
+    } catch (error) {
+      // Fallback for unsupported currency codes
+      // Use the currency code directly with the amount
+      return `${currencyCode} ${amount.toFixed(2)}`
+    }
   }
 
   const formatRate = (rate: number, from = 'USD', to = 'PHP') => {
@@ -275,4 +297,8 @@ export const useRemittanceApi = () => {
     getRelativeTime,
     DEFAULT_WEIGHTS,
   }
+}
+
+export const usePopularCorridors = (options: Record<string, any> = {}) => {
+  return useRemittanceApi().usePopularCorridors(options)
 }

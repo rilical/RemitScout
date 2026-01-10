@@ -88,36 +88,6 @@ export const validateAwsConfig = async (
     })
   }
 
-  // Validate S3 User Assets Storage
-  if (!options.skipS3 && config.storage.userAssets.bucket) {
-    try {
-      const s3Client = new S3Client({})
-      await s3Client.send(
-        new HeadBucketCommand({
-          Bucket: config.storage.userAssets.bucket,
-        }),
-      )
-      results.push({ service: 's3_user_assets', valid: true })
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('s3_validation_failed', {
-        bucket: config.storage.userAssets.bucket,
-        error: errorMessage,
-      })
-      results.push({
-        service: 's3_user_assets',
-        valid: false,
-        error: errorMessage,
-      })
-    }
-  } else if (!options.skipS3) {
-    results.push({
-      service: 's3_user_assets',
-      valid: false,
-      error: 'USER_ASSETS_S3_BUCKET not configured',
-    })
-  }
-
   // Validate SQS Queues
   if (!options.skipSQS) {
     const queues = [
@@ -214,4 +184,3 @@ export const assertAwsConfig = async (
     throw new Error(`AWS configuration validation failed: ${errors}`)
   }
 }
-

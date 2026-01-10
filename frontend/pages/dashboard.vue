@@ -238,6 +238,12 @@
         </div>
       </div>
 
+      <div v-if="!isPlus" class="bg-slate-50 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <AdSlot placement="dashboard_inline" wrapper-class="rounded-xl" min-height="120px" />
+        </div>
+      </div>
+
       <!-- Header -->
       <header class="border-b border-slate-200 bg-white sticky top-16 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2191,6 +2197,40 @@
                 <div class="mt-4 text-xs text-slate-400">
                   Admin endpoints: /analytics/*, /audit/*, /telemetry/analytics, /ops/*
                 </div>
+                <div class="mt-5 border-t border-slate-100 pt-4">
+                  <h4 class="text-sm font-semibold text-slate-900">Role management</h4>
+                  <p class="text-xs text-slate-500">Grant admin access by email.</p>
+                  <div class="mt-3 grid gap-2">
+                    <input
+                      v-model="adminRoleEmail"
+                      type="email"
+                      placeholder="user@example.com"
+                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    />
+                    <select
+                      v-model="adminRoleSelection"
+                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                      <option value="super_admin">Super admin</option>
+                    </select>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors disabled:cursor-not-allowed disabled:bg-slate-400"
+                      :disabled="adminRoleLoading || !adminRoleEmail"
+                      @click="handleAdminRoleUpdate"
+                    >
+                      {{ adminRoleLoading ? 'Updating...' : 'Set role' }}
+                    </button>
+                    <p v-if="adminRoleSuccess" class="text-xs text-emerald-700">
+                      {{ adminRoleSuccess }}
+                    </p>
+                    <p v-else-if="adminRoleError" class="text-xs text-amber-700">
+                      {{ adminRoleError }}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div class="bg-white rounded-xl border border-slate-200 p-6 lg:col-span-2">
@@ -2695,27 +2735,55 @@
 
                 <div class="bg-white rounded-xl border border-slate-200 p-6">
                   <h3 class="font-medium text-slate-900 mb-4">Push Notifications</h3>
-                  <label class="flex items-center justify-between cursor-pointer">
+                  <div class="flex items-center justify-between gap-3">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Browser Notifications</div>
-                      <div class="text-xs text-slate-500">Receive real-time alerts in your browser</div>
+                      <div class="text-xs text-slate-500">
+                        Receive real-time alerts in your browser
+                      </div>
+                      <div class="mt-1 text-xs text-slate-500">
+                        Status: {{ notificationSettings.pushEnabled ? 'Enabled' : 'Disabled' }}
+                      </div>
                     </div>
-                    <input
-                      v-model="notificationSettings.pushEnabled"
-                      type="checkbox"
-                      class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </label>
+                    <button
+                      type="button"
+                      class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="pushLoading || !pushSupported"
+                      @click="handlePushToggle"
+                    >
+                      {{ pushLoading ? 'Working…' : notificationSettings.pushEnabled ? 'Disable' : 'Enable' }}
+                    </button>
+                  </div>
+                  <p v-if="!pushSupported" class="mt-3 text-xs text-slate-500">
+                    Push notifications are not supported in this browser.
+                  </p>
+                  <p v-else-if="pushPermission === 'denied'" class="mt-3 text-xs text-amber-700">
+                    Browser notifications are blocked. Enable them in your browser settings.
+                  </p>
                 </div>
 
                 <div class="flex justify-end">
                   <button
                     type="button"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:bg-blue-300"
+                    :disabled="notificationLoading"
+                    @click="handleSaveNotificationSettings"
                   >
-                    Save Preferences
+                    {{ notificationLoading ? 'Saving…' : 'Save Preferences' }}
                   </button>
                 </div>
+                <p v-if="notificationSaveSuccess" class="text-xs text-emerald-700">
+                  Notification settings saved.
+                </p>
+                <p v-else-if="notificationSaveError" class="text-xs text-red-600">
+                  {{ notificationSaveError }}
+                </p>
+                <p v-else-if="notificationLoadError" class="text-xs text-red-600">
+                  {{ notificationLoadError }}
+                </p>
+                <p v-else-if="privacyLoadError" class="text-xs text-red-600">
+                  {{ privacyLoadError }}
+                </p>
               </div>
 
               <!-- Security Section -->
@@ -3066,6 +3134,7 @@
 definePageMeta({ middleware: 'auth' })
 
 import type { AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
+import AdSlot from '~/components/ads/AdSlot.vue'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
@@ -3145,6 +3214,8 @@ const {
 const { updateProfile } = useMe()
 const { isPlus, limits, billing, refreshPlan } = useEntitlements()
 const billingActions = useBilling()
+const runtimeConfig = useRuntimeConfig()
+const devAutoUpgrade = computed(() => Boolean(runtimeConfig.public.devAuthEnabled) || import.meta.dev)
 const exportsApi = useExports()
 const dataExportApi = useDataExport()
 const accountApi = useAccount()
@@ -3397,10 +3468,24 @@ async function openBillingPortal() {
 async function startCheckout() {
   billingActionMessage.value = null
   const result = await billingActions.createCheckoutSession('plus')
-  if (!result.ok || !result.url) {
+  if (!result.ok) {
     billingActionMessage.value = result.error || 'Unable to start checkout.'
     return
   }
+
+  if (devAutoUpgrade.value && result.sessionId) {
+    const verifyResult = await billingActions.verifyCheckoutSession(result.sessionId)
+    if (verifyResult.ok) {
+      await navigateTo('/plus/success')
+      return
+    }
+  }
+
+  if (!result.url) {
+    billingActionMessage.value = result.error || 'Unable to start checkout.'
+    return
+  }
+
   if (process.client) {
     window.location.href = result.url
   }
@@ -3521,7 +3606,18 @@ const opsAdminLinks = [
     description: 'Security, compliance, and admin event trails.',
     to: '/admin/audit',
   },
+  {
+    label: 'Ad Inventory',
+    description: 'Manage placements, creatives, and ad performance.',
+    to: '/admin/ads',
+  },
 ] as const
+
+const adminRoleEmail = ref('')
+const adminRoleSelection = ref<'user' | 'admin' | 'super_admin'>('user')
+const adminRoleLoading = ref(false)
+const adminRoleError = ref<string | null>(null)
+const adminRoleSuccess = ref<string | null>(null)
 
 const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>({
   remitly: null,
@@ -3719,6 +3815,31 @@ const loadOpsHealth = async (providerId: OpsProviderId) => {
 const refreshAllOps = async () => {
   opsHasLoaded.value = true
   await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
+}
+
+const handleAdminRoleUpdate = async () => {
+  const email = adminRoleEmail.value.trim()
+  if (!email) {
+    adminRoleError.value = 'Enter a user email to update.'
+    return
+  }
+  adminRoleLoading.value = true
+  adminRoleError.value = null
+  adminRoleSuccess.value = null
+  try {
+    await request('/admin/users/role', {
+      method: 'PATCH',
+      body: {
+        email,
+        role: adminRoleSelection.value,
+      },
+    })
+    adminRoleSuccess.value = `Role updated for ${email}.`
+  } catch (error) {
+    adminRoleError.value = toOpsErrorMessage(error)
+  } finally {
+    adminRoleLoading.value = false
+  }
 }
 
 const buildOpsDateRange = (days: number) => {
@@ -4135,14 +4256,24 @@ const billingStatusBadge = computed(() => {
   return { label: status ? status.replace(/_/g, ' ') : 'Free', classes: 'bg-slate-100 text-slate-600' }
 })
 
-const notificationSettings = ref({
-  rateAlerts: true,
-  weeklySummary: true,
-  marketUpdates: false,
-  productUpdates: true,
-  promotional: false,
-  pushEnabled: false,
-})
+const {
+  settings: notificationSettings,
+  loading: notificationLoading,
+  error: notificationLoadError,
+  fetchSettings: fetchNotificationSettings,
+  saveSettings: saveNotificationSettings,
+} = useNotificationSettings()
+const notificationSaveSuccess = ref(false)
+const notificationSaveError = ref<string | null>(null)
+
+const {
+  supported: pushSupported,
+  permission: pushPermission,
+  loading: pushLoading,
+  error: pushError,
+  subscribeWebPush,
+  unsubscribeWebPush,
+} = usePushNotifications()
 
 const securitySettings = ref({
   currentPassword: '',
@@ -4153,10 +4284,15 @@ const passwordUpdateLoading = ref(false)
 const passwordUpdateError = ref<string | null>(null)
 const passwordUpdateSuccess = ref(false)
 
-const privacySettings = ref({
-  analytics: true,
-  personalization: true,
-})
+const {
+  settings: privacySettings,
+  loading: privacyLoading,
+  error: privacyLoadError,
+  fetchSettings: fetchPrivacySettings,
+  saveSettings: savePrivacySettings,
+} = usePrivacySettings()
+const privacySaveSuccess = ref(false)
+const privacySaveError = ref<string | null>(null)
 
 // Profile editing
 const profileName = ref('')
@@ -4183,6 +4319,12 @@ watch(
     if (section === 'security' && isAuthenticated.value) {
       void fetchSessions()
     }
+    if (section === 'privacy' && isAuthenticated.value) {
+      void fetchPrivacySettings()
+    }
+    if (section === 'notifications' && isAuthenticated.value) {
+      void fetchNotificationSettings()
+    }
   },
 )
 
@@ -4207,6 +4349,51 @@ async function saveProfile() {
     }, 3000)
   } catch (error) {
     console.warn('Profile update failed', error)
+  }
+}
+
+async function handleSavePrivacySettings() {
+  privacySaveError.value = null
+  privacySaveSuccess.value = false
+  await savePrivacySettings()
+  if (privacyLoadError.value) {
+    privacySaveError.value = privacyLoadError.value
+    return
+  }
+  privacySaveSuccess.value = true
+  setTimeout(() => {
+    privacySaveSuccess.value = false
+  }, 3000)
+}
+
+async function handleSaveNotificationSettings() {
+  notificationSaveError.value = null
+  notificationSaveSuccess.value = false
+  await saveNotificationSettings()
+  if (notificationLoadError.value) {
+    notificationSaveError.value = notificationLoadError.value
+    return
+  }
+  notificationSaveSuccess.value = true
+  setTimeout(() => {
+    notificationSaveSuccess.value = false
+  }, 3000)
+}
+
+async function handlePushToggle() {
+  notificationSaveError.value = null
+  if (!pushSupported.value) {
+    notificationSaveError.value = 'Push notifications are not supported in this browser.'
+    return
+  }
+  const result = notificationSettings.value.pushEnabled
+    ? await unsubscribeWebPush()
+    : await subscribeWebPush()
+
+  if (result.success) {
+    await fetchNotificationSettings()
+  } else if (pushError.value) {
+    notificationSaveError.value = pushError.value
   }
 }
 
@@ -4634,10 +4821,12 @@ function formatMethod(method: string | null | undefined): string {
     bank: 'Bank',
     cash: 'Cash Pickup',
     wallet: 'Mobile Wallet',
+    airtime: 'Airtime',
     card: 'Card',
     bank_deposit: 'Bank',
     cash_pickup: 'Cash Pickup',
     mobile_wallet: 'Mobile Wallet',
+    airtime: 'Airtime',
   }
   return methodMap[method.toLowerCase()] || method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ')
 }

@@ -215,7 +215,7 @@
               </NuxtLink>
               <button
                 class="flex w-full items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-3 text-white hover:bg-neutral-600 transition-colors"
-                @click="addToWatchlist"
+                @click="handleSetAlert"
               >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -270,6 +270,14 @@
       mode="embed"
       @close="showEmbedModal = false"
     />
+
+    <AuthPromptModal
+      :is-open="authModalOpen"
+      :feature="authModalFeature"
+      title="Sign in to set alerts"
+      message="Create a free account to set price alerts and get notified when conditions improve."
+      @close="authModalOpen = false"
+    />
   </div>
 </template>
 
@@ -280,9 +288,12 @@ import type { PulseFilters, TimeRange } from '~/types/pulse'
 import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
 import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
+import AuthPromptModal from '~/components/shared/AuthPromptModal.vue'
 
 const route = useRoute()
 const store = usePulseStore()
+const { isAuthenticated } = useAuth()
+const saveAlertModal = useSaveAlertModal()
 
 const chartId = computed(() => route.params.chartId as string)
 
@@ -299,6 +310,8 @@ const isPlus = ref(false)
 const lastUpdated = ref<string>('')
 const showShareModal = ref(false)
 const showEmbedModal = ref(false)
+const authModalOpen = ref(false)
+const authModalFeature = ref<'watchlist' | 'alert'>('alert')
 
 const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3))
 
@@ -375,13 +388,17 @@ function handleExportPDF() {
   alert('PDF export requires Plus subscription. Upgrade to access compliance-ready reports.')
 }
 
-function addToWatchlist() {
-  const watchlist = useWatchlist()
+function handleSetAlert() {
+  if (!isAuthenticated.value) {
+    authModalFeature.value = 'alert'
+    authModalOpen.value = true
+    return
+  }
   const label = chartMeta.value?.title || `Pulse chart ${chartId.value}`
-  watchlist.save({ type: 'pulseChart', chartId: chartId.value }, { label }).then((result) => {
-    if (result.status === 'limit_reached' || result.status === 'error') {
-      alert(result.message)
-    }
+  saveAlertModal.open({
+    target: { type: 'pulseChart', chartId: chartId.value },
+    label,
+    source: 'pulse',
   })
 }
 
@@ -401,6 +418,3 @@ useHead({
   ],
 })
 </script>
-
-
-
