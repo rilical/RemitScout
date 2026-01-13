@@ -65,7 +65,7 @@
                 <!-- Logo: 50% left -->
                 <div class="w-1/2 flex items-center justify-start">
                   <img
-                    v-if="provider.logoUrl"
+                    v-if="provider.logoUrl && !provider.logoUrl.includes('instarem')"
                     :src="provider.logoUrl"
                     :alt="provider.name"
                     :class="[provider.logoSize || 'h-18 w-auto', 'object-contain flex-shrink-0']"
@@ -187,6 +187,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useApi } from '~/composables/useApi'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import ScoreBadge from '~/components/shared/ScoreBadge.vue'
+import { PROVIDER_SCORES } from '~/lib/providerScores'
 
 type ProviderMetadata = {
   id: string
@@ -213,7 +214,16 @@ const { request } = useApi()
 
 const { data, pending, error } = await useAsyncData(
   'provider-metadata-featured',
-  () => request<{ data: ProviderMetadata[] }>('/providers/metadata'),
+  async () => {
+    try {
+      return await request<{ data: ProviderMetadata[] }>('/providers/metadata')
+    } catch (error: any) {
+      if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
+        return { data: [] }
+      }
+      throw error
+    }
+  },
   { watch: false },
 )
 
@@ -255,10 +265,24 @@ const getLogoSize = (slug: string): string => {
 
 const providers = computed(() => {
   const list = data.value?.data || []
+  
+  // Create lookup maps for PROVIDER_SCORES (source of truth)
+  const scoreLookup = new Map(
+    Object.values(PROVIDER_SCORES).map(provider => [provider.id, provider]),
+  )
+  const scoreBySlug = new Map(
+    Object.values(PROVIDER_SCORES).map(provider => [provider.slug, provider]),
+  )
+  
   return [...list]
     .filter((provider) => provider.id !== 'wellsfargo' && provider.slug !== 'wells-fargo')
     .map((provider) => {
-      const breakdown = provider.scoreBreakdown
+      // Get score from PROVIDER_SCORES (source of truth) - matches individual provider pages
+      const scoreSource = scoreLookup.get(provider.id) || scoreBySlug.get(provider.slug)
+      const remitScore = scoreSource?.remitScore ?? provider.remitScore ?? 0
+      
+      // Use scoreBreakdown from PROVIDER_SCORES if available, otherwise from API
+      const breakdown = scoreSource?.scoreBreakdown || provider.scoreBreakdown
       const metrics: MetricRow[] = [
         { label: 'Delivered Value', value: labelForMetric(breakdown?.deliveredValue, 'delivered') },
         { label: 'Reliability', value: labelForMetric(breakdown?.reliability, 'reliability') },
@@ -269,12 +293,14 @@ const providers = computed(() => {
 
       return {
         ...provider,
+        remitScore, // Use score from PROVIDER_SCORES (matches individual provider pages)
         logoUrl: provider.logo?.sm,
         logoSize: getLogoSize(provider.slug),
         typeLabel: provider.type?.replace(/_/g, ' ') || 'Provider',
         metrics,
       }
     })
+    .filter((provider) => provider.remitScore > 0) // Only show providers with valid scores
     .sort((a, b) => (b.remitScore || 0) - (a.remitScore || 0))
     .slice(0, 12)
 })
@@ -427,4 +453,3 @@ watch(providers, () => {
   display: none;
 }
 </style>
-

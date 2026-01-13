@@ -1,457 +1,286 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-      <Breadcrumbs :items="breadcrumbItems" />
+  <LegalPageShell
+    title="Corrections Policy"
+    subtitle="How we report, verify, and fix accuracy issues."
+    badge="Accuracy"
+    :last-updated-label="lastUpdatedLabel"
+    :last-updated-iso="lastUpdatedIso"
+    :breadcrumb-items="breadcrumbItems"
+    :toc="tocItems"
+    :highlights="highlights"
+    :related="relatedLinks"
+  >
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
+      <p class="mb-6 text-lg leading-relaxed">
+        This Corrections Policy explains how <strong class="text-blue-600">Remit-Scout</strong> handles accuracy issues,
+        verifies data discrepancies, and resolves correction requests. We are an independent comparison platform that takes
+        accuracy seriously and publishes a clear process for reporting issues and requesting corrections.
+      </p>
 
-      <div class="mx-auto max-w-4xl">
-        <div class="rounded-lg bg-white p-8 shadow-md">
-          <div class="mb-8">
-            <h1 class="mb-4 text-4xl font-bold text-gray-900">
-              Corrections Policy
-            </h1>
-            <p class="text-gray-600">
-              Last updated: December 14, 2025
-            </p>
-          </div>
-
-          <div class="prose prose-lg max-w-none">
-            <p class="mb-6 text-lg leading-relaxed">
-              At <strong class="text-blue-600">Remit-Scout</strong> (operated by <strong class="text-blue-600">Remit-Scout LLC</strong>),
-              accuracy is fundamental to our mission. We strive to provide the most current and accurate information about money
-              transfer providers, including exchange rates, fees, delivery times, and provider availability. However, pricing and
-              availability can change, and errors can occur. This Corrections Policy explains how we handle corrections and how you
-              can report issues.
-            </p>
-
-            <div class="my-8 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-6">
-              <h3 class="mb-2 text-lg font-semibold text-blue-900">
-                Our Commitment to Accuracy
-              </h3>
-              <p class="text-blue-800 leading-relaxed">
-                We take data accuracy seriously. Every quote is timestamped, and we refresh data frequently for popular corridors. However, rates can change throughout the day, and some fees or promotions depend on payment method, KYC status, or payout method. The provider's checkout is always the final source of truth. If you notice a discrepancy between our displayed quote and the provider's checkout, we want to know about it.
-              </p>
-            </div>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              Scope of This Policy
-            </h2>
-            <p class="mb-6 leading-relaxed">
-              This Corrections Policy applies to content across <strong class="text-blue-600">Remit-Scout</strong>, including comparison
-              data, provider pages, guides, explanations, and other informational content — including content that references or is
-              related to third-party providers and partners.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              How We Publish Corrections
-            </h2>
-            <p class="mb-6 leading-relaxed">
-              We typically correct issues by updating the relevant page or data and refreshing affected quotes. We may not always
-              publish a public correction log for each change, especially for fast-moving pricing data. When appropriate, we may add
-              an explanatory note to help users understand what changed.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              How to Request a Correction
-            </h2>
-            <p class="mb-4 leading-relaxed">
-              If you notice incorrect pricing, fees, availability, or any other information on Remit-Scout, please report it through
-              our <NuxtLink
-                to="/contact"
-                class="text-blue-600 hover:text-blue-700 underline font-semibold"
-              >contact page</NuxtLink>.
-              The fastest path to a fix is providing enough detail for us to reproduce the result.
-            </p>
-
-            <h3 class="mb-3 text-xl font-semibold text-gray-900">
-              What to Include in Your Report
-            </h3>
-            <p class="mb-4 leading-relaxed">
-              To help us investigate and correct issues quickly, please include the following information:
-            </p>
-            <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Corridor:</strong> Sending country → receiving country</li>
-              <li><strong class="text-blue-600">Send amount:</strong> The amount you entered</li>
-              <li><strong class="text-blue-600">Payout method:</strong> Bank transfer, cash pickup, mobile wallet, etc. (if applicable)</li>
-              <li><strong class="text-blue-600">Timestamp:</strong> The timestamp shown on Remit-Scout when you viewed the quote</li>
-              <li><strong class="text-blue-600">Provider name:</strong> The provider you're reporting about</li>
-              <li><strong class="text-blue-600">Payment method:</strong> Bank transfer, debit card, credit card, etc. (if applicable)</li>
-              <li><strong class="text-blue-600">Screenshot (optional but helpful):</strong> A screenshot of the provider's checkout screen showing the final amount and fees</li>
-            </ul>
-
-            <div class="my-8 rounded-lg border border-gray-200 bg-gray-50 p-6">
-              <h3 class="mb-3 text-lg font-semibold text-gray-900">
-                Why Quotes May Differ
-              </h3>
-              <p class="mb-4 leading-relaxed">
-                Before reporting, please note that quotes can legitimately differ from checkout due to:
-              </p>
-              <ul class="space-y-2 leading-relaxed">
-                <li class="flex items-start">
-                  <svg
-                    class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span><strong class="text-blue-600">Payment method:</strong> Bank transfer vs. debit card vs. credit card can affect pricing</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span><strong class="text-blue-600">Promotions:</strong> New-user discounts, corridor-specific promos, or limited-time offers</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span><strong class="text-blue-600">KYC status:</strong> New vs. verified customers may see different rates</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span><strong class="text-blue-600">Rate movement:</strong> Exchange rates can change between quote time and checkout time</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <span><strong class="text-blue-600">Local rules and recipient banking requirements:</strong> Some providers adjust pricing based on recipient bank or location</span>
-                </li>
-              </ul>
-            </div>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              What Happens After You Report
-            </h2>
-            <p class="mb-4 leading-relaxed">
-              When you report an issue, we follow a systematic process to investigate and resolve it:
-            </p>
-            <ol class="mb-6 list-inside list-decimal space-y-3 leading-relaxed">
-              <li><strong class="text-blue-600">We attempt to reproduce the quote</strong> using the same corridor, amount, payment method, payout method, and timestamp window you provided.</li>
-              <li><strong class="text-blue-600">We check for common checkout differences</strong> such as payment method variations, promotional discounts, KYC verification status, transfer limits, and provider-specific rules that might affect pricing.</li>
-              <li><strong class="text-blue-600">If the issue is on our side</strong> (for example, stale data, incorrect fee calculation, or systematic capture error), we update our data logic and refresh the affected quotes immediately.</li>
-              <li><strong class="text-blue-600">We correct confirmed issues</strong> by updating the page or data and refreshing affected quotes (often without a public log entry for each change).</li>
-              <li><strong class="text-blue-600">We use reports to improve our data pipeline</strong> and prevent similar issues in the future.</li>
-            </ol>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              How Quickly We Fix Errors
-            </h2>
-            <p class="mb-6 leading-relaxed">
-              We treat data accuracy seriously. We investigate reports promptly and update the site when we confirm an issue. Some
-              mismatches are caused by normal checkout variables (as listed above), but if we find a systematic capture error or
-              stale quote behavior, we fix it as quickly as possible. Our goal is to resolve confirmed issues within
-              <strong class="text-blue-600">48 hours</strong>, though complex cases may take longer.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              Historical Records (Pulse and Past Quotes)
-            </h2>
-            <p class="mb-4 leading-relaxed">
-              We maintain historical snapshots of quotes and pricing movements over time. In some cases, we may correct historical
-              records if we confirm a systematic issue. Whether we adjust historical records is at our discretion.
-            </p>
-            <p class="mb-6 leading-relaxed">
-              If an issue is not reported within <strong class="text-blue-600">48 hours</strong> of the relevant quote timestamp, we
-              may be unable (or may choose not) to modify historical records, even if we fix the issue going forward.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              Trust & Safety
-            </h2>
-            <p class="mb-6 leading-relaxed">
-              <strong class="text-blue-600">Remit-Scout</strong> is a comparison and research product. We do not hold, move, or transmit money. When you choose a provider, you complete the transfer on that provider's licensed website or app. We help you compare options and link you to providers, but we do not process payments or control provider outcomes. If something goes wrong with your transfer, the provider you chose is responsible for processing your transfer and handling disputes.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              User Reviews: Guidelines and Moderation
-            </h2>
-            <p class="mb-4 leading-relaxed">
-              We welcome user reviews and feedback, including negative experiences. We do not remove reviews simply because they are
-              critical of a provider. However, we may remove or restrict reviews if they violate our guidelines or appear to be
-              untrue.
-            </p>
-            <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Be truthful:</strong> Reviews should reflect a genuine experience</li>
-              <li><strong class="text-blue-600">No personal data:</strong> Don’t post account numbers, addresses, phone numbers, or other sensitive info</li>
-              <li><strong class="text-blue-600">No hate or harassment:</strong> No abusive, discriminatory, or threatening content</li>
-              <li><strong class="text-blue-600">No spam or promotions:</strong> No marketing, referral codes, or repetitive content</li>
-              <li><strong class="text-blue-600">No impersonation or fake activity:</strong> Including incentivized or coordinated reviews represented as independent</li>
-              <li><strong class="text-blue-600">Stay relevant:</strong> Keep reviews focused on the provider and the transfer experience</li>
-            </ul>
-            <p class="mb-6 leading-relaxed">
-              If a review is challenged, we may request additional context or evidence (for example, a timestamp, corridor, or
-              redacted proof of transaction) before deciding whether to keep or remove it. To report a review you believe violates
-              these guidelines, use our <NuxtLink
-                to="/contact"
-                class="text-blue-600 hover:text-blue-700 underline font-semibold"
-              >contact page</NuxtLink>.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              Data Sources and Verification
-            </h2>
-            <p class="mb-4 leading-relaxed">
-              We collect pricing data from multiple sources to ensure accuracy:
-            </p>
-            <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-              <li><strong class="text-blue-600">Provider APIs / partner feeds:</strong> When available, structured data direct from providers</li>
-              <li><strong class="text-blue-600">Public quote flow capture:</strong> Structured capture from provider quote flows where applicable</li>
-              <li><strong class="text-blue-600">Spot-check transfers:</strong> Periodic real transfer tests on selected corridors and methods</li>
-            </ul>
-            <p class="mb-6 leading-relaxed">
-              We normalize this data into a standardized comparison so you can evaluate providers fairly. However, rates and fees can change, so we recommend verifying current information directly with providers before making transfers. Every quote is timestamped, and we refresh frequently, especially for popular corridors.
-            </p>
-
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
-              Updates to This Policy
-            </h2>
-            <p class="mb-6 leading-relaxed">
-              We may update this Corrections Policy from time to time to reflect changes in our practices, data collection methods, or legal requirements. Changes will be posted on this page with an updated "Last updated" date. We encourage you to review this policy periodically.
-            </p>
-
-            <!-- CTA Section -->
-            <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
-              <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <svg
-                  class="h-6 w-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                  />
-                </svg>
-                <span>Learn More About Remit-Scout</span>
-              </h3>
-              <p class="mb-6 text-gray-700 leading-relaxed">
-                Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
-                comparisons.
-              </p>
-              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <NuxtLink
-                  to="/about"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">About Us</div>
-                    <div class="text-sm text-gray-600">Our story and mission</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/methodology"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 13l8 0 7 8 0-8 7 0-7-8-7 8-7 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Methodology</div>
-                    <div class="text-sm text-gray-600">How we compare providers</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/how-we-make-money"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Revenue Model</div>
-                    <div class="text-sm text-gray-600">How we make money</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/faq"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">FAQ</div>
-                    <div class="text-sm text-gray-600">Common questions</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/contact"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Contact Us</div>
-                    <div class="text-sm text-gray-600">Get in touch</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/partnerships"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Partnerships</div>
-                    <div class="text-sm text-gray-600">Partner with us</div>
-                  </div>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <div class="rounded-lg border border-blue-200 bg-blue-50 p-6">
-              <h3 class="mb-2 text-lg font-semibold text-blue-900">
-                Questions About Our Corrections Policy?
-              </h3>
-              <p class="mb-4 text-blue-800 leading-relaxed">
-                If you have questions about how we handle corrections, investigate reports, or update our data, we're here to help. Visit our
-                <NuxtLink
-                  to="/faq"
-                  class="font-semibold underline hover:text-blue-900"
-                >FAQ page</NuxtLink>
-                or <NuxtLink
-                  to="/contact"
-                  class="font-semibold underline hover:text-blue-900"
-                >report an issue directly</NuxtLink>.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div class="my-8 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-6">
+        <h3 class="mb-2 text-lg font-semibold text-blue-900">
+          Important Information
+        </h3>
+        <p class="text-blue-800 leading-relaxed">
+          <strong class="text-blue-600">Remit-Scout</strong> is an independent comparison platform. We do not hold, move, or transmit money.
+          All transfers are completed directly with licensed third-party providers on their platforms. Provider checkout is the definitive
+          source of truth for pricing. If our quote differs materially from the checkout amount, we treat it as a correction request
+          and investigate promptly. We aim to resolve confirmed issues within 48 hours.
+        </p>
       </div>
+
+      <h2 id="accuracy" class="mb-4 text-2xl font-bold text-gray-900">
+        Commitment to Accuracy
+      </h2>
+      <p class="mb-6 leading-relaxed">
+        We refresh data frequently for popular corridors and timestamp every quote. Pricing can change quickly in the money transfer
+        market, and provider checkout remains the final source of truth. If you see a discrepancy between our quote and the provider's
+        checkout amount, we want to know about it. We use multiple data sources and verification methods to ensure accuracy, but
+        exchange rates and provider terms can change between quote capture and checkout.
+      </p>
+
+      <h2 id="scope" class="mb-4 text-2xl font-bold text-gray-900">
+        Scope
+      </h2>
+      <p class="mb-6 leading-relaxed">
+        This policy applies to comparisons, provider pages, and editorial content across <strong class="text-blue-600">Remit-Scout</strong>.
+        We do not hold, move, or transmit money; all transfers are completed on provider platforms. This policy covers corrections to
+        pricing data, exchange rates, fees, delivery times, and other information displayed on our platform.
+      </p>
+
+      <h2 id="request" class="mb-4 text-2xl font-bold text-gray-900">
+        How to Request a Correction
+      </h2>
+      <p class="mb-4 leading-relaxed">
+        Report an issue via our <NuxtLink
+          to="/contact"
+          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+        >contact page</NuxtLink>. The fastest path to a fix is providing enough detail for us to reproduce the quote and verify
+        the discrepancy.
+      </p>
+      <p class="mb-4 leading-relaxed">
+        <strong class="text-blue-600">Please include the following information:</strong>
+      </p>
+      <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
+        <li><strong class="text-blue-600">Corridor:</strong> Sending country to receiving country</li>
+        <li><strong class="text-blue-600">Send amount:</strong> Amount entered in the comparison</li>
+        <li><strong class="text-blue-600">Payout method:</strong> Bank transfer, cash pickup, mobile wallet, etc.</li>
+        <li><strong class="text-blue-600">Payment method:</strong> Bank transfer, debit card, credit card, etc.</li>
+        <li><strong class="text-blue-600">Timestamp:</strong> When the quote was shown (date and approximate time)</li>
+        <li><strong class="text-blue-600">Provider name:</strong> Provider being reported</li>
+        <li><strong class="text-blue-600">Screenshot (optional):</strong> Checkout screen showing final amount and fees</li>
+      </ul>
+
+      <div class="my-8 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-6">
+        <h3 class="mb-2 text-lg font-semibold text-amber-900">
+          Why Quotes May Differ
+        </h3>
+        <p class="mb-4 text-amber-800 leading-relaxed">
+          Several factors may cause our quote to differ from the provider's checkout amount:
+        </p>
+        <ul class="list-inside list-disc space-y-2 text-amber-800 leading-relaxed">
+          <li><strong class="text-amber-900">Payment method:</strong> Bank vs card pricing can differ significantly</li>
+          <li><strong class="text-amber-900">Promotions:</strong> Targeted discounts or eligibility rules may apply</li>
+          <li><strong class="text-amber-900">KYC status:</strong> Verification steps can affect price or speed</li>
+          <li><strong class="text-amber-900">Local rules:</strong> Corridor-specific requirements or limits</li>
+          <li><strong class="text-amber-900">FX movement:</strong> Exchange rates can move between quote and checkout</li>
+        </ul>
+      </div>
+
+      <h2 id="process" class="mb-4 text-2xl font-bold text-gray-900">
+        What Happens Next
+      </h2>
+      <p class="mb-4 leading-relaxed">
+        When you report a correction request, we follow this process:
+      </p>
+      <ol class="mb-6 list-inside list-decimal space-y-2 leading-relaxed">
+        <li>We reproduce the quote using the corridor, amount, and timestamp you provided.</li>
+        <li>We check for checkout differences such as payment method, promotions, and KYC state.</li>
+        <li>If the issue is on our side, we fix data logic and refresh affected quotes.</li>
+        <li>We document fixes and use reports to improve data capture methods and accuracy.</li>
+      </ol>
+      <p class="mb-6 leading-relaxed">
+        We investigate all reported discrepancies and will respond to your request within 48 hours if we can confirm the issue.
+        If the discrepancy is due to factors outside our control (such as FX rate movement or provider-specific promotions),
+        we will explain the difference.
+      </p>
+
+      <h2 id="timeline" class="mb-4 text-2xl font-bold text-gray-900">
+        How Quickly We Fix Errors
+      </h2>
+      <p class="mb-6 leading-relaxed">
+        We aim to resolve confirmed issues within <strong class="text-blue-600">48 hours</strong>. Complex cases may take longer,
+        but we prioritize accuracy on active corridors. If we cannot resolve the issue immediately, we will acknowledge your
+        request and provide an estimated timeline for resolution.
+      </p>
+
+      <h2 id="history" class="mb-4 text-2xl font-bold text-gray-900">
+        Historical Records and Past Quotes
+      </h2>
+      <p class="mb-6 leading-relaxed">
+        We maintain historical snapshots to track price movements over time. These records help us identify trends and improve
+        our data collection. If an issue is not reported within 48 hours of a quote, we may be unable to adjust historical records
+        even if we correct future data. Historical corrections require additional verification and may not always be possible.
+      </p>
+
+      <h2 id="sources" class="mb-4 text-2xl font-bold text-gray-900">
+        Data Sources and Verification
+      </h2>
+      <p class="mb-4 leading-relaxed">
+        We collect pricing data from multiple sources to improve accuracy and reliability:
+      </p>
+      <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
+        <li><strong class="text-blue-600">Provider data feeds:</strong> Structured data shared by providers through APIs or partnerships</li>
+        <li><strong class="text-blue-600">Public quote capture:</strong> Quotes captured from provider pricing flows and public interfaces</li>
+        <li><strong class="text-blue-600">Spot-check transfers:</strong> Periodic real transfers on select corridors to verify accuracy</li>
+      </ul>
+      <p class="mb-6 leading-relaxed">
+        We continuously work to expand direct API integrations and improve data freshness across all corridors. All quotes are
+        timestamped to ensure we can track when data was captured and identify potential discrepancies.
+      </p>
+
+      <h2 id="reviews" class="mb-4 text-2xl font-bold text-gray-900">
+        User Reviews and Moderation
+      </h2>
+      <p class="mb-6 leading-relaxed">
+        We welcome user feedback, including negative experiences with providers. Reviews help other users make informed decisions.
+        We remove reviews only when they violate our guidelines or appear to be false or fraudulent.
+      </p>
+      <p class="mb-4 leading-relaxed">
+        <strong class="text-blue-600">Review guidelines:</strong>
+      </p>
+      <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
+        <li><strong class="text-blue-600">Be truthful:</strong> Reviews should reflect a genuine experience with the provider</li>
+        <li><strong class="text-blue-600">No personal data:</strong> Do not share account numbers, transfer IDs, or sensitive information</li>
+        <li><strong class="text-blue-600">No abuse:</strong> Harassment or hateful content is removed immediately</li>
+        <li><strong class="text-blue-600">No spam:</strong> Promotional content or affiliate links are not allowed</li>
+        <li><strong class="text-blue-600">Stay relevant:</strong> Keep feedback focused on the provider and transfer experience</li>
+      </ul>
+      <p class="mb-6 leading-relaxed">
+        To report a review, use our <NuxtLink
+          to="/contact"
+          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+        >contact page</NuxtLink> and include the reason for removal. We review all reports and take appropriate action.
+      </p>
+
+      <h2 id="updates" class="mb-4 text-2xl font-bold text-gray-900">
+        Updates to This Policy
+      </h2>
+      <p class="mb-6 leading-relaxed">
+        We may update this policy from time to time to reflect changes in our data collection practices, verification methods,
+        or legal requirements. Updates will be posted here with a new "Last updated" date. Your continued use of our services
+        after changes constitutes acceptance of the updated policy.
+      </p>
     </div>
-  </div>
+
+    <template #sidebar>
+      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+        <h3 class="text-sm font-semibold text-blue-900">
+          Need help reporting an error?
+        </h3>
+        <p class="mt-2 text-sm text-blue-800 leading-relaxed">
+          If you see an error or have a question about a quote, visit our
+          <NuxtLink to="/contact" class="font-semibold underline hover:text-blue-900">contact page</NuxtLink>
+          and include the details listed in this policy.
+        </p>
+      </div>
+    </template>
+  </LegalPageShell>
 </template>
 
 <script setup lang="ts">
-import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
+import LegalPageShell from '~/components/legal/LegalPageShell.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
-const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
-const canonicalUrl = `${siteUrl}/corrections`
-const _lastReviewedIso = '2025-12-14'
+const { public: { siteUrl } } = useRuntimeConfig()
+
+const lastUpdatedIso = '2025-12-14'
+const lastUpdatedLabel = 'December 14, 2025'
+
+const breadcrumbItems = [
+  { name: 'Home', path: '/' },
+  { name: 'Corrections Policy', path: '/corrections' },
+]
+
+const highlights = [
+  {
+    title: '48-hour target',
+    body: 'Confirmed issues are prioritized for quick resolution.',
+  },
+  {
+    title: 'Checkout is final',
+    body: 'Provider checkout is the source of truth for pricing.',
+  },
+  {
+    title: 'Corrections process',
+    body: 'We document fixes and improve capture logic.',
+  },
+]
+
+const tocItems = [
+  { id: 'accuracy', label: 'Commitment to accuracy' },
+  { id: 'scope', label: 'Scope' },
+  { id: 'request', label: 'How to request a correction' },
+  { id: 'process', label: 'What happens next' },
+  { id: 'timeline', label: 'How quickly we fix errors' },
+  { id: 'history', label: 'Historical records' },
+  { id: 'sources', label: 'Data sources' },
+  { id: 'reviews', label: 'User reviews' },
+  { id: 'updates', label: 'Updates' },
+]
+
+const relatedLinks = [
+  {
+    title: 'Methodology',
+    description: 'How we collect and normalize quote data.',
+    to: '/methodology',
+  },
+  {
+    title: 'Privacy Policy',
+    description: 'How we handle data and cookies.',
+    to: '/legal/privacy',
+  },
+  {
+    title: 'How We Make Money',
+    description: 'Revenue streams and independence guardrails.',
+    to: '/legal/how-we-make-money',
+  },
+]
 
 setSeo({
-  title: 'Corrections Policy | Report Issues & Request Corrections | Remit-Scout',
-  description: 'Report issues and request corrections for Remit-Scout quote data and pages. We investigate and update when needed.',
-  canonical: canonicalUrl,
+  title: 'Corrections Policy | Remit-Scout',
+  description: 'How Remit-Scout handles corrections, verifies data, and resolves accuracy issues.',
+  canonical: `${siteUrl}/corrections`,
+  ogType: 'article',
+  publishedTime: lastUpdatedIso,
+  modifiedTime: lastUpdatedIso,
+  author: 'Remit-Scout Editorial Team',
+  tags: ['corrections', 'accuracy', 'methodology'],
 })
 
 jsonLdBreadcrumb([
   { name: 'Home', url: `${siteUrl}/` },
-  { name: 'Corrections', url: canonicalUrl },
+  { name: 'Corrections Policy', url: `${siteUrl}/corrections` },
 ])
 
-const breadcrumbItems = [
-  { name: 'Home', path: '/' },
-  { name: 'Corrections', path: '/corrections' },
-]
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        'name': 'Corrections Policy',
+        'url': `${siteUrl}/corrections`,
+        'datePublished': lastUpdatedIso,
+        'dateModified': lastUpdatedIso,
+        'publisher': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+        },
+      }),
+    },
+  ],
+})
 </script>

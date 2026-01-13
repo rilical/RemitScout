@@ -12,6 +12,7 @@ import { createTtlCache } from '../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
 import {
   CorridorPriorityRepository,
+  CorridorCapabilityRepository,
   FxRateRepository,
   LatestQuoteRepository,
   RightsMatrixRepository,
@@ -27,6 +28,8 @@ const normalizeToken = (value: string): string => {
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '')
 }
+
+const normalizeProviderId = (value: string): string => value.trim().toLowerCase()
 
 const METHOD_ORDER: Array<'bank' | 'cash' | 'wallet' | 'airtime'> = [
   'bank',
@@ -65,6 +68,7 @@ const fxRateRepository = new FxRateRepository(planeAPool)
 const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
 const corridorPriorityRepository = new CorridorPriorityRepository(planeAPool)
+const corridorCapabilityRepository = new CorridorCapabilityRepository(planeAPool)
 
 type ProviderQuoteResponse = {
   psp: {
@@ -658,6 +662,40 @@ export const providersRoutes = async (app: FastifyInstance) => {
         return { error: 'bad_request', details: [{ message: `amount must be <= ${maxAmount} ${sourceCurrency}` }] }
       }
 
+      const supportedProviderIds = await loadActiveB2cProviderIdsByCountry(
+        sourceCountry,
+        destCountry,
+      )
+      const supportedProviderSet = new Set(
+        supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean),
+      )
+      const capabilityMethods = new Set<'bank' | 'cash' | 'wallet' | 'airtime'>()
+
+      try {
+        const capabilityRows = await corridorCapabilityRepository.listByCorridor(corridorId)
+        for (const row of capabilityRows) {
+          if (!row?.is_supported) continue
+          const providerId = row.provider_id ? normalizeProviderId(row.provider_id) : ''
+          if (!providerId) continue
+          if (supportedProviderSet.size && !supportedProviderSet.has(providerId)) continue
+          const payoutMethods = Array.isArray(row.payout_methods) ? row.payout_methods : []
+          for (const payoutMethod of payoutMethods) {
+            const methodValue = toAvailableMethod(payoutMethod)
+            if (!methodValue) continue
+            capabilityMethods.add(methodValue)
+          }
+        }
+      } catch (error) {
+        logger.warn('capability_methods_lookup_failed', {
+          corridor_id: corridorId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+
+      for (const methodValue of capabilityMethods) {
+        availableMethods.add(methodValue)
+      }
+
       let bucketUsed = amountBucket
       let quotes = await latestQuoteRepository.listLatestByCorridorAllMethods(
         corridorId,
@@ -724,11 +762,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
       }
 
       if (!filteredQuotes.length) {
-        const supportedProviders = await loadActiveB2cProviderIdsByCountry(
-          sourceCountry,
-          destCountry,
-        )
-        if (supportedProviders.length === 0) {
+        if (supportedProviderIds.length === 0) {
           reply.code(404)
           return {
             error: 'corridor_unsupported',

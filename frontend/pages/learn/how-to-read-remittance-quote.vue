@@ -3,28 +3,23 @@
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
         <div class="mt-12 max-w-4xl">
-          <div class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand-700 shadow-md mb-6">
-            <span>📊</span>
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
             Money Transfer Basics
           </div>
-          <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
-            How to Read a Quote: "Recipient Gets"
+          <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6">
+            How to Read a Quote:<br>
+            <span class="text-brand-400">"Recipient Gets"</span>
           </h1>
-          <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
-            "Recipient Gets" is the number that matters. It captures the money lost from a bad exchange rate (FX spread) plus the upfront fee—so you can compare providers correctly.
+          <p class="text-xl text-slate-300 sm:text-2xl font-medium mb-6 leading-relaxed">
+            <span class="font-bold text-brand-400">"Recipient Gets"</span> is the number that matters. It captures the money lost from a bad exchange rate (FX spread) plus the upfront fee, so you can compare providers correctly.
           </p>
-          <p class="text-lg text-neutral-700 leading-relaxed mb-6">
-            Most people compare transfers the wrong way: they look at the fee. A $0 fee feels like a win. But the fee is only part of the cost. The best single metric is what we call <strong class="font-semibold text-neutral-900">Recipient Gets</strong>—the exact amount your recipient receives in the destination currency.
-          </p>
-          <div class="flex items-center gap-4 text-sm text-neutral-600">
+          <div class="flex items-center gap-4 text-sm text-slate-400">
             <span>5 min read</span>
-            <span>•</span>
-            <span>Updated December 2024</span>
           </div>
         </div>
       </div>
@@ -32,29 +27,80 @@
 
     <!-- Main Content -->
     <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
-          <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
-            <h2 class="text-xl font-bold text-neutral-900 mb-3">Quick takeaways</h2>
-            <ul class="space-y-2 text-base text-neutral-700">
-              <li class="flex items-start gap-2">
-                <span class="text-brand-600 mt-1">•</span>
-                <span>"Recipient gets" is the best single metric because it includes fees and FX spread.</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-brand-600 mt-1">•</span>
-                <span>Compare the offered rate to mid-market to spot hidden markup.</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-brand-600 mt-1">•</span>
-                <span>Keep inputs identical and compare at checkout for a fair match.</span>
-              </li>
-            </ul>
+          <!-- Introduction -->
+          <div class="mb-16">
+            <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+              <!-- Left Column -->
+              <div class="flex flex-col h-full">
+                <div class="mb-8">
+                  <h2 class="text-3xl font-bold text-neutral-900 mb-4 leading-tight">
+                    Why <span class="text-brand-600">"Recipient Gets"</span> Is the Only Number That Matters
+                  </h2>
+                  <p class="text-lg text-neutral-700 leading-relaxed">
+                    Most people compare transfers the wrong way: they look at the fee. A $0 fee feels like a win. But the fee is only part of the cost. The best single metric is what we call <strong class="font-semibold text-neutral-900">Recipient Gets</strong>—the exact amount your recipient receives in the destination currency.
+                  </p>
+                </div>
+                
+                <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
+                  <h3 class="font-bold text-2xl mb-4">The Bottom Line</h3>
+                  <p class="text-lg font-medium leading-relaxed">
+                    "Recipient gets" is the best single metric because it includes fees and FX spread. Compare the offered rate to mid market to spot hidden markup. Keep inputs identical and compare at checkout for a fair match.
+                  </p>
+                </div>
+              </div>
+              
+              <!-- Right Column -->
+              <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">Quick Takeaways</h3>
+                <div class="grid gap-4">
+                  <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
+                    <div class="flex items-start gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">The complete picture</h4>
+                        <p class="text-sm text-neutral-600 leading-relaxed">
+                          "Recipient gets" captures both the upfront fee and money lost through FX spread.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
+                    <div class="flex items-start gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">Compare at checkout</h4>
+                        <p class="text-sm text-neutral-600 leading-relaxed">
+                          Rates can change. Always compare quotes at the final checkout step, not the homepage.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
+                    <div class="flex items-start gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">Keep inputs identical</h4>
+                        <p class="text-sm text-neutral-600 leading-relaxed">
+                          Use the same send amount, funding method, and payout method across all comparisons.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <!-- What Recipient Gets Means -->
+          <div class="my-10">
+            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+          </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
-              What "Recipient Gets" really means
+              What <span class="text-brand-600">"Recipient Gets"</span> really means
             </h2>
             <p class="text-base text-neutral-700 leading-relaxed mb-6">
               "Recipient gets" is the end result after all costs are applied.
@@ -69,7 +115,7 @@
               </li>
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 mt-1">•</span>
-                <span>the <strong class="font-semibold text-neutral-900">money lost through a weaker exchange rate</strong> (FX spread/markup), because both reduce the amount that converts or the rate applied to it.</span>
+                <span>the <strong class="font-semibold text-neutral-900">money lost through a weaker exchange rate</strong> (FX spread or markup), because both reduce the amount that converts or the rate applied to it.</span>
               </li>
             </ul>
             <p class="text-base text-neutral-700 leading-relaxed">
@@ -80,7 +126,7 @@
           <!-- Quote Breakdown -->
           <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-8 lg:p-12">
             <h2 class="text-2xl font-bold text-neutral-900 mb-6">
-              The basic anatomy of a quote
+              The basic <span class="text-brand-600">anatomy of a quote</span>
             </h2>
             <p class="text-base text-neutral-700 leading-relaxed mb-6">
               When you're looking at a quote screen, you'll usually see:
@@ -148,11 +194,11 @@
             <ol class="space-y-2 text-base text-neutral-700 mb-4">
               <li class="flex items-start gap-3">
                 <span class="font-semibold text-brand-600">1.</span>
-                <span><strong class="font-semibold text-neutral-900">Amount converted</strong> = Send amount – Fee</span>
+                <span><strong class="font-semibold text-neutral-900">Amount converted</strong> = Send amount minus Fee</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="font-semibold text-brand-600">2.</span>
-                <span><strong class="font-semibold text-neutral-900">Recipient gets</strong> = Amount converted × Provider exchange rate</span>
+                <span><strong class="font-semibold text-neutral-900">Recipient gets</strong> = Amount converted times Provider exchange rate</span>
               </li>
             </ol>
             <p class="text-sm text-neutral-600">
@@ -169,19 +215,19 @@
             <ul class="space-y-2 text-base text-neutral-700 mb-4">
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 mt-1">•</span>
-                <span><strong class="font-semibold text-neutral-900">Mid‑market conversion (ideal)</strong> = (Send amount – fee) × Mid‑market rate</span>
+                <span><strong class="font-semibold text-neutral-900">Mid market conversion (ideal)</strong> = (Send amount minus fee) times Mid market rate</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 mt-1">•</span>
-                <span><strong class="font-semibold text-neutral-900">Quoted conversion (actual)</strong> = (Send amount – fee) × Provider rate</span>
+                <span><strong class="font-semibold text-neutral-900">Quoted conversion (actual)</strong> = (Send amount minus fee) times Provider rate</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 mt-1">•</span>
-                <span><strong class="font-semibold text-neutral-900">Money lost to FX</strong> = Mid‑market conversion – Quoted conversion</span>
+                <span><strong class="font-semibold text-neutral-900">Money lost to FX</strong> = Mid market conversion minus Quoted conversion</span>
               </li>
             </ul>
             <p class="text-base text-neutral-700 leading-relaxed">
-              That "money lost" is the cost of the exchange rate being worse than mid‑market. Add the upfront fee and you have your total effective cost.
+              That "money lost" is the cost of the exchange rate being worse than mid market. Add the upfront fee and you have your total effective cost.
             </p>
             <p class="text-base text-neutral-700 leading-relaxed mt-3">
               You don't need to compute this every time to compare providers, but it's useful when a quote feels confusing or too good to be true.
@@ -191,7 +237,7 @@
           <!-- How to Compare -->
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
-              How to compare two quotes correctly (step-by-step)
+              How to compare two quotes correctly <span class="text-brand-600">(step by step)</span>
             </h2>
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
@@ -256,17 +302,22 @@
             <ul class="space-y-3 text-base text-neutral-700">
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 font-bold">•</span>
-                <span><strong class="font-semibold text-neutral-900">Provider A:</strong> $0 fee, rate = 1.20 → recipient gets = 500 × 1.20 = 600</span>
+                <span><strong class="font-semibold text-neutral-900">Provider A:</strong> $0 fee, rate = 1.20. Recipient gets = 500 times 1.20 = 600</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 font-bold">•</span>
-                <span><strong class="font-semibold text-neutral-900">Provider B:</strong> $3.99 fee, rate = 1.22 → recipient gets = (500 – 3.99) × 1.22 ≈ 605. (rounded)</span>
+                <span><strong class="font-semibold text-neutral-900">Provider B:</strong> $3.99 fee, rate = 1.22. Recipient gets = (500 minus 3.99) times 1.22 = 605 (rounded)</span>
               </li>
             </ul>
             <p class="text-base text-neutral-700 leading-relaxed mt-4">
               Even though Provider B charges a fee, it delivers more because the FX rate is better. This is exactly why "fee-only" comparisons fail.
             </p>
           </div>
+
+          <div class="my-10">
+            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+          </div>
+
 
           <!-- Quote Traps -->
           <div class="mb-12">
@@ -303,23 +354,23 @@
             </p>
             <ul class="space-y-2 text-base text-neutral-700">
               <li class="flex items-start gap-3">
-                <span class="text-emerald-600 font-bold">✅</span>
+                <span class="text-brand-600 font-bold mt-1">•</span>
                 <span>Same amount, same payout method, same funding method across providers</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-emerald-600 font-bold">✅</span>
+                <span class="text-brand-600 font-bold mt-1">•</span>
                 <span>Compare at checkout, not on the homepage</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-emerald-600 font-bold">✅</span>
+                <span class="text-brand-600 font-bold mt-1">•</span>
                 <span>Use Recipient Gets as the primary metric</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-emerald-600 font-bold">✅</span>
+                <span class="text-brand-600 font-bold mt-1">•</span>
                 <span>Verify recipient details and payout method requirements</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-emerald-600 font-bold">✅</span>
+                <span class="text-brand-600 font-bold mt-1">•</span>
                 <span>Only then consider speed, limits, and refunds</span>
               </li>
             </ul>
@@ -332,52 +383,44 @@
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
-                    <span class="text-2xl">⭐</span>
-                  </div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">1</div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Recipient Gets (Most Important)</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2"><span class="text-brand-600">Recipient Gets</span> (Most Important)</h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
-                      This is the actual amount your recipient will receive after all fees and FX markup. Compare this number across providers—it's the only metric that matters.
+                      This is the actual amount your recipient will receive after all fees and FX markup. Compare this number across providers. It's the only metric that matters.
                     </p>
                   </div>
                 </div>
               </div>
-              <div class="rounded-xl border border-neutral-200 bg-white p-6">
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <span class="text-2xl">💰</span>
-                  </div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">2</div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Total Cost (Fee + FX Markup)</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Total Cost <span class="text-brand-600">(Fee plus FX Markup)</span></h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       Don't just look at the transfer fee. Add the FX markup cost. A $0 fee with 3% markup is often more expensive than a $3 fee with 0.5% markup.
                     </p>
                   </div>
                 </div>
               </div>
-              <div class="rounded-xl border border-neutral-200 bg-white p-6">
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                    <span class="text-2xl">⚡</span>
-                  </div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">3</div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Delivery Speed (If Urgent)</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2"><span class="text-brand-600">Delivery Speed</span> (If Urgent)</h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       Speed matters if you need money delivered quickly. But remember: faster often costs more. Balance urgency with cost.
                     </p>
                   </div>
                 </div>
               </div>
-              <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-6">
+              <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-neutral-200 flex items-center justify-center">
-                    <span class="text-xl">📅</span>
-                  </div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">4</div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Quote Timestamp (Context Only)</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Quote Timestamp <span class="text-brand-600">(Context Only)</span></h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
-                      Exchange rates change minute-to-minute. A quote from 2 hours ago may be outdated. Always check when the quote was generated.
+                      Exchange rates change minute to minute. A quote from 2 hours ago may be outdated. Always check when the quote was generated.
                     </p>
                   </div>
                 </div>
@@ -385,49 +428,86 @@
             </div>
           </div>
 
+          <!-- CTA Section -->
+          <div class="rounded-3xl border-2 border-brand-500 bg-gradient-to-br from-brand-600 to-blue-600 p-8 lg:p-12 text-white">
+            <h2 class="text-2xl font-bold mb-4">
+              Ready to Find Your Best Rate?
+            </h2>
+            <p class="text-lg text-white/90 mb-6 leading-relaxed">
+              Compare live rates from 30+ licensed providers in seconds. See exactly how much your recipient will get, no hidden fees.
+            </p>
+            <NuxtLink
+              to="/send-money"
+              class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
+            >
+              Compare Providers Now
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </NuxtLink>
+          </div>
+
         </div>
       </div>
     </section>
 
     <!-- Related Guides -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-bold text-neutral-900 mb-8 text-center">
+        <h2 class="text-3xl font-bold text-white mb-8 text-center">
           Related Guides
         </h2>
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/learn/hidden-exchange-rate-fees-explained"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
-            <h3 class="text-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
+            <h3 class="text-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Hidden Exchange Rate Fees
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
               Learn how FX markup works and how to spot hidden costs.
             </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
           <NuxtLink
-            to="/learn/why-checkout-price-differs"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            to="/learn/why-compare-before-every-transfer"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
-            <h3 class="text-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
-              Why Checkout Price Can Differ
+            <h3 class="text-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
+              Why Compare Before Every Transfer
             </h3>
-            <p class="text-sm text-neutral-600">
-              Understand why final amounts may differ from quotes.
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Learn how comparing can save you hundreds on the same transfer.
             </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
           <NuxtLink
-            to="/faq"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            to="/learn/bank-transfer-vs-card-vs-cash-pickup"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
-            <h3 class="text-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
-              FAQ
+            <h3 class="text-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
+              Payment Method Playbook
             </h3>
-            <p class="text-sm text-neutral-600">
-              Common questions about reading quotes and comparing providers.
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Choose the right payment and payout method for your needs.
             </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
         </div>
       </div>
@@ -461,7 +541,6 @@ jsonLdBreadcrumb([
   { name: 'Reading Quotes', url: `${siteUrl}/learn/how-to-read-remittance-quote` },
 ])
 </script>
-
 
 
 

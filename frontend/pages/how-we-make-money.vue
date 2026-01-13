@@ -3,36 +3,36 @@
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
         <div class="mt-12 grid gap-12 lg:grid-cols-2 lg:items-start">
           <div>
-            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6">
               How <span class="text-brand-600">Remit-Scout</span> Makes Money
             </h1>
 
-            <p class="text-lg text-neutral-700 leading-relaxed mb-4">
+            <p class="text-lg text-white leading-relaxed mb-4">
               Remit-Scout is free to use. We fund it through a small number of transparent revenue streams that
-              <strong class="font-semibold text-brand-600">never influence rankings</strong>.
+              <strong class="font-semibold text-white">never influence rankings</strong>.
             </p>
-            <p class="text-base text-neutral-600 leading-relaxed mb-6">
+            <p class="text-base text-neutral-200 leading-relaxed mb-6">
               This page explains what we earn money from, what we do not accept, and the controls we use to protect independence.
             </p>
 
             <!-- Trust Chips -->
             <div class="flex flex-wrap gap-3">
-              <div class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-neutral-700">
-                <ShieldCheckIcon class="h-4 w-4 text-brand-700" />
+              <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
+                <ShieldCheckIcon class="h-4 w-4 text-white" />
                 No pay to rank
               </div>
-              <div class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-neutral-700">
-                <LockClosedIcon class="h-4 w-4 text-brand-700" />
+              <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
+                <LockClosedIcon class="h-4 w-4 text-white" />
                 We do not move money
               </div>
-              <div class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-neutral-700">
-                <DocumentTextIcon class="h-4 w-4 text-brand-700" />
+              <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
+                <DocumentTextIcon class="h-4 w-4 text-white" />
                 Clear disclosures
               </div>
             </div>
@@ -97,8 +97,8 @@
             <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow">
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
-                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-100">
-                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                   </div>
@@ -112,11 +112,11 @@
                     commission. <strong class="font-semibold text-neutral-900">You do not pay extra</strong>. The commission comes from the
                     provider's marketing budget, not your transfer amount.
                   </p>
-                  <div class="rounded-xl border border-blue-100 bg-blue-50 p-6">
-                    <p class="text-base font-semibold text-blue-900 mb-2">
+                  <div class="rounded-xl border border-gray-900 bg-gray-900 p-6">
+                    <p class="text-base font-semibold text-white mb-2">
                       Does this affect rankings?
                     </p>
-                    <p class="text-base text-blue-800 leading-relaxed">
+                    <p class="text-base text-white/90 leading-relaxed">
                       <strong>No.</strong> Rankings are determined by data and our scoring methodology. If Provider A ranks higher than
                       Provider B, it is because Provider A offers better value for your specific transfer, not because we earn more from
                       Provider A.
@@ -130,8 +130,8 @@
             <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow">
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
-                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-purple-100">
-                    <svg class="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
@@ -145,11 +145,11 @@
                     those links, we may earn a commission. These relationships are disclosed. Editorial content and comparisons remain
                     independent.
                   </p>
-                  <div class="rounded-xl border border-purple-100 bg-purple-50 p-6">
-                    <p class="text-base font-semibold text-purple-900 mb-2">
+                  <div class="rounded-xl border border-brand-100 bg-brand-50 p-6">
+                    <p class="text-base font-semibold text-brand-900 mb-2">
                       Does this affect rankings?
                     </p>
-                    <p class="text-base text-purple-800 leading-relaxed">
+                    <p class="text-base text-brand-800 leading-relaxed">
                       <strong>No.</strong> This applies only to guide content and never changes Remit-Score or comparison sorting. Money transfer
                       rankings remain independent.
                     </p>
@@ -159,7 +159,7 @@
             </div>
 
             <!-- Remit-Scout Plus -->
-            <div class="rounded-3xl border-2 border-brand-500 bg-brand-50 p-10 lg:p-12 shadow-lg hover:shadow-xl transition-shadow">
+            <div class="rounded-3xl border-2 border-brand-500 bg-white p-10 lg:p-12 shadow-lg hover:shadow-xl transition-shadow">
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
                   <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600">
@@ -179,7 +179,7 @@
                     Plus is a feature upgrade, not a different comparison engine. Every user sees the same provider set, the same
                     rankings, and the same scoring rules.
                   </p>
-                  <div class="rounded-xl border border-brand-500 bg-brand-600 p-6">
+                  <div class="rounded-xl border border-gray-900 bg-gray-900 p-6">
                     <p class="text-base font-semibold text-white mb-2">
                       Does this affect rankings?
                     </p>
@@ -193,7 +193,10 @@
             </div>
 
             <!-- Data Licensing -->
-            <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow">
+            <div
+              v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED"
+              class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow"
+            >
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
                   <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-100">
@@ -212,7 +215,7 @@
                   </p>
 
                   <div class="space-y-4 mb-6">
-                    <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-5">
+                    <div v-if="FEATURE_FLAGS.PULSE_ENABLED" class="rounded-xl border border-emerald-100 bg-emerald-50 p-5">
                       <div class="flex items-start gap-3 mb-2">
                         <ChartBarIcon class="h-6 w-6 text-emerald-700" />
                         <div class="flex-1">
@@ -264,6 +267,7 @@
                       Request widget access →
                     </NuxtLink>
                     <NuxtLink
+                      v-if="FEATURE_FLAGS.PULSE_ENABLED"
                       to="/contact?type=media&topic=pulse"
                       class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50 transition-colors"
                     >
@@ -283,112 +287,6 @@
               </div>
             </div>
 
-            <!-- Provider Insights & Research -->
-            <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow">
-              <div class="flex flex-col lg:flex-row lg:items-start gap-8">
-                <div class="flex-shrink-0">
-                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-100">
-                    <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-4">
-                    Provider Insights & Research Reports
-                  </h3>
-                  <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-                    We may offer paid insights that help providers understand corridor competitiveness using aggregated data (for example,
-                    fee and FX positioning, speed benchmarks, and ranking frequency). These products do not change how providers rank.
-                  </p>
-                  <p class="text-lg leading-relaxed text-neutral-700 mb-6">
-                    We may also publish research and custom analysis for journalists, NGOs, academics, and fintechs using aggregated data.
-                  </p>
-                  <div class="flex flex-wrap gap-3 mb-6">
-                    <NuxtLink
-                      to="/contact?type=provider&topic=insights"
-                      class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-50 transition-colors"
-                    >
-                      Request provider insights →
-                    </NuxtLink>
-                    <NuxtLink
-                      to="/contact?type=media&topic=research"
-                      class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-50 transition-colors"
-                    >
-                      Request a research report →
-                    </NuxtLink>
-                  </div>
-                  <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-6">
-                    <p class="text-base font-semibold text-indigo-900 mb-2">
-                      Does this affect rankings?
-                    </p>
-                    <p class="text-base text-indigo-800 leading-relaxed">
-                      <strong>No.</strong> Providers cannot pay to improve their Remit-Score. Insights and research are separate from scoring and rankings.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sponsorships -->
-            <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow">
-              <div class="flex flex-col lg:flex-row lg:items-start gap-8">
-                <div class="flex-shrink-0">
-                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-100">
-                    <svg class="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-4">
-                    Sponsorships
-                  </h3>
-                  <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-                    We may offer clearly labeled sponsorship placements in specific content areas. All sponsorships are clearly marked and <strong class="font-semibold text-neutral-900">never appear in rankings or comparison results</strong>.
-                  </p>
-                  <div class="rounded-xl border border-orange-100 bg-orange-50 p-5 mb-6">
-                    <p class="text-sm font-semibold text-orange-900 mb-3">
-                      Where sponsorships may appear (clearly labeled):
-                    </p>
-                    <ul class="space-y-2 text-sm text-orange-800">
-                      <li class="flex items-start gap-2">
-                        <span>•</span>
-                        <span>Newsletter sponsor (top/bottom of Pulse newsletter)</span>
-                      </li>
-                      <li class="flex items-start gap-2">
-                        <span>•</span>
-                        <span>Pulse sponsor block (separate from rankings)</span>
-                      </li>
-                      <li class="flex items-start gap-2">
-                        <span>•</span>
-                        <span>Partner spotlight section on Guides (clearly labeled)</span>
-                      </li>
-                      <li class="flex items-start gap-2">
-                        <span>•</span>
-                        <span>Podcast/YouTube sponsor (if we produce content)</span>
-                      </li>
-                    </ul>
-                    <p class="text-sm font-semibold text-orange-900 mt-4 mb-2">
-                      Never: sponsored ranking positions, sponsored sort order, sponsored "best deal"
-                    </p>
-                  </div>
-                  <p class="text-base leading-relaxed text-neutral-600 mb-6">
-                    <strong class="font-semibold text-neutral-900">Plus subscribers get an ad free experience</strong>, which removes sponsored
-                    modules. You still see the same comparison results and rankings, just without ads or sponsorship placements.
-                  </p>
-                  <div class="rounded-xl border border-orange-100 bg-orange-50 p-6">
-                    <p class="text-base font-semibold text-orange-900 mb-2">
-                      Does this affect rankings?
-                    </p>
-                    <p class="text-base text-orange-800 leading-relaxed">
-                      <strong>No.</strong> Sponsorships are labeled and never appear inside comparison results or rankings. They only appear
-                      in separate content areas like newsletters or Pulse pages.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Revenue Map -->
@@ -404,7 +302,7 @@
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <div class="rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-sm">
                 <div class="text-center mb-4">
-                  <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 mb-3">
+                  <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 mb-3">
                     <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
@@ -441,10 +339,10 @@
                 </div>
               </div>
 
-              <div class="rounded-2xl border-2 border-purple-200 bg-white p-6 shadow-sm">
+              <div class="rounded-2xl border-2 border-brand-200 bg-white p-6 shadow-sm">
                 <div class="text-center mb-4">
-                  <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 mb-3">
-                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 mb-3">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
@@ -517,7 +415,7 @@
                 </div>
               </div>
 
-              <div class="rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-sm">
+              <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-sm">
                 <div class="text-center mb-4">
                   <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 mb-3">
                     <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -556,83 +454,6 @@
                 </div>
               </div>
 
-              <div class="rounded-2xl border-2 border-indigo-200 bg-white p-6 shadow-sm">
-                <div class="text-center mb-4">
-                  <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 mb-3">
-                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <h4 class="text-lg font-bold text-neutral-900 mb-4">
-                    Provider Insights
-                  </h4>
-                </div>
-                <div class="space-y-3">
-                  <div>
-                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-                      Who pays us?
-                    </p>
-                    <p class="text-sm font-medium text-neutral-900">
-                      Providers
-                    </p>
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-                      What they get?
-                    </p>
-                    <p class="text-sm text-neutral-700">
-                      Aggregated benchmarking and insights
-                    </p>
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-                      What they don't get?
-                    </p>
-                    <p class="text-sm text-neutral-700">
-                      Ranking placement, score influence, sorting influence
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rounded-2xl border-2 border-orange-200 bg-white p-6 shadow-sm">
-                <div class="text-center mb-4">
-                  <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 mb-3">
-                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <h4 class="text-lg font-bold text-neutral-900 mb-4">
-                    Sponsorships
-                  </h4>
-                </div>
-                <div class="space-y-3">
-                  <div>
-                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-                      Who pays us?
-                    </p>
-                    <p class="text-sm font-medium text-neutral-900">
-                      Sponsors
-                    </p>
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-                      What they get?
-                    </p>
-                    <p class="text-sm text-neutral-700">
-                      Brand placement in newsletters, Pulse, guides
-                    </p>
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-                      What they don't get?
-                    </p>
-                    <p class="text-sm text-neutral-700">
-                      Ranking influence, score influence, comparison placement
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -660,7 +481,7 @@
               </h3>
               <p class="text-base leading-relaxed text-neutral-700 mb-4">
                 <strong class="font-semibold text-neutral-900">Paid placements</strong> can appear in specific content areas such as newsletters,
-                Pulse pages, or guides. These placements are labeled and are separate from comparison results.
+                guides<span v-if="FEATURE_FLAGS.PULSE_ENABLED">, or Pulse pages</span>. These placements are labeled and are separate from comparison results.
               </p>
               <p class="text-sm leading-relaxed text-neutral-600">
                 <strong class="font-semibold text-neutral-900">Plus removes ads:</strong> Plus can remove advertising placements and sponsored
@@ -690,15 +511,15 @@
     <!-- How Affiliate Commissions Work -->
     <section
       id="affiliate-commissions"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-gradient-to-r from-blue-600 to-blue-700 scroll-mt-20"
     >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <div class="text-center mb-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
               How Affiliate Commissions Work
             </h2>
-            <p class="text-lg leading-relaxed text-neutral-700 max-w-3xl mx-auto">
+            <p class="text-lg leading-relaxed text-white/90 max-w-3xl mx-auto">
               This is our primary revenue stream. Here's how it works:
             </p>
           </div>
@@ -706,56 +527,56 @@
           <!-- Stepper Diagram -->
           <div class="grid gap-6 md:grid-cols-4 mb-10">
             <div class="text-center">
-              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 mb-3">
-                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-brand-600 mx-auto mb-3">
-                  <MagnifyingGlassIcon class="h-6 w-6 text-white" />
+              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
+                  <MagnifyingGlassIcon class="h-6 w-6 text-brand-600" />
                 </div>
-                <h3 class="text-sm font-semibold text-neutral-900 mb-2">
+                <h3 class="text-sm font-semibold text-white mb-2">
                   1. You compare
                 </h3>
-                <p class="text-xs text-neutral-600 leading-relaxed">
+                <p class="text-xs text-white/90 leading-relaxed">
                   See live quotes from multiple providers
                 </p>
               </div>
             </div>
 
             <div class="text-center">
-              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 mb-3">
-                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-brand-600 mx-auto mb-3">
-                  <CursorArrowRaysIcon class="h-6 w-6 text-white" />
+              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
+                  <CursorArrowRaysIcon class="h-6 w-6 text-brand-600" />
                 </div>
-                <h3 class="text-sm font-semibold text-neutral-900 mb-2">
+                <h3 class="text-sm font-semibold text-white mb-2">
                   2. You click
                 </h3>
-                <p class="text-xs text-neutral-600 leading-relaxed">
+                <p class="text-xs text-white/90 leading-relaxed">
                   Choose a provider and click through
                 </p>
               </div>
             </div>
 
             <div class="text-center">
-              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 mb-3">
-                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-brand-600 mx-auto mb-3">
-                  <BanknotesIcon class="h-6 w-6 text-white" />
+              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
+                  <BanknotesIcon class="h-6 w-6 text-brand-600" />
                 </div>
-                <h3 class="text-sm font-semibold text-neutral-900 mb-2">
+                <h3 class="text-sm font-semibold text-white mb-2">
                   3. You transfer
                 </h3>
-                <p class="text-xs text-neutral-600 leading-relaxed">
+                <p class="text-xs text-white/90 leading-relaxed">
                   Complete transfer on provider's platform
                 </p>
               </div>
             </div>
 
             <div class="text-center">
-              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 mb-3">
-                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-brand-600 mx-auto mb-3">
-                  <CurrencyDollarIcon class="h-6 w-6 text-white" />
+              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+                <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
+                  <CurrencyDollarIcon class="h-6 w-6 text-brand-600" />
                 </div>
-                <h3 class="text-sm font-semibold text-neutral-900 mb-2">
+                <h3 class="text-sm font-semibold text-white mb-2">
                   4. We may earn
                 </h3>
-                <p class="text-xs text-neutral-600 leading-relaxed">
+                <p class="text-xs text-white/90 leading-relaxed">
                   Provider pays referral fee (you don't pay extra)
                 </p>
               </div>
@@ -902,82 +723,82 @@
     <!-- Remit-Scout Plus -->
     <section
       id="plus-plan"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-gradient-to-r from-blue-600 to-blue-700 scroll-mt-20"
     >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <div class="text-center mb-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
               Remit-Scout Plus
             </h2>
-            <p class="text-lg leading-relaxed text-neutral-700 max-w-3xl mx-auto">
+            <p class="text-lg leading-relaxed text-white/90 max-w-3xl mx-auto">
               An optional subscription for repeat senders who want better tools and an ad free experience.
             </p>
           </div>
 
-          <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-8 lg:p-10">
+          <div class="rounded-3xl border-2 border-gray-900/20 bg-gray-900 p-8 lg:p-10">
             <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
               <div>
-                <h3 class="text-2xl font-bold text-neutral-900 mb-6">
+                <h3 class="text-2xl font-bold text-white mb-6">
                   What's included
                 </h3>
                 <ul class="space-y-4">
                   <li class="flex items-start gap-4">
                     <div class="flex-shrink-0">
-                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white">
                         <span class="text-brand-600 text-xl">✓</span>
                       </div>
                     </div>
                     <div>
-                      <p class="font-semibold text-neutral-900 mb-1">
+                      <p class="font-semibold text-white mb-1">
                         Rate alerts
                       </p>
-                      <p class="text-sm text-neutral-600">
+                      <p class="text-sm text-white/80">
                         Get notified when rates hit your target
                       </p>
                     </div>
                   </li>
                   <li class="flex items-start gap-4">
                     <div class="flex-shrink-0">
-                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white">
                         <span class="text-brand-600 text-xl">✓</span>
                       </div>
                     </div>
                     <div>
-                      <p class="font-semibold text-neutral-900 mb-1">
+                      <p class="font-semibold text-white mb-1">
                         Exchange rate history
                       </p>
-                      <p class="text-sm text-neutral-600">
+                      <p class="text-sm text-white/80">
                         See trends over time
                       </p>
                     </div>
                   </li>
                   <li class="flex items-start gap-4">
                     <div class="flex-shrink-0">
-                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white">
                         <span class="text-brand-600 text-xl">✓</span>
                       </div>
                     </div>
                     <div>
-                      <p class="font-semibold text-neutral-900 mb-1">
+                      <p class="font-semibold text-white mb-1">
                         Watchlist
                       </p>
-                      <p class="text-sm text-neutral-600">
+                      <p class="text-sm text-white/80">
                         Save corridors you care about
                       </p>
                     </div>
                   </li>
                   <li class="flex items-start gap-4">
                     <div class="flex-shrink-0">
-                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white">
                         <span class="text-brand-600 text-xl">✓</span>
                       </div>
                     </div>
                     <div>
-                      <p class="font-semibold text-neutral-900 mb-1">
+                      <p class="font-semibold text-white mb-1">
                         No ads
                       </p>
-                      <p class="text-sm text-neutral-600">
+                      <p class="text-sm text-white/80">
                         Cleaner, distraction free experience
                       </p>
                     </div>
@@ -985,19 +806,13 @@
                 </ul>
               </div>
 
-              <div class="rounded-2xl border-2 border-brand-300 bg-brand-50 p-6">
-                <h4 class="font-semibold text-neutral-900 mb-3 text-lg">
+              <div class="rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm p-6">
+                <h4 class="font-semibold text-white mb-3 text-lg">
                   Does Plus change rankings?
                 </h4>
-                <p class="text-sm text-neutral-700 leading-relaxed mb-4">
-                  <strong class="font-semibold text-neutral-900">No.</strong> Everyone sees the exact same comparison results, rankings, and Remit-Scores, whether on the free plan or Plus. Plus is a feature upgrade, not a different comparison engine.
+                <p class="text-sm text-white/90 leading-relaxed mb-4">
+                  <strong class="font-semibold text-white">No.</strong> Everyone sees the exact same comparison results, rankings, and Remit-Scores, whether on the free plan or Plus. Plus is a feature upgrade, not a different comparison engine.
                 </p>
-                <div class="rounded-lg bg-brand-50 p-4">
-                  <p class="text-xs text-neutral-700 leading-relaxed">
-                    <strong class="font-semibold text-neutral-900">If Plus removes ads, will I still see disclosures?</strong><br>
-                    Yes. Plus can remove advertising placements, but disclosures remain.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -1008,7 +823,7 @@
     <!-- Independence Rules -->
     <section
       id="independence-rules"
-      class="py-16 lg:py-20 bg-slate-900 scroll-mt-20"
+      class="py-16 lg:py-20 bg-gray-900 scroll-mt-20"
     >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
@@ -1090,194 +905,6 @@
             <p class="text-sm text-white/80 leading-relaxed">
               Editorial decisions (scoring, ranking, content) are made separately from business relationships. Revenue opportunities never override data-driven rankings. We regularly audit our results to ensure commercial relationships haven't influenced outcomes.
             </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- How Disclosures Look -->
-    <section
-      id="disclosure-examples"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
-    >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <div class="text-center mb-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-              How Disclosures Look in Product
-            </h2>
-            <p class="text-lg leading-relaxed text-neutral-700 max-w-3xl mx-auto">
-              Here's exactly what you'll see when you compare providers:
-            </p>
-          </div>
-
-          <!-- Mock Provider Card -->
-          <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 shadow-lg mb-8">
-            <div class="flex items-start justify-between mb-6">
-              <div class="flex items-center gap-4">
-                <div class="h-14 w-14 rounded-xl bg-brand-100 flex items-center justify-center">
-                  <BuildingLibraryIcon class="h-7 w-7 text-brand-700" />
-                </div>
-                <div>
-                  <h3 class="font-bold text-neutral-900 text-lg">
-                    Provider Name
-                  </h3>
-                  <p class="text-sm text-neutral-600">
-                    Bank transfer • 1-2 days
-                  </p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p class="text-3xl font-bold text-neutral-900">
-                  700 JOD
-                </p>
-                <p class="text-xs text-neutral-500">
-                  Recipient gets
-                </p>
-              </div>
-            </div>
-
-            <div class="space-y-3 pt-6 border-t border-neutral-200 mb-6">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-neutral-600">Transfer fee</span>
-                <span class="text-sm font-semibold text-neutral-900">$1.99</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-neutral-600">Exchange rate</span>
-                <span class="text-sm font-semibold text-neutral-900">0.71</span>
-              </div>
-            </div>
-
-            <div class="pt-6 border-t border-neutral-200">
-              <div class="flex items-center gap-2 mb-4">
-                <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 ring-1 ring-blue-200">
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  We may earn a commission
-                </span>
-                <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200">
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  Rankings are independent
-                </span>
-              </div>
-              <button class="w-full rounded-xl bg-brand-600 px-6 py-4 text-base font-semibold text-white hover:bg-brand-700 transition-colors">
-                Continue to Provider
-              </button>
-            </div>
-          </div>
-
-          <!-- Badge Explanations -->
-          <div class="grid gap-6 sm:grid-cols-2">
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 ring-1 ring-blue-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                We may earn a commission
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Indicates an affiliate relationship may exist for that provider link. This appears near outbound links to providers we have partnerships with.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                Rankings are independent
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Indicates that sorting and scoring is not influenced by paid placement. This appears on comparison pages and methodology documentation.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800 ring-1 ring-purple-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                  />
-                </svg>
-                Official Data Feed
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Indicates the provider supplies direct structured data via API for real-time quotes. This improves accuracy and reduces the chance of stale pricing.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-medium text-orange-800 ring-1 ring-orange-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-                  />
-                </svg>
-                Sponsored
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Reserved for clearly labeled sponsorship placements (if we offer them). Sponsored content never influences organic rankings or Remit-Scores.
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -1382,6 +1009,7 @@ import {
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import { FEATURE_FLAGS } from '~/utils/constants'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },

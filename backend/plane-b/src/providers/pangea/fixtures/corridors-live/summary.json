@@ -1,0 +1,77 @@
+{
+  "US-PH-USD-PHP": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "bank_transfer",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 57.67,
+    "promotional_rate": 60.1,
+    "fee_amount": 0,
+    "receive_amount": 6010,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/pangea/fixtures/corridors-live/US-PH-USD-PHP.json"
+  },
+  "US-MX-USD-MXN": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "bank_transfer",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 17.4,
+    "promotional_rate": 18.38,
+    "fee_amount": 0,
+    "receive_amount": 1838,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/pangea/fixtures/corridors-live/US-MX-USD-MXN.json"
+  },
+  "US-IN-USD-INR": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "bank_transfer",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 89.8,
+    "promotional_rate": null,
+    "fee_amount": 0,
+    "receive_amount": 8980,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/pangea/fixtures/corridors-live/US-IN-USD-INR.json"
+  },
+  "US-GT-USD-GTQ": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "bank_transfer",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 7.51,
+    "promotional_rate": 7.9,
+    "fee_amount": 0,
+    "receive_amount": 790,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/pangea/fixtures/corridors-live/US-GT-USD-GTQ.json"
+  },
+  "US-VN-USD-VND": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "bank_transfer",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 26222.92,
+    "promotional_rate": null,
+    "fee_amount": 0,
+    "receive_amount": 2622292,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/pangea/fixtures/corridors-live/US-VN-USD-VND.json"
+  }
+}

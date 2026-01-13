@@ -1,20 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-      <Breadcrumbs :items="breadcrumbItems" />
-
-      <div class="mx-auto max-w-4xl">
-        <div class="rounded-lg bg-white p-8 shadow-md">
-          <div class="mb-8">
-            <h1 class="mb-4 text-4xl font-bold text-gray-900">
-              Privacy Policy
-            </h1>
-            <p class="text-gray-600">
-              Last updated: December 14, 2025
-            </p>
-          </div>
-
-          <div class="prose prose-lg max-w-none">
+  <LegalPageShell
+    title="Privacy Policy"
+    subtitle="How we collect, use, and protect information across Remit-Scout."
+    badge="Privacy"
+    :last-updated-label="lastUpdatedLabel"
+    :last-updated-iso="lastUpdatedIso"
+    :breadcrumb-items="breadcrumbItems"
+    :toc="tocItems"
+    :highlights="highlights"
+    :related="relatedLinks"
+  >
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
             <p class="mb-6 text-lg leading-relaxed">
               <strong class="text-blue-600">Remit-Scout LLC</strong> ("we," "our," "us") is committed to protecting your privacy.
               This Privacy Policy describes how we collect, use, and safeguard information when you use our money transfer
@@ -37,7 +33,7 @@
               </p>
             </div>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="information-we-collect" class="mb-4 text-2xl font-bold text-gray-900">
               1. Information We Collect
             </h2>
 
@@ -90,9 +86,8 @@
               build personal profiles for advertising or sell personal data.
             </p>
             <p class="mb-6 leading-relaxed">
-              Separately, we maintain a historical database of provider rates and fees at specific points in time (internally
-              referred to as <strong class="text-blue-600">Pulse</strong>) to power comparisons and research. This dataset is not
-              tied to your account identity.
+              Separately, we maintain a historical database of provider rates and fees at specific points in time to power
+              comparisons and research. This dataset is not tied to your account identity.
             </p>
 
             <h3 class="mb-3 text-xl font-semibold text-gray-900">
@@ -113,13 +108,34 @@
             <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
               <li><strong class="text-blue-600">Essential cookies:</strong> Required for the website to function properly</li>
               <li><strong class="text-blue-600">Analytics cookies:</strong> Help us understand usage patterns and improve the service</li>
+              <li><strong class="text-blue-600">Advertising cookies:</strong> Used to deliver and measure ads when permitted</li>
             </ul>
             <p class="mb-6 leading-relaxed">
               You may control or delete cookies through your browser settings. Where required, we will provide notice and choices
               (such as a cookie banner) before placing non-essential cookies.
             </p>
+            <p class="mb-6 leading-relaxed">
+              For more detail, see our
+              <NuxtLink
+                to="/cookies"
+                class="text-blue-600 hover:text-blue-700 underline font-semibold"
+              >Cookie Policy</NuxtLink>.
+            </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h3 id="advertising-and-consent" class="mb-3 text-xl font-semibold text-gray-900">
+              D. Advertising & Consent Management
+            </h3>
+            <p class="mb-4 leading-relaxed">
+              We may show clearly labeled ads on free pages. We use <strong class="text-blue-600">Ezoic</strong> to serve and
+              measure ads and to manage consent choices where required. Ezoic may collect device and usage data and set cookies
+              or similar technologies in line with your consent preferences.
+            </p>
+            <p class="mb-6 leading-relaxed">
+              <strong class="text-blue-600">Remit-Scout Plus</strong> subscribers receive an ad-free experience, and ad
+              placeholders are not rendered for Plus accounts.
+            </p>
+
+            <h2 id="how-we-use-information" class="mb-4 text-2xl font-bold text-gray-900">
               2. How We Use Your Information
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -142,7 +158,7 @@
               We do <strong>not</strong> sell personal information.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="information-sharing" class="mb-4 text-2xl font-bold text-gray-900">
               3. Information Sharing
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -163,6 +179,7 @@
               <li>Payment processing (Stripe)</li>
               <li>Email/newsletter delivery (Mailchimp)</li>
               <li>Phone/SMS service providers (Quo, if used)</li>
+              <li>Advertising and consent management (Ezoic)</li>
               <li>Analytics, performance monitoring, and error logging</li>
             </ul>
             <p class="mb-6 leading-relaxed">
@@ -194,7 +211,7 @@
               <li>Prevent fraud, abuse, or illegal activity</li>
             </ul>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="data-retention" class="mb-4 text-2xl font-bold text-gray-900">
               4. Data Retention
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -206,14 +223,14 @@
               <li><strong class="text-blue-600">Newsletter data:</strong> Kept until you unsubscribe</li>
               <li><strong class="text-blue-600">Operational logs:</strong> Typically retained for up to 30 days</li>
               <li><strong class="text-blue-600">Click-through/referral data:</strong> Needed for provider reporting and attribution</li>
-              <li><strong class="text-blue-600">Provider rate history (Pulse):</strong> Stored as historical rate/fee snapshots</li>
+              <li><strong class="text-blue-600">Provider rate history:</strong> Stored as historical rate/fee snapshots</li>
             </ul>
             <p class="mb-6 leading-relaxed">
               If you request account deletion, we will delete or anonymize personal information where feasible. We may retain
               limited records as necessary to comply with law, prevent fraud, resolve disputes, and enforce our agreements.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="security" class="mb-4 text-2xl font-bold text-gray-900">
               5. Security
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -230,7 +247,7 @@
               implement industry-standard practices to safeguard your information.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="your-rights" class="mb-4 text-2xl font-bold text-gray-900">
               6. Your Rights
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -254,7 +271,7 @@
               We will respond to your request within a reasonable timeframe and in accordance with applicable laws.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="children-privacy" class="mb-4 text-2xl font-bold text-gray-900">
               7. Children's Privacy
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -267,7 +284,7 @@
               immediately, and we will take steps to delete such information.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="international-data-transfers" class="mb-4 text-2xl font-bold text-gray-900">
               8. International Data Transfers
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -276,7 +293,7 @@
               we take appropriate measures designed to protect your information in accordance with this Privacy Policy.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="policy-updates" class="mb-4 text-2xl font-bold text-gray-900">
               9. Changes to This Privacy Policy
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -417,194 +434,86 @@
                 </p>
               </div>
             </div>
-
-            <!-- CTA Section -->
-            <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
-              <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <svg
-                  class="h-6 w-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                  />
-                </svg>
-                <span>Learn More About Remit-Scout</span>
-              </h3>
-              <p class="mb-6 text-gray-700 leading-relaxed">
-                Transparency and trust are at the heart of everything we do. Learn more about our mission, how we operate,
-                and our commitment to helping you make informed financial decisions.
-              </p>
-              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <NuxtLink
-                  to="/about"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">About Us</div>
-                    <div class="text-sm text-gray-600">Our story and mission</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/methodology"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 13l8 0 7 8 0-8 7 0-7-8-7 8-7 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Methodology</div>
-                    <div class="text-sm text-gray-600">How we compare providers</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/legal/disclosure"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Disclosure Policy</div>
-                    <div class="text-sm text-gray-600">Our transparency commitment</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/faq"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">FAQ</div>
-                    <div class="text-sm text-gray-600">Common questions</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/contact"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Contact Us</div>
-                    <div class="text-sm text-gray-600">Get in touch</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/legal/terms"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Terms of Service</div>
-                    <div class="text-sm text-gray-600">Legal agreement</div>
-                  </div>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <div class="rounded-lg border border-blue-200 bg-blue-50 p-6">
-              <h3 class="mb-2 text-lg font-semibold text-blue-900">
-                Questions About Our Privacy Policy?
-              </h3>
-              <p class="mb-4 text-blue-800 leading-relaxed">
-                If you have questions about how we collect, use, or protect your information, or if you wish to exercise
-                your privacy rights, we're here to help. Visit our
-                <NuxtLink
-                  to="/faq"
-                  class="font-semibold underline hover:text-blue-900"
-                >FAQ page</NuxtLink>
-                or <NuxtLink
-                  to="/contact"
-                  class="font-semibold underline hover:text-blue-900"
-                >contact us directly</NuxtLink>.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <template #sidebar>
+      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+        <h3 class="text-sm font-semibold text-blue-900">
+          Questions about our privacy policy?
+        </h3>
+        <p class="mt-2 text-sm text-blue-800 leading-relaxed">
+          If you have questions about how we collect, use, or protect your information, visit our
+          <NuxtLink to="/faq" class="font-semibold underline hover:text-blue-900">FAQ</NuxtLink>
+          or <NuxtLink to="/contact" class="font-semibold underline hover:text-blue-900">contact us</NuxtLink>.
+        </p>
+      </div>
+    </template>
+  </LegalPageShell>
 </template>
 
 <script setup lang="ts">
-import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
+import LegalPageShell from '~/components/legal/LegalPageShell.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
+
+const lastUpdatedIso = '2026-01-10'
+const lastUpdatedLabel = 'January 10, 2026'
+
+const highlights = [
+  {
+    title: 'No selling personal data',
+    body: 'We use data to run comparisons, improve accuracy, and protect the platform.',
+  },
+  {
+    title: 'Ad-free for Plus',
+    body: 'Plus subscribers do not see ad placements, while free pages may show consented ads.',
+  },
+  {
+    title: 'Control your information',
+    body: 'Access, update, or delete your account data and manage email preferences.',
+  },
+  {
+    title: 'Limited sharing',
+    body: 'We only share data with essential service providers or when legally required.',
+  },
+]
+
+const tocItems = [
+  { id: 'information-we-collect', label: 'Information we collect' },
+  { id: 'advertising-and-consent', label: 'Advertising & consent' },
+  { id: 'how-we-use-information', label: 'How we use information' },
+  { id: 'information-sharing', label: 'Information sharing' },
+  { id: 'data-retention', label: 'Data retention' },
+  { id: 'security', label: 'Security' },
+  { id: 'your-rights', label: 'Your rights' },
+  { id: 'children-privacy', label: 'Children privacy' },
+  { id: 'international-data-transfers', label: 'International data transfers' },
+  { id: 'policy-updates', label: 'Policy updates' },
+]
+
+const relatedLinks = [
+  {
+    title: 'About Remit-Scout',
+    description: 'Our mission, leadership, and values.',
+    to: '/about',
+  },
+  {
+    title: 'Methodology',
+    description: 'How we compare providers.',
+    to: '/methodology',
+  },
+  {
+    title: 'Disclosure Policy',
+    description: 'Transparency and partnerships.',
+    to: '/legal/disclosure',
+  },
+  {
+    title: 'Terms of Service',
+    description: 'The legal agreement.',
+    to: '/legal/terms',
+  },
+]
 
 setSeo({
   title: 'Privacy Policy | How We Protect Your Data | Remit-Scout',
@@ -612,6 +521,11 @@ setSeo({
     'Read Remit-Scout\'s Privacy Policy. Learn how we handle account information, subscriptions, and usage data while providing money transfer comparisons.',
   canonical: `${siteUrl}/legal/privacy`,
   ogImage: `${siteUrl}/images/og/privacy.jpg`,
+  ogType: 'article',
+  publishedTime: lastUpdatedIso,
+  modifiedTime: lastUpdatedIso,
+  author: 'Remit-Scout Editorial Team',
+  tags: ['privacy', 'data', 'transparency'],
 })
 
 jsonLdBreadcrumb([
@@ -620,7 +534,27 @@ jsonLdBreadcrumb([
   { name: 'Privacy Policy', url: `${siteUrl}/legal/privacy` },
 ])
 
-// Breadcrumbs
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'PrivacyPolicy',
+        'name': 'Privacy Policy',
+        'url': `${siteUrl}/legal/privacy`,
+        'datePublished': lastUpdatedIso,
+        'dateModified': lastUpdatedIso,
+        'publisher': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+        },
+      }),
+    },
+  ],
+})
+
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Legal', path: '/legal' },

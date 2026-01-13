@@ -4,9 +4,18 @@ INSERT INTO silver.provider (provider_id, display_name)
 VALUES
   ('remitly', 'Remitly'),
   ('wise', 'Wise'),
+  ('ria', 'Ria'),
+  ('dahabshiil', 'Dahabshiil'),
+  ('sendwave', 'Sendwave'),
+  ('mukuru', 'Mukuru'),
   ('westernunion', 'Western Union'),
   ('worldremit', 'WorldRemit'),
-  ('xe', 'Xe')
+  ('xe', 'Xe'),
+  ('instarem', 'Instarem'),
+  ('wirebarley', 'WireBarley'),
+  ('transfergo', 'TransferGo'),
+  ('paysend', 'Paysend'),
+  ('pangea', 'Pangea')
 ON CONFLICT (provider_id) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   updated_at = NOW();
@@ -16,9 +25,18 @@ INSERT INTO silver.rights_matrix
 VALUES
   ('remitly', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
   ('wise', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('ria', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('dahabshiil', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('sendwave', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('mukuru', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
   ('westernunion', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
   ('worldremit', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
-  ('xe', true, true, true, 'active', 'http', 'seed:S3.0', NOW())
+  ('xe', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('instarem', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('wirebarley', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('transfergo', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('paysend', true, true, true, 'active', 'http', 'seed:S3.0', NOW()),
+  ('pangea', true, true, true, 'active', 'http', 'seed:S3.0', NOW())
 ON CONFLICT (provider_id) DO UPDATE SET
   allowed_collect = EXCLUDED.allowed_collect,
   allowed_b2c = EXCLUDED.allowed_b2c,

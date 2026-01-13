@@ -16,7 +16,7 @@
             Embed Remit‑Scout on Your Site
           </h1>
           <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
-            Widgets, API, and How We Keep Editorial Independence
+            Widgets and Editorial Independence
           </p>
           <p class="text-lg text-neutral-700 leading-relaxed mb-6">
             A guide for publishers, platforms, and developers who want to integrate Remit-Scout comparisons while maintaining our commitment to independent rankings.
@@ -39,7 +39,7 @@
             <ul class="space-y-2 text-base text-neutral-700">
               <li class="flex items-start gap-2">
                 <span class="text-brand-600 mt-1">•</span>
-                <span>Widgets and API deliver live comparisons while preserving editorial independence.</span>
+                <span>Widgets deliver live comparisons while preserving editorial independence.</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="text-brand-600 mt-1">•</span>
@@ -52,6 +52,9 @@
             </ul>
           </div>
           <!-- Widget Examples -->
+          <div class="my-10">
+            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+          </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
               Widget Examples
@@ -98,40 +101,38 @@
             </div>
           </div>
 
-          <!-- API Endpoints -->
+          <!-- Integration Checklist -->
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
-              API Endpoints (High Level)
+              Integration Checklist
             </h2>
             <p class="text-base text-neutral-700 leading-relaxed mb-6">
-              Our API provides programmatic access to comparison data, rate history, and provider information. Key endpoints include:
+              A simple path to launch: confirm corridors, embed the widget, and validate quotes before going live.
             </p>
-            <div class="space-y-4">
+            <div class="grid gap-4 sm:grid-cols-2">
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <code class="text-sm font-mono text-brand-600">GET {{ apiBase }}/compare</code>
-                <p class="text-sm text-neutral-700 mt-2">
-                  Get live comparison results for a specific corridor and amount.
-                </p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">1) Scope & corridors</p>
+                <p class="text-sm text-neutral-700">Choose the corridors, amounts, and payout methods you want to show by default.</p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <code class="text-sm font-mono text-brand-600">GET {{ apiBase }}/providers</code>
-                <p class="text-sm text-neutral-700 mt-2">
-                  Retrieve provider information, Remit-Scores, and metadata.
-                </p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">2) Embed & styling</p>
+                <p class="text-sm text-neutral-700">Drop in the widget, align styles, and place disclosures where required.</p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <code class="text-sm font-mono text-brand-600">GET {{ apiBase }}/rates/history</code>
-                <p class="text-sm text-neutral-700 mt-2">
-                  Access historical rate data for trend analysis and charting.
-                </p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">3) QA & validation</p>
+                <p class="text-sm text-neutral-700">We verify live quotes against provider checkout for the default scenarios.</p>
               </div>
-            </div>
-            <div class="mt-6 rounded-xl border-2 border-brand-200 bg-brand-50 p-5">
-              <p class="text-sm text-neutral-700">
-                <strong>Note:</strong> Full API documentation and authentication details are available to approved partners. Contact us for access.
-              </p>
+              <div class="rounded-xl border border-neutral-200 bg-white p-5">
+                <p class="text-sm font-semibold text-neutral-900 mb-2">4) Launch & monitoring</p>
+                <p class="text-sm text-neutral-700">Monitor performance and corridor coverage as your audience grows.</p>
+              </div>
             </div>
           </div>
+
+          <div class="my-10">
+            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+          </div>
+
 
           <!-- Use Cases -->
           <div class="mb-12">
@@ -148,7 +149,7 @@
               <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-neutral-900 mb-3">💻 Fintech Apps</h3>
                 <p class="text-sm text-neutral-700 leading-relaxed">
-                  Integrate our API to show money transfer options within your app. White-label the experience while maintaining independent rankings.
+                  Embed our comparison module inside your app. White-label the experience while maintaining independent rankings.
                 </p>
               </div>
               <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
@@ -181,7 +182,7 @@
                   <li>Customize widget appearance</li>
                   <li>Choose default corridors</li>
                   <li>Set up white-label branding</li>
-                  <li>Access API for custom integrations</li>
+                  <li>Request a white-label embed</li>
                 </ul>
               </div>
               <div class="rounded-xl border border-red-200 bg-red-50 p-4">
@@ -203,7 +204,7 @@
               Interested in Integration?
             </h3>
             <p class="text-base text-neutral-700 leading-relaxed mb-4">
-              Contact us to discuss widget integration, API access, or data licensing. We work with publishers, platforms, and researchers who share our commitment to transparency.
+              Contact us to discuss widget integration or data licensing. We work with publishers, platforms, and researchers who share our commitment to transparency.
             </p>
             <div class="flex flex-wrap gap-4">
               <NuxtLink
@@ -289,11 +290,10 @@ const breadcrumbItems = [
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
-const apiBase = runtimeConfig?.public?.apiBase || '/api'
 
 setSeo({
-  title: 'Embed Remit-Scout on Your Site: Widgets, API, and Editorial Independence | Remit-Scout',
-  description: 'Guide for publishers and platforms: widget examples, white-label rules, API endpoints, use cases, and how we maintain independent rankings.',
+  title: 'Embed Remit-Scout on Your Site: Widgets and Editorial Independence | Remit-Scout',
+  description: 'Guide for publishers and platforms: widget examples, white-label rules, use cases, and how we maintain independent rankings.',
   canonical: `${siteUrl}/learn/embed-remit-scout-on-your-site`,
 })
 
@@ -303,11 +303,6 @@ jsonLdBreadcrumb([
   { name: 'For Publishers', url: `${siteUrl}/learn/embed-remit-scout-on-your-site` },
 ])
 </script>
-
-
-
-
-
 
 
 

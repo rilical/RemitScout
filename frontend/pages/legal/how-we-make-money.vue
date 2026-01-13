@@ -1,42 +1,35 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-      <Breadcrumbs :items="breadcrumbItems" />
-
-      <div class="mx-auto max-w-5xl">
-        <div class="rounded-lg bg-white p-8 shadow-md">
-          <div class="mb-6 flex items-start justify-between">
-            <div>
-              <h1 class="mb-3 text-4xl font-bold text-gray-900">
-                How We Make Money
-              </h1>
-              <p class="text-gray-600">
-                Transparency on revenue and editorial independence.
-              </p>
-            </div>
-            <Badge variant="secondary">
-              Updated 2025
-            </Badge>
-          </div>
-
-          <div class="prose prose-lg max-w-none">
+  <LegalPageShell
+    title="How We Make Money"
+    subtitle="Transparency on revenue, independence, and rankings."
+    badge="Revenue"
+    :last-updated-label="lastUpdatedLabel"
+    :last-updated-iso="lastUpdatedIso"
+    :breadcrumb-items="breadcrumbItems"
+    :toc="tocItems"
+    :highlights="highlights"
+    :related="relatedLinks"
+  >
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
             <p class="mb-6">
               Remit-Scout compares licensed money transfer providers. We keep the service free by
               earning revenue in a few clearly defined ways. None of these change how we score
               providers or which options we show first.
             </p>
 
-            <h2 class="mb-3 text-2xl font-bold text-gray-900">
+            <h2 id="revenue-streams" class="mb-3 text-2xl font-bold text-gray-900">
               Revenue streams
             </h2>
             <ul class="mb-6 list-inside list-disc space-y-2">
               <li><strong>Affiliate commissions:</strong> Paid when a user we refer completes a sign-up or transfer.</li>
               <li><strong>Advertising placements:</strong> Marked as “Sponsored” and separated from organic rankings.</li>
-              <li><strong>Partnerships & APIs:</strong> White-label data access for partners; no impact on consumer rankings.</li>
+              <li v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED">
+                <strong>Partnerships & data access:</strong> White-label data access for partners; no impact on consumer rankings.
+              </li>
               <li><strong>Premium tooling:</strong> Optional business-tier analytics (coming soon).</li>
             </ul>
 
-            <h2 class="mb-3 text-2xl font-bold text-gray-900">
+            <h2 id="editorial-guardrails" class="mb-3 text-2xl font-bold text-gray-900">
               Editorial guardrails
             </h2>
             <ul class="mb-6 list-inside list-disc space-y-2">
@@ -46,7 +39,7 @@
               <li>We publish methodology updates and change logs when weights shift.</li>
             </ul>
 
-            <h2 class="mb-3 text-2xl font-bold text-gray-900">
+            <h2 id="ranking-policy" class="mb-3 text-2xl font-bold text-gray-900">
               User-first ranking policy
             </h2>
             <p class="mb-4">
@@ -61,7 +54,7 @@
               </p>
             </div>
 
-            <h2 class="mb-3 text-2xl font-bold text-gray-900">
+            <h2 id="conflict-checks" class="mb-3 text-2xl font-bold text-gray-900">
               Conflict checks
             </h2>
             <ul class="mb-6 list-inside list-disc space-y-2">
@@ -70,7 +63,7 @@
               <li>User feedback loop to flag mis-ranked offers.</li>
             </ul>
 
-            <h2 class="mb-3 text-2xl font-bold text-gray-900">
+            <h2 id="questions" class="mb-3 text-2xl font-bold text-gray-900">
               Questions?
             </h2>
             <p>
@@ -80,27 +73,108 @@
               >transparency@Remit-Scout.com</a>
               if you want more detail about any partnership, ad placement, or ranking decision.
             </p>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+  </LegalPageShell>
 </template>
 
 <script setup lang="ts">
-useHead({
+import LegalPageShell from '~/components/legal/LegalPageShell.vue'
+import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { FEATURE_FLAGS } from '~/utils/constants'
+
+const { public: { siteUrl } } = useRuntimeConfig()
+
+const lastUpdatedIso = '2025-12-14'
+const lastUpdatedLabel = 'December 14, 2025'
+
+const highlights = [
+  {
+    title: 'Affiliate commissions',
+    body: 'Revenue comes from referrals, not ranking placement.',
+  },
+  {
+    title: 'Ads and partnerships',
+    body: 'Sponsored placements are labeled and separated.',
+  },
+  {
+    title: 'Editorial guardrails',
+    body: 'Commercial deals cannot change Remit-Score.',
+  },
+]
+
+const tocItems = [
+  { id: 'revenue-streams', label: 'Revenue streams' },
+  { id: 'editorial-guardrails', label: 'Editorial guardrails' },
+  { id: 'ranking-policy', label: 'User-first ranking policy' },
+  { id: 'conflict-checks', label: 'Conflict checks' },
+  { id: 'questions', label: 'Questions' },
+]
+
+const relatedLinks = [
+  {
+    title: 'Disclosure Policy',
+    description: 'Transparency and partnerships.',
+    to: '/legal/disclosure',
+  },
+  {
+    title: 'Methodology',
+    description: 'How we compare providers.',
+    to: '/methodology',
+  },
+  {
+    title: 'Terms of Service',
+    description: 'The legal agreement.',
+    to: '/legal/terms',
+  },
+  {
+    title: 'Privacy Policy',
+    description: 'How we protect your data.',
+    to: '/legal/privacy',
+  },
+]
+
+setSeo({
   title: 'How We Make Money | Remit-Scout Transparency',
-  meta: [
+  description:
+    'Learn how Remit-Scout earns revenue through affiliate links, ads, and partnerships without affecting rankings or Remit-Score.',
+  canonical: `${siteUrl}/legal/how-we-make-money`,
+  ogType: 'article',
+  publishedTime: lastUpdatedIso,
+  modifiedTime: lastUpdatedIso,
+  author: 'Remit-Scout Editorial Team',
+  tags: ['revenue', 'transparency', 'independence'],
+})
+
+jsonLdBreadcrumb([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'Legal', url: `${siteUrl}/legal` },
+  { name: 'How We Make Money', url: `${siteUrl}/legal/how-we-make-money` },
+])
+
+useHead({
+  script: [
     {
-      name: 'description',
-      content:
-        'Learn how Remit-Scout earns revenue through affiliate links, ads, and partnerships without affecting rankings or Remit-Score.',
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        'name': 'How We Make Money',
+        'url': `${siteUrl}/legal/how-we-make-money`,
+        'datePublished': lastUpdatedIso,
+        'dateModified': lastUpdatedIso,
+        'publisher': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+        },
+      }),
     },
   ],
 })
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'How We Make Money', path: '/how-we-make-money' },
+  { name: 'Legal', path: '/legal' },
+  { name: 'How We Make Money', path: '/legal/how-we-make-money' },
 ]
 </script>

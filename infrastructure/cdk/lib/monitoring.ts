@@ -436,7 +436,7 @@ export const createMonitoring = (
   workerLockFailureAlarm.addAlarmAction(alarmAction)
 
   // Provider Probe Failure Alarms
-  const probeProviders = ['remitly', 'westernunion', 'wise', 'worldremit', 'xe']
+  const probeProviders = ['remitly', 'westernunion', 'wise', 'worldremit', 'ria', 'dahabshiil', 'sendwave', 'mukuru', 'xe']
   const probeFailureAlarms = probeProviders.map((providerId) =>
     new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {
       alarmName: `remit-scout-${options.envName}-${providerId}-probe-failure`,

@@ -6,12 +6,6 @@
         <Breadcrumbs :items="breadcrumbItems" />
 
         <div class="mt-10 text-center">
-          <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-2 rounded-full mb-6">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            Transparent Data Collection
-          </div>
           <h1 class="text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-4">
             Remit-Scout <span class="text-blue-600">Research</span>
           </h1>
@@ -28,12 +22,7 @@
         <div class="prose prose-lg prose-neutral max-w-none">
           <!-- Who We Are -->
           <div class="mb-12">
-            <h2 class="text-3xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
-              <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-              </span>
+            <h2 class="text-3xl font-bold text-neutral-900 mb-6">
               About Remit-Scout
             </h2>
             <p class="text-lg text-neutral-700 leading-relaxed mb-4">
@@ -46,12 +35,7 @@
 
           <!-- What We Collect -->
           <div class="mb-12">
-            <h2 class="text-3xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
-              <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-              </span>
+            <h2 class="text-3xl font-bold text-neutral-900 mb-6">
               Data Collection Scope
             </h2>
             <p class="text-lg text-neutral-700 leading-relaxed mb-4">
@@ -88,13 +72,7 @@
 
           <!-- How We Collect -->
           <div class="mb-12">
-            <h2 class="text-3xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
-              <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </span>
+            <h2 class="text-3xl font-bold text-neutral-900 mb-6">
               Data Collection Methodology
             </h2>
             <p class="text-lg text-neutral-700 leading-relaxed mb-4">
@@ -157,12 +135,7 @@
 
           <!-- Legal Compliance -->
           <div class="mb-12">
-            <h2 class="text-3xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
-              <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </span>
+            <h2 class="text-3xl font-bold text-neutral-900 mb-6">
               Legal Compliance and Best Practices
             </h2>
             <p class="text-lg text-neutral-700 leading-relaxed mb-4">
@@ -195,12 +168,7 @@
 
           <!-- Partnership Opportunities -->
           <div class="mb-12">
-            <h2 class="text-3xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
-              <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </span>
+            <h2 class="text-3xl font-bold text-neutral-900 mb-6">
               Partnership Opportunities
             </h2>
             <p class="text-lg text-neutral-700 leading-relaxed mb-6">
@@ -213,7 +181,7 @@
               </li>
               <li class="flex items-start gap-3">
                 <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-bold flex-shrink-0 mt-0.5">✓</span>
-                <span class="text-neutral-700"><strong class="text-neutral-900">Reduced server load</strong> — API access eliminates the need for automated web scraping, reducing bandwidth and server resource consumption</span>
+                <span class="text-neutral-700"><strong class="text-neutral-900">Reduced server load</strong> — Direct data feeds reduce the need for automated quote capture, lowering bandwidth and server resource consumption</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm font-bold flex-shrink-0 mt-0.5">✓</span>
@@ -226,7 +194,7 @@
             </ul>
             <div class="rounded-xl border-l-4 border-blue-600 bg-blue-50 p-5">
               <p class="text-neutral-800 font-medium mb-4">
-                We welcome partnerships with providers who wish to ensure accurate rate representation and explore mutually beneficial collaboration opportunities. Many of our partner providers offer API access, which enables more efficient, accurate, and resource-friendly data collection.
+                We welcome partnerships with providers who wish to ensure accurate rate representation and explore mutually beneficial collaboration opportunities. Many of our partner providers share structured data feeds or exports, which enable more efficient, accurate, and resource-friendly data collection.
               </p>
               <NuxtLink
                 to="/partnerships"
@@ -253,7 +221,7 @@
               <div class="flex-1">
                 <h3 class="text-3xl font-bold mb-3">Questions or Partnership Inquiries?</h3>
                 <p class="text-lg text-white/90 mb-6 leading-relaxed">
-                  We are committed to maintaining transparent communication with all money transfer providers. If you have questions regarding our data collection practices, wish to discuss partnership opportunities, need to report a technical issue, or are interested in providing API access, please contact us.
+                  We are committed to maintaining transparent communication with all money transfer providers. If you have questions regarding our data collection practices, wish to discuss partnership opportunities, need to report a technical issue, or are interested in providing structured data feeds, please contact us.
                 </p>
                 <NuxtLink
                   to="/contact"
@@ -320,39 +288,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
-const breadcrumbItems = computed(() => [
+const { public: { siteUrl } } = useRuntimeConfig()
+
+const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Research', path: '/research' },
-])
+]
 
-useHead({
+setSeo({
   title: 'Remit-Scout Research | Transparent Data Collection',
-  meta: [
-    {
-      name: 'description',
-      content: 'Learn about Remit-Scout\'s transparent approach to collecting money transfer pricing data. Our automated research helps consumers compare rates and find the best deals.',
-    },
-    {
-      property: 'og:title',
-      content: 'Remit-Scout Research | Transparent Data Collection',
-    },
-    {
-      property: 'og:description',
-      content: 'Learn about Remit-Scout\'s transparent approach to collecting money transfer pricing data.',
-    },
-    {
-      property: 'og:type',
-      content: 'website',
-    },
-  ],
-  link: [
-    {
-      rel: 'canonical',
-      href: 'https://remit-scout.com/research',
-    },
-  ],
+  description: 'Learn about Remit-Scout\'s transparent approach to collecting money transfer pricing data. Our automated research helps consumers compare rates and find the best deals.',
+  canonical: `${siteUrl}/research`,
+  ogType: 'article',
 })
-</script>
 
+jsonLdBreadcrumb([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'Research', url: `${siteUrl}/research` },
+])
+</script>

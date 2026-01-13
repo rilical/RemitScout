@@ -5,9 +5,19 @@ const isAwsEnvironment = Boolean(
   process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
 )
 const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+const isrRouteRules = isStagingOrProd ? {
+  '/send-money/**': { isr: 600 }, // 10 minutes
+  '/providers/**': { isr: 1800 }, // 30 minutes
+  '/compare/**': { isr: 86400 }, // 24 hours
+  '/learn/**': { isr: 604800 }, // 7 days
+  '/pulse': { isr: 300 }, // 5 minutes - main pulse dashboard
+  '/pulse/charts/**': { isr: 300 }, // 5 minutes - chart detail pages
+  '/embed/pulse/**': { isr: 60 }, // 1 minute - embeds refresh faster
+} : {}
 const projectRoot = process.cwd()
+const workspaceRoot = join(projectRoot, '..')
 const localNodeModules = join(projectRoot, 'node_modules')
-const workspaceNodeModules = join(projectRoot, '..', 'node_modules')
+const workspaceNodeModules = join(workspaceRoot, 'node_modules')
 const workspacePnpmStore = join(workspaceNodeModules, '.pnpm')
 const defaultWatchIgnored = [
   '**/node_modules/**',
@@ -47,6 +57,41 @@ const ensureClientPrecomputed = async () => {
   }
 }
 
+const ensureNuxtPaths = async () => {
+  const buildDir = join(process.cwd(), '.nuxt')
+  await fs.mkdir(buildDir, { recursive: true })
+  const pathsPath = join(buildDir, 'paths.mjs')
+  try {
+    await fs.access(pathsPath)
+    return
+  } catch {
+    // Continue and write fallback file if missing.
+  }
+
+  const appConfig = {
+    baseURL: '/',
+    buildAssetsDir: '/_nuxt/',
+    cdnURL: '',
+  }
+  const contents = [
+    "import { joinRelativeURL } from 'ufo'",
+    `const getAppConfig = () => (${JSON.stringify(appConfig)})`,
+    'export const baseURL = () => getAppConfig().baseURL',
+    'export const buildAssetsDir = () => getAppConfig().buildAssetsDir',
+    'export const buildAssetsURL = (...path) => joinRelativeURL(publicAssetsURL(), buildAssetsDir(), ...path)',
+    'export const publicAssetsURL = (...path) => {',
+    '  const appConfig = getAppConfig()',
+    '  const publicBase = appConfig.cdnURL || appConfig.baseURL',
+    '  return path.length ? joinRelativeURL(publicBase, ...path) : publicBase',
+    '}',
+    'if (import.meta.client) {',
+    '  globalThis.__buildAssetsURL = buildAssetsURL',
+    '  globalThis.__publicAssetsURL = publicAssetsURL',
+    '}',
+  ].join('\n')
+  await fs.writeFile(pathsPath, contents, 'utf8')
+}
+
 export default defineNuxtConfig({
   // Development
 
@@ -66,8 +111,8 @@ export default defineNuxtConfig({
   hooks: {
     'build:before': async () => {
       // Copy SVG files from frontend/png/SVG to public/png/SVG for proper routing
-      const sourceDir = join(process.cwd(), 'frontend', 'png', 'SVG')
-      const destDir = join(process.cwd(), 'frontend', 'public', 'png', 'SVG')
+      const sourceDir = join(projectRoot, 'png', 'SVG')
+      const destDir = join(projectRoot, 'public', 'png', 'SVG')
       try {
         await fs.mkdir(destDir, { recursive: true })
         const files = await fs.readdir(sourceDir)
@@ -83,8 +128,8 @@ export default defineNuxtConfig({
       }
 
       // Copy PROVIDERS SVG files to public/png/SVG/PROVIDERS
-      const providersSourceDirForPublic = join(process.cwd(), 'frontend', 'png', 'SVG', 'PROVIDERS')
-      const providersDestDir = join(process.cwd(), 'frontend', 'public', 'png', 'SVG', 'PROVIDERS')
+      const providersSourceDirForPublic = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
+      const providersDestDir = join(projectRoot, 'public', 'png', 'SVG', 'PROVIDERS')
       try {
         await fs.mkdir(providersDestDir, { recursive: true })
         const providerFiles = await fs.readdir(providersSourceDirForPublic)
@@ -100,8 +145,8 @@ export default defineNuxtConfig({
       }
 
       // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
-      const providersSourceDir = join(process.cwd(), 'frontend', 'png', 'SVG', 'PROVIDERS')
-      const logosDestDir = join(process.cwd(), 'frontend', 'public', 'logos')
+      const providersSourceDir = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
+      const logosDestDir = join(projectRoot, 'public', 'logos')
       const providerLogoMap: Record<string, string> = {
         'WISE_LOGO.svg': 'wise.svg',
         'REMITLY_LOGO.svg': 'remitly.svg',
@@ -109,6 +154,14 @@ export default defineNuxtConfig({
         'WESTERN_UNION_LOGO.svg': 'western-union.svg',
         'XE_LOGO.svg': 'xe-money.svg',
         'WELLS_FARGO_LOGO.svg': 'wellsfargo.svg',
+        'TRANSFERGO_LOGO.svg': 'transfergo.svg',
+        'PAYSEND_LOGO.svg': 'paysend.svg',
+        'SENDWAVE_LOGO.svg': 'sendwave.svg',
+        'INSTAREM_LOGO.svg': 'instarem.svg',
+        'KORONAPAY_LOGO.svg': 'koronapay.svg',
+        'REMITBEE_LOGO.svg': 'remitbee.svg',
+        'RIA_LOGO.svg': 'ria.svg',
+        'XOOM_LOGO.svg': 'xoom.svg',
       }
       try {
         await fs.mkdir(logosDestDir, { recursive: true })
@@ -126,9 +179,11 @@ export default defineNuxtConfig({
     },
     'build:done': async () => {
       await ensureClientPrecomputed()
+      await ensureNuxtPaths()
     },
     'nitro:build:done': async () => {
       await ensureClientPrecomputed()
+      await ensureNuxtPaths()
     },
   },
 
@@ -138,6 +193,31 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en',
       },
+      script: [
+        {
+          key: 'ezoic-privacy-cmp',
+          'data-cfasync': 'false',
+          src: 'https://cmp.gatekeeperconsent.com/min.js',
+          tagPriority: -10,
+        },
+        {
+          key: 'ezoic-privacy-gatekeeper',
+          'data-cfasync': 'false',
+          src: 'https://the.gatekeeperconsent.com/cmp.min.js',
+          tagPriority: -10,
+        },
+        {
+          key: 'ezoic-header',
+          async: true,
+          src: 'https://www.ezojs.com/ezoic/sa.min.js',
+          tagPriority: -10,
+        },
+        {
+          key: 'ezoic-init',
+          innerHTML: 'window.ezstandalone=window.ezstandalone||{};ezstandalone.cmd=ezstandalone.cmd||[];',
+          tagPriority: -10,
+        },
+      ],
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -200,7 +280,7 @@ export default defineNuxtConfig({
   // Runtime Configuration
   runtimeConfig: {
     // Server-only backend base URL for BFF proxying (must be absolute).
-    apiBase: process.env.API_BASE || 'http://localhost:4000/api/v1',
+    apiBase: process.env.API_BASE || 'http://127.0.0.1:4000/api/v1',
     public: {
       siteUrl:
         process.env.PUBLIC_SITE_URL ||
@@ -210,6 +290,7 @@ export default defineNuxtConfig({
       apiBase: process.env.PUBLIC_API_BASE || '/api',
       b2cRefreshPollMs: Number(process.env.PUBLIC_B2C_REFRESH_POLL_MS) || 1500,
       b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 750,
+      b2cBackgroundRefreshEnabled: process.env.PUBLIC_B2C_BACKGROUND_REFRESH_ENABLED === '1',
       imageBase:
         process.env.PUBLIC_IMAGE_BASE ||
         (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
@@ -247,13 +328,8 @@ export default defineNuxtConfig({
 
   // Route Rules (ISR)
   routeRules: {
-    '/send-money/**': { isr: 600 }, // 10 minutes
-    '/providers/**': { isr: 1800 }, // 30 minutes
-    '/compare/**': { isr: 86400 }, // 24 hours
-    '/learn/**': { isr: 604800 }, // 7 days
-    '/pulse': { isr: 300 }, // 5 minutes - main pulse dashboard
-    '/pulse/charts/**': { isr: 300 }, // 5 minutes - chart detail pages
-    '/embed/pulse/**': { isr: 60 }, // 1 minute - embeds refresh faster
+    ...isrRouteRules,
+    '/ads.txt': { redirect: { to: 'https://srv.adstxtmanager.com/19390/remit-scout.com', statusCode: 301 } },
     '/legal/methodology': { redirect: '/methodology' },
   },
 
@@ -285,6 +361,9 @@ export default defineNuxtConfig({
       },
     },
     server: {
+      fs: {
+        allow: [workspaceRoot],
+      },
       hmr: {
         overlay: false,
       },

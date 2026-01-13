@@ -15,10 +15,61 @@ import { extractWiseMethodPairs } from '../providers/wise/parse'
 import { WISE_SUPPORTED_CORRIDORS } from '../providers/wise/supported-corridors'
 import { fetchXeQuote } from '../providers/xe/fetch'
 import { extractXeMethodPairs } from '../providers/xe/parse'
+import { fetchTransferGoQuote } from '../providers/transfergo/fetch'
+import { extractTransferGoMethodPairs } from '../providers/transfergo/parse'
+import { TRANSFERGO_SUPPORTED_CORRIDORS } from '../providers/transfergo/supported-corridors'
+import { fetchPaysendQuote } from '../providers/paysend/fetch'
+import { extractPaysendMethodPairs } from '../providers/paysend/parse'
+import { PAYSEND_SUPPORTED_CORRIDORS } from '../providers/paysend/supported-corridors'
+import { fetchPangeaQuote } from '../providers/pangea/fetch'
+import { extractPangeaMethodPairs } from '../providers/pangea/parse'
+import { PANGEA_SUPPORTED_CORRIDORS } from '../providers/pangea/supported-corridors'
+import { fetchOrbitRemitQuote } from '../providers/orbitremit/fetch'
+import { extractOrbitRemitMethodPairs } from '../providers/orbitremit/parse'
+import { ORBITREMIT_SUPPORTED_CORRIDORS } from '../providers/orbitremit/supported-corridors'
+import { fetchBossMoneyQuote } from '../providers/bossmoney/fetch'
+import { extractBossMoneyMethodPairs } from '../providers/bossmoney/parse'
+import { BOSSMONEY_SUPPORTED_CORRIDORS } from '../providers/bossmoney/supported-corridors'
+import { fetchKoronaPayQuote } from '../providers/koronapay/fetch'
+import { extractKoronaPayMethodPairs } from '../providers/koronapay/parse'
+import { KORONAPAY_SUPPORTED_CORRIDORS } from '../providers/koronapay/supported-corridors'
+import { fetchRemitbeeQuote } from '../providers/remitbee/fetch'
+import { extractRemitbeeMethodPairs } from '../providers/remitbee/parse'
+import { REMITBEE_SUPPORTED_CORRIDORS } from '../providers/remitbee/supported-corridors'
+import { fetchSingxQuote } from '../providers/singx/fetch'
+import { extractSingxMethodPairs } from '../providers/singx/parse'
+import { SINGX_SUPPORTED_CORRIDORS } from '../providers/singx/supported-corridors'
+import { fetchPlacidQuote } from '../providers/placid/fetch'
+import { extractPlacidMethodPairs } from '../providers/placid/parse'
+import { PLACID_SUPPORTED_CORRIDORS } from '../providers/placid/supported-corridors'
+import { fetchRiaQuote } from '../providers/ria/fetch'
+import { extractRiaMethodPairs } from '../providers/ria/parse'
+import { RIA_SUPPORTED_CORRIDORS } from '../providers/ria/supported-corridors'
+import { fetchDahabshiilQuote } from '../providers/dahabshiil/fetch'
+import { extractDahabshiilMethodPairs } from '../providers/dahabshiil/parse'
+import { DAHABSHIIL_SUPPORTED_CORRIDORS } from '../providers/dahabshiil/supported-corridors'
+import { fetchSendwaveQuote } from '../providers/sendwave/fetch'
+import { extractSendwaveMethodPairs } from '../providers/sendwave/parse'
+import { SENDWAVE_SUPPORTED_CORRIDORS } from '../providers/sendwave/supported-corridors'
+import { fetchMukuruQuote } from '../providers/mukuru/fetch'
+import { extractMukuruMethodPairs } from '../providers/mukuru/parse'
+import { MUKURU_SUPPORTED_CORRIDORS } from '../providers/mukuru/supported-corridors'
 import { fetchWorldRemitQuote } from '../providers/worldremit/fetch'
 import { extractWorldRemitMethodPairs } from '../providers/worldremit/parse'
 import { fetchWesternUnionQuote } from '../providers/westernunion/fetch'
 import { extractWesternUnionMethodPairs } from '../providers/westernunion/parse'
+import { fetchXoomQuote } from '../providers/xoom/fetch'
+import { extractXoomMethodPairs } from '../providers/xoom/parse'
+import { XOOM_SUPPORTED_CORRIDORS } from '../providers/xoom/supported-corridors'
+import { fetchInstaremQuote } from '../providers/instarem/fetch'
+import { extractInstaremMethodPairs } from '../providers/instarem/parse'
+import { INSTAREM_SUPPORTED_CORRIDORS } from '../providers/instarem/supported-corridors'
+import { fetchWireBarleyQuote } from '../providers/wirebarley/fetch'
+import { extractWireBarleyMethodPairs } from '../providers/wirebarley/parse'
+import { WIREBARLEY_SUPPORTED_CORRIDORS } from '../providers/wirebarley/supported-corridors'
+import { fetchIntermexQuote } from '../providers/intermex/fetch'
+import { extractIntermexMethodPairs } from '../providers/intermex/parse'
+import { INTERMEX_SUPPORTED_CORRIDORS } from '../providers/intermex/supported-corridors'
 
 type MethodPair = {
   payin_method?: string | null
@@ -28,7 +79,7 @@ type MethodPair = {
 type CapabilityProbeEntry = {
   providerId: string
   fetch: (request: CollectorRequest, options?: { jitterMs?: number; proxyTier?: ProxyTier }) => Promise<FetchResult>
-  extractPairs: (payload: any) => MethodPair[]
+  extractPairs: (payload: any, request?: CollectorRequest) => MethodPair[]
 }
 
 type MethodSets = {
@@ -58,6 +109,71 @@ const capabilityProbes: Record<string, CapabilityProbeEntry> = {
     fetch: fetchXeQuote,
     extractPairs: extractXeMethodPairs,
   },
+  transfergo: {
+    providerId: 'transfergo',
+    fetch: fetchTransferGoQuote,
+    extractPairs: extractTransferGoMethodPairs,
+  },
+  paysend: {
+    providerId: 'paysend',
+    fetch: fetchPaysendQuote,
+    extractPairs: extractPaysendMethodPairs,
+  },
+  pangea: {
+    providerId: 'pangea',
+    fetch: fetchPangeaQuote,
+    extractPairs: extractPangeaMethodPairs,
+  },
+  orbitremit: {
+    providerId: 'orbitremit',
+    fetch: fetchOrbitRemitQuote,
+    extractPairs: extractOrbitRemitMethodPairs,
+  },
+  bossmoney: {
+    providerId: 'bossmoney',
+    fetch: fetchBossMoneyQuote,
+    extractPairs: extractBossMoneyMethodPairs,
+  },
+  koronapay: {
+    providerId: 'koronapay',
+    fetch: fetchKoronaPayQuote,
+    extractPairs: extractKoronaPayMethodPairs,
+  },
+  remitbee: {
+    providerId: 'remitbee',
+    fetch: fetchRemitbeeQuote,
+    extractPairs: extractRemitbeeMethodPairs,
+  },
+  singx: {
+    providerId: 'singx',
+    fetch: fetchSingxQuote,
+    extractPairs: extractSingxMethodPairs,
+  },
+  placid: {
+    providerId: 'placid',
+    fetch: fetchPlacidQuote,
+    extractPairs: extractPlacidMethodPairs,
+  },
+  ria: {
+    providerId: 'ria',
+    fetch: fetchRiaQuote,
+    extractPairs: extractRiaMethodPairs,
+  },
+  dahabshiil: {
+    providerId: 'dahabshiil',
+    fetch: fetchDahabshiilQuote,
+    extractPairs: extractDahabshiilMethodPairs,
+  },
+  sendwave: {
+    providerId: 'sendwave',
+    fetch: fetchSendwaveQuote,
+    extractPairs: extractSendwaveMethodPairs,
+  },
+  mukuru: {
+    providerId: 'mukuru',
+    fetch: fetchMukuruQuote,
+    extractPairs: extractMukuruMethodPairs,
+  },
   worldremit: {
     providerId: 'worldremit',
     fetch: fetchWorldRemitQuote,
@@ -68,14 +184,68 @@ const capabilityProbes: Record<string, CapabilityProbeEntry> = {
     fetch: fetchWesternUnionQuote,
     extractPairs: extractWesternUnionMethodPairs,
   },
+  xoom: {
+    providerId: 'xoom',
+    fetch: fetchXoomQuote,
+    extractPairs: extractXoomMethodPairs,
+  },
+  instarem: {
+    providerId: 'instarem',
+    fetch: fetchInstaremQuote,
+    extractPairs: extractInstaremMethodPairs,
+  },
+  wirebarley: {
+    providerId: 'wirebarley',
+    fetch: fetchWireBarleyQuote,
+    extractPairs: extractWireBarleyMethodPairs,
+  },
+  intermex: {
+    providerId: 'intermex',
+    fetch: fetchIntermexQuote,
+    extractPairs: extractIntermexMethodPairs,
+  },
 }
 
 const remitlySupportedCorridors = new Set(REMITLY_SUPPORTED_CORRIDORS)
 const wiseSupportedCorridors = new Set(WISE_SUPPORTED_CORRIDORS)
+const transferGoSupportedCorridors = new Set(TRANSFERGO_SUPPORTED_CORRIDORS)
+const paysendSupportedCorridors = new Set(PAYSEND_SUPPORTED_CORRIDORS)
+const pangeaSupportedCorridors = new Set(PANGEA_SUPPORTED_CORRIDORS)
+const orbitremitSupportedCorridors = new Set(ORBITREMIT_SUPPORTED_CORRIDORS)
+const bossmoneySupportedCorridors = new Set(BOSSMONEY_SUPPORTED_CORRIDORS)
+const koronapaySupportedCorridors = new Set(KORONAPAY_SUPPORTED_CORRIDORS)
+const remitbeeSupportedCorridors = new Set(REMITBEE_SUPPORTED_CORRIDORS)
+const singxSupportedCorridors = new Set(SINGX_SUPPORTED_CORRIDORS)
+const placidSupportedCorridors = new Set(PLACID_SUPPORTED_CORRIDORS)
+const riaSupportedCorridors = new Set(RIA_SUPPORTED_CORRIDORS)
+const dahabshiilSupportedCorridors = new Set(DAHABSHIIL_SUPPORTED_CORRIDORS)
+const sendwaveSupportedCorridors = new Set(SENDWAVE_SUPPORTED_CORRIDORS)
+const mukuruSupportedCorridors = new Set(MUKURU_SUPPORTED_CORRIDORS)
+const xoomSupportedCorridors = new Set(XOOM_SUPPORTED_CORRIDORS)
+const instaremSupportedCorridors = new Set(INSTAREM_SUPPORTED_CORRIDORS)
+const wirebarleySupportedCorridors = new Set(WIREBARLEY_SUPPORTED_CORRIDORS)
+const intermexSupportedCorridors = new Set(INTERMEX_SUPPORTED_CORRIDORS)
 
 const catalogSupportedCorridors: Record<string, Set<string>> = {
   remitly: remitlySupportedCorridors,
   wise: wiseSupportedCorridors,
+  transfergo: transferGoSupportedCorridors,
+  paysend: paysendSupportedCorridors,
+  pangea: pangeaSupportedCorridors,
+  orbitremit: orbitremitSupportedCorridors,
+  bossmoney: bossmoneySupportedCorridors,
+  koronapay: koronapaySupportedCorridors,
+  remitbee: remitbeeSupportedCorridors,
+  singx: singxSupportedCorridors,
+  placid: placidSupportedCorridors,
+  ria: riaSupportedCorridors,
+  dahabshiil: dahabshiilSupportedCorridors,
+  sendwave: sendwaveSupportedCorridors,
+  mukuru: mukuruSupportedCorridors,
+  xoom: xoomSupportedCorridors,
+  instarem: instaremSupportedCorridors,
+  wirebarley: wirebarleySupportedCorridors,
+  intermex: intermexSupportedCorridors,
 }
 
 const normalizeMethod = (value?: string | null) => {
@@ -155,7 +325,7 @@ const probeProviderCapability = async (
   const payload = fetchResult.payload && typeof fetchResult.payload === 'object'
     ? fetchResult.payload
     : {}
-  const pairs = probe.extractPairs(payload as any)
+  const pairs = probe.extractPairs(payload as any, request)
   const { payinMethods, payoutMethods } = buildMethodSets(pairs)
 
   if (payinMethods.length === 0 && payoutMethods.length === 0) {

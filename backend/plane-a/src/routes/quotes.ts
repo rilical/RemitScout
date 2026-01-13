@@ -16,6 +16,7 @@ import { VolatilityService } from '../services/volatility-service'
 import { getProviderMetadata } from '../services/provider-metadata'
 import {
   CorridorPriorityRepository,
+  CorridorCapabilityRepository,
   LatestQuoteRepository,
   QuoteRefreshRepository,
   RightsMatrixRepository,
@@ -28,8 +29,11 @@ const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 const quoteRefreshRepository = new QuoteRefreshRepository(planeAPool)
 const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
 const corridorPriorityRepository = new CorridorPriorityRepository(planeAPool)
+const corridorCapabilityRepository = new CorridorCapabilityRepository(planeAPool)
 
 const latestQuoteCache = createTtlCache<any[]>({ namespace: 'plane_a:latest_quote' })
+
+const normalizeProviderId = (value: string): string => value.trim().toLowerCase()
 
 const querySchema = z.object({
   corridor_id: z.string().min(1),
@@ -337,17 +341,46 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       const supportedProviderIds = allowLive
         ? await loadSupportedProviderIds(sourceCountry, destCountry)
         : []
+      const supportedProviderSet = new Set(
+        supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean),
+      )
+      let capabilityProviderIds: string[] = []
 
-      const expectedProviders = Array.from(new Set(supportedProviderIds))
+      if (allowLive) {
+        try {
+          const capabilityIds = await corridorCapabilityRepository.listSupportedProviderIds(
+            corridor_id,
+            payin,
+            payout,
+          )
+          capabilityProviderIds = capabilityIds
+            .map(id => normalizeProviderId(id))
+            .filter(Boolean)
+            .filter(id => supportedProviderSet.size === 0 || supportedProviderSet.has(id))
+        } catch (error) {
+          logger.warn('capability_provider_lookup_failed', {
+            corridor_id,
+            payin,
+            payout,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+
+      const expectedProviders = capabilityProviderIds.length
+        ? Array.from(new Set(capabilityProviderIds))
+        : Array.from(new Set(supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean)))
 
       const providerCollectedAt = new Map<string, number>()
       for (const row of result.rows) {
         if (!row.provider_id || !row.collected_at) continue
+        const providerId = normalizeProviderId(row.provider_id)
+        if (!providerId) continue
         const ts = new Date(row.collected_at).getTime()
         if (!Number.isFinite(ts)) continue
-        const existing = providerCollectedAt.get(row.provider_id)
+        const existing = providerCollectedAt.get(providerId)
         if (!existing || ts > existing) {
-          providerCollectedAt.set(row.provider_id, ts)
+          providerCollectedAt.set(providerId, ts)
         }
       }
 

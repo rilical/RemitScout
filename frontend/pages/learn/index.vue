@@ -3,13 +3,13 @@
     <CompareWidget />
 
     <!-- Hero Section with Search -->
-    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
         <div class="mt-12">
           <div class="text-center mb-12">
-            <div class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand-700 shadow-md mb-6">
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -25,37 +25,12 @@
               </svg>
               Guides & Reviews
             </div>
-            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6">
               Money Transfer <span class="text-brand-600">Guides</span>
             </h1>
-            <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
+            <p class="text-xl text-white sm:text-2xl font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
               Everything you need to send money smarter, compare providers, and avoid hidden fees.
             </p>
-
-            <!-- Search Bar -->
-            <div class="max-w-2xl mx-auto mb-8">
-              <div class="relative">
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Search guides, reviews, comparisons..."
-                  class="w-full rounded-2xl border-2 border-neutral-200 bg-white px-6 py-4 pl-14 text-base shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                >
-                <svg
-                  class="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
 
             <!-- Filters -->
             <div class="flex flex-wrap items-center justify-center gap-3 max-w-4xl mx-auto">
@@ -66,7 +41,7 @@
                   'px-4 py-2 rounded-full text-sm font-semibold transition-all',
                   activeFilter === filter.key
                     ? 'bg-brand-600 text-white shadow-md'
-                    : 'bg-white border-2 border-neutral-200 text-neutral-700 hover:border-brand-300',
+                    : 'bg-white/10 border-2 border-white/20 text-white hover:border-brand-400 hover:bg-white/15',
                 ]"
                 @click="activeFilter = filter.key"
               >
@@ -144,20 +119,7 @@
     <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/10 px-4 py-2 text-sm font-semibold text-brand-700 mb-6">
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-600 shadow-md mb-6">
             New User Path
           </div>
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
@@ -186,7 +148,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -219,7 +181,7 @@
     <section class="py-16 lg:py-20 bg-neutral-50">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-3xl sm:text-4xl font-bold text-brand-600 mb-4">
             Browse by Category
           </h2>
           <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
@@ -227,12 +189,12 @@
           </p>
         </div>
 
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
           <button
             v-for="cat in categories"
             :key="cat.key"
             type="button"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1 flex flex-col cursor-pointer text-left w-full"
+            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1 flex flex-col cursor-pointer text-left w-full h-full"
             @click="scrollToSection(cat.key)"
           >
             <div
@@ -332,15 +294,12 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
+            <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
@@ -422,15 +381,12 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
+            <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
@@ -613,102 +569,12 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
-              <NuxtLink
-                :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
-              >
-                Read
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </NuxtLink>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Corridor Playbooks Section -->
-    <section
-      id="corridor-playbooks"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
-    >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-10">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
-              <svg
-                class="w-8 h-8 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
-                Corridor Playbooks
-              </h2>
-              <p class="text-neutral-600 mt-1">
-                Country + route guides: best methods, fees, payout types, timing, and local payout methods.
-              </p>
-            </div>
-          </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
-        </div>
-
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <article
-            v-for="guide in getArticlesByCategory('corridor-playbooks')"
-            :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
-          >
-            <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-                Playbook
-              </span>
-              <span class="text-xs text-neutral-500">
-                {{ guide.readTime || '10 min' }}
-              </span>
-            </div>
-            <NuxtLink
-              :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
-            >
-              {{ guide.title }}
-            </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
-              {{ guide.excerpt }}
-            </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
+            <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
@@ -787,15 +653,12 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
+            <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
@@ -856,46 +719,6 @@
           <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
         </div>
 
-        <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 mb-8">
-          <div class="flex items-start gap-4">
-            <div class="flex-shrink-0 w-12 h-12 bg-brand-600 rounded-full flex items-center justify-center">
-              <svg
-                class="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h3 class="font-bold text-neutral-900 mb-2">
-                Tools
-              </h3>
-              <div class="flex flex-wrap gap-3">
-                <NuxtLink
-                  :to="{ path: '/dashboard', query: { tab: 'alerts' } }"
-                  class="text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
-                >
-                  Track rates → Set alert
-                </NuxtLink>
-                <span class="text-neutral-400">•</span>
-                <NuxtLink
-                  :to="{ path: '/dashboard', query: { tab: 'watchlist' } }"
-                  class="text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
-                >
-                  Save corridor to watchlist
-                </NuxtLink>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in getArticlesByCategory('exchange-rates-timing')"
@@ -914,123 +737,12 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
-              <NuxtLink
-                :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
-              >
-                Read
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </NuxtLink>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Safety, Scams & Compliance Section -->
-    <section
-      id="safety-scams"
-      class="py-16 lg:py-20 bg-gray-900 scroll-mt-20"
-    >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-10">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <svg
-                class="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-3xl font-bold text-white">
-                Safety, Scams & Compliance
-              </h2>
-              <p class="text-white/90 mt-1">
-                Reduce user anxiety and support load: KYC explained, scam red flags, what "regulated provider" means, and how to verify providers.
-              </p>
-            </div>
-          </div>
-          <div class="h-1 w-24 bg-white/30 rounded-full" />
-        </div>
-
-        <div class="rounded-2xl border-2 border-white/30 bg-white/10 backdrop-blur-sm p-6 mb-8">
-          <div class="flex items-center gap-3">
-            <svg
-              class="h-6 w-6 text-white flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-            <p class="text-sm font-semibold text-white">
-              Safety first: Always verify providers and be aware of common scams. See our safety guidelines for more information.
-            </p>
-          </div>
-        </div>
-
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <article
-            v-for="guide in getArticlesByCategory('safety-scams')"
-            :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
-          >
-            <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-                {{ guide.level || 'Beginner' }}
-              </span>
-              <span class="text-xs text-neutral-500">
-                {{ guide.readTime || '5 min' }}
-              </span>
-            </div>
-            <NuxtLink
-              :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
-            >
-              {{ guide.title }}
-            </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
-              {{ guide.excerpt }}
-            </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated ? `Updated ${guide.lastUpdated}` : '' }}
-              </span>
+            <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
@@ -1091,9 +803,6 @@
             class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                Updated
-              </span>
               <span class="text-xs text-neutral-500">
                 {{ guide.readTime || '5 min' }}
               </span>
@@ -1102,15 +811,12 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              {{ guide.title }}
+              <span v-html="guide.title"></span>
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
-            <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-xs text-neutral-500">
-                {{ guide.lastUpdated || 'Recently updated' }}
-              </span>
+            <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
@@ -1136,34 +842,47 @@
       </div>
     </section>
 
-    <!-- View All Guides CTA -->
-    <section class="py-16 lg:py-20 bg-white">
+    <!-- Read Our Guides Section -->
+    <section class="py-12 sm:py-16 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            Explore All {{ filteredGuides.length }}+ Guides
+        <div class="text-center mb-12">
+          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+            Read Our Guides
           </h2>
-          <p class="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Browse our complete library of expert guides covering money transfers, fees, reviews, comparisons, and more.
+          <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
+            Everything you need to know about international money transfers
           </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <NuxtLink
-            to="/learn/all"
-            class="inline-flex items-center gap-3 rounded-xl bg-brand-600 px-8 py-4 text-lg font-bold text-white shadow-xl hover:bg-brand-700 transition-all"
+            v-for="guide in startHereGuides"
+            :key="guide.slug"
+            :to="`/learn/${guide.slug}`"
+            class="group bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
           >
-            View All Articles
-            <svg
-              class="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2.5"
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
+            <div class="p-6 flex flex-col flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                  Beginner
+                </span>
+                <span class="text-xs text-neutral-500">
+                  {{ guide.readTime || '5 min read' }}
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
+                <span v-html="guide.title"></span>
+              </h3>
+              <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+                {{ guide.excerpt }}
+              </p>
+              <div class="flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:gap-3 transition-all">
+                <span>Read guide</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
           </NuxtLink>
         </div>
       </div>
@@ -1173,35 +892,35 @@
     <section class="py-16 lg:py-20 bg-slate-900">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-12">
-          <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">
-            For Research & Compliance Teams
+          <p class="text-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
+            For Transparency & Research
           </p>
           <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Research & Intelligence
+            Transparency & Research
           </h2>
           <p class="text-lg text-slate-400 max-w-3xl">
-            Access institutional-grade research, market indices, and compliance documentation. Built for analysts, treasury teams, and regulatory professionals.
+            Open methodology, corrections policy, and data collection practices behind every comparison.
           </p>
         </div>
 
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
           <NuxtLink
-            to="/pulse"
-            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-800"
+            to="/research"
+            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-brand-500/50 hover:bg-slate-800 flex flex-col h-full"
           >
             <div class="flex items-center gap-3 mb-4">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20">
-                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
+                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-white">Remit-Pulse Index</h3>
+              <h3 class="text-lg font-semibold text-white">Research & Data Practices</h3>
             </div>
-            <p class="text-sm text-slate-400 mb-4">
-              Real-time corridor pricing indices, volatility metrics, and market timing signals across 150+ global corridors.
+            <p class="text-sm text-slate-400 mb-4 flex-1">
+              Transparency around data collection practices and provider partnership guidelines.
             </p>
-            <div class="flex items-center gap-2 text-sm text-blue-400 font-medium group-hover:gap-3 transition-all">
-              <span>View live data</span>
+            <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
+              <span>Read research</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -1210,20 +929,20 @@
 
           <NuxtLink
             to="/methodology"
-            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-800"
+            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-brand-500/50 hover:bg-slate-800 flex flex-col h-full"
           >
             <div class="flex items-center gap-3 mb-4">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/20">
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
+                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-white">Data Methodology</h3>
             </div>
-            <p class="text-sm text-slate-400 mb-4">
+            <p class="text-sm text-slate-400 mb-4 flex-1">
               Comprehensive documentation of our data collection, verification processes, and synthetic validation methodology.
             </p>
-            <div class="flex items-center gap-2 text-sm text-emerald-400 font-medium group-hover:gap-3 transition-all">
+            <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
               <span>Read documentation</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -1232,22 +951,22 @@
           </NuxtLink>
 
           <NuxtLink
-            to="/enterprise"
-            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-blue-500/50 hover:bg-slate-800"
+            to="/corrections"
+            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-brand-500/50 hover:bg-slate-800 flex flex-col h-full"
           >
             <div class="flex items-center gap-3 mb-4">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600/20">
-                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
+                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-white">API & Data Feeds</h3>
+              <h3 class="text-lg font-semibold text-white">Corrections Policy</h3>
             </div>
-            <p class="text-sm text-slate-400 mb-4">
-              RESTful API access to historical and real-time pricing data. Designed for integration with compliance and trading systems.
+            <p class="text-sm text-slate-400 mb-4 flex-1">
+              How we handle data corrections, error reporting, and accuracy reviews across the site.
             </p>
-            <div class="flex items-center gap-2 text-sm text-purple-400 font-medium group-hover:gap-3 transition-all">
-              <span>Explore API</span>
+            <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
+              <span>Read corrections</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -1273,7 +992,7 @@
               <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span>Compliance-ready exports</span>
+              <span>Audit-ready snapshots</span>
             </div>
           </div>
         </div>
@@ -1290,6 +1009,7 @@ import { computed, ref } from 'vue'
 import { setSeo } from '~/composables/useSeo'
 import { useArticles } from '~/composables/useArticles'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import { PROVIDER_SCORES } from '~/lib/providerScores'
 
 const { data: articles } = await useArticles()
 
@@ -1298,16 +1018,13 @@ const breadcrumbItems = [
   { name: 'Learn', path: '/learn' },
 ]
 
-const searchQuery = ref('')
 const activeFilter = ref('all')
 
 const filters = [
   { key: 'all', label: 'All Topics' },
   { key: 'fees', label: 'Fees' },
   { key: 'speed', label: 'Speed' },
-  { key: 'safety', label: 'Safety' },
   { key: 'reviews', label: 'Reviews' },
-  { key: 'corridors', label: 'Corridors' },
   { key: 'exchange-rates', label: 'Exchange Rates' },
 ]
 
@@ -1331,12 +1048,6 @@ const categories = [
     color: 'yellow',
   },
   {
-    key: 'corridor-playbooks',
-    name: 'Corridor Playbooks',
-    icon: 'globe',
-    color: 'blue',
-  },
-  {
     key: 'speed-delivery',
     name: 'Speed & Delivery',
     icon: 'lightning',
@@ -1347,12 +1058,6 @@ const categories = [
     name: 'Exchange Rates & Timing',
     icon: 'chart',
     color: 'green',
-  },
-  {
-    key: 'safety-scams',
-    name: 'Safety & Scams',
-    icon: 'shield',
-    color: 'red',
   },
 ]
 
@@ -1417,7 +1122,7 @@ const staticArticles = [
   },
   {
     slug: 'hidden-exchange-rate-fees-explained',
-    title: 'Hidden Fees Explained (FX Markup vs Fee)',
+    title: 'Hidden Fees Explained<br><span class="text-base font-normal">(FX Markup vs Fee)</span>',
     excerpt: 'Learn the difference between FX markup and transfer fees, and why "no fee" doesn\'t mean no cost.',
     categoryKey: 'fees-hidden-costs',
     readTime: '6 min read',
@@ -1426,7 +1131,7 @@ const staticArticles = [
   },
   {
     slug: 'how-to-read-remittance-quote',
-    title: 'How to Read a Quote ("Recipient Gets")',
+    title: 'How to Read a Quote<br><span class="text-base font-normal">("Recipient Gets")</span>',
     excerpt: 'Understand what "Recipient Gets" really means and how to compare quotes effectively.',
     categoryKey: 'money-transfer-basics',
     readTime: '5 min read',
@@ -1435,7 +1140,7 @@ const staticArticles = [
   },
   {
     slug: 'why-checkout-price-differs',
-    title: 'Why Checkout Differs and What to Do',
+    title: 'Why Checkout Differs<br><span class="text-base font-normal">and What to Do</span>',
     excerpt: 'Why the final price at checkout might differ from the quote, and what you can do about it.',
     categoryKey: 'fees-hidden-costs',
     readTime: '4 min read',
@@ -1518,9 +1223,9 @@ const startHereGuides = computed(() => {
 const getTitleFromSlug = (slug: string): string => {
   const titles: Record<string, string> = {
     'why-compare-before-every-transfer': 'Why You Must Compare Before Every Transfer',
-    'hidden-exchange-rate-fees-explained': 'Hidden Fees Explained (FX Markup vs Fee)',
-    'how-to-read-remittance-quote': 'How to Read a Quote ("Recipient Gets")',
-    'why-checkout-price-differs': 'Why Checkout Differs and What to Do',
+    'hidden-exchange-rate-fees-explained': 'Hidden Fees Explained<br><span class="text-base font-normal">(FX Markup vs Fee)</span>',
+    'how-to-read-remittance-quote': 'How to Read a Quote<br><span class="text-base font-normal">("Recipient Gets")</span>',
+    'why-checkout-price-differs': 'Why Checkout Differs<br><span class="text-base font-normal">and What to Do</span>',
     'bank-transfer-vs-card-vs-cash-pickup': 'Bank Transfer vs Card vs Cash Pickup',
     'bank-transfer-vs-card-funding': 'Bank Transfer vs Card Funding: Which Is Cheaper (and When)?',
     'choose-right-delivery-method': 'Choose the Right Delivery Method: Bank Deposit vs Cash Pickup vs Mobile Money',
@@ -1561,29 +1266,20 @@ const getArticlesByCategory = (categoryKey: string) => {
 }
 
 const getCategoryArticleCount = (categoryKey: string) => {
+  if (categoryKey === 'provider-reviews') {
+    return Object.keys(PROVIDER_SCORES).length
+  }
   return getArticlesByCategory(categoryKey).length
 }
 
 const filteredGuides = computed(() => {
   let filtered = allGuides.value
 
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(
-      g =>
-        (g.title || '').toLowerCase().includes(query)
-        || (g.excerpt || '').toLowerCase().includes(query)
-        || (g.tags || []).some(tag => tag.toLowerCase().includes(query)),
-    )
-  }
-
   if (activeFilter.value !== 'all') {
     const filterMap: Record<string, string[]> = {
       'fees': ['fees-hidden-costs'],
       'speed': ['speed-delivery'],
-      'safety': ['safety-scams'],
       'reviews': ['provider-reviews'],
-      'corridors': ['corridor-playbooks'],
       'exchange-rates': ['exchange-rates-timing'],
     }
     const categories = filterMap[activeFilter.value] || []
@@ -1621,6 +1317,6 @@ const scrollToSection = (sectionId: string) => {
 setSeo({
   title: 'Money Transfer Guides & Reviews | Remit-Scout',
   description:
-    'Comprehensive guides on money transfers, fees, hidden costs, provider reviews, comparisons, and corridor playbooks. Learn how to send money smarter and avoid costly mistakes.',
+    'Comprehensive guides on money transfers, fees, hidden costs, provider reviews, and comparisons. Learn how to send money smarter and avoid costly mistakes.',
 })
 </script>

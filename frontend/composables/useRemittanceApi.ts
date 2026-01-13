@@ -1,6 +1,6 @@
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import type { Ref } from 'vue'
-import { isRef, unref } from 'vue'
+import { computed, isRef, unref } from 'vue'
 import { getProviderScore } from '~/lib/providerScores'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode } from '~/utils/countries-currencies'
@@ -32,7 +32,16 @@ export const useRemittanceApi = () => {
     const key = options.key || 'popular-corridors'
     return useAsyncData(
       key,
-      () => request<{ data: CorridorPopularity[], updatedAt: string }>('/popular-corridors'),
+      async () => {
+        try {
+          return await request<{ data: CorridorPopularity[], updatedAt: string }>('/popular-corridors')
+        } catch (error: any) {
+          if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
+            return { data: [], updatedAt: fallbackUpdatedAt() }
+          }
+          throw error
+        }
+      },
       { watch: false, ...options },
     )
   }
@@ -84,10 +93,10 @@ export const useRemittanceApi = () => {
       ...restOptions
     } = options
     const resolveOption = (value: unknown) => (isRef(value) ? unref(value) : value)
-    const resolvedLive = resolveOption(live) === true
-    const key =
-      options.key ||
-      `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}-${resolvedLive ? 'live' : 'cached'}`
+    const resolvedLive = computed(() => resolveOption(live) === true)
+    const key = options.key || computed(() => (
+      `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}-${resolvedLive.value ? 'live' : 'cached'}`
+    ))
     const watchSources = [from, to, amount, method, fromCurrency, toCurrency, live].filter(isRef)
     const watch = Array.isArray(optionWatch)
       ? [...optionWatch, ...watchSources]
@@ -117,6 +126,7 @@ export const useRemittanceApi = () => {
               },
             }
           }
+          const isLive = resolvedLive.value
           return await request<{
             data: ProviderQuote[]
             updatedAt: string
@@ -149,7 +159,7 @@ export const useRemittanceApi = () => {
                 method: unref(method),
                 fromCurrency: resolvedFromCurrency,
                 toCurrency: resolvedToCurrency,
-                ...(resolvedLive ? { live: true } : {}),
+                ...(isLive ? { live: true } : {}),
               },
             },
           )
@@ -178,10 +188,16 @@ export const useRemittanceApi = () => {
   }
 
   const recordSearch = async (search: Partial<RecentSearch>) => {
-    return await request('/recent-searches', {
-      method: 'POST',
-      body: search,
-    })
+    try {
+      return await request('/recent-searches', {
+        method: 'POST',
+        body: search,
+        retries: 0,
+        timeoutMs: 3000,
+      })
+    } catch {
+      return null
+    }
   }
 
   const DEFAULT_WEIGHTS: RatingWeights = {

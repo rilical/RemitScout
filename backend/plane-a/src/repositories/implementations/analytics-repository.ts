@@ -9,6 +9,8 @@ import type {
   IAnalyticsRepository,
   PopularCorridor,
   ProviderCTR,
+  ProviderCorridorImpact,
+  ProviderImpactSummary,
   RevenueMetric,
   SavingsMetric,
   SessionMetric,
@@ -704,6 +706,179 @@ export class AnalyticsRepository implements IAnalyticsRepository {
        GROUP BY toc.provider_id, p.display_name, toc.corridor_id
        ORDER BY affiliate_clicks DESC, total_clicks DESC
        LIMIT $5`,
+      [params.startDate, params.endDate, providerId, corridorId, limit],
+      this.pool,
+    )
+
+    return result.rows
+  }
+
+  async getProviderImpactSummary(params: {
+    startDate: Date
+    endDate: Date
+    providerId?: string
+    limit?: number
+  }): Promise<ProviderImpactSummary[]> {
+    const limit = params.limit ?? 100
+    const providerId = params.providerId ?? null
+
+    const result = await query<ProviderImpactSummary>(
+      `WITH provider_keys AS (
+        SELECT provider_id
+        FROM silver.telemetry_outbound_click
+        WHERE ts >= $1 AND ts <= $2
+        UNION
+        SELECT provider_id
+        FROM silver.telemetry_affiliate_conversion
+        WHERE ts >= $1 AND ts <= $2
+      ),
+      clicks AS (
+        SELECT provider_id,
+               COUNT(*)::int AS total_clicks,
+               COUNT(*) FILTER (WHERE COALESCE(is_affiliate, false))::int AS affiliate_clicks,
+               COUNT(DISTINCT COALESCE(user_id::text, anon_session_id))::int AS unique_clicks
+        FROM silver.telemetry_outbound_click
+        WHERE ts >= $1 AND ts <= $2
+        GROUP BY provider_id
+      ),
+      conversions AS (
+        SELECT provider_id,
+               COUNT(*)::int AS conversions,
+               COUNT(DISTINCT COALESCE(user_id::text, anon_session_id))::int AS unique_conversions
+        FROM silver.telemetry_affiliate_conversion
+        WHERE ts >= $1 AND ts <= $2
+        GROUP BY provider_id
+      ),
+      conversion_values AS (
+        SELECT provider_id,
+               jsonb_object_agg(conversion_currency, total_value) AS conversion_values
+        FROM (
+          SELECT provider_id,
+                 COALESCE(conversion_currency, 'UNKNOWN') AS conversion_currency,
+                 COALESCE(SUM(conversion_value), 0)::float AS total_value
+          FROM silver.telemetry_affiliate_conversion
+          WHERE ts >= $1 AND ts <= $2
+            AND conversion_value IS NOT NULL
+          GROUP BY provider_id, COALESCE(conversion_currency, 'UNKNOWN')
+        ) totals
+        GROUP BY provider_id
+      )
+      SELECT k.provider_id,
+             p.display_name AS provider_name,
+             COALESCE(c.total_clicks, 0) AS total_clicks,
+             COALESCE(c.unique_clicks, 0) AS unique_clicks,
+             COALESCE(c.affiliate_clicks, 0) AS affiliate_clicks,
+             COALESCE(conv.conversions, 0) AS conversions,
+             COALESCE(conv.unique_conversions, 0) AS unique_conversions,
+             CASE
+               WHEN COALESCE(c.total_clicks, 0) > 0
+               THEN ROUND(COALESCE(conv.conversions, 0)::numeric / c.total_clicks * 100, 2)::float
+               ELSE 0
+             END AS conversion_rate,
+             cv.conversion_values
+      FROM provider_keys k
+      LEFT JOIN clicks c ON c.provider_id = k.provider_id
+      LEFT JOIN conversions conv ON conv.provider_id = k.provider_id
+      LEFT JOIN conversion_values cv ON cv.provider_id = k.provider_id
+      LEFT JOIN silver.provider p ON p.provider_id = k.provider_id
+      WHERE ($3::text IS NULL OR k.provider_id = $3)
+      ORDER BY total_clicks DESC, conversions DESC
+      LIMIT $4`,
+      [params.startDate, params.endDate, providerId, limit],
+      this.pool,
+    )
+
+    return result.rows
+  }
+
+  async getProviderCorridorImpact(params: {
+    startDate: Date
+    endDate: Date
+    providerId?: string
+    corridorId?: string
+    limit?: number
+  }): Promise<ProviderCorridorImpact[]> {
+    const limit = params.limit ?? 200
+    const providerId = params.providerId ?? null
+    const corridorId = params.corridorId ?? null
+
+    const result = await query<ProviderCorridorImpact>(
+      `WITH corridor_keys AS (
+        SELECT provider_id,
+               corridor_id
+        FROM silver.telemetry_outbound_click
+        WHERE ts >= $1 AND ts <= $2
+          AND corridor_id IS NOT NULL
+        UNION
+        SELECT provider_id,
+               corridor_id
+        FROM silver.telemetry_affiliate_conversion
+        WHERE ts >= $1 AND ts <= $2
+          AND corridor_id IS NOT NULL
+      ),
+      clicks AS (
+        SELECT provider_id,
+               corridor_id,
+               COUNT(*)::int AS total_clicks,
+               COUNT(DISTINCT COALESCE(user_id::text, anon_session_id))::int AS unique_clicks
+        FROM silver.telemetry_outbound_click
+        WHERE ts >= $1 AND ts <= $2
+          AND corridor_id IS NOT NULL
+        GROUP BY provider_id, corridor_id
+      ),
+      conversions AS (
+        SELECT provider_id,
+               corridor_id,
+               COUNT(*)::int AS conversions
+        FROM silver.telemetry_affiliate_conversion
+        WHERE ts >= $1 AND ts <= $2
+          AND corridor_id IS NOT NULL
+        GROUP BY provider_id, corridor_id
+      ),
+      conversion_values AS (
+        SELECT provider_id,
+               corridor_id,
+               jsonb_object_agg(conversion_currency, total_value) AS conversion_values
+        FROM (
+          SELECT provider_id,
+                 corridor_id,
+                 COALESCE(conversion_currency, 'UNKNOWN') AS conversion_currency,
+                 COALESCE(SUM(conversion_value), 0)::float AS total_value
+          FROM silver.telemetry_affiliate_conversion
+          WHERE ts >= $1 AND ts <= $2
+            AND conversion_value IS NOT NULL
+            AND corridor_id IS NOT NULL
+          GROUP BY provider_id, corridor_id, COALESCE(conversion_currency, 'UNKNOWN')
+        ) totals
+        GROUP BY provider_id, corridor_id
+      )
+      SELECT k.provider_id,
+             p.display_name AS provider_name,
+             k.corridor_id,
+             COALESCE(c.total_clicks, 0) AS total_clicks,
+             COALESCE(c.unique_clicks, 0) AS unique_clicks,
+             COALESCE(conv.conversions, 0) AS conversions,
+             CASE
+               WHEN COALESCE(c.total_clicks, 0) > 0
+               THEN ROUND(COALESCE(conv.conversions, 0)::numeric / c.total_clicks * 100, 2)::float
+               ELSE 0
+             END AS conversion_rate,
+             cv.conversion_values
+      FROM corridor_keys k
+      LEFT JOIN clicks c
+        ON c.provider_id = k.provider_id
+       AND c.corridor_id IS NOT DISTINCT FROM k.corridor_id
+      LEFT JOIN conversions conv
+        ON conv.provider_id = k.provider_id
+       AND conv.corridor_id IS NOT DISTINCT FROM k.corridor_id
+      LEFT JOIN conversion_values cv
+        ON cv.provider_id = k.provider_id
+       AND cv.corridor_id IS NOT DISTINCT FROM k.corridor_id
+      LEFT JOIN silver.provider p ON p.provider_id = k.provider_id
+      WHERE ($3::text IS NULL OR k.provider_id = $3)
+        AND ($4::text IS NULL OR k.corridor_id = $4)
+      ORDER BY total_clicks DESC, conversions DESC
+      LIMIT $5`,
       [params.startDate, params.endDate, providerId, corridorId, limit],
       this.pool,
     )

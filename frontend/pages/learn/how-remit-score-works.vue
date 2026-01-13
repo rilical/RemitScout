@@ -52,6 +52,9 @@
             </ul>
           </div>
           <!-- Categories & Weights -->
+          <div class="my-10">
+            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+          </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-8 text-center">
               Rating Categories & Weights
@@ -211,6 +214,11 @@
             </div>
           </div>
 
+          <div class="my-10">
+            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+          </div>
+
+
           <!-- Data Sources -->
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -223,7 +231,7 @@
               <div class="rounded-xl border border-brand-200 bg-white p-5">
                 <div class="flex items-center gap-3 mb-2">
                   <span class="text-2xl">🧩</span>
-                  <h3 class="text-base font-bold text-neutral-900">Provider API / Partner Feed</h3>
+                  <h3 class="text-base font-bold text-neutral-900">Provider Data Feed / Partner Feed</h3>
                 </div>
                 <p class="text-sm text-neutral-700">
                   Highest consistency when available. Direct data feeds from providers or partners.
@@ -235,7 +243,7 @@
                   <h3 class="text-base font-bold text-neutral-900">Public Quote Flow</h3>
                 </div>
                 <p class="text-sm text-neutral-700">
-                  Structured capture from provider quote pages where API access isn't available.
+                  Structured capture from provider quote pages where direct data feeds are not available.
                 </p>
               </div>
               <div class="rounded-xl border border-brand-200 bg-white p-5">
@@ -344,8 +352,6 @@ jsonLdBreadcrumb([
   { name: 'Remit-Score', url: `${siteUrl}/learn/how-remit-score-works` },
 ])
 </script>
-
-
 
 
 

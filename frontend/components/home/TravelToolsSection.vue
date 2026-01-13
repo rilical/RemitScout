@@ -4,8 +4,9 @@
       <div class="max-w-6xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-12">
-          <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Don't Make These Money Transfer Mistakes
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Don't Make These<br />
+            Money Transfer Mistakes
           </h2>
           <p class="text-xl text-white/90 max-w-3xl mx-auto">
             These common errors can cost you hundreds of dollars. Here's how to avoid them.
@@ -29,7 +30,7 @@
                 <p class="text-neutral-700 mb-3">
                   "Zero fee" doesn't mean zero cost. Providers hide profit in exchange rate markups that often cost more than the fee.
                 </p>
-                <div class="bg-brand-50 rounded-lg p-3">
+                <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
                   <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
                   <p class="text-sm text-brand-800">
                     Compare the "recipient gets" amount—that shows the true total cost including hidden markup.
@@ -54,7 +55,7 @@
                 <p class="text-neutral-700 mb-3">
                   Exchange rates change daily. The best provider last month might not be the best today.
                 </p>
-                <div class="bg-brand-50 rounded-lg p-3">
+                <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
                   <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
                   <p class="text-sm text-brand-800">
                     Always compare rates before sending. Use our tool to see live quotes from multiple providers side-by-side.
@@ -79,7 +80,7 @@
                 <p class="text-neutral-700 mb-3">
                   Banks typically charge 3-5% more in hidden exchange rate markups because they know customers don't compare.
                 </p>
-                <div class="bg-brand-50 rounded-lg p-3">
+                <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
                   <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
                   <p class="text-sm text-brand-800">
                     Compare your bank's rate to money transfer specialists. Most specialists beat banks by 3-7x.
@@ -104,7 +105,7 @@
                 <p class="text-neutral-700 mb-3">
                   Checkout prices can differ from initial quotes due to promo rates, verification, or rate changes.
                 </p>
-                <div class="bg-brand-50 rounded-lg p-3">
+                <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
                   <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
                   <p class="text-sm text-brand-800">
                     Review the final quote at checkout. If it differs significantly, compare other providers.

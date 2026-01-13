@@ -1,5 +1,6 @@
 import { runIngestion } from '../../plane-b/src/ingest'
 import { runB2cRefreshWorker } from '../b2c-refresh-worker'
+import { runB2bSweepScheduler } from '../b2b-sweep-scheduler'
 import { runGoldFxRatesJob } from '../gold-fx-rates-job'
 import { runGoldPopularCorridorsJob } from '../gold-popular-corridors-job'
 import { runGoldPulseCacheJob } from '../gold-pulse-cache-job'
@@ -9,7 +10,10 @@ import { runSmartAlertsJob } from '../smart-alerts-job'
 import { runTelemetryAnalyticsJob } from '../telemetry-analytics-job'
 import { runContinuousSync } from '../oanda-rates-sync'
 import { runBankVsSpecialistRefresh } from '../bank-vs-specialist-refresh'
+import { runFxRateRefreshWorker } from '../fx-rate-refresh-worker'
+import { runB2cTier2CacheWarmup } from '../b2c-tier2-cache-warmup'
 import { createLogger } from '../../shared/logger'
+import { config } from '../../shared/config'
 
 const logger = createLogger('script.dev-continuous-pipeline')
 
@@ -27,6 +31,18 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const ingestIntervalSeconds = toNumber(process.env.PIPELINE_INGEST_INTERVAL_SECONDS, 60)
 const b2cRefreshIntervalSeconds = toNumber(process.env.PIPELINE_B2C_REFRESH_INTERVAL_SECONDS, 10)
+const b2bSweepSchedulerIntervalSeconds = toNumber(
+  process.env.PIPELINE_B2B_SWEEP_SCHEDULER_INTERVAL_SECONDS,
+  60,
+)
+const fxRateRefreshIntervalSeconds = toNumber(
+  process.env.PIPELINE_FX_RATE_REFRESH_INTERVAL_SECONDS,
+  15,
+)
+const b2cTier2WarmupIntervalSeconds = toNumber(
+  process.env.PIPELINE_B2C_TIER2_WARMUP_INTERVAL_SECONDS,
+  3600,
+)
 const goldFxRatesIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_FX_RATES_INTERVAL_MINUTES, 10)
 const goldPulseCacheIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_PULSE_CACHE_INTERVAL_MINUTES, 10)
 const goldPopularCorridorsIntervalMinutes = toNumber(process.env.PIPELINE_GOLD_POPULAR_CORRIDORS_INTERVAL_MINUTES, 15)
@@ -39,8 +55,26 @@ const bankVsSpecialistIntervalMinutes = toNumber(
   240,
 )
 
-const enableIngestion = toBoolean(process.env.PIPELINE_INGEST_ENABLED, true)
+const enableB2bSweepScheduler = toBoolean(
+  process.env.PIPELINE_B2B_SWEEP_SCHEDULER_ENABLED,
+  false,
+)
+const disableIngestWhenSchedulerEnabled = toBoolean(
+  process.env.PIPELINE_B2B_SWEEP_SCHEDULER_DISABLE_INGEST,
+  true,
+)
+const enableIngestionRaw = toBoolean(process.env.PIPELINE_INGEST_ENABLED, true)
+const enableIngestion =
+  enableIngestionRaw && !(enableB2bSweepScheduler && disableIngestWhenSchedulerEnabled)
 const enableB2cRefresh = toBoolean(process.env.PIPELINE_B2C_REFRESH_ENABLED, true)
+const enableFxRateRefresh = toBoolean(
+  process.env.PIPELINE_FX_RATE_REFRESH_ENABLED,
+  true,
+)
+const enableB2cTier2Warmup = toBoolean(
+  process.env.PIPELINE_B2C_TIER2_WARMUP_ENABLED,
+  true,
+)
 const enableGoldFxRates = toBoolean(process.env.PIPELINE_GOLD_FX_RATES_ENABLED, true)
 const enableGoldPulseCache = toBoolean(process.env.PIPELINE_GOLD_PULSE_CACHE_ENABLED, true)
 const enableGoldPopularCorridors = toBoolean(process.env.PIPELINE_GOLD_POPULAR_CORRIDORS_ENABLED, true)
@@ -110,6 +144,9 @@ const startContinuousPipeline = async () => {
   logger.info('pipeline_start', {
     ingest_interval_seconds: ingestIntervalSeconds,
     b2c_refresh_interval_seconds: b2cRefreshIntervalSeconds,
+    fx_rate_refresh_interval_seconds: fxRateRefreshIntervalSeconds,
+    b2c_tier2_warmup_interval_seconds: b2cTier2WarmupIntervalSeconds,
+    b2b_sweep_scheduler_interval_seconds: b2bSweepSchedulerIntervalSeconds,
     gold_fx_rates_interval_minutes: goldFxRatesIntervalMinutes,
     gold_pulse_cache_interval_minutes: goldPulseCacheIntervalMinutes,
     gold_popular_corridors_interval_minutes: goldPopularCorridorsIntervalMinutes,
@@ -119,6 +156,10 @@ const startContinuousPipeline = async () => {
     telemetry_analytics_interval_minutes: telemetryAnalyticsIntervalMinutes,
     bank_vs_specialist_interval_minutes: bankVsSpecialistIntervalMinutes,
     enable_oanda_sync: enableOandaSync,
+    enable_b2b_sweep_scheduler: enableB2bSweepScheduler,
+    enable_fx_rate_refresh: enableFxRateRefresh,
+    enable_b2c_tier2_warmup: enableB2cTier2Warmup,
+    ingest_disabled_by_scheduler: enableIngestionRaw && !enableIngestion,
   })
 
   const cleanupFns: Array<() => void> = []
@@ -139,6 +180,19 @@ const startContinuousPipeline = async () => {
     )
   }
 
+  if (enableB2bSweepScheduler) {
+    cleanupFns.push(
+      scheduleRecurring(
+        'b2b-sweep-scheduler',
+        b2bSweepSchedulerIntervalSeconds * 1000,
+        async () => {
+          await runB2bSweepScheduler()
+        },
+        true,
+      ),
+    )
+  }
+
   if (enableB2cRefresh) {
     cleanupFns.push(
       scheduleRecurring(
@@ -146,6 +200,32 @@ const startContinuousPipeline = async () => {
         b2cRefreshIntervalSeconds * 1000,
         async () => {
           await runB2cRefreshWorker()
+        },
+        true,
+      ),
+    )
+  }
+
+  if (enableFxRateRefresh && config.fxRates?.refreshEnabled) {
+    cleanupFns.push(
+      scheduleRecurring(
+        'fx-rate-refresh-worker',
+        fxRateRefreshIntervalSeconds * 1000,
+        async () => {
+          await runFxRateRefreshWorker()
+        },
+        true,
+      ),
+    )
+  }
+
+  if (enableB2cTier2Warmup) {
+    cleanupFns.push(
+      scheduleRecurring(
+        'b2c-tier2-warmup',
+        b2cTier2WarmupIntervalSeconds * 1000,
+        async () => {
+          await runB2cTier2CacheWarmup()
         },
         true,
       ),

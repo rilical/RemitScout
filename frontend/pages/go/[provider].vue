@@ -13,15 +13,15 @@
             <span v-else class="text-4xl font-bold text-slate-600">
               {{ provider?.name?.slice(0, 1) || '?' }}
             </span>
-            <div class="text-6xl font-bold text-slate-400 my-2">
-              X:
+            <div class="text-xl font-normal text-slate-300 my-2">
+              X
             </div>
             <div>
               <img
                 src="/png/SVG/FULL_LOGO.svg"
                 alt="Remit-Scout"
                 class="h-16 w-auto mx-auto"
-              >
+              />
             </div>
           </div>
           <div>

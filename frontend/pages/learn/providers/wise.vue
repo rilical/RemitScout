@@ -19,13 +19,12 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-40 h-40 rounded-2xl bg-white p-3 shadow-xl">
-                <img
-                  src="/logos/wise.svg"
-                  alt="Wise logo"
-                  class="w-full h-full object-contain"
-                  onerror="this.parentElement.innerHTML='<div class=\'w-full h-full rounded-xl bg-emerald-500 flex items-center justify-center text-white text-2xl font-bold\'>W</div>'"
-                >
+              <div class="flex h-40 w-40 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+                <ProviderLogo
+                  slug="wise"
+                  alt="Wise"
+                  size="xlarge"
+                />
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
@@ -233,15 +232,14 @@
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
                     9.3
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                      <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
                       Wise
                     </h3>
-                    <p class="text-sm text-black">remit-score</p>
+                    <p class="text-sm text-black">Remit-Score</p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
@@ -728,6 +726,7 @@
                 </NuxtLink>
               </div>
 
+              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
@@ -906,7 +905,6 @@ addReviewSchema({
   datePublished: '2024-01-01',
 })
 </script>
-
 
 
 

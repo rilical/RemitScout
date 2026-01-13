@@ -8,6 +8,8 @@ import * as wiseFetch from '../../plane-b/src/providers/wise/fetch'
 import * as wiseParse from '../../plane-b/src/providers/wise/parse'
 import * as xeFetch from '../../plane-b/src/providers/xe/fetch'
 import * as xeParse from '../../plane-b/src/providers/xe/parse'
+import * as riaFetch from '../../plane-b/src/providers/ria/fetch'
+import * as riaParse from '../../plane-b/src/providers/ria/parse'
 import * as worldremitFetch from '../../plane-b/src/providers/worldremit/fetch'
 import * as worldremitParse from '../../plane-b/src/providers/worldremit/parse'
 import * as westernunionFetch from '../../plane-b/src/providers/westernunion/fetch'
@@ -255,6 +257,11 @@ const run = async () => {
     fetchFn: getExport(xeFetch as Record<string, unknown>, 'fetchXeQuote'),
     parseFn: getExport(xeParse as Record<string, unknown>, 'parseXePayload'),
     extractPairsFn: getExport(xeParse as Record<string, unknown>, 'extractXeMethodPairs'),
+  })
+  await captureProvider('ria', {
+    fetchFn: getExport(riaFetch as Record<string, unknown>, 'fetchRiaQuote'),
+    parseFn: getExport(riaParse as Record<string, unknown>, 'parseRiaPayload'),
+    extractPairsFn: getExport(riaParse as Record<string, unknown>, 'extractRiaMethodPairs'),
   })
   await captureProvider('worldremit', {
     fetchFn: getExport(worldremitFetch as Record<string, unknown>, 'fetchWorldRemitQuote'),

@@ -13,6 +13,13 @@ type ProviderCtrParams = AnalyticsDateRange & {
   bucket?: 'hour' | 'day' | 'week'
 }
 
+type ProviderImpactParams = AnalyticsDateRange & {
+  provider_id?: string
+  corridor_id?: string
+  limit?: number
+  corridor_limit?: number
+}
+
 type EngagementParams = AnalyticsDateRange & {
   bucket?: 'hour' | 'day' | 'week'
 }
@@ -66,6 +73,9 @@ export const useAnalytics = () => {
   const getProviderCTR = (params: ProviderCtrParams) =>
     withLoading(() => request('/analytics/providers/ctr', { method: 'GET', query: params }))
 
+  const getProviderImpact = (params: ProviderImpactParams) =>
+    withLoading(() => request('/analytics/providers/impact', { method: 'GET', query: params }))
+
   const getEngagementMetrics = (params: EngagementParams) =>
     withLoading(() => request('/analytics/engagement', { method: 'GET', query: params }))
 
@@ -91,6 +101,7 @@ export const useAnalytics = () => {
     getCorridorTrends,
     getFavoriteProviders,
     getProviderCTR,
+    getProviderImpact,
     getEngagementMetrics,
     getSessionMetrics,
     getHeatmapData,

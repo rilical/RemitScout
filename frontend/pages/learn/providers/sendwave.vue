@@ -19,10 +19,12 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                  S
-                </div>
+              <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+                <ProviderLogo
+                  slug="sendwave"
+                  alt="Sendwave"
+                  size="small"
+                />
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
@@ -97,49 +99,39 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 85%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
-                    <span class="font-semibold text-black">Good</span>
-                  </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 80%" />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="text-black">Speed</span>
-                    <span class="font-semibold text-black">Elite</span>
-                  </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-400 rounded-full" style="width: 95%" />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="text-black">Trust & Safety</span>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="text-black">Speed</span>
+                    <span class="font-semibold text-black">Strong</span>
+                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 82%" />
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="text-black">Trust & Safety</span>
+                    <span class="font-semibold text-black">Strong</span>
                   </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
               </div>
 
@@ -226,15 +218,14 @@
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
                     9.0
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                      <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
                       Sendwave
                     </h3>
-                    <p class="text-sm text-black">remit-score</p>
+                    <p class="text-sm text-black">Remit-Score</p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
@@ -296,7 +287,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
@@ -349,7 +340,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
@@ -394,7 +385,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
@@ -430,7 +421,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
@@ -504,7 +495,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
@@ -673,35 +664,35 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Compare the exchange rate to a mid-market reference to spot spread:</strong>
                       <span class="text-slate-700">Don't focus only on the fee line.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Always check the final confirmation screen:</strong>
                       <span class="text-slate-700">Review the exact rate + any fee before sending.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">If you have time, compare the "recipient gets" amount:</strong>
                       <span class="text-slate-700">Check against at least one alternative for the same corridor.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Make sure the recipient's payout method is correct:</strong>
                       <span class="text-slate-700">Mobile wallet vs bank, since instant payout reduces your ability to cancel.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">If you made a mistake, act fast:</strong>
                       <span class="text-slate-700">Cancellation is time-limited (e.g., 30 minutes for certain refunds, and only if not paid out).</span>
@@ -793,6 +784,7 @@
                 </NuxtLink>
               </div>
 
+              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
@@ -955,7 +947,6 @@ const breadcrumbItems = [
   { name: 'Sendwave Review', path: '/learn/providers/sendwave' },
 ]
 </script>
-
 
 
 

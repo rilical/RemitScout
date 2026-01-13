@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        provider: [remitly, wise, xe, worldremit, westernunion]
+        provider: [remitly, ria, dahabshiil, sendwave, mukuru, wise, xe, worldremit, westernunion, xoom, instarem, wirebarley, intermex]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -61,5 +61,3 @@ jobs:
           PROBE_TIMEOUT_MS: 60000
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
         run: pnpm -C backend probe:cache-ttl
-
-

@@ -101,6 +101,11 @@ import PulseBarChart from '~/components/pulse/PulseBarChart.vue'
 import PulseStackedChart from '~/components/pulse/PulseStackedChart.vue'
 import PulseScatterChart from '~/components/pulse/PulseScatterChart.vue'
 import PulseMatrixTable from '~/components/pulse/PulseMatrixTable.vue'
+import { FEATURE_FLAGS } from '~/utils/constants'
+
+if (!FEATURE_FLAGS.PULSE_ENABLED) {
+  await navigateTo('/plus', { redirectCode: 302 })
+}
 
 definePageMeta({
   layout: false,
@@ -198,6 +203,5 @@ useHead({
   },
 })
 </script>
-
 
 

@@ -3,77 +3,42 @@
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
         <div class="mt-12 grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6">
-              About <span class="text-brand-600">Remit-Scout</span>
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 whitespace-nowrap">
+              Remittance Intelligence.
             </h1>
 
-            <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
-              Built by <span class="font-semibold text-neutral-900">expats</span> for <span class="font-semibold text-brand-600">expats</span>.
+            <p class="text-xl text-white sm:text-2xl font-medium mb-6 leading-relaxed">
+              Global finance is <span class="text-brand-600">opaque</span> by design.<br>We are the <span class="text-brand-600">auditor</span>.
             </p>
 
-            <p class="text-lg text-neutral-700 leading-relaxed mb-4 max-w-3xl">
-              Remit-Scout is an <strong class="font-semibold text-neutral-900">independent comparison platform</strong> for international money transfers.
-              We focus on the outcome that matters most: <span class="font-semibold text-brand-600">what your recipient should receive</span> after fees and FX markup.
+            <p class="text-lg text-slate-200 leading-relaxed mb-4 max-w-3xl">
+              Remit-Scout is a <strong class="font-semibold text-white">quantitative comparison engine</strong> for cross border capital. We aggregate real time FX data to expose the true cost of international transfers, stripping away hidden spreads to reveal the only metric that matters: <span class="font-semibold text-brand-400">Net Delivered Value</span>.
             </p>
 
-            <p class="text-base text-neutral-600 leading-relaxed mb-8 max-w-3xl">
-              Developed at <a
+            <p class="text-base text-slate-300 leading-relaxed mb-8 max-w-3xl">
+              Incubated at the <a
                 href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="font-medium text-brand-600 underline decoration-brand-600/30 hover:text-brand-700 hover:decoration-brand-700"
-              >Carnegie Mellon (Swartz Center for Entrepreneurship)</a>. Remit-Scout is an independent project and is not endorsed by Carnegie Mellon University.
+                class="font-medium text-brand-400 underline decoration-brand-400/30 hover:text-brand-300 hover:decoration-brand-300"
+              >Swartz Center for Entrepreneurship, CMU</a>.
             </p>
-
-            <div class="mt-8">
-              <p class="text-lg font-bold text-neutral-900 mb-3">
-                How we stay transparent
-              </p>
-              <div class="flex items-center gap-x-6 flex-nowrap">
-                <NuxtLink
-                  to="/methodology"
-                  class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
-                >
-                  <ChartBarIcon class="h-4 w-4 text-current" />
-                  Methodology
-                  <span aria-hidden="true">→</span>
-                </NuxtLink>
-                <NuxtLink
-                  to="/how-we-make-money"
-                  class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
-                >
-                  <DocumentTextIcon class="h-4 w-4 text-current" />
-                  How we make money
-                  <span aria-hidden="true">→</span>
-                </NuxtLink>
-                <NuxtLink
-                  to="/contact"
-                  class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
-                >
-                  <ArrowPathIcon class="h-4 w-4 text-current" />
-                  Corrections and feedback
-                  <span aria-hidden="true">→</span>
-                </NuxtLink>
-              </div>
-            </div>
           </div>
 
           <div class="lg:pl-8">
-            <div class="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 p-8 shadow-lg">
-              <div class="relative pl-4 border-l-4 border-white/30">
-                <p class="text-lg sm:text-xl font-semibold text-white leading-relaxed italic mb-4">
-                  "You earned every dollar. Our job is to help more of it reach your family."
-                </p>
-                <p class="text-sm text-white/90">
-                  — Omar Ghabayen, Founder
-                </p>
-              </div>
+            <div class="rounded-3xl bg-white border border-neutral-200 p-8 shadow-lg">
+              <p class="text-lg sm:text-xl font-bold text-neutral-900 leading-relaxed">
+                Banks profit from confusion.<br>We profit from clarity.
+              </p>
+              <p class="text-sm text-neutral-600 mt-4 whitespace-nowrap">
+                — Remit-Scout Philosophy
+              </p>
             </div>
           </div>
         </div>
@@ -81,38 +46,51 @@
     </section>
 
     <!-- Who We Are -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            Who We Are
-          </h2>
-          <p class="mt-4 mb-10 leading-relaxed text-neutral-700">
-            Remit-Scout is an independent comparison platform operated by <strong class="font-semibold text-neutral-900">Remit-Scout LLC</strong>.
-            We do not move or hold your money. When you choose a provider, you complete the transfer on that provider’s licensed platform.
-            We earn trust by making our data sources, ranking logic, and revenue model easy to inspect.
-          </p>
+          <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
+            <div>
+              <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+                <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Who We Are
+              </h2>
+              <div class="space-y-6">
+                <p class="text-lg sm:text-xl leading-relaxed text-neutral-700">
+                  <strong class="font-semibold text-brand-600">Remit-Scout</strong> is an independent comparison platform operated by <strong class="font-semibold text-neutral-900">Remit-Scout LLC</strong>. 
+                  We are committed to providing transparent, accurate, and unbiased information to help you make informed decisions about international money transfers.
+                </p>
+                
+                <p class="text-lg sm:text-xl leading-relaxed text-neutral-700">
+                  Trust is earned through transparency. That's why we make our data sources, ranking logic, and revenue model easy to inspect. 
+                  We publish detailed methodology, disclose affiliate relationships, and maintain editorial independence in our rankings. 
+                  Our goal is to help you save money and make better decisions, not to promote any particular provider.
+                </p>
+              </div>
+            </div>
 
-          <div class="grid gap-6 sm:grid-cols-2 mb-12">
-            <div
-              v-for="item in whoWeArePrinciples"
-              :key="item.title"
-              class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-            >
-              <div class="flex items-start gap-3">
-                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
-                  <component :is="getIconForEmoji(item.emoji)" class="w-5 h-5 text-brand-600" />
-                </div>
-                <div>
-                  <h3 class="text-base font-semibold text-neutral-900">
-                    {{ item.title }}
-                  </h3>
-                  <p class="mt-1 text-sm leading-relaxed text-neutral-600">
-                    {{ item.body }}
-                  </p>
+            <div>
+              <div class="grid gap-6 sm:grid-cols-1">
+                <div
+                  v-for="item in whoWeArePrinciples"
+                  :key="item.title"
+                  class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
+                      <component :is="getIconForEmoji(item.emoji)" class="w-5 h-5 text-brand-600" />
+                    </div>
+                    <div>
+                      <h3 class="text-base font-semibold text-neutral-900">
+                        {{ item.title }}
+                      </h3>
+                      <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                        {{ item.body }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -121,238 +99,79 @@
       </div>
     </section>
 
-    <!-- Our Mission -->
-    <section class="py-16 lg:py-20 bg-white">
+    <!-- Our Story -->
+    <section class="py-16 lg:py-20 bg-gradient-to-r from-blue-600 to-blue-700">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Our Mission
-          </h2>
-          <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-            We help <strong class="font-semibold text-neutral-900">migrants, expats, and international families</strong> make confident money transfer decisions by showing what matters most:
-            <span class="font-semibold text-brand-600">fees, FX markup, payout options, delivery speed</span>, and the real outcome at the end: what the recipient should receive.
-          </p>
-          <p class="leading-relaxed text-neutral-600 mb-8">
-            If you send once a year, you should still get a fair comparison. If you send every week, you should be able to save, track, and monitor what matters.
-            That’s why the core product stays free, with optional tools available through Remit-Scout Plus.
-          </p>
-
-          <div class="rounded-3xl border border-blue-200 bg-white shadow-2xl overflow-hidden mb-8">
-            <div class="border-b border-blue-100 bg-brand-600 px-6 py-4 text-center">
-              <h3 class="text-lg font-bold text-white flex items-center justify-center gap-2">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Find Your Best Rate Now
-              </h3>
-              <p class="text-sm text-white/90 mt-1">
-                Compare live rates from {{ SITE_STATS.providers.display }} providers
-              </p>
-            </div>
-
-            <form
-              class="p-6 space-y-4"
-              @submit.prevent="handleMoneySubmit"
-            >
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label
-                    for="from-country"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                  >
-                    Sending from
-                  </label>
-                  <CountrySelect
-                    id="from-country"
-                    v-model="moneyForm.from"
-                    label="Sending from"
-                    placeholder="United States"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="to-country"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                  >
-                    Receiving in
-                  </label>
-                  <CountrySelect
-                    id="to-country"
-                    v-model="moneyForm.to"
-                    label="Receiving in"
-                    placeholder="Select country"
-                  />
-                </div>
-              </div>
-
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label
-                    for="from-currency"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                  >
-                    From currency
-                  </label>
-                  <CurrencySelect
-                    id="from-currency"
-                    v-model="moneyForm.fromCurrency"
-                    :country-code="moneyForm.from"
-                    placeholder="USD"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="to-currency"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                  >
-                    To currency
-                  </label>
-                  <CurrencySelect
-                    id="to-currency"
-                    v-model="moneyForm.toCurrency"
-                    :country-code="moneyForm.to"
-                    :placeholder="moneyForm.to ? 'Select currency' : 'Select country first'"
-                    :disabled="!moneyForm.to"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  for="amount"
-                  class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                >
-                  Amount to send
-                </label>
-                <input
-                  id="amount"
-                  v-model.number="moneyForm.amount"
-                  type="number"
-                  min="1"
-                  step="1"
-                  class="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                  placeholder="500"
-                >
-              </div>
-
-              <button
-                type="submit"
-                :disabled="isWaitingForQuotes"
-                class="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-bold text-white transition-all hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <span v-if="isWaitingForQuotes">Checking...</span>
-                <span v-else>Compare Rates</span>
-                <svg
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </button>
-
-              <p
-                v-if="formError"
-                class="text-sm text-red-600"
-                role="alert"
-              >
-                {{ formError }}
-              </p>
-              <p
-                v-else-if="formInfo"
-                class="text-sm text-slate-600"
-                role="status"
-              >
-                {{ formInfo }}
-              </p>
-            </form>
-
-            <div class="border-t border-blue-100 bg-blue-50 px-6 py-4">
-              <p class="text-sm text-slate-600 leading-relaxed">
-                Typical savings vs. banks: <strong class="font-semibold text-slate-900">3–9% per transfer</strong>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Our History -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white flex items-center justify-center gap-3 mb-3">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Our History
+            Our Story
           </h2>
+          <p class="text-lg text-white/90 max-w-2xl mx-auto">
+            How frustration with hidden fees became a mission for transparency
+          </p>
+        </div>
 
-          <div class="grid gap-10 lg:grid-cols-2 lg:items-start">
-            <div>
-              <p class="leading-relaxed text-neutral-700">
-                In 2023, founder <strong class="font-semibold text-neutral-900">Omar Ghabayen</strong> left Amman for Carnegie Mellon. Every time his family sent money from Jordan to the US, about <strong class="text-red-600">$30 quietly disappeared</strong>: half from the sending bank, half from the receiving bank.
-              </p>
-              <p class="mt-4 leading-relaxed text-neutral-600">
-                The deeper we looked, the more confusing it got: “low fee” offers hiding FX markups, inconsistent delivery promises, and comparison sites that weren’t always aligned with user outcomes.
-              </p>
-
-              <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5">
-                <p class="text-sm font-semibold text-red-900">
-                  What we wanted instead:
+        <div class="max-w-5xl mx-auto">
+          <div class="grid gap-8 lg:grid-cols-3">
+            <div class="relative">
+              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </div>
+                <div class="text-center mb-4">
+                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-sm font-semibold rounded-full">
+                    <span>2022</span>
+                  </span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 text-center">The Discovery</h3>
+                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                  When Omar first came to Carnegie Mellon, he realized that every time his family sent money from Jordan to the US, about <strong class="font-semibold text-white">$30 quietly disappeared</strong>: half from the sending bank, half from the receiving bank.
                 </p>
-                <ul class="mt-3 space-y-2 text-sm text-red-800">
-                  <li class="flex items-start gap-3">
-                    <svg class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Rank by what the recipient should receive, not a headline rate.</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Explain the “why” behind price differences (fees vs. FX markup).</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Keep rankings independent: no pay-to-play placements.</span>
-                  </li>
-                </ul>
               </div>
             </div>
 
-            <div>
-              <ol class="space-y-6 border-l-2 border-neutral-200 pl-6">
-                <li
-                  v-for="item in historyTimeline"
-                  :key="item.title"
-                  class="relative pl-8"
-                >
-                  <div class="absolute -left-[1.05rem] top-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-brand-200 bg-white shadow-sm">
-                    <component :is="getIconForEmoji(item.emoji)" class="w-4 h-4 text-brand-600" />
-                  </div>
-                  <h3 class="text-base font-semibold text-neutral-900">
-                    {{ item.title }}
-                  </h3>
-                  <p class="mt-1 text-sm leading-relaxed text-neutral-600">
-                    {{ item.body }}
-                  </p>
-                </li>
-              </ol>
+            <div class="relative">
+              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div class="text-center mb-4">
+                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-sm font-semibold rounded-full">
+                    <span>The Realization</span>
+                  </span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 text-center">A Wider Problem</h3>
+                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                  Omar noticed that this hidden fee problem impacts countless families who depend on remittances for essentials. For those sending money regularly, these fees add up to hundreds or even thousands of dollars each year.
+                </p>
+              </div>
+            </div>
+
+            <div class="relative">
+              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div class="text-center mb-4">
+                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-sm font-semibold rounded-full">
+                    <span>2025-2026</span>
+                  </span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 text-center">Building the Solution</h3>
+                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                  Omar built an MVP in 2025 and launched it for about a year. Now, with this new version launching in 2026, he and the team hope to solve the fee problem and help people keep more of their hard earned money where it belongs with their families.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -369,94 +188,97 @@
             </svg>
             Our Leadership
           </h2>
-          <p class="leading-relaxed text-neutral-700 mb-8">
-            Remit-Scout is founded by <strong class="font-semibold text-brand-600">Omar Ghabayen</strong> and supported by a <span class="font-semibold text-neutral-900">small editorial team</span>. We maintain <strong class="font-semibold text-neutral-900">clear standards</strong>, <span class="font-semibold text-brand-600">disclose partnerships</span>, and keep an <strong class="font-semibold text-neutral-900">open channel for corrections</strong>.
+          <p class="leading-relaxed text-neutral-700 mb-8 text-lg">
+            Remit-Scout was founded to solve a data problem, not just a money problem.<br>We treat remittance fees as a bug in the financial system. Our algorithm is the patch.
           </p>
 
           <div class="space-y-6">
             <div>
               <div class="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm">
-                <div class="flex items-start gap-6 mb-6">
-                  <div class="flex-shrink-0">
-                    <div class="relative">
-                      <div class="absolute inset-2 rounded-2xl bg-gradient-to-br from-brand-400 via-brand-300 to-emerald-400 blur-xl opacity-60" />
-                      <img
-                        :src="founderHeadshotUrl"
-                        onerror="this.src='/images/about/omar-placeholder.jpg'; this.onerror=null;"
-                        alt="Omar Ghabayen, Founder of Remit-Scout"
-                        class="relative w-32 h-32 rounded-2xl object-cover border-4 border-white shadow-2xl"
+                <div class="grid gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
+                  <div class="flex flex-col items-center lg:items-start">
+                    <div class="relative mb-6">
+                      <a
+                        href="https://www.linkedin.com/in/ghabayeno/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="block"
                       >
+                        <div class="absolute inset-2 rounded-3xl bg-gradient-to-br from-brand-400 via-brand-300 to-emerald-400 blur-xl opacity-60" />
+                        <img
+                          :src="founderHeadshotUrl"
+                          onerror="this.src='/images/about/omar-placeholder.jpg'; this.onerror=null;"
+                          alt="Omar Ghabayen, Founder of Remit-Scout"
+                          class="relative w-48 h-48 lg:w-56 lg:h-56 rounded-3xl object-cover border-4 border-white shadow-2xl hover:opacity-90 transition-opacity cursor-pointer"
+                        >
+                      </a>
+                    </div>
+                    <div class="text-center lg:text-left w-full">
+                      <div class="flex items-center gap-3 mb-2 flex-wrap justify-center lg:justify-start">
+                        <h3 class="text-2xl font-bold text-neutral-900">
+                          Omar Ghabayen
+                        </h3>
+                        <a
+                          href="https://www.linkedin.com/in/ghabayeno/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-neutral-700 hover:text-neutral-900 transition-colors"
+                          aria-label="LinkedIn"
+                        >
+                          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                          </svg>
+                        </a>
+                      </div>
+                      <h4 class="inline-block mb-3 px-4 py-1.5 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full uppercase tracking-wide">
+                        Founder of Remit-Scout
+                      </h4>
+                      <div class="space-y-3 text-sm text-neutral-600">
+                        <div class="flex items-center gap-3 justify-center lg:justify-start">
+                          <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                          </svg>
+                          <span class="font-medium">Carnegie Mellon University</span>
+                        </div>
+                        <div class="flex items-center gap-3 justify-center lg:justify-start">
+                          <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21s-7-6.35-7-12a7 7 0 1114 0c0 5.65-7 12-7 12z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11a2 2 0 100-4 2 2 0 000 4z" />
+                          </svg>
+                          <span class="font-medium">Based in Pittsburgh, PA</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div class="flex-1">
-                    <div class="inline-flex items-center gap-1.5 mb-2 px-3 py-1 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full uppercase tracking-wide">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Founder
+
+                  <div class="space-y-6">
+                    <div class="space-y-4">
+                      <h3 class="text-xl font-bold text-brand-600 mb-3">
+                        The Arbitrage Opportunity
+                      </h3>
+                      <p class="text-lg leading-relaxed text-neutral-700">
+                        "During my time at Carnegie Mellon, I kept noticing something that didn't add up. When I'd check the rates for sending money between the US and Jordan, what they advertised almost never matched what actually landed in the recipient's account.
+                      </p>
+
+                      <p class="text-lg leading-relaxed text-neutral-700">
+                        I dug deeper and found that intermediaries were quietly taking a cut through hidden FX markups—and the comparison sites everyone was using completely missed it. That's when it hit me: the whole 'low fee' pitch was a red herring. The real cost was always in the spread, hiding in plain sight.
+                      </p>
+
+                      <p class="text-lg leading-relaxed text-neutral-700">
+                        So I built Remit-Scout to cut through the noise and answer one straightforward question: what's actually going to arrive? We're here to close that gap between what you send and what actually gets delivered."
+                      </p>
                     </div>
-                    <h3 class="text-xl font-bold text-neutral-900 mb-2">
-                      Omar Ghabayen
-                    </h3>
-                    <div class="space-y-1 mb-3 text-sm text-neutral-600">
-                      <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Expat from Jordan
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v9M4 9v5a3 3 0 003 3h10a3 3 0 003-3V9" />
-                        </svg>
-                        Carnegie Mellon University
-                      </div>
-                    </div>
+
+                    <p class="text-lg leading-relaxed text-brand-600 mb-6 font-medium">
+                      "I believe global finance is complex as is. The decision shouldn't be."
+                    </p>
+
+                    <p class="text-xs text-neutral-500">
+                      Reviewed: {{ lastReviewedLabel }}
+                    </p>
                   </div>
                 </div>
-
-                <div class="space-y-4 mb-6">
-                  <p class="leading-relaxed text-neutral-700">
-                    I grew up in <strong class="font-semibold text-neutral-900">Amman, Jordan</strong>, where cross-border transfers were normal for families. When I moved to
-                    <span class="font-semibold text-brand-600">Pittsburgh</span> in 2023 for Carnegie Mellon, I started receiving money from home and noticed the same pattern over and over:
-                    the “low fee” story often didn’t match the final outcome.
-                  </p>
-
-                  <p class="leading-relaxed text-neutral-600">
-                    My family would send <strong class="font-semibold text-neutral-900">$500</strong>, and I’d receive about <span class="font-semibold text-red-600">$470</span>.
-                    Some fees were obvious, others were buried in FX markup. And most comparison pages made it worse by ranking providers on a headline rate instead of
-                    <span class="font-semibold text-brand-600">what the recipient actually gets</span>.
-                  </p>
-
-                  <p class="leading-relaxed text-neutral-600">
-                    I built Remit-Scout to answer one question with discipline: <strong class="font-semibold text-neutral-900">what’s the real delivered outcome?</strong>
-                    We publish our methodology, disclose how we make money, and keep an open channel for corrections so the product stays useful and honest.
-                  </p>
-                </div>
-
-                <div class="relative pl-4 border-l-4 border-brand-400 italic text-neutral-700 leading-relaxed text-sm mb-6">
-                  <p>
-                    "You earned every dollar. Our job is to help more of it reach your family."
-                  </p>
-                </div>
-
-                <div class="flex flex-wrap gap-3 mb-6">
-                  <NuxtLink
-                    to="/contact"
-                    class="inline-flex min-h-btn items-center justify-center rounded-xl bg-neutral-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-9 3.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                    Contact support
-                  </NuxtLink>
-                </div>
-
-                <p class="text-xs text-neutral-500">
-                  Reviewed: {{ lastReviewedLabel }}
-                </p>
               </div>
             </div>
 
@@ -466,32 +288,32 @@
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  How we keep it accurate
+                  Data Integrity Protocol
                 </h3>
                 <p class="text-sm text-white/90 mb-5">
-                  The short version of our data checks and editorial standards.
+                  Our verification standards are absolute.
                 </p>
                 <ul class="space-y-3 text-sm text-white/95 mb-6">
                   <li class="flex items-start gap-3">
                     <component :is="getIconForEmoji('🧪')" class="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
-                    <span><strong class="font-semibold">Run spot-check transfers</strong> on selected corridors when feasible.</span>
+                    <span><strong class="font-semibold">Synthetic Transaction Audits:</strong> We execute real-money transfers to validate settlement times and fee structures against api claims.</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span><strong class="font-semibold">Refresh data frequently</strong> for top corridors; long-tail corridors update less often.</span>
+                    <span><strong class="font-semibold">High-Frequency Polling:</strong> Rates are updated dynamically. High-volume corridors are indexed every 60 seconds.</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <component :is="getIconForEmoji('🧾')" class="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
-                    <span><strong class="font-semibold">Disclose affiliate partnerships</strong> and keep ranking logic consistent.</span>
+                    <span><strong class="font-semibold">Revenue Transparency:</strong> Commercial relationships are fully disclosed and strictly firewalled from the ranking algorithm.</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span><strong class="font-semibold">Investigate reports fast</strong> and update content when we confirm issues.</span>
+                    <span><strong class="font-semibold">Rapid Dispute Resolution:</strong> Discrepancies reported by users are investigated and patched within 24 hours.</span>
                   </li>
                 </ul>
 
@@ -535,7 +357,7 @@
             </p>
           </div>
 
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-10">
             <NuxtLink
               v-for="card in whatWeDoCards"
               :key="card.title"
@@ -573,7 +395,7 @@
                       1) Collect quotes
                     </p>
                     <p class="mt-1 text-sm leading-relaxed text-neutral-600">
-                      We use <strong class="font-semibold text-neutral-900">provider APIs, partner feeds, and public quote flows</strong> where available. Coverage varies by corridor and payment method.
+                      We gather real-time quotes from multiple sources to compare providers side by side. Coverage varies by corridor and payment method.
                     </p>
                   </div>
                 </li>
@@ -614,8 +436,8 @@
                     Important note
                   </h3>
                 </div>
-                <p class="text-sm leading-relaxed text-white/90">
-                  Rates can change between quote and checkout due to promos, KYC, payment method, and provider rules. Always confirm the final amount on the provider’s checkout screen.
+                <p class="text-sm leading-relaxed text-white/90 flex-1">
+                  Rates can change between quote and checkout due to promotional offers, verification requirements, payment method selection, and provider-specific rules. The final amount displayed during checkout may differ from the initial quote due to these factors. Always confirm the final amount on the provider's checkout screen before completing your transfer to ensure you're comfortable with the total cost and exchange rate applied.
                 </p>
               </div>
             </div>
@@ -669,74 +491,138 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl text-center">
           <h2 class="text-3xl font-bold text-white flex items-center justify-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
-            What we don’t compromise on
+            What we don't compromise on
           </h2>
           <p class="text-lg leading-relaxed text-white/95 mb-8 max-w-3xl mx-auto">
             We built Remit-Scout for people who send money internationally and want a straight answer. That means transparent sources, outcome-first rankings,
             and clear disclosure when we earn revenue.
           </p>
 
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-10">
-            <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 text-white">
-              <div class="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white">
-                <CalculatorIcon class="h-6 w-6" />
+          <div class="grid gap-8 lg:grid-cols-3 mt-10">
+            <div class="relative">
+              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
+                  <CalculatorIcon class="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                  Outcome-first ranking
+                </h3>
+                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                  We rank by <strong class="font-semibold text-white">what the recipient should receive</strong>, not a headline rate.
+                </p>
               </div>
-              <h3 class="text-lg font-bold mb-2">
-                Outcome-first ranking
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed">
-                We rank by <strong class="font-semibold">what the recipient should receive</strong>, not a headline rate.
-              </p>
             </div>
-            <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 text-white">
-              <div class="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white">
-                <ShieldCheckIcon class="h-6 w-6" />
+            <div class="relative">
+              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
+                  <ShieldCheckIcon class="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                  No pay-to-rank
+                </h3>
+                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                  Providers <strong class="font-semibold text-white">cannot buy placement</strong> in our organic results.
+                </p>
               </div>
-              <h3 class="text-lg font-bold mb-2">
-                No pay-to-rank
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed">
-                Providers <strong class="font-semibold">cannot buy placement</strong> in our organic results.
-              </p>
             </div>
-            <div class="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 text-white">
-              <div class="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white">
-                <ChartBarIcon class="h-6 w-6" />
+            <div class="relative">
+              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
+                  <ChartBarIcon class="w-8 h-8 text-white" />
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                  Live, comparable data
+                </h3>
+                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                  We track <strong class="font-semibold text-white">{{ SITE_STATS.providers.display }} providers</strong> across {{ SITE_STATS.corridors.display }} corridors, normalized into a single outcome metric.
+                </p>
               </div>
-              <h3 class="text-lg font-bold mb-2">
-                Live, comparable data
-              </h3>
-              <p class="text-sm text-white/90 leading-relaxed">
-                We track <strong class="font-semibold">{{ SITE_STATS.providers.display }} providers</strong> across {{ SITE_STATS.corridors.display }} corridors, normalized into a single outcome metric.
-              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Coverage / stats -->
+    <!-- Read More / Blogs -->
     <section class="py-16 lg:py-20 bg-neutral-50">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
             <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            Coverage at a glance
+            Market Intelligence
+          </h2>
+          <p class="leading-relaxed text-neutral-700 mb-8">
+            Operational playbooks for cross-border capital. We decode regulatory frameworks, banking infrastructure, and FX mechanisms to help you navigate the global financial grid.
+          </p>
+
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            <NuxtLink
+              v-for="guide in featuredGuides"
+              :key="guide.slug"
+              :to="guide.to"
+              class="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            >
+              <div class="flex items-center gap-2 mb-3">
+                <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+                  {{ guide.category }}
+                </span>
+                <span class="text-xs text-neutral-500">
+                  {{ guide.readTime }}
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2">
+                {{ guide.title }}
+              </h3>
+              <p class="text-sm text-neutral-600 leading-relaxed flex-1">
+                {{ guide.excerpt }}
+              </p>
+              <div class="mt-4 flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
+                Read more
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </div>
+            </NuxtLink>
+          </div>
+
+          <div class="text-center">
+            <NuxtLink
+              to="/learn/money-transfer"
+              class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+            >
+              Access the Library
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Coverage / stats -->
+    <section class="py-16 lg:py-20 bg-white">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-5xl">
+          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+            </svg>
+            Platform Reach
           </h2>
 
           <div class="space-y-6 mb-10">
             <p class="text-lg leading-relaxed text-neutral-700">
-              These numbers are <strong class="font-semibold text-neutral-900">directional</strong> and updated as we add providers and corridors. Coverage can vary by payment method and corridor rules.
-            </p>
-
-            <p class="leading-relaxed text-neutral-600">
-              We focus on comparisons that help people make real decisions, not just lists. That means showing the total cost (fees plus FX markup) and the resulting outcome:
-              <span class="font-semibold text-brand-600">what the recipient should receive</span>.
+              We index the global remittance economy in real-time. Data is normalized across 150+ corridors to ensure an apples-to-apples comparison of landed capital.
             </p>
           </div>
 
@@ -810,76 +696,6 @@
       </div>
     </section>
 
-    <!-- Read More / Blogs -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            Read our guides
-          </h2>
-          <p class="leading-relaxed text-neutral-700 mb-4">
-            Browse our <strong class="font-semibold text-neutral-900">expert guides</strong> on money transfers, banking abroad, and financial tips for <span class="font-semibold text-brand-600">expats and international families</span>.
-          </p>
-
-          <p class="leading-relaxed text-neutral-600 mb-8">
-            Money across borders comes with a learning curve: foreign banking systems, FX rates and markups, compliance rules, and the practical realities of supporting family.
-            We write clear guides that cut through jargon and stay current as providers and policies change.
-          </p>
-
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-            <NuxtLink
-              v-for="guide in featuredGuides"
-              :key="guide.slug"
-              :to="guide.to"
-              class="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
-            >
-              <div class="flex items-center gap-2 mb-3">
-                <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-                  {{ guide.category }}
-                </span>
-                <span class="text-xs text-neutral-500">
-                  {{ guide.readTime }}
-                </span>
-              </div>
-              <h3 class="text-lg font-bold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2">
-                {{ guide.title }}
-              </h3>
-              <p class="text-sm text-neutral-600 leading-relaxed flex-1">
-                {{ guide.excerpt }}
-              </p>
-              <div class="mt-4 flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
-                Read more
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </div>
-            </NuxtLink>
-          </div>
-
-          <div class="text-center">
-            <NuxtLink
-              to="/learn"
-              class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              View all guides
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- Partnership Section -->
     <section class="py-16 lg:py-20 bg-slate-900">
@@ -889,57 +705,19 @@
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            Partner with Remit-Scout
+            Provider Partnership
           </h2>
           <p class="text-lg leading-relaxed text-slate-300 mb-6">
-            If you’re a <strong class="font-semibold text-white">licensed money transfer provider</strong> (or you support one) and want accurate coverage on Remit-Scout, we’d like to hear from you.
-          </p>
-          <p class="text-base leading-relaxed text-slate-400 mb-10">
-            Partnerships help us expand coverage, but they don’t buy ranking. We keep <strong class="font-semibold text-white">editorial independence</strong>, and any affiliate relationship is clearly disclosed.
+            For licensed Money Service Businesses (MSBs) seeking high-intent volume.<br>Partner with Remit-Scout and beyond to access a qualified audience actively searching for liquidity.
           </p>
           <div class="flex flex-wrap justify-center gap-4">
             <NuxtLink
-              to="/contact"
+              to="/partnerships"
               class="inline-flex min-h-btn items-center justify-center gap-2 rounded-xl bg-brand-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 focus:ring-offset-slate-900"
             >
-              <ChatBubbleLeftRightIcon class="h-5 w-5" />
-              <span>Get in touch</span>
-            </NuxtLink>
-            <NuxtLink
-              to="/partnerships"
-              class="inline-flex min-h-btn items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-8 py-3 text-base font-semibold text-slate-900 transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900"
-            >
-              <EyeIcon class="h-5 w-5" />
-              <span>Partnership details</span>
+              <span>Partnership Details</span>
             </NuxtLink>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-10">
-          <h2 class="text-3xl font-bold text-neutral-900">
-            Frequently asked questions
-          </h2>
-          <p class="mt-3 text-neutral-600">
-            Quick answers about independence, data, and what we do.
-          </p>
-        </div>
-
-        <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <FaqAccordion :faqs="faqs" />
-        </div>
-
-        <div class="mt-8 text-center">
-          <NuxtLink
-            to="/faq"
-            class="inline-flex min-h-btn items-center justify-center rounded-xl border border-brand-600 bg-white px-6 text-sm font-semibold text-brand-600 transition-colors hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-          >
-            View all FAQs
-          </NuxtLink>
         </div>
       </div>
     </section>
@@ -954,7 +732,7 @@
           Find the best delivered outcome for your corridor
         </p>
         <p class="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
-          Compare fees and FX markup across providers, then confirm the final amount on the provider’s checkout.
+          See exactly what your recipient will receive after all fees and exchange rates are applied. Start comparing now to find the best option for your transfer.
         </p>
         <NuxtLink
           to="/send-money"
@@ -995,30 +773,10 @@ import { h } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
-import CountrySelect from '~/components/shared/CountrySelect.vue'
-import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import { SITE_STATS } from '~/config/stats'
 import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useSeo'
-import { useCompareForm } from '~/composables/useCompareForm'
-import { useRemittanceApi } from '~/composables/useRemittanceApi'
 
-const { form: moneyForm, validationError, submit: submitForm, statusMessage, isWaitingForQuotes } = useCompareForm()
-const formError = validationError
-const formInfo = statusMessage
-const { recordSearch } = useRemittanceApi()
-
-const handleMoneySubmit = async () => {
-  const { from, to, amount, method, fromCurrency, toCurrency } = moneyForm.value
-  if (!from || !to || !fromCurrency || !toCurrency || !amount || amount <= 0) {
-    formError.value = 'Please complete all fields.'
-    return
-  }
-  formError.value = ''
-  await recordSearch({ from, to, amount, method })
-  await submitForm()
-}
-
-const founderHeadshotUrl = '/images/about/omar-ghabayen-headshot.webp'
+const founderHeadshotUrl = '/webpacks/IMG_4439.webp'
 const lastReviewedLabel = 'December 14, 2025'
 const lastReviewedIso = '2025-12-14'
 
@@ -1056,43 +814,21 @@ const faqs = [
 const whoWeArePrinciples = [
   {
     emoji: '🧾',
-    title: 'No pay-to-rank',
-    body: 'Providers cannot pay to rank higher. If we earn affiliate commissions, it’s disclosed and does not change the ranking logic.',
-  },
-  {
-    emoji: '🧪',
-    title: 'Verified sampling',
-    body: 'We run spot-check testing on selected corridors to validate provider claims when feasible.',
+    title: 'Algorithmic Neutrality',
+    body: 'Rankings are determined purely by mathematical outcome. Marketing budgets cannot buy position; our sort order is immutable.',
   },
   {
     emoji: '🔎',
-    title: 'Outcome-first comparisons',
-    body: 'We emphasize “recipient gets” and total cost so you can compare real outcomes, not marketing rates.',
+    title: 'Net-Value Indexing',
+    body: 'We ignore "headline rates." Our engine calculates the final settlement amount, factoring in upfront fees and the hidden FX spread markup.',
   },
   {
     emoji: '🛡️',
-    title: 'Clear corrections path',
-    body: 'If you spot an error in pricing, fees, or content, reach out. When we confirm an issue, we typically update within 48 hours.',
+    title: 'Open Data Protocol',
+    body: 'Trust requires verification. We maintain an open channel for data correction—if a provider updates their pricing logic, our system adapts within 24 hours.',
   },
 ]
 
-const historyTimeline = [
-  {
-    emoji: '💸',
-    title: 'The fee problem',
-    body: 'Bank transfers were expensive and unclear, especially once sending + receiving bank fees stacked up.',
-  },
-  {
-    emoji: '🧠',
-    title: 'Build the comparison engine',
-    body: 'We started collecting live pricing signals and documenting a transparent ranking approach.',
-  },
-  {
-    emoji: '📈',
-    title: 'Publish, verify, repeat',
-    body: `We expand coverage and keep updating: now tracking ${SITE_STATS.providers.display} providers across ${SITE_STATS.corridors.display} corridors.`,
-  },
-]
 
 const whatWeDoCards = [
   {
@@ -1106,12 +842,6 @@ const whatWeDoCards = [
     title: 'Provider Reviews',
     body: 'Independent notes on coverage, payout options, and trust signals.',
     to: '/providers',
-  },
-  {
-    emoji: '📈',
-    title: 'Exchange Rate Tools',
-    body: 'Track rates and learn what “mid-market” means in practice.',
-    to: '/exchange-rates',
   },
   {
     emoji: '📚',
@@ -1222,6 +952,11 @@ setSeo({
   title: 'About Remit-Scout | Independent Money Transfer Comparisons',
   description: 'Meet Remit-Scout: an independent platform built by expats to help migrants and international families compare money transfer costs, speed, and outcomes with transparent methodology.',
   canonical: canonicalUrl,
+  ogType: 'article',
+  publishedTime: lastReviewedIso,
+  modifiedTime: lastReviewedIso,
+  author: 'Remit-Scout Editorial Team',
+  tags: ['about', 'remittances', 'transparency'],
 })
 
 jsonLdBreadcrumb([
@@ -1288,3 +1023,4 @@ useHead({
   ],
 })
 </script>
+

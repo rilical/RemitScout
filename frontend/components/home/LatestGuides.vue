@@ -2,9 +2,11 @@
   <section class="py-12 sm:py-16 bg-white">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
-          Read Our Guides
-        </h2>
+        <NuxtLink to="/learn" class="group">
+          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
+            Read Our Guides
+          </h2>
+        </NuxtLink>
         <p class="text-lg text-neutral-600">
           Everything you need to know about international money transfers
         </p>
@@ -17,53 +19,6 @@
           :to="`/learn/${guide.slug}`"
           class="group bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
         >
-          <!-- Image/Icon Header -->
-          <div
-            class="relative h-40 bg-gradient-to-br overflow-hidden"
-            :class="guide.gradient"
-          >
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="transform group-hover:scale-110 transition-transform duration-300">
-                <template v-if="isFlagEmoji(guide.emoji)">
-                  <span class="text-6xl">{{ guide.emoji }}</span>
-                </template>
-                <template v-else-if="guide.emoji === '⚖️'">
-                  <svg class="w-16 h-16 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                  </svg>
-                </template>
-                <template v-else-if="guide.emoji === '💰'">
-                  <svg class="w-16 h-16 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </template>
-                <template v-else-if="guide.emoji === '🏦'">
-                  <svg class="w-16 h-16 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </template>
-                <template v-else-if="guide.emoji === '🧭'">
-                  <svg class="w-16 h-16 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </template>
-                <template v-else-if="guide.emoji === '🛡️'">
-                  <svg class="w-16 h-16 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </template>
-                <template v-else-if="guide.emoji === '⏱️'">
-                  <svg class="w-16 h-16 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </template>
-                <template v-else>
-                  <span class="text-6xl">{{ guide.emoji }}</span>
-                </template>
-              </div>
-            </div>
-          </div>
-
           <!-- Content -->
           <div class="p-6">
             <h3 class="text-lg font-bold text-neutral-900 mb-3 leading-snug group-hover:text-brand-600 transition-colors">
@@ -242,34 +197,6 @@ const getCategoryName = (key: string): string => {
   return categoryMap[key] || 'Guide'
 }
 
-const getEmojiForGuide = (slug: string, categoryKey?: string): string => {
-  const emojiMap: Record<string, string> = {
-    'why-compare-before-every-transfer': '⚖️',
-    'hidden-exchange-rate-fees-explained': '💰',
-    'how-to-read-remittance-quote': '📊',
-    'why-checkout-price-differs': '❓',
-    'bank-transfer-vs-card-vs-cash-pickup': '🏦',
-    'how-fast-is-international-money-transfer': '⏱️',
-    'best-time-to-send-money': '📅',
-    'promo-codes-intro-rates': '🎁',
-  }
-  return emojiMap[slug] || '📖'
-}
-
-const getGradientForGuide = (slug: string, categoryKey?: string): string => {
-  const gradientMap: Record<string, string> = {
-    'why-compare-before-every-transfer': 'from-purple-100 to-pink-100',
-    'hidden-exchange-rate-fees-explained': 'from-emerald-100 to-teal-100',
-    'how-to-read-remittance-quote': 'from-blue-100 to-indigo-100',
-    'why-checkout-price-differs': 'from-amber-100 to-orange-100',
-    'bank-transfer-vs-card-vs-cash-pickup': 'from-amber-100 to-orange-100',
-    'how-fast-is-international-money-transfer': 'from-rose-100 to-orange-100',
-    'best-time-to-send-money': 'from-cyan-100 to-blue-100',
-    'promo-codes-intro-rates': 'from-lime-100 to-emerald-100',
-  }
-  return gradientMap[slug] || 'from-neutral-100 to-neutral-200'
-}
-
 const guides = computed(() => {
   return allGuides.value
     .slice(0, 8)
@@ -277,15 +204,9 @@ const guides = computed(() => {
       title: guide.title || '',
       blurb: guide.excerpt || '',
       readTime: guide.readTime || '5 min read',
-      updated: guide.lastUpdated || guide.date || 'Recently',
-      slug: guide.slug,
-      emoji: getEmojiForGuide(guide.slug, guide.categoryKey),
-      gradient: getGradientForGuide(guide.slug, guide.categoryKey),
-      category: guide.category || getCategoryName(guide.categoryKey),
+      updated: guide.lastUpdated || (('date' in guide && typeof guide.date === 'string') ? guide.date : undefined) || 'Recently',
+      slug: guide.slug || '',
+      category: guide.category || getCategoryName(guide.categoryKey || ''),
     }))
 })
-
-const isFlagEmoji = (emoji: string) => {
-  return emoji.includes('🇵🇭') || emoji.includes('🇺🇸') || emoji.includes('🇮🇳') || /[\u{1F1E6}-\u{1F1FF}]{2}/u.test(emoji)
-}
 </script>

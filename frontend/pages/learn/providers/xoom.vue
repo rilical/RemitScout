@@ -19,10 +19,12 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-xl font-bold">
-                  X
-                </div>
+              <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+                <ProviderLogo
+                  slug="xoom"
+                  alt="Xoom"
+                  size="small"
+                />
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
@@ -100,49 +102,39 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 88%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 80%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 90%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
               </div>
 
@@ -229,15 +221,14 @@
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
                     8.5
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                      <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
                       Xoom
                     </h3>
-                    <p class="text-sm text-black">remit-score</p>
+                    <p class="text-sm text-black">Remit-Score</p>
                     <p class="text-xs text-slate-500 mt-1">(a PayPal service)</p>
                   </div>
                 </div>
@@ -300,7 +291,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
@@ -372,7 +363,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
@@ -415,7 +406,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
@@ -487,7 +478,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
@@ -551,7 +542,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
@@ -729,35 +720,35 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Compare the total outcome ("recipient gets"), not just the fee line:</strong>
                       <span class="text-slate-700">Xoom's cost can be in both fees + FX conversion margin.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Test funding methods (bank vs debit/credit vs PayPal balance where available):</strong>
                       <span class="text-slate-700">Fees can vary by payment method and corridor.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Use the fee / exchange-rate calculator (or corridor flow page) right before sending:</strong>
                       <span class="text-slate-700">Xoom notes rates can change.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Pick payout method intentionally:</strong>
                       <span class="text-slate-700">Cash pickup/debit card deposit/mobile wallet can be fast, but also reduces your ability to cancel if you spot an error late.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">If you might need to cancel, act immediately:</strong>
                       <span class="text-slate-700">The agreement describes a 30-minute cancellation window for full refund (if not already paid out).</span>
@@ -849,6 +840,7 @@
                 </NuxtLink>
               </div>
 
+              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
@@ -1011,7 +1003,6 @@ const breadcrumbItems = [
   { name: 'Xoom Review', path: '/learn/providers/xoom' },
 ]
 </script>
-
 
 
 

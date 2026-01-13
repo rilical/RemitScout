@@ -12,6 +12,7 @@ import { computed, nextTick, onMounted, watch } from 'vue'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
+import { useEntitlements } from '~/composables/useEntitlements'
 import CookieConsentBanner from '~/components/privacy/CookieConsentBanner.vue'
 
 // Global app setup
@@ -24,6 +25,7 @@ useHead({
 const { initSession } = useTelemetry()
 const { settings } = usePrivacySettings()
 const { initMarketing, trackPageView } = useMarketingAnalytics()
+const { isPlus, hydrated } = useEntitlements()
 const runtimeConfig = useRuntimeConfig()
 const ga4Id = runtimeConfig.public.ga4MeasurementId
 const metaPixelId = runtimeConfig.public.metaPixelId
@@ -88,8 +90,18 @@ watch(
 
 watch(
   () => route.fullPath,
-  () => {
+  async () => {
     void trackPageView()
+    if (!import.meta.client) return
+    if (!hydrated.value || isPlus.value) return
+    await nextTick()
+    const win = window as typeof window & { ezstandalone?: any }
+    if (!win.ezstandalone?.cmd) return
+    win.ezstandalone.cmd.push(() => {
+      if (typeof win.ezstandalone.showAds === 'function') {
+        win.ezstandalone.showAds()
+      }
+    })
   },
 )
 </script>

@@ -58,6 +58,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Local tooling
+tools/aws-cli/
+
 # Temporary files
 *.tmp
 *.temp

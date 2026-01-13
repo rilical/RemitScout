@@ -4,7 +4,7 @@ export type Country = {
   currency: string
 }
 
-export const BASE_CURRENCIES = ['USD', 'EUR', 'GBP'] as const
+export const BASE_CURRENCIES = ['USD', 'GBP', 'EUR'] as const
 
 export const COUNTRIES: Country[] = [
   { name: 'Afghanistan', code: 'AF', currency: 'AFN' },
@@ -53,6 +53,7 @@ export const COUNTRIES: Country[] = [
   { name: 'Comoros', code: 'KM', currency: 'KMF' },
   { name: 'Congo', code: 'CG', currency: 'XAF' },
   { name: 'Congo (DRC)', code: 'CD', currency: 'CDF' },
+  { name: 'Cook Islands', code: 'CK', currency: 'NZD' },
   { name: 'Costa Rica', code: 'CR', currency: 'CRC' },
   { name: 'Cote d\'Ivoire', code: 'CI', currency: 'XOF' },
   { name: 'Croatia', code: 'HR', currency: 'EUR' },
@@ -69,9 +70,12 @@ export const COUNTRIES: Country[] = [
   { name: 'El Salvador', code: 'SV', currency: 'USD' },
   { name: 'Equatorial Guinea', code: 'GQ', currency: 'XAF' },
   { name: 'Eritrea', code: 'ER', currency: 'ERN' },
+  { name: 'Europe', code: 'EU', currency: 'EUR' },
+  { name: 'Estonia', code: 'EE', currency: 'EUR' },
   { name: 'Eswatini', code: 'SZ', currency: 'SZL' },
   { name: 'Ethiopia', code: 'ET', currency: 'ETB' },
   { name: 'Fiji', code: 'FJ', currency: 'FJD' },
+  { name: 'Falkland Islands', code: 'FK', currency: 'FKP' },
   { name: 'Finland', code: 'FI', currency: 'EUR' },
   { name: 'France', code: 'FR', currency: 'EUR' },
   { name: 'French Guiana', code: 'GF', currency: 'EUR' },
@@ -109,6 +113,7 @@ export const COUNTRIES: Country[] = [
   { name: 'Kazakhstan', code: 'KZ', currency: 'KZT' },
   { name: 'Kenya', code: 'KE', currency: 'KES' },
   { name: 'Kiribati', code: 'KI', currency: 'AUD' },
+  { name: 'Kosovo', code: 'XK', currency: 'EUR' },
   { name: 'Kuwait', code: 'KW', currency: 'KWD' },
   { name: 'Kyrgyzstan', code: 'KG', currency: 'KGS' },
   { name: 'Laos', code: 'LA', currency: 'LAK' },
@@ -166,6 +171,7 @@ export const COUNTRIES: Country[] = [
   { name: 'Portugal', code: 'PT', currency: 'EUR' },
   { name: 'Puerto Rico', code: 'PR', currency: 'USD' },
   { name: 'Qatar', code: 'QA', currency: 'QAR' },
+  { name: 'Reunion', code: 'RE', currency: 'EUR' },
   { name: 'Romania', code: 'RO', currency: 'RON' },
   { name: 'Russia', code: 'RU', currency: 'RUB' },
   { name: 'Rwanda', code: 'RW', currency: 'RWF' },
@@ -183,9 +189,11 @@ export const COUNTRIES: Country[] = [
   { name: 'Singapore', code: 'SG', currency: 'SGD' },
   { name: 'Slovakia', code: 'SK', currency: 'EUR' },
   { name: 'Slovenia', code: 'SI', currency: 'EUR' },
+  { name: 'Solomon Islands', code: 'SB', currency: 'SBD' },
   { name: 'Somalia', code: 'SO', currency: 'SOS' },
   { name: 'South Africa', code: 'ZA', currency: 'ZAR' },
   { name: 'South Korea', code: 'KR', currency: 'KRW' },
+  { name: 'South Sudan', code: 'SS', currency: 'SSP' },
   { name: 'Spain', code: 'ES', currency: 'EUR' },
   { name: 'Sri Lanka', code: 'LK', currency: 'LKR' },
   { name: 'Sudan', code: 'SD', currency: 'SDG' },
@@ -204,12 +212,14 @@ export const COUNTRIES: Country[] = [
   { name: 'Tunisia', code: 'TN', currency: 'TND' },
   { name: 'Turkey', code: 'TR', currency: 'TRY' },
   { name: 'Turkmenistan', code: 'TM', currency: 'TMT' },
+  { name: 'Turks and Caicos Islands', code: 'TC', currency: 'USD' },
   { name: 'Tuvalu', code: 'TV', currency: 'AUD' },
   { name: 'Uganda', code: 'UG', currency: 'UGX' },
   { name: 'Ukraine', code: 'UA', currency: 'UAH' },
   { name: 'United Arab Emirates', code: 'AE', currency: 'AED' },
   { name: 'United Kingdom', code: 'GB', currency: 'GBP' },
   { name: 'United States', code: 'US', currency: 'USD' },
+  { name: 'US Virgin Islands', code: 'VI', currency: 'USD' },
   { name: 'Uruguay', code: 'UY', currency: 'UYU' },
   { name: 'Uzbekistan', code: 'UZ', currency: 'UZS' },
   { name: 'Vanuatu', code: 'VU', currency: 'VUV' },
@@ -222,7 +232,7 @@ export const COUNTRIES: Country[] = [
   { name: 'Zimbabwe', code: 'ZW', currency: 'ZWL' },
 ]
 
-const currencyCodeSet = new Set(["AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BMD","BND","BOB","BRL","BSD","BTN","BWP","BYN","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUP","CVE","CZK","DJF","DKK","DOP","DZD","EGP","ERN","ETB","EUR","FJD","GBP","GEL","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HTG","HUF","IDR","ILS","INR","IQD","IRR","ISK","JMD","JOD","JPY","KES","KGS","KHR","KMF","KRW","KWD","KYD","KZT","LAK","LBP","LKR","LRD","LSL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRU","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SCR","SDG","SEK","SGD","SLE","SOS","SRD","STN","SYP","SZL","THB","TJS","TMT","TND","TOP","TRY","TTD","TWD","TZS","UAH","UGX","USD","UYU","UZS","VES","VND","VUV","WST","XAF","XCD","XOF","XPF","YER","ZAR","ZMW","ZWL"]);
+const currencyCodeSet = new Set(["AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BMD","BND","BOB","BRL","BSD","BTN","BWP","BYN","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUP","CVE","CZK","DJF","DKK","DOP","DZD","EGP","ERN","ETB","EUR","FJD","FKP","GBP","GEL","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HTG","HUF","IDR","ILS","INR","IQD","IRR","ISK","JMD","JOD","JPY","KES","KGS","KHR","KMF","KRW","KWD","KYD","KZT","LAK","LBP","LKR","LRD","LSL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRU","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SLE","SOS","SSP","SRD","STN","SYP","SZL","THB","TJS","TMT","TND","TOP","TRY","TTD","TWD","TZS","UAH","UGX","USD","UYU","UZS","VES","VND","VUV","WST","XAF","XCD","XOF","XPF","YER","ZAR","ZMW","ZWL"]);
 const countryCodeSet = new Set(COUNTRIES.map((country) => country.code));
 
 export const getCountryByCode = (code: string) => {

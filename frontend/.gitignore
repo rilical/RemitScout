@@ -129,3 +129,9 @@ storybook-static/
 # Build outputs
 dist/
 build/
+
+# Generated public assets (copied from /png/SVG on build)
+public/logos/*.svg
+public/logos/*.png
+!public/logos/remit-scout.svg
+public/png/SVG/

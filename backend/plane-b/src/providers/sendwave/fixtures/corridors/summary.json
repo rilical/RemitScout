@@ -1,0 +1,122 @@
+{
+  "US-PH-USD-PHP": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "debit_card",
+        "payout_method": "mobile_wallet"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "bank_deposit"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "cash_pickup"
+      }
+    ],
+    "base_rate": 57.9376,
+    "fee_amount": 0,
+    "receive_amount": 5906,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/sendwave/fixtures/corridors/US-PH-USD-PHP.json"
+  },
+  "US-KE-USD-KES": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "debit_card",
+        "payout_method": "mobile_wallet"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 127.70324,
+    "fee_amount": 0,
+    "receive_amount": 12827,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/sendwave/fixtures/corridors/US-KE-USD-KES.json"
+  },
+  "CA-PH-CAD-PHP": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "debit_card",
+        "payout_method": "mobile_wallet"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "bank_deposit"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "cash_pickup"
+      }
+    ],
+    "base_rate": 41.89274,
+    "fee_amount": 0,
+    "receive_amount": 4253,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/sendwave/fixtures/corridors/CA-PH-CAD-PHP.json"
+  },
+  "FR-PH-EUR-PHP": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "debit_card",
+        "payout_method": "mobile_wallet"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "bank_deposit"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "cash_pickup"
+      }
+    ],
+    "base_rate": 67.32756,
+    "fee_amount": 0,
+    "receive_amount": 6826,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/sendwave/fixtures/corridors/FR-PH-EUR-PHP.json"
+  },
+  "FR-MA-EUR-MAD": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "debit_card",
+        "payout_method": "cash_pickup"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "bank_deposit"
+      }
+    ],
+    "base_rate": 10.62765,
+    "fee_amount": 0,
+    "receive_amount": 1084.26,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/sendwave/fixtures/corridors/FR-MA-EUR-MAD.json"
+  },
+  "US-MX-USD-MXN": {
+    "status": 200,
+    "method_pairs": [
+      {
+        "payin_method": "debit_card",
+        "payout_method": "bank_deposit"
+      },
+      {
+        "payin_method": "debit_card",
+        "payout_method": "cash_pickup"
+      }
+    ],
+    "base_rate": 17.60832,
+    "fee_amount": 0,
+    "receive_amount": 1761,
+    "parse_flags": [],
+    "fixture_path": "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-b/src/providers/sendwave/fixtures/corridors/US-MX-USD-MXN.json"
+  }
+}

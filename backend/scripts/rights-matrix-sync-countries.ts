@@ -9,9 +9,33 @@ import {
 } from '../plane-b/src/providers/remitly/supported-corridors'
 import { WISE_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/wise/supported-corridors'
 import { XE_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/xe/supported-corridors'
+import { TRANSFERGO_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/transfergo/supported-corridors'
+import { PAYSEND_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/paysend/supported-corridors'
+import { PANGEA_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/pangea/supported-corridors'
+import { RIA_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/ria/supported-corridors'
+import { DAHABSHIIL_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/dahabshiil/supported-corridors'
+import { SENDWAVE_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/sendwave/supported-corridors'
+import { MUKURU_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/mukuru/supported-corridors'
 import { WORLDREMIT_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/worldremit/supported-corridors'
 import { WESTERNUNION_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/westernunion/supported-corridors'
 import { WELLSFARGO_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/wellsfargo/supported-corridors'
+import { XOOM_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/xoom/supported-corridors'
+import { INSTAREM_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/instarem/supported-corridors'
+import { WIREBARLEY_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/wirebarley/supported-corridors'
+import { ALANSARI_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/alansari/supported-corridors'
+import { INTERMEX_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/intermex/supported-corridors'
+import {
+  KORONAPAY_DESTINATION_COUNTRIES,
+  KORONAPAY_SOURCE_COUNTRIES,
+  KORONAPAY_SUPPORTED_CORRIDORS,
+} from '../plane-b/src/providers/koronapay/supported-corridors'
+import {
+  REMITBEE_DESTINATION_COUNTRIES,
+  REMITBEE_SOURCE_COUNTRIES,
+  REMITBEE_SUPPORTED_CORRIDORS,
+} from '../plane-b/src/providers/remitbee/supported-corridors'
+import { SINGX_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/singx/supported-corridors'
+import { PLACID_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/placid/supported-corridors'
 
 type CountrySupport = {
   providerId: string
@@ -58,15 +82,41 @@ const countrySupportEntries: CountrySupport[] = [
     sourceCountries: normalizeCountryList(REMITLY_SOURCE_COUNTRIES),
     destinationCountries: normalizeCountryList(REMITLY_DESTINATION_COUNTRIES),
   },
+  {
+    providerId: 'koronapay',
+    sourceCountries: normalizeCountryList(KORONAPAY_SOURCE_COUNTRIES),
+    destinationCountries: normalizeCountryList(KORONAPAY_DESTINATION_COUNTRIES),
+  },
+  {
+    providerId: 'remitbee',
+    sourceCountries: normalizeCountryList(REMITBEE_SOURCE_COUNTRIES),
+    destinationCountries: normalizeCountryList(REMITBEE_DESTINATION_COUNTRIES),
+  },
 ]
 
 const corridorSupportEntries: CorridorSupport[] = [
   { providerId: 'wise', corridors: WISE_SUPPORTED_CORRIDORS },
   { providerId: 'xe', corridors: XE_SUPPORTED_CORRIDORS },
+  { providerId: 'transfergo', corridors: TRANSFERGO_SUPPORTED_CORRIDORS },
+  { providerId: 'paysend', corridors: PAYSEND_SUPPORTED_CORRIDORS },
+  { providerId: 'pangea', corridors: PANGEA_SUPPORTED_CORRIDORS },
+  { providerId: 'ria', corridors: RIA_SUPPORTED_CORRIDORS },
   { providerId: 'worldremit', corridors: WORLDREMIT_SUPPORTED_CORRIDORS },
   { providerId: 'westernunion', corridors: WESTERNUNION_SUPPORTED_CORRIDORS },
   { providerId: 'wellsfargo', corridors: WELLSFARGO_SUPPORTED_CORRIDORS },
+  { providerId: 'xoom', corridors: XOOM_SUPPORTED_CORRIDORS },
   { providerId: 'remitly', corridors: REMITLY_SUPPORTED_CORRIDORS },
+  { providerId: 'instarem', corridors: INSTAREM_SUPPORTED_CORRIDORS },
+  { providerId: 'wirebarley', corridors: WIREBARLEY_SUPPORTED_CORRIDORS },
+  { providerId: 'alansari', corridors: ALANSARI_SUPPORTED_CORRIDORS },
+  { providerId: 'intermex', corridors: INTERMEX_SUPPORTED_CORRIDORS },
+  { providerId: 'koronapay', corridors: KORONAPAY_SUPPORTED_CORRIDORS },
+  { providerId: 'remitbee', corridors: REMITBEE_SUPPORTED_CORRIDORS },
+  { providerId: 'singx', corridors: SINGX_SUPPORTED_CORRIDORS },
+  { providerId: 'placid', corridors: PLACID_SUPPORTED_CORRIDORS },
+  { providerId: 'dahabshiil', corridors: DAHABSHIIL_SUPPORTED_CORRIDORS },
+  { providerId: 'sendwave', corridors: SENDWAVE_SUPPORTED_CORRIDORS },
+  { providerId: 'mukuru', corridors: MUKURU_SUPPORTED_CORRIDORS },
 ]
 
 const main = async () => {

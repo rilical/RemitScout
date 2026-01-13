@@ -769,6 +769,11 @@ import { COUNTRIES, getCountryByCode, getAvailableCurrencies } from '~/utils/cou
 import { useEntitlements } from '~/composables/useEntitlements'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import { FEATURE_FLAGS } from '~/utils/constants'
+
+if (!FEATURE_FLAGS.PULSE_ENABLED) {
+  await navigateTo('/plus', { redirectCode: 302 })
+}
 
 const router = useRouter()
 const route = useRoute()

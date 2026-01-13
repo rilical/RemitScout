@@ -51,6 +51,12 @@ export type ScheduledJobsResources = {
   wiseProbeRule: Rule
   worldremitProbeFunction: IFunction
   worldremitProbeRule: Rule
+  riaProbeFunction: IFunction
+  riaProbeRule: Rule
+  mukuruProbeFunction: IFunction
+  mukuruProbeRule: Rule
+  sendwaveProbeFunction: IFunction
+  sendwaveProbeRule: Rule
   xeProbeFunction: IFunction
   xeProbeRule: Rule
 }
@@ -880,7 +886,13 @@ export const createScheduledJobs = (
     { id: 'WesternUnion', providerId: 'westernunion' },
     { id: 'Wise', providerId: 'wise' },
     { id: 'WorldRemit', providerId: 'worldremit' },
+    { id: 'Ria', providerId: 'ria' },
+    { id: 'Dahabshiil', providerId: 'dahabshiil' },
+    { id: 'Sendwave', providerId: 'sendwave' },
+    { id: 'Mukuru', providerId: 'mukuru' },
     { id: 'Xe', providerId: 'xe' },
+    { id: 'WireBarley', providerId: 'wirebarley' },
+    { id: 'Intermex', providerId: 'intermex' },
   ]
 
   const probeFunctions: Record<string, IFunction> = {}
@@ -993,6 +1005,14 @@ export const createScheduledJobs = (
     wiseProbeRule: probeRules.wiseProbeRule,
     worldremitProbeFunction: probeFunctions.worldremitProbeFunction,
     worldremitProbeRule: probeRules.worldremitProbeRule,
+    riaProbeFunction: probeFunctions.riaProbeFunction,
+    riaProbeRule: probeRules.riaProbeRule,
+    dahabshiilProbeFunction: probeFunctions.dahabshiilProbeFunction,
+    dahabshiilProbeRule: probeRules.dahabshiilProbeRule,
+    sendwaveProbeFunction: probeFunctions.sendwaveProbeFunction,
+    sendwaveProbeRule: probeRules.sendwaveProbeRule,
+    mukuruProbeFunction: probeFunctions.mukuruProbeFunction,
+    mukuruProbeRule: probeRules.mukuruProbeRule,
     xeProbeFunction: probeFunctions.xeProbeFunction,
     xeProbeRule: probeRules.xeProbeRule,
   }

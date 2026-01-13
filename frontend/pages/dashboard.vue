@@ -1124,7 +1124,7 @@
                   <button
                     type="button"
                     class="opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50"
-                    @click="watchlistRemove(item.id)"
+                    @click="openDeleteWatchlistModal(item)"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1919,6 +1919,60 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                   {{ accountApi.deleting ? 'Deleting...' : 'Delete Account' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delete Watchlist Item Modal -->
+          <div
+            v-if="showDeleteWatchlistModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div class="absolute inset-0 bg-black/50" @click="closeDeleteWatchlistModal" />
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-slate-900">Remove from Watchlist</h3>
+                <button
+                  type="button"
+                  class="text-slate-400 hover:text-slate-600"
+                  @click="closeDeleteWatchlistModal"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="space-y-4 text-sm text-slate-600">
+                <p v-if="watchlistItemToDelete?.target.type === 'corridor'">
+                  Are you sure you want to remove <strong class="font-semibold text-slate-900">{{ watchlistItemToDelete.target.from }} → {{ watchlistItemToDelete.target.to }}</strong> from your watchlist?
+                </p>
+                <p v-else-if="watchlistItemToDelete?.target.type === 'fxPair'">
+                  Are you sure you want to remove <strong class="font-semibold text-slate-900">{{ watchlistItemToDelete.target.base }}/{{ watchlistItemToDelete.target.quote }}</strong> from your watchlist?
+                </p>
+                <p v-else>
+                  Are you sure you want to remove this item from your watchlist?
+                </p>
+                <p class="text-xs text-slate-500">
+                  You can add it back anytime.
+                </p>
+              </div>
+
+              <div class="flex gap-3 pt-6">
+                <button
+                  type="button"
+                  class="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  @click="closeDeleteWatchlistModal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+                  @click="confirmDeleteWatchlistItem"
+                >
+                  Remove
                 </button>
               </div>
             </div>
@@ -3491,8 +3545,6 @@ async function startCheckout() {
   }
 }
 
-type OpsProviderId = 'remitly' | 'westernunion' | 'worldremit' | 'xe' | 'wise'
-
 type OpsHealthCorridor = {
   corridor_id: string
   last_attempt_at: string | null
@@ -3593,7 +3645,27 @@ const opsProviders = [
   { id: 'worldremit', label: 'WorldRemit', endpoint: '/ops/worldremit/health' },
   { id: 'xe', label: 'XE', endpoint: '/ops/xe/health' },
   { id: 'wise', label: 'Wise', endpoint: '/ops/wise/health' },
+  { id: 'xoom', label: 'Xoom', endpoint: '/ops/xoom/health' },
+  { id: 'ria', label: 'Ria', endpoint: '/ops/ria/health' },
+  { id: 'dahabshiil', label: 'Dahabshiil', endpoint: '/ops/dahabshiil/health' },
+  { id: 'instarem', label: 'Instarem', endpoint: '/ops/instarem/health' },
+  { id: 'wirebarley', label: 'WireBarley', endpoint: '/ops/wirebarley/health' },
+  { id: 'alansari', label: 'Al Ansari Exchange', endpoint: '/ops/alansari/health' },
+  { id: 'intermex', label: 'Intermex', endpoint: '/ops/intermex/health' },
+  { id: 'koronapay', label: 'KoronaPay', endpoint: '/ops/koronapay/health' },
+  { id: 'remitbee', label: 'RemitBee', endpoint: '/ops/remitbee/health' },
+  { id: 'singx', label: 'SingX', endpoint: '/ops/singx/health' },
+  { id: 'placid', label: 'Placid', endpoint: '/ops/placid/health' },
+  { id: 'transfergo', label: 'TransferGo', endpoint: '/ops/transfergo/health' },
+  { id: 'paysend', label: 'Paysend', endpoint: '/ops/paysend/health' },
+  { id: 'pangea', label: 'Pangea', endpoint: '/ops/pangea/health' },
+  { id: 'orbitremit', label: 'OrbitRemit', endpoint: '/ops/orbitremit/health' },
+  { id: 'bossmoney', label: 'BOSS Money', endpoint: '/ops/bossmoney/health' },
+  { id: 'sendwave', label: 'Sendwave', endpoint: '/ops/sendwave/health' },
+  { id: 'mukuru', label: 'Mukuru', endpoint: '/ops/mukuru/health' },
 ] as const
+
+type OpsProviderId = typeof opsProviders[number]['id']
 
 const opsAdminLinks = [
   {
@@ -3619,27 +3691,21 @@ const adminRoleLoading = ref(false)
 const adminRoleError = ref<string | null>(null)
 const adminRoleSuccess = ref<string | null>(null)
 
-const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>({
-  remitly: null,
-  westernunion: null,
-  worldremit: null,
-  xe: null,
-  wise: null,
-})
-const opsLoading = ref<Record<OpsProviderId, boolean>>({
-  remitly: false,
-  westernunion: false,
-  worldremit: false,
-  xe: false,
-  wise: false,
-})
-const opsErrors = ref<Record<OpsProviderId, string | null>>({
-  remitly: null,
-  westernunion: null,
-  worldremit: null,
-  xe: null,
-  wise: null,
-})
+const buildOpsRecord = <T>(factory: () => T) =>
+  opsProviders.reduce((acc, provider) => {
+    acc[provider.id] = factory()
+    return acc
+  }, {} as Record<OpsProviderId, T>)
+
+const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>(
+  buildOpsRecord(() => null),
+)
+const opsLoading = ref<Record<OpsProviderId, boolean>>(
+  buildOpsRecord(() => false),
+)
+const opsErrors = ref<Record<OpsProviderId, string | null>>(
+  buildOpsRecord(() => null),
+)
 const opsHasLoaded = ref(false)
 
 const telemetryMetricOptions = [
@@ -4143,8 +4209,8 @@ const providerSlugOverrides: Record<string, string> = {
   'xe': 'xe-money',
   'xe money': 'xe-money',
   'xoom': 'xoom',
-  'moneygram': 'moneygram',
   'ria': 'ria',
+  'dahabshiil': 'dahabshiil',
 }
 
 const slugifyProvider = (name: string) => {
@@ -4640,6 +4706,9 @@ const deleteAccountConfirmed = ref(false)
 const deleteAccountError = ref<string | null>(null)
 const deleteAccountWarning = ref<string | null>(null)
 
+const showDeleteWatchlistModal = ref(false)
+const watchlistItemToDelete = ref<WatchlistItem | null>(null)
+
 const deleteAccountReady = computed(() => {
   return deleteAccountConfirmed.value && deleteAccountConfirmText.value.trim().toUpperCase() === 'DELETE'
 })
@@ -4689,6 +4758,23 @@ const handleDeleteAccount = async () => {
 
   if (result.result?.warnings?.length) {
     deleteAccountWarning.value = result.result.warnings.join(', ')
+  }
+}
+
+const openDeleteWatchlistModal = (item: WatchlistItem) => {
+  watchlistItemToDelete.value = item
+  showDeleteWatchlistModal.value = true
+}
+
+const closeDeleteWatchlistModal = () => {
+  showDeleteWatchlistModal.value = false
+  watchlistItemToDelete.value = null
+}
+
+const confirmDeleteWatchlistItem = () => {
+  if (watchlistItemToDelete.value) {
+    watchlistRemove(watchlistItemToDelete.value.id)
+    closeDeleteWatchlistModal()
   }
 }
 

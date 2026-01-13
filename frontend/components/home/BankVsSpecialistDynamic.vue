@@ -21,12 +21,12 @@
         </div>
 
         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 mb-4">
-          Why comparing saves you money
+          Why comparative pricing preserves capital
         </h2>
 
         <p class="text-lg text-neutral-600 max-w-3xl mx-auto mb-6">
-          Banks charge hidden fees through poor exchange rates.<br>
-          Here's a real example of sending <span class="font-bold text-neutral-900">$500</span> from
+          Banks monetize FX Spread through off-market execution.<br>
+          This is a real example of sending <span class="font-bold text-neutral-900">$500</span> from
           <span class="inline-flex items-center gap-1.5 font-semibold text-brand-700">
             🇺🇸 United States to 🇲🇽 Mexico
           </span>
@@ -59,13 +59,13 @@
           </div>
           <div class="text-left">
             <div class="text-2xl font-bold text-success-600">
-              Save {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}+
+              Net Delivered Value delta: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}+
             </div>
             <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-neutral-600">
-              ≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD saved by choosing the right provider
+              ≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD retained by selecting the optimal counterparty
             </div>
             <div v-else class="text-sm text-neutral-600">
-              by choosing the right provider
+              retained by selecting the optimal counterparty
             </div>
           </div>
         </div>
@@ -177,12 +177,12 @@
               </div>
             </div>
 
-            <div class="bg-neutral-100 rounded-2xl p-6 border-2 border-neutral-300">
-              <div class="text-sm text-neutral-600 mb-2">Recipient Gets</div>
-              <div class="text-4xl font-bold text-neutral-900 mb-2">
+            <div class="bg-red-50 rounded-2xl p-6 border-2 border-red-300">
+              <div class="text-sm text-red-700 mb-2">Net Delivered Value</div>
+              <div class="text-4xl font-bold text-red-900 mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
               </div>
-              <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-neutral-600">
+              <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-red-600">
                 ≈ {{ formatMoney(Math.round(comparison.bank.recipientGets / comparison.midRate), comparison.corridor.sendCurrency) }} USD
               </div>
             </div>
@@ -194,7 +194,7 @@
           <div class="flex items-center gap-4 mb-6">
             <div
               v-if="comparison.top.logoUrl"
-              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
+              class="h-24 w-24 flex items-center justify-center flex-shrink-0"
             >
               <img
                 :src="comparison.top.logoUrl"
@@ -204,7 +204,7 @@
             </div>
             <div
               v-else
-              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
+              class="h-24 w-24 flex items-center justify-center flex-shrink-0"
             >
               <svg class="h-full w-full text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -227,7 +227,7 @@
                 {{ formatRate(comparison.top.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
               </div>
               <div class="text-xs text-emerald-600 font-medium mt-2">
-                {{ (100 - comparison.top.marginPct).toFixed(1) }}% of market rate
+                Above mid-market rate
               </div>
             </div>
 
@@ -239,7 +239,7 @@
             </div>
 
             <div class="bg-emerald-600 rounded-2xl p-6 border-2 border-emerald-400 text-white">
-              <div class="text-sm opacity-90 mb-2">Recipient Gets</div>
+              <div class="text-sm opacity-90 mb-2">Net Delivered Value</div>
               <div class="text-4xl font-bold mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
               </div>
@@ -251,7 +251,7 @@
                 class="bg-white/20 backdrop-blur rounded-lg px-4 py-2 mt-3"
               >
                 <div class="text-lg font-bold">
-                  +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} more
+                  +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta
                 </div>
                 <div class="text-sm opacity-90 mt-1">
                   <span v-if="comparison.midRate && comparison.midRate > 0">≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD </span>vs {{ comparison.bank.name }}
@@ -265,34 +265,34 @@
     </div>
   </section>
 
-  <!-- Understanding Hidden Costs Section -->
+  <!-- Spread Analysis Section -->
   <section class="w-screen py-20 sm:py-28 bg-gray-900 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Section Header -->
       <div class="text-center mb-16">
         <h3 class="text-4xl sm:text-5xl font-bold text-white mb-6">
-          Understanding the hidden costs
+          Deconstructing the Spread.
         </h3>
         <p class="text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-          Banks don't just charge fees. They make most of their money through exchange rate markup. Here's how it works, step by step.
+          The "Zero Fee" claim is an arbitrage strategy. Institutions generate revenue by offering exchange rates below the mid-market reference price. We visualize this gap.
         </p>
       </div>
 
       <!-- 3 Horizontal Steps -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-        <!-- Step 1: The Hidden Markup -->
+        <!-- Step 1: Spread Delta -->
         <div class="bg-white rounded-3xl border-2 border-neutral-200 p-8 shadow-xl">
           <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white text-2xl font-bold mb-6">
             1
           </div>
           <h4 class="text-2xl font-bold text-neutral-900 mb-4">
-            The Hidden Markup
+            The Spread Delta
           </h4>
           <p class="text-neutral-700 leading-relaxed mb-4">
-            Banks advertise "low fees" or even "no fees," but they hide their profit in the exchange rate itself. This markup typically ranges from <strong class="text-blue-700">3% to 5%</strong> above the real mid-market rate.
+            Banks typically widen the FX Spread by <strong class="text-blue-700">3% to 5%</strong> above the mid-market rate. This is an invisible tax on your capital.
           </p>
           <p class="text-neutral-700 leading-relaxed mb-6 text-sm">
-            When you send money internationally, there's a real exchange rate that financial institutions use between themselves. But banks offer you a worse rate and pocket the difference.
+            The mid-market rate is the reference price institutions use between themselves. The spread delta is the margin captured by the intermediary.
           </p>
           <div v-if="comparison" class="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <p class="text-sm font-bold text-neutral-900 mb-3">
@@ -301,7 +301,7 @@
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-600">Exchange rate:</span>
-                <span class="font-bold text-neutral-900">1 {{ comparison.corridor.sendCurrency }} = {{ formatRate(comparison.bank.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}</span>
+                <span class="font-bold text-neutral-900">{{ comparison.bank.fxRate.toFixed(2) }} {{ comparison.corridor.recvCurrency }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-600">Amount sent:</span>
@@ -313,72 +313,72 @@
               </div>
               <div v-if="comparison.savings" class="pt-2 border-t border-blue-200">
                 <div class="flex justify-between text-sm">
-                  <span class="text-neutral-600">Lost potential (delta):</span>
+                  <span class="text-neutral-600">Spread delta impact:</span>
                   <span class="font-bold text-blue-700">{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}</span>
                 </div>
                 <p class="text-xs text-neutral-500 mt-1">
-                  Even with a good rate, high fees reduce what your family receives
+                  Even with a competitive fee, FX Spread reduces Net Delivered Value
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 2: Compare the Difference -->
+        <!-- Step 2: Comparative Indexing -->
         <div class="bg-white rounded-3xl border-2 border-neutral-200 p-8 shadow-xl">
           <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white text-2xl font-bold mb-6">
             2
           </div>
           <h4 class="text-2xl font-bold text-neutral-900 mb-4">
-            Compare the Difference
+            Comparative Indexing
           </h4>
           <p class="text-neutral-700 leading-relaxed mb-6">
-            Exchange rates fluctuate throughout the day. Money transfer specialists offer better rates because they focus exclusively on international transfers. Remit-Scout shows you real-time comparisons so you can see exactly how much more your family receives.
+            We overlay provider rates against the live mid-market benchmark. This reveals the exact margin being captured by the intermediary.
           </p>
           <div v-if="comparison" class="space-y-4">
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p class="text-xs text-neutral-600 mb-2">Expensive option:</p>
+              <p class="text-xs text-neutral-600 mb-2">Lower Effective Rate:</p>
               <p class="text-sm font-bold text-neutral-900 mb-1">
                 {{ comparison.bank.name }}
               </p>
               <p class="text-sm text-blue-700">
-                1 {{ comparison.corridor.sendCurrency }} = {{ formatRate(comparison.bank.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
+                {{ comparison.bank.fxRate.toFixed(2) }} {{ comparison.corridor.recvCurrency }}
               </p>
               <p class="text-xs text-neutral-600 mt-2">
-                Recipient gets: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
+                Net Delivered Value: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
               </p>
             </div>
             <div class="bg-blue-600 rounded-xl p-4 text-white">
-              <p class="text-xs text-blue-100 mb-2">Better option:</p>
+              <p class="text-xs text-blue-100 mb-2">Higher Effective Rate:</p>
               <p class="text-sm font-bold mb-1">
                 {{ comparison.top.name }}
               </p>
               <p class="text-sm">
-                1 {{ comparison.corridor.sendCurrency }} = {{ formatRate(comparison.top.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
+                {{ comparison.top.fxRate.toFixed(2) }} {{ comparison.corridor.recvCurrency }}
               </p>
               <p class="text-xs text-blue-100 mt-2">
-                Recipient gets: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
+                Net Delivered Value: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
               </p>
               <p v-if="comparison.savings && comparison.savings.recipientGetsDifference > 0" class="text-xs font-bold mt-2">
-                +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} more per transfer
+                +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta per transfer
               </p>
             </div>
           </div>
         </div>
 
-        <!-- Step 3: Annual Savings -->
+        <!-- Step 3: Yield Optimization -->
         <div class="bg-white rounded-3xl border-2 border-neutral-200 p-8 shadow-xl flex flex-col">
           <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white text-2xl font-bold mb-6">
             3
           </div>
           <h4 class="text-2xl font-bold text-neutral-900 mb-4">
-            Potential Savings
+            Yield Optimization
           </h4>
           <p class="text-neutral-700 leading-relaxed mb-6">
-            If you send money regularly, these small differences add up. By comparing rates and choosing the better option, you can save significantly over a year. The savings from each transfer compound when you send money monthly or weekly, making the annual impact substantial. Even small percentage differences can translate to hundreds of dollars saved annually, money that can go directly to your family instead of fees and hidden markups.
+            For recurring transfers, spread optimization compounds. A 2% tighter spread on monthly volume materially improves annual retained capital and capital preservation.
           </p>
           <div v-if="comparison?.savings" class="bg-blue-600 rounded-xl p-4 text-white mt-auto">
-            <p class="text-xs text-blue-100 mb-2">Annual savings:</p>
+            <p class="text-xs text-blue-100 mb-2">Annual retained capital:</p>
             <p class="text-lg font-bold mb-1">
               {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference * 12).toLocaleString() }}
             </p>
@@ -386,12 +386,12 @@
               ≈ {{ formatMoney(Math.round((comparison.savings.recipientGetsDifference * 12) / comparison.midRate), comparison.corridor.sendCurrency) }} USD per year
             </p>
             <p class="text-xs text-blue-100 mt-2 pt-2 border-t border-blue-500">
-              {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} saved per transfer × 12 months
+              {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta per transfer × 12 months
             </p>
           </div>
           <div v-else class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-auto">
             <p class="text-sm text-neutral-700 text-center">
-              Compare rates to see your potential annual savings
+              Compare quotes to see annual retained capital
             </p>
           </div>
         </div>
@@ -410,10 +410,10 @@
               The Bottom Line
             </h4>
             <p class="text-neutral-700 text-lg leading-relaxed mb-4">
-              Banks make more money when you don't compare. They rely on customers using their service out of habit. Comparing rates takes a few minutes and often finds better options that save hundreds per year. That money can go to your family instead of bank profits.
+              Incumbents benefit from opaque FX Spread when transfers are executed without comparison. A disciplined quote audit surfaces tighter spreads and higher Net Delivered Value across corridors.
             </p>
             <p class="text-neutral-600 text-base leading-relaxed">
-              Remit-Scout is free and shows real rates from multiple providers. Try it next time you send money and see how much you can save.
+              Remit-Scout publishes real-time quotes from licensed counterparties so execution decisions are based on measurable cost and liquidity.
             </p>
           </div>
         </div>

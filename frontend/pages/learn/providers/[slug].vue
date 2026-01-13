@@ -87,6 +87,9 @@
         </div>
       </div>
 
+      <div class="mb-8">
+        <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+      </div>
       <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -306,15 +309,15 @@ const amountDisplay = computed(() => formatMoney(amount.value, fromCurrency.valu
 
 // Meta
 const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+const siteBaseUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 setSeo({
   title: `${provider.value?.name || 'Provider'} Review | Remit-Scout`,
   description: `Compare ${provider.value?.name || 'this provider'} on Remit-Scout and see live rates across providers.`,
-  canonical: `${siteUrl}${route.path}`,
+  canonical: `${siteBaseUrl}${route.path}`,
   ogImage: provider.value?.slug 
-    ? `${siteUrl}/og-images/provider-${provider.value.slug}.jpg`
-    : `${siteUrl}/og-image.jpg`,
+    ? `${siteBaseUrl}/og-images/provider-${provider.value.slug}.jpg`
+    : `${siteBaseUrl}/og-image.jpg`,
 })
 
 // Breadcrumbs

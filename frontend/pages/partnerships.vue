@@ -9,10 +9,7 @@
 
         <div class="mt-12">
           <div>
-            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6 leading-tight flex items-center gap-3">
-              <svg class="w-10 h-10 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6 leading-tight">
               Partner with <span class="text-brand-600">Remit-Scout</span>
             </h1>
 
@@ -48,56 +45,6 @@
                   />
                 </svg>
               </NuxtLink>
-              <div class="flex flex-wrap gap-2">
-                <div class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700">
-                  <svg
-                    class="h-3.5 w-3.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  No pay-to-rank
-                </div>
-                <div class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700">
-                  <svg
-                    class="h-3.5 w-3.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Full disclosure
-                </div>
-                <div class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700">
-                  <svg
-                    class="h-3.5 w-3.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  We don't move money
-                </div>
-              </div>
             </div>
 
             <p class="text-sm text-neutral-600">
@@ -112,22 +59,11 @@
     <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
-          <div class="flex items-center gap-4 mb-4">
-            <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3">
-              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Providers We Compare
-            </h2>
-            <span class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-              Growing
-            </span>
-          </div>
           <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-            Examples of providers you’ll see in our comparison results. Some have affiliate or data partnerships with us; others don’t. Either way, rankings follow the same rules and are driven by pricing and performance data.
+            Examples of providers you'll see in our comparison results. Some have affiliate or data partnerships with us; others don't. Either way, rankings follow the same rules and are driven by pricing and performance data.
           </p>
           <p class="text-base text-neutral-600 leading-relaxed">
-            <strong class="font-semibold text-brand-600">We’re still growing.</strong> If you’re a licensed provider and want accurate coverage, reach out. We onboard new partners continuously.
+            <strong class="font-semibold text-brand-600">We're still growing.</strong> If you're a licensed provider and want accurate coverage, reach out. We onboard new partners continuously.
           </p>
         </div>
 
@@ -135,20 +71,14 @@
           <div class="flex gap-8 animate-scroll-left px-6">
             <div
               v-for="(partner, index) in [...partners, ...partners, ...partners]"
-              :key="`provider-${partner.name}-${index}`"
+              :key="`provider-${partner.slug}-${index}`"
               class="flex-shrink-0 w-56 h-36 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
             >
-              <div class="text-center">
-                <div class="mb-3 flex justify-center">
-                  <component :is="getIconForPartnerEmoji(partner.emoji)" class="w-8 h-8 text-brand-600" />
-                </div>
-                <div class="text-base font-semibold text-neutral-900">
-                  {{ partner.name }}
-                </div>
-                <div class="text-xs text-neutral-500 mt-1">
-                  {{ partner.type }}
-                </div>
-              </div>
+              <ProviderLogo
+                :slug="partner.slug"
+                :alt="partner.name"
+                size="default"
+              />
             </div>
           </div>
         </div>
@@ -181,48 +111,50 @@
     </section>
 
     <!-- Partnership opportunities at a glance -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 mb-4 flex items-center gap-3">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h2 class="text-3xl font-bold text-white mb-4 flex items-center gap-3">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             Partnership opportunities at a glance
           </h2>
-          <p class="text-lg leading-relaxed text-neutral-700 mb-4">
-            We offer four ways to partner with Remit-Scout. Pick the model that fits what you’re building: provider onboarding, data and widgets, API access, or clearly labeled sponsorship.
+          <p class="text-lg leading-relaxed text-white/90 mb-4">
+            We offer multiple ways to partner with Remit-Scout. Start with provider onboarding and affiliate placements,
+            and use clearly labeled sponsorships for brand-safe visibility.
+            <span v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED">Enterprise data licensing is available for select partners.</span>
           </p>
-          <p class="text-base leading-relaxed text-neutral-600 mb-10">
+          <p class="text-base leading-relaxed text-white/80 mb-10">
             Partnerships never buy placement. Rankings, scores, and comparisons stay independent and are determined by data, pricing, and performance metrics.
           </p>
 
           <div class="space-y-6">
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all">
               <div class="flex items-start gap-4">
-                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100">
-                  <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
+                  <h3 class="text-2xl font-semibold text-white mb-3">
                     Affiliate Partnerships
                   </h3>
-                  <p class="text-base leading-relaxed text-neutral-700 mb-4">
+                  <p class="text-base leading-relaxed text-white/90 mb-4">
                     Get listed in our comparison results. When users click through and complete a transfer, we may earn a commission.
                   </p>
-                  <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 mb-4">
-                    <p class="text-sm font-semibold text-blue-900 mb-1">
+                  <div class="rounded-lg border border-white/20 bg-white/10 p-4 mb-4">
+                    <p class="text-sm font-semibold text-white mb-1">
                       Does this affect rankings?
                     </p>
-                    <p class="text-sm text-blue-800">
+                    <p class="text-sm text-white/90">
                       No. Rankings are based on comparison data (recipient gets, total cost, speed, and trust signals).
                     </p>
                   </div>
                   <NuxtLink
                     to="/contact?type=provider&topic=onboarding"
-                    class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
+                    class="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 underline"
                   >
                     Provider onboarding →
                   </NuxtLink>
@@ -230,31 +162,34 @@
               </div>
             </div>
 
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div
+              v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED"
+              class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all"
+            >
               <div class="flex items-start gap-4">
-                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
-                  <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
+                  <h3 class="text-2xl font-semibold text-white mb-3">
                     Data & Widgets
                   </h3>
-                  <p class="text-base leading-relaxed text-neutral-700 mb-4">
-                    License our comparison data, market charts (Pulse), or embed widgets on your site or app.
+                  <p class="text-base leading-relaxed text-white/90 mb-4">
+                    License our comparison data, market charts, or embed widgets on your site or app.
                   </p>
-                  <div class="rounded-lg border border-emerald-100 bg-emerald-50 p-4 mb-4">
-                    <p class="text-sm font-semibold text-emerald-900 mb-1">
+                  <div class="rounded-lg border border-white/20 bg-white/10 p-4 mb-4">
+                    <p class="text-sm font-semibold text-white mb-1">
                       Does this affect rankings?
                     </p>
-                    <p class="text-sm text-emerald-800">
+                    <p class="text-sm text-white/90">
                       No. Data licensing is separate from scoring and rankings.
                     </p>
                   </div>
                   <NuxtLink
                     to="/contact?type=media"
-                    class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
+                    class="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 underline"
                   >
                     Publisher/media inquiry →
                   </NuxtLink>
@@ -262,31 +197,31 @@
               </div>
             </div>
 
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all">
               <div class="flex items-start gap-4">
-                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-purple-100">
-                  <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
+                  <h3 class="text-2xl font-semibold text-white mb-3">
                     API Access
                   </h3>
-                  <p class="text-base leading-relaxed text-neutral-700 mb-4">
+                  <p class="text-base leading-relaxed text-white/90 mb-4">
                     Programmatic access to comparison data for platforms building remittance features or conducting research.
                   </p>
-                  <div class="rounded-lg border border-purple-100 bg-purple-50 p-4 mb-4">
-                    <p class="text-sm font-semibold text-purple-900 mb-1">
+                  <div class="rounded-lg border border-white/20 bg-white/10 p-4 mb-4">
+                    <p class="text-sm font-semibold text-white mb-1">
                       Does this affect rankings?
                     </p>
-                    <p class="text-sm text-purple-800">
-                      No. API partnerships don’t influence comparison results.
+                    <p class="text-sm text-white/90">
+                      No. API partnerships don't influence comparison results.
                     </p>
                   </div>
                   <NuxtLink
                     to="/contact?type=platform&topic=api"
-                    class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
+                    class="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 underline"
                   >
                     Platform/API inquiry →
                   </NuxtLink>
@@ -294,31 +229,31 @@
               </div>
             </div>
 
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-8 hover:shadow-lg transition-shadow">
+            <div class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all">
               <div class="flex items-start gap-4">
-                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-orange-100">
-                  <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <h3 class="text-2xl font-semibold text-neutral-900 mb-3">
+                  <h3 class="text-2xl font-semibold text-white mb-3">
                     Sponsorship
                   </h3>
-                  <p class="text-base leading-relaxed text-neutral-700 mb-4">
-                    Support independent research on remittance pricing and reach expats through clearly labeled sponsorships (for example: “Pulse supported by…”). Brand-safe and clearly labeled.
+                  <p class="text-base leading-relaxed text-white/90 mb-4">
+                    Support independent research on remittance pricing and reach expats through clearly labeled sponsorships. Brand-safe and clearly labeled.
                   </p>
-                  <div class="rounded-lg border border-orange-100 bg-orange-50 p-4 mb-4">
-                    <p class="text-sm font-semibold text-orange-900 mb-1">
+                  <div class="rounded-lg border border-white/20 bg-white/10 p-4 mb-4">
+                    <p class="text-sm font-semibold text-white mb-1">
                       Does this affect rankings?
                     </p>
-                    <p class="text-sm text-orange-800">
+                    <p class="text-sm text-white/90">
                       No. Sponsorship never changes rankings, sorting, or Remit-Score.
                     </p>
                   </div>
                   <NuxtLink
                     to="/contact?type=sponsorship&topic=inquiry"
-                    class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
+                    class="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 underline"
                   >
                     Request sponsorship info →
                   </NuxtLink>
@@ -326,6 +261,78 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- More B2B Opportunities To Come -->
+    <section class="py-16 lg:py-20 bg-white">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl text-center">
+          <h2 class="text-3xl font-bold text-neutral-900 mb-4">
+            More B2B Opportunities To Come
+          </h2>
+          <p class="text-lg leading-relaxed text-neutral-700 mb-6">
+            We're continuously expanding our partnership offerings. Whether you're a financial institution, remittance provider, or technology platform, we're building new ways to collaborate.
+          </p>
+          <p class="text-base leading-relaxed text-neutral-600 mb-8">
+            Interested in a partnership opportunity that's not listed above? Reach out to discuss custom solutions tailored to your needs.
+          </p>
+          <NuxtLink
+            to="/contact?type=partnership"
+            class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+          >
+            Discuss partnership opportunities
+            <svg
+              class="ml-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- More Partnership Opportunities -->
+    <section class="py-16 lg:py-20 bg-neutral-50">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl text-center">
+          <h2 class="text-3xl font-bold text-neutral-900 mb-4">
+            More Partnership Opportunities Coming Soon
+          </h2>
+          <p class="text-lg leading-relaxed text-neutral-700 mb-6">
+            We're actively developing additional partnership models to better serve our partners and the remittance community. Stay tuned for updates on new collaboration opportunities.
+          </p>
+          <p class="text-base leading-relaxed text-neutral-600 mb-8">
+            Have ideas for partnership opportunities? We'd love to hear from you.
+          </p>
+          <NuxtLink
+            to="/contact?type=partnership"
+            class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+          >
+            Contact us about partnerships
+            <svg
+              class="ml-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </NuxtLink>
         </div>
       </div>
     </section>
@@ -454,8 +461,8 @@
             </div>
 
             <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 mb-4">
-                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -470,9 +477,9 @@
               </p>
             </div>
 
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 mb-4">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="md:col-span-2 rounded-2xl border-2 border-neutral-200 bg-white p-6">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -494,26 +501,6 @@
                 </p>
               </div>
             </div>
-
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 mb-4">
-                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                Official Data Feed Badge
-              </h3>
-              <p class="text-sm leading-relaxed text-neutral-700 mb-3">
-                When you provide API access for real-time quotes, you receive an <strong class="font-semibold text-brand-600">"Official Data Feed" badge</strong> that appears next to your listings in comparison results. This badge signals that pricing comes directly from your systems and is updated in real time, not estimated or scraped. It can materially improve user confidence and, in some cases, click-through rates (up to 20–30%); results vary by corridor and audience.
-              </p>
-              <p class="text-xs leading-relaxed text-neutral-600 mb-3">
-                Users understand they're seeing accurate, up-to-date pricing that matches what they'll see at checkout — reducing frustration from pricing discrepancies and building trust in your brand. When we have direct API access, we can display your rates more accurately across all corridors and transfer amounts, minimize discrepancies that lead to user complaints, and ensure your competitive positioning reflects your actual pricing rather than outdated estimates.
-              </p>
-              <p class="text-xs leading-relaxed text-neutral-600">
-                Plus, API integration means faster updates when you adjust pricing, launch promotions, or add new corridors — ensuring users always see your current offers and helping you stay competitive in comparison results.
-              </p>
-            </div>
           </div>
 
           <div class="rounded-2xl border-2 border-brand-600 bg-gradient-to-br from-brand-600 to-brand-700 p-8 text-white">
@@ -521,81 +508,16 @@
               Ready to get started?
             </h3>
 
-            <div class="mb-6">
-              <p class="text-base font-semibold text-white mb-4">
-                How partnership onboarding works:
-              </p>
-              <div class="space-y-4">
-                <div class="flex gap-4">
-                  <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
-                    1
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-white mb-1">
-                      Intro (15 min)
-                    </p>
-                    <p class="text-sm text-white/90">
-                      Confirm corridors, methods, and eligibility
-                    </p>
-                  </div>
-                </div>
-                <div class="flex gap-4">
-                  <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
-                    2
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-white mb-1">
-                      Data connection
-                    </p>
-                    <p class="text-sm text-white/90">
-                      API/feed/public quote approach
-                    </p>
-                  </div>
-                </div>
-                <div class="flex gap-4">
-                  <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
-                    3
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-white mb-1">
-                      QA & validation
-                    </p>
-                    <p class="text-sm text-white/90">
-                      We validate live quotes vs checkout and set escalation contact
-                    </p>
-                  </div>
-                </div>
-                <div class="flex gap-4">
-                  <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
-                    4
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-white mb-1">
-                      Go live
-                    </p>
-                    <p class="text-sm text-white/90">
-                      Tracking (if affiliate), labels, and first reporting
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <p class="text-base text-white/95 leading-relaxed mb-6">
-              There’s no listing fee. We may earn a commission when users complete transfers through your service. Most providers can be listed within 1–2 weeks once data access is set.
+            <p class="text-lg text-white/95 leading-relaxed mb-6">
+              Just contact us. We'll help you understand how we can work together and what information we need to get you listed on Remit-Scout.
             </p>
+
             <div class="flex flex-wrap gap-3">
               <NuxtLink
-                to="/contact?type=provider&topic=onboarding"
+                to="/contact?type=partnership"
                 class="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-sm transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600"
               >
-                Start provider onboarding
-              </NuxtLink>
-              <NuxtLink
-                to="/contact?type=api&topic=documentation"
-                class="inline-flex items-center justify-center rounded-xl border-2 border-white/30 bg-transparent px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600"
-              >
-                Share API documentation
+                Contact us
               </NuxtLink>
             </div>
           </div>
@@ -603,114 +525,9 @@
       </div>
     </section>
 
-    <!-- Partner Types (Detailed) -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            What We Need From You
-          </h2>
-          <p class="text-lg leading-relaxed text-neutral-700 mb-8">
-            To list your service accurately and keep it current, we need a few basics:
-          </p>
-
-          <div class="grid gap-6 md:grid-cols-2 mb-8">
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 mb-4">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-                </svg>
-              </div>
-              <h3 class="text-xl font-semibold text-neutral-900 mb-3">
-                Rate Data Access (Choose One)
-              </h3>
-              <div class="space-y-3 text-sm text-neutral-700">
-                <div>
-                  <strong class="font-semibold text-brand-600">1. API endpoint (preferred):</strong> Real-time quote endpoint. Most accurate.
-                </div>
-                <div>
-                  <strong class="font-semibold text-brand-600">2. Structured data feed:</strong> Regular CSV/JSON exports with pricing data.
-                </div>
-                <div>
-                  <strong class="font-semibold text-brand-600">3. Manual documentation:</strong> Fee schedules and corridors. We'll pull quotes from your website.
-                </div>
-              </div>
-            </div>
-
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 mb-4">
-                <span class="text-2xl">📄</span>
-              </div>
-              <h3 class="text-xl font-semibold text-neutral-900 mb-3">
-                Documentation & Service Info
-              </h3>
-              <ul class="space-y-2 text-sm text-neutral-700">
-                <li class="flex items-start gap-2">
-                  <span class="text-neutral-400 font-bold mt-0.5">•</span>
-                  <span>Supported corridors, fee structure, exchange rate methodology</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <span class="text-neutral-400 font-bold mt-0.5">•</span>
-                  <span>Transfer speed, min/max amounts, licensing info</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 mb-4">
-                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <h3 class="text-xl font-semibold text-neutral-900 mb-3">
-                Partnership Contact
-              </h3>
-              <p class="text-sm leading-relaxed text-neutral-700 mb-3">
-                A dedicated contact who can answer questions, resolve discrepancies, coordinate tracking, and update us on changes.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 mb-4">
-                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-              </div>
-              <h3 class="text-xl font-semibold text-neutral-900 mb-3">
-                Affiliate Tracking (Optional)
-              </h3>
-              <p class="text-sm leading-relaxed text-neutral-700 mb-3">
-                Affiliate network credentials or program details if you want to track referrals and pay commissions.
-              </p>
-              <p class="text-xs leading-relaxed text-neutral-600 italic">
-                Note: Completely optional. We'll list you fairly even without an affiliate arrangement.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap gap-3">
-            <NuxtLink
-              to="/contact?type=provider"
-              class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              Start onboarding process
-            </NuxtLink>
-            <NuxtLink
-              to="/contact?type=api&topic=documentation"
-              class="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-6 py-3 text-base font-semibold text-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              Share API documentation
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- For Publishers/Media -->
-    <section class="py-16 lg:py-20 bg-brand-600">
+    <section v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
@@ -785,7 +602,7 @@
     </section>
 
     <!-- Enterprise Data & API Partnerships (Institutional) -->
-    <section class="py-16 lg:py-20 bg-slate-900">
+    <section v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="py-16 lg:py-20 bg-slate-900">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-12">
           <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">
@@ -1097,113 +914,6 @@
       </div>
     </section>
 
-    <!-- How We Label Disclosures -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            How We Label Partnerships on Remit-Scout
-          </h2>
-          <p class="text-lg leading-relaxed text-neutral-700 mb-10">
-            We use consistent labels so users always know what they're seeing. These badges appear throughout the site:
-          </p>
-
-          <div class="grid gap-6 md:grid-cols-2">
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 ring-1 ring-blue-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                We may earn a commission
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Indicates an affiliate relationship may exist for that provider link. This appears near outbound links to providers we have partnerships with.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                Rankings are independent
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Indicates that sorting and scoring is not influenced by paid placement. This appears on comparison pages and methodology documentation.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800 ring-1 ring-purple-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                  />
-                </svg>
-                Official Data Feed
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Indicates the provider supplies direct structured data via API for real-time quotes. This improves accuracy and reduces the chance of stale pricing.
-              </p>
-            </div>
-
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-medium text-orange-800 ring-1 ring-orange-200 mb-4">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-                  />
-                </svg>
-                Sponsored
-              </div>
-              <p class="text-sm leading-relaxed text-neutral-700">
-                Reserved for clearly labeled sponsorship placements (if we offer them). Sponsored content never influences organic rankings or Remit-Scores.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Data Sourcing & Accuracy -->
     <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -1218,7 +928,7 @@
             How we collect and display comparison data
           </p>
           <p class="text-base leading-relaxed text-neutral-600 mb-8">
-            We get pricing data three ways: <strong class="font-semibold text-neutral-900">direct provider APIs</strong> (most consistent when available), <strong class="font-semibold text-neutral-900">partner feeds</strong>, or <strong class="font-semibold text-neutral-900">public quote requests</strong>. We normalize everything into one comparable number: what the recipient should receive. Refresh cadence varies by corridor and payment method.
+            We get pricing data three ways: <strong class="font-semibold text-neutral-900">direct provider feeds</strong> (most consistent when available), <strong class="font-semibold text-neutral-900">partner feeds</strong>, or <strong class="font-semibold text-neutral-900">public quote requests</strong>. We normalize everything into one comparable number: what the recipient should receive. Refresh cadence varies by corridor and payment method.
           </p>
 
           <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
@@ -1312,7 +1022,7 @@
                 </summary>
                 <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
                   <p class="mb-3">
-                    <strong class="font-semibold text-neutral-900">No upfront costs.</strong> There's no fee to be listed on Remit-Scout. If you provide API access or structured data, we'll list you for free.
+                    <strong class="font-semibold text-neutral-900">No upfront costs.</strong> There's no fee to be listed on Remit-Scout. If you share pricing documentation or allow quote capture from public pages, we'll list you for free.
                   </p>
                   <p class="mb-3">
                     Affiliate partnerships are optional. If we have an affiliate relationship, we only earn a commission when a user clicks through from Remit-Scout and completes a transfer with you. If you don't want an affiliate relationship, we'll still list you — you just won't pay any commissions.
@@ -1411,7 +1121,7 @@
                     <strong class="font-semibold text-neutral-900">We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate and resolve confirmed issues within 48 hours.
                   </p>
                   <p>
-                    For pricing changes: If you have API access, updates are automatic. If we pull quotes manually, just let us know when pricing changes and we'll update our system. For new corridors, promotions, or service changes, keep your partnership contact updated and we'll reflect changes on the site.
+                    For pricing changes: If we have direct data feeds, updates are automatic. If we pull quotes manually, just let us know when pricing changes and we'll update our system. For new corridors, promotions, or service changes, keep your partnership contact updated and we'll reflect changes on the site.
                   </p>
                 </div>
               </details>
@@ -1441,13 +1151,13 @@
                   </p>
                   <ol class="space-y-2 ml-4 list-decimal">
                     <li><strong class="font-semibold text-neutral-900">Initial contact:</strong> Fill out our provider inquiry form or email us with basic info about your service.</li>
-                    <li><strong class="font-semibold text-neutral-900">Data sharing:</strong> Share your API endpoint, structured data feed, or pricing documentation.</li>
+                    <li><strong class="font-semibold text-neutral-900">Data sharing:</strong> Share pricing documentation, corridor details, or access to public quote flows.</li>
                     <li><strong class="font-semibold text-neutral-900">Integration:</strong> We integrate your data into our comparison system (usually 3-5 business days).</li>
                     <li><strong class="font-semibold text-neutral-900">Testing & verification:</strong> We test quotes across your corridors and verify accuracy.</li>
                     <li><strong class="font-semibold text-neutral-900">Go live:</strong> You appear in comparison results!</li>
                   </ol>
                   <p class="mt-3">
-                    If you have API access ready, the process is faster. If we need to pull quotes manually, it may take a bit longer. We'll keep you updated throughout the process.
+                    If you can provide structured data, the process is faster. If we need to pull quotes manually, it may take a bit longer. We'll keep you updated throughout the process.
                   </p>
                 </div>
               </details>
@@ -1538,50 +1248,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, h } from 'vue'
+import { ref } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
-
-const getIconForPartnerEmoji = (emoji: string) => {
-  const iconMap: Record<string, any> = {
-    '💸': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
-    ]),
-    '📱': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' })
-    ]),
-    '🌍': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
-    ]),
-    '🏦': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' })
-    ]),
-    '💼': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' })
-    ]),
-    '⚡': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M13 10V3L4 14h7v7l9-11h-7z' })
-    ]),
-    '📲': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' })
-    ]),
-    '🚀': () => h('svg', { class: 'w-8 h-8 text-brand-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M13 10V3L4 14h7v7l9-11h-7z' })
-    ]),
-  }
-  return iconMap[emoji] || (() => h('span', { class: 'text-3xl' }, emoji))
-}
+import { FEATURE_FLAGS } from '~/utils/constants'
 
 const partners = ref([
-  { name: 'Wise', type: 'Money Transfer', emoji: '💸' },
-  { name: 'Remitly', type: 'Money Transfer', emoji: '📱' },
-  { name: 'WorldRemit', type: 'Money Transfer', emoji: '🌍' },
-  { name: 'Western Union', type: 'Money Transfer', emoji: '🏦' },
-  { name: 'MoneyGram', type: 'Money Transfer', emoji: '💼' },
-  { name: 'Xoom', type: 'Money Transfer', emoji: '⚡' },
-  { name: 'SendWave', type: 'Money Transfer', emoji: '📲' },
-  { name: 'Azimo', type: 'Money Transfer', emoji: '🚀' },
+  { name: 'Wise', slug: 'wise' },
+  { name: 'Remitly', slug: 'remitly' },
+  { name: 'WorldRemit', slug: 'worldremit' },
+  { name: 'Western Union', slug: 'western-union' },
+  { name: 'SendWave', slug: 'sendwave' },
+  { name: 'XE Money', slug: 'xe-money' },
 ])
 
 const runtimeConfig = useRuntimeConfig()

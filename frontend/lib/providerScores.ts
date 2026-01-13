@@ -65,19 +65,6 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.88,
     },
   },
-  xe: {
-    id: 'xe',
-    slug: 'xe-money',
-    name: 'XE Money',
-    remitScore: 8.7,
-    scoreBreakdown: {
-      deliveredValue: 0.85,
-      reliability: 0.88,
-      frictionSpeed: 0.80,
-      supportRefunds: 0.85,
-      trustSafety: 0.88,
-    },
-  },
   transfergo: {
     id: 'transfergo',
     slug: 'transfergo',
@@ -128,6 +115,19 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       frictionSpeed: 0.85,
       supportRefunds: 0.82,
       trustSafety: 0.85,
+    },
+  },
+  intermex: {
+    id: 'intermex',
+    slug: 'intermex',
+    name: 'Intermex',
+    remitScore: 8.0,
+    scoreBreakdown: {
+      deliveredValue: 0.75,
+      reliability: 0.80,
+      frictionSpeed: 0.77,
+      supportRefunds: 0.76,
+      trustSafety: 0.79,
     },
   },
   remitbee: {
@@ -208,6 +208,19 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.79,
     },
   },
+  dahabshiil: {
+    id: 'dahabshiil',
+    slug: 'dahabshiil',
+    name: 'Dahabshiil',
+    remitScore: 8.0,
+    scoreBreakdown: {
+      deliveredValue: 0.75,
+      reliability: 0.81,
+      frictionSpeed: 0.77,
+      supportRefunds: 0.76,
+      trustSafety: 0.79,
+    },
+  },
   singx: {
     id: 'singx',
     slug: 'singx',
@@ -273,8 +286,8 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.78,
     },
   },
-  'al-ansari-exchange': {
-    id: 'al-ansari-exchange',
+  alansari: {
+    id: 'alansari',
     slug: 'al-ansari-exchange',
     name: 'Al Ansari Exchange',
     remitScore: 7.9,
@@ -284,6 +297,19 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       frictionSpeed: 0.73,
       supportRefunds: 0.76,
       trustSafety: 0.81,
+    },
+  },
+  bossmoney: {
+    id: 'bossmoney',
+    slug: 'boss-money',
+    name: 'BOSS Money',
+    remitScore: 8.8,
+    scoreBreakdown: {
+      deliveredValue: 0.82,
+      reliability: 0.90,
+      frictionSpeed: 0.87,
+      supportRefunds: 0.75,
+      trustSafety: 0.90,
     },
   },
 }

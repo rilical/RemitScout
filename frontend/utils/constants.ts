@@ -257,5 +257,4 @@ export const FEATURE_FLAGS = {
   PULSE_ENABLED: false,
   ENTERPRISE_ENABLED: false,
   DEV_AUTO_LOGIN: false,
-  PULE_ENABLED: false,
 } as const

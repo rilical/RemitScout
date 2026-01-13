@@ -30,6 +30,13 @@ const providersSchema = dateRangeSchema.extend({
   sort_by: z.enum(['click_count', 'ctr', 'unique_users']).optional(),
 })
 
+const providerImpactSchema = dateRangeSchema.extend({
+  provider_id: z.string().optional(),
+  corridor_id: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  corridor_limit: z.coerce.number().int().min(1).max(500).optional(),
+})
+
 const providerCtrSchema = dateRangeSchema.extend({
   provider_id: z.string().optional(),
   bucket: z.enum(['hour', 'day', 'week']).optional(),
@@ -158,6 +165,52 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
       return { providers }
     } catch (error) {
       logger.error('analytics_providers_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.get('/analytics/providers/impact', { preHandler: requireAdmin() }, async (request, reply) => {
+    const parsed = providerImpactSchema.safeParse(request.query ?? {})
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    const range = parseDateRange(parsed.data)
+    if (!range) {
+      reply.code(400)
+      return { error: 'invalid_date_range' }
+    }
+
+    try {
+      const providers = await analyticsRepository.getProviderImpactSummary({
+        startDate: range.start,
+        endDate: range.end,
+        providerId: parsed.data.provider_id,
+        limit: parsed.data.limit ?? 50,
+      })
+
+      const corridors = await analyticsRepository.getProviderCorridorImpact({
+        startDate: range.start,
+        endDate: range.end,
+        providerId: parsed.data.provider_id,
+        corridorId: parsed.data.corridor_id,
+        limit: parsed.data.corridor_limit ?? 200,
+      })
+
+      return {
+        providers,
+        corridors,
+        period: {
+          start_date: range.start.toISOString(),
+          end_date: range.end.toISOString(),
+        },
+      }
+    } catch (error) {
+      logger.error('analytics_provider_impact_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
       reply.code(500)

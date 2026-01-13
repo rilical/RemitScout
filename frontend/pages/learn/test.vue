@@ -67,14 +67,9 @@
         This is the hidden cost that many people miss. Providers add a markup to the exchange rate, typically 0.5% to 5% above the mid-market rate. On a $1,000 transfer, a 3% markup costs you $30—even if they advertise "$0 fees."
       </p>
 
-      <!-- Another Inline Ad -->
-      <AdSpace
-        position="inline"
-        width="100%"
-        height="250px"
-        class="my-8"
-      />
-
+      <div class="my-8">
+        <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+      </div>
       <h2>Real Example: $500 Transfer to Mexico</h2>
       <p>
         Let's compare two providers for a $500 transfer from the US to Mexico:
@@ -211,7 +206,6 @@
 
 <script setup lang="ts">
 import BlogTemplate from '~/components/blog/BlogTemplate.vue'
-import AdSpace from '~/components/blog/AdSpace.vue'
 import { setSeo } from '~/composables/useSeo'
 
 const faqs = [
@@ -238,7 +232,6 @@ setSeo({
   description: 'A comprehensive guide to understanding how fees work in international money transfers and how to avoid hidden costs.',
 })
 </script>
-
 
 
 

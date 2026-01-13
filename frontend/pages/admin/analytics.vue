@@ -90,6 +90,73 @@
         </div>
       </section>
 
+      <section class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900">Provider Impact</h2>
+          <p class="text-xs text-slate-500">Traffic, clicks, and reported transfer volume by provider.</p>
+          <div class="mt-4 overflow-auto">
+            <table class="min-w-full text-sm">
+              <thead class="text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="py-2 text-left">Provider</th>
+                  <th class="py-2 text-right">Clicks</th>
+                  <th class="py-2 text-right">Unique clickers</th>
+                  <th class="py-2 text-right">Conversions</th>
+                  <th class="py-2 text-right">Conv rate</th>
+                  <th class="py-2 text-right">Reported volume</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in providerImpact" :key="row.provider_id" class="border-t border-slate-100">
+                  <td class="py-2 text-left text-slate-700">{{ row.provider_name || row.provider_id }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatCount(row.total_clicks) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatCount(row.unique_clicks) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatCount(row.conversions) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatRate(row.conversion_rate) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatConversionValues(row.conversion_values) }}</td>
+                </tr>
+                <tr v-if="providerImpact.length === 0">
+                  <td colspan="6" class="py-3 text-center text-xs text-slate-400">No data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-2 text-xs text-slate-400">Reported volume is sourced from affiliate conversion events.</p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900">Top Provider Corridors</h2>
+          <p class="text-xs text-slate-500">Corridors driving the most traffic and value per provider.</p>
+          <div class="mt-4 overflow-auto">
+            <table class="min-w-full text-sm">
+              <thead class="text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="py-2 text-left">Provider</th>
+                  <th class="py-2 text-left">Corridor</th>
+                  <th class="py-2 text-right">Clicks</th>
+                  <th class="py-2 text-right">Conversions</th>
+                  <th class="py-2 text-right">Conv rate</th>
+                  <th class="py-2 text-right">Reported volume</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in providerCorridors" :key="`${row.provider_id}-${row.corridor_id || 'none'}`" class="border-t border-slate-100">
+                  <td class="py-2 text-left text-slate-700">{{ row.provider_name || row.provider_id }}</td>
+                  <td class="py-2 text-left text-slate-700">{{ row.corridor_id || '-' }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatCount(row.total_clicks) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatCount(row.conversions) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatRate(row.conversion_rate) }}</td>
+                  <td class="py-2 text-right text-slate-600">{{ formatConversionValues(row.conversion_values) }}</td>
+                </tr>
+                <tr v-if="providerCorridors.length === 0">
+                  <td colspan="6" class="py-3 text-center text-xs text-slate-400">No data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section class="grid gap-6 lg:grid-cols-3">
         <div class="rounded-2xl bg-white p-6 shadow-sm">
           <h2 class="text-lg font-semibold text-slate-900">Engagement</h2>
@@ -142,7 +209,8 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
-const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, loading, error } = useAnalytics()
+const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact, loading, error } = useAnalytics()
+const { formatMoney } = useRemittanceApi()
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
@@ -170,6 +238,30 @@ const savingsSummary = ref({
   worst_provider_cost: 0,
 })
 const userPatterns = ref<any[]>([])
+const providerImpact = ref<any[]>([])
+const providerCorridors = ref<any[]>([])
+
+const formatCount = (value: number | string | null | undefined) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return '0'
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(parsed)
+}
+
+const formatRate = (value: number | string | null | undefined) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return '0%'
+  return `${parsed.toFixed(2)}%`
+}
+
+const formatConversionValues = (values?: Record<string, number> | null) => {
+  if (!values || typeof values !== 'object') return '-'
+  const entries = Object.entries(values).filter(([, amount]) => Number.isFinite(Number(amount)))
+  if (!entries.length) return '-'
+  return entries
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([currency, amount]) => formatMoney(Number(amount), currency))
+    .join(', ')
+}
 
 const loadAnalytics = async () => {
   const range = {
@@ -177,13 +269,14 @@ const loadAnalytics = async () => {
     end_date: new Date(endDate.value).toISOString(),
   }
 
-  const [corridors, providers, sessions, heatmapRes, savings, patterns] = await Promise.all([
+  const [corridors, providers, sessions, heatmapRes, savings, patterns, impact] = await Promise.all([
     getPopularCorridors({ ...range, limit: 12 }),
     getFavoriteProviders({ ...range, limit: 12 }),
     getSessionMetrics(range),
     getHeatmapData({ ...range, aggregation: 'country' }),
     getSavingsMetrics(range),
     getUserBehaviorPatterns({ ...range, pattern_type: 'search_frequency' }),
+    getProviderImpact({ ...range, limit: 50, corridor_limit: 50 }),
   ])
 
   popularCorridors.value = corridors?.corridors || []
@@ -192,6 +285,8 @@ const loadAnalytics = async () => {
   heatmap.value = heatmapRes?.heatmap || []
   savingsSummary.value = savings?.summary || savingsSummary.value
   userPatterns.value = patterns?.patterns || []
+  providerImpact.value = impact?.providers || []
+  providerCorridors.value = impact?.corridors || []
 }
 
 onMounted(loadAnalytics)

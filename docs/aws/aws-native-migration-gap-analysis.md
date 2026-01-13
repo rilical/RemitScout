@@ -19,36 +19,36 @@ Last updated: 2026-01-02 (local repo scan)
 - `backend/plane-c/` - Analytics API server (publisher validation)
 - `backend/scripts/` - Batch jobs, probes, guardrails, synthetic checks
 - `backend/shared/` - Shared config, db, logging, metrics, tracing, cache
-- `k8s/` and `backend/k8s/` - Kubernetes manifests
+- `infrastructure/k8s/` - Kubernetes manifests
 - `docs/aws/` - AWS notes and migration planning (env vars in Appendix A)
 
 ## 1) Kubernetes resources inventory
 
-### Primary manifests (`k8s/`)
+### Kubernetes manifests (`infrastructure/k8s/`)
 
 | File | Kind | Name | Purpose | AWS-native mapping |
 |---|---|---|---|---|
-| `k8s/alertmanager-config.yaml` | Secret | `alertmanager-config` | Alertmanager config + Slack/PagerDuty tokens | CloudWatch Alarms + SNS + AWS Chatbot/PagerDuty; secrets in Secrets Manager |
-| `k8s/alertmanager-config.yaml` | ConfigMap | `alertmanager-templates` | Alert message templates | CloudWatch Alarm templates + SNS formatting |
-| `k8s/grafana-dashboards-configmap.yaml` | ConfigMap | `grafana-dashboards` | Grafana dashboards (Prometheus) | Amazon Managed Grafana or CloudWatch Dashboards |
-| `k8s/jaeger-deployment.yaml` | Deployment | `jaeger` | Jaeger all-in-one tracing | AWS X-Ray (or ADOT + X-Ray exporter) |
-| `k8s/jaeger-deployment.yaml` | Service | `jaeger` | Service for Jaeger UI + collectors | X-Ray; no service needed |
-| `k8s/prometheus-alert-rules.yaml` | ConfigMap | `prometheus-alert-rules` | Prometheus alert rules | CloudWatch Alarms or AMP rule groups |
-| `k8s/synthetic-monitor-deployment.yaml` | Deployment | `synthetic-monitor` | Synthetic monitoring runner | CloudWatch Synthetics (Canary) or EventBridge + Lambda |
-| `k8s/synthetic-monitor-deployment.yaml` | Service | `synthetic-monitor` | Metrics endpoint | CloudWatch Metrics / Synthetics |
-| `k8s/b2c-refresh-worker-cronjob.yaml` | CronJob | `b2c-refresh-worker` | B2C refresh worker | EventBridge schedule -> Lambda/ECS |
+| `infrastructure/k8s/alertmanager-config.yaml` | Secret | `alertmanager-config` | Alertmanager config + Slack/PagerDuty tokens | CloudWatch Alarms + SNS + AWS Chatbot/PagerDuty; secrets in Secrets Manager |
+| `infrastructure/k8s/alertmanager-config.yaml` | ConfigMap | `alertmanager-templates` | Alert message templates | CloudWatch Alarm templates + SNS formatting |
+| `infrastructure/k8s/grafana-dashboards-configmap.yaml` | ConfigMap | `grafana-dashboards` | Grafana dashboards (Prometheus) | Amazon Managed Grafana or CloudWatch Dashboards |
+| `infrastructure/k8s/jaeger-deployment.yaml` | Deployment | `jaeger` | Jaeger all-in-one tracing | AWS X-Ray (or ADOT + X-Ray exporter) |
+| `infrastructure/k8s/jaeger-deployment.yaml` | Service | `jaeger` | Service for Jaeger UI + collectors | X-Ray; no service needed |
+| `infrastructure/k8s/prometheus-alert-rules.yaml` | ConfigMap | `prometheus-alert-rules` | Prometheus alert rules | CloudWatch Alarms or AMP rule groups |
+| `infrastructure/k8s/synthetic-monitor-deployment.yaml` | Deployment | `synthetic-monitor` | Synthetic monitoring runner | CloudWatch Synthetics (Canary) or EventBridge + Lambda |
+| `infrastructure/k8s/synthetic-monitor-deployment.yaml` | Service | `synthetic-monitor` | Metrics endpoint | CloudWatch Metrics / Synthetics |
+| `infrastructure/k8s/b2c-refresh-worker-cronjob.yaml` | CronJob | `b2c-refresh-worker` | B2C refresh worker | EventBridge schedule -> Lambda/ECS |
 
-### Plane B cronjobs (`backend/k8s/`)
+### Plane B cronjobs (`infrastructure/k8s/`)
 
 | File | Kind | Name | Purpose | AWS-native mapping |
 |---|---|---|---|---|
-| `backend/k8s/b2c-refresh-worker-cronjob.yaml` | CronJob | `b2c-refresh-worker` | B2C refresh worker (schedule */2) | EventBridge schedule -> Lambda/ECS |
-| `backend/k8s/b2c-refresh-worker-cronjob.yaml` | CronJob | `b2c-retry-failed` | Retry failed refresh requests (*/15) | EventBridge schedule -> Lambda |
-| `backend/k8s/stoplist-auto-resume-cronjob.yaml` | CronJob | `stoplist-auto-resume` | Resume stoplisted providers (daily 02:00) | EventBridge schedule -> Lambda |
+| `infrastructure/k8s/b2c-refresh-worker-cronjob.yaml` | CronJob | `b2c-refresh-worker` | B2C refresh worker (schedule */2) | EventBridge schedule -> Lambda/ECS |
+| `infrastructure/k8s/b2c-refresh-worker-cronjob.yaml` | CronJob | `b2c-retry-failed` | Retry failed refresh requests (*/15) | EventBridge schedule -> Lambda |
+| `infrastructure/k8s/stoplist-auto-resume-cronjob.yaml` | CronJob | `stoplist-auto-resume` | Resume stoplisted providers (daily 02:00) | EventBridge schedule -> Lambda |
 
 Notes:
-- There are duplicate CronJob definitions in `k8s/` vs `backend/k8s/` with different
-  schedules and image names. Phase 1 should reconcile to a single source of truth.
+- CronJob definitions have been consolidated under `infrastructure/k8s/` to avoid
+  duplicate schedules and image references.
 
 ## 2) Deployment configuration and packaging
 
@@ -284,7 +284,7 @@ cutover timing and scaling thresholds.
 ### Tracing
 
 - OpenTelemetry + Jaeger exporter in `backend/shared/tracing.ts`.
-- Jaeger deployed in `k8s/jaeger-deployment.yaml`.
+- Jaeger deployed in `infrastructure/k8s/jaeger-deployment.yaml`.
 
 ### Logging
 

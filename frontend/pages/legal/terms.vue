@@ -1,20 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-      <Breadcrumbs :items="breadcrumbItems" />
-
-      <div class="mx-auto max-w-4xl">
-        <div class="rounded-lg bg-white p-8 shadow-md">
-          <div class="mb-8">
-            <h1 class="mb-4 text-4xl font-bold text-gray-900">
-              Terms of Service
-            </h1>
-            <p class="text-gray-600">
-              Last updated: December 14, 2025
-            </p>
-          </div>
-
-          <div class="prose prose-lg max-w-none">
+  <LegalPageShell
+    title="Terms of Service"
+    subtitle="The legal agreement for using Remit-Scout and our comparison tools."
+    badge="Terms"
+    :last-updated-label="lastUpdatedLabel"
+    :last-updated-iso="lastUpdatedIso"
+    :breadcrumb-items="breadcrumbItems"
+    :toc="tocItems"
+    :highlights="highlights"
+    :related="relatedLinks"
+  >
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
             <p class="mb-6 text-lg leading-relaxed">
               These Terms of Service ("Terms") govern your access to and use of the <strong class="text-blue-600">Remit-Scout</strong>
               website and services (the "Service"), operated by <strong class="text-blue-600">Remit-Scout LLC</strong> ("Remit-Scout,"
@@ -40,7 +36,7 @@
               </p>
             </div>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="acceptance-of-terms" class="mb-4 text-2xl font-bold text-gray-900">
               Acceptance of Terms
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -54,7 +50,7 @@
               between you and Remit-Scout LLC.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="description-of-services" class="mb-4 text-2xl font-bold text-gray-900">
               Description of Services
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -74,7 +70,7 @@
               of any third-party provider.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="no-financial-advice" class="mb-4 text-2xl font-bold text-gray-900">
               No Financial or Legal Advice
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -85,7 +81,7 @@
               before making any significant financial decisions.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="provider-offerings" class="mb-4 text-2xl font-bold text-gray-900">
               Changes to Provider Offerings
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -96,7 +92,7 @@
               directly with the provider before initiating a transfer.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="eligibility" class="mb-4 text-2xl font-bold text-gray-900">
               Eligibility
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -106,7 +102,7 @@
               organization to these Terms.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="accounts" class="mb-4 text-2xl font-bold text-gray-900">
               Accounts
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -119,7 +115,7 @@
               >contact page</NuxtLink>.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="remit-scout-plus" class="mb-4 text-2xl font-bold text-gray-900">
               Remit-Scout Plus (Paid Membership)
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -144,7 +140,7 @@
               notice and give you an opportunity to cancel before the new price takes effect.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="user-responsibilities" class="mb-4 text-2xl font-bold text-gray-900">
               User Responsibilities
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -163,7 +159,7 @@
               <li><strong class="text-blue-600">No Resale:</strong> Not resell, license, or commercially exploit the Service or its outputs except as expressly permitted by us</li>
             </ul>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="intellectual-property" class="mb-4 text-2xl font-bold text-gray-900">
               Intellectual Property Rights
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -174,7 +170,7 @@
               publicly perform, republish, download, store, or transmit any of our content without our prior written consent.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="user-content" class="mb-4 text-2xl font-bold text-gray-900">
               User Content (Reviews)
             </h2>
             <p class="mb-4 leading-relaxed">
@@ -188,7 +184,7 @@
               not violate any law or any third-party rights. We may remove or restrict User Content at any time in our discretion.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="disclaimer" class="mb-4 text-2xl font-bold text-gray-900">
               Disclaimer of Warranties
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -209,7 +205,7 @@
               with providers before making transfers.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="limitation-of-liability" class="mb-4 text-2xl font-bold text-gray-900">
               Limitation of Liability
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -229,7 +225,7 @@
               the amount you paid to us, if any, in the twelve months preceding the claim, or $100, whichever is greater.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="third-party-services" class="mb-4 text-2xl font-bold text-gray-900">
               Third-Party Services and Links
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -255,7 +251,7 @@
               transactions between you and third-party providers.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="indemnification" class="mb-4 text-2xl font-bold text-gray-900">
               Indemnification
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -270,7 +266,7 @@
               <li>Your violation of any applicable laws or regulations</li>
             </ul>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="termination" class="mb-4 text-2xl font-bold text-gray-900">
               Termination
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -289,7 +285,7 @@
               limitations of liability.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="changes-to-terms" class="mb-4 text-2xl font-bold text-gray-900">
               Changes to Terms
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -299,7 +295,7 @@
               Terms, you must stop using our services.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="governing-law" class="mb-4 text-2xl font-bold text-gray-900">
               Governing Law and Dispute Resolution
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -320,7 +316,7 @@
               either party from bringing an individual claim in small claims court where permitted.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="severability" class="mb-4 text-2xl font-bold text-gray-900">
               Severability
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -329,7 +325,7 @@
               it valid and enforceable.
             </p>
 
-            <h2 class="mb-4 text-2xl font-bold text-gray-900">
+            <h2 id="entire-agreement" class="mb-4 text-2xl font-bold text-gray-900">
               Entire Agreement
             </h2>
             <p class="mb-6 leading-relaxed">
@@ -346,194 +342,91 @@
               constitute the entire agreement between you and <strong class="text-blue-600">Remit-Scout</strong> regarding your use
               of our services and supersede all prior agreements and understandings.
             </p>
-
-            <!-- CTA Section -->
-            <div class="my-12 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8">
-              <h3 class="mb-4 text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <svg
-                  class="h-6 w-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                  />
-                </svg>
-                <span>Learn More About Remit-Scout</span>
-              </h3>
-              <p class="mb-6 text-gray-700 leading-relaxed">
-                Understand our mission, how we operate, and our commitment to providing transparent, independent money transfer
-                comparisons.
-              </p>
-              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <NuxtLink
-                  to="/about"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">About Us</div>
-                    <div class="text-sm text-gray-600">Our story and mission</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/methodology"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 13l8 0 7 8 0-8 7 0-7-8-7 8-7 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Methodology</div>
-                    <div class="text-sm text-gray-600">How we compare providers</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/legal/disclosure"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Disclosure Policy</div>
-                    <div class="text-sm text-gray-600">Our transparency commitment</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/legal/privacy"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Privacy Policy</div>
-                    <div class="text-sm text-gray-600">How we protect your data</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/faq"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">FAQ</div>
-                    <div class="text-sm text-gray-600">Common questions</div>
-                  </div>
-                </NuxtLink>
-                <NuxtLink
-                  to="/contact"
-                  class="flex items-center gap-3 rounded-lg border border-blue-200 bg-white p-4 transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <div>
-                    <div class="font-semibold text-gray-900">Contact Us</div>
-                    <div class="text-sm text-gray-600">Get in touch</div>
-                  </div>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <div class="rounded-lg border border-blue-200 bg-blue-50 p-6">
-              <h3 class="mb-2 text-lg font-semibold text-blue-900">
-                Questions About Our Terms of Service?
-              </h3>
-              <p class="mb-4 text-blue-800 leading-relaxed">
-                If you have questions about these Terms or need clarification on any aspect of our services,
-                we're here to help. Visit our
-                <NuxtLink
-                  to="/faq"
-                  class="font-semibold underline hover:text-blue-900"
-                >FAQ page</NuxtLink>
-                or <NuxtLink
-                  to="/contact"
-                  class="font-semibold underline hover:text-blue-900"
-                >contact us directly</NuxtLink>.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <template #sidebar>
+      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+        <h3 class="text-sm font-semibold text-blue-900">
+          Questions about our terms?
+        </h3>
+        <p class="mt-2 text-sm text-blue-800 leading-relaxed">
+          If you need clarification about these Terms or how the service works, visit our
+          <NuxtLink to="/faq" class="font-semibold underline hover:text-blue-900">FAQ</NuxtLink>
+          or <NuxtLink to="/contact" class="font-semibold underline hover:text-blue-900">contact us</NuxtLink>.
+        </p>
+      </div>
+    </template>
+  </LegalPageShell>
 </template>
 
 <script setup lang="ts">
-import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
+import LegalPageShell from '~/components/legal/LegalPageShell.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
+
+const lastUpdatedIso = '2025-12-14'
+const lastUpdatedLabel = 'December 14, 2025'
+
+const highlights = [
+  {
+    title: 'Independent comparison platform',
+    body: 'We do not move money or provide financial services.',
+  },
+  {
+    title: 'No financial advice',
+    body: 'Information is educational and should be verified with providers.',
+  },
+  {
+    title: 'Rankings stay unbiased',
+    body: 'Remit-Scout Plus and partnerships do not affect rankings.',
+  },
+]
+
+const tocItems = [
+  { id: 'acceptance-of-terms', label: 'Acceptance of terms' },
+  { id: 'description-of-services', label: 'Description of services' },
+  { id: 'no-financial-advice', label: 'No financial or legal advice' },
+  { id: 'provider-offerings', label: 'Changes to provider offerings' },
+  { id: 'eligibility', label: 'Eligibility' },
+  { id: 'accounts', label: 'Accounts' },
+  { id: 'remit-scout-plus', label: 'Remit-Scout Plus' },
+  { id: 'user-responsibilities', label: 'User responsibilities' },
+  { id: 'intellectual-property', label: 'Intellectual property' },
+  { id: 'user-content', label: 'User content' },
+  { id: 'disclaimer', label: 'Disclaimer of warranties' },
+  { id: 'limitation-of-liability', label: 'Limitation of liability' },
+  { id: 'third-party-services', label: 'Third-party services' },
+  { id: 'indemnification', label: 'Indemnification' },
+  { id: 'termination', label: 'Termination' },
+  { id: 'changes-to-terms', label: 'Changes to terms' },
+  { id: 'governing-law', label: 'Governing law' },
+  { id: 'severability', label: 'Severability' },
+  { id: 'entire-agreement', label: 'Entire agreement' },
+]
+
+const relatedLinks = [
+  {
+    title: 'Privacy Policy',
+    description: 'How we protect your data.',
+    to: '/legal/privacy',
+  },
+  {
+    title: 'Disclosure Policy',
+    description: 'Transparency and partnerships.',
+    to: '/legal/disclosure',
+  },
+  {
+    title: 'Methodology',
+    description: 'How we compare providers.',
+    to: '/methodology',
+  },
+  {
+    title: 'About Remit-Scout',
+    description: 'Our mission and values.',
+    to: '/about',
+  },
+]
 
 setSeo({
   title: 'Terms of Service | Remit-Scout Legal Agreement',
@@ -541,6 +434,11 @@ setSeo({
     'Read the Terms of Service for Remit-Scout. Understand rules for using our comparison platform, accounts, and Remit-Scout Plus membership.',
   canonical: `${siteUrl}/legal/terms`,
   ogImage: `${siteUrl}/images/og/terms.jpg`,
+  ogType: 'article',
+  publishedTime: lastUpdatedIso,
+  modifiedTime: lastUpdatedIso,
+  author: 'Remit-Scout Editorial Team',
+  tags: ['terms', 'legal', 'remit-scout'],
 })
 
 jsonLdBreadcrumb([
@@ -549,7 +447,27 @@ jsonLdBreadcrumb([
   { name: 'Terms of Service', url: `${siteUrl}/legal/terms` },
 ])
 
-// Breadcrumbs
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'TermsOfService',
+        'name': 'Terms of Service',
+        'url': `${siteUrl}/legal/terms`,
+        'datePublished': lastUpdatedIso,
+        'dateModified': lastUpdatedIso,
+        'publisher': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+        },
+      }),
+    },
+  ],
+})
+
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Legal', path: '/legal' },

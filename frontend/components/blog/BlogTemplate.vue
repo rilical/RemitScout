@@ -168,12 +168,7 @@
                 </NuxtLink>
               </div>
 
-              <!-- Ad Space (Sidebar - Single) -->
-              <AdSpace
-                position="sidebar"
-                width="300px"
-                height="600px"
-              />
+              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
             </div>
           </aside>
         </div>
@@ -215,7 +210,6 @@ import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import FounderStory from '~/components/home/FounderStory.vue'
 import NewsletterSignup from '~/components/home/NewsletterSignup.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
-import AdSpace from '~/components/blog/AdSpace.vue'
 import Author from '~/components/blog/Author.vue'
 import MoreGuides from '~/components/blog/MoreGuides.vue'
 
@@ -278,7 +272,6 @@ const guideAlertTarget = computed(() => ({
 
 const guideAlertLabel = computed(() => `${guideAlertTarget.value.from}→${guideAlertTarget.value.to} • ${guideAlertTarget.value.method}`)
 </script>
-
 
 
 

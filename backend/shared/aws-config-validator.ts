@@ -93,6 +93,8 @@ export const validateAwsConfig = async (
     const queues = [
       { name: 'quote_refresh', url: config.queues.quoteRefreshUrl },
       { name: 'quote_refresh_dlq', url: config.queues.quoteRefreshDlqUrl },
+      { name: 'fx_rate_refresh', url: config.queues.fxRateRefreshUrl },
+      { name: 'fx_rate_refresh_dlq', url: config.queues.fxRateRefreshDlqUrl },
       { name: 'exports', url: config.queues.exports.url },
       { name: 'alert_evaluation', url: config.alerts.evaluation.queueUrl },
       { name: 'ops_alerts', url: config.queues.opsAlerts.url },
@@ -184,3 +186,4 @@ export const assertAwsConfig = async (
     throw new Error(`AWS configuration validation failed: ${errors}`)
   }
 }
+

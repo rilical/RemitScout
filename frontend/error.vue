@@ -30,11 +30,11 @@
 
       <!-- Heading -->
       <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">
-        Page not found
+        {{ heading }}
       </h2>
 
       <p class="text-base sm:text-lg text-neutral-600 mb-10 max-w-xl mx-auto">
-        {{ error.statusMessage || 'The page you\'re looking for doesn\'t exist or has been moved.' }}
+        {{ description }}
       </p>
 
       <!-- Action Buttons -->
@@ -87,14 +87,28 @@ const props = defineProps<ErrorProps>()
 
 const error = computed(() => props.error || { statusCode: 404, statusMessage: 'Page not found' })
 
+const statusCode = computed(() => error.value.statusCode || 404)
+const heading = computed(() => {
+  if (statusCode.value === 401) return 'Unauthorized'
+  if (statusCode.value === 403) return 'Access denied'
+  if (statusCode.value >= 500) return 'Something went wrong'
+  return 'Page not found'
+})
+const description = computed(() => {
+  if (statusCode.value === 401) return 'Please sign in to access this page.'
+  if (statusCode.value === 403) return 'You do not have permission to view this page.'
+  if (statusCode.value >= 500) return 'We hit an unexpected error. Please try again.'
+  return error.value.statusMessage || 'The page you\'re looking for doesn\'t exist or has been moved.'
+})
+
 const handleError = () => clearError({ redirect: '/' })
 
 useHead({
-  title: `${error.value.statusCode || 404} - Page Not Found | Remit-Scout`,
+  title: `${statusCode.value} - ${heading.value} | Remit-Scout`,
   meta: [
     {
       name: 'description',
-      content: 'The page you\'re looking for doesn\'t exist. Return to Remit-Scout to compare money transfer rates.',
+      content: description.value,
     },
     {
       name: 'robots',

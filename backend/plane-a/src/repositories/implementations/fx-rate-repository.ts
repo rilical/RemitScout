@@ -217,6 +217,9 @@ export class FxRateRepository implements IFxRateRepository {
   }
 
   private shouldUseOandaFallback(): boolean {
+    if (config.fxRates?.refreshEnabled) {
+      return false
+    }
     return config.fxRates?.oandaFallbackEnabled ?? false
   }
 

@@ -1,11 +1,14 @@
 <template>
   <nav
-    class="mb-6 flex items-center space-x-2 text-sm text-gray-500"
+    :class="[
+      'mb-6 flex items-center space-x-2 text-sm',
+      isDark ? 'text-white' : 'text-gray-500'
+    ]"
     aria-label="Breadcrumb"
   >
     <NuxtLink
       to="/"
-      class="hover:text-gray-700"
+      :class="isDark ? 'text-white hover:text-brand-400' : 'text-gray-500 hover:text-gray-700'"
     >Home</NuxtLink>
     <svg
       class="h-4 w-4"
@@ -25,13 +28,13 @@
       <NuxtLink
         v-if="index < filteredItems.length - 1"
         :to="item.path"
-        class="hover:text-gray-700"
+        :class="isDark ? 'text-white hover:text-brand-400' : 'text-gray-500 hover:text-gray-700'"
       >
         {{ item.name }}
       </NuxtLink>
       <span
         v-else
-        class="font-medium text-gray-900"
+        :class="isDark ? 'font-medium text-white' : 'font-medium text-gray-900'"
       >{{ item.name }}</span>
       <svg
         v-if="index < filteredItems.length - 1"
@@ -57,11 +60,16 @@ interface BreadcrumbItem {
   path: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   items: BreadcrumbItem[]
-}>()
+  dark?: boolean
+}>(), {
+  dark: false,
+})
 
 const filteredItems = computed(() => {
   return props.items.filter(item => item.path !== '/' && item.name !== 'Home')
 })
+
+const isDark = computed(() => props.dark)
 </script>

@@ -1,7 +1,5 @@
 <template>
   <div class="flex min-h-screen flex-col">
-    <SkipToContent />
-
     <NavSiteHeader />
 
     <main
@@ -25,7 +23,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import SkipToContent from '~/components/shared/SkipToContent.vue'
 import NavSiteHeader from '~/components/nav/SiteHeader.vue'
 import NavSiteFooter from '~/components/nav/SiteFooter.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'

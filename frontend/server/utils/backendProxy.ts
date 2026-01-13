@@ -85,6 +85,12 @@ const NON_BLOCKING_PATHS = new Set([
 
 const isNonBlockingPath = (path: string) => NON_BLOCKING_PATHS.has(path)
 
+type ProxyOptions = {
+  timeoutMs?: number
+  maxRetries?: number
+  nonBlocking?: boolean
+}
+
 const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
   maxRetries = 3,
@@ -108,16 +114,19 @@ const retryWithBackoff = async <T>(
   throw lastError
 }
 
-export const proxyToBackend = async (event: any, path: string) => {
+export const proxyToBackend = async (event: any, path: string, options: ProxyOptions = {}) => {
   const base = getBackendBase()
   const method = getMethod(event)
   const query = getQuery(event)
   const headers = buildForwardHeaders(getHeaders(event))
   const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(event)
-  const nonBlocking = isNonBlockingPath(path)
+  const nonBlocking = options.nonBlocking ?? isNonBlockingPath(path)
 
-  const timeoutMs =
-    Number(process.env.BACKEND_PROXY_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS
+  const timeoutMs = options.timeoutMs
+    ?? (nonBlocking ? 3000 : undefined)
+    ?? Number(process.env.BACKEND_PROXY_TIMEOUT_MS)
+    ?? DEFAULT_TIMEOUT_MS
+  const maxRetries = options.maxRetries ?? (nonBlocking ? 0 : 3)
 
   return await retryWithBackoff(async () => {
     try {
@@ -130,9 +139,9 @@ export const proxyToBackend = async (event: any, path: string) => {
       })
     } catch (error: any) {
       const statusCode = error?.statusCode || error?.response?.status
-      if (nonBlocking && (statusCode === 401 || statusCode === 403)) {
+      if (nonBlocking) {
         setResponseStatus(event, 204)
-        return { ok: false, status: statusCode }
+        return { ok: false, status: statusCode ?? 0 }
       }
       if (statusCode && statusCode >= 500) {
         throw error
@@ -142,5 +151,5 @@ export const proxyToBackend = async (event: any, path: string) => {
       }
       throw error
     }
-  })
+  }, maxRetries)
 }

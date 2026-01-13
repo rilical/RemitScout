@@ -1,11 +1,11 @@
 <template>
-  <section class="py-12 sm:py-16 bg-neutral-50">
+  <section class="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-700">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
           What people are saying
         </h2>
-        <p class="text-lg text-neutral-600">
+        <p class="text-lg text-white/90">
           Real stories from people who saved money on their transfers
         </p>
       </div>
@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <p class="mt-8 text-center text-xs text-neutral-500">
+      <p class="mt-8 text-center text-xs text-white/80">
         {{ STR.testimonials.note }}
       </p>
     </div>

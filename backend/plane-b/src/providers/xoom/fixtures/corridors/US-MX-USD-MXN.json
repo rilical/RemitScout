@@ -1,0 +1,1531 @@
+{
+  "remittance": {
+    "id": "76a34ba6-4b8e-4034-a8e1-85f25c2fb3d3",
+    "selectedDisbursementType": "CARD_DEPOSIT",
+    "sourceCountry": null,
+    "sourceCurrency": "USD",
+    "destinationCountry": "MX",
+    "destinationCurrency": "MXN",
+    "recipient": null,
+    "validations": [],
+    "quote": {
+      "pricing": [
+        {
+          "disbursementType": "CARD_DEPOSIT",
+          "paymentType": {
+            "type": "CRYPTO_PYUSD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.2549",
+            "comparisonString": "1 USD = 18.2549 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1825.00",
+            "formattedValue": "1,825.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Deposit directly to a Visa, MasterCard and others. "
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fees for debit card deposits"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal USD (PYUSD)"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "CARD_DEPOSIT",
+          "paymentType": {
+            "type": "PAYPAL_BALANCE"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.2549",
+            "comparisonString": "1 USD = 18.2549 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1825.00",
+            "formattedValue": "1,825.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Deposit directly to a Visa, MasterCard and others. "
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fees for debit card deposits"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal balance"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "CARD_DEPOSIT",
+          "paymentType": {
+            "type": "ACH"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.2549",
+            "comparisonString": "1 USD = 18.2549 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1825.00",
+            "formattedValue": "1,825.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Deposit directly to a Visa, MasterCard and others. "
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fees for debit card deposits"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Bank Account"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "CARD_DEPOSIT",
+          "paymentType": {
+            "type": "DEBIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.2549",
+            "comparisonString": "1 USD = 18.2549 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1825.00",
+            "formattedValue": "1,825.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.39",
+            "formattedValue": "0.39",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Deposit directly to a Visa, MasterCard and others. "
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fees for debit card deposits"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Debit Card"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "CARD_DEPOSIT",
+          "paymentType": {
+            "type": "CREDIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.2549",
+            "comparisonString": "1 USD = 18.2549 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1825.00",
+            "formattedValue": "1,825.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "3.29",
+            "formattedValue": "3.29",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Deposit directly to a Visa, MasterCard and others. "
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fees for debit card deposits"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Debit Card Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Credit Card*"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "MOBILE_WALLET",
+          "paymentType": {
+            "type": "CRYPTO_PYUSD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1686",
+            "comparisonString": "1 USD = 18.1686 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Mobile Wallet"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Mercado Pago and Spin by OXXO."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal USD (PYUSD)"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "MOBILE_WALLET",
+          "paymentType": {
+            "type": "PAYPAL_BALANCE"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1686",
+            "comparisonString": "1 USD = 18.1686 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Mobile Wallet"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Mercado Pago and Spin by OXXO."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal balance"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "MOBILE_WALLET",
+          "paymentType": {
+            "type": "ACH"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1686",
+            "comparisonString": "1 USD = 18.1686 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Mobile Wallet"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Mercado Pago and Spin by OXXO."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Bank Account"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "MOBILE_WALLET",
+          "paymentType": {
+            "type": "DEBIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1686",
+            "comparisonString": "1 USD = 18.1686 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.99",
+            "formattedValue": "0.99",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Mobile Wallet"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Mercado Pago and Spin by OXXO."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Debit Card"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "MOBILE_WALLET",
+          "paymentType": {
+            "type": "CREDIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1686",
+            "comparisonString": "1 USD = 18.1686 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "4.49",
+            "formattedValue": "4.49",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Mobile Wallet"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Mercado Pago and Spin by OXXO."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Mobile Wallet"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Credit Card*"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "DEPOSIT",
+          "paymentType": {
+            "type": "CRYPTO_PYUSD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1680",
+            "comparisonString": "1 USD = 18.1680 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Bank Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available within 1 hour."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Banorte, BBVA (Bancomer), BanCoppel, Banco Azteca, Banamex and more."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Bank Deposit"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Bank Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal USD (PYUSD)"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "DEPOSIT",
+          "paymentType": {
+            "type": "PAYPAL_BALANCE"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1680",
+            "comparisonString": "1 USD = 18.1680 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Bank Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available within 1 hour."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Banorte, BBVA (Bancomer), BanCoppel, Banco Azteca, Banamex and more."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Bank Deposit"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Bank Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal balance"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "DEPOSIT",
+          "paymentType": {
+            "type": "ACH"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1680",
+            "comparisonString": "1 USD = 18.1680 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Bank Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available within 1 hour."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Banorte, BBVA (Bancomer), BanCoppel, Banco Azteca, Banamex and more."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Bank Deposit"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Bank Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Bank Account"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "DEPOSIT",
+          "paymentType": {
+            "type": "DEBIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1680",
+            "comparisonString": "1 USD = 18.1680 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.99",
+            "formattedValue": "0.99",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Bank Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available within 1 hour."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Banorte, BBVA (Bancomer), BanCoppel, Banco Azteca, Banamex and more."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Bank Deposit"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Bank Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Debit Card"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "DEPOSIT",
+          "paymentType": {
+            "type": "CREDIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "18.1680",
+            "comparisonString": "1 USD = 18.1680 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1817.00",
+            "formattedValue": "1,817.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "4.49",
+            "formattedValue": "4.49",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": [
+            {
+              "text": "First Time Rate",
+              "type": "FIRST_TIME_RATE"
+            }
+          ],
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Bank Deposit"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available within 1 hour."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Banorte, BBVA (Bancomer), BanCoppel, Banco Azteca, Banamex and more."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Bank Deposit"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Bank Deposit"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Credit Card*"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "PICKUP",
+          "paymentType": {
+            "type": "CRYPTO_PYUSD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "16.5760",
+            "comparisonString": "1 USD = 16.5760 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1658.00",
+            "formattedValue": "1,658.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": null,
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Cash Pickup"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Elektra, BanCoppel, OXXO, Bodega Aurrera, Walmart, Farmacias Guadalajara and others."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Cash Pickup"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Cash Pickup"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal USD (PYUSD)"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "PICKUP",
+          "paymentType": {
+            "type": "PAYPAL_BALANCE"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "16.5760",
+            "comparisonString": "1 USD = 16.5760 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1658.00",
+            "formattedValue": "1,658.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": null,
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Cash Pickup"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Elektra, BanCoppel, OXXO, Bodega Aurrera, Walmart, Farmacias Guadalajara and others."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Cash Pickup"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Cash Pickup"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "PayPal balance"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "PICKUP",
+          "paymentType": {
+            "type": "ACH"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "16.5760",
+            "comparisonString": "1 USD = 16.5760 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1658.00",
+            "formattedValue": "1,658.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.0000",
+            "formattedValue": "0.00",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": null,
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Cash Pickup"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Elektra, BanCoppel, OXXO, Bodega Aurrera, Walmart, Farmacias Guadalajara and others."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Cash Pickup"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Cash Pickup"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Bank Account"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "PICKUP",
+          "paymentType": {
+            "type": "DEBIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "16.5760",
+            "comparisonString": "1 USD = 16.5760 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1658.00",
+            "formattedValue": "1,658.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "0.59",
+            "formattedValue": "0.59",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": null,
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Cash Pickup"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Elektra, BanCoppel, OXXO, Bodega Aurrera, Walmart, Farmacias Guadalajara and others."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Cash Pickup"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Cash Pickup"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Debit Card"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        },
+        {
+          "disbursementType": "PICKUP",
+          "paymentType": {
+            "type": "CREDIT_CARD"
+          },
+          "validations": [],
+          "fxRate": {
+            "rate": "16.5760",
+            "comparisonString": "1 USD = 16.5760 MXN"
+          },
+          "sendAmount": {
+            "rawValue": "100.00",
+            "formattedValue": "100.00",
+            "currencyCode": "USD",
+            "validations": []
+          },
+          "receiveAmount": {
+            "rawValue": "1658.00",
+            "formattedValue": "1,658.00",
+            "currencyCode": "MXN",
+            "validations": []
+          },
+          "feeAmount": {
+            "rawValue": "2.99",
+            "formattedValue": "2.99",
+            "currencyCode": "USD",
+            "validations": null
+          },
+          "tags": null,
+          "content": [
+            {
+              "key": "feesFx.sendingToLabel",
+              "value": "Sending to Mexico"
+            },
+            {
+              "key": "feesFx.disbursementType",
+              "value": "Cash Pickup"
+            },
+            {
+              "key": "feesFx.paymentTypeHeader",
+              "value": "Typically available in minutes."
+            },
+            {
+              "key": "feesFx.paymentTypeParagraph",
+              "value": "Elektra, BanCoppel, OXXO, Bodega Aurrera, Walmart, Farmacias Guadalajara and others."
+            },
+            {
+              "key": "feesFx.feesFor",
+              "value": "Fee for Cash Pickup"
+            },
+            {
+              "key": "feesFx.showFeesForLabel",
+              "value": "Show fees for Cash Pickup"
+            },
+            {
+              "key": "feesFx.feeInLabel",
+              "value": "Fee in USD"
+            },
+            {
+              "key": "feesFx.paymentType",
+              "value": "Credit Card*"
+            },
+            {
+              "key": "feesFx.promoBanner",
+              "value": "Don't miss out! Enjoy a promotional [first time rate](/legal/xoom-new-user-promo) on your initial transfer plus no Xoom transfer fees on eligible transactions. [Learn more.](/legal/xoom-transfer-fees)"
+            },
+            {
+              "key": "feesFx.exchangeRateDisclaimer",
+              "value": "We make money on the exchange rate. The currency conversion spread varies per transaction and refreshes frequently. We round to the nearest whole peso."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

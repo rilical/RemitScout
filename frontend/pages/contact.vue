@@ -1,29 +1,36 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
+  <div class="min-h-screen bg-slate-50">
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <Breadcrumbs :items="breadcrumbItems" />
 
-      <div class="mx-auto max-w-6xl">
+      <div class="mx-auto max-w-7xl">
         <!-- Hero Section -->
-        <div class="mb-8 rounded-lg bg-white p-8 shadow-md">
-          <h1 class="mb-6 text-4xl font-bold text-gray-900">
-            Get in touch with <span class="text-primary-600">Remit-Scout</span>
-          </h1>
-          <p class="mb-4 text-lg text-gray-600">
-            Have questions about money transfers or need help choosing the right provider? We're
-            here to help.
-          </p>
-          <p class="text-sm text-gray-500">
-            Advertiser disclosure
-          </p>
-          <p class="mb-6 mt-4 text-gray-600">
-            We are unfortunately not able to answer questions about your individual money transfers.
-            Please refer to our frequently asked questions below or use the contact form for general
-            inquiries.
-          </p>
+        <div class="mb-10 rounded-3xl border border-slate-200 bg-white p-10 shadow-xl relative overflow-hidden">
+          <div class="absolute inset-0">
+            <div class="h-full w-full bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_60%)]" />
+          </div>
+          <div class="relative">
+            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 mb-6">
+              Contact
+            </div>
+            <h1 class="mb-6 text-4xl font-bold text-slate-900 sm:text-5xl">
+              Get in touch with <span class="text-brand-600">Remit-Scout</span>
+            </h1>
+            <p class="mb-4 text-lg text-slate-600">
+              Have questions about money transfers or need help choosing the right provider? We're
+              here to help.
+            </p>
+            <p class="text-sm text-slate-500">
+              Advertiser disclosure -
+              <NuxtLink to="/legal/disclosure" class="font-semibold text-brand-600 hover:text-brand-700 underline">Read disclosure</NuxtLink>
+            </p>
+            <p class="mb-6 mt-4 text-slate-600">
+              We are not able to answer questions about individual money transfers. Please refer to our frequently asked
+              questions or use the form below for general inquiries.
+            </p>
 
           <!-- Important Note -->
-          <div class="mb-8 rounded-lg border-l-4 border-orange-500 bg-orange-50 p-4">
+          <div class="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-4">
             <div class="flex">
               <svg
                 class="mr-3 h-6 w-6 flex-shrink-0 text-orange-500"
@@ -38,9 +45,8 @@
               </svg>
               <div>
                 <p class="text-sm font-medium text-orange-800">
-                  Please note that if you have a question about an ongoing transaction with a
-                  provider recommended by Remit-Scout, the quickest way to get an answer is to
-                  contact their support directly.
+                  If you have a question about an ongoing transaction, the fastest path is to contact the provider's
+                  support team directly.
                 </p>
               </div>
             </div>
@@ -48,9 +54,9 @@
 
           <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <!-- Contact Form -->
-            <div class="text-gray-900">
-              <h2 class="mb-6 text-2xl font-bold text-gray-900">
-                Get in Touch
+            <div class="text-slate-900">
+              <h2 class="mb-6 text-2xl font-bold text-slate-900">
+                Send a message
               </h2>
 
               <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -165,44 +171,8 @@
               </form>
             </div>
 
-            <!-- Location & Resources -->
+            <!-- Resources -->
             <div>
-              <h2 class="mb-6 text-2xl font-bold text-gray-900">
-                Location
-              </h2>
-
-              <div class="mb-8 space-y-6">
-                <div class="flex items-start">
-                  <svg
-                    class="mr-3 mt-1 h-6 w-6 flex-shrink-0 text-primary-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <h3 class="font-semibold text-gray-900">
-                      Remit-Scout's Office
-                    </h3>
-                    <p class="mt-1 text-gray-600">
-                      Remit-Scout's team is based in the
-                      <button
-                        type="button"
-                        class="font-medium text-primary-600 hover:text-primary-700 underline"
-                        @click="handleExternalLink('https://www.cmu.edu/swartz-center-for-entrepreneurship/')"
-                      >
-                        Swartz Center for Entrepreneurship
-                      </button>
-                      at Carnegie Mellon University.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <!-- Internal Links -->
               <div class="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
                 <h3 class="mb-5 text-xl font-bold text-gray-900">
@@ -333,17 +303,18 @@
             </div>
           </div>
         </div>
+        </div>
 
         <!-- Mini FAQ Section -->
-        <div class="mb-8 rounded-lg bg-white p-8 shadow-md">
-          <h2 class="mb-6 text-3xl font-bold text-gray-900">
+        <div class="mb-10 rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
+          <h2 class="mb-6 text-3xl font-bold text-slate-900">
             Frequently Asked Questions
           </h2>
           <FaqAccordion :faqs="contactFaqs" />
           <div class="mt-6 text-center">
             <NuxtLink
               to="/faq"
-              class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-3 text-white font-semibold hover:bg-primary-700 transition-colors"
+              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-white font-semibold hover:bg-brand-700 transition-colors"
             >
               View All FAQs
               <svg

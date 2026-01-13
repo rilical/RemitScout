@@ -97,49 +97,39 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-1" style="color: rgba(0, 0, 0, 1);">
+                  <div class="flex justify-between text-sm mb-2" >
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 79%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-1">
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-400 rounded-full" style="width: 78%" />
-                  </div>
+                  <div class="h-0.5 bg-brand-600 w-full"></div>
                 </div>
               </div>
 
@@ -187,7 +177,7 @@
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
+              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -198,7 +188,7 @@
                 </p>
               </div>
 
-              <div class="mb-12">
+              <div class="mb-22">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
                   Auditor Notes (Verbatim)
@@ -226,15 +216,14 @@
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
                     8.2
                   </div>
                   <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                      <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
                       WireBarley
                     </h3>
-                    <p class="text-sm text-black">remit-score</p>
+                    <p class="text-sm text-black">Remit-Score</p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
@@ -285,7 +274,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.2 (not 9.0+):</div>
+                      <div class="font-semibold text-slate-900 mb-2.5">Why 8.2 (not 9.0+):</div>
                       <div class="text-sm text-slate-700 leading-relaxed">WireBarley's 8.2/10 is driven first by Delivered Value because in its core use case—Korea-linked corridors—WireBarley can be cost-effective with clearly tiered fees. The score doesn't push higher mainly because corridor footprint is narrower than the global leaders, especially on the "send-from" side, so it's not always an option even if the receiving country is supported.</div>
                     </div>
                   </div>
@@ -294,9 +283,9 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
@@ -362,9 +351,9 @@
                 </p>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
@@ -395,9 +384,9 @@
                 </div>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
@@ -448,9 +437,9 @@
                 </div>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
@@ -505,9 +494,9 @@
                 </div>
               </div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
@@ -605,7 +594,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="grid md:grid-cols-2 gap-8 mb-12">
+              <div class="grid md:grid-cols-2 gap-8 mb-22">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -667,7 +656,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -679,37 +668,37 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Compare "effective cost," not the headline fee:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Compare "effective cost," not the headline fee:</strong>
                       <span class="text-slate-700">check the send fee and the FX rate you're being offered.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Move within the quote window:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Move within the quote window:</strong>
                       <span class="text-slate-700">WireBarley says the rate is guaranteed for 30 minutes during the application flow.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Choose payout method carefully:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">Choose payout method carefully:</strong>
                       <span class="text-slate-700">cash pickup vs home delivery can change both cost and speed (home delivery can be more expensive and slower, depending on corridor).</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">If sending SWIFT, expect possible intermediary deductions:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">If sending SWIFT, expect possible intermediary deductions:</strong>
                       <span class="text-slate-700">WireBarley flags this directly; don't assume "fee = total cost."</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">If you might need a refund, cancel early:</strong>
+                      <strong class="text-slate-900 block mb-2.5 text-base">If you might need a refund, cancel early:</strong>
                       <span class="text-slate-700">refunds become impossible once the instruction is delivered/received.</span>
                     </div>
                   </div>
@@ -718,7 +707,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -757,7 +746,7 @@
 
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 
-              <div class="mb-10">
+              <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                   <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -799,6 +788,7 @@
                 </NuxtLink>
               </div>
 
+              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>

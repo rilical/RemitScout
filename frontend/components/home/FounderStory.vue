@@ -38,8 +38,13 @@
                 <div class="text-sm text-neutral-600">
                   Founded by
                 </div>
-                <div class="font-semibold text-neutral-900">
-                  Carnegie Mellon Graduate
+                <div class="flex items-center gap-2 font-semibold text-brand-600">
+                  <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v9M5 13l2.5-5.5M19 13l-2.5-5.5" />
+                  </svg>
+                  <span>Carnegie Mellon Graduate</span>
                 </div>
               </div>
             </div>
@@ -120,12 +125,9 @@
               </div>
             </div>
 
-            <div class="mt-6 text-center p-4 bg-brand-50 rounded-xl">
-              <div class="text-3xl font-bold text-brand-600 mb-1">
-                $27 saved
-              </div>
-              <div class="text-sm text-neutral-600">
-                per transfer
+            <div class="mt-6 text-center p-4 bg-brand-700 rounded-xl">
+              <div class="text-3xl font-bold text-white">
+                $27 saved <span class="text-lg font-normal">per transfer</span>
               </div>
             </div>
           </div>

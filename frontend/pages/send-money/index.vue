@@ -51,15 +51,6 @@
                 </p>
               </div>
 
-              <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
-                  Why Rates Change
-                </h3>
-                <p class="text-sm text-slate-700 leading-relaxed">
-                  Exchange rates fluctuate throughout the day based on global currency markets. Different providers update their rates at different intervals, and some may offer better rates for specific corridors or transfer amounts. That's why comparing multiple providers in real-time ensures you always get the best deal available at that moment.
-                </p>
-              </div>
-
               <div class="mt-auto pt-6 border-t border-slate-200">
                 <NuxtLink
                   to="/learn"
@@ -76,7 +67,7 @@
 
           <!-- Extended Comparison Widget -->
           <div class="space-y-6">
-            <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 flex flex-col overflow-hidden">
               <div class="border-b border-slate-100 bg-blue-600 px-6 py-5">
                 <h3 class="text-xl font-bold text-white mb-1">
                   Find Your Best Rate Now
@@ -266,6 +257,7 @@
             
             <!-- Market Snapshot Box -->
             <PulseSnapshotBox
+              v-if="FEATURE_FLAGS.PULSE_ENABLED"
               title="Market Snapshot"
               description="Track live market trends and pricing intelligence across global corridors with Remit-Pulse."
               link="/pulse"
@@ -666,6 +658,7 @@ import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { FEATURE_FLAGS } from '~/utils/constants'
 
 const { form: moneyForm, validationError, submit: submitForm, statusMessage, isWaitingForQuotes } = useCompareForm()
 const formError = validationError
@@ -724,22 +717,18 @@ const handleMoneySubmit = async () => {
   const { from, to, amount, method, fromCurrency, toCurrency } = moneyForm.value
   const corridorId = `${from}-${to}-${fromCurrency}-${toCurrency}`
 
-  try {
-    void trackSearch({
-      corridor_id: corridorId,
-      amount,
-      payin: 'bank',
-      payout: method,
-    })
-    await recordSearch({
-      from_country: from,
-      to_country: to,
-      amount,
-      method,
-    } as any)
-  }
-  catch {
-  }
+  void trackSearch({
+    corridor_id: corridorId,
+    amount,
+    payin: 'bank',
+    payout: method,
+  })
+  void recordSearch({
+    from_country: from,
+    to_country: to,
+    amount,
+    method,
+  } as any)
 
   await submitForm()
 }

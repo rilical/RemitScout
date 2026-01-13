@@ -160,6 +160,11 @@ import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
 import { POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
+import { FEATURE_FLAGS } from '~/utils/constants'
+
+if (!FEATURE_FLAGS.PULSE_ENABLED) {
+  await navigateTo('/plus', { redirectCode: 302 })
+}
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
@@ -311,7 +316,6 @@ useHead({
   ],
 })
 </script>
-
 
 
 

@@ -8,28 +8,28 @@ export const SITE_STATS = {
   totalSaved: {
     value: 2500000, // in USD
     display: '$2.5M+',
-    label: 'Saved in fees',
+    label: 'Saved',
   },
 
   // Total number of users who trust us
   users: {
     value: 80000,
     display: '80k+',
-    label: 'Users trust us',
+    label: 'Comparisons Executed',
   },
 
   // Number of providers we compare
   providers: {
     value: 30,
     display: '30+',
-    label: 'Providers compared',
+    label: 'Providers',
   },
 
   // Number of corridors covered
   corridors: {
     value: 150,
     display: '150+',
-    label: 'Corridors covered',
+    label: 'Global Corridors',
   },
 
   // Licensed and regulated providers

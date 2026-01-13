@@ -551,7 +551,7 @@ const pricingFaqs = [
   },
   {
     question: 'Where do you get your pricing data?',
-    answer: '<p>We typically collect pricing via:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Direct provider API access (most consistent when available)</li><li>Partner data feeds (structured exports)</li><li>Public quote capture from provider quote flows (coverage varies)</li></ul><p class="mt-2">We normalize that data into a standardized comparison. <a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our methodology</a> for details.</p>',
+    answer: '<p>We typically collect pricing via:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Direct provider data feeds (most consistent when available)</li><li>Partner data feeds (structured exports)</li><li>Public quote capture from provider quote flows (coverage varies)</li></ul><p class="mt-2">We normalize that data into a standardized comparison. <a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">Read our methodology</a> for details.</p>',
   },
   {
     question: 'Do you include promo codes and discounts?',
@@ -635,7 +635,7 @@ const plusFaqs = [
 const partnershipsFaqs = [
   {
     question: 'How does Remit‑Scout make money?',
-    answer: '<p>Remit‑Scout may earn revenue in a few ways, with clear separation from rankings:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Affiliate commissions when a user clicks a provider link and completes a transfer (where programs exist)</li><li>Remit‑Scout Plus subscriptions</li><li>Data licensing and widgets for publishers and platforms</li><li>API access or exports for platforms and researchers</li></ul><p class="mt-2">Commercial relationships never override the ranking methodology. <a href="/partnerships" class="text-brand-600 hover:text-brand-700 underline font-semibold">Learn more about partnerships</a>.</p>',
+    answer: '<p>Remit‑Scout may earn revenue in a few ways, with clear separation from rankings:</p><ul class="list-disc pl-5 space-y-1 mt-2"><li>Affiliate commissions when a user clicks a provider link and completes a transfer (where programs exist)</li><li>Remit‑Scout Plus subscriptions</li><li>Data licensing and widgets for publishers and platforms</li><li>Custom research and analysis for publishers or institutions</li></ul><p class="mt-2">Commercial relationships never override the ranking methodology. <a href="/partnerships" class="text-brand-600 hover:text-brand-700 underline font-semibold">Learn more about partnerships</a>.</p>',
   },
   {
     question: 'What does "We may earn a commission" mean?',
@@ -643,7 +643,7 @@ const partnershipsFaqs = [
   },
   {
     question: 'Do you sell rankings or "featured placements"?',
-    answer: '<p>We do not sell ranking position. If we ever run sponsorships (for example, a clearly labeled "Pulse supported by…" placement), it is labeled plainly as sponsorship and does not affect organic rankings, sorting, or Remit‑Score calculations.</p>',
+    answer: '<p>We do not sell ranking position. If we ever run sponsorships, they are labeled plainly as sponsorship and do not affect organic rankings, sorting, or Remit‑Score calculations.</p>',
   },
   {
     question: 'How do you label partnerships?',

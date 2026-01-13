@@ -139,13 +139,13 @@
                   <!-- Y-axis labels -->
                   <g v-if="chartStats" font-family="Inter, system-ui, sans-serif">
                     <text x="45" y="28" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ chartStats.maxRate.toFixed(2) }}
+                      {{ formatChartRate(chartStats.maxRate) }}
                     </text>
                     <text x="45" y="58" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ chartStats.avgRate.toFixed(2) }}
+                      {{ formatChartRate(chartStats.avgRate) }}
                     </text>
                     <text x="45" y="88" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ chartStats.minRate.toFixed(2) }}
+                      {{ formatChartRate(chartStats.minRate) }}
                     </text>
                   </g>
                   
@@ -283,30 +283,20 @@
           class="mb-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
         >
           <div class="flex flex-col items-center justify-center gap-6 text-center mx-auto">
-            <div class="relative flex h-28 w-28 items-center justify-center mx-auto">
-              <svg class="absolute h-28 w-28 text-slate-200" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" fill="none" />
-              </svg>
-              <svg class="absolute h-28 w-28 animate-spin text-brand-600" viewBox="0 0 64 64">
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-dasharray="6 50"
-                />
-              </svg>
-            </div>
-            <div class="flex flex-col items-center justify-center mx-auto">
+            <div class="flex flex-col items-center justify-center mx-auto w-full max-w-2xl">
               <span class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
                 <span class="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
                 Live refresh
               </span>
               <h2 class="mt-4 text-2xl font-black text-slate-900 text-center">Collecting live quotes</h2>
-              <p class="mt-2 text-sm text-slate-600 max-w-2xl text-center mx-auto">
+              <div class="mt-4 w-full">
+                <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-brand-600 rounded-full loading-bar-animate"
+                  ></div>
+                </div>
+              </div>
+              <p class="mt-4 text-sm text-slate-600 max-w-2xl text-center mx-auto">
                 We query every available provider for this corridor. Results appear together once all providers respond
                 or after {{ refreshTimeoutSeconds }} seconds.
               </p>
@@ -392,7 +382,7 @@
               <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div class="flex items-center gap-4">
                   <!-- Square logo container with border similar to TrueCostCard -->
-                  <div class="relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center flex-shrink-0 rounded-xl border border-white/20 bg-white p-3">
+                  <div class="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center flex-shrink-0 rounded-xl border border-white/20 bg-white p-3">
                     <ProviderLogo
                       :slug="getProviderSlug(row) || ''"
                       :alt="row.provider"
@@ -433,9 +423,9 @@
                     <!-- Promotional Info -->
                     <div
                       v-if="row.hasPromo && row.promoInfo"
-                      class="mt-2 flex items-center gap-2 rounded-lg bg-brand-600/20 border border-brand-500/30 px-3 py-1.5 w-full"
+                      class="mt-2 flex items-center gap-2 rounded-lg bg-white border-2 border-brand-200 px-3 py-1.5 w-full"
                     >
-                      <svg class="h-4 w-4 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="h-4 w-4 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -444,10 +434,10 @@
                         />
                       </svg>
                       <div class="flex flex-col gap-0.5">
-                        <span class="text-xs font-semibold text-brand-100">
+                        <span class="text-xs font-semibold text-brand-700">
                           Promotional Offer
                         </span>
-                        <span class="text-xs text-brand-200">
+                        <span class="text-xs text-neutral-700">
                           {{ row.promoInfo.newCustomersOnly ? 'New customers only' : 'Special rate' }} · 
                           Fee: {{ formatMoney(row.promoInfo.fee, fromCurrencyCode) }}
                         </span>
@@ -459,15 +449,15 @@
                 <div class="text-right">
                   <p class="text-xs font-medium text-white/70 mb-1">Recipient gets</p>
                   <p class="text-2xl font-bold">{{ row.recipientGets }}</p>
-                  <div v-if="row.fxRate && midMarketRate && Number.isFinite(row.fxRate)" class="mt-3 space-y-1.5">
-                    <div class="text-xs">
-                      <span class="text-white/70">Exchange rate: </span>
-                      <span class="font-semibold text-white">{{ formatRate(row.fxRate, fromCurrencyCode, toCurrencyCode) }}</span>
+                  <div v-if="row.fxRate && midMarketRate && Number.isFinite(row.fxRate)" class="mt-4 space-y-2">
+                    <div class="text-sm">
+                      <span class="text-white/80">Exchange rate: </span>
+                      <span class="font-bold text-white text-base">{{ formatRate(row.fxRate, fromCurrencyCode, toCurrencyCode) }}</span>
                     </div>
-                    <div class="text-xs">
+                    <div class="text-sm">
                       <span 
                         :class="[
-                          'font-semibold px-2 py-1 rounded bg-white',
+                          'font-bold px-3 py-1.5 rounded-md bg-white text-sm',
                           getRateComparison(row.fxRate).isBetter 
                             ? index === 0 ? 'text-emerald-600' : 'text-emerald-700'
                             : getRateComparison(row.fxRate).isWorse
@@ -546,6 +536,7 @@
               v-if="!isPlus && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
               placement="compare_inline"
               :corridor-id="corridorId"
+              :slot-index="Math.floor(index / 2)"
               wrapper-class="rounded-xl"
               min-height="120px"
             />
@@ -582,10 +573,9 @@
     <section v-if="hasApiQuotes && !showRefreshGate" id="insights" class="bg-white border-b border-slate-200 scroll-mt-20">
       <div class="mx-auto max-w-6xl px-4 py-10">
         <div class="mb-8">
-          <h2 class="text-3xl font-bold text-neutral-900 mb-3">Corridor Insights</h2>
+          <h2 class="text-3xl font-bold text-brand-600 mb-3">Corridor Insights</h2>
           <p class="text-lg text-neutral-700 max-w-3xl">
-            Based on live quotes from <strong>{{ providerCount }}</strong> providers for {{ content.from }} → {{ content.to }}, 
-            here's what our proprietary indices reveal about this corridor right now.
+            Live data from <strong class="text-brand-600">{{ providerCount }}</strong> providers showing current market conditions.
           </p>
         </div>
 
@@ -595,172 +585,97 @@
         >
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <!-- TEER Card -->
-            <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-6 shadow-sm">
-              <div class="flex items-start justify-between mb-4">
-                <div>
-                  <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">TEER</p>
-                  <p class="text-sm font-medium text-slate-600">Total Effective Exchange Rate</p>
-                </div>
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100">
-                  <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
+            <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
+              <div class="mb-4">
+                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">TEER</p>
+                <p class="text-sm font-medium text-gray-300">Total Effective Exchange Rate</p>
               </div>
-              <p class="text-3xl font-bold text-slate-900 mb-2">{{ teerDisplay }}</p>
-              <p class="text-xs text-slate-500 mb-4">{{ indexRateUnit }}</p>
-              <p class="text-sm text-slate-700 mb-4">
-                <strong>What you actually get</strong> after all fees and hidden costs are factored in. Higher is better—this tells you the real exchange rate you'll receive.
+              <p class="text-3xl font-bold text-white mb-2">{{ teerDisplay }}</p>
+              <p class="text-xs text-gray-400 mb-4">{{ indexRateUnit }}</p>
+              <p class="text-sm text-gray-300 mb-4 flex-grow">
+                Real exchange rate after all fees and hidden costs. Higher is better.
               </p>
-              <details class="group">
-                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
-                  <span>Learn more</span>
-                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </summary>
-                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2">
-                  <p>TEER is calculated by taking the mid-market rate and subtracting the average hidden costs (RCI). It represents the effective rate you'll actually receive after all fees and FX markups. A TEER closer to the mid-market rate means providers in this corridor charge less in hidden fees.</p>
-                </div>
-              </details>
+              <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
+                <p>TEER shows the effective rate you'll receive after fees and FX markups. Closer to mid-market means lower hidden costs.</p>
+              </div>
             </div>
 
             <!-- RVI Card -->
-            <div class="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
-              <div class="flex items-start justify-between mb-4">
-                <div>
-                  <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">RVI</p>
-                  <p class="text-sm font-medium text-slate-600">Rate Volatility Index</p>
-                </div>
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
-                  <svg class="h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                </div>
+            <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
+              <div class="mb-4">
+                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">RVI</p>
+                <p class="text-sm font-medium text-gray-300">Rate Volatility Index</p>
               </div>
-              <p class="text-3xl font-bold text-slate-900 mb-2">{{ rviDisplay }}</p>
-              <p class="text-xs text-slate-500 mb-4">{{ indexRateUnit }}</p>
-              <p class="text-sm text-slate-700 mb-4">
-                <strong>How much providers' rates vary.</strong> Lower RVI means more consistency—you're likely to get a similar deal regardless of which provider you choose. Higher RVI means shopping around matters more.
+              <p class="text-3xl font-bold text-white mb-2">{{ rviDisplay }}</p>
+              <p class="text-xs text-gray-400 mb-4">{{ indexRateUnit }}</p>
+              <p class="text-sm text-gray-300 mb-4 flex-grow">
+                How much provider rates vary. Lower means similar deals. Higher means comparing saves money.
               </p>
-              <details class="group">
-                <summary class="cursor-pointer text-xs font-semibold text-slate-600 hover:text-slate-700 flex items-center gap-1">
-                  <span>Learn more</span>
-                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </summary>
-                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2">
-                  <p>RVI is the standard deviation of effective rates across all providers. It measures rate dispersion. A low RVI (under 0.01) suggests providers offer similar value, so convenience or speed might matter more than price. A high RVI means comparison shopping could save you significantly.</p>
-                </div>
-              </details>
+              <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
+                <p>RVI measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
+              </div>
             </div>
 
             <!-- RCI Card -->
-            <div class="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm">
-              <div class="flex items-start justify-between mb-4">
-                <div>
-                  <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-1">RCI</p>
-                  <p class="text-sm font-medium text-slate-600">Remittance Cost Index</p>
-                </div>
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
-                  <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+            <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
+              <div class="mb-4">
+                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">RCI</p>
+                <p class="text-sm font-medium text-gray-300">Remittance Cost Index</p>
               </div>
-              <p class="text-3xl font-bold text-slate-900 mb-2">{{ rciDisplay }}</p>
-              <p class="text-xs text-slate-500 mb-4">of amount sent</p>
-              <p class="text-sm text-slate-700 mb-4">
-                <strong>Average total cost</strong> as a percentage of your transfer. This includes both upfront fees and hidden FX markups. Lower is better—the industry average is typically 2-5%.
+              <p class="text-3xl font-bold text-white mb-2">{{ rciDisplay }}</p>
+              <p class="text-xs text-gray-400 mb-4">of amount sent</p>
+              <p class="text-sm text-gray-300 mb-4 flex-grow">
+                Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.
               </p>
-              <details class="group">
-                <summary class="cursor-pointer text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                  <span>Learn more</span>
-                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </summary>
-                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2">
-                  <p>RCI represents the weighted average of total costs (upfront fees + hidden FX markups) as a percentage of the transfer amount. Unlike advertised fees, RCI includes the "hidden cost" providers build into their exchange rates. This is why a "$0 fee" offer can still cost you 3% of your money.</p>
-                </div>
-              </details>
+              <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
+                <p>RCI includes upfront fees and hidden FX markups. Providers can advertise $0 fees but still charge 3% through exchange rate markups.</p>
+              </div>
             </div>
+          </div>
+          <div class="mt-6 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+            <span>These indices power enterprise reports and data partnerships.</span>
+            <NuxtLink to="/partnerships" class="font-semibold text-brand-600 hover:text-brand-500 underline">
+              See partnerships →
+            </NuxtLink>
           </div>
         </div>
 
         <!-- Live Insights Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
           <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-medium text-slate-500 mb-1">Providers Checked</p>
-            <p class="text-2xl font-bold text-slate-900">{{ providerCount }}</p>
-            <p class="text-xs text-slate-500 mt-1">Live quotes</p>
+            <p class="text-xs font-medium text-slate-500 mb-1">Best Deal</p>
+            <p class="text-2xl font-bold text-brand-600 truncate">{{ content.table.rows[0]?.recipientGets || '—' }}</p>
+            <p class="text-xs text-slate-500 mt-1">Highest recipient amount</p>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-5">
             <p class="text-xs font-medium text-slate-500 mb-1">Cost Spread</p>
-            <p class="text-2xl font-bold text-slate-900">{{ costSpread }}</p>
-            <p class="text-xs text-slate-500 mt-1">Best vs worst</p>
+            <p class="text-2xl font-bold text-brand-600">{{ recipientDeltaDisplay }}</p>
+            <p class="text-xs text-slate-500 mt-1">Best vs worst difference</p>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-medium text-slate-500 mb-1">Average Cost</p>
-            <p class="text-2xl font-bold text-slate-900">{{ averageCostPercent }}</p>
-            <p class="text-xs text-slate-500 mt-1">Total cost %</p>
-          </div>
-          <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-medium text-slate-500 mb-1">Best Provider</p>
-            <p class="text-lg font-bold text-slate-900 truncate">{{ bestProviderName }}</p>
-            <p class="text-xs text-slate-500 mt-1">Lowest total cost</p>
+            <p class="text-xs font-medium text-slate-500 mb-1">Fastest Speed</p>
+            <p class="text-2xl font-bold text-brand-600 truncate">{{ fastestSpeedDisplay }}</p>
+            <p class="text-xs text-slate-500 mt-1">Quickest delivery time</p>
           </div>
         </div>
 
-        <!-- What These Numbers Mean -->
-        <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 mb-8">
-          <h3 class="text-xl font-bold text-slate-900 mb-4">What These Numbers Mean for Your Transfer</h3>
-          <div class="prose prose-sm max-w-none">
-            <p class="text-slate-700 mb-4">
-              <strong>TEER of {{ teerDisplay }}</strong> means that after all fees and hidden costs, you can expect to get approximately 
-              <strong>{{ indexRateUnit }}</strong> for every dollar you send. This corridor's TEER is 
-              <span v-if="corridorIndices?.midMarketRate">{{ getTeerVsMidMarket }}</span>
-              <span v-else>calculated from live provider quotes</span>.
-            </p>
-            <p class="text-slate-700 mb-4">
-              <strong>RCI of {{ rciDisplay }}</strong> indicates that on average, providers in this corridor charge 
-              <strong>{{ rciDisplay }} of your transfer amount</strong> in total costs (fees + FX markup). 
-              <span v-if="corridorIndices?.rci !== null && corridorIndices?.rci !== undefined">
-                <span v-if="corridorIndices.rci < 0.02">This is excellent—below the 2-5% industry average.</span>
-                <span v-else-if="corridorIndices.rci < 0.03">This is good—at or slightly below industry average.</span>
-                <span v-else>This is typical for the industry, though shopping around can still save you money.</span>
-              </span>
-              <span v-else>Compare providers above to see how total costs vary.</span>
-            </p>
-            <p class="text-slate-700">
-              <strong>RVI of {{ rviDisplay }}</strong> suggests 
-              <span v-if="providerConsistency === 'high'">providers offer very similar rates—comparison shopping matters less, so you can choose based on speed, convenience, or trust.</span>
-              <span v-else>rates vary significantly between providers—comparison shopping could save you {{ costSavingsPotential }} on this transfer.</span>
-            </p>
-          </div>
-        </div>
 
         <!-- Provider Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="rounded-xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-base font-semibold text-slate-900">True Cost Comparison</h3>
-              <span class="text-xs text-slate-500">On ${{ displayAmount.toLocaleString() }}</span>
+              <h3 class="text-base font-semibold text-slate-900">Upfront Fees</h3>
+              <span class="text-xs text-slate-500">Per transfer</span>
             </div>
             <div class="space-y-3">
-              <div v-for="(row, index) in content.table.rows.slice(0, 5)" :key="row.provider" class="flex items-center gap-3">
-                <span class="w-24 text-sm font-medium text-slate-700 truncate">{{ row.provider }}</span>
-                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    class="h-full rounded-full"
-                    :class="index === 0 ? 'bg-emerald-500' : 'bg-brand-500'"
-                    :style="{ width: `${Math.min(100, getProviderTrueCost(row, index).totalCostPercent * 10)}%` }"
-                  />
+              <div v-for="(row, index) in content.table.rows.slice(0, 5)" :key="row.provider" class="flex items-center justify-between gap-3">
+                <span class="text-sm font-medium text-slate-700 truncate">{{ row.provider }}</span>
+                <div class="flex items-center gap-2">
+                  <span v-if="row.hasPromo && row.promoInfo" class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                    Promo
+                  </span>
+                  <span class="text-sm font-semibold text-brand-600">{{ row.fee }}</span>
                 </div>
-                <span class="w-16 text-right text-sm font-semibold" :class="index === 0 ? 'text-emerald-600' : 'text-slate-700'">
-                  {{ getProviderTrueCost(row, index).totalCostPercent.toFixed(2) }}%
-                </span>
               </div>
             </div>
           </div>
@@ -772,57 +687,254 @@
             <div class="space-y-3">
               <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-600">Bank Transfer</span>
-                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('Bank')).length }} providers</span>
+                <span class="font-semibold text-brand-600">{{ 
+                  currentRows.filter(r => {
+                    const methods = r.methods || []
+                    const payOut = (r.payOut || '').toLowerCase()
+                    return methods.includes('bank') || 
+                           methods.includes('bank_deposit') ||
+                           payOut.includes('bank') || 
+                           payOut.includes('account')
+                  }).length 
+                }} providers</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-600">Cash Pickup</span>
-                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('Cash')).length }} providers</span>
+                <span class="font-semibold text-brand-600">{{ 
+                  currentRows.filter(r => {
+                    const methods = r.methods || []
+                    const payOut = (r.payOut || '').toLowerCase()
+                    return methods.includes('cash') || 
+                           methods.includes('cash_pickup') ||
+                           payOut.includes('cash')
+                  }).length 
+                }} providers</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-600">Mobile Wallet</span>
-                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('wallet')).length }} providers</span>
+                <span class="font-semibold text-brand-600">{{ 
+                  currentRows.filter(r => {
+                    const methods = r.methods || []
+                    const payOut = (r.payOut || '').toLowerCase()
+                    return methods.includes('wallet') || 
+                           methods.includes('mobile_wallet') ||
+                           payOut.includes('wallet') ||
+                           payOut.includes('mobile')
+                  }).length 
+                }} providers</span>
               </div>
-              <div
-                v-if="content.table.rows.some(r => r.payOut?.includes('Airtime'))"
-                class="flex items-center justify-between text-sm"
-              >
+              <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-600">Airtime</span>
-                <span class="font-semibold text-slate-900">{{ content.table.rows.filter(r => r.payOut?.includes('Airtime')).length }} providers</span>
+                <span class="font-semibold text-brand-600">{{ 
+                  currentRows.filter(r => {
+                    const methods = r.methods || []
+                    const payOut = (r.payOut || '').toLowerCase()
+                    return methods.includes('airtime') ||
+                           payOut.includes('airtime')
+                  }).length 
+                }} providers</span>
               </div>
             </div>
           </div>
         </div>
-
-        </div>
       </div>
     </section>
 
-    <!-- ZONE C: Learn (SEO) -->
+    <!-- ZONE C: Recommendations -->
     <section id="how-to-send" class="bg-slate-50">
       <div class="mx-auto max-w-6xl px-4 py-10">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2 space-y-8">
             <div>
-              <h2 class="text-2xl font-bold text-neutral-900 mb-4">
-                Stop Losing Money on the Mid-Market Rate
+              <h2 class="text-3xl font-bold text-neutral-900 mb-4 break-words">
+                Best Money Transfer Providers<br />
+                from <span class="text-brand-600">{{ content.from }}</span> to <span class="text-brand-600">{{ content.to }}</span>
               </h2>
-              <div class="prose prose-neutral prose-sm max-w-none">
-                <p class="text-neutral-600 leading-relaxed mb-4">
-                  {{ content.hero.subhead }}
-                </p>
-                <p class="text-neutral-600 leading-relaxed mb-4">
-                  Exchange rates fluctuate constantly. What your recipient receives depends on the rate you lock in—not just the transfer fee. Most providers hide their markup in the exchange rate, making "zero fees" look cheaper than it actually is.
-                </p>
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                  <p class="text-sm font-semibold text-amber-900 mb-2">Why receivers care about volatility</p>
-                  <p class="text-sm text-amber-800 leading-relaxed">
-                    A 2% worse rate on $500 means your recipient gets $10 less—even with "zero fees." Rate volatility compounds over time. Track rate changes with <span v-if="FEATURE_FLAGS.PULSE_ENABLED" class="font-semibold">Remit-Scout Pulse</span><span v-else class="font-semibold">our Plus features</span> to avoid losing money to hidden markups.
+
+              <p class="text-base text-neutral-700 leading-relaxed mb-6">
+                Finding the best way to send money from {{ content.from }} to {{ content.to }} requires comparing exchange rates, fees, transfer speeds, and payout methods across multiple providers. 
+                The cheapest option today might not be the best choice tomorrow, as rates fluctuate constantly and promotional offers change regularly. 
+                Our recommendations below are based on live quotes from {{ providerCount }} money transfer providers, helping you find the best-rated, cheapest, and fastest options for your specific needs. 
+                Whether you need instant transfers or bank deposits, compare all options to ensure your recipient gets the maximum amount possible.
+              </p>
+
+              <div v-if="recommendations.length > 0" class="mb-8">
+                <div class="space-y-3">
+                  <div
+                    v-for="rec in recommendations"
+                    :key="rec.label"
+                    class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all cursor-pointer"
+                    @click="scrollToProvider(rec.provider)"
+                  >
+                    <div class="flex-shrink-0 mt-0.5">
+                      <!-- Star icon for "best rated" (general) -->
+                      <svg
+                        v-if="rec.label.toLowerCase().includes('best rated') && !rec.label.toLowerCase().includes('bank')"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <!-- Credit card icon for "best rated (transfer to a bank account)" -->
+                      <svg
+                        v-else-if="rec.label.toLowerCase().includes('best rated') && rec.label.toLowerCase().includes('bank')"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <!-- Currency/Dollar icon for "cheapest" -->
+                      <svg
+                        v-else-if="rec.label.toLowerCase().includes('cheapest')"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <!-- Lightning bolt icon for "fastest" -->
+                      <svg
+                        v-else-if="rec.label.toLowerCase().includes('fastest')"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <!-- Bank building icon for other bank-related -->
+                      <svg
+                        v-else-if="rec.label.toLowerCase().includes('bank')"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <!-- Default star icon for any other case -->
+                      <svg
+                        v-else
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="font-semibold text-neutral-900">{{ rec.label }}:</span>
+                        <span class="font-bold text-brand-600 text-lg">{{ rec.provider }}</span>
+                        <span v-if="rec.score" class="text-sm text-neutral-600 font-medium">({{ rec.score }}/10)</span>
+                      </div>
+                      <p v-if="rec.note" class="text-sm text-neutral-600 leading-relaxed mb-1">{{ rec.note }}</p>
+                      <p v-if="rec.speed" class="text-xs text-neutral-500 font-medium">Transfer speed: {{ rec.speed }}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <svg class="w-5 h-5 text-slate-400 group-hover:text-brand-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else-if="!hasApiQuotes" class="mb-8">
+                <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6">
+                  <h4 class="text-lg font-bold text-white leading-relaxed mb-3">
+                    Recommendations will appear here once we have live quotes from providers for this corridor.
+                  </h4>
+                  <p class="text-sm text-white leading-relaxed">
+                    Please check back soon or try comparing providers in the table above.
                   </p>
+                </div>
+              </div>
+
+              <!-- Related Guides Section -->
+              <div class="mt-10 pt-8 border-t border-slate-200">
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  Learn More About Money Transfers
+                </h3>
+                <p class="text-sm text-neutral-600 mb-5 leading-relaxed">
+                  Master the fundamentals of international money transfers to save more on every transaction.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <NuxtLink
+                    to="/learn/why-compare-before-every-transfer"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                        Why You Must Compare Before Every Transfer
+                      </h4>
+                      <p class="text-sm text-neutral-600 leading-relaxed">
+                        Even on the same transfer, the difference between providers can be hundreds of dollars.
+                      </p>
+                    </div>
+                  </NuxtLink>
+
+                  <NuxtLink
+                    to="/learn/hidden-exchange-rate-fees-explained"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                        Hidden Fees Explained (FX Markup vs Fee)
+                      </h4>
+                      <p class="text-sm text-neutral-600 leading-relaxed">
+                        Learn the difference between FX markup and transfer fees, and why "no fee" doesn't mean no cost.
+                      </p>
+                    </div>
+                  </NuxtLink>
+
+                  <NuxtLink
+                    to="/learn/how-to-read-remittance-quote"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                        How to Read a Quote ("Recipient Gets")
+                      </h4>
+                      <p class="text-sm text-neutral-600 leading-relaxed">
+                        Understand what "Recipient Gets" really means and how to compare quotes effectively.
+                      </p>
+                    </div>
+                  </NuxtLink>
+
+                  <NuxtLink
+                    to="/learn/best-time-to-send-money"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                        Best Time to Send Money
+                      </h4>
+                      <p class="text-sm text-neutral-600 leading-relaxed">
+                        Practical guidance on when to send money, without over-optimizing for rate movements.
+                      </p>
+                    </div>
+                  </NuxtLink>
+                </div>
+                <div class="mt-6 text-center">
+                  <NuxtLink
+                    to="/learn/money-transfer"
+                    class="inline-flex items-center gap-2 text-brand-600 font-semibold hover:text-brand-700 transition-colors"
+                  >
+                    View all guides
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </NuxtLink>
                 </div>
               </div>
             </div>
 
-            <div v-if="content.steps.length">
+            <div v-if="content.steps.length" class="mt-8">
               <h3 class="text-lg font-bold text-neutral-900 mb-4">
                 How to Send Money to {{ content.to }}
               </h3>
@@ -842,45 +954,97 @@
           </div>
 
           <div class="space-y-6">
-            <div v-if="!isPlus" class="rounded-xl border border-dashed border-slate-300 bg-white p-5">
-              <div class="text-center mb-3">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Advertisement</span>
+            <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-5">
+              <h3 class="font-bold text-white text-base mb-3">Save to Watchlist</h3>
+              <p class="text-sm text-white mb-4 leading-relaxed">Track this corridor and get notified when rates change.</p>
+              <div class="space-y-3">
+                <button
+                  type="button"
+                  class="w-full rounded-lg bg-white px-4 py-3 text-base font-bold text-brand-700 hover:bg-brand-50 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  @click="handleSave"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  Add to Watchlist
+                </button>
+                <button
+                  type="button"
+                  class="w-full rounded-lg border-2 border-white bg-transparent px-4 py-3 text-base font-bold text-white hover:bg-white hover:text-brand-700 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  @click="handleAlert"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  Add Alert
+                </button>
               </div>
-              <div class="h-48 flex items-center justify-center text-sm text-slate-400">
-                Ad placeholder (300×250)
-              </div>
-              <div class="text-center mt-3">
-                <NuxtLink to="/plus" class="text-xs text-brand-600 hover:underline">
-                  Remove ads with Plus →
-                </NuxtLink>
-              </div>
-            </div>
-
-            <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
-              <h3 class="font-bold text-brand-900 mb-2 text-sm">Save to Watchlist</h3>
-              <p class="text-xs text-brand-700 mb-3">Track this corridor and get notified when rates change.</p>
-              <button
-                type="button"
-                class="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition-colors"
-                @click="handleSave"
-              >
-                Add to Watchlist
-              </button>
-              <p class="text-xs text-center text-brand-600 mt-2">
-                Free accounts: 3 corridors · Plus: Unlimited
+              <p class="text-xs text-center text-white mt-4">
+                <span v-if="isPlus">Unlimited watchlists & alerts</span>
+                <span v-else>Free: {{ limits.watchlistItems }} watchlists · 1 alert</span>
               </p>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5">
-              <h3 class="font-bold text-neutral-900 mb-3 text-sm">Corridor Stats</h3>
-              <div class="space-y-3">
-                <div v-for="stat in content.statsBar" :key="stat.label" class="flex items-center justify-between text-sm">
-                  <span class="text-neutral-600">{{ stat.label }}</span>
-                  <span class="font-semibold text-neutral-900">{{ stat.value }}</span>
+            <div v-if="!isPlus" class="space-y-6">
+              <div class="rounded-xl border border-dashed border-slate-300 bg-white p-5">
+                <div class="text-center mb-3">
+                  <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Advertisement</span>
+                </div>
+                <div class="h-48 flex items-center justify-center text-sm text-slate-400">
+                  Ad placeholder (300×250)
+                </div>
+                <div class="text-center mt-3">
+                  <NuxtLink to="/plus" class="text-xs text-brand-600 hover:underline">
+                    Remove ads with Plus →
+                  </NuxtLink>
+                </div>
+              </div>
+              <div class="rounded-xl border border-dashed border-slate-300 bg-white p-5">
+                <div class="text-center mb-3">
+                  <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Advertisement</span>
+                </div>
+                <div class="h-48 flex items-center justify-center text-sm text-slate-400">
+                  Ad placeholder (300×250)
+                </div>
+                <div class="text-center mt-3">
+                  <NuxtLink to="/plus" class="text-xs text-brand-600 hover:underline">
+                    Remove ads with Plus →
+                  </NuxtLink>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQs -->
+    <section id="faqs" class="bg-brand-600 scroll-mt-20">
+      <div class="mx-auto max-w-4xl px-4 py-10">
+        <h2 class="text-3xl font-bold text-white text-center mb-6">
+          Frequently Asked Questions
+        </h2>
+        <div class="divide-y divide-white/20 border border-white/30 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm">
+          <details
+            v-for="faq in corridorFaqs"
+            :key="faq.q"
+            class="group"
+          >
+            <summary class="flex items-center justify-between cursor-pointer px-5 py-4 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+              {{ faq.q }}
+              <svg class="h-5 w-5 text-white/80 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-5 pb-4 text-sm text-white/90 leading-relaxed">
+              {{ faq.a }}
+            </div>
+          </details>
+        </div>
+        <div class="text-center mt-4">
+          <NuxtLink to="/faq" class="text-sm font-semibold text-white hover:text-white/80 underline transition-colors">
+            View all FAQs →
+          </NuxtLink>
         </div>
       </div>
     </section>
@@ -892,37 +1056,6 @@
 
     <!-- Popular Corridors -->
     <CorridorsGridDynamic dark />
-
-    <!-- FAQs -->
-    <section id="faqs" class="bg-gradient-to-b from-brand-50 to-white border-t border-brand-100 scroll-mt-20">
-      <div class="mx-auto max-w-4xl px-4 py-10">
-        <h2 class="text-2xl font-bold text-brand-900 text-center mb-6">
-          Frequently Asked Questions
-        </h2>
-        <div class="divide-y divide-brand-100 border border-brand-200 rounded-xl overflow-hidden bg-white">
-          <details
-            v-for="faq in corridorFaqs"
-            :key="faq.q"
-            class="group"
-          >
-            <summary class="flex items-center justify-between cursor-pointer px-5 py-4 text-sm font-semibold text-brand-900 hover:bg-brand-50">
-              {{ faq.q }}
-              <svg class="h-5 w-5 text-brand-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div class="px-5 pb-4 text-sm text-neutral-600 leading-relaxed">
-              {{ faq.a }}
-            </div>
-          </details>
-        </div>
-        <div class="text-center mt-4">
-          <NuxtLink to="/faq" class="text-sm font-semibold text-brand-600 hover:underline">
-            View all FAQs →
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
 
     <!-- Related Guides -->
     <section v-if="content.miniGuides && content.miniGuides.length" class="bg-white border-t border-slate-200">
@@ -948,16 +1081,6 @@
               </svg>
             </span>
           </NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- Disclosures -->
-    <section class="bg-slate-50 border-t border-slate-200">
-      <div class="mx-auto max-w-4xl px-4 py-6">
-        <div class="text-xs text-neutral-500 space-y-2">
-          <p><strong>Affiliate disclosure:</strong> {{ content.disclosures.advert }}</p>
-          <p><strong>Data accuracy:</strong> {{ content.disclosures.data }}</p>
         </div>
       </div>
     </section>
@@ -1080,7 +1203,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 
-const { isPlus } = useEntitlements()
+const { isPlus, limits } = useEntitlements()
 const { isAuthenticated } = useAuth()
 const watchlist = useWatchlist()
 const alerts = useAlerts()
@@ -1150,6 +1273,22 @@ type CorridorIndices = {
   amount: number
   midMarketRate: number | null
   weights: 'equal'
+}
+
+type ProvidersResponse = {
+  data: ProviderQuote[]
+  updatedAt: string
+  corridor: string
+  amount: number
+  method: string
+  bucketUsed?: number
+  approximate?: boolean
+  midMarketRate?: number | null
+  midMarketSource?: string | null
+  midMarketUpdatedAt?: string | null
+  availableMethods?: string[]
+  indices?: CorridorIndices
+  error?: { code: string; message: string }
 }
 
 type Guide = {
@@ -1258,8 +1397,12 @@ const fromSlug = computed(() => normalizeSlug(currentRoute.params.from))
 const toSlug = computed(() => normalizeSlug(currentRoute.params.to))
 const canonicalFrom = computed(() => getCanonicalSlug(fromSlug.value))
 const canonicalTo = computed(() => getCanonicalSlug(toSlug.value))
-const amountParam = Array.isArray(currentRoute.query.amount) ? currentRoute.query.amount[0] : currentRoute.query.amount
-const methodParam = Array.isArray(currentRoute.query.method) ? currentRoute.query.method[0] : currentRoute.query.method
+const amountParam = computed(() => (
+  Array.isArray(currentRoute.query.amount) ? currentRoute.query.amount[0] : currentRoute.query.amount
+))
+const methodParam = computed(() => (
+  Array.isArray(currentRoute.query.method) ? currentRoute.query.method[0] : currentRoute.query.method
+))
 const fromCurrencyParam = computed(() => (
   Array.isArray(currentRoute.query.fromCurrency)
     ? currentRoute.query.fromCurrency[0]
@@ -1290,16 +1433,44 @@ const toCurrencyCode = computed(() => {
   const fallback = resolveCurrency(canonicalTo.value) || 'XXX'
   return fallback.toUpperCase()
 })
-const initialAmount = Number(amountParam) || 1000
+const initialAmount = computed(() => Number(amountParam.value) || 1000)
 const supportedMethods: Method[] = ['bank', 'cash', 'wallet', 'airtime']
-const initialMethod = supportedMethods.includes(methodParam as Method) ? (methodParam as Method) : 'bank'
-const displayAmount = ref(initialAmount)
+const normalizeMethod = (value?: string | null): Method | null => {
+  if (!value || typeof value !== 'string') return null
+  const token = value.trim().toLowerCase().replace(/[\s-]+/g, '_')
+  if (token === 'bank' || token === 'bank_deposit') return 'bank'
+  if (token === 'cash' || token === 'cash_pickup') return 'cash'
+  if (token === 'wallet' || token === 'mobile_wallet') return 'wallet'
+  if (token === 'airtime') return 'airtime'
+  return null
+}
+const initialMethod = computed(() => {
+  const normalized = normalizeMethod(methodParam.value)
+  return normalized && supportedMethods.includes(normalized) ? normalized : 'bank'
+})
+const displayAmount = ref(initialAmount.value)
 const amountLimits = computed(() => ({
   minAmount: getMinAmount(fromCurrencyCode.value),
   maxAmount: getMaxAmount(fromCurrencyCode.value),
   strict: true,
 }))
-const payoutMethod = ref<Method>(initialMethod)
+const payoutMethod = ref<Method>(initialMethod.value)
+watch(amountParam, (value) => {
+  const parsed = Number(value)
+  const fallback = Number.isFinite(parsed) && parsed > 0 ? parsed : 1000
+  const sanitized = sanitizeAmount(fallback, fromCurrencyCode.value, amountLimits.value)
+  if (sanitized !== displayAmount.value) {
+    displayAmount.value = sanitized
+  }
+}, { immediate: true })
+
+watch(methodParam, (value) => {
+  const normalized = normalizeMethod(value)
+  const nextMethod = normalized && supportedMethods.includes(normalized) ? normalized : 'bank'
+  if (nextMethod !== payoutMethod.value) {
+    payoutMethod.value = nextMethod
+  }
+}, { immediate: true })
 const searchInitiated = ref(false)
 const quoteRefreshPending = ref(false)
 const providersLive = ref(false)
@@ -1320,6 +1491,7 @@ const refreshStatus = ref<{
   providers: string[]
   requestedAt: string
 } | null>(null)
+const backgroundRefreshKeys = new Set<string>()
 const refreshGateActive = computed(() => {
   if (refreshTimedOut.value) return false
   if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
@@ -1332,9 +1504,10 @@ const shouldBlockResults = computed(() => {
   if (refreshTimedOut.value) return false
   if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
 
-  const hasRefresh = Boolean(refreshStatus.value?.enqueued && refreshStatus.value.requestIds?.length)
+  const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
-    if (!refreshCompletion.value?.done) return true
+    if (refreshCompletion.value && !refreshCompletion.value.done) return true
+    if (!refreshCompletion.value && !hasApiQuotes.value) return true
     if (refreshFinalizing.value) return true
     if (quotesPending.value) return true
     if (!hasApiQuotes.value) return true
@@ -1369,14 +1542,14 @@ if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) 
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
 
-const { data: quotesData, pending: quotesPending, error: quotesError, refresh: refreshQuotes } = await useProviders(
+const { data: rawQuotesData, pending: quotesPending, error: quotesError, refresh: refreshQuotes } = await useProviders(
   fromCountryCode,
   toCountryCode,
   displayAmount,
   payoutMethod,
   {
     key: `${currentRoute.fullPath}-${payoutMethod.value}`, // Include method in key for caching per method
-    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod, providersLive],
+    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod],
     server: true,
     lazy: false,
     fromCurrency: fromCurrencyCode,
@@ -1385,12 +1558,36 @@ const { data: quotesData, pending: quotesPending, error: quotesError, refresh: r
   },
 )
 
+const lastNonEmptyQuotes = ref<ProvidersResponse | null>(null)
+const quotesData = computed<ProvidersResponse | null>(() => {
+  const current = rawQuotesData.value as ProvidersResponse | null
+  if (current?.data?.length) return current
+  if (current?.error) return current
+  return lastNonEmptyQuotes.value ?? current
+})
+
+watch(rawQuotesData, (value) => {
+  const resolved = value as ProvidersResponse | null
+  if (resolved?.data?.length) {
+    lastNonEmptyQuotes.value = resolved
+    return
+  }
+  if (resolved?.error) {
+    lastNonEmptyQuotes.value = null
+  }
+})
+
+watch([fromCountryCode, toCountryCode, fromCurrencyCode, toCurrencyCode, displayAmount, payoutMethod], () => {
+  lastNonEmptyQuotes.value = null
+})
+
 const toPositiveMs = (value: unknown, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 const REFRESH_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMs, 1500)
-const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 750)
+const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 2000)
+const backgroundRefreshEnabled = computed(() => Boolean(runtimeConfig?.public?.b2cBackgroundRefreshEnabled))
 const REFRESH_STATUS_TIMEOUT_MS = 60000
 const MAX_REFRESH_ATTEMPTS = Math.max(1, Math.ceil(REFRESH_STATUS_TIMEOUT_MS / REFRESH_POLL_MS))
 const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
@@ -1478,7 +1675,6 @@ const corridorContent: Record<string, CorridorContent> = {
     providerHighlights: [
       { label: 'Best rated', provider: 'Wise', score: '9.4', rate: '1 USD = 0.7105 JOD', fee: '$5.49', speed: '1-2 days', note: 'Transparent pricing', ctaLabel: 'Go to Wise' },
       { label: 'Cheapest', provider: 'Remitly', score: '9.0', rate: '1 USD = 0.7090 JOD', fee: '$0 promo', speed: 'Same day', note: 'Best for bank deposits', ctaLabel: 'Go to Remitly' },
-      { label: 'Fastest', provider: 'MoneyGram', score: '8.6', rate: '1 USD = 0.7030 JOD', fee: '$4.99', speed: 'Minutes', note: 'Cash pickup', ctaLabel: 'Go to MoneyGram' },
     ],
     rateWidget: {
       midMarket: '1 USD = 0.7100 JOD',
@@ -1492,7 +1688,6 @@ const corridorContent: Record<string, CorridorContent> = {
       rows: [
         { provider: 'Remitly', score: '9.0', recipientGets: '709 JOD', delta: '0.4% off mid-market', fee: '$0 (promo)', rate: '1 USD = 0.7090 JOD', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'ACH, debit card', payOut: 'Bank account', notes: 'Cheapest in most checks', badge: 'Best Deal', isAffiliate: true },
         { provider: 'Wise', score: '9.4', recipientGets: '708 JOD', delta: '0.5% off mid-market', fee: '$5.49', rate: '1 USD = 0.7105 JOD', speed: '1-2 days', speedNote: 'Bank deposit', payIn: 'Bank transfer', payOut: 'Bank account', notes: 'Best transparency', badge: 'Top Rated', isAffiliate: true },
-        { provider: 'MoneyGram', score: '8.6', recipientGets: '704 JOD', delta: '0.9% off mid-market', fee: '$4.99', rate: '1 USD = 0.7030 JOD', speed: 'Minutes', speedNote: 'Cash pickup', payIn: 'Debit, credit card', payOut: 'Cash pickup', notes: 'Fastest for cash', isAffiliate: true },
         { provider: 'XE', score: '8.7', recipientGets: '703 JOD', delta: '1.1% off mid-market', fee: '$0', rate: '1 USD = 0.7040 JOD', speed: 'Same day', speedNote: 'Bank deposit', payIn: 'Bank, card', payOut: 'Bank account', notes: 'Good for large amounts', isAffiliate: true },
         { provider: 'Major US Bank', score: '6.0', recipientGets: '670 JOD', delta: '5.6% off mid-market', fee: '$30+', rate: '1 USD = 0.6700 JOD', speed: '2-5 days', speedNote: 'SWIFT', payIn: 'Bank account', payOut: 'Bank account', notes: 'High fees, slow', warning: 'Not recommended', isAffiliate: false },
       ],
@@ -1513,7 +1708,7 @@ const corridorContent: Record<string, CorridorContent> = {
       'Track delivery and confirm JOD arrived.',
     ],
     faqs: [
-      { q: 'What is the best way to send USD to Jordan?', a: 'Online money transfer services are typically cheaper than banks. Remitly and Wise lead for bank deposits; MoneyGram is fastest for cash pickup.' },
+      { q: 'What is the best way to send USD to Jordan?', a: 'Online money transfer services are typically cheaper than banks. Remitly and Wise lead for bank deposits; Xoom and Western Union are fastest for cash pickup.' },
       { q: 'How are fees calculated?', a: 'Total cost = transfer fee + FX markup versus mid-market rate. We benchmark every quote against the OANDA mid-market rate.' },
       { q: 'How long does a USD → JOD transfer take?', a: 'Cash pickup: minutes. Bank deposits: same-day to 1 business day. SWIFT: 2-5 days.' },
       { q: 'Are these providers licensed?', a: 'Yes. All providers listed are licensed in their operating regions. We exclude unlicensed services.' },
@@ -1636,14 +1831,20 @@ const availableMethods = computed<Method[]>(() => {
     return []
   }
 
-  const responseMethods = Array.isArray((quotesData.value as { availableMethods?: Method[] } | null)?.availableMethods)
-    ? (quotesData.value as { availableMethods?: Method[] }).availableMethods ?? []
+  const responseMethods = Array.isArray((quotesData.value as { availableMethods?: string[] } | null)?.availableMethods)
+    ? (quotesData.value as { availableMethods?: string[] }).availableMethods ?? []
     : []
   const quoteMethods = (quotesData.value?.data || [])
     .flatMap((quote) => (Array.isArray(quote.methods) ? quote.methods : []))
-    .filter((method): method is Method => typeof method === 'string')
+    .filter((method): method is string => typeof method === 'string')
 
-  const combined = new Set<Method>([...responseMethods, ...quoteMethods])
+  const combined = new Set<Method>()
+  const addMethod = (method: string) => {
+    const normalized = normalizeMethod(method)
+    if (normalized) combined.add(normalized)
+  }
+  responseMethods.forEach(addMethod)
+  quoteMethods.forEach(addMethod)
   if (combined.size === 0) {
     return quotesPending.value ? [] : ['bank']
   }
@@ -1669,13 +1870,20 @@ const providerQuotes = computed(() => {
     // Add all methods from this quote
     if (Array.isArray(quote.methods)) {
       quote.methods.forEach((method) => {
-        if (method) providerMethodsMap.value.get(quote.id)!.add(method as Method)
+        const normalized = normalizeMethod(method)
+        if (normalized) providerMethodsMap.value.get(quote.id)!.add(normalized)
       })
     }
   })
   
   // Filter by selected payout method - only show providers that support this method
-  return allQuotes.filter(quote => quote.methods?.includes(payoutMethod.value))
+  const selectedMethod = normalizeMethod(payoutMethod.value) ?? payoutMethod.value
+  const filtered = allQuotes.filter((quote) => {
+    const methods = Array.isArray(quote.methods) ? quote.methods : []
+    if (!methods.length) return true
+    return methods.some((method) => normalizeMethod(method) === selectedMethod)
+  })
+  return filtered.length ? filtered : allQuotes
 })
 const ratedQuotes = computed(() => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>)
 const apiUpdatedAt = computed(() => quotesData.value?.updatedAt)
@@ -1706,6 +1914,25 @@ watch(availableMethods, (methods) => {
     payoutMethod.value = methods[0]
   }
 })
+
+watch([corridorId, displayAmount], () => {
+  backgroundRefreshKeys.clear()
+}, { immediate: true })
+
+watch(
+  [availableMethods, payoutMethod, corridorId, displayAmount],
+  ([methods]) => {
+    if (!import.meta.client) return
+    if (!backgroundRefreshEnabled.value) return
+    if (!methods.length) return
+    methods
+      .filter(method => method !== payoutMethod.value)
+      .forEach(method => {
+        void enqueueBackgroundRefresh(method)
+      })
+  },
+  { immediate: true },
+)
 
 watch(
   corridorId,
@@ -1797,7 +2024,7 @@ const midMarketLabel = computed(() => {
   if (!midMarketRate.value) {
     return `1 ${fromCurrencyCode.value} = -- ${toCurrencyCode.value}`
   }
-  return `1 ${fromCurrencyCode.value} = ${midMarketRate.value.toFixed(2)} ${toCurrencyCode.value}`
+  return `1 ${fromCurrencyCode.value} = ${midMarketRate.value.toFixed(4)} ${toCurrencyCode.value}`
 })
 const midMarketAsOf = computed(() => {
   if (!midMarketUpdatedAt.value) return ''
@@ -1970,6 +2197,13 @@ const formatChartDate = (value: string) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const formatChartRate = (rate: number) => {
+  if (!Number.isFinite(rate)) return '0'
+  // Show enough decimal places to be meaningful without excessive precision
+  // Use 4 decimal places for exchange rates to avoid rounding issues
+  return rate.toFixed(4)
 }
 
 const chartLabels = computed(() => {
@@ -2182,13 +2416,15 @@ const apiRows = computed<TableRow[]>(() => {
 
   return ratedQuotes.value.map((quote, index) => {
     const score = Number.isFinite(quote.score) ? Number(quote.score).toFixed(1) : '0.0'
-    const methodsLabel = formatMethodLabels(quote.methods as string[])
     
     // Get all methods for this provider from the map, fallback to quote methods
     const allProviderMethods = providerMethodsMap.value.get(quote.id)
-    const methodsArray = allProviderMethods 
+    const methodsArray = (allProviderMethods 
       ? Array.from(allProviderMethods) 
-      : (quote.methods as string[] || [])
+      : (quote.methods as string[] || []))
+      .map((method) => normalizeMethod(method))
+      .filter((method): method is Method => Boolean(method))
+    const methodsLabel = formatMethodLabels(methodsArray)
 
     return {
       provider: quote.name,
@@ -2218,13 +2454,15 @@ const apiRows = computed<TableRow[]>(() => {
 
 const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
 
+const currentRows = computed(() => hasApiQuotes.value ? apiRows.value : content.value.table.rows)
+
 const corridorIndices = computed(() => {
   return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
 })
 
 const formatIndexRate = (value: number | null) => {
   if (!Number.isFinite(value ?? Number.NaN)) return '—'
-  return Number(value).toFixed(4)
+  return Number(value).toFixed(2)
 }
 
 const formatIndexPercent = (value: number | null) => {
@@ -2301,6 +2539,148 @@ const seoDescription = computed(() => {
   const rateLine = bestRateLabel.value ? ` Best rate: ${bestRateLabel.value}.` : ''
   return `Compare ${providerCount.value} providers${providerLine}.${rateLine} Updated ${seoUpdatedLabel.value}.`
 })
+
+type Recommendation = {
+  label: string
+  provider: string
+  score?: string
+  note?: string
+  speed?: string
+}
+
+function parseSpeedToHours(speed: string): number {
+  const lower = speed.toLowerCase()
+  if (lower.includes('instant') || lower.includes('immediate')) return 0
+  if (lower.includes('minute')) {
+    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*min/i)
+    if (match) return (parseInt(match[1]) + parseInt(match[2])) / 120
+    const singleMatch = speed.match(/(\d+)\s*min/i)
+    if (singleMatch) return parseInt(singleMatch[1]) / 60
+    return 0.5
+  }
+  if (lower.includes('hour') || lower.includes('hr')) {
+    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:hour|hr)/i)
+    if (match) return (parseInt(match[1]) + parseInt(match[2])) / 2
+    const singleMatch = speed.match(/(\d+)\s*(?:hour|hr)/i)
+    if (singleMatch) return parseInt(singleMatch[1])
+    return 1
+  }
+  if (lower.includes('same day') || lower.includes('same-day')) return 8
+  if (lower.includes('day')) {
+    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*day/i)
+    if (match) return (parseInt(match[1]) + parseInt(match[2])) * 12
+    const singleMatch = speed.match(/(\d+)\s*day/i)
+    if (singleMatch) return parseInt(singleMatch[1]) * 24
+    return 24
+  }
+  return 999
+}
+
+const recommendations = computed<Recommendation[]>(() => {
+  const rows = hasApiQuotes.value ? apiRows.value : content.value.table.rows
+  if (!rows.length) return []
+
+  const results: Recommendation[] = []
+
+  const allRows = rows as Array<TableRow & { methods?: Method[] }>
+  
+  const bestRated = [...allRows].sort((a, b) => {
+    const scoreA = parseFloat(a.score || '0')
+    const scoreB = parseFloat(b.score || '0')
+    return scoreB - scoreA
+  })[0]
+
+  if (bestRated && bestRated.score) {
+    results.push({
+      label: 'The best rated',
+      provider: bestRated.provider,
+      score: bestRated.score,
+      note: bestRated.notes || bestRated.speedNote,
+    })
+  }
+
+  const cheapest = [...allRows].filter(row => row.recipientGets).sort((a, b) => {
+    const amountA = parseFloat(a.recipientGets.replace(/[^\d.]/g, '')) || 0
+    const amountB = parseFloat(b.recipientGets.replace(/[^\d.]/g, '')) || 0
+    return amountB - amountA
+  })[0]
+
+  if (cheapest) {
+    results.push({
+      label: 'The cheapest',
+      provider: cheapest.provider,
+      score: cheapest.score,
+      note: cheapest.notes || cheapest.speedNote,
+    })
+  }
+
+  const fastest = [...allRows].sort((a, b) => {
+    const hoursA = parseSpeedToHours(a.speed)
+    const hoursB = parseSpeedToHours(b.speed)
+    return hoursA - hoursB
+  })[0]
+
+  if (fastest) {
+    results.push({
+      label: 'The fastest',
+      provider: fastest.provider,
+      speed: fastest.speed,
+      note: fastest.notes || fastest.speedNote,
+    })
+  }
+
+  const bankRows = allRows.filter(row => {
+    if (row.methods && Array.isArray(row.methods)) {
+      return row.methods.includes('bank')
+    }
+    const payOutLower = (row.payOut || '').toLowerCase()
+    return payOutLower.includes('bank') || payOutLower.includes('account')
+  })
+
+  if (bankRows.length > 0) {
+    const bestRatedBank = [...bankRows].sort((a, b) => {
+      const scoreA = parseFloat(a.score || '0')
+      const scoreB = parseFloat(b.score || '0')
+      return scoreB - scoreA
+    })[0]
+
+    if (bestRatedBank && bestRatedBank.score) {
+      results.push({
+        label: 'The best rated (transfer to a bank account)',
+        provider: bestRatedBank.provider,
+        score: bestRatedBank.score,
+        note: bestRatedBank.notes || bestRatedBank.speedNote,
+      })
+    }
+
+    const cheapestBank = [...bankRows].filter(row => row.recipientGets).sort((a, b) => {
+      const amountA = parseFloat(a.recipientGets.replace(/[^\d.]/g, '')) || 0
+      const amountB = parseFloat(b.recipientGets.replace(/[^\d.]/g, '')) || 0
+      return amountB - amountA
+    })[0]
+
+    if (cheapestBank) {
+      results.push({
+        label: 'The cheapest (transfer to a bank account)',
+        provider: cheapestBank.provider,
+        score: cheapestBank.score,
+        note: cheapestBank.notes || cheapestBank.speedNote,
+      })
+    }
+  }
+
+  return results
+})
+
+const scrollToProvider = (providerName: string) => {
+  if (typeof window === 'undefined') return
+  const compareSection = document.getElementById('compare')
+  if (compareSection) {
+    const offset = 120
+    const top = compareSection.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+}
 
 const handleProviderOutbound = async (row: TableRow) => {
   const targetUrl = row.outboundUrl ?? row.affiliateUrl
@@ -2413,7 +2793,16 @@ const sortedProviders = computed(() => {
 const recipientRange = computed(() => {
   const rows = content.value.table.rows
   if (!rows.length) return { min: '0', max: '0', minNum: 0, maxNum: 0 }
-  const amounts = rows.map(r => parseFloat(r.recipientGets.replace(/[^0-9.]/g, '')))
+  const amounts = rows
+    .map(r => {
+      if (!r.recipientGets) return null
+      const num = parseFloat(r.recipientGets.replace(/[^0-9.]/g, ''))
+      return Number.isFinite(num) && num > 0 ? num : null
+    })
+    .filter((num): num is number => num !== null)
+  
+  if (!amounts.length) return { min: '0', max: '0', minNum: 0, maxNum: 0 }
+  
   const minNum = Math.min(...amounts)
   const maxNum = Math.max(...amounts)
   return {
@@ -2525,6 +2914,37 @@ const costSavingsPotential = computed(() => {
   return `$${savings.toFixed(2)}`
 })
 
+const recipientDeltaDisplay = computed(() => {
+  const rows = content.value.table.rows
+  if (!rows.length || !hasRecipientQuotes.value || !recipientRange.value) return '—'
+  const delta = recipientRange.value.maxNum - recipientRange.value.minNum
+  if (delta <= 0 || !Number.isFinite(delta) || isNaN(delta)) return '—'
+  const currencyCode = toCurrencyCode.value?.toUpperCase() || content.value.toCode?.toUpperCase() || ''
+  if (!currencyCode) return '—'
+  return `${currencyCode} ${Math.round(delta).toLocaleString('en-US')}`
+})
+
+const fastestSpeedDisplay = computed(() => {
+  const rows = content.value.table.rows
+  if (!rows.length) return '—'
+  const fastest = [...rows].sort((a, b) => {
+    const hoursA = parseSpeedToHours(a.speed)
+    const hoursB = parseSpeedToHours(b.speed)
+    return hoursA - hoursB
+  })[0]
+  return fastest?.speed || '—'
+})
+
+const calculatedAverageCost = computed(() => {
+  if (corridorIndices.value?.rci && Number.isFinite(corridorIndices.value.rci)) {
+    return formatIndexPercent(corridorIndices.value.rci)
+  }
+  if (providerCosts.value.length === 0) return '—'
+  const avg = averageCost.value / displayAmount.value * 100
+  if (!Number.isFinite(avg)) return '—'
+  return `${avg.toFixed(2)}%`
+})
+
 const getTeerVsMidMarket = computed(() => {
   if (!corridorIndices.value?.teer || !corridorIndices.value?.midMarketRate) return ''
   const teer = corridorIndices.value.teer
@@ -2567,6 +2987,36 @@ const getQuoteRefreshMethods = (method: Method) => {
     return { payin: 'bank_transfer', payout: 'airtime' }
   }
   return { payin: 'bank_transfer', payout: 'bank_deposit' }
+}
+
+const getBackgroundRefreshKey = (method: Method) => (
+  `${corridorId.value}:${displayAmount.value}:${method}`
+)
+
+const enqueueBackgroundRefresh = async (method: Method) => {
+  if (!import.meta.client || displayAmount.value <= 0) return
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return
+  const refreshKey = getBackgroundRefreshKey(method)
+  if (backgroundRefreshKeys.has(refreshKey)) return
+  backgroundRefreshKeys.add(refreshKey)
+
+  try {
+    const { payin, payout } = getQuoteRefreshMethods(method)
+    await request('/quotes/current', {
+      query: {
+        corridor_id: corridorId.value,
+        amount: displayAmount.value,
+        payin,
+        payout,
+        live: true,
+      },
+      retries: 0,
+    })
+  } catch (error) {
+    if (import.meta.dev) {
+      console.warn('[remittance] background quote refresh unavailable', error)
+    }
+  }
 }
 
 type QuoteRefreshResponse = {
@@ -2726,7 +3176,6 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
       if (requestIds.length) {
         startRefreshStatusPoll(requestIds)
       }
-      scheduleRefreshPoll()
     }
   } catch (error) {
     if (import.meta.dev) {
@@ -2739,7 +3188,9 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
 
 const handleRefreshQuotes = async () => {
   await requestQuoteRefresh('manual')
-  await refreshQuotes()
+  if (!refreshStatus.value?.requestIds?.length) {
+    await refreshQuotes()
+  }
 }
 
 const isRefreshQueued = computed(() => {
@@ -2838,21 +3289,20 @@ watch(
 )
 
 watch(hasApiQuotes, (hasQuotes) => {
-  if (hasQuotes) {
-    refreshTimedOut.value = false
-    if (refreshStatus.value?.enqueued) {
-      providersLive.value = false
-      refreshStatus.value = null
-      refreshFinalizing.value = false
-      lastRefreshKey.value = null
-      refreshAttempts.value = 0
-      clearRefreshPoll()
-      clearRefreshStatusPoll()
-      clearRefreshGateTimer()
-      refreshGateStartedAt.value = null
-      refreshElapsedSeconds.value = 0
-    }
-  }
+  if (!hasQuotes) return
+  refreshTimedOut.value = false
+  if (!refreshStatus.value?.enqueued) return
+  if (refreshCompletion.value) return
+  providersLive.value = false
+  refreshStatus.value = null
+  refreshFinalizing.value = false
+  lastRefreshKey.value = null
+  refreshAttempts.value = 0
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
 })
 
 watch(quoteRefreshKey, () => {
@@ -3090,23 +3540,42 @@ function openScoreModal(row: TableRow) {
 const corridorFaqs = computed(() => [
   {
     q: `What is the best way to send money from ${content.value.from} to ${content.value.to}?`,
-    a: `Online money transfer services like Wise, Remitly, and WorldRemit are typically cheaper than banks for sending money from ${content.value.from} to ${content.value.to}. They offer better exchange rates, lower fees, and faster delivery times. We compare all options above so you can find the best deal for your specific transfer amount.`,
+    a: `Online money transfer services like Wise, Remitly, and WorldRemit usually cost less than banks when sending money from ${content.value.from} to ${content.value.to}. They have better exchange rates, lower fees, and faster delivery. Use our comparison tool above to find the best option for your transfer amount.`,
   },
   {
     q: `How long does a transfer from ${content.value.from} to ${content.value.to} take?`,
-    a: `Transfer times vary by provider and payout method. Cash pickup is usually fastest (minutes to hours). Bank deposits typically take 1-3 business days. Traditional bank SWIFT transfers can take 3-5 business days. The comparison above shows exact delivery times for each provider.`,
+    a: `Delivery time depends on the provider and how your recipient gets the money. Cash pickup is fastest, often available within minutes or hours. Bank deposits usually take 1 to 3 business days. Traditional bank transfers through SWIFT can take 3 to 5 business days. Check the comparison table above for exact times from each provider.`,
   },
   {
     q: `What fees will I pay to send money to ${content.value.to}?`,
-    a: `Fees consist of two parts: the transfer fee (shown upfront) and the exchange rate markup (hidden in the rate). We calculate total cost by comparing each provider's rate against the OANDA mid-market rate. This shows you the true cost, not just the advertised fee.`,
+    a: `The total cost has two parts: the upfront transfer fee you see advertised, plus the exchange rate markup hidden in the rate itself. We calculate the real total cost by comparing each provider's rate to the mid market rate. This shows you what you actually pay, not just the headline fee.`,
   },
   {
     q: `Is it safe to use online money transfer services?`,
-    a: `Yes, all providers we list are licensed and regulated by financial authorities (FinCEN in the US, FCA in the UK, ASIC in Australia). We exclude unlicensed services. Look for the licensing badges on each provider card above.`,
+    a: `Yes. Every provider we list holds licenses from financial regulators, including FinCEN in the US, FCA in the UK, and ASIC in Australia. We do not include unlicensed services. You can verify licensing on each provider's card in the comparison above.`,
   },
   {
     q: `How do you rank the providers?`,
-    a: `We rank by total cost (fee + FX markup) so the cheapest option appears first. Providers cannot pay for better placement—our rankings are 100% independent. We also show speed, reliability scores, and user ratings to help you choose.`,
+    a: `We sort providers by total cost, which includes both fees and exchange rate markup. The cheapest option shows up first. Providers cannot pay to rank higher. Our rankings are completely independent. We also display transfer speed, reliability scores, and user ratings to help you make the best choice.`,
   },
 ])
 </script>
+
+<style scoped>
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(400%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.loading-bar-animate {
+  width: 30%;
+  animation: loading-bar 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+</style>

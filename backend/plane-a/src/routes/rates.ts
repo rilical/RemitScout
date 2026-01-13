@@ -7,6 +7,7 @@ import { createLogger } from '../../../shared/logger'
 import {
   FxRateHistoryRepository,
   FxRateRepository,
+  FxRateRefreshRepository,
   LatestQuoteRepository,
 } from '../repositories'
 
@@ -15,6 +16,7 @@ const logger = createLogger('plane-a.rates')
 const planeAPool = getPool(config.db.planeAUrl)
 const fxRateRepository = new FxRateRepository(planeAPool)
 const fxRateHistoryRepository = new FxRateHistoryRepository(planeAPool)
+const fxRateRefreshRepository = new FxRateRefreshRepository(planeAPool)
 const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 
 const pairSchema = z.object({
@@ -46,6 +48,48 @@ const formatSpeed = (min: number | null, max: number | null) => {
   return 'N/A'
 }
 
+const getFxRateStaleness = (
+  record: { last_updated?: string | Date | null; updated_at?: string | Date | null } | null,
+) => {
+  const freshnessHours = config.fxRates?.dbFreshnessHours ?? 1
+  const lastUpdated = record?.last_updated ?? record?.updated_at
+  if (!lastUpdated) {
+    return { stale: true, ageSeconds: null }
+  }
+  const ageSeconds = Math.floor((Date.now() - new Date(lastUpdated).getTime()) / 1000)
+  return {
+    stale: ageSeconds > freshnessHours * 60 * 60,
+    ageSeconds,
+  }
+}
+
+const enqueueFxRateRefreshIfNeeded = async (
+  base: string,
+  quote: string,
+  record: { last_updated?: string | Date | null; updated_at?: string | Date | null } | null,
+) => {
+  if (!config.fxRates?.refreshEnabled) {
+    return null
+  }
+  const { stale } = getFxRateStaleness(record)
+  if (!stale) {
+    return null
+  }
+  try {
+    return await fxRateRefreshRepository.enqueueRequest({
+      baseCurrency: base,
+      quoteCurrency: quote,
+    })
+  } catch (error) {
+    logger.warn('fx_rate_refresh_enqueue_failed', {
+      base,
+      quote,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
 export const ratesRoutes = async (app: FastifyInstance) => {
   app.get('/rates/spot', async (request, reply) => {
     const parsed = pairSchema.safeParse(request.query)
@@ -59,18 +103,30 @@ export const ratesRoutes = async (app: FastifyInstance) => {
 
     try {
       const record = await fxRateRepository.getRateRecord(base, quote)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, record)
       if (!record || record.rate === null || record.rate === undefined) {
         reply.code(404)
-        return { error: 'rate_unavailable', base, quote }
+        return {
+          error: 'rate_unavailable',
+          base,
+          quote,
+          refreshQueued: Boolean(refreshRequestId),
+          refreshRequestId,
+        }
       }
 
       const updatedAt = toIsoString(record.last_updated ?? record.updated_at)
+      const { stale, ageSeconds } = getFxRateStaleness(record)
 
       return {
         rate: Number(record.rate),
         updatedAt,
         base,
         quote,
+        stale,
+        ageSeconds,
+        refreshQueued: Boolean(refreshRequestId),
+        refreshRequestId,
       }
     } catch (error) {
       logger.error('spot_rate_failed', {
@@ -95,10 +151,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
     const maxAgeHours = parsed.data.maxAgeHours ?? 24
 
     try {
-      const [midMarketRate, latestQuotes] = await Promise.all([
-        fxRateRepository.getRate(base, quote),
+      const [rateRecord, latestQuotes] = await Promise.all([
+        fxRateRepository.getRateRecord(base, quote),
         latestQuoteRepository.listLatestByCurrencyPair(base, quote, maxAgeHours),
       ])
+      const midMarketRate = rateRecord?.rate !== null && rateRecord?.rate !== undefined
+        ? Number(rateRecord.rate)
+        : null
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, rateRecord)
 
       const data = latestQuotes
         .filter((quoteRow) => quoteRow.implied_fx_rate !== null && quoteRow.implied_fx_rate !== undefined)
@@ -122,6 +182,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         midMarketRate: midMarketRate ?? null,
         data,
+        refreshQueued: Boolean(refreshRequestId),
+        refreshRequestId,
       }
     } catch (error) {
       logger.error('provider_rates_failed', {
@@ -148,9 +210,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
     const endDate = parsed.data.endDate
 
     try {
-      const rows = startDate && endDate
-        ? await fxRateHistoryRepository.getHistory(base, quote, startDate, endDate)
-        : await fxRateHistoryRepository.getLatestHistory(base, quote, days)
+      const rowsPromise = startDate && endDate
+        ? fxRateHistoryRepository.getHistory(base, quote, startDate, endDate)
+        : fxRateHistoryRepository.getLatestHistory(base, quote, days)
+      const [rows, rateRecord] = await Promise.all([
+        rowsPromise,
+        fxRateRepository.getRateRecord(base, quote),
+      ])
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, rateRecord)
 
       if (rows.length === 0) {
         logger.warn('rate_history_empty', {
@@ -162,7 +229,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
           message: 'No rate history found in database. OANDA sync may not be running or data not yet populated.',
         })
         reply.code(404)
-        return { error: 'rate_unavailable', base, quote, message: 'No rate history available. OANDA sync may be pending.' }
+        return {
+          error: 'rate_unavailable',
+          base,
+          quote,
+          message: 'No rate history available. OANDA sync may be pending.',
+          refreshQueued: Boolean(refreshRequestId),
+          refreshRequestId,
+        }
       }
 
       const history = rows.map((row) => ({
@@ -189,6 +263,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         history,
         lastUpdated,
+        refreshQueued: Boolean(refreshRequestId),
+        refreshRequestId,
       }
     } catch (error) {
       logger.error('rate_history_failed', {
@@ -219,15 +295,16 @@ export const ratesRoutes = async (app: FastifyInstance) => {
 
     try {
       const result = await fxRateRepository.getRateWithHistory(base, quote, days)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, result.current)
       const current = result.current
         ? {
             rate: Number(result.current.rate),
             bid: result.current.bid !== null && result.current.bid !== undefined
               ? Number(result.current.bid)
-              : null,
+            : null,
             ask: result.current.ask !== null && result.current.ask !== undefined
               ? Number(result.current.ask)
-              : null,
+            : null,
             source: result.current.source ?? null,
             lastUpdated: toIsoString(result.current.last_updated ?? result.current.updated_at),
           }
@@ -249,6 +326,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         current,
         history,
         cached: result.cached,
+        refreshQueued: Boolean(refreshRequestId),
+        refreshRequestId,
       }
     } catch (error) {
       logger.error('exchange_rate_failed', {
@@ -278,9 +357,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
     const endDate = parsed.data.endDate
 
     try {
-      const rows = startDate && endDate
-        ? await fxRateHistoryRepository.getHistory(base, quote, startDate, endDate)
-        : await fxRateHistoryRepository.getLatestHistory(base, quote, days)
+      const rowsPromise = startDate && endDate
+        ? fxRateHistoryRepository.getHistory(base, quote, startDate, endDate)
+        : fxRateHistoryRepository.getLatestHistory(base, quote, days)
+      const [rows, rateRecord] = await Promise.all([
+        rowsPromise,
+        fxRateRepository.getRateRecord(base, quote),
+      ])
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, rateRecord)
 
       const history = rows.map((row) => ({
         date: row.rate_date instanceof Date
@@ -301,6 +385,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         history,
         lastUpdated,
+        refreshQueued: Boolean(refreshRequestId),
+        refreshRequestId,
       }
     } catch (error) {
       logger.error('exchange_rate_history_failed', {

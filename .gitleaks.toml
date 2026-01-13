@@ -47,3 +47,4 @@ regex = '''(?i)(api[_-]?key|secret[_-]?key|access[_-]?token|private[_-]?key)\s*[
 
 
 
+

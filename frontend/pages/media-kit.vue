@@ -253,8 +253,8 @@
                 </NuxtLink>
               </div>
               <div class="p-6">
-                <p class="font-semibold text-slate-900 mb-2">Data API / Bulk Access</p>
-                <p class="text-sm text-slate-600 mb-3">For systematic data access, API integration, or research partnerships.</p>
+                <p class="font-semibold text-slate-900 mb-2">Data Licensing & Research</p>
+                <p class="text-sm text-slate-600 mb-3">For licensing requests, research partnerships, or custom analysis.</p>
                 <NuxtLink
                   to="/contact?type=data"
                   class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
@@ -348,9 +348,6 @@
                 </NuxtLink>
                 <NuxtLink to="/methodology" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
                   Methodology →
-                </NuxtLink>
-                <NuxtLink to="/pulse" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  Pulse (Market Data) →
                 </NuxtLink>
                 <NuxtLink to="/how-we-make-money" class="block text-sm text-blue-600 hover:text-blue-700 font-medium">
                   How We Make Money →

@@ -86,6 +86,29 @@ export type RevenueMetric = {
   unique_users: number
 }
 
+export type ProviderImpactSummary = {
+  provider_id: string
+  provider_name: string | null
+  total_clicks: number
+  unique_clicks: number
+  affiliate_clicks: number
+  conversions: number
+  unique_conversions: number
+  conversion_rate: number
+  conversion_values: Record<string, number> | null
+}
+
+export type ProviderCorridorImpact = {
+  provider_id: string
+  provider_name: string | null
+  corridor_id: string | null
+  total_clicks: number
+  unique_clicks: number
+  conversions: number
+  conversion_rate: number
+  conversion_values: Record<string, number> | null
+}
+
 export interface IAnalyticsRepository {
   getPopularCorridors(params: {
     startDate: Date
@@ -149,4 +172,19 @@ export interface IAnalyticsRepository {
     corridorId?: string
     limit?: number
   }): Promise<RevenueMetric[]>
+
+  getProviderImpactSummary(params: {
+    startDate: Date
+    endDate: Date
+    providerId?: string
+    limit?: number
+  }): Promise<ProviderImpactSummary[]>
+
+  getProviderCorridorImpact(params: {
+    startDate: Date
+    endDate: Date
+    providerId?: string
+    corridorId?: string
+    limit?: number
+  }): Promise<ProviderCorridorImpact[]>
 }

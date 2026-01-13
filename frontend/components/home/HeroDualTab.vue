@@ -1170,17 +1170,12 @@ const handleMoneySubmit = async () => {
     // Ensure amount is within valid range
     moneyForm.value.amount = sanitizedAmount
 
-    try {
-      await recordSearch({
-        from,
-        to,
-        amount: sanitizedAmount,
-        method: method || 'bank',
-      })
-    }
-    catch {
-      // Ignore recordSearch errors
-    }
+    void recordSearch({
+      from,
+      to,
+      amount: sanitizedAmount,
+      method: method || 'bank',
+    })
 
     // Submit form and navigate
     const success = await submitForm()

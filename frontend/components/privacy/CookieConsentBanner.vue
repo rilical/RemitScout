@@ -11,7 +11,7 @@
         </p>
         <div class="mt-2 flex gap-3 text-xs">
           <NuxtLink to="/legal/privacy" class="text-blue-600 hover:text-blue-700">Privacy Policy</NuxtLink>
-          <NuxtLink to="/legal/privacy#cookies" class="text-blue-600 hover:text-blue-700">Cookie Policy</NuxtLink>
+          <NuxtLink to="/cookies" class="text-blue-600 hover:text-blue-700">Cookie Policy</NuxtLink>
         </div>
       </div>
       <div class="flex shrink-0 flex-col gap-2 sm:flex-row">

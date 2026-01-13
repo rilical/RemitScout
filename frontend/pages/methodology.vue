@@ -3,44 +3,21 @@
     <CompareWidget />
 
     <!-- Hero Section with improved design -->
-    <section class="relative bg-white py-16 lg:py-20">
+    <section class="relative bg-gray-900 py-16 lg:py-20">
       <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
-        <div class="mt-10 grid gap-12 lg:grid-cols-2 lg:items-center">
-          <!-- Left Column: Content -->
+        <div class="mt-10">
           <div class="space-y-8">
-            <!-- Trust badges -->
-            <div class="flex flex-wrap gap-3">
-              <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                No pay-to-rank
-              </div>
-              <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-emerald-200/50">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-                Spot-check testing
-              </div>
-              <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-md ring-1 ring-blue-200/50">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Live pricing data
-              </div>
-            </div>
-
             <div>
-              <h1 class="text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl">
-                How We Compare Money Transfer Providers
+              <h1 class="text-4xl font-bold leading-tight text-white sm:text-5xl">
+                The <span class="text-brand-600">Evaluation Standard</span>
               </h1>
 
-              <p class="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-600">
-                A transparent methodology for comparing fees, FX markup, delivery options, and the outcome that matters: what your recipient should receive.
+              <p class="mt-4 max-w-4xl text-lg leading-relaxed text-gray-300">
+                A quantitative framework for assessing cross-border liquidity. We deconstruct the total cost of transfer - isolating execution fees from FX spreads to calculate the only metric that matters: Net Delivered Value.
               </p>
-              <p class="mt-4 text-sm text-neutral-600">
+              <p class="mt-4 text-sm text-gray-400">
                 Last updated:
                 <time :datetime="lastUpdatedIso">{{ lastUpdatedLabel }}</time>
               </p>
@@ -49,18 +26,18 @@
             <!-- Stats -->
             <div class="flex flex-wrap gap-4 pt-4">
               <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-2 text-2xl font-bold text-blue-600">
+                <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
                   <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                   <span>{{ SITE_STATS.providers.display }}</span>
                 </div>
                 <div class="text-sm text-neutral-600">
-                  Licensed Providers
+                  Licensed Counterparties
                 </div>
               </div>
 
-              <div class="rounded-2xl border border-brand-200 bg-white p-5 shadow-sm">
+              <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
                   <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -68,136 +45,19 @@
                   <span>{{ SITE_STATS.corridors.display }}</span>
                 </div>
                 <div class="text-sm text-neutral-600">
-                  Money Corridors
+                  Payment Corridors
                 </div>
               </div>
 
               <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-2 text-2xl font-bold text-blue-600">
+                <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
                   <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   <span>{{ SITE_STATS.totalSaved.display }}</span>
                 </div>
                 <div class="text-sm text-neutral-600">
-                  Saved by Users
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column: Compare Form -->
-          <div>
-            <div class="relative overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-2xl">
-              <div class="border-b border-blue-100 bg-brand-600 px-6 py-4 text-center">
-                <h3 class="text-lg font-bold text-white">
-                  Find Your Best Rate Now
-                </h3>
-                <p class="text-sm text-white/90">
-                  Compare live rates from {{ SITE_STATS.providers.display }} providers
-                </p>
-              </div>
-
-              <form
-                class="p-6 space-y-4"
-                @submit.prevent="handleMoneySubmit"
-              >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label
-                      for="from-country"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                    >
-                      Sending from
-                    </label>
-                    <CountrySelect
-                      id="from-country"
-                      v-model="moneyForm.from"
-                      label="Sending from"
-                      placeholder="United States"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      for="to-country"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                    >
-                      Receiving in
-                    </label>
-                    <CountrySelect
-                      id="to-country"
-                      v-model="moneyForm.to"
-                      label="Receiving in"
-                      placeholder="Select country"
-                    />
-                  </div>
-                </div>
-
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label
-                      for="from-currency"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                    >
-                      From currency
-                    </label>
-                    <CurrencySelect
-                      id="from-currency"
-                      v-model="moneyForm.fromCurrency"
-                      :country-code="moneyForm.from"
-                      placeholder="USD"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      for="to-currency"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                    >
-                      To currency
-                    </label>
-                    <CurrencySelect
-                      id="to-currency"
-                      v-model="moneyForm.toCurrency"
-                      :country-code="moneyForm.to"
-                      :placeholder="moneyForm.to ? 'Select currency' : 'Select country first'"
-                      :disabled="!moneyForm.to"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    for="amount"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                  >
-                    Amount to send
-                  </label>
-                  <input
-                    id="amount"
-                    v-model.number="moneyForm.amount"
-                    type="number"
-                    min="1"
-                    step="1"
-                    class="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                    placeholder="500"
-                  >
-                </div>
-
-                <button
-                  type="submit"
-                  class="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-base font-bold text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 shadow-lg hover:shadow-xl"
-                >
-                  Compare Rates
-                </button>
-              </form>
-
-              <div class="border-t border-blue-100 bg-blue-50 px-6 py-4">
-                <div class="text-sm text-slate-600">
-                  <p class="leading-relaxed">
-                    Typical savings vs. banks: <strong class="font-semibold text-slate-900">3–9% per transfer</strong>
-                  </p>
+                  Capital Efficiency Realized
                 </div>
               </div>
             </div>
@@ -213,28 +73,12 @@
     >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/10 px-4 py-2 text-sm font-semibold text-brand-700 mb-6">
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-            Our Comparison Engine
-          </div>
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-6">
-            Our comparison engine
+            The Aggregation Core.
           </h2>
-          <p class="text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed mb-6">
-            We collect live quotes, normalize total cost (fees + FX markup), and rank providers by the delivered outcome: <strong class="font-semibold text-neutral-900">recipient gets</strong>.
-            We cover <strong class="font-semibold text-neutral-900">{{ SITE_STATS.providers.display }}</strong> providers across <strong class="font-semibold text-neutral-900">{{ SITE_STATS.corridors.display }}</strong> corridors, with data freshness that varies by corridor and payment method.
+          <p class="text-lg text-neutral-600 leading-relaxed mb-6">
+            We don't just take providers at their word. Instead, we collect real quotes directly from their systems and double-check them ourselves. This shows you the actual amount of money that will arrive in the recipient's account—not just what sounds good in an advertisement.
+            We track <strong class="font-semibold text-neutral-900">{{ SITE_STATS.providers.display }}</strong> providers across <strong class="font-semibold text-neutral-900">{{ SITE_STATS.corridors.display }}</strong> routes. Our data updates at different speeds depending on the specific route and how you're sending money.
           </p>
           <p class="text-base text-neutral-600 max-w-3xl mx-auto">
             <NuxtLink
@@ -259,13 +103,13 @@
               </svg>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
-              Real-Time Exchange Rates
+              Latency Minimization
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We capture quotes frequently on top corridors, and less frequently on long-tail corridors. Every quote is timestamped so you can judge freshness.
+              FX markets are volatile. Our system polls providers at high frequency to ensure the spread you see is the spread you book.
             </p>
             <NuxtLink
-              to="/learn/how-exchange-rates-work"
+              to="/learn/best-time-to-send-money"
               class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 mt-auto"
             >
               Learn how rates work
@@ -292,16 +136,16 @@
               </svg>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
-              Transfer Fees & Hidden Costs
+              Total Cost Analysis
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We show total cost, not just the headline fee. That includes FX markup, which can quietly outweigh a “low fee” claim.
+              We treat the FX Spread as a fee. By combining the upfront charge with the spread differential, we expose the true cost of the transaction.
             </p>
             <NuxtLink
-              to="/learn/how-to-avoid-hidden-fees"
+              to="/learn/hidden-exchange-rate-fees-explained"
               class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 mt-auto"
             >
-              Learn about hidden fees
+              Learn about FX spread
               <svg
                 class="h-3 w-3"
                 fill="none"
@@ -325,10 +169,10 @@
               </svg>
             </div>
             <h3 class="text-xl font-bold text-neutral-900 mb-3">
-              Availability & Quote Success
+              Quote Integrity
             </h3>
             <p class="text-neutral-600 leading-relaxed mb-3 flex-grow">
-              We track quote success rate, data freshness, and pricing stability. When feasible, we run spot-check transfers on selected corridors to validate what we see in quotes.
+              We track 'Quote-to-Book' ratios. Providers with high failure rates or bait-and-switch pricing are algorithmically penalized in our rankings.
             </p>
             <NuxtLink
               to="/learn/providers"
@@ -355,15 +199,34 @@
     </section>
 
     <!-- Remit Score Section -->
-    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+    <section id="remit-score" class="py-16 lg:py-20 bg-white scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- What is Remit-Score Section -->
+        <div class="mb-12 text-center">
+          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-6">
+            What is <span class="text-brand-600">Remit-Score</span>?
+          </h2>
+          <div class="max-w-4xl mx-auto space-y-4">
+            <p class="text-lg text-neutral-700 leading-relaxed">
+              Comparing money transfer providers is confusing. Everyone says they're the cheapest, fastest, or most reliable. Remit-Score cuts through that: it's a 0–10 rating based on real transfer data, not what providers claim in their ads.
+            </p>
+            <p class="text-lg text-neutral-700 leading-relaxed">
+              The question we're really answering: how much money does your recipient actually get? Fees, exchange rates, delivery times, and reliability all factor in, but they're measured against that outcome. Providers can't pay for a higher score, and our affiliate relationships don't influence the numbers.
+            </p>
+            <p class="text-lg text-neutral-700 leading-relaxed">
+              Scores come from our quote dataset and transfer observations. If a provider delivers good value consistently, their score shows it. If they don't, same thing.
+            </p>
+          </div>
+        </div>
+
+        <!-- Remit-Score Details -->
         <div class="bg-gradient-to-r from-brand-50 to-blue-50 border-2 border-brand-200 rounded-3xl p-8 lg:p-12">
           <div class="mb-8">
             <div class="flex items-start gap-4 mb-6">
               <div class="flex-shrink-0">
-                <div class="w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center">
                   <svg
-                    class="w-6 h-6 text-white"
+                    class="w-8 h-8 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -377,157 +240,196 @@
                   </svg>
                 </div>
               </div>
-              <div>
-                <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+              <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold text-neutral-900 mb-3">
                   How We Score Providers
                 </h2>
-                <p class="text-base text-neutral-700 mb-3 max-w-3xl leading-relaxed">
-                  Each provider gets a <span class="font-semibold">Remit-Score</span> (0–10 scale) based on quote data and reliability signals, not paid reviews.
-                  Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">9.5</span>,
-                  <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">8.4</span>, or
-                  <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">7.2</span>
-                  represent the overall quality and value you can expect from each provider for your specific transfer.
+                <p class="text-base text-neutral-700 mb-4 leading-relaxed">
+                  Each provider gets a <span class="font-semibold text-brand-600">Remit-Score (0-10 scale)</span> based on real transfer data, not paid reviews. Scores like <span class="font-semibold">9.5</span>, <span class="font-semibold">8.4</span>, or <span class="font-semibold">7.2</span> represent the overall quality and value you can expect when using that provider.
                 </p>
-                <p class="text-sm text-neutral-600 max-w-2xl">
-                  See how top providers like
-                  <NuxtLink
-                    to="/learn/providers/wise"
-                    class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                  >Wise</NuxtLink>,
-                  <NuxtLink
-                    to="/learn/providers/remitly"
-                    class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                  >Remitly</NuxtLink>, and
-                  <NuxtLink
-                    to="/learn/providers/western-union"
-                    class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                  >Western Union</NuxtLink> score.
+                <p class="text-base text-neutral-700 mb-4 leading-relaxed">
+                  Our methodology prioritizes what matters most: <strong>how much money actually reaches your recipient</strong>. We analyze fees, exchange rate markups, and the total delivered amount. Providers cannot pay to rank higher—the score reflects real value.
                 </p>
               </div>
             </div>
           </div>
 
-          <div class="max-w-4xl mx-auto">
-            <div class="space-y-4">
-              <h3 class="text-xl font-bold text-neutral-900 mb-4 text-center">
-                Rating Categories & Weights
-              </h3>
-              <div class="space-y-4">
-                <div class="border border-neutral-200 rounded-lg bg-white p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-bold text-neutral-900">
-                      Delivered Value
-                    </h4>
-                    <span class="text-brand-600 font-bold text-lg">40%</span>
-                  </div>
-                  <p class="text-sm text-neutral-600">
-                    Total cost (fees + FX markup) and how often a provider delivers the best outcome for the scenario shown.
-                  </p>
-                  <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full"
-                      style="width: 40%"
-                    />
+          <!-- Rating Categories & Weights -->
+          <div class="mb-10">
+            <h3 class="text-2xl font-bold text-neutral-900 mb-8 text-center">
+              Rating Categories & Weights
+            </h3>
+            
+            <div class="space-y-4 w-full">
+              <!-- Delivered Value - 40% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
                 </div>
-
-                <div class="border border-neutral-200 rounded-lg bg-white p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-bold text-neutral-900">
-                      Reliability & Success
-                    </h4>
-                    <span class="text-brand-600 font-bold text-lg">20%</span>
-                  </div>
-                  <p class="text-sm text-neutral-600">
-                    Quote success rate, data freshness, and pricing stability (where available).
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Delivered Value</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
                   </p>
-                  <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full"
-                      style="width: 20%"
-                    />
+                </div>
+                <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">40%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                </div>
+              </div>
+
+              <!-- Reliability & Success - 20% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
                   </div>
                 </div>
-
-                <div class="border border-neutral-200 rounded-lg bg-white p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-bold text-neutral-900">
-                      Friction & Speed
-                    </h4>
-                    <span class="text-brand-600 font-bold text-lg">15%</span>
-                  </div>
-                  <p class="text-sm text-neutral-600">
-                    ETA where available, speed buckets, and observed delivery times on selected corridors (when tested).
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Reliability & Success</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Quote success rate, data freshness, pricing stability (where available)
                   </p>
-                  <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full"
-                      style="width: 15%"
-                    />
+                </div>
+                <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">20%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                </div>
+              </div>
+
+              <!-- Friction & Speed - 15% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                   </div>
                 </div>
-
-                <div class="border border-neutral-200 rounded-lg bg-white p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-bold text-neutral-900">
-                      Support & Refunds
-                    </h4>
-                    <span class="text-brand-600 font-bold text-lg">15%</span>
-                  </div>
-                  <p class="text-sm text-neutral-600">
-                    Published policies, support availability, and refund experience signals (where available).
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Friction & Speed</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    ETA where available, speed buckets, observed delivery times on selected corridors
                   </p>
-                  <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full"
-                      style="width: 15%"
-                    />
+                </div>
+                <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">15%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                </div>
+              </div>
+
+              <!-- Support & Refunds - 15% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
                   </div>
                 </div>
-
-                <div class="border border-neutral-200 rounded-lg bg-white p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-bold text-neutral-900">
-                      Trust & Safety
-                    </h4>
-                    <span class="text-brand-600 font-bold text-lg">10%</span>
-                  </div>
-                  <p class="text-sm text-neutral-600">
-                    Public licensing checks where available and basic compliance and safety signals.
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Support & Refunds</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
                   </p>
-                  <div class="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600 rounded-full"
-                      style="width: 10%"
-                    />
+                </div>
+                <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">15%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                </div>
+              </div>
+
+              <!-- Trust & Safety - 10% -->
+              <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                  <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                   </div>
+                </div>
+                <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Trust & Safety</h4>
+                  <p class="text-sm text-neutral-600 leading-relaxed">
+                    Public licensing checks where available, regulatory register verification
+                  </p>
+                </div>
+                <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
+                  <div class="text-4xl font-bold text-white mb-1">10%</div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Bottom Text -->
+          <div class="border-t-2 border-brand-200 pt-6">
+            <p class="text-base text-neutral-600 leading-relaxed">
+              Scores are computed from our quote dataset—fees, implied FX rate vs a mid-market reference, and delivered amount. We also factor in measurable signals like stated ETA, payment method support, and quote availability. Providers cannot pay to rank higher, and affiliate relationships do not influence score calculation.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Show Your Work Section -->
-    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+    <section id="show-your-work" class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-brand-600 shadow-lg mb-6">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-6">
+          <h2 class="text-4xl sm:text-5xl font-bold text-brand-600 mb-6">
             Show Your Work
           </h2>
           <p class="text-xl leading-relaxed text-neutral-700 max-w-4xl mx-auto [text-wrap:pretty]">
-            No black box. This is what we measure, how we calculate “recipient gets,” how we handle freshness, and what can change at checkout.
+            No black box. This is what we measure, how we calculate Net Delivered Value, how we manage Data Latency, and what can change at checkout.
           </p>
         </div>
 
+         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12 max-w-5xl mx-auto">
+           <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+             <h3 class="text-base font-semibold text-brand-600 mb-2">
+               Data Sources
+             </h3>
+             <p class="text-sm text-neutral-600 leading-relaxed">
+               Mix of direct feeds from providers and public observation. We track when each quote was captured and store it for accuracy checks.
+             </p>
+           </div>
+
+           <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+             <h3 class="text-base font-semibold text-brand-600 mb-2">
+               Normalization
+             </h3>
+             <p class="text-sm text-neutral-600 leading-relaxed">
+               We decompose execution fees and FX Spread to compute Effective Exchange Rate and Net Delivered Value.
+             </p>
+           </div>
+
+           <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+             <h3 class="text-base font-semibold text-brand-600 mb-2">
+               Latency Controls
+             </h3>
+             <p class="text-sm text-neutral-600 leading-relaxed">
+               Corridor-specific polling cadence with visible timestamps. Data Latency is surfaced with each quote.
+             </p>
+           </div>
+
+           <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+             <h3 class="text-base font-semibold text-brand-600 mb-2">
+               Audit Trail
+             </h3>
+             <p class="text-sm text-neutral-600 leading-relaxed">
+               Corrections are logged and discrepancies reviewed against checkout deltas or market movement.
+             </p>
+           </div>
+         </div>
+
         <!-- Editorial & Independence -->
-        <div class="mb-12">
+        <div class="mb-12 max-w-5xl mx-auto">
           <div class="rounded-3xl border-2 border-brand-200 bg-white p-10 lg:p-12 shadow-lg">
             <div class="flex items-start gap-6 mb-8">
               <div class="flex-shrink-0">
@@ -607,20 +509,33 @@
         </div>
 
         <!-- FAQ Section -->
-        <div class="mb-12">
-          <div class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-lg">
-            <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-8 text-center">
-              Frequently Asked Questions
-            </h3>
-            <div class="relative z-10">
-              <FaqAccordion :faqs="showYourWorkFaqs" />
+        <div class="mb-12 max-w-5xl mx-auto">
+          <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-white to-brand-50/30 p-10 lg:p-12 shadow-lg">
+            <div class="text-center mb-10">
+              <div class="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-brand-600 shadow-lg mb-4 mx-auto">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-2xl lg:text-3xl font-bold text-neutral-900 mb-3">
+                Frequently Asked Questions
+              </h3>
+              <p class="text-base text-neutral-600 max-w-2xl mx-auto">
+                Common questions about how we collect data, calculate metrics, and ensure accuracy
+              </p>
+            </div>
+            <div class="relative z-10 max-w-4xl mx-auto">
+              <div class="space-y-3">
+                <FaqAccordion :faqs="showYourWorkFaqs" />
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Quick Links -->
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
           <NuxtLink
+            v-if="FEATURE_FLAGS.PULSE_ENABLED"
             to="/pulse"
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
           >
@@ -673,14 +588,12 @@
     </section>
 
     <!-- Educational Example Section -->
-    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <BankVsSpecialistDynamic />
-      </div>
+    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20 overflow-hidden">
+      <BankVsSpecialistDynamic />
     </section>
 
     <!-- How It Works Section -->
-    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+    <section id="how-it-works" class="py-16 lg:py-20 bg-white scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
           <div class="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 px-4 py-2 text-sm font-semibold text-emerald-700 mb-6">
@@ -697,13 +610,13 @@
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
               />
             </svg>
-            Step by Step Process
+            Execution Workflow
           </div>
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-            How Our Comparison Works
+            Execution Workflow.
           </h2>
           <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-            Three steps to compare a corridor
+            A three-stage audit for corridor execution
           </p>
         </div>
 
@@ -716,16 +629,16 @@
                 </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                1. Enter your transfer details
+                1. Define Requirements
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-3 flex-1">
-                Tell us where you’re sending from, where you’re sending to, and how much. We’ll show the latest available quotes from <NuxtLink
+                Input origin, destination, and capital amount. This defines the corridor and funding route for quote normalization across <NuxtLink
                   to="/learn/providers"
                   class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
+                >{{ SITE_STATS.providers.display }} licensed counterparties</NuxtLink>.
               </p>
               <p class="text-sm text-neutral-600">
-                Quote availability and freshness vary by corridor, provider, and payment method.
+                Quote availability and Data Latency vary by corridor, provider, and payment method.
               </p>
             </div>
           </div>
@@ -738,37 +651,11 @@
                 </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                2. Compare and choose
+                2. Audit the Market
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                Results are grouped by payout method and ranked by delivered outcome (recipient gets), with context on fees, FX markup, speed, and reliability.
+                Our engine aggregates and normalizes quotes in real-time, then ranks by Net Delivered Value with context on FX Spread, execution fees, settlement speed, and quote integrity.
               </p>
-              <div class="grid gap-2 sm:grid-cols-2">
-                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <svg class="w-4 h-4 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Transfer speed</strong></span>
-                </div>
-                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Payment method</strong></span>
-                </div>
-                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <svg class="w-4 h-4 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Remit-Score</strong></span>
-                </div>
-                <div class="flex items-start gap-2 rounded-lg bg-brand-50 p-2.5">
-                  <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span class="text-xs text-neutral-700"><strong class="font-semibold">Total cost</strong></span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -780,10 +667,10 @@
                 </svg>
               </div>
               <h3 class="text-xl font-bold text-neutral-900 mb-3">
-                3. Complete the transfer
+                3. Select &amp; Execute
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                You’ll be redirected to the provider to sign in, verify identity if required, and complete checkout. Always confirm the final amount on the provider’s checkout screen.
+                Choose the optimal counterparty and bridge directly to their secure checkout. Confirm Net Delivered Value at execution.
               </p>
               <div class="rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div class="flex items-start gap-2">
@@ -801,7 +688,7 @@
                     />
                   </svg>
                   <p class="text-xs text-neutral-700 leading-relaxed">
-                    <strong class="font-bold text-neutral-900">Independent comparisons:</strong> we may earn a commission when you use our links, but it never affects rankings.
+                    <strong class="font-bold text-neutral-900">Independence disclosure:</strong> we may earn a commission when you use our links, but it never affects rankings.
                   </p>
                 </div>
               </div>
@@ -812,10 +699,10 @@
     </section>
 
     <!-- Testing Methodology -->
-    <section class="py-16 lg:py-20 bg-white scroll-mt-20">
+    <section id="testing-methodology" class="py-16 lg:py-20 bg-brand-600 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full bg-purple-600/10 px-4 py-2 text-sm font-semibold text-purple-700 mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white mb-6">
             <svg
               class="h-4 w-4"
               fill="none"
@@ -831,10 +718,10 @@
             </svg>
             Our Testing Process
           </div>
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
             How We Test & Verify Providers
           </h2>
-          <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
+          <p class="text-lg text-white/90 max-w-3xl mx-auto">
             Spot-check validation on selected corridors and methods
           </p>
         </div>
@@ -857,19 +744,19 @@
             </p>
             <ul class="space-y-3 text-sm text-slate-600">
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>We check publicly available regulatory registers where applicable</span>
               </li>
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>Refresh frequently on top corridors (cadence varies)</span>
               </li>
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>Spot-check on selected corridors when feasible</span>
@@ -878,7 +765,7 @@
           </div>
 
           <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
-            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600 shadow-md">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
               </svg>
@@ -891,20 +778,20 @@
             </p>
             <ul class="space-y-3 text-sm text-slate-600">
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>Selected corridors based on coverage and user demand</span>
               </li>
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>Multiple send amounts (where testable)</span>
               </li>
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>Different payout methods where supported</span>
               </li>
@@ -912,7 +799,7 @@
           </div>
 
           <div class="rounded-2xl border border-slate-200 bg-white p-8 hover:shadow-lg transition-shadow">
-            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 shadow-md">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-600 shadow-md">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
               </svg>
@@ -925,20 +812,20 @@
             </p>
             <ul class="space-y-3 text-sm text-slate-600">
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>Automated alerts for unusual rate changes</span>
               </li>
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>Track delivery time anomalies</span>
               </li>
               <li class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-9 3.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm2.25 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                <svg class="w-5 h-5 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>User feedback is reviewed and triaged continuously</span>
               </li>
@@ -949,7 +836,11 @@
     </section>
 
     <!-- Technical Appendix (Institutional) -->
-    <section class="py-16 lg:py-20 bg-slate-900 scroll-mt-20">
+    <section
+      id="technical-appendix"
+      v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED"
+      class="py-16 lg:py-20 bg-slate-900 scroll-mt-20"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-12">
           <p class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">
@@ -1193,171 +1084,88 @@
     </section>
 
     <!-- Guides Section -->
-    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+    <section id="guides" class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full bg-blue-600/10 px-4 py-2 text-sm font-semibold text-blue-700 mb-4">
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
-            Learning Resources
-          </div>
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-            Check Out Our Guides & Save More
-          </h2>
-          <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-            Learn how to send money abroad smarter with our expert guides on exchange rates, fees, and choosing the right provider
-          </p>
-        </div>
-
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <h2 class="text-3xl font-bold text-white mb-8 text-center">
+          Related Guides
+        </h2>
+        <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
-            to="/learn/how-to-avoid-hidden-fees"
-            class="group rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm transition-all hover:shadow-2xl hover:border-brand-300"
+            to="/learn/hidden-exchange-rate-fees-explained"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
-            <div class="aspect-video bg-gradient-to-br from-brand-600/20 to-blue-50 relative overflow-hidden">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <svg
-                  class="h-20 w-20 text-brand-600/40"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-brand-600 transition-colors">
-                How to Avoid Hidden Exchange Rate Fees
-              </h3>
-              <p class="text-sm text-slate-500 mb-3">November 2024 · Remit-Scout Team</p>
-              <p class="text-sm text-slate-600 leading-relaxed">
-                Learn how banks and providers hide fees in exchange rate markups and how to spot them before you send money abroad.
-              </p>
-            </div>
+            <h3 class="text-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
+              Hidden Exchange Rate Fees Explained
+            </h3>
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Learn how FX markup works and why "$0 fee" can still be expensive.
+            </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
 
           <NuxtLink
-            to="/learn/fastest-way-to-send-money-internationally"
-            class="group rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm transition-all hover:shadow-2xl hover:border-emerald-300"
+            to="/learn/how-to-read-remittance-quote"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
-            <div class="aspect-video bg-gradient-to-br from-emerald-600/20 to-emerald-50 relative overflow-hidden">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <svg
-                  class="h-20 w-20 text-emerald-600/40"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                Fastest Way to Send Money Internationally
-              </h3>
-              <p class="text-sm text-slate-500 mb-3">November 2024 · Remit-Scout Team</p>
-              <p class="text-sm text-slate-600 leading-relaxed">
-                Need to send money urgently? Discover the fastest transfer methods and which providers deliver in minutes vs. days.
-              </p>
-            </div>
+            <h3 class="text-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
+              How to Read a Remittance Quote
+            </h3>
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Understand what matters in a quote and spot hidden costs.
+            </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
 
           <NuxtLink
-            to="/learn/bank-vs-money-transfer-service"
-            class="group rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm transition-all hover:shadow-2xl hover:border-purple-300"
+            to="/learn/why-compare-before-every-transfer"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
-            <div class="aspect-video bg-gradient-to-br from-purple-600/20 to-purple-50 relative overflow-hidden">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <svg
-                  class="h-20 w-20 text-purple-600/40"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
-                Bank vs. Money Transfer Service
-              </h3>
-              <p class="text-sm text-slate-500 mb-3">November 2024 · Remit-Scout Team</p>
-              <p class="text-sm text-slate-600 leading-relaxed">
-                Compare the real costs and speeds of traditional banks versus specialist money transfer services to find the best option.
-              </p>
-            </div>
-          </NuxtLink>
-        </div>
-
-        <div class="mt-10 text-center">
-          <NuxtLink
-            to="/learn"
-            class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-8 py-4 text-base font-bold text-white transition-all hover:bg-slate-800 shadow-lg hover:shadow-xl"
-          >
-            View All Guides
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
+            <h3 class="text-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
+              Why Compare Before Every Transfer
+            </h3>
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Learn how comparing can save you hundreds on the same transfer.
+            </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
         </div>
       </div>
     </section>
 
     <!-- Final CTA -->
-    <section class="bg-gradient-to-r from-brand-600 via-blue-600 to-brand-700 py-16 lg:py-20">
-      <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-white">
-        <h2 class="text-3xl font-bold mb-4 sm:text-4xl lg:text-5xl">
-          Ready to Save on Your Next Transfer?
+    <section class="py-16 sm:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+          Ready to save on your next transfer?
         </h2>
-        <p class="mx-auto mb-8 max-w-2xl text-lg text-white/95 leading-relaxed">
-          Compare live quotes from {{ SITE_STATS.providers.display }} providers. See what your recipient should receive, then confirm the final amount at checkout.
+        <p class="text-xl sm:text-2xl text-white/90 mb-4">
+          Compare live rates from top providers and find the best deal
+        </p>
+        <p class="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
+          Enter your transfer details to see real-time rates and save money on fees and exchange rates.
         </p>
         <NuxtLink
           to="/"
-          class="inline-flex items-center gap-3 rounded-xl bg-white px-10 py-5 text-lg font-bold text-brand-600 transition-all hover:bg-slate-50 hover:scale-105 shadow-2xl"
+          class="inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-600 font-bold text-lg rounded-xl hover:bg-white/90 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
         >
-          Start Comparing Rates Now
+          <span>Compare Rates Now</span>
           <svg
-            class="h-6 w-6"
+            class="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -1365,8 +1173,8 @@
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2.5"
-              d="M13 7l5 5m0 0l-5 5m5-5H6"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
             />
           </svg>
         </NuxtLink>
@@ -1383,17 +1191,11 @@ import {
 } from '@heroicons/vue/24/outline'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
-import CountrySelect from '~/components/shared/CountrySelect.vue'
-import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import BankVsSpecialistDynamic from '~/components/home/BankVsSpecialistDynamic.vue'
-import { useCompareForm } from '~/composables/useCompareForm'
-import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { SITE_STATS } from '~/config/stats'
-
-const { form: moneyForm, submit: submitForm } = useCompareForm()
-const { recordSearch } = useRemittanceApi()
+import { FEATURE_FLAGS } from '~/utils/constants'
 
 const lastUpdatedIso = '2025-12-14'
 const lastUpdatedLabel = computed(() => {
@@ -1403,6 +1205,18 @@ const lastUpdatedLabel = computed(() => {
     month: 'long',
   })
 })
+
+const quickLinks = [
+  { label: 'Comparison engine', href: '#providers' },
+  { label: 'Remit-Score', href: '#remit-score' },
+  { label: 'Show your work', href: '#show-your-work' },
+  { label: 'Testing', href: '#testing-methodology' },
+  ...(FEATURE_FLAGS.ENTERPRISE_ENABLED ? [{ label: 'Data pipeline', href: '#technical-appendix' }] : []),
+]
+
+const pulseCallout = FEATURE_FLAGS.PULSE_ENABLED
+  ? '<p>These records enable us to track pricing trends over time and power features like <a href="/pulse" class="text-brand-600 hover:text-brand-700 underline font-semibold">Pulse</a>, which shows rate movements and helps you time your transfers.</p>'
+  : '<p>These records enable us to track pricing trends over time and publish guidance on timing, volatility, and pricing patterns.</p>'
 
 const showYourWorkFaqs = [
   {
@@ -1418,36 +1232,36 @@ const showYourWorkFaqs = [
         <li>Payment method (card, bank transfer) and delivery method (bank account, cash pickup, mobile wallet)</li>
         <li>Provider fees (fixed and variable)</li>
         <li>Exchange rate offered</li>
-        <li>Final amount recipient receives</li>
+        <li>Net Delivered Value (destination amount)</li>
         <li>Estimated delivery time</li>
       </ul>
-      <p>These records enable us to track pricing trends over time and power features like <a href="/pulse" class="text-brand-600 hover:text-brand-700 underline font-semibold">Pulse</a>, which shows rate movements and helps you time your transfers.</p>
+      ${pulseCallout}
     `,
   },
   {
-    question: 'How we calculate "recipient gets"',
+    question: 'How we calculate Net Delivered Value',
     answer: `
-      <p>The "recipient gets" amount represents the actual funds your recipient will receive after all fees and exchange rate adjustments are applied.</p>
+      <p>Net Delivered Value represents the funds delivered to the destination account after all fees and FX Spread adjustments are applied.</p>
       <p><strong>Calculation formula:</strong></p>
       <p><code class="bg-slate-100 px-2 py-1 rounded">(send amount - fees) × provider exchange rate</code></p>
       <p><strong>Example calculation:</strong></p>
       <ul>
         <li>Send amount: $500 USD</li>
         <li>Mid-market rate: 18.50 MXN per USD</li>
-        <li>Provider A: $5.00 fee, 18.00 rate → recipient receives <strong>8,910 MXN</strong></li>
-        <li>Provider B: $1.99 fee, 18.45 rate → recipient receives <strong>9,188 MXN</strong></li>
+        <li>Provider A: $5.00 fee, 18.00 rate → Net Delivered Value: <strong>8,910 MXN</strong></li>
+        <li>Provider B: $1.99 fee, 18.45 rate → Net Delivered Value: <strong>9,188 MXN</strong></li>
       </ul>
-      <p>Provider B delivers <strong>278 MXN more</strong> despite both providers advertising low fees. The exchange rate difference accounts for the variation.</p>
+      <p>Provider B delivers <strong>278 MXN more</strong> despite similar execution fees. The exchange rate difference accounts for the variation.</p>
       <p><strong>Important note:</strong> Final checkout amounts may differ from our quotes due to promotional offers, identity verification requirements, payment method variations, or exchange rate movements between quote capture and transaction completion.</p>
     `,
   },
   {
-    question: 'How we estimate FX markup',
+    question: 'How we estimate FX Spread',
     answer: `
-      <p>Many providers generate revenue by offering exchange rates below the mid-market rate. This difference, known as <strong>FX markup</strong>, represents a hidden cost to consumers.</p>
-      <p>We calculate markup by comparing the provider's quoted rate to the mid-market reference rate at the <strong>exact same timestamp</strong>. Exchange rates fluctuate throughout the day, so accurate timing is essential for fair comparison.</p>
+      <p>Many providers generate revenue by offering exchange rates below the mid-market rate. This difference, known as <strong>FX Spread</strong>, represents an embedded cost to the sender.</p>
+      <p>We calculate FX Spread by comparing the provider's quoted rate to the mid-market reference rate at the <strong>exact same timestamp</strong>. Exchange rates fluctuate throughout the day, so accurate timing is essential for fair comparison.</p>
       <p><strong>Calculation formula:</strong></p>
-      <p><code class="bg-slate-100 px-2 py-1 rounded">FX markup = (mid-market rate - provider rate) ÷ mid-market rate</code></p>
+      <p><code class="bg-slate-100 px-2 py-1 rounded">FX Spread = (mid-market rate - provider rate) ÷ mid-market rate</code></p>
       <p>When reliable timestamp alignment or data quality cannot be confirmed, we prioritize transparency and clearly indicate reduced confidence levels rather than making assumptions.</p>
     `,
   },
@@ -1487,28 +1301,48 @@ const showYourWorkFaqs = [
   },
 ]
 
-const handleMoneySubmit = async () => {
-  const { from, to, amount, method } = moneyForm.value
-
-  if (from && to && amount && amount > 0 && method) {
-    await recordSearch({ from, to, amount, method }).catch(() => undefined)
-  }
-
-  await submitForm()
-}
-
 const { public: { siteUrl } } = useRuntimeConfig()
 
 setSeo({
-  title: 'Our Methodology | How We Compare Money Transfer Providers | Remit-Scout',
-  description: 'Learn how Remit-Scout collects quotes, estimates fees and FX markup, and ranks money transfer providers by delivered outcome with an independent, transparent methodology.',
+  title: 'The Evaluation Standard | Remit-Scout Methodology',
+  description: 'A quantitative framework for assessing cross-border liquidity, isolating execution fees from FX Spread to calculate Net Delivered Value with Data Latency controls.',
   canonical: `${siteUrl}/methodology`,
+  ogType: 'article',
+  publishedTime: lastUpdatedIso,
+  modifiedTime: lastUpdatedIso,
+  author: 'Remit-Scout Editorial Team',
+  tags: ['methodology', 'remittances', 'comparison'],
 })
 
 jsonLdBreadcrumb([
   { name: 'Home', url: `${siteUrl}/` },
   { name: 'Methodology', url: `${siteUrl}/methodology` },
 ])
+
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        'headline': 'The Evaluation Standard.',
+        'url': `${siteUrl}/methodology`,
+        'datePublished': lastUpdatedIso,
+        'dateModified': lastUpdatedIso,
+        'author': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout Editorial Team',
+        },
+        'publisher': {
+          '@type': 'Organization',
+          'name': 'Remit-Scout',
+          'url': siteUrl,
+        },
+      }),
+    },
+  ],
+})
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },

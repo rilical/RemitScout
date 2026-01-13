@@ -12,13 +12,13 @@
           <!-- Main Content -->
           <div class="lg:col-span-2">
             <h1 class="mb-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
-              How We Compare Money Transfer Providers
+              The Evaluation Standard.
             </h1>
             <p class="mx-auto max-w-3xl text-xl text-slate-600 sm:text-2xl font-medium mb-6">
-              Transparent, data-driven methodology built by expats who got tired of losing money to hidden fees
+              A quantitative framework for assessing cross-border liquidity. We deconstruct the total cost of transfer - isolating execution fees from FX spreads to calculate Net Delivered Value.
             </p>
             <p class="text-lg text-slate-600 leading-relaxed max-w-3xl">
-              We're like a travel comparison site, but for money transfers. Every comparison, every rating, every recommendation is backed by real transfers, verified data, and a commitment to showing you the actual "recipient gets" amount—not marketing fluff.
+              This methodology documents data sourcing, normalization, and Data Latency controls used to publish a performance rating - not a review.
             </p>
           </div>
 
@@ -26,7 +26,7 @@
           <div class="lg:col-span-1">
             <div class="sticky top-24 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
               <h3 class="text-xl font-bold text-slate-900 mb-6">
-                Find a better provider now
+                Run a quote audit
               </h3>
 
               <form
@@ -117,7 +117,7 @@
                     </svg>
                   </div>
                   <p class="text-sm text-slate-700 leading-relaxed">
-                    Our comparison engine is trusted by more than <strong class="font-semibold text-slate-900">{{ SITE_STATS.users.display }} users</strong> worldwide
+                    Our aggregation core processes <strong class="font-semibold text-slate-900">{{ SITE_STATS.users.display }}+ comparisons</strong> annually
                   </p>
                 </div>
 
@@ -138,7 +138,7 @@
                     </svg>
                   </div>
                   <p class="text-sm text-slate-700 leading-relaxed">
-                    We only recommend <strong class="font-semibold text-slate-900">regulated and secure companies</strong>
+                    We only list <strong class="font-semibold text-slate-900">regulated and licensed counterparties</strong>
                   </p>
                 </div>
 
@@ -159,7 +159,7 @@
                     </svg>
                   </div>
                   <p class="text-sm text-slate-700 leading-relaxed">
-                    Save up to <strong class="font-semibold text-slate-900">90% by switching</strong> to a cheaper provider today
+                    Reduce <strong class="font-semibold text-slate-900">FX Spread exposure</strong> by routing to tighter liquidity
                   </p>
                 </div>
               </div>
@@ -174,17 +174,17 @@
       <!-- Why You Need to Compare -->
       <section class="mb-16">
         <h2 class="mb-6 text-3xl font-bold text-slate-900">
-          Why You Need to Compare Your Options Before Every Transfer
+          Why Comparative Pricing Matters
         </h2>
         <div class="space-y-4 text-lg leading-relaxed text-slate-700">
           <p>
-            Just like you wouldn't book a flight or hotel without comparing prices, you shouldn't send money abroad without checking your options first. The difference between providers can be <strong class="font-semibold text-slate-900">hundreds of dollars</strong> on a single transfer—money that could go to your family instead of fees and hidden markups.
+            Cross-border transfers execute across fragmented liquidity and pricing policies. The same corridor can clear with materially different FX Spread and execution fees, which directly impacts Net Delivered Value.
           </p>
           <p>
-            Traditional banks and even some "low fee" providers hide their real costs in exchange rate markups. A provider might advertise "$0 fees" but charge you 3–5% more than the real exchange rate. That's why we show you the <strong class="font-semibold text-slate-900">actual amount your recipient will receive</strong>—the only number that actually matters.
+            Banks and some providers monetize the FX Spread. A "zero fee" claim often implies a wider spread, typically 3–5% above the mid-market benchmark. Net Delivered Value exposes the delta.
           </p>
           <p>
-            Remit-Scout helps you find the best deal by comparing live rates, total costs, and delivery speeds from {{ SITE_STATS.providers.display }} licensed providers. We test, verify, and explain every option so you can send with confidence.
+            Remit-Scout aggregates live quotes, normalizes total cost, and publishes Net Delivered Value across {{ SITE_STATS.providers.display }} licensed counterparties. We test, verify, and document methodology for auditability.
           </p>
         </div>
       </section>
@@ -192,7 +192,7 @@
       <!-- How It Works - Step by Step -->
       <section class="mb-16">
         <h2 class="mb-8 text-3xl font-bold text-slate-900">
-          How Our Comparison Works
+          Execution Workflow.
         </h2>
 
         <!-- Step 1 -->
@@ -205,13 +205,13 @@
             </div>
             <div class="flex-1">
               <h3 class="mb-4 text-2xl font-bold text-slate-900">
-                Enter Your Transfer Details
+                Define Requirements
               </h3>
               <p class="mb-4 text-lg leading-relaxed text-slate-700">
-                Tell us where you're sending money from and to, plus how much. We'll instantly show you live quotes from {{ SITE_STATS.providers.display }} licensed providers.
+                Input origin, destination, and capital amount. This defines the corridor for quote normalization across {{ SITE_STATS.providers.display }} licensed counterparties.
               </p>
               <p class="text-base text-slate-600">
-                Our comparison engine fetches current rates and fees in real-time, providing detailed results in 10–30 seconds. No sign-up required to see your options.
+                Our aggregation core fetches current quotes in near real-time with corridor-specific Data Latency. Results render in 10–30 seconds. No sign-up required to view quotes.
               </p>
             </div>
           </div>
@@ -227,10 +227,10 @@
             </div>
             <div class="flex-1">
               <h3 class="mb-4 text-2xl font-bold text-slate-900">
-                Select the Best Provider for Your Transfer
+                Audit the Market
               </h3>
               <p class="mb-4 text-lg leading-relaxed text-slate-700">
-                Our comparison engine shows you results organized by transfer type (bank account, cash pick-up, mobile wallet) and ranked from cheapest to most expensive based on the total amount your recipient will receive.
+                Quotes are normalized across payout methods and ranked by Net Delivered Value, with visibility into execution fees, FX Spread, settlement speed, and quote integrity.
               </p>
               <p class="mb-4 text-base text-slate-700">
                 You can also sort by:
@@ -238,19 +238,19 @@
               <ul class="mb-4 ml-6 space-y-2 text-slate-700">
                 <li class="flex items-start gap-2">
                   <span class="text-emerald-600 font-bold mt-1">•</span>
-                  <span><strong>Transfer speed</strong> – How fast your money arrives</span>
+                  <span><strong>Settlement speed</strong> – Time to receipt by corridor</span>
                 </li>
                 <li class="flex items-start gap-2">
                   <span class="text-emerald-600 font-bold mt-1">•</span>
-                  <span><strong>Payment method</strong> – Bank transfer, debit card, credit card, etc.</span>
+                  <span><strong>Payout method</strong> – Bank transfer, debit card, credit card, etc.</span>
                 </li>
                 <li class="flex items-start gap-2">
                   <span class="text-emerald-600 font-bold mt-1">•</span>
-                  <span><strong>Remit Score</strong> – Our independent rating (1–10) based on cost, speed, reliability, and safety</span>
+                  <span><strong>Remit-Score</strong> – A 0–10 performance rating based on Pricing Efficiency, Settlement Speed, and User Assurance</span>
                 </li>
               </ul>
               <p class="text-base text-slate-600">
-                Every result shows the exact amount your recipient will receive, including all fees and exchange rate markups. No surprises.
+                Every result shows Net Delivered Value, inclusive of execution fees and FX Spread. Confirm final figures at checkout.
               </p>
             </div>
           </div>
@@ -266,13 +266,13 @@
             </div>
             <div class="flex-1">
               <h3 class="mb-4 text-2xl font-bold text-slate-900">
-                Send Money and Save on Transfer Fees
+                Select &amp; Execute
               </h3>
               <p class="mb-4 text-lg leading-relaxed text-slate-700">
-                After selecting a provider, you'll be redirected to their website to sign up and validate your account before making the transfer. The entire process typically takes 5–10 minutes for first-time users.
+                Choose the optimal counterparty and bridge directly to their secure checkout. Identity verification may be required for first-time execution.
               </p>
               <p class="text-base text-slate-600">
-                We're 100% independent—providers cannot pay to rank higher. We earn a small commission when you use our links, but this never affects our rankings. We show you the best deal based on total cost, speed, and reliability.
+                We are independent. Counterparties cannot pay to rank higher. We may earn a commission when you use our links, but this never affects rankings. We publish outcomes based on Net Delivered Value, settlement speed, and quote integrity.
               </p>
             </div>
           </div>
@@ -441,10 +441,10 @@
                   <span class="text-purple-600">3.</span> Total Cost Calculation
                 </h3>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
-                  Most sites stop at the headline fee and ignore hidden FX markups. We don't.
+                  Most sites stop at the headline fee and ignore FX Spread. We don't.
                 </p>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
-                  We compare the real "recipient gets" amount to the mid‑market rate (the rate banks give each other). The difference is the hidden markup.
+                  We compare Net Delivered Value to the mid-market rate (the rate institutions quote to each other). The difference is the FX Spread.
                 </p>
                 <div class="bg-purple-50 border border-purple-200 rounded-xl p-5 mb-4">
                   <p class="text-sm font-semibold text-purple-900 mb-2">
@@ -456,15 +456,15 @@
                   <ul class="mt-3 ml-4 space-y-1 text-sm text-slate-700">
                     <li class="flex items-center gap-2">
                       <span class="text-purple-600">•</span>
-                      <span><strong>Total Cost</strong> – Fees + exchange rate markup</span>
+                      <span><strong>Total Cost</strong> – Execution fees + FX Spread</span>
                     </li>
                     <li class="flex items-center gap-2">
                       <span class="text-purple-600">•</span>
-                      <span><strong>Amount Received</strong> – What your recipient actually gets</span>
+                      <span><strong>Net Delivered Value</strong> – Amount delivered to the destination account</span>
                     </li>
                     <li class="flex items-center gap-2">
                       <span class="text-purple-600">•</span>
-                      <span><strong>vs Mid-Market Rate</strong> – How much you're losing to hidden markups</span>
+                      <span><strong>vs Mid-Market Rate</strong> – FX Spread delta versus benchmark</span>
                     </li>
                   </ul>
                   <p class="mt-3 text-sm text-slate-700">
@@ -483,50 +483,42 @@
               </div>
               <div class="flex-1">
                 <h3 class="text-xl font-semibold text-slate-900 mb-3">
-                  <span class="text-orange-600">4.</span> Remit Score Rating System
+                  <span class="text-orange-600">4.</span> Remit-Score Algorithm
                 </h3>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
-                  We built Remit Score to compress all the messy details into a clear <strong>1–10 rating</strong>.
+                  A 0–10 composite index weighing three variables: <strong>Pricing Efficiency (40%)</strong>, <strong>Settlement Speed (30%)</strong>, and <strong>User Assurance (30%)</strong>. This is not a user review; it is a performance rating.
                 </p>
                 <p class="text-base leading-relaxed text-slate-700 mb-4">
-                  Each score is made of four equally weighted pillars:
+                  Each score weights three variables:
                 </p>
                 <div class="grid gap-3 sm:grid-cols-2 mb-4">
                   <div class="bg-orange-50 rounded-lg p-4">
                     <p class="text-sm font-semibold text-orange-900 mb-1">
-                      Cost (25%)
+                      Pricing Efficiency (40%)
                     </p>
                     <p class="text-xs text-slate-700">
-                      Fees + FX markup versus mid‑market
+                      Net Delivered Value versus the mid-market benchmark, inclusive of execution fees and FX Spread
                     </p>
                   </div>
                   <div class="bg-orange-50 rounded-lg p-4">
                     <p class="text-sm font-semibold text-orange-900 mb-1">
-                      Speed (25%)
+                      Settlement Speed (30%)
                     </p>
                     <p class="text-xs text-slate-700">
-                      Real delivery times from our test transfers
+                      Observed time-to-receipt by corridor and payout method, normalized for liquidity conditions
                     </p>
                   </div>
                   <div class="bg-orange-50 rounded-lg p-4">
                     <p class="text-sm font-semibold text-orange-900 mb-1">
-                      Trust & Safety (25%)
+                      User Assurance (30%)
                     </p>
                     <p class="text-xs text-slate-700">
-                      Licensing, security practices, complaint history
-                    </p>
-                  </div>
-                  <div class="bg-orange-50 rounded-lg p-4">
-                    <p class="text-sm font-semibold text-orange-900 mb-1">
-                      Customer Experience (25%)
-                    </p>
-                    <p class="text-xs text-slate-700">
-                      Real user feedback, support quality, and product polish
+                      Quote-to-book stability, support responsiveness, and compliance posture
                     </p>
                   </div>
                 </div>
                 <p class="font-medium text-slate-900">
-                  It's not just "who's cheapest." It rewards providers that are fast, reliable, and human-friendly—because saving $2 isn't worth it if the transfer fails on payday.
+                  This is a performance lens, not a marketing scorecard.
                 </p>
               </div>
             </div>
@@ -603,7 +595,7 @@
               {{ SITE_STATS.users.display }} people across the globe trust Remit-Scout
             </h3>
             <p class="text-sm text-slate-600 leading-relaxed">
-              Join thousands of expats who use our platform to find the best rates and save money on every transfer.
+              Used globally to benchmark FX Spread and optimize Net Delivered Value on recurring transfers.
             </p>
           </div>
 
@@ -696,16 +688,16 @@
       <!-- CTA Section -->
       <section class="rounded-3xl bg-gradient-to-r from-blue-600 to-blue-700 p-8 lg:p-12 text-center text-white shadow-2xl">
         <h2 class="mb-3 text-3xl font-bold lg:text-4xl">
-          Ready to save on your next transfer?
+          Ready to audit your next transfer?
         </h2>
         <p class="mx-auto mb-8 max-w-2xl text-lg text-blue-100 [text-wrap:pretty]">
-          Compare live rates from {{ SITE_STATS.providers.display }} licensed providers in seconds. See exactly how much your recipient will get—no hidden fees, no marketing fluff.
+          Compare live quotes from {{ SITE_STATS.providers.display }} licensed counterparties in seconds. See Net Delivered Value with FX Spread transparency.
         </p>
         <NuxtLink
           to="/send-money/us-to-in"
           class="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-4 text-lg font-semibold text-blue-600 hover:bg-blue-50 transition-colors shadow-xl"
         >
-          Start Comparing Rates
+          Run a Quote Audit
           <svg
             class="h-5 w-5"
             fill="none"
@@ -767,8 +759,8 @@ const breadcrumbItems = [
 const { public: { siteUrl } } = useRuntimeConfig()
 
 setSeo({
-  title: 'Our Methodology | How We Compare Money Transfer Providers | Remit-Scout',
-  description: 'Learn how Remit-Scout compares money transfer providers. Our transparent methodology uses real transfers, verified data, and independent testing to help you find the best rates.',
+  title: 'The Evaluation Standard | Remit-Scout Methodology',
+  description: 'A quantitative framework for assessing cross-border liquidity, isolating execution fees from FX Spread to calculate Net Delivered Value with Data Latency controls.',
   canonical: `${siteUrl}/legal/methodology`,
 })
 

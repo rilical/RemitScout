@@ -3,10 +3,10 @@
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-8">
         <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">
-          How Remit-Scout Works
+          Execution Workflow.
         </h2>
         <p class="text-base text-white/90 max-w-2xl mx-auto">
-          Three steps to comparing your options, clearly
+          A three-stage audit of cross-border liquidity
         </p>
       </div>
 
@@ -19,10 +19,10 @@
           </div>
           <div class="text-center">
             <h3 class="text-lg font-bold text-neutral-900 mb-2">
-              1. Enter your details
+              1. Define Requirements
             </h3>
             <p class="text-sm text-neutral-600">
-              Enter where you're sending from, where it's going, and the amount. We show you the options.
+              Input origin, destination, and capital amount to define the corridor.
             </p>
           </div>
         </div>
@@ -35,10 +35,10 @@
           </div>
           <div class="text-center">
             <h3 class="text-lg font-bold text-neutral-900 mb-2">
-              2. We pull current quotes
+              2. Audit the Market
             </h3>
             <p class="text-sm text-neutral-600">
-              We pull live quotes and convert everything into comparable numbers using the same amount. Rates are timestamped and updated throughout the day.
+              We aggregate real-time quotes, normalize FX Spread and fees, and rank by Net Delivered Value with tracked Data Latency.
             </p>
           </div>
         </div>
@@ -51,17 +51,17 @@
           </div>
           <div class="text-center">
             <h3 class="text-lg font-bold text-neutral-900 mb-2 leading-tight break-words">
-              3. Complete your transfer
+              3. Select &amp; Execute
             </h3>
             <p class="text-sm text-neutral-600">
-              Choose your provider and complete the transfer on their site. Your money never touches our hands.
+              Choose the optimal counterparty and complete execution on their secure checkout.
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 p-6">
-        <div class="flex items-start gap-4 max-w-4xl mx-auto">
+      <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-5xl mx-auto">
+        <div class="flex items-start gap-4">
           <div class="flex-shrink-0 w-12 h-12 rounded-full bg-white flex items-center justify-center">
             <svg
               class="w-6 h-6 text-brand-600"
@@ -76,17 +76,17 @@
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </svg>
-          </div>
-          <div class="flex-1">
-            <h4 class="font-bold text-white mb-2">
-              Independent and free to use
-            </h4>
-            <p class="text-white/95 text-sm leading-relaxed">
-              Providers cannot pay to rank higher. We may earn a small commission when you use our links, but affiliate relationships do not affect rankings or Remit-Score calculations.
-              <NuxtLink
-                to="/methodology"
-                class="text-white hover:text-white/80 font-semibold underline ml-1"
-              >
+        </div>
+        <div class="flex-1">
+          <h4 class="font-bold text-white mb-2">
+            Independence and disclosure
+          </h4>
+          <p class="text-white/95 text-sm leading-relaxed">
+            Counterparties cannot pay to rank higher. We may earn a commission when you use our links, but affiliate relationships do not affect rankings or Remit-Score calculations.
+            <NuxtLink
+              to="/methodology"
+              class="text-white hover:text-white/80 font-semibold underline ml-1"
+            >
                 Read more about our methodology →
               </NuxtLink>
             </p>

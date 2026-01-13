@@ -1,0 +1,111 @@
+{
+  "tariffs": [
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "sendingAmount": 10000,
+      "sendingAmountDiscount": 0,
+      "sendingAmountWithoutCommission": 9905,
+      "sendingCommission": 95,
+      "sendingCommissionDiscount": 0,
+      "sendingTransferCommission": 95,
+      "paidNotificationCommission": 0,
+      "receivingCurrency": {
+        "id": "860",
+        "code": "UZS",
+        "name": "Узбекский сум"
+      },
+      "receivingAmount": 135487035,
+      "exchangeRate": 13678.6507,
+      "exchangeRateType": "reverse",
+      "exchangeRateDiscount": 0,
+      "profit": 0,
+      "properties": {}
+    }
+  ],
+  "tariffInfo": [
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1095,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "840",
+        "code": "USD",
+        "name": "Доллар США"
+      },
+      "minReceivingAmount": 1137,
+      "maxReceivingAmount": 568670,
+      "fractionalReceivingAmountUsage": "enabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "cash"
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1118,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "860",
+        "code": "UZS",
+        "name": "Узбекский сум"
+      },
+      "minReceivingAmount": 14000000,
+      "maxReceivingAmount": 6839325373,
+      "fractionalReceivingAmountUsage": "enabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "card",
+      "warnings": [
+        {
+          "priority": 4,
+          "messages": [
+            {
+              "body": "Для отправки на Visa/Mastercard выберите валюту USD\nДля отправки на Humo/Uzcard выберите валюту UZS"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1095,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "840",
+        "code": "USD",
+        "name": "Доллар США"
+      },
+      "minReceivingAmount": 1137,
+      "maxReceivingAmount": 568670,
+      "fractionalReceivingAmountUsage": "enabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "card",
+      "warnings": [
+        {
+          "priority": 4,
+          "messages": [
+            {
+              "body": "Для отправки на Visa/Mastercard выберите валюту USD\nДля отправки на Humo/Uzcard выберите валюту UZS"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

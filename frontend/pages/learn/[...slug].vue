@@ -93,12 +93,16 @@
           </div>
         </header>
 
-        <div class="mb-6">
+        <div class="my-8">
           <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
         </div>
 
         <div class="prose prose-lg max-w-none">
           <div v-html="article?.content" />
+        </div>
+
+        <div class="my-8">
+          <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
         </div>
 
         <footer class="mt-8 border-t pt-8">

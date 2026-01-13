@@ -289,6 +289,11 @@ import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
 import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
 import AuthPromptModal from '~/components/shared/AuthPromptModal.vue'
+import { FEATURE_FLAGS } from '~/utils/constants'
+
+if (!FEATURE_FLAGS.PULSE_ENABLED) {
+  await navigateTo('/plus', { redirectCode: 302 })
+}
 
 const route = useRoute()
 const store = usePulseStore()

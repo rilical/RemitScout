@@ -43,11 +43,50 @@ const b2bAmountByProvider: Record<string, number> = {
   remitly: config.planeB.remitly.b2bAmount,
   wise: config.planeB.wise.b2bAmount,
   xe: config.planeB.xe.b2bAmount,
+  transfergo: config.planeB.transfergo.b2bAmount,
+  paysend: config.planeB.paysend.b2bAmount,
+  pangea: config.planeB.pangea.b2bAmount,
+  orbitremit: config.planeB.orbitremit.b2bAmount,
+  bossmoney: config.planeB.bossmoney.b2bAmount,
   worldremit: config.planeB.worldremit.b2bAmount,
   westernunion: config.planeB.westernunion.b2bAmount,
+  ria: config.planeB.ria.b2bAmount,
+  dahabshiil: config.planeB.dahabshiil.b2bAmount,
+  sendwave: config.planeB.sendwave.b2bAmount,
+  mukuru: config.planeB.mukuru.b2bAmount,
+  xoom: config.planeB.xoom.b2bAmount,
+  instarem: config.planeB.instarem.b2bAmount,
+  wirebarley: config.planeB.wirebarley.b2bAmount,
+  intermex: config.planeB.intermex.b2bAmount,
+  koronapay: config.planeB.koronapay.b2bAmount,
+  remitbee: config.planeB.remitbee.b2bAmount,
+  singx: config.planeB.singx.b2bAmount,
+  placid: config.planeB.placid.b2bAmount,
 }
 const resolveB2bAmount = (providerId: string) => {
   return b2bAmountByProvider[providerId] ?? config.planeB.remitly.b2bAmount
+}
+const defaultB2bPayinMethod = 'bank_transfer'
+const defaultB2bPayoutMethod = 'bank_deposit'
+const b2bPayinMethodByProvider: Record<string, string> = {
+  koronapay: 'debit_card',
+  paysend: 'debit_card',
+  remitbee: 'debit_card',
+  sendwave: 'debit_card',
+  intermex: 'debit_card',
+  placid: 'debit_card',
+}
+const b2bPayoutMethodByProvider: Record<string, string> = {
+  koronapay: 'bank_deposit',
+  paysend: 'bank_deposit',
+  remitbee: 'bank_deposit',
+  intermex: 'bank_deposit',
+}
+const resolveB2bPayinMethod = (providerId: string) => {
+  return b2bPayinMethodByProvider[providerId] ?? defaultB2bPayinMethod
+}
+const resolveB2bPayoutMethod = (providerId: string) => {
+  return b2bPayoutMethodByProvider[providerId] ?? defaultB2bPayoutMethod
 }
 
 type IngestFanoutMessage = {
@@ -514,8 +553,6 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const b2bFreshnessSloEnabled = config.planeB.b2bFreshnessSloEnabled
     const b2bNativeCurrencyOnly = config.planeB.b2bNativeCurrencyOnly
     const b2bWiseCurrencyOverride = config.planeB.b2bWiseCurrencyOverride
-    const b2bPayinMethod = 'bank_transfer'
-    const b2bPayoutMethod = 'bank_deposit'
     const targetMinutes = config.planeB.b2bTargetMinutes
     const planMinutes = targetMinutes > 0 ? targetMinutes : 30
     const tier1Enabled = config.planeB.b2bTier1Enabled
@@ -603,13 +640,15 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       ): Promise<PriorityTierPlan> => {
         const tierConfig = priorityTierConfig[tierKey]
         const eligibleCorridors = corridors
+        const payinMethod = resolveB2bPayinMethod(providerId)
+        const payoutMethod = resolveB2bPayoutMethod(providerId)
         const freshness = await applyFreshnessSlo({
           pool,
           providerId,
           corridors: eligibleCorridors,
           amountBucket,
-          payinMethod: b2bPayinMethod,
-          payoutMethod: b2bPayoutMethod,
+          payinMethod,
+          payoutMethod,
           sloMinutes: tierConfig.sloMinutes,
           enabled: b2bFreshnessSloEnabled,
         })
@@ -633,6 +672,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       for (const provider of eligibleProviders) {
         const providerId = provider.providerId
         const b2bAmount = resolveB2bAmount(providerId)
+        const payinMethod = resolveB2bPayinMethod(providerId)
+        const payoutMethod = resolveB2bPayoutMethod(providerId)
         const sweptCorridors = new Set<string>()
 
         const queue = queuesByProvider.get(providerId) ?? {
@@ -784,8 +825,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 collectorType: tierConfig.collectorType,
                 corridors,
                 amountBuckets: [b2bAmount],
-                payinMethod: b2bPayinMethod,
-                payoutMethod: b2bPayoutMethod,
+                payinMethod,
+                payoutMethod,
                 freshnessSloMinutes: tierConfig.sloMinutes,
                 freshnessSloEnabled: b2bFreshnessSloEnabled,
                 rpmOverride: tierConfig.rpm,
@@ -818,8 +859,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 collectorType: tierConfig.collectorType,
                 corridors,
                 amountBuckets: [b2bAmount],
-                payinMethod: b2bPayinMethod,
-                payoutMethod: b2bPayoutMethod,
+                payinMethod,
+                payoutMethod,
                 freshnessSloMinutes: tierConfig.sloMinutes,
                 freshnessSloEnabled: b2bFreshnessSloEnabled,
                 rpmOverride: tierConfig.rpm,

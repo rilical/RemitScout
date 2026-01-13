@@ -19,13 +19,12 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-40 h-40 rounded-2xl bg-white p-3 shadow-xl">
-                <img
-                  src="/logos/western-union.svg"
-                  alt="Western Union logo"
-                  class="w-full h-full object-contain"
-                  onerror="this.parentElement.innerHTML='<div class=\'w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold\'>WU</div>'"
-                >
+              <div class="flex h-40 w-40 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+                <ProviderLogo
+                  slug="western-union"
+                  alt="Western Union"
+                  size="xlarge"
+                />
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
@@ -211,15 +210,14 @@
 
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
                     8.2
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <img src="/logos/remit-scout.svg" alt="RemitScout" class="h-6 w-auto" />
                       Western Union
                     </h3>
-                    <p class="text-sm text-black">remit-score</p>
+                    <p class="text-sm text-black">Remit-Score</p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
@@ -281,7 +279,7 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
@@ -349,7 +347,7 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
@@ -395,7 +393,7 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
@@ -453,7 +451,7 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
@@ -500,7 +498,7 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
                   <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
@@ -680,35 +678,35 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Compare payout methods:</strong>
                       <span class="text-slate-700">Cash pickup is convenient, but bank deposit or wallet (where available) can sometimes reduce the effective cost—check "receiver gets" before paying.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Compare funding methods:</strong>
                       <span class="text-slate-700">Card funding is convenient but can be pricier; check the final quote for both bank and card if you have the option.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Focus on the exchange rate, not just fees:</strong>
                       <span class="text-slate-700">Western Union rates are interbank + margin; the margin is often the biggest cost driver.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Move quickly once you're happy with the quote:</strong>
                       <span class="text-slate-700">rates update several times daily; in some corridors the rate shown may be an estimate until payout.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">If you made a mistake, cancel fast:</strong>
                       <span class="text-slate-700">in the US there's a 30‑minute cancellation window with a 3‑business‑day refund requirement (if funds haven't been picked up/deposited).</span>
@@ -797,6 +795,7 @@
                 </NuxtLink>
               </div>
 
+              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>

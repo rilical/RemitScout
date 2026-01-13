@@ -11,11 +11,16 @@ export const PROVIDER_COLORS: Record<string, string> = {
   wise: '#00b9ff',
   remitly: '#2ecc71',
   xe: '#9b59b6',
+  ria: '#f43f5e',
+  dahabshiil: '#ea580c',
   xoom: '#3498db',
   worldremit: '#e74c3c',
   sendwave: '#f39c12',
   westernunion: '#ffd700',
-  moneygram: '#e67e22',
+  koronapay: '#f59e0b',
+  remitbee: '#3b82f6',
+  bossmoney: '#2a2825',
+  placid: '#16a34a',
   paypal: '#003087',
   revolut: '#0075eb',
   best: '#10b981',
@@ -316,6 +321,3 @@ export function isRangeGated(chartId: string, range: string, isPlus: boolean): b
   if (!chart) return false
   return chart.plusRanges.includes(range as '90d' | '365d')
 }
-
-
-

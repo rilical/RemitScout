@@ -151,11 +151,6 @@ watch(() => route.path, () => {
       scrolled ? 'shadow-[0_1px_12px_rgba(0,0,0,0.05)]' : 'shadow-none',
     ]"
   >
-    <a
-      href="#main-content"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white border border-slate-300 px-3 py-1.5 rounded-md text-sm font-medium z-[100] focus:outline-none focus:ring-2 focus:ring-blue-500"
-    >Skip to content</a>
-
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Left: Logo + Navigation -->
       <div class="flex items-center gap-6">

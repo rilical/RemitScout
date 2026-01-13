@@ -192,6 +192,14 @@
             </li>
             <li>
               <NuxtLink
+                to="/cookies"
+                class="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Cookie Policy
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
                 to="/legal/disclosure"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
               >

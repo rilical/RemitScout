@@ -70,7 +70,7 @@
           </span>
         </div>
 
-        <div :class="['grid grid-cols-1 gap-8 max-w-6xl mx-auto', FEATURE_FLAGS.PULE_ENABLED ? 'lg:grid-cols-3' : 'lg:grid-cols-2']">
+        <div :class="['grid grid-cols-1 gap-8 max-w-6xl mx-auto', FEATURE_FLAGS.ENTERPRISE_ENABLED ? 'lg:grid-cols-3' : 'lg:grid-cols-2']">
           <!-- Free Plan -->
           <div class="bg-white rounded-3xl border-4 border-slate-300 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full">
             <div class="text-center mb-6">
@@ -243,7 +243,7 @@
           </div>
 
           <!-- Enterprise Plan -->
-          <div v-if="FEATURE_FLAGS.PULE_ENABLED" class="bg-slate-900 rounded-3xl border-4 border-slate-600 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="bg-slate-900 rounded-3xl border-4 border-slate-600 p-8 flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
             <div class="text-center mb-6">
               <h3 class="text-2xl font-bold text-white mb-2">Enterprise</h3>
               <p class="text-slate-300 mb-4">For businesses</p>
@@ -292,8 +292,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
                 <div>
-                  <span class="text-white font-semibold">API access</span>
-                  <p class="text-xs text-slate-400 mt-1">Integrate with your systems</p>
+                  <span class="text-white font-semibold">Data integrations</span>
+                  <p class="text-xs text-slate-400 mt-1">Custom delivery formats for your systems</p>
                 </div>
               </li>
               <li class="flex items-start gap-3">

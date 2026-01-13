@@ -1,5 +1,5 @@
 <template>
-  <section class="py-4 sm:py-6 bg-white">
+  <section class="py-16 sm:py-20 bg-white">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="bg-gradient-to-r from-brand-50 to-blue-50 border border-brand-200 rounded-xl p-6">
         <div class="flex items-start justify-between gap-4">
