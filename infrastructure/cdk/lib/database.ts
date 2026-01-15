@@ -39,7 +39,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
 
   const cluster = new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
     engine: DatabaseClusterEngine.auroraPostgres({
-      version: AuroraPostgresEngineVersion.VER_15_4,
+      version: AuroraPostgresEngineVersion.VER_15_14,
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
     instances: isProd ? 2 : 1,

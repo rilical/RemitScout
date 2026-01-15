@@ -37,6 +37,15 @@ const toOptionalNumber = (value: string | number | undefined): number | undefine
   return undefined
 }
 
+const toList = (value: string | string[] | undefined): string[] => {
+  if (!value) return []
+  if (Array.isArray(value)) return value.map((item) => item.trim()).filter(Boolean)
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim()).filter(Boolean)
+  }
+  return []
+}
+
 export type RemitScoutStackProps = StackProps & {
   envName?: string
 }
@@ -106,6 +115,18 @@ export class RemitScoutStack extends Stack {
     const redisSsmName =
       this.node.tryGetContext('redisSsmName') ??
       process.env.REDIS_SSM_NAME
+    const supabaseSecretArn =
+      this.node.tryGetContext('supabaseSecretArn') ??
+      process.env.SUPABASE_SECRET_ARN
+    const supabaseSsmName =
+      this.node.tryGetContext('supabaseSsmName') ??
+      process.env.SUPABASE_SSM_NAME
+    const stripeSecretArn =
+      this.node.tryGetContext('stripeSecretArn') ??
+      process.env.STRIPE_SECRET_ARN
+    const stripeSsmName =
+      this.node.tryGetContext('stripeSsmName') ??
+      process.env.STRIPE_SSM_NAME
     const oandaSecretArn =
       this.node.tryGetContext('oandaSecretArn') ??
       process.env.OANDA_SECRET_ARN
@@ -207,6 +228,30 @@ export class RemitScoutStack extends Stack {
       }
       return []
     })()
+    const planeAAdminEmails = toList(
+      this.node.tryGetContext('planeAAdminEmails') ??
+      process.env.PLANE_A_ADMIN_EMAILS,
+    )
+    const planeACorsOrigins = toList(
+      this.node.tryGetContext('planeACorsOrigins') ??
+      process.env.PLANE_A_CORS_ORIGINS,
+    )
+    const planeACorsAllowedHeaders = toList(
+      this.node.tryGetContext('planeACorsAllowedHeaders') ??
+      process.env.PLANE_A_CORS_ALLOWED_HEADERS,
+    )
+    const planeACorsAllowedMethods = toList(
+      this.node.tryGetContext('planeACorsAllowedMethods') ??
+      process.env.PLANE_A_CORS_ALLOWED_METHODS,
+    )
+    const planeACorsAllowCredentials = toOptionalBool(
+      this.node.tryGetContext('planeACorsAllowCredentials') ??
+        process.env.PLANE_A_CORS_ALLOW_CREDENTIALS,
+    )
+    const frontendBaseUrl =
+      this.node.tryGetContext('frontendBaseUrl') ??
+      process.env.FRONTEND_BASE_URL ??
+      process.env.PUBLIC_SITE_URL
     const publicSupabaseUrl =
       this.node.tryGetContext('publicSupabaseUrl') ??
       process.env.PUBLIC_SUPABASE_URL ??
@@ -218,6 +263,10 @@ export class RemitScoutStack extends Stack {
     const enablePlaneCIamAuth = toOptionalBool(
       this.node.tryGetContext('enablePlaneCIamAuth') ??
         process.env.PLANE_C_ENABLE_IAM_AUTH,
+    )
+    const disablePlaneAExecuteEndpoint = toOptionalBool(
+      this.node.tryGetContext('disablePlaneAExecuteEndpoint') ??
+        process.env.PLANE_A_DISABLE_EXECUTE_ENDPOINT,
     )
     const disablePlaneCExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneCExecuteEndpoint') ??
@@ -357,6 +406,16 @@ export class RemitScoutStack extends Stack {
       planeADbHost,
       planeADbPort,
       planeADbName,
+      supabaseSecretArn,
+      supabaseSsmName,
+      stripeSecretArn,
+      stripeSsmName,
+      planeAAdminEmails,
+      planeACorsOrigins,
+      planeACorsAllowedHeaders,
+      planeACorsAllowedMethods,
+      planeACorsAllowCredentials,
+      frontendBaseUrl,
       planeCDbSecretArn,
       planeCDbSecretJsonKey,
       planeCDbSsmName,
@@ -373,6 +432,7 @@ export class RemitScoutStack extends Stack {
       planeAJwtIssuer,
       planeAJwtAudiences,
       enablePlaneCIamAuth,
+      disablePlaneAExecuteEndpoint,
       disablePlaneCExecuteEndpoint,
       wafAllowListIps,
       wafBlockListIps,

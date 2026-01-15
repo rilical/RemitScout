@@ -178,15 +178,9 @@ const handleSearch = (event: Event) => {
 
 const handleFocus = async () => {
   isOpen.value = true
-
-  if (props.modelValue) {
-    const country = allCountries.find((c) => c.value === props.modelValue)
-    if (country && !searchQuery.value) {
-      searchQuery.value = country.label
-    }
-  } else {
-    searchQuery.value = ''
-  }
+  
+  // Clear search query when focusing to show all countries
+  searchQuery.value = ''
   
   await nextTick()
   filteredCountries.value = [...allCountries]

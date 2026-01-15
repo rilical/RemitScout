@@ -17,12 +17,7 @@
     ]
   },
   "output": "cdk.out",
-  "build": {
-    "command": "tsc",
-    "options": {
-      "cwd": "."
-    }
-  },
+  "build": "tsc",
   "test": {
     "command": "echo 'No tests configured'"
   }

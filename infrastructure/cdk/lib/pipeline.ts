@@ -9,6 +9,7 @@ import {
   BuildSpec,
   LinuxBuildImage,
   PipelineProject,
+  type BuildEnvironmentVariable,
 } from 'aws-cdk-lib/aws-codebuild'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
 import type { Repository } from 'aws-cdk-lib/aws-ecr'
@@ -45,6 +46,8 @@ export const createPipeline = (
     return null
   }
 
+  const backendRepository = options.backendRepository
+
   const sourceOutput = new Artifact('Source')
   const buildOutput = new Artifact('Build')
 
@@ -66,30 +69,32 @@ export const createPipeline = (
     ],
   })
 
+  const buildEnvVars: Record<string, BuildEnvironmentVariable> = {
+    ENV_NAME: { value: options.envName },
+    ECR_REPO_URI: { value: backendRepository.repositoryUri },
+  }
+  if (options.frontendBucket) {
+    buildEnvVars.FRONTEND_BUCKET_NAME = { value: options.frontendBucket.bucketName }
+  }
+  if (options.frontendDistribution) {
+    buildEnvVars.FRONTEND_DISTRIBUTION_ID = { value: options.frontendDistribution.distributionId }
+  }
+  if (options.planeACloudFrontDomain) {
+    buildEnvVars.PLANE_A_CLOUDFRONT_DOMAIN = { value: options.planeACloudFrontDomain }
+  }
+  if (options.publicSupabaseUrl) {
+    buildEnvVars.PUBLIC_SUPABASE_URL = { value: options.publicSupabaseUrl }
+  }
+  if (options.publicSupabaseAnonKey) {
+    buildEnvVars.PUBLIC_SUPABASE_ANON_KEY = { value: options.publicSupabaseAnonKey }
+  }
+
   const buildProject = new PipelineProject(scope, 'RemitScoutBuildProject', {
     environment: {
       buildImage: LinuxBuildImage.STANDARD_7_0,
       privileged: true,
     },
-    environmentVariables: {
-      ENV_NAME: { value: options.envName },
-      ECR_REPO_URI: { value: options.backendRepository.repositoryUri },
-      FRONTEND_BUCKET_NAME: options.frontendBucket
-        ? { value: options.frontendBucket.bucketName }
-        : undefined,
-      FRONTEND_DISTRIBUTION_ID: options.frontendDistribution
-        ? { value: options.frontendDistribution.distributionId }
-        : undefined,
-      PLANE_A_CLOUDFRONT_DOMAIN: options.planeACloudFrontDomain
-        ? { value: options.planeACloudFrontDomain }
-        : undefined,
-      PUBLIC_SUPABASE_URL: options.publicSupabaseUrl
-        ? { value: options.publicSupabaseUrl }
-        : undefined,
-      PUBLIC_SUPABASE_ANON_KEY: options.publicSupabaseAnonKey
-        ? { value: options.publicSupabaseAnonKey }
-        : undefined,
-    },
+    environmentVariables: buildEnvVars,
     buildSpec: BuildSpec.fromObject({
       version: '0.2',
       phases: {
@@ -144,26 +149,10 @@ export const createPipeline = (
     timeout: Duration.minutes(30),
   })
 
-  options.backendRepository.grantPullPush(buildProject)
+  backendRepository.grantPullPush(buildProject)
 
-  if (options.frontendBucket && deployProject) {
+  if (options.frontendBucket) {
     options.frontendBucket.grantReadWrite(buildProject)
-    options.frontendBucket.grantReadWrite(deployProject)
-  }
-
-  if (options.frontendDistribution && deployProject) {
-    deployProject.addToRolePolicy(
-      new PolicyStatement({
-        actions: [
-          'cloudfront:CreateInvalidation',
-          'cloudfront:GetInvalidation',
-          'cloudfront:ListInvalidations',
-        ],
-        resources: [
-          `arn:aws:cloudfront::*:distribution/${options.frontendDistribution.distributionId}`,
-        ],
-      }),
-    )
   }
 
   pipeline.addStage({
@@ -240,6 +229,25 @@ export const createPipeline = (
         }),
       ],
     })
+  }
+
+  if (options.frontendBucket && deployProject) {
+    options.frontendBucket.grantReadWrite(deployProject)
+  }
+
+  if (options.frontendDistribution && deployProject) {
+    deployProject.addToRolePolicy(
+      new PolicyStatement({
+        actions: [
+          'cloudfront:CreateInvalidation',
+          'cloudfront:GetInvalidation',
+          'cloudfront:ListInvalidations',
+        ],
+        resources: [
+          `arn:aws:cloudfront::*:distribution/${options.frontendDistribution.distributionId}`,
+        ],
+      }),
+    )
   }
 
   return { pipeline, buildProject, deployProject }

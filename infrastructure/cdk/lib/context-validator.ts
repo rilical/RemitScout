@@ -89,7 +89,8 @@ export const validateContext = (
     }
   }
 
-  for (const [key, value] of Object.entries(construct.node.tryGetContext() || {})) {
+  const allContext = construct.node.getAllContext() as Record<string, ContextValue>
+  for (const [key, value] of Object.entries(allContext)) {
     if (key.startsWith('@')) {
       continue
     }
@@ -146,4 +147,3 @@ export const getContextWithDefaults = (
 
   return result
 }
-

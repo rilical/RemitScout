@@ -41,10 +41,38 @@ const METHOD_ORDER: Array<'bank' | 'cash' | 'wallet' | 'airtime'> = [
 const toAvailableMethod = (value?: string | null): 'bank' | 'cash' | 'wallet' | 'airtime' | null => {
   if (!value) return null
   const token = normalizeToken(value)
-  if (token === 'bank_deposit') return 'bank'
-  if (token === 'cash_pickup') return 'cash'
-  if (token === 'mobile_wallet') return 'wallet'
-  if (token === 'airtime') return 'airtime'
+  if (!token) return null
+  if (token === 'airtime' || token.includes('airtime') || token.includes('topup') || token.includes('top_up')) {
+    return 'airtime'
+  }
+  if (
+    token === 'mobile_wallet'
+    || token === 'mobile_money'
+    || token === 'wallet'
+    || token.includes('wallet')
+    || token.includes('mobile_money')
+  ) {
+    return 'wallet'
+  }
+  if (token === 'cash_pickup' || token === 'cash' || token.includes('cash')) {
+    return 'cash'
+  }
+  if (
+    token === 'bank_deposit'
+    || token === 'bank_transfer'
+    || token === 'bank_account'
+    || token === 'bank'
+    || token === 'account'
+    || token === 'card'
+    || token === 'card_deposit'
+    || token === 'debit_card'
+    || token === 'credit_card'
+    || token.includes('bank')
+    || token.includes('account')
+    || token.includes('card')
+  ) {
+    return 'bank'
+  }
   return null
 }
 

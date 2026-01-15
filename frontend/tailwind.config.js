@@ -2,6 +2,7 @@
 module.exports = {
   content: [
     './components/**/*.{js,vue,ts}',
+    './composables/**/*.{js,ts}',
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
@@ -76,6 +77,7 @@ module.exports = {
       },
       spacing: {
         '18': '4.5rem',
+        '22': '5.5rem',
         '72': '18rem',
         '88': '22rem',
         'section-desktop': '4.5rem',
@@ -87,6 +89,7 @@ module.exports = {
       },
       height: {
         18: '4.5rem',
+        22: '5.5rem',
         520: '520px',
       },
       minHeight: {

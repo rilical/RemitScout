@@ -14,7 +14,7 @@
         <NuxtLink
           v-for="country in countries"
           :key="country.code"
-          :to="getCorridorUrl(country.code)"
+          to="/send-money"
           class="group bg-white rounded-xl border border-neutral-200 p-5 transition-all hover:border-neutral-300 hover:shadow-sm flex items-center justify-between"
         >
           <div class="flex items-center gap-4">
@@ -105,24 +105,4 @@ const getCountryFlag = (code: string): string => {
   return countryFlags[code] || '🏳️'
 }
 
-// Convert country name to URL-friendly slug
-const slugify = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-    .trim()
-}
-
-// Generate URL using country name slug instead of country code
-const getCorridorUrl = (countryCode: string): string => {
-  const country = countries.find(c => c.code === countryCode)
-  if (!country) {
-    return `/send-money/`
-  }
-
-  const countrySlug = slugify(country.name)
-  return `/send-money/${countrySlug}`
-}
 </script>

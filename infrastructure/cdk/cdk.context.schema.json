@@ -59,6 +59,22 @@
       "type": "string",
       "description": "SSM Parameter Store path for Redis URL"
     },
+    "supabaseSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Supabase config (URL + keys)"
+    },
+    "supabaseSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for Supabase config"
+    },
+    "stripeSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Stripe config"
+    },
+    "stripeSsmName": {
+      "type": "string",
+      "description": "SSM Parameter Store path for Stripe config"
+    },
     "oandaSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for OANDA API key"
@@ -150,6 +166,42 @@
       },
       "description": "JWT audience values for Plane A"
     },
+    "planeAAdminEmails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Admin email allowlist for Plane A"
+    },
+    "planeACorsOrigins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "CORS origins for Plane A"
+    },
+    "planeACorsAllowedHeaders": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "CORS allowed headers for Plane A"
+    },
+    "planeACorsAllowedMethods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "CORS allowed methods for Plane A"
+    },
+    "planeACorsAllowCredentials": {
+      "type": "boolean",
+      "description": "CORS allow credentials flag for Plane A"
+    },
+    "frontendBaseUrl": {
+      "type": "string",
+      "description": "Frontend base URL for billing/newsletter links"
+    },
     "publicSupabaseUrl": {
       "type": "string",
       "description": "Public Supabase project URL for frontend builds"
@@ -161,6 +213,10 @@
     "enablePlaneCIamAuth": {
       "type": "boolean",
       "description": "Enable IAM authentication for Plane C"
+    },
+    "disablePlaneAExecuteEndpoint": {
+      "type": "boolean",
+      "description": "Disable execute endpoint for Plane A"
     },
     "disablePlaneCExecuteEndpoint": {
       "type": "boolean",

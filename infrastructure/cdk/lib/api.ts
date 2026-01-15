@@ -40,6 +40,16 @@ export type ApiOptions = {
   planeADbHost?: string
   planeADbPort?: string
   planeADbName?: string
+  supabaseSecretArn?: string
+  supabaseSsmName?: string
+  stripeSecretArn?: string
+  stripeSsmName?: string
+  planeAAdminEmails?: string[]
+  planeACorsOrigins?: string[]
+  planeACorsAllowedHeaders?: string[]
+  planeACorsAllowedMethods?: string[]
+  planeACorsAllowCredentials?: boolean
+  frontendBaseUrl?: string
   planeCDbSecretArn?: string
   planeCDbSecretJsonKey?: string
   planeCDbSsmName?: string
@@ -67,6 +77,7 @@ export type ApiOptions = {
   planeAJwtAudiences?: string[]
   enablePlaneAJwtAuth?: boolean
   enablePlaneCIamAuth?: boolean
+  disablePlaneAExecuteEndpoint?: boolean
   disablePlaneCExecuteEndpoint?: boolean
   wafAllowListIps?: string[]
   wafBlockListIps?: string[]
@@ -89,7 +100,7 @@ export type ApiResources = {
 
 export const createApi = (scope: Construct, options: ApiOptions): ApiResources => {
   const logRetention = options.envName === 'prod'
-    ? RetentionDays.THIRTY_DAYS
+    ? RetentionDays.ONE_MONTH
     : RetentionDays.TWO_WEEKS
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
 
@@ -132,6 +143,26 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.userAssetsPrefix) {
     planeAEnvironment.USER_ASSETS_S3_PREFIX = options.userAssetsPrefix
+  }
+  if (options.planeAAdminEmails && options.planeAAdminEmails.length > 0) {
+    planeAEnvironment.PLANE_A_ADMIN_EMAILS = options.planeAAdminEmails.join(',')
+  }
+  if (options.planeACorsOrigins && options.planeACorsOrigins.length > 0) {
+    planeAEnvironment.PLANE_A_CORS_ORIGINS = options.planeACorsOrigins.join(',')
+  }
+  if (options.planeACorsAllowedHeaders && options.planeACorsAllowedHeaders.length > 0) {
+    planeAEnvironment.PLANE_A_CORS_ALLOWED_HEADERS = options.planeACorsAllowedHeaders.join(',')
+  }
+  if (options.planeACorsAllowedMethods && options.planeACorsAllowedMethods.length > 0) {
+    planeAEnvironment.PLANE_A_CORS_ALLOWED_METHODS = options.planeACorsAllowedMethods.join(',')
+  }
+  if (options.planeACorsAllowCredentials !== undefined) {
+    planeAEnvironment.PLANE_A_CORS_ALLOW_CREDENTIALS = options.planeACorsAllowCredentials
+      ? '1'
+      : '0'
+  }
+  if (options.frontendBaseUrl) {
+    planeAEnvironment.FRONTEND_BASE_URL = options.frontendBaseUrl
   }
 
   const planeCEnvironment: Record<string, string> = {
@@ -285,6 +316,30 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   if (options.redisSsmName) {
     planeAFunction.addEnvironment('REDIS_SSM_NAME', options.redisSsmName)
   }
+  if (options.supabaseSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'PlaneASupabaseSecret',
+      options.supabaseSecretArn,
+    )
+    secret.grantRead(planeAFunction)
+    planeAFunction.addEnvironment('SUPABASE_SECRET_ARN', options.supabaseSecretArn)
+  }
+  if (options.supabaseSsmName) {
+    planeAFunction.addEnvironment('SUPABASE_SSM_NAME', options.supabaseSsmName)
+  }
+  if (options.stripeSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'PlaneAStripeSecret',
+      options.stripeSecretArn,
+    )
+    secret.grantRead(planeAFunction)
+    planeAFunction.addEnvironment('STRIPE_SECRET_ARN', options.stripeSecretArn)
+  }
+  if (options.stripeSsmName) {
+    planeAFunction.addEnvironment('STRIPE_SSM_NAME', options.stripeSsmName)
+  }
 
   const enablePlaneAJwtAuth = options.enablePlaneAJwtAuth ?? options.envName === 'prod'
   const jwtIssuer = options.planeAJwtIssuer
@@ -302,6 +357,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
 
   const planeAApi = new HttpApi(scope, 'PlaneAHttpApi', {
     apiName: `remit-scout-plane-a-${options.envName}`,
+    disableExecuteApiEndpoint: options.disablePlaneAExecuteEndpoint ?? false,
     createDefaultStage: false,
   })
   const planeAIntegration = new HttpLambdaIntegration('PlaneALambdaIntegration', planeAFunction)

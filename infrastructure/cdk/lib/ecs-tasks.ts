@@ -60,7 +60,7 @@ export const createEcsTasks = (
   options: EcsTaskOptions,
 ): EcsTaskResources => {
   const isProd = options.envName === 'prod'
-  const logRetention = isProd ? RetentionDays.THIRTY_DAYS : RetentionDays.TWO_WEEKS
+  const logRetention = isProd ? RetentionDays.ONE_MONTH : RetentionDays.TWO_WEEKS
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
   const otelConfigContent = [
     'receivers:',

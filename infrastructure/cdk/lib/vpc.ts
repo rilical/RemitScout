@@ -65,14 +65,14 @@ export const createNetworking = (
   })
 
   // Allow Plane A/B/C to reach the database.
-  dbSecurityGroup.addIngressRule(planeASecurityGroup, Port.tcp(5432), 'Plane A -> DB')
-  dbSecurityGroup.addIngressRule(planeBSecurityGroup, Port.tcp(5432), 'Plane B -> DB')
-  dbSecurityGroup.addIngressRule(planeCSecurityGroup, Port.tcp(5432), 'Plane C -> DB')
+  dbSecurityGroup.addIngressRule(planeASecurityGroup, Port.tcp(5432), 'Plane A to DB')
+  dbSecurityGroup.addIngressRule(planeBSecurityGroup, Port.tcp(5432), 'Plane B to DB')
+  dbSecurityGroup.addIngressRule(planeCSecurityGroup, Port.tcp(5432), 'Plane C to DB')
 
   // Allow Plane A/B/C to reach Redis.
-  redisSecurityGroup.addIngressRule(planeASecurityGroup, Port.tcp(6379), 'Plane A -> Redis')
-  redisSecurityGroup.addIngressRule(planeBSecurityGroup, Port.tcp(6379), 'Plane B -> Redis')
-  redisSecurityGroup.addIngressRule(planeCSecurityGroup, Port.tcp(6379), 'Plane C -> Redis')
+  redisSecurityGroup.addIngressRule(planeASecurityGroup, Port.tcp(6379), 'Plane A to Redis')
+  redisSecurityGroup.addIngressRule(planeBSecurityGroup, Port.tcp(6379), 'Plane B to Redis')
+  redisSecurityGroup.addIngressRule(planeCSecurityGroup, Port.tcp(6379), 'Plane C to Redis')
 
   return {
     vpc,

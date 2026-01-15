@@ -233,19 +233,23 @@ const labelForMetric = (
 ) => {
   if (value === undefined) {
     if (kind === 'delivered') return 'Competitive'
-    if (kind === 'speed' || kind === 'support') return 'Good'
+    if (kind === 'speed') return 'Good'
     return 'Strong'
   }
 
+  // Convert 0-1 scale to 0-10 scale (matching ProviderScoreModal logic)
+  const score = value * 10
+
+  if (kind === 'speed') {
+    return score >= 9.0 ? 'Elite' : score >= 8.5 ? 'Strong' : score >= 7.5 ? 'Good' : 'Fair'
+  }
+
   if (kind === 'delivered') {
-    return value >= 0.85 ? 'Competitive' : value >= 0.75 ? 'Good' : 'Fair'
+    return score >= 8.5 ? 'Competitive' : score >= 7.5 ? 'Good' : 'Fair'
   }
 
-  if (kind === 'speed' || kind === 'support') {
-    return value >= 0.85 ? 'Good' : value >= 0.75 ? 'Fair' : 'Limited'
-  }
-
-  return value >= 0.85 ? 'Strong' : value >= 0.75 ? 'Good' : 'Fair'
+  // For reliability, support, and trust
+  return score >= 8.5 ? 'Strong' : score >= 7.5 ? 'Good' : 'Fair'
 }
 
 // Individual logo sizing based on aspect ratios

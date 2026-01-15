@@ -243,20 +243,12 @@ const handleSearch = (event: Event) => {
 }
 
 const handleFocus = async () => {
-  console.log('=== Currency Focus ===')
-  console.log('Current searchQuery:', searchQuery.value)
-  console.log('Current modelValue:', props.modelValue)
-  console.log('All currencies count:', allCurrencies.value.length)
-
   isOpen.value = true
 
-  // Clear and force update
+  // Clear search query when focusing to show all currencies
   searchQuery.value = ''
   await nextTick()
   filteredCurrencies.value = [...allCurrencies.value]
-
-  console.log('After clear - searchQuery:', searchQuery.value)
-  console.log('Filtered currencies count:', filteredCurrencies.value.length)
 
   updateDropdownPosition()
 }

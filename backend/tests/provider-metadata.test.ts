@@ -191,6 +191,13 @@ describe('provider-metadata', () => {
       expect(metadata?.remitScore).toBe(8.2)
     })
 
+    it('returns metadata for wellsfargo', () => {
+      const metadata = getProviderMetadata('wellsfargo')
+
+      expect(metadata).toBeDefined()
+      expect(metadata?.id).toBe('wellsfargo')
+    })
+
     it('includes score breakdown when available', () => {
       const metadata = getProviderMetadata('wise')
 
@@ -241,6 +248,7 @@ describe('provider-metadata', () => {
       expect(providerIds).toContain('koronapay')
       expect(providerIds).toContain('remitbee')
       expect(providerIds).toContain('placid')
+      expect(providerIds).toContain('wellsfargo')
     })
 
     it('all entries have required fields', () => {
@@ -291,6 +299,15 @@ describe('provider-metadata', () => {
 
       expect(metadata).toBeDefined()
       expect(metadata?.slug).toBe('xe-money')
+    })
+  })
+
+  describe('getProviderMetadataBySlug', () => {
+    it('resolves slug variants', () => {
+      const metadata = getProviderMetadataBySlug('westernunion')
+
+      expect(metadata).toBeDefined()
+      expect(metadata?.id).toBe('westernunion')
     })
   })
 })

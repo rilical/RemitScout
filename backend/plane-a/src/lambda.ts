@@ -52,6 +52,97 @@ const init = async () => {
         ]),
         required: true,
       },
+      {
+        envVar: 'SUPABASE_URL',
+        secretArnEnv: 'SUPABASE_SECRET_ARN',
+        ssmNameEnv: 'SUPABASE_SSM_NAME',
+        jsonKeys: [
+          'SUPABASE_URL',
+          'supabase_url',
+          'url',
+        ],
+      },
+      {
+        envVar: 'SUPABASE_PUBLISHABLE_KEY',
+        secretArnEnv: 'SUPABASE_SECRET_ARN',
+        ssmNameEnv: 'SUPABASE_SSM_NAME',
+        jsonKeys: [
+          'SUPABASE_PUBLISHABLE_KEY',
+          'SUPABASE_ANON_KEY',
+          'supabase_anon_key',
+          'anon_key',
+          'publishable_key',
+        ],
+      },
+      {
+        envVar: 'SUPABASE_SERVICE_ROLE_KEY',
+        secretArnEnv: 'SUPABASE_SECRET_ARN',
+        ssmNameEnv: 'SUPABASE_SSM_NAME',
+        jsonKeys: [
+          'SUPABASE_SERVICE_ROLE_KEY',
+          'service_role_key',
+          'service_role',
+        ],
+      },
+      {
+        envVar: 'SUPABASE_JWKS_URL',
+        secretArnEnv: 'SUPABASE_SECRET_ARN',
+        ssmNameEnv: 'SUPABASE_SSM_NAME',
+        jsonKeys: [
+          'SUPABASE_JWKS_URL',
+          'jwks_url',
+        ],
+      },
+      {
+        envVar: 'STRIPE_SECRET_KEY',
+        secretArnEnv: 'STRIPE_SECRET_ARN',
+        ssmNameEnv: 'STRIPE_SSM_NAME',
+        jsonKeys: [
+          'STRIPE_SECRET_KEY',
+          'stripe_secret_key',
+          'secret_key',
+        ],
+      },
+      {
+        envVar: 'STRIPE_WEBHOOK_SECRET',
+        secretArnEnv: 'STRIPE_SECRET_ARN',
+        ssmNameEnv: 'STRIPE_SSM_NAME',
+        jsonKeys: [
+          'STRIPE_WEBHOOK_SECRET',
+          'stripe_webhook_secret',
+          'webhook_secret',
+        ],
+      },
+      {
+        envVar: 'STRIPE_PRICE_ID_PLUS',
+        secretArnEnv: 'STRIPE_SECRET_ARN',
+        ssmNameEnv: 'STRIPE_SSM_NAME',
+        jsonKeys: [
+          'STRIPE_PRICE_ID_PLUS',
+          'stripe_price_id_plus',
+          'price_id_plus',
+        ],
+      },
+      {
+        envVar: 'STRIPE_PRICE_ID_PLUS_ANNUAL',
+        secretArnEnv: 'STRIPE_SECRET_ARN',
+        ssmNameEnv: 'STRIPE_SSM_NAME',
+        jsonKeys: [
+          'STRIPE_PRICE_ID_PLUS_ANNUAL',
+          'stripe_price_id_plus_annual',
+          'price_id_plus_annual',
+        ],
+      },
+      {
+        envVar: 'STRIPE_TRIAL_DAYS',
+        secretArnEnv: 'STRIPE_SECRET_ARN',
+        ssmNameEnv: 'STRIPE_SSM_NAME',
+        jsonKeys: [
+          'STRIPE_TRIAL_DAYS',
+          'stripe_trial_days',
+          'trial_days',
+        ],
+      },
     ])
 
     assertRuntimeConfig({

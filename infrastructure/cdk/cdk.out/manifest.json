@@ -11,7 +11,7 @@
     },
     "remit-scout-dev": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://242201284656/us-east-2",
+      "environment": "aws://716156543157/us-east-1",
       "properties": {
         "templateFile": "remit-scout-dev.template.json",
         "terminationProtection": false,
@@ -20,16 +20,16 @@
           "project": "remit-scout"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::242201284656:role/cdk-hnb659fds-deploy-role-242201284656-us-east-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::242201284656:role/cdk-hnb659fds-cfn-exec-role-242201284656-us-east-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-242201284656-us-east-2/65ec80a3c7d1293cde387d2fd720a9134762698ff66a065426446712dc4954f8.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::716156543157:role/cdk-hnb659fds-deploy-role-716156543157-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::716156543157:role/cdk-hnb659fds-cfn-exec-role-716156543157-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-716156543157-us-east-1/077d7c6208c15851f76962211aea97c47076b00ad5428c71e10c21cfef748423.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "remit-scout-dev.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::242201284656:role/cdk-hnb659fds-lookup-role-242201284656-us-east-2",
+          "arn": "arn:${AWS::Partition}:iam::716156543157:role/cdk-hnb659fds-lookup-role-716156543157-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -389,6 +389,24 @@
             "data": "BronzeBucketFF082204"
           }
         ],
+        "/remit-scout-dev/ExportsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsBucket5A12738B"
+          }
+        ],
+        "/remit-scout-dev/UserAssetsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserAssetsBucket8B59E294"
+          }
+        ],
+        "/remit-scout-dev/AuditLogsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuditLogsBucket963995A4"
+          }
+        ],
         "/remit-scout-dev/QuoteRefreshDlq/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -399,6 +417,30 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "QuoteRefreshQueue342D1DBA"
+          }
+        ],
+        "/remit-scout-dev/ExportJobDlq/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportJobDlqD2F3A985"
+          }
+        ],
+        "/remit-scout-dev/ExportJobQueue/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportJobQueue5D8CA1FF"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationDlq/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationDlq8C9BF7AA"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationQueue/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationQueue7EBDD1BB"
           }
         ],
         "/remit-scout-dev/IngestFanoutDlq/Resource": [
@@ -449,22 +491,22 @@
             "data": "PlaneBIngestTask41725D6D"
           }
         ],
-        "/remit-scout-dev/PlaneBIngestTask/PlaneBIngestContainer/LogGroup/Resource": [
+        "/remit-scout-dev/PlaneBIngestLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "PlaneBIngestTaskPlaneBIngestContainerLogGroup34F265C3"
+            "data": "PlaneBIngestLogGroup12F40BF7"
+          }
+        ],
+        "/remit-scout-dev/PlaneBIngestOtelLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneBIngestOtelLogGroupA9D18DF9"
           }
         ],
         "/remit-scout-dev/B2cRefreshWorkerTask/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "B2cRefreshWorkerTask3DA7DC15"
-          }
-        ],
-        "/remit-scout-dev/B2cRefreshWorkerTask/B2cRefreshWorkerContainer/LogGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cRefreshWorkerTaskB2cRefreshWorkerContainerLogGroup836A2795"
           }
         ],
         "/remit-scout-dev/B2cRefreshWorkerTask/EventsRole/Resource": [
@@ -479,16 +521,34 @@
             "data": "B2cRefreshWorkerTaskEventsRoleDefaultPolicy651806B6"
           }
         ],
+        "/remit-scout-dev/B2cRefreshLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRefreshLogGroupDC2A3BB4"
+          }
+        ],
+        "/remit-scout-dev/B2cRefreshOtelLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRefreshOtelLogGroup4D21F34B"
+          }
+        ],
         "/remit-scout-dev/IngestFanoutWorkerTask/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "IngestFanoutWorkerTask160E255A"
           }
         ],
-        "/remit-scout-dev/IngestFanoutWorkerTask/IngestFanoutWorkerContainer/LogGroup/Resource": [
+        "/remit-scout-dev/IngestFanoutLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "IngestFanoutWorkerTaskIngestFanoutWorkerContainerLogGroupDFADF5F9"
+            "data": "IngestFanoutLogGroupE561ADD7"
+          }
+        ],
+        "/remit-scout-dev/IngestFanoutOtelLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutOtelLogGroup6BF15611"
           }
         ],
         "/remit-scout-dev/NotificationsQueueWorkerTask/Resource": [
@@ -497,10 +557,16 @@
             "data": "NotificationsQueueWorkerTask7919B5A7"
           }
         ],
-        "/remit-scout-dev/NotificationsQueueWorkerTask/NotificationsQueueWorkerContainer/LogGroup/Resource": [
+        "/remit-scout-dev/NotificationsQueueLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "NotificationsQueueWorkerTaskNotificationsQueueWorkerContainerLogGroup4D8B73E3"
+            "data": "NotificationsQueueLogGroupF541F644"
+          }
+        ],
+        "/remit-scout-dev/NotificationsQueueOtelLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotificationsQueueOtelLogGroupE39CC762"
           }
         ],
         "/remit-scout-dev/OpsAlertsQueueWorkerTask/Resource": [
@@ -509,10 +575,16 @@
             "data": "OpsAlertsQueueWorkerTask9089B6AC"
           }
         ],
-        "/remit-scout-dev/OpsAlertsQueueWorkerTask/OpsAlertsQueueWorkerContainer/LogGroup/Resource": [
+        "/remit-scout-dev/OpsAlertsQueueLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "OpsAlertsQueueWorkerTaskOpsAlertsQueueWorkerContainerLogGroup253C6B34"
+            "data": "OpsAlertsQueueLogGroup2404481D"
+          }
+        ],
+        "/remit-scout-dev/OpsAlertsQueueOtelLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OpsAlertsQueueOtelLogGroup2B6C87D0"
           }
         ],
         "/remit-scout-dev/PlaneCApiFunction/Resource": [
@@ -521,16 +593,34 @@
             "data": "PlaneCApiFunction02CF465E"
           }
         ],
+        "/remit-scout-dev/PlaneCApiFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneCApiFunctionLogRetentionD70BC9C5"
+          }
+        ],
+        "/remit-scout-dev/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/remit-scout-dev/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/remit-scout-dev/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
         "/remit-scout-dev/PlaneCHttpApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "PlaneCHttpApi95BE662B"
-          }
-        ],
-        "/remit-scout-dev/PlaneCHttpApi/DefaultStage/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "PlaneCHttpApiDefaultStageAD5010A1"
           }
         ],
         "/remit-scout-dev/PlaneCHttpApi/ANY--{proxy+}/PlaneCLambdaIntegration/Resource": [
@@ -569,22 +659,154 @@
             "data": "PlaneAApiFunction8248FA15"
           }
         ],
+        "/remit-scout-dev/PlaneAApiFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAApiFunctionLogRetention97391580"
+          }
+        ],
         "/remit-scout-dev/PlaneAHttpApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "PlaneAHttpApi827058CE"
           }
         ],
-        "/remit-scout-dev/PlaneAHttpApi/DefaultStage/Resource": [
+        "/remit-scout-dev/PlaneAHttpApi/ANY--healthz/PlaneALambdaIntegration/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "PlaneAHttpApiDefaultStageA48C516C"
+            "data": "PlaneAHttpApiANYhealthzPlaneALambdaIntegration7E06D72A"
           }
         ],
-        "/remit-scout-dev/PlaneAHttpApi/ANY--{proxy+}/PlaneALambdaIntegration/Resource": [
+        "/remit-scout-dev/PlaneAHttpApi/ANY--healthz/PlaneALambdaIntegration-Permission": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "PlaneAHttpApiANYproxyPlaneALambdaIntegrationAECB4124"
+            "data": "PlaneAHttpApiANYhealthzPlaneALambdaIntegrationPermissionDD9291E3"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--healthz/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYhealthz4C612628"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--readyz/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYreadyzPlaneALambdaIntegrationPermissionED97138A"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--readyz/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYreadyz95EE0906"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--metrics/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYmetricsPlaneALambdaIntegrationPermission98D30F43"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--metrics/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYmetricsB25B2EE4"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--quotes--current/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiquotescurrentPlaneALambdaIntegrationPermission7D8F4D8C"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--quotes--current/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiquotescurrentC210F763"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--quotes--current/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1quotescurrentPlaneALambdaIntegrationPermission183797C3"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--quotes--current/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1quotescurrent9DF9A940"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--popular-corridors/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapipopularcorridorsPlaneALambdaIntegrationPermissionD7D0904F"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--popular-corridors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapipopularcorridors6F3C22A9"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--popular-corridors/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1popularcorridorsPlaneALambdaIntegrationPermission6041378C"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--popular-corridors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1popularcorridors9C6E3B21"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--billing--webhook/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapibillingwebhookPlaneALambdaIntegrationPermissionA6FF3ADE"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--billing--webhook/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapibillingwebhookE1800285"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--billing--webhook/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1billingwebhookPlaneALambdaIntegrationPermissionF9D40B92"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--billing--webhook/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1billingwebhookDC400D05"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--contact/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapicontactPlaneALambdaIntegrationPermission7A59078B"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--contact/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapicontact9A9A1889"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--contact/PlaneALambdaIntegration-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1contactPlaneALambdaIntegrationPermissionE850C464"
+          }
+        ],
+        "/remit-scout-dev/PlaneAHttpApi/ANY--api--v1--contact/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlaneAHttpApiANYapiv1contact861F5006"
           }
         ],
         "/remit-scout-dev/PlaneAHttpApi/ANY--{proxy+}/PlaneALambdaIntegration-Permission": [
@@ -611,136 +833,58 @@
             "data": "PlaneAHttpApiANYB43B2FBE"
           }
         ],
-        "/remit-scout-dev/GoldFxRatesJobFunction/Resource": [
+        "/remit-scout-dev/PlaneAStage/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldFxRatesJobFunction17A7CC7B"
+            "data": "PlaneAStage20ED8012"
           }
         ],
-        "/remit-scout-dev/GoldFxRatesSchedule/Resource": [
+        "/remit-scout-dev/PlaneCStage/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldFxRatesSchedule76D078CC"
+            "data": "PlaneCStage2293EB49"
           }
         ],
-        "/remit-scout-dev/GoldFxRatesSchedule/AllowEventRuleremitscoutdevGoldFxRatesJobFunction466A2819": [
+        "/remit-scout-dev/DatabaseBackupAlerts/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldFxRatesScheduleAllowEventRuleremitscoutdevGoldFxRatesJobFunction466A2819B61170FE"
+            "data": "DatabaseBackupAlerts7CD3C7FE"
           }
         ],
-        "/remit-scout-dev/GoldPopularCorridorsJobFunction/Resource": [
+        "/remit-scout-dev/DatabaseBackupAlerts/Policy/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldPopularCorridorsJobFunctionAC15A6B1"
+            "data": "DatabaseBackupAlertsPolicy12844A47"
           }
         ],
-        "/remit-scout-dev/GoldPopularCorridorsJobSchedule/Resource": [
+        "/remit-scout-dev/DatabaseBackupVault/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldPopularCorridorsJobSchedule73ADAFEE"
+            "data": "DatabaseBackupVault41C1030A"
           }
         ],
-        "/remit-scout-dev/GoldPopularCorridorsJobSchedule/AllowEventRuleremitscoutdevGoldPopularCorridorsJobFunction163EFBDF": [
+        "/remit-scout-dev/DatabaseBackupRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldPopularCorridorsJobScheduleAllowEventRuleremitscoutdevGoldPopularCorridorsJobFunction163EFBDF7C4EC99A"
+            "data": "DatabaseBackupRoleA5076C5B"
           }
         ],
-        "/remit-scout-dev/GoldPulseCacheJobFunction/Resource": [
+        "/remit-scout-dev/DatabaseBackupPlan/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldPulseCacheJobFunction06B3E7B9"
+            "data": "DatabaseBackupPlan828BE0C0"
           }
         ],
-        "/remit-scout-dev/GoldPulseCacheJobSchedule/Resource": [
+        "/remit-scout-dev/DatabaseBackupSelection/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldPulseCacheJobSchedule58509416"
+            "data": "DatabaseBackupSelection051AFAEB"
           }
         ],
-        "/remit-scout-dev/GoldPulseCacheJobSchedule/AllowEventRuleremitscoutdevGoldPulseCacheJobFunctionEA470679": [
+        "/remit-scout-dev/DatabaseRestoreTestingRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GoldPulseCacheJobScheduleAllowEventRuleremitscoutdevGoldPulseCacheJobFunctionEA470679C9E835C0"
-          }
-        ],
-        "/remit-scout-dev/GoldPublisherJobFunction/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "GoldPublisherJobFunction7B7413FF"
-          }
-        ],
-        "/remit-scout-dev/GoldPublisherJobSchedule/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "GoldPublisherJobScheduleD886A741"
-          }
-        ],
-        "/remit-scout-dev/GoldPublisherJobSchedule/AllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8F": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "GoldPublisherJobScheduleAllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8FB72252DA"
-          }
-        ],
-        "/remit-scout-dev/B2cRetryFailedJobFunction/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cRetryFailedJobFunction5D0A7238"
-          }
-        ],
-        "/remit-scout-dev/B2cRetryFailedJobSchedule/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cRetryFailedJobSchedule21CA5C8E"
-          }
-        ],
-        "/remit-scout-dev/B2cRetryFailedJobSchedule/AllowEventRuleremitscoutdevB2cRetryFailedJobFunctionD3E796AB": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cRetryFailedJobScheduleAllowEventRuleremitscoutdevB2cRetryFailedJobFunctionD3E796AB60C71BF8"
-          }
-        ],
-        "/remit-scout-dev/B2cQueueCleanupJobFunction/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cQueueCleanupJobFunction60DEB75E"
-          }
-        ],
-        "/remit-scout-dev/B2cQueueCleanupJobSchedule/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cQueueCleanupJobSchedule2B41C33A"
-          }
-        ],
-        "/remit-scout-dev/B2cQueueCleanupJobSchedule/AllowEventRuleremitscoutdevB2cQueueCleanupJobFunction49A70D49": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cQueueCleanupJobScheduleAllowEventRuleremitscoutdevB2cQueueCleanupJobFunction49A70D49D1E4A1A2"
-          }
-        ],
-        "/remit-scout-dev/StoplistAutoResumeJobFunction/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "StoplistAutoResumeJobFunctionBD0BF241"
-          }
-        ],
-        "/remit-scout-dev/StoplistAutoResumeJobSchedule/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "StoplistAutoResumeJobScheduleC8710ABF"
-          }
-        ],
-        "/remit-scout-dev/StoplistAutoResumeJobSchedule/AllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "StoplistAutoResumeJobScheduleAllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268D074E894"
-          }
-        ],
-        "/remit-scout-dev/B2cRefreshWorkerSchedule/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "B2cRefreshWorkerScheduleC6D481F4"
+            "data": "DatabaseRestoreTestingRole86B363A6"
           }
         ],
         "/remit-scout-dev/PlaneBIngestService": [
@@ -753,9 +897,9 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:30:31)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:206:22)",
-              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:12:1)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:33:31)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:475:42)",
+              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
               "loadTS (node:internal/modules/cjs/loader:1826:10)",
@@ -796,9 +940,9 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:39:31)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:206:22)",
-              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:12:1)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:42:31)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:475:42)",
+              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
               "loadTS (node:internal/modules/cjs/loader:1826:10)",
@@ -839,9 +983,9 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:49:37)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:206:22)",
-              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:12:1)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:52:37)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:475:42)",
+              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
               "loadTS (node:internal/modules/cjs/loader:1826:10)",
@@ -882,9 +1026,9 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:63:33)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:206:22)",
-              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:12:1)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:66:33)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:475:42)",
+              "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
               "loadTS (node:internal/modules/cjs/loader:1826:10)",
@@ -913,6 +1057,984 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "OpsAlertsQueueWorkerServiceD58F4B7D"
+          }
+        ],
+        "/remit-scout-dev/CriticalAlertsTopic/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CriticalAlertsTopicF16F2E77"
+          }
+        ],
+        "/remit-scout-dev/WarningAlertsTopic/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WarningAlertsTopic278F5B4C"
+          }
+        ],
+        "/remit-scout-dev/OpsAlertsTopic/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OpsAlertsTopicF77DA89B"
+          }
+        ],
+        "/remit-scout-dev/SyntheticsArtifactsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SyntheticsArtifactsBucketD0DC82F9"
+          }
+        ],
+        "/remit-scout-dev/SyntheticsArtifactsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SyntheticsArtifactsBucketPolicy0B961147"
+          }
+        ],
+        "/remit-scout-dev/SyntheticsArtifactsBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SyntheticsArtifactsBucketAutoDeleteObjectsCustomResourceEC7C601F"
+          }
+        ],
+        "/remit-scout-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/remit-scout-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/remit-scout-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/remit-scout-dev/SyntheticsExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SyntheticsExecutionRole7C51B804"
+          }
+        ],
+        "/remit-scout-dev/SyntheticsExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SyntheticsExecutionRoleDefaultPolicy77898CB7"
+          }
+        ],
+        "/remit-scout-dev/HealthCheckCanary": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckCanary"
+          }
+        ],
+        "/remit-scout-dev/QuotesCanary": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuotesCanary"
+          }
+        ],
+        "/remit-scout-dev/HealthCheckCanaryAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckCanaryAlarmA833E8ED"
+          }
+        ],
+        "/remit-scout-dev/QuotesCanaryAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuotesCanaryAlarm9FB57ED8"
+          }
+        ],
+        "/remit-scout-dev/RemitScoutDashboard/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RemitScoutDashboardC279D8C6"
+          }
+        ],
+        "/remit-scout-dev/DlqAlarm0/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DlqAlarm0F030916E"
+          }
+        ],
+        "/remit-scout-dev/DlqAlarm1/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DlqAlarm13862978F"
+          }
+        ],
+        "/remit-scout-dev/DlqAlarm2/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DlqAlarm26535B8FD"
+          }
+        ],
+        "/remit-scout-dev/DlqAlarm3/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DlqAlarm321504B5A"
+          }
+        ],
+        "/remit-scout-dev/DlqAlarm4/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DlqAlarm4213024EC"
+          }
+        ],
+        "/remit-scout-dev/LambdaErrorAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaErrorAlarm646BFA4C"
+          }
+        ],
+        "/remit-scout-dev/RdsCpuAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RdsCpuAlarm29EF1690"
+          }
+        ],
+        "/remit-scout-dev/FreshnessSLOAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FreshnessSLOAlarm32B9C867"
+          }
+        ],
+        "/remit-scout-dev/QuoteSuccessRateAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuoteSuccessRateAlarm68CB7114"
+          }
+        ],
+        "/remit-scout-dev/OandaSyncFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OandaSyncFailureAlarmFEB5A28A"
+          }
+        ],
+        "/remit-scout-dev/ProviderCoverageAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProviderCoverageAlarm2F1F98D0"
+          }
+        ],
+        "/remit-scout-dev/GoldPublisherStuckAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPublisherStuckAlarm0FD55072"
+          }
+        ],
+        "/remit-scout-dev/GoldJobFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldJobFailureAlarmD3777F41"
+          }
+        ],
+        "/remit-scout-dev/GoldJobSlowAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldJobSlowAlarmF5288084"
+          }
+        ],
+        "/remit-scout-dev/BatchJobFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BatchJobFailureAlarm43C28C88"
+          }
+        ],
+        "/remit-scout-dev/StoplistAutoResumeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StoplistAutoResumeFailureAlarm57411A1E"
+          }
+        ],
+        "/remit-scout-dev/QueueCleanupFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueueCleanupFailureAlarmBDA61EAF"
+          }
+        ],
+        "/remit-scout-dev/ExportJobQueueDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportJobQueueDepthAlarm1BD128EA"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationQueueDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationQueueDepthAlarmEFA1F0D0"
+          }
+        ],
+        "/remit-scout-dev/IngestFanoutQueueDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutQueueDepthAlarm0D7C8F50"
+          }
+        ],
+        "/remit-scout-dev/NotificationsQueueDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotificationsQueueDepthAlarm13A1F5C6"
+          }
+        ],
+        "/remit-scout-dev/OpsAlertsQueueDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OpsAlertsQueueDepthAlarmD8C0BB1C"
+          }
+        ],
+        "/remit-scout-dev/WorkerLockFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorkerLockFailureAlarmD25EF379"
+          }
+        ],
+        "/remit-scout-dev/RemitlyProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RemitlyProbeFailureAlarm9AD83A0F"
+          }
+        ],
+        "/remit-scout-dev/WesternunionProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WesternunionProbeFailureAlarm8D4EA0EB"
+          }
+        ],
+        "/remit-scout-dev/WiseProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WiseProbeFailureAlarmCDA17E7D"
+          }
+        ],
+        "/remit-scout-dev/WorldremitProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldremitProbeFailureAlarmD01ED1E1"
+          }
+        ],
+        "/remit-scout-dev/RiaProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RiaProbeFailureAlarm6F9F59B9"
+          }
+        ],
+        "/remit-scout-dev/DahabshiilProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DahabshiilProbeFailureAlarmF84F36D2"
+          }
+        ],
+        "/remit-scout-dev/SendwaveProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendwaveProbeFailureAlarmF2893A36"
+          }
+        ],
+        "/remit-scout-dev/MukuruProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MukuruProbeFailureAlarmE555429E"
+          }
+        ],
+        "/remit-scout-dev/XeProbeFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "XeProbeFailureAlarmBB39E6E7"
+          }
+        ],
+        "/remit-scout-dev/HighAPIErrorRateAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HighAPIErrorRateAlarm2F34F52E"
+          }
+        ],
+        "/remit-scout-dev/HighAPILatencyAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HighAPILatencyAlarm0289CC87"
+          }
+        ],
+        "/remit-scout-dev/APIEndpointDownAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "APIEndpointDownAlarmB3C1AA21"
+          }
+        ],
+        "/remit-scout-dev/DataFreshnessStaleAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DataFreshnessStaleAlarm7B6ABE13"
+          }
+        ],
+        "/remit-scout-dev/ProviderCollectionFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProviderCollectionFailureAlarm518B5938"
+          }
+        ],
+        "/remit-scout-dev/CircuitBreakerOpenAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CircuitBreakerOpenAlarmAD2F09F9"
+          }
+        ],
+        "/remit-scout-dev/ProviderCompletelyDownAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProviderCompletelyDownAlarmC2EBF2DB"
+          }
+        ],
+        "/remit-scout-dev/HighDatabaseQueryLatencyAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HighDatabaseQueryLatencyAlarm690E0751"
+          }
+        ],
+        "/remit-scout-dev/DatabaseQueryErrorsAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DatabaseQueryErrorsAlarm5EA79577"
+          }
+        ],
+        "/remit-scout-dev/DatabaseConnectionPoolExhaustedAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DatabaseConnectionPoolExhaustedAlarm9BE417CE"
+          }
+        ],
+        "/remit-scout-dev/GoldFxRatesJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldFxRatesJobFunction17A7CC7B"
+          }
+        ],
+        "/remit-scout-dev/GoldFxRatesJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldFxRatesJobFunctionLogRetentionC29AA2BF"
+          }
+        ],
+        "/remit-scout-dev/GoldFxRatesSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldFxRatesSchedule76D078CC"
+          }
+        ],
+        "/remit-scout-dev/GoldFxRatesSchedule/AllowEventRuleremitscoutdevGoldFxRatesJobFunction466A2819": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldFxRatesScheduleAllowEventRuleremitscoutdevGoldFxRatesJobFunction466A2819B61170FE"
+          }
+        ],
+        "/remit-scout-dev/ExportWorkerFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportWorkerFunction51B373D6"
+          }
+        ],
+        "/remit-scout-dev/ExportWorkerFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportWorkerFunctionLogRetention6BC9017C"
+          }
+        ],
+        "/remit-scout-dev/ExportWorkerSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportWorkerSchedule3300E767"
+          }
+        ],
+        "/remit-scout-dev/ExportWorkerSchedule/AllowEventRuleremitscoutdevExportWorkerFunction5CB26E2A": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportWorkerScheduleAllowEventRuleremitscoutdevExportWorkerFunction5CB26E2A4D433151"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationSchedulerFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationSchedulerFunction7E617175"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationSchedulerFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationSchedulerFunctionLogRetention84A64624"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationRealtimeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationRealtimeSchedule5B4C44BE"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationRealtimeSchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationRealtimeScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219CAB73FADA"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationHourlySchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationHourlyScheduleDF69C381"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationHourlySchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationHourlyScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C9C598FE9"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationDailySchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationDailySchedule845E33A8"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationDailySchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationDailyScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219CEBDA5C4A"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationWorkerFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationWorkerFunction13F5A4FD"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationWorkerFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationWorkerFunctionLogRetention3072E0B6"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationWorkerSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationWorkerScheduleE9713C23"
+          }
+        ],
+        "/remit-scout-dev/AlertEvaluationWorkerSchedule/AllowEventRuleremitscoutdevAlertEvaluationWorkerFunction32AD9F1D": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertEvaluationWorkerScheduleAllowEventRuleremitscoutdevAlertEvaluationWorkerFunction32AD9F1DB4F3BC4F"
+          }
+        ],
+        "/remit-scout-dev/TelemetryAnalyticsJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TelemetryAnalyticsJobFunction104EEA48"
+          }
+        ],
+        "/remit-scout-dev/TelemetryAnalyticsJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TelemetryAnalyticsJobFunctionLogRetentionE23BBA62"
+          }
+        ],
+        "/remit-scout-dev/TelemetryAnalyticsSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TelemetryAnalyticsSchedule1AF90712"
+          }
+        ],
+        "/remit-scout-dev/TelemetryAnalyticsSchedule/AllowEventRuleremitscoutdevTelemetryAnalyticsJobFunction00D5F201": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TelemetryAnalyticsScheduleAllowEventRuleremitscoutdevTelemetryAnalyticsJobFunction00D5F201988A370F"
+          }
+        ],
+        "/remit-scout-dev/SessionCleanupFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SessionCleanupFunctionB9A00AE4"
+          }
+        ],
+        "/remit-scout-dev/SessionCleanupFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SessionCleanupFunctionLogRetention8A07D800"
+          }
+        ],
+        "/remit-scout-dev/SessionCleanupSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SessionCleanupSchedule59730D2C"
+          }
+        ],
+        "/remit-scout-dev/SessionCleanupSchedule/AllowEventRuleremitscoutdevSessionCleanupFunction71922E5B": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SessionCleanupScheduleAllowEventRuleremitscoutdevSessionCleanupFunction71922E5B5E70758A"
+          }
+        ],
+        "/remit-scout-dev/AuditLogCleanupFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuditLogCleanupFunction158B53A0"
+          }
+        ],
+        "/remit-scout-dev/AuditLogCleanupFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuditLogCleanupFunctionLogRetention4C2FC31D"
+          }
+        ],
+        "/remit-scout-dev/AuditLogCleanupSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuditLogCleanupScheduleD7DD25F7"
+          }
+        ],
+        "/remit-scout-dev/AuditLogCleanupSchedule/AllowEventRuleremitscoutdevAuditLogCleanupFunction730E1F24": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuditLogCleanupScheduleAllowEventRuleremitscoutdevAuditLogCleanupFunction730E1F2483D8500D"
+          }
+        ],
+        "/remit-scout-dev/OandaSyncJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OandaSyncJobFunctionA6D5EC24"
+          }
+        ],
+        "/remit-scout-dev/OandaSyncJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OandaSyncJobFunctionLogRetentionECA4291F"
+          }
+        ],
+        "/remit-scout-dev/OandaSyncSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OandaSyncSchedule29346536"
+          }
+        ],
+        "/remit-scout-dev/OandaSyncSchedule/AllowEventRuleremitscoutdevOandaSyncJobFunction75D9B845": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OandaSyncScheduleAllowEventRuleremitscoutdevOandaSyncJobFunction75D9B84544B8F65C"
+          }
+        ],
+        "/remit-scout-dev/GoldPopularCorridorsJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPopularCorridorsJobFunctionAC15A6B1"
+          }
+        ],
+        "/remit-scout-dev/GoldPopularCorridorsJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPopularCorridorsJobFunctionLogRetentionB515D7F7"
+          }
+        ],
+        "/remit-scout-dev/GoldPopularCorridorsJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPopularCorridorsJobSchedule73ADAFEE"
+          }
+        ],
+        "/remit-scout-dev/GoldPopularCorridorsJobSchedule/AllowEventRuleremitscoutdevGoldPopularCorridorsJobFunction163EFBDF": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPopularCorridorsJobScheduleAllowEventRuleremitscoutdevGoldPopularCorridorsJobFunction163EFBDF7C4EC99A"
+          }
+        ],
+        "/remit-scout-dev/GoldPulseCacheJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPulseCacheJobFunction06B3E7B9"
+          }
+        ],
+        "/remit-scout-dev/GoldPulseCacheJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPulseCacheJobFunctionLogRetention6B5998E6"
+          }
+        ],
+        "/remit-scout-dev/GoldPulseCacheJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPulseCacheJobSchedule58509416"
+          }
+        ],
+        "/remit-scout-dev/GoldPulseCacheJobSchedule/AllowEventRuleremitscoutdevGoldPulseCacheJobFunctionEA470679": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPulseCacheJobScheduleAllowEventRuleremitscoutdevGoldPulseCacheJobFunctionEA470679C9E835C0"
+          }
+        ],
+        "/remit-scout-dev/GoldPublisherJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPublisherJobFunction7B7413FF"
+          }
+        ],
+        "/remit-scout-dev/GoldPublisherJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPublisherJobFunctionLogRetention9AB08865"
+          }
+        ],
+        "/remit-scout-dev/GoldPublisherJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPublisherJobScheduleD886A741"
+          }
+        ],
+        "/remit-scout-dev/GoldPublisherJobSchedule/AllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8F": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldPublisherJobScheduleAllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8FB72252DA"
+          }
+        ],
+        "/remit-scout-dev/B2cRetryFailedJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRetryFailedJobFunction5D0A7238"
+          }
+        ],
+        "/remit-scout-dev/B2cRetryFailedJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRetryFailedJobFunctionLogRetention6B00EDC5"
+          }
+        ],
+        "/remit-scout-dev/B2cRetryFailedJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRetryFailedJobSchedule21CA5C8E"
+          }
+        ],
+        "/remit-scout-dev/B2cRetryFailedJobSchedule/AllowEventRuleremitscoutdevB2cRetryFailedJobFunctionD3E796AB": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRetryFailedJobScheduleAllowEventRuleremitscoutdevB2cRetryFailedJobFunctionD3E796AB60C71BF8"
+          }
+        ],
+        "/remit-scout-dev/B2cQueueCleanupJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cQueueCleanupJobFunction60DEB75E"
+          }
+        ],
+        "/remit-scout-dev/B2cQueueCleanupJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cQueueCleanupJobFunctionLogRetention78BAFBEA"
+          }
+        ],
+        "/remit-scout-dev/B2cQueueCleanupJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cQueueCleanupJobSchedule2B41C33A"
+          }
+        ],
+        "/remit-scout-dev/B2cQueueCleanupJobSchedule/AllowEventRuleremitscoutdevB2cQueueCleanupJobFunction49A70D49": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cQueueCleanupJobScheduleAllowEventRuleremitscoutdevB2cQueueCleanupJobFunction49A70D49D1E4A1A2"
+          }
+        ],
+        "/remit-scout-dev/StoplistAutoResumeJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StoplistAutoResumeJobFunctionBD0BF241"
+          }
+        ],
+        "/remit-scout-dev/StoplistAutoResumeJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StoplistAutoResumeJobFunctionLogRetention6686EFDC"
+          }
+        ],
+        "/remit-scout-dev/StoplistAutoResumeJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StoplistAutoResumeJobScheduleC8710ABF"
+          }
+        ],
+        "/remit-scout-dev/StoplistAutoResumeJobSchedule/AllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StoplistAutoResumeJobScheduleAllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268D074E894"
+          }
+        ],
+        "/remit-scout-dev/B2cRefreshWorkerSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "B2cRefreshWorkerScheduleC6D481F4"
+          }
+        ],
+        "/remit-scout-dev/RemitlyProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RemitlyProbeFunctionC273ADF9"
+          }
+        ],
+        "/remit-scout-dev/RemitlyProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RemitlyProbeFunctionLogRetention5235D175"
+          }
+        ],
+        "/remit-scout-dev/RemitlyProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RemitlyProbeSchedule4CC4DC73"
+          }
+        ],
+        "/remit-scout-dev/RemitlyProbeSchedule/AllowEventRuleremitscoutdevRemitlyProbeFunction317DA103": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RemitlyProbeScheduleAllowEventRuleremitscoutdevRemitlyProbeFunction317DA103A9EAD21F"
+          }
+        ],
+        "/remit-scout-dev/WesternUnionProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WesternUnionProbeFunctionFAD2E2A0"
+          }
+        ],
+        "/remit-scout-dev/WesternUnionProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WesternUnionProbeFunctionLogRetention6DC4A9F4"
+          }
+        ],
+        "/remit-scout-dev/WesternUnionProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WesternUnionProbeScheduleE75A4DF7"
+          }
+        ],
+        "/remit-scout-dev/WesternUnionProbeSchedule/AllowEventRuleremitscoutdevWesternUnionProbeFunction8E46C283": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WesternUnionProbeScheduleAllowEventRuleremitscoutdevWesternUnionProbeFunction8E46C283FB63D8EC"
+          }
+        ],
+        "/remit-scout-dev/WiseProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WiseProbeFunction31704C4E"
+          }
+        ],
+        "/remit-scout-dev/WiseProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WiseProbeFunctionLogRetention2209DD49"
+          }
+        ],
+        "/remit-scout-dev/WiseProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WiseProbeSchedule4A21DCB2"
+          }
+        ],
+        "/remit-scout-dev/WiseProbeSchedule/AllowEventRuleremitscoutdevWiseProbeFunction1005629E": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WiseProbeScheduleAllowEventRuleremitscoutdevWiseProbeFunction1005629E3360B822"
+          }
+        ],
+        "/remit-scout-dev/WorldRemitProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldRemitProbeFunctionE5F257A7"
+          }
+        ],
+        "/remit-scout-dev/WorldRemitProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldRemitProbeFunctionLogRetentionEADC560B"
+          }
+        ],
+        "/remit-scout-dev/WorldRemitProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldRemitProbeSchedule495B8A1C"
+          }
+        ],
+        "/remit-scout-dev/WorldRemitProbeSchedule/AllowEventRuleremitscoutdevWorldRemitProbeFunctionAFB64954": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldRemitProbeScheduleAllowEventRuleremitscoutdevWorldRemitProbeFunctionAFB64954522392A0"
+          }
+        ],
+        "/remit-scout-dev/RiaProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RiaProbeFunctionF93CDC43"
+          }
+        ],
+        "/remit-scout-dev/RiaProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RiaProbeFunctionLogRetention3C019AE7"
+          }
+        ],
+        "/remit-scout-dev/RiaProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RiaProbeSchedule35426E21"
+          }
+        ],
+        "/remit-scout-dev/RiaProbeSchedule/AllowEventRuleremitscoutdevRiaProbeFunction1AF4ADDB": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RiaProbeScheduleAllowEventRuleremitscoutdevRiaProbeFunction1AF4ADDBD8173728"
+          }
+        ],
+        "/remit-scout-dev/DahabshiilProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DahabshiilProbeFunction14BD714B"
+          }
+        ],
+        "/remit-scout-dev/DahabshiilProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DahabshiilProbeFunctionLogRetention65CBA86A"
+          }
+        ],
+        "/remit-scout-dev/DahabshiilProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DahabshiilProbeSchedule2664A8F0"
+          }
+        ],
+        "/remit-scout-dev/DahabshiilProbeSchedule/AllowEventRuleremitscoutdevDahabshiilProbeFunction53B92B0A": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DahabshiilProbeScheduleAllowEventRuleremitscoutdevDahabshiilProbeFunction53B92B0AB8463476"
+          }
+        ],
+        "/remit-scout-dev/SendwaveProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendwaveProbeFunctionBF10B1EB"
+          }
+        ],
+        "/remit-scout-dev/SendwaveProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendwaveProbeFunctionLogRetention74B22DD3"
+          }
+        ],
+        "/remit-scout-dev/SendwaveProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendwaveProbeSchedule96D48956"
+          }
+        ],
+        "/remit-scout-dev/SendwaveProbeSchedule/AllowEventRuleremitscoutdevSendwaveProbeFunction571CB7BB": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendwaveProbeScheduleAllowEventRuleremitscoutdevSendwaveProbeFunction571CB7BBAA9DC674"
+          }
+        ],
+        "/remit-scout-dev/MukuruProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MukuruProbeFunction2AB82168"
+          }
+        ],
+        "/remit-scout-dev/MukuruProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MukuruProbeFunctionLogRetention4A56CBC2"
+          }
+        ],
+        "/remit-scout-dev/MukuruProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MukuruProbeSchedule46D34B7B"
+          }
+        ],
+        "/remit-scout-dev/MukuruProbeSchedule/AllowEventRuleremitscoutdevMukuruProbeFunctionF9732B92": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MukuruProbeScheduleAllowEventRuleremitscoutdevMukuruProbeFunctionF9732B92ABA2F947"
+          }
+        ],
+        "/remit-scout-dev/XeProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "XeProbeFunction558B74E5"
+          }
+        ],
+        "/remit-scout-dev/XeProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "XeProbeFunctionLogRetention2C8E7D96"
+          }
+        ],
+        "/remit-scout-dev/XeProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "XeProbeSchedule6AB3B502"
+          }
+        ],
+        "/remit-scout-dev/XeProbeSchedule/AllowEventRuleremitscoutdevXeProbeFunctionDE125E6D": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "XeProbeScheduleAllowEventRuleremitscoutdevXeProbeFunctionDE125E6D7030D5FC"
+          }
+        ],
+        "/remit-scout-dev/WireBarleyProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WireBarleyProbeFunctionF07ABE4E"
+          }
+        ],
+        "/remit-scout-dev/WireBarleyProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WireBarleyProbeFunctionLogRetention810B5DFA"
+          }
+        ],
+        "/remit-scout-dev/WireBarleyProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WireBarleyProbeSchedule05D4A1B7"
+          }
+        ],
+        "/remit-scout-dev/WireBarleyProbeSchedule/AllowEventRuleremitscoutdevWireBarleyProbeFunction7ABDE8E3": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WireBarleyProbeScheduleAllowEventRuleremitscoutdevWireBarleyProbeFunction7ABDE8E3333F32BB"
+          }
+        ],
+        "/remit-scout-dev/IntermexProbeFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IntermexProbeFunctionEA323AEF"
+          }
+        ],
+        "/remit-scout-dev/IntermexProbeFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IntermexProbeFunctionLogRetention92427E65"
+          }
+        ],
+        "/remit-scout-dev/IntermexProbeSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IntermexProbeSchedule38F6A375"
+          }
+        ],
+        "/remit-scout-dev/IntermexProbeSchedule/AllowEventRuleremitscoutdevIntermexProbeFunctionBB40F80B": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IntermexProbeScheduleAllowEventRuleremitscoutdevIntermexProbeFunctionBB40F80BBC18C7E7"
           }
         ],
         "/remit-scout-dev/VpcId": [
@@ -999,6 +2121,24 @@
             "data": "BronzeBucketName"
           }
         ],
+        "/remit-scout-dev/ExportsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsBucketName"
+          }
+        ],
+        "/remit-scout-dev/UserAssetsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserAssetsBucketName"
+          }
+        ],
+        "/remit-scout-dev/AuditLogsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuditLogsBucketName"
+          }
+        ],
         "/remit-scout-dev/QuoteRefreshQueueUrl": [
           {
             "type": "aws:cdk:logicalId",
@@ -1009,6 +2149,18 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "QuoteRefreshDlqUrl"
+          }
+        ],
+        "/remit-scout-dev/ExportJobQueueUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportJobQueueUrl"
+          }
+        ],
+        "/remit-scout-dev/ExportJobDlqUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportJobDlqUrl"
           }
         ],
         "/remit-scout-dev/IngestFanoutQueueUrl": [
@@ -1057,6 +2209,54 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "PlaneCApiUrl"
+          }
+        ],
+        "/remit-scout-dev/BackupVaultName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackupVaultName"
+          }
+        ],
+        "/remit-scout-dev/BackupAlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackupAlertsTopicArn"
+          }
+        ],
+        "/remit-scout-dev/CloudWatchDashboardName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudWatchDashboardName"
+          }
+        ],
+        "/remit-scout-dev/CloudWatchAlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudWatchAlertsTopicArn"
+          }
+        ],
+        "/remit-scout-dev/CriticalAlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CriticalAlertsTopicArn"
+          }
+        ],
+        "/remit-scout-dev/WarningAlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WarningAlertsTopicArn"
+          }
+        ],
+        "/remit-scout-dev/OpsAlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OpsAlertsTopicArn"
+          }
+        ],
+        "/remit-scout-dev/SyntheticsCanaryNames": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SyntheticsCanaryNames"
           }
         ],
         "/remit-scout-dev/CDKMetadata/Default": [

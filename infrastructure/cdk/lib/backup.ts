@@ -20,8 +20,8 @@ export type BackupResources = {
   vault: BackupVault
   plan: BackupPlan
   notificationTopic: Topic
-  restoreTestingPlan: CfnRestoreTestingPlan
-  restoreTestingSelection: CfnRestoreTestingSelection
+  restoreTestingPlan?: CfnRestoreTestingPlan
+  restoreTestingSelection?: CfnRestoreTestingSelection
 }
 
 export type BackupOptions = {
@@ -33,7 +33,6 @@ export type BackupOptions = {
 export const createBackup = (scope: Construct, options: BackupOptions): BackupResources => {
   const isProd = options.envName === 'prod'
   const vaultRetentionDays = isProd ? 35 : 14
-  const restorePlanName = `remit-scout-${options.envName}-db-restore`
 
   const notificationTopic = new Topic(scope, 'DatabaseBackupAlerts', {
     topicName: `remit-scout-${options.envName}-backup-alerts`,
@@ -83,42 +82,45 @@ export const createBackup = (scope: Construct, options: BackupOptions): BackupRe
     ],
   })
 
-  const restoreTestingPlan = new CfnRestoreTestingPlan(scope, 'DatabaseRestoreTestingPlan', {
-    restoreTestingPlanName: restorePlanName,
-    scheduleExpression: 'cron(0 3 1 * ? *)',
-    startWindowHours: 8,
-    recoveryPointSelection: {
-      algorithm: 'LATEST_WITHIN_WINDOW',
-      includeVaults: [vault.backupVaultArn],
-      recoveryPointTypes: ['SNAPSHOT'],
-      selectionWindowDays: 30,
-    },
-  })
+  let restoreTestingPlan: CfnRestoreTestingPlan | undefined
+  let restoreTestingSelection: CfnRestoreTestingSelection | undefined
 
-  const subnetGroupName = options.cluster.subnetGroup?.subnetGroupName
-  const restoreMetadataOverrides: Record<string, string> = {
-    DBClusterIdentifier: `remit-scout-${options.envName}-restore-test`,
-    VpcSecurityGroupIds: options.dbSecurityGroup.securityGroupId,
-  }
-  if (subnetGroupName) {
-    restoreMetadataOverrides.DBSubnetGroupName = subnetGroupName
-  }
+  if (isProd) {
+    const restorePlanName = `remit-scout-${options.envName}-db-restore`
 
-  const restoreTestingSelection = new CfnRestoreTestingSelection(
-    scope,
-    'DatabaseRestoreTestingSelection',
-    {
+    restoreTestingPlan = new CfnRestoreTestingPlan(scope, 'DatabaseRestoreTestingPlan', {
       restoreTestingPlanName: restorePlanName,
-      restoreTestingSelectionName: `remit-scout-${options.envName}-db-selection`,
-      protectedResourceType: 'RDS',
-      protectedResourceArns: [options.cluster.clusterArn],
-      iamRoleArn: restoreRole.roleArn,
-      validationWindowHours: 8,
-      restoreMetadataOverrides,
-    },
-  )
+      scheduleExpression: 'cron(0 3 1 * ? *)',
+      startWindowHours: 8,
+      recoveryPointSelection: {
+        algorithm: 'LATEST_WITHIN_WINDOW',
+        includeVaults: [vault.backupVaultArn],
+        recoveryPointTypes: ['SNAPSHOT'],
+        selectionWindowDays: 30,
+      },
+    })
 
-  restoreTestingSelection.addDependency(restoreTestingPlan)
+    const restoreMetadataOverrides: Record<string, string> = {
+      DBClusterIdentifier: `remit-scout-${options.envName}-restore-test`,
+      VpcSecurityGroupIds: options.dbSecurityGroup.securityGroupId,
+    }
+
+    restoreTestingSelection = new CfnRestoreTestingSelection(
+      scope,
+      'DatabaseRestoreTestingSelection',
+      {
+        restoreTestingPlanName: restorePlanName,
+        restoreTestingSelectionName: `remit-scout-${options.envName}-db-selection`,
+        protectedResourceType: 'RDS',
+        protectedResourceArns: [options.cluster.clusterArn],
+        iamRoleArn: restoreRole.roleArn,
+        validationWindowHours: 8,
+        restoreMetadataOverrides,
+      },
+    )
+
+    restoreTestingSelection.addDependency(restoreTestingPlan)
+  }
 
   return {
     vault,

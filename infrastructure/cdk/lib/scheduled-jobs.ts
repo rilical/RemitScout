@@ -53,6 +53,8 @@ export type ScheduledJobsResources = {
   worldremitProbeRule: Rule
   riaProbeFunction: IFunction
   riaProbeRule: Rule
+  dahabshiilProbeFunction: IFunction
+  dahabshiilProbeRule: Rule
   mukuruProbeFunction: IFunction
   mukuruProbeRule: Rule
   sendwaveProbeFunction: IFunction

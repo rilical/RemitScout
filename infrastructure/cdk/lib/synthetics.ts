@@ -29,12 +29,14 @@ const synthetics = require('Synthetics');
 const log = require('SyntheticsLogger');
 
 const apiCanaryBlueprint = async function () {
+  const targetUrl = '${url}';
+  const parsedUrl = new URL(targetUrl);
   const requestOptions = {
-    hostname: new URL('${url}').hostname,
+    hostname: parsedUrl.hostname,
     method: 'GET',
-    path: '${new URL(url).pathname}',
-    port: new URL('${url}').port || (url.startsWith('https') ? 443 : 80),
-    protocol: new URL('${url}').protocol.replace(':', ''),
+    path: parsedUrl.pathname,
+    port: parsedUrl.port || (targetUrl.startsWith('https') ? 443 : 80),
+    protocol: parsedUrl.protocol.replace(':', ''),
     headers: {
       'User-Agent': 'CloudWatch-Synthetics',
     },
@@ -187,4 +189,3 @@ export const createSynthetics = (
 
   return { canaries, alarms }
 }
-

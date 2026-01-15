@@ -521,11 +521,60 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
       trustSafety: 0.79,
     },
   },
+  wellsfargo: {
+    id: 'wellsfargo',
+    slug: 'wells-fargo',
+    name: 'Wells Fargo',
+    displayName: 'Wells Fargo',
+    type: 'HYBRID_MTO',
+    url: 'https://www.wellsfargo.com/international-remittances/',
+    affiliateUrl: null,
+    isAffiliate: false,
+    logo: {
+      sm: '/logos/wellsfargo.svg',
+      ico: '/logos/wellsfargo.svg',
+    },
+    remitScore: 7.6,
+    scoreBreakdown: {
+      deliveredValue: 0.7,
+      reliability: 0.82,
+      frictionSpeed: 0.7,
+      supportRefunds: 0.72,
+      trustSafety: 0.85,
+    },
+  },
+}
+
+const normalizeProviderKey = (value: string) => value
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '')
+
+const PROVIDER_METADATA_BY_NORMALIZED_ID: Record<string, ProviderMetadata> = {}
+const PROVIDER_METADATA_BY_NORMALIZED_SLUG: Record<string, ProviderMetadata> = {}
+
+for (const metadata of Object.values(PROVIDER_METADATA)) {
+  const normalizedId = normalizeProviderKey(metadata.id)
+  if (normalizedId && !PROVIDER_METADATA_BY_NORMALIZED_ID[normalizedId]) {
+    PROVIDER_METADATA_BY_NORMALIZED_ID[normalizedId] = metadata
+  }
+
+  const normalizedSlug = normalizeProviderKey(metadata.slug)
+  if (normalizedSlug && !PROVIDER_METADATA_BY_NORMALIZED_SLUG[normalizedSlug]) {
+    PROVIDER_METADATA_BY_NORMALIZED_SLUG[normalizedSlug] = metadata
+  }
 }
 
 export function getProviderMetadata(providerId: string): ProviderMetadata | null {
-  const normalizedId = providerId.toLowerCase()
-  return PROVIDER_METADATA[normalizedId] || null
+  const normalizedRaw = providerId.toLowerCase()
+  if (PROVIDER_METADATA[normalizedRaw]) {
+    return PROVIDER_METADATA[normalizedRaw]
+  }
+
+  const normalizedKey = normalizeProviderKey(providerId)
+  return PROVIDER_METADATA_BY_NORMALIZED_ID[normalizedKey]
+    || PROVIDER_METADATA_BY_NORMALIZED_SLUG[normalizedKey]
+    || null
 }
 
 export function getAllProviderMetadata(): ProviderMetadata[] {
@@ -533,6 +582,6 @@ export function getAllProviderMetadata(): ProviderMetadata[] {
 }
 
 export function getProviderMetadataBySlug(slug: string): ProviderMetadata | null {
-  const entry = Object.values(PROVIDER_METADATA).find(p => p.slug === slug)
-  return entry || null
+  const normalizedKey = normalizeProviderKey(slug)
+  return PROVIDER_METADATA_BY_NORMALIZED_SLUG[normalizedKey] || null
 }
