@@ -427,9 +427,14 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
           continue
         }
 
+        if (attemptErrorType || !parsed) {
+          continue
+        }
+
         const normalizedQuote = normalizeQuote({
           provider_id: providerId,
           corridor_id: corridorId,
+          amount_bucket: amount,
           send_amount: parsed.send_amount,
           fee_amount: parsed.fee_amount,
           fee_currency: parsed.fee_currency,

@@ -281,8 +281,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
 
   app.get('/rates/exchange/:base/:quote', async (request, reply) => {
     const parsed = historySchema.safeParse({
-      ...request.params,
-      ...request.query,
+      ...(request.params as Record<string, unknown>),
+      ...(request.query as Record<string, unknown>),
     })
     if (!parsed.success) {
       reply.code(400)
@@ -342,8 +342,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
 
   app.get('/rates/exchange/:base/:quote/history', async (request, reply) => {
     const parsed = historySchema.safeParse({
-      ...request.params,
-      ...request.query,
+      ...(request.params as Record<string, unknown>),
+      ...(request.query as Record<string, unknown>),
     })
     if (!parsed.success) {
       reply.code(400)

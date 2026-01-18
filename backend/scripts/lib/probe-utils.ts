@@ -1,4 +1,5 @@
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
 
@@ -21,6 +22,9 @@ const publishProbeMetrics = async (
   result: ProbeResult,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -197,4 +201,3 @@ export const outputProbeResult = (result: ProbeResult, format: 'json' | 'text' =
     }
   }
 }
-

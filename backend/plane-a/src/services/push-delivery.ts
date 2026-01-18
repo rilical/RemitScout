@@ -30,6 +30,14 @@ type DeviceRow = {
   sns_endpoint_arn: string | null
 }
 
+type WebPushSubscription = {
+  endpoint: string
+  keys: {
+    p256dh: string
+    auth: string
+  }
+}
+
 type DeliveryResult = {
   delivered: number
   failed: number
@@ -105,6 +113,20 @@ const parseSubscription = (value: unknown) => {
   return null
 }
 
+const getErrorStatusCode = (error: unknown): number | null => {
+  if (!error || typeof error !== 'object') return null
+  if (!('statusCode' in error)) return null
+  const statusCode = (error as { statusCode?: unknown }).statusCode
+  return typeof statusCode === 'number' ? statusCode : null
+}
+
+const getErrorName = (error: unknown): string => {
+  if (!error || typeof error !== 'object') return ''
+  if (!('name' in error)) return ''
+  const name = (error as { name?: unknown }).name
+  return typeof name === 'string' ? name : ''
+}
+
 const listActiveDevices = async (pool: Pool, userId: string): Promise<DeviceRow[]> => {
   const result = await pool.query<DeviceRow>(
     `SELECT id,
@@ -149,7 +171,7 @@ const updateDeviceEndpointArn = async (pool: Pool, deviceId: string, arn: string
 }
 
 const shouldDeactivateWebPush = (error: unknown) => {
-  const statusCode = typeof error === 'object' && error ? (error as any).statusCode : undefined
+  const statusCode = getErrorStatusCode(error)
   return statusCode === 404 || statusCode === 410
 }
 
@@ -159,11 +181,20 @@ const sendWebPush = async (pool: Pool, device: DeviceRow, payload: PushPayload):
     return false
   }
 
-  const subscription = parseSubscription(device.subscription_json) as {
-    endpoint?: string
-    keys?: { p256dh?: string; auth?: string }
-  } | null
-  if (!subscription?.endpoint) {
+  const subscription = parseSubscription(device.subscription_json)
+  const subscriptionObject = subscription && typeof subscription === 'object'
+    ? subscription as Record<string, unknown>
+    : null
+  const endpoint = typeof subscriptionObject?.endpoint === 'string'
+    ? subscriptionObject.endpoint
+    : null
+  const keys = (subscriptionObject?.keys && typeof subscriptionObject.keys === 'object')
+    ? subscriptionObject.keys as Record<string, unknown>
+    : null
+  const p256dh = typeof keys?.p256dh === 'string' ? keys.p256dh : null
+  const auth = typeof keys?.auth === 'string' ? keys.auth : null
+
+  if (!endpoint || !p256dh || !auth) {
     await markDeviceError(pool, device.id, 'missing_web_subscription', true)
     return false
   }
@@ -175,7 +206,14 @@ const sendWebPush = async (pool: Pool, device: DeviceRow, payload: PushPayload):
       url: payload.url,
       icon: payload.icon,
     })
-    await webpush.sendNotification(subscription as any, payloadJson)
+    const webSubscription: WebPushSubscription = {
+      endpoint,
+      keys: {
+        p256dh,
+        auth,
+      },
+    }
+    await webpush.sendNotification(webSubscription, payloadJson)
     return true
   } catch (error) {
     const { message } = formatError(error)
@@ -243,7 +281,7 @@ const ensureSnsEndpoint = async (pool: Pool, device: DeviceRow) => {
 }
 
 const shouldDeactivateSns = (error: unknown) => {
-  const name = typeof error === 'object' && error ? (error as any).name : ''
+  const name = getErrorName(error)
   if (typeof name === 'string' && name.includes('EndpointDisabled')) return true
   return false
 }

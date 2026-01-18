@@ -28,6 +28,18 @@ export const createPool = (connectionString?: string) => {
   const connectionTimeoutMs = Number(process.env.DB_CONNECTION_TIMEOUT_MS) || 10000 // 10 seconds
   const isProduction = process.env.NODE_ENV === 'production'
   const poolLimits = getPoolSizeLimits()
+  const resolvedConnectionString = connectionString || config.db.url
+  const disableStatementTimeout = (() => {
+    if (process.env.DB_DISABLE_STATEMENT_TIMEOUT === '1') return true
+    if (!resolvedConnectionString) return false
+    try {
+      const host = new URL(resolvedConnectionString).hostname
+      return host.includes('.proxy-') || host.includes('proxy-')
+    } catch {
+      return resolvedConnectionString.includes('.proxy-')
+        || resolvedConnectionString.includes('proxy-')
+    }
+  })()
 
   // SSL configuration: verify certificates in production
   const sslConfig = sslEnabled
@@ -37,9 +49,9 @@ export const createPool = (connectionString?: string) => {
     : undefined
 
   const pool = new Pool({
-    connectionString: connectionString || config.db.url,
+    connectionString: resolvedConnectionString,
     ssl: sslConfig,
-    statement_timeout: queryTimeoutMs,
+    ...(disableStatementTimeout ? {} : { statement_timeout: queryTimeoutMs }),
     query_timeout: queryTimeoutMs,
     connectionTimeoutMillis: connectionTimeoutMs,
     max: poolLimits.max,
@@ -47,6 +59,21 @@ export const createPool = (connectionString?: string) => {
     idleTimeoutMillis: 30000,
     allowExitOnIdle: true,
   })
+  ;(pool as { __skipStatementTimeout?: boolean }).__skipStatementTimeout = disableStatementTimeout
+
+  // Make pool.end idempotent to avoid double-close during shutdown handlers.
+  let poolClosed = false
+  const originalEnd = pool.end.bind(pool)
+  pool.end = ((cb?: (err?: Error) => void) => {
+    if (poolClosed) {
+      if (cb) {
+        cb()
+      }
+      return Promise.resolve()
+    }
+    poolClosed = true
+    return originalEnd(cb as never)
+  }) as typeof pool.end
 
   // Cleanup pool on process exit
   const cleanup = () => {
@@ -127,11 +154,16 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
       typeof (poolInstance as Pool).query === 'function'
       && 'mock' in (poolInstance as Pool).query
     const shouldUseConnect = canConnect && !isMockedQuery && !isPoolClient
+    const skipStatementTimeout =
+      Boolean((poolInstance as { __skipStatementTimeout?: boolean }).__skipStatementTimeout)
+      || process.env.DB_DISABLE_STATEMENT_TIMEOUT === '1'
     if (shouldUseConnect) {
       const pool = poolInstance as Pool
       const client = await pool.connect()
       try {
-        await client.query(`SET statement_timeout = ${queryTimeout}`)
+        if (!skipStatementTimeout) {
+          await client.query(`SET statement_timeout = ${queryTimeout}`)
+        }
         const result = await client.query<T>(text, params)
         try {
           const durationSeconds = (Date.now() - startTime) / 1000

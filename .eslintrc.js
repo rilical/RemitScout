@@ -14,11 +14,17 @@ module.exports = {
   ],
   settings: {
     "boundaries/elements": [
-      // Define our architectural element patterns and tag them with scopes.
-      { pattern: "backend/plane-a/**", tags: ["scope:plane-a-product"] },
-      { pattern: "backend/plane-b/**", tags: ["scope:plane-b-ingestion"] },
-      { pattern: "backend/plane-c/**", tags: ["scope:plane-c-publishing"] },
-      { pattern: "backend/storage/bronze/**", tags: ["scope:bronze", "scope:storage-bronze"] }
+      // Define our architectural element patterns and tag them with types.
+      { pattern: "backend/plane-a/**", type: "plane-a" },
+      { pattern: "plane-a/**", type: "plane-a" },
+      { pattern: "backend/plane-b/**", type: "plane-b" },
+      { pattern: "plane-b/**", type: "plane-b" },
+      { pattern: "backend/plane-c/**", type: "plane-c" },
+      { pattern: "plane-c/**", type: "plane-c" },
+      { pattern: "backend/shared/**", type: "shared" },
+      { pattern: "shared/**", type: "shared" },
+      { pattern: "backend/storage/bronze/**", type: "bronze" },
+      { pattern: "storage/bronze/**", type: "bronze" }
       // Patterns can be adjusted once actual folder structure is set in Phase 1.
     ],
     "boundaries/ignore": [
@@ -32,8 +38,8 @@ module.exports = {
       default: "allow", // Allow imports unless restricted below.
       rules: [
         {
-          from: ["scope:plane-a-product"],
-          disallow: ["scope:bronze"]
+          from: ["plane-a"],
+          disallow: ["bronze"]
           // Plane A code cannot import anything tagged as Bronze (raw data access).
         }
         // Add rules to restrict other cross-plane imports as needed.

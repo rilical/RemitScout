@@ -11,7 +11,7 @@
  * - Currency diversity (USD, GBP, CAD, AUD, EUR)
  */
 
-export type ProviderId = 'remitly' | 'wise' | 'xe' | 'transfergo' | 'paysend' | 'pangea' | 'orbitremit' | 'bossmoney' | 'koronapay' | 'remitbee' | 'singx' | 'placid' | 'ria' | 'worldremit' | 'westernunion' | 'xoom' | 'instarem' | 'dahabshiil' | 'sendwave' | 'mukuru' | 'wirebarley' | 'alansari' | 'intermex'
+export type ProviderId = 'remitly' | 'wise' | 'xe' | 'transfergo' | 'paysend' | 'pangea' | 'orbitremit' | 'bossmoney' | 'koronapay' | 'remitbee' | 'singx' | 'placid' | 'ria' | 'worldremit' | 'westernunion' | 'xoom' | 'instarem' | 'dahabshiil' | 'sendwave' | 'mukuru' | 'wirebarley' | 'alansari' | 'intermex' | 'wellsfargo'
 
 export const HEALTH_CORRIDORS: Record<ProviderId, readonly string[]> = {
   remitly: [
@@ -293,6 +293,9 @@ export const HEALTH_CORRIDORS: Record<ProviderId, readonly string[]> = {
     'US-AR-USD-ARS',
     'US-EC-USD-USD',
     'US-PH-USD-PHP',
+  ] as const,
+  wellsfargo: [
+    'US-MX-USD-MXN',
   ] as const,
 } as const
 

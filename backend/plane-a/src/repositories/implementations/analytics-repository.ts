@@ -27,7 +27,10 @@ const buildTrend = (current: number, previous: number) => {
     return { trend: 'up' as const, trend_percentage: 100 }
   }
   const delta = ((current - previous) / previous) * 100
-  const trend = Math.abs(delta) < 5 ? 'stable' : delta > 0 ? 'up' : 'down'
+  const trend = (Math.abs(delta) < 5 ? 'stable' : delta > 0 ? 'up' : 'down') as
+    | 'up'
+    | 'down'
+    | 'stable'
   return { trend, trend_percentage: Number(delta.toFixed(1)) }
 }
 

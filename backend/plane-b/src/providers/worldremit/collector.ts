@@ -725,6 +725,7 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
         const normalized = normalizeQuote({
           provider_id: providerId,
           corridor_id: corridorId,
+          amount_bucket: amountBucket,
           send_amount: parsed.send_amount,
           fee_amount: parsed.fee_amount,
           fee_currency: parsed.fee_currency,

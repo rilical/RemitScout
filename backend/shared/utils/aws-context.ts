@@ -183,7 +183,7 @@ export const getAwsContext = async (lambdaContext?: unknown): Promise<AwsContext
  * Checks if running in Lambda and approaching timeout.
  */
 export const isLambdaTimeoutWarning = (lambdaContext?: LambdaContext, threshold = 0.8): boolean => {
-  if (!lambdaContext.timeoutMs || !lambdaContext.remainingTimeMs) {
+  if (!lambdaContext || !lambdaContext.timeoutMs || !lambdaContext.remainingTimeMs) {
     return false
   }
 
@@ -192,7 +192,6 @@ export const isLambdaTimeoutWarning = (lambdaContext?: LambdaContext, threshold 
 
   return elapsed >= thresholdMs
 }
-
 
 
 

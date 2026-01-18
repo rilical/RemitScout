@@ -300,7 +300,7 @@ export const runDahabshiilCollector = async (options: DahabshiilCollectorOptions
   }
 
   // Ensure provider exists in database, create if missing
-  await ensureProvider(pool, providerId, 'Ria')
+  await ensureProvider(pool, providerId, 'Dahabshiil')
 
   // Check if provider is paused due to previous blocks, resume if cooldown expired
   const resumeStatus = await resumeProviderIfCooldownExpired(pool, providerId)
@@ -765,6 +765,7 @@ export const runDahabshiilCollector = async (options: DahabshiilCollectorOptions
         const normalized = normalizeQuote({
           provider_id: providerId,
           corridor_id: corridorId,
+          amount_bucket: amountBucket,
           send_amount: parsed.send_amount,
           fee_amount: parsed.fee_amount,
           fee_currency: parsed.fee_currency,

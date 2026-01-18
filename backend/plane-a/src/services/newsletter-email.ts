@@ -35,7 +35,7 @@ const isSuppressedEmail = async (email: string): Promise<boolean> => {
     [emailHash],
     planeAPool,
   )
-  return result.rowCount > 0
+  return (result.rowCount ?? 0) > 0
 }
 
 const buildLink = (path: string, token: string): string => {

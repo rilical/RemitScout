@@ -139,13 +139,13 @@
                   <!-- Y-axis labels -->
                   <g v-if="chartStats" font-family="Inter, system-ui, sans-serif">
                     <text x="45" y="28" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ formatChartRate(chartStats.maxRate) }}
+                      {{ chartStats.maxRate.toFixed(2) }}
                     </text>
                     <text x="45" y="58" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ formatChartRate(chartStats.avgRate) }}
+                      {{ chartStats.avgRate.toFixed(2) }}
                     </text>
                     <text x="45" y="88" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ formatChartRate(chartStats.minRate) }}
+                      {{ chartStats.minRate.toFixed(2) }}
                     </text>
                   </g>
                   
@@ -340,6 +340,13 @@
             class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
           >
             This corridor is unavailable right now. Please try another combination.
+          </div>
+
+          <div
+            v-else-if="quotesUnavailable"
+            class="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"
+          >
+            We’re collecting live quotes for this corridor. Hang tight or press Compare to try again.
           </div>
 
           <div
@@ -595,9 +602,17 @@
               <p class="text-sm text-gray-300 mb-4 flex-grow">
                 Real exchange rate after all fees and hidden costs. Higher is better.
               </p>
-              <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
-                <p>TEER shows the effective rate you'll receive after fees and FX markups. Closer to mid-market means lower hidden costs.</p>
-              </div>
+              <details class="group mt-auto">
+                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                  <span>Learn more</span>
+                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
+                  <p>TEER shows the effective rate you'll receive after fees and FX markups. Closer to mid-market means lower hidden costs.</p>
+                </div>
+              </details>
             </div>
 
             <!-- RVI Card -->
@@ -611,9 +626,17 @@
               <p class="text-sm text-gray-300 mb-4 flex-grow">
                 How much provider rates vary. Lower means similar deals. Higher means comparing saves money.
               </p>
-              <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
-                <p>RVI measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
-              </div>
+              <details class="group mt-auto">
+                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                  <span>Learn more</span>
+                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
+                  <p>RVI measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
+                </div>
+              </details>
             </div>
 
             <!-- RCI Card -->
@@ -627,9 +650,17 @@
               <p class="text-sm text-gray-300 mb-4 flex-grow">
                 Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.
               </p>
-              <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
-                <p>RCI includes upfront fees and hidden FX markups. Providers can advertise $0 fees but still charge 3% through exchange rate markups.</p>
-              </div>
+              <details class="group mt-auto">
+                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                  <span>Learn more</span>
+                  <svg class="h-3 w-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
+                  <p>RCI includes upfront fees and hidden FX markups. Providers can advertise $0 fees but still charge 3% through exchange rate markups.</p>
+                </div>
+              </details>
             </div>
           </div>
           <div class="mt-6 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
@@ -644,7 +675,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
           <div class="rounded-xl border border-slate-200 bg-white p-5">
             <p class="text-xs font-medium text-slate-500 mb-1">Best Deal</p>
-            <p class="text-2xl font-bold text-brand-600 truncate">{{ content.table.rows[0]?.recipientGets || '—' }}</p>
+            <p class="text-lg font-bold text-brand-600 truncate">{{ content.table.rows[0]?.recipientGets || '—' }}</p>
             <p class="text-xs text-slate-500 mt-1">Highest recipient amount</p>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-5">
@@ -654,7 +685,7 @@
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-5">
             <p class="text-xs font-medium text-slate-500 mb-1">Fastest Speed</p>
-            <p class="text-2xl font-bold text-brand-600 truncate">{{ fastestSpeedDisplay }}</p>
+            <p class="text-lg font-bold text-brand-600 truncate">{{ fastestSpeedDisplay }}</p>
             <p class="text-xs text-slate-500 mt-1">Quickest delivery time</p>
           </div>
         </div>
@@ -1275,22 +1306,6 @@ type CorridorIndices = {
   weights: 'equal'
 }
 
-type ProvidersResponse = {
-  data: ProviderQuote[]
-  updatedAt: string
-  corridor: string
-  amount: number
-  method: string
-  bucketUsed?: number
-  approximate?: boolean
-  midMarketRate?: number | null
-  midMarketSource?: string | null
-  midMarketUpdatedAt?: string | null
-  availableMethods?: string[]
-  indices?: CorridorIndices
-  error?: { code: string; message: string }
-}
-
 type Guide = {
   title: string
   excerpt: string
@@ -1542,14 +1557,14 @@ if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) 
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
 
-const { data: rawQuotesData, pending: quotesPending, error: quotesError, refresh: refreshQuotes } = await useProviders(
+const { data: quotesData, pending: quotesPending, error: quotesError, refresh: refreshQuotes } = await useProviders(
   fromCountryCode,
   toCountryCode,
   displayAmount,
   payoutMethod,
   {
     key: `${currentRoute.fullPath}-${payoutMethod.value}`, // Include method in key for caching per method
-    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod],
+    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod, providersLive],
     server: true,
     lazy: false,
     fromCurrency: fromCurrencyCode,
@@ -1558,36 +1573,12 @@ const { data: rawQuotesData, pending: quotesPending, error: quotesError, refresh
   },
 )
 
-const lastNonEmptyQuotes = ref<ProvidersResponse | null>(null)
-const quotesData = computed<ProvidersResponse | null>(() => {
-  const current = rawQuotesData.value as ProvidersResponse | null
-  if (current?.data?.length) return current
-  if (current?.error) return current
-  return lastNonEmptyQuotes.value ?? current
-})
-
-watch(rawQuotesData, (value) => {
-  const resolved = value as ProvidersResponse | null
-  if (resolved?.data?.length) {
-    lastNonEmptyQuotes.value = resolved
-    return
-  }
-  if (resolved?.error) {
-    lastNonEmptyQuotes.value = null
-  }
-})
-
-watch([fromCountryCode, toCountryCode, fromCurrencyCode, toCurrencyCode, displayAmount, payoutMethod], () => {
-  lastNonEmptyQuotes.value = null
-})
-
 const toPositiveMs = (value: unknown, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 const REFRESH_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMs, 1500)
-const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 2000)
-const backgroundRefreshEnabled = computed(() => Boolean(runtimeConfig?.public?.b2cBackgroundRefreshEnabled))
+const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 750)
 const REFRESH_STATUS_TIMEOUT_MS = 60000
 const MAX_REFRESH_ATTEMPTS = Math.max(1, Math.ceil(REFRESH_STATUS_TIMEOUT_MS / REFRESH_POLL_MS))
 const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
@@ -1897,13 +1888,38 @@ const isQuoteStale = computed(() => {
   return Date.now() - apiUpdatedAtMs.value > MAX_B2C_STALE_MS
 })
 const apiUpdatedLabel = computed(() => (apiUpdatedAt.value ? getRelativeTime(apiUpdatedAt.value) : ''))
-const providerError = computed(() => (quotesData.value as { error?: { code: string; message: string } } | null)?.error ?? null)
+type ProviderError = { code: string; message?: string }
+const normalizeProviderError = (value: unknown, fallbackMessage?: string): ProviderError | null => {
+  if (!value) return null
+  if (typeof value === 'string') {
+    return { code: value, message: fallbackMessage }
+  }
+  if (typeof value === 'object' && value !== null) {
+    const maybe = value as { code?: string; message?: string }
+    if (typeof maybe.code === 'string') {
+      return { code: maybe.code, message: maybe.message ?? fallbackMessage }
+    }
+  }
+  return null
+}
+const providerError = computed<ProviderError | null>(() => {
+  const payload = quotesData.value as { error?: unknown; message?: string } | null
+  const inline = normalizeProviderError(payload?.error, payload?.message)
+  if (inline) return inline
+  const requestError = quotesError.value as { data?: { error?: string; message?: string }; message?: string } | null
+  return normalizeProviderError(requestError?.data?.error, requestError?.data?.message ?? requestError?.message)
+})
 const corridorUnsupported = computed(() => providerError.value?.code === 'corridor_unsupported')
 const corridorUnavailable = computed(() => {
   const code = providerError.value?.code
   return code === 'corridor_unavailable' || code === 'rate_unavailable' || code === 'fx_unavailable'
 })
-const hasApiError = computed(() => (quotesError.value || providerError.value) && !corridorUnavailable.value && !corridorUnsupported.value)
+const quotesUnavailable = computed(() => providerError.value?.code === 'quotes_unavailable')
+const hasApiError = computed(() => {
+  if (!quotesError.value && !providerError.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || quotesUnavailable.value) return false
+  return true
+})
 const corridorId = computed(() => `${fromCountryCode.value}-${toCountryCode.value}-${fromCurrencyCode.value}-${toCurrencyCode.value}`)
 const quoteRefreshKey = computed(() => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`)
 
@@ -1923,7 +1939,6 @@ watch(
   [availableMethods, payoutMethod, corridorId, displayAmount],
   ([methods]) => {
     if (!import.meta.client) return
-    if (!backgroundRefreshEnabled.value) return
     if (!methods.length) return
     methods
       .filter(method => method !== payoutMethod.value)
@@ -2024,7 +2039,7 @@ const midMarketLabel = computed(() => {
   if (!midMarketRate.value) {
     return `1 ${fromCurrencyCode.value} = -- ${toCurrencyCode.value}`
   }
-  return `1 ${fromCurrencyCode.value} = ${midMarketRate.value.toFixed(4)} ${toCurrencyCode.value}`
+  return `1 ${fromCurrencyCode.value} = ${midMarketRate.value.toFixed(2)} ${toCurrencyCode.value}`
 })
 const midMarketAsOf = computed(() => {
   if (!midMarketUpdatedAt.value) return ''
@@ -2197,13 +2212,6 @@ const formatChartDate = (value: string) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-const formatChartRate = (rate: number) => {
-  if (!Number.isFinite(rate)) return '0'
-  // Show enough decimal places to be meaningful without excessive precision
-  // Use 4 decimal places for exchange rates to avoid rounding issues
-  return rate.toFixed(4)
 }
 
 const chartLabels = computed(() => {
@@ -3176,6 +3184,7 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
       if (requestIds.length) {
         startRefreshStatusPoll(requestIds)
       }
+      scheduleRefreshPoll()
     }
   } catch (error) {
     if (import.meta.dev) {
@@ -3188,9 +3197,7 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
 
 const handleRefreshQuotes = async () => {
   await requestQuoteRefresh('manual')
-  if (!refreshStatus.value?.requestIds?.length) {
-    await refreshQuotes()
-  }
+  await refreshQuotes()
 }
 
 const isRefreshQueued = computed(() => {

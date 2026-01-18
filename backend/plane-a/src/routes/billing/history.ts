@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
-import { getStripeClient } from '../../services/stripe-client'
+import { getStripeClient, isStripeConfigured, isStripeMockMisconfigured } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
 import { getErrorMessage, isStripeError } from '../../types/errors'
 
@@ -12,7 +12,12 @@ export const billingHistoryRoutes = async (app: FastifyInstance) => {
   app.get('/billing/history', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
 
-    if (!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) {
+    if (isStripeMockMisconfigured()) {
+      reply.code(500)
+      return { error: 'billing_misconfigured' }
+    }
+
+    if (!isStripeConfigured()) {
       reply.code(500)
       return { error: 'billing_not_configured' }
     }

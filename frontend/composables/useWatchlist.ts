@@ -263,7 +263,8 @@ export const useWatchlist = () => {
 
   onMounted(async () => {
     if (isLoggedIn.value) {
-      await syncLocalToServer()
+      resetLocalStorage()
+      await fetchFromBackend()
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -271,7 +272,8 @@ export const useWatchlist = () => {
 
   watch(isLoggedIn, async (loggedIn) => {
     if (loggedIn) {
-      await syncLocalToServer()
+      resetLocalStorage()
+      await fetchFromBackend()
     } else {
       hydrated.value = localStorageHydrated.value
     }

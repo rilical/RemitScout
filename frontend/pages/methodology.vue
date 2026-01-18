@@ -78,7 +78,7 @@
           </h2>
           <p class="text-lg text-neutral-600 leading-relaxed mb-6">
             We don't just take providers at their word. Instead, we collect real quotes directly from their systems and double-check them ourselves. This shows you the actual amount of money that will arrive in the recipient's account—not just what sounds good in an advertisement.
-            We track <strong class="font-semibold text-neutral-900">{{ SITE_STATS.providers.display }}</strong> providers across <strong class="font-semibold text-neutral-900">{{ SITE_STATS.corridors.display }}</strong> routes. Our data updates at different speeds depending on the specific route and how you're sending money.
+            We track <strong class="font-semibold text-brand-600">{{ SITE_STATS.providers.display }}</strong> providers across <strong class="font-semibold text-brand-600">{{ SITE_STATS.corridors.display }}</strong> routes. Our data updates at different speeds depending on the specific route and how you're sending money.
           </p>
           <p class="text-base text-neutral-600 max-w-3xl mx-auto">
             <NuxtLink
@@ -379,13 +379,13 @@
     </section>
 
     <!-- Show Your Work Section -->
-    <section id="show-your-work" class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
+    <section id="show-your-work" class="py-16 lg:py-20 bg-gray-900 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <h2 class="text-4xl sm:text-5xl font-bold text-brand-600 mb-6">
             Show Your Work
           </h2>
-          <p class="text-xl leading-relaxed text-neutral-700 max-w-4xl mx-auto [text-wrap:pretty]">
+          <p class="text-xl leading-relaxed max-w-4xl mx-auto [text-wrap:pretty]" style="color: var(--tw-ring-offset-color)">
             No black box. This is what we measure, how we calculate Net Delivered Value, how we manage Data Latency, and what can change at checkout.
           </p>
         </div>
@@ -510,7 +510,7 @@
 
         <!-- FAQ Section -->
         <div class="mb-12 max-w-5xl mx-auto">
-          <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-white to-brand-50/30 p-10 lg:p-12 shadow-lg">
+          <div class="rounded-3xl border-2 border-brand-200 bg-white p-10 lg:p-12 shadow-lg">
             <div class="text-center mb-10">
               <div class="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-brand-600 shadow-lg mb-4 mx-auto">
                 <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1084,7 +1084,7 @@
     </section>
 
     <!-- Guides Section -->
-    <section id="guides" class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700 scroll-mt-20">
+    <section id="guides" class="py-16 lg:py-20 bg-gray-900 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 class="text-3xl font-bold text-white mb-8 text-center">
           Related Guides
@@ -1197,7 +1197,7 @@ import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { SITE_STATS } from '~/config/stats'
 import { FEATURE_FLAGS } from '~/utils/constants'
 
-const lastUpdatedIso = '2025-12-14'
+const lastUpdatedIso = '2026-01-17'
 const lastUpdatedLabel = computed(() => {
   return new Date(lastUpdatedIso).toLocaleDateString('en-US', {
     day: 'numeric',

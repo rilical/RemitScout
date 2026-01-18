@@ -23,6 +23,15 @@ type SignUpInput = {
   password: string
 }
 
+const isEmailConfirmed = (supabaseUser: SupabaseUser | null): boolean => {
+  if (!supabaseUser) return false
+  const confirmedAt =
+    supabaseUser.email_confirmed_at ||
+    (supabaseUser as { confirmed_at?: string | null }).confirmed_at ||
+    null
+  return Boolean(confirmedAt)
+}
+
 const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
   if (!supabaseUser) return null
   const metadata = supabaseUser.user_metadata || {}
@@ -62,6 +71,8 @@ export const useAuth = () => {
     return Boolean(config.public.devAuthEnabled) || (import.meta.dev && !isConfigured.value)
   }
 
+  const shouldEnforceEmailConfirmation = () => !isDevAuthEnabled()
+
   const resolveDevEmail = (value: string) => {
     const trimmed = value.trim()
     if (trimmed) return trimmed
@@ -98,8 +109,12 @@ export const useAuth = () => {
   }
 
   const setSession = (nextSession: Session | null) => {
-    session.value = nextSession
-    user.value = mapSupabaseUser(nextSession?.user ?? null)
+    const enforceEmail = shouldEnforceEmailConfirmation()
+    const effectiveSession = enforceEmail && nextSession?.user && !isEmailConfirmed(nextSession.user)
+      ? null
+      : nextSession
+    session.value = effectiveSession
+    user.value = mapSupabaseUser(effectiveSession?.user ?? null)
     hydrated.value = true
   }
 
@@ -203,6 +218,13 @@ export const useAuth = () => {
       return { ok: false, error: error.message }
     }
 
+    const authUser = data.user ?? data.session?.user ?? null
+    if (shouldEnforceEmailConfirmation() && authUser && !isEmailConfirmed(authUser)) {
+      await supabase.auth.signOut()
+      lastError.value = 'Please verify your email before signing in.'
+      return { ok: false, error: lastError.value }
+    }
+
     setSession(data.session ?? null)
     return { ok: true }
   }
@@ -245,6 +267,15 @@ export const useAuth = () => {
     if (error) {
       lastError.value = error.message
       return { ok: false, error: error.message }
+    }
+
+    const authUser = data.user ?? data.session?.user ?? null
+    if (shouldEnforceEmailConfirmation() && authUser && !isEmailConfirmed(authUser)) {
+      if (data.session) {
+        await supabase.auth.signOut()
+      }
+      hydrated.value = true
+      return { ok: true }
     }
 
     if (data.session) {

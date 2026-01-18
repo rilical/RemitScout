@@ -122,6 +122,7 @@ const handleSubmit = async () => {
             id="header-from"
             v-model="form.from"
             label="Sending from"
+            :exclude-country="form.to"
             placeholder="United States"
           />
         </div>
@@ -137,6 +138,7 @@ const handleSubmit = async () => {
             id="header-to"
             v-model="form.to"
             label="Receiving in"
+            :exclude-country="form.from"
             placeholder="Country"
           />
         </div>

@@ -1,6 +1,7 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { formatError } from '../../../shared/utils/error-handling'
 import { getEmailConfig, getSmsConfig } from './config-aws'
@@ -177,6 +178,9 @@ export const recordNotificationMetric = async (
   count: number = 1,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -209,6 +213,9 @@ export const recordNotificationDuration = async (
   durationMs: number,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -231,7 +238,6 @@ export const recordNotificationDuration = async (
     })
   }
 }
-
 
 
 

@@ -128,7 +128,7 @@ export const providerVisitRoutes = async (app: FastifyInstance) => {
     }
 
     const user = request.user!
-    const visitId = String(request.params.id)
+    const visitId = String((request.params as { id: string }).id)
     const visit = await providerVisitRepository.getVisitById(visitId)
 
     if (!visit || visit.user_id !== user.user_id) {

@@ -159,7 +159,7 @@ export const createVisibilityTimeoutExtender = (
     })
   })
 
-  return () => {
+  return async () => {
     if (intervalId) {
       clearInterval(intervalId)
       intervalId = null
@@ -466,5 +466,5 @@ export const getQueueDepth = async (queueUrl: string): Promise<number> => {
 }
 
 export const getQueueDLQ = async (queueUrl: string): Promise<string | null> => {
-  return checkDLQ(queueUrl)
+  return getDLQUrl(queueUrl)
 }

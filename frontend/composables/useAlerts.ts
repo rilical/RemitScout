@@ -227,13 +227,8 @@ export const useAlerts = () => {
 
   onMounted(async () => {
     if (isLoggedIn.value) {
-      const localAlerts = [...alerts.value]
-      const { idMap } = await watchlist.syncToServer()
+      resetLocalStorage()
       await fetchFromBackend()
-      const created = await syncLocalAlerts(localAlerts, idMap)
-      if (created) {
-        await fetchFromBackend()
-      }
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -241,13 +236,8 @@ export const useAlerts = () => {
 
   watch(isLoggedIn, async (loggedIn) => {
     if (loggedIn) {
-      const localAlerts = [...alerts.value]
-      const { idMap } = await watchlist.syncToServer()
+      resetLocalStorage()
       await fetchFromBackend()
-      const created = await syncLocalAlerts(localAlerts, idMap)
-      if (created) {
-        await fetchFromBackend()
-      }
     } else {
       hydrated.value = localStorageHydrated.value
     }
@@ -300,7 +290,7 @@ export const useAlerts = () => {
     const next = {
       watchlistItemId,
       rule: nextRule,
-      frequency: draft?.frequency ?? 'daily',
+      frequency: draft?.frequency ?? 'weekly',
       enabled: draft?.enabled ?? true,
     }
 

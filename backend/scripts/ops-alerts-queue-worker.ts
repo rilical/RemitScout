@@ -106,7 +106,8 @@ const runWorker = async () => {
       const deleteHandles: string[] = []
 
       for (const message of messages) {
-        if (!validatePayload(message.payload)) {
+        const payload = message.payload
+        if (!validatePayload(payload)) {
           logger.warn('ops_alerts_item_invalid', { message_id: message.messageId })
           deleteHandles.push(message.receiptHandle)
           continue
@@ -114,7 +115,7 @@ const runWorker = async () => {
 
         try {
           await withWorkerRetry(
-            () => notifyBlockAlert(pool, message.payload.alertId, { force: true }),
+            () => notifyBlockAlert(pool, payload.alertId, { force: true }),
             {
               maxRetries: 3,
               initialDelayMs: 1000,
@@ -127,7 +128,7 @@ const runWorker = async () => {
           const err = error instanceof Error ? error : new Error(String(error))
           logger.error('ops_alerts_item_failed', {
             message_id: message.messageId,
-            alert_id: message.payload.alertId,
+            alert_id: payload.alertId,
             error: err.message,
           })
           await recordWorkerMetric('ops-alerts-queue-worker', 'message_failed', 1)

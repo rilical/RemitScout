@@ -323,7 +323,7 @@ in runtime code (or use env injection from Lambda/ECS via secrets).
 ## 10) CI/CD
 
 - GitHub Actions:
-  - `validate.yml` (lint + tests)
+  - `ci.yml` (lint + tests)
   - `probe-health-checks.yml` (provider probes on schedule)
 - No AWS pipeline or infra deployment automation.
 

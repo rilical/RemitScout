@@ -306,8 +306,10 @@ const allProviders = computed(() => {
 
   // Add all providers from PROVIDER_SCORES, merging with metadata when available
   const allProvidersMap = new Map()
+  const seenSlugs = new Set() // Track slugs to prevent duplicates
   
   Object.values(PROVIDER_SCORES).forEach(scoreProvider => {
+    seenSlugs.add(scoreProvider.slug)
     const existing = metadataMap.get(scoreProvider.id)
     if (existing) {
       // Use metadata version, but ensure score is from PROVIDER_SCORES (most up-to-date)
@@ -328,9 +330,9 @@ const allProviders = computed(() => {
     }
   })
 
-  // Also add any metadata providers that might not be in PROVIDER_SCORES yet
+  // Also add any metadata providers that might not be in PROVIDER_SCORES yet (but avoid duplicates)
   metadata.forEach(provider => {
-    if (!allProvidersMap.has(provider.id)) {
+    if (!allProvidersMap.has(provider.id) && !seenSlugs.has(provider.slug)) {
       const scoreSource = scoreLookup.get(provider.id) || scoreBySlug.get(provider.slug)
       allProvidersMap.set(provider.id, {
         id: provider.id,
@@ -341,6 +343,7 @@ const allProviders = computed(() => {
         affiliateUrl: provider.affiliateUrl || undefined,
         url: provider.url || undefined,
       })
+      seenSlugs.add(provider.slug)
     }
   })
 

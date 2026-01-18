@@ -28,6 +28,7 @@ export type PipelineOptions = {
   frontendBucket?: Bucket
   frontendDistribution?: Distribution
   planeACloudFrontDomain?: string
+  planeAApiEndpoint?: string
   publicSupabaseUrl?: string
   publicSupabaseAnonKey?: string
 }
@@ -82,6 +83,9 @@ export const createPipeline = (
   if (options.planeACloudFrontDomain) {
     buildEnvVars.PLANE_A_CLOUDFRONT_DOMAIN = { value: options.planeACloudFrontDomain }
   }
+  if (options.planeAApiEndpoint) {
+    buildEnvVars.PLANE_A_API_ENDPOINT = { value: options.planeAApiEndpoint }
+  }
   if (options.publicSupabaseUrl) {
     buildEnvVars.PUBLIC_SUPABASE_URL = { value: options.publicSupabaseUrl }
   }
@@ -121,7 +125,13 @@ export const createPipeline = (
             'pnpm -C backend build',
             'if [ -n "$FRONTEND_BUCKET_NAME" ]; then',
             '  echo "Building frontend..."',
-            '  export PUBLIC_API_BASE=${PLANE_A_CLOUDFRONT_DOMAIN:+https://$PLANE_A_CLOUDFRONT_DOMAIN/api/v1}',
+            '  if [ -z "$PUBLIC_API_BASE" ]; then',
+            '    if [ -n "$PLANE_A_CLOUDFRONT_DOMAIN" ]; then',
+            '      export PUBLIC_API_BASE=https://$PLANE_A_CLOUDFRONT_DOMAIN/api/v1',
+            '    elif [ -n "$PLANE_A_API_ENDPOINT" ]; then',
+            '      export PUBLIC_API_BASE=${PLANE_A_API_ENDPOINT%/}/api/v1',
+            '    fi',
+            '  fi',
             '  export PUBLIC_SITE_URL=${FRONTEND_DISTRIBUTION_ID:+https://d$FRONTEND_DISTRIBUTION_ID.cloudfront.net}',
             '  export PUBLIC_IMAGE_BASE=${FRONTEND_DISTRIBUTION_ID:+https://d$FRONTEND_DISTRIBUTION_ID.cloudfront.net/images}',
             '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',

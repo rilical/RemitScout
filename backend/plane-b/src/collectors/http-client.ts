@@ -74,9 +74,6 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
     }
   }
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
-
   const finalHeaders = { ...headers }
   let payload: string | undefined
   if (body !== undefined) {
@@ -91,7 +88,7 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
   }
 
   // Resolve proxy URL (async for Secrets Manager/SSM support)
-  let resolvedProxyUrl: string | null = proxyUrl
+  let resolvedProxyUrl: string | null = proxyUrl ?? null
   if (!resolvedProxyUrl && proxyTier) {
     const { getProxyForTier, getProxyForTierSync } = await import('../lib/proxy-router')
     // Try sync first (uses cache or env vars)
@@ -211,8 +208,6 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       },
     })
   } catch (error: unknown) {
-    clearTimeout(timeout)
-
     if (isError(error) && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
       logger.warn('http_request_timeout', {
         url,
@@ -235,7 +230,5 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       stack,
     })
     throw error
-  } finally {
-    clearTimeout(timeout)
   }
 }

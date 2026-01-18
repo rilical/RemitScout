@@ -268,7 +268,6 @@ export class AlertRepository implements IAlertRepository {
 
     updateFields.push(`updated_at = NOW()`)
     const updateValues = [...values, alertId]
-    const updateParamIndex = paramIndex
 
     // Get current state to use as defaults for INSERT
     const currentState = await this.getAlertState(alertId)

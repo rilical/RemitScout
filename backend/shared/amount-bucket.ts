@@ -6,13 +6,17 @@ export type BucketSelection = {
 
 export const DEFAULT_AMOUNT_BUCKETS = [50, 100, 500, 1000, 3000, 10000]
 
+const getValidBuckets = (buckets: number[]) => buckets.filter((bucket) => Number.isFinite(bucket) && bucket > 0)
+
 export const getNearestBucket = (
   sendAmount: number,
   buckets: number[] = DEFAULT_AMOUNT_BUCKETS,
 ) => {
-  let nearest = buckets[0]
+  const validBuckets = getValidBuckets(buckets)
+  if (!validBuckets.length) return sendAmount
+  let nearest = validBuckets[0]
   let smallestDelta = Math.abs(sendAmount - nearest)
-  for (const bucket of buckets) {
+  for (const bucket of validBuckets) {
     const delta = Math.abs(sendAmount - bucket)
     if (delta < smallestDelta || (delta === smallestDelta && bucket > nearest)) {
       smallestDelta = delta
@@ -26,8 +30,10 @@ export const getFloorBucket = (
   sendAmount: number,
   buckets: number[] = DEFAULT_AMOUNT_BUCKETS,
 ) => {
-  let floor = buckets[0]
-  for (const bucket of buckets) {
+  const validBuckets = getValidBuckets(buckets)
+  if (!validBuckets.length) return sendAmount
+  let floor = validBuckets[0]
+  for (const bucket of validBuckets) {
     if (bucket <= sendAmount) {
       floor = bucket
     }
@@ -39,10 +45,18 @@ export const computeBucketSelection = (
   sendAmount: number,
   buckets: number[] = DEFAULT_AMOUNT_BUCKETS,
 ): BucketSelection => {
+  const validBuckets = getValidBuckets(buckets)
+  const fallbackBucket = validBuckets[0] ?? 0
   const isValid = Number.isFinite(sendAmount) && sendAmount > 0
-  const amount = isValid ? sendAmount : buckets[0]
-  const bucket_used = getNearestBucket(amount, buckets)
-  const fee_bucket_used = getFloorBucket(amount, buckets)
-  const approximate = !isValid || amount !== bucket_used
-  return { bucket_used, fee_bucket_used, approximate }
+  const amount = isValid ? sendAmount : fallbackBucket
+  if (!isValid) {
+    return { bucket_used: amount, fee_bucket_used: amount, approximate: true }
+  }
+  const normalizedAmount = Math.round(amount)
+  const approximate = normalizedAmount !== amount
+  return {
+    bucket_used: normalizedAmount,
+    fee_bucket_used: normalizedAmount,
+    approximate,
+  }
 }

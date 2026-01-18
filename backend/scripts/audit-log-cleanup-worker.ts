@@ -65,7 +65,7 @@ const formatNdjson = (rows: AuditLogRow[]) =>
 
 const buildFilterClause = (filter: ArchiveFilter, batchSize: number) => {
   const conditions: string[] = ['created_at < $1']
-  const params: Array<string | Date> = [filter.cutoff]
+  const params: Array<string | Date | string[]> = [filter.cutoff]
 
   if (filter.category) {
     params.push(filter.category)

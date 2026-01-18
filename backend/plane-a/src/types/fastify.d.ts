@@ -7,5 +7,6 @@ declare module 'fastify' {
     authError?: AuthError
     traceId?: string
     span?: Span
+    startTime?: number
   }
 }

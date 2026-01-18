@@ -28,7 +28,7 @@ const buildCurrencyCountryIndex = () => {
 
 const currencyCountries = buildCurrencyCountryIndex()
 
-const buildCountryCurrencyPairs = (currencies: string[]) => {
+const buildCountryCurrencyPairs = (currencies: readonly string[]) => {
   const pairs: Array<[string, string]> = []
   for (const currency of currencies) {
     const countries = currencyCountries.get(currency) ?? []

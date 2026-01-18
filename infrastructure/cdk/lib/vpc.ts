@@ -4,6 +4,8 @@ import {
   SubnetType,
   SecurityGroup,
   Port,
+  GatewayVpcEndpointAwsService,
+  InterfaceVpcEndpointAwsService,
 } from 'aws-cdk-lib/aws-ec2'
 
 export type NetworkingResources = {
@@ -37,6 +39,33 @@ export const createNetworking = (
       },
     ],
   })
+
+  if (options.envName === 'dev') {
+    vpc.addGatewayEndpoint('S3GatewayEndpoint', {
+      service: GatewayVpcEndpointAwsService.S3,
+      subnets: [{ subnetType: SubnetType.PRIVATE_WITH_EGRESS }],
+    })
+    vpc.addInterfaceEndpoint('EcrApiEndpoint', {
+      service: InterfaceVpcEndpointAwsService.ECR,
+      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    })
+    vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
+      service: InterfaceVpcEndpointAwsService.ECR_DOCKER,
+      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    })
+    vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
+      service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    })
+    vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+      service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    })
+    vpc.addInterfaceEndpoint('SsmEndpoint', {
+      service: InterfaceVpcEndpointAwsService.SSM,
+      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    })
+  }
 
   const planeASecurityGroup = new SecurityGroup(scope, 'PlaneASecurityGroup', {
     vpc,

@@ -13,6 +13,13 @@ const logger = createLogger('plane-a.alert-notifications')
 let sesClient: SESClient | null = null
 let snsClient: SNSClient | null = null
 
+const resolveAlertBaseUrl = (): string => (
+  config.alerts.unsubscribe.baseUrl ||
+  config.billing.stripe.frontendBaseUrl ||
+  config.newsletter.baseUrl ||
+  ''
+)
+
 const getSesClient = (): SESClient | null => {
   const sesRegion = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
   const alertsEmailEnabled = process.env.ALERTS_EMAIL_ENABLED === '1' || process.env.ALERTS_EMAIL_ENABLED === 'true'
@@ -189,6 +196,7 @@ export async function sendAlertEmail(
   message: string,
   context?: Record<string, unknown>,
 ): Promise<boolean> {
+  void context
   try {
     const settings = await getNotificationSettings(pool, userId)
     if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'email')) {
@@ -239,7 +247,14 @@ export async function sendAlertEmail(
 
     const alertsEmailFrom = process.env.ALERTS_EMAIL_FROM || process.env.SES_FROM_ADDRESS || 'alerts@remitscout.com'
     const alertsEmailFromName = process.env.ALERTS_EMAIL_FROM_NAME || 'Remit-Scout Alerts'
-    const siteUrl = config.alerts.unsubscribe.baseUrl || 'https://remitscout.com'
+    const siteUrl = resolveAlertBaseUrl()
+    if (!siteUrl) {
+      logger.warn('alert_email_site_url_missing', {
+        user_id: userId,
+        alert_id: alertId,
+      })
+      return false
+    }
     const unsubscribeToken = generateAlertUnsubscribeToken(userId)
     const unsubscribeLink = unsubscribeToken
       ? `${siteUrl.replace(/\/$/, '')}/api/alerts/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
@@ -333,6 +348,7 @@ export async function sendAlertSms(
   alertId: string,
   message: string,
 ): Promise<boolean> {
+  void message
   try {
     const settings = await getNotificationSettings(pool, userId)
     if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'sms')) {
@@ -363,12 +379,10 @@ export async function sendAlertSms(
       return false
     }
 
-    // TODO: Get phone number from user profile when mobile support is added
-    // For now, SMS is prepared but not active
-    logger.debug('alert_sms_prepared', {
+    logger.debug('alert_sms_disabled', {
       user_id: userId,
       alert_id: alertId,
-      message: 'SMS notifications prepared for future mobile support',
+      reason: 'phone_number_missing',
     })
 
     return false
@@ -411,7 +425,14 @@ export async function sendAlertPush(
       return false
     }
 
-    const baseUrl = config.alerts.unsubscribe.baseUrl || 'http://localhost:3000'
+    const baseUrl = resolveAlertBaseUrl()
+    if (!baseUrl) {
+      logger.warn('alert_push_site_url_missing', {
+        user_id: userId,
+        alert_id: alertId,
+      })
+      return false
+    }
     const result = await sendPushNotification(pool, userId, {
       title,
       body: message,

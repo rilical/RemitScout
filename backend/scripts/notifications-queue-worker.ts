@@ -95,7 +95,8 @@ const runWorker = async () => {
       const deleteHandles: string[] = []
 
       for (const message of messages) {
-        if (!validatePayload(message.payload)) {
+        const payload = message.payload
+        if (!validatePayload(payload)) {
           logger.warn('notifications_item_invalid', { message_id: message.messageId })
           deleteHandles.push(message.receiptHandle)
           continue
@@ -110,7 +111,7 @@ const runWorker = async () => {
 
         try {
           await withWorkerRetry(
-            () => dispatchQueuedSignal(pool, message.payload),
+            () => dispatchQueuedSignal(pool, payload),
             {
               maxRetries: 3,
               initialDelayMs: 1000,

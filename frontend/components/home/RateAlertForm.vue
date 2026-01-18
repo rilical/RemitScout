@@ -32,6 +32,7 @@
                   id="from-country"
                   v-model="selectedFromCountry"
                   label="From"
+                  :exclude-country="selectedToCountry"
                   placeholder="Select country"
                 />
               </div>
@@ -46,6 +47,7 @@
                   id="to-country"
                   v-model="selectedToCountry"
                   label="To"
+                  :exclude-country="selectedFromCountry"
                   placeholder="Select country"
                 />
               </div>

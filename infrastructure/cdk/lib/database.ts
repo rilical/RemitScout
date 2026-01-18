@@ -1,6 +1,7 @@
 import { Duration, RemovalPolicy } from 'aws-cdk-lib'
 import {
   AuroraPostgresEngineVersion,
+  ClusterInstance,
   Credentials,
   DatabaseCluster,
   DatabaseClusterEngine,
@@ -26,6 +27,7 @@ export type DatabaseOptions = {
 
 export const createDatabase = (scope: Construct, options: DatabaseOptions): DatabaseResources => {
   const isProd = options.envName === 'prod'
+  const isDev = options.envName === 'dev'
 
   const credentialsSecret = new Secret(scope, 'AuroraMasterSecret', {
     secretName: `remit-scout/${options.envName}/database/master`,
@@ -37,24 +39,39 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
 
-  const cluster = new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
+  const clusterBaseProps = {
     engine: DatabaseClusterEngine.auroraPostgres({
       version: AuroraPostgresEngineVersion.VER_15_14,
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
-    instances: isProd ? 2 : 1,
-    instanceProps: {
-      vpc: options.vpc,
-      vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-      securityGroups: [options.dbSecurityGroup],
-      instanceType: new InstanceType(isProd ? 'r6g.xlarge' : 'r6g.large'),
-    },
     defaultDatabaseName: 'remit_scout',
     backup: { retention: Duration.days(isProd ? 30 : 7) },
     storageEncrypted: true,
     deletionProtection: isProd,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-  })
+  }
+
+  const cluster = isDev
+    ? new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
+        ...clusterBaseProps,
+        vpc: options.vpc,
+        vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+        securityGroups: [options.dbSecurityGroup],
+        writer: ClusterInstance.serverlessV2('Writer'),
+        serverlessV2MinCapacity: 0,
+        serverlessV2MaxCapacity: 1,
+        serverlessV2AutoPauseDuration: Duration.minutes(30),
+      })
+    : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
+        ...clusterBaseProps,
+        instances: isProd ? 2 : 1,
+        instanceProps: {
+          vpc: options.vpc,
+          vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+          securityGroups: [options.dbSecurityGroup],
+          instanceType: new InstanceType(isProd ? 'r6g.xlarge' : 'r6g.large'),
+        },
+      })
 
   const proxy = new DatabaseProxy(scope, 'RemitScoutDbProxy', {
     proxyTarget: ProxyTarget.fromCluster(cluster),

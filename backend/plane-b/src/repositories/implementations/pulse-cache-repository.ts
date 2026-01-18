@@ -48,14 +48,14 @@ const PROVIDER_COLORS: Record<string, string> = {
   best: '#10b981',
 }
 
-const toNumber = (value: string | number | null | undefined, fallback = 0) => {
+const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-const toIsoString = (value: Date | string | null | undefined) => {
+const toIsoString = (value: unknown) => {
   if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
+  const date = value instanceof Date ? value : new Date(String(value))
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 

@@ -74,7 +74,7 @@ const hashString = (value: string) => {
   return Math.abs(hash)
 }
 
-const pickWeighted = <T extends { weight?: number }>(ads: T[], seed: string) => {
+const pickWeighted = <T extends { weight?: number | null }>(ads: T[], seed: string) => {
   const totalWeight = ads.reduce((sum, ad) => sum + (ad.weight ?? 1), 0)
   if (totalWeight <= 0) return ads[0]
   const target = hashString(seed) % totalWeight
@@ -466,9 +466,9 @@ export const adsRoutes = async (app: FastifyInstance) => {
         const values: Array<string | number | boolean | null> = []
         let index = 2
 
-        const setField = (field: string, value: unknown) => {
+        const setField = (field: string, value: string | number | boolean | null) => {
           updates.push(`${field} = $${index}`)
-          values.push(value as any)
+          values.push(value)
           index += 1
         }
 

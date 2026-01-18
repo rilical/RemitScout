@@ -165,7 +165,7 @@ export const extractPaysendMethodPairs = (
   request?: CollectorRequest | string,
 ) => {
   const corridorId = typeof request === 'string' ? request : request?.corridor_id
-  const payinCandidates = [
+  const payinCandidates: unknown[] = [
     payload.paymentForm?.payIn,
     payload.paymentForm?.payInMethod,
     payload.paymentForm?.paymentMethod,
@@ -175,7 +175,7 @@ export const extractPaysendMethodPairs = (
     payload.payinMethod,
   ]
 
-  const payoutCandidates = [
+  const payoutCandidates: unknown[] = [
     payload.paymentForm?.payOut,
     payload.paymentForm?.payOutMethod,
     payload.paymentForm?.deliveryMethod,

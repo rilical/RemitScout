@@ -358,6 +358,7 @@
                   id="from-country"
                   v-model="moneyForm.from"
                   label="Sending from"
+                  :exclude-country="moneyForm.to"
                   placeholder="United States"
                 />
               </div>
@@ -373,6 +374,7 @@
                   id="to-country"
                   v-model="moneyForm.to"
                   label="Receiving in"
+                  :exclude-country="moneyForm.from"
                   placeholder="Select country"
                 />
               </div>

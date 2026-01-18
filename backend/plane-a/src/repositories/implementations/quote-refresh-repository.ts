@@ -19,6 +19,26 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
     const queueUrl = config.queues.quoteRefreshUrl
     const queueEnabled = queueMode !== 'off' && Boolean(queueUrl)
 
+    const existing = await query<{ status: string }>(
+      `SELECT status
+         FROM silver.quote_refresh_request
+        WHERE provider_id = $1
+          AND corridor_id = $2
+          AND amount_bucket = $3
+          AND payin_method = $4
+          AND payout_method = $5`,
+      [
+        input.providerId,
+        input.corridorId,
+        input.amountBucket,
+        input.payinMethod,
+        input.payoutMethod,
+      ],
+      this.pool,
+    )
+    const existingStatus = existing.rows[0]?.status ?? null
+    const shouldEnqueue = !existingStatus || !['pending', 'processing'].includes(existingStatus)
+
     if (queueMode === 'queue' && !queueEnabled) {
       this.logger.warn('queue_mode_without_url', {
         mode: queueMode,
@@ -49,7 +69,7 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
 
     const requestId = result.rows[0]?.request_id ?? null
 
-    if (requestId && queueEnabled) {
+    if (requestId && queueEnabled && shouldEnqueue) {
       try {
         await sendJsonMessage(queueUrl, {
           requestId,
@@ -65,6 +85,11 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
           error: error instanceof Error ? error.message : String(error),
         })
       }
+    } else if (requestId && queueEnabled && !shouldEnqueue) {
+      this.logger.debug('queue_enqueue_skipped', {
+        request_id: requestId,
+        status: existingStatus,
+      })
     }
 
     return requestId

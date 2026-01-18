@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 
 export const handler = async (): Promise<void> => {
@@ -28,8 +26,28 @@ export const handler = async (): Promise<void> => {
     },
   ])
 
-  const ingestPath = path.resolve(__dirname, '..', '..', 'plane-b', 'ingest')
-  const { runIngestion } = await import(ingestPath)
+  // Use TS source when available (dev/tsx), fall back to built output in prod.
+  const candidates = [
+    '../../plane-b/src/ingest',
+    '../../plane-b/ingest',
+    '../../dist/plane-b/ingest',
+  ] as const
+  let runIngestion: typeof import('../../plane-b/src/ingest').runIngestion | undefined
+  let lastError: unknown
+  for (const candidate of candidates) {
+    try {
+      ({ runIngestion } = await import(candidate))
+      break
+    } catch (error) {
+      lastError = error
+    }
+  }
+  if (!runIngestion) {
+    const message = lastError instanceof Error ? lastError.message : String(lastError)
+    throw new Error(
+      `Failed to load plane-b ingestion module (tried ${candidates.join(', ')}): ${message}`,
+    )
+  }
   await runIngestion()
 }
 

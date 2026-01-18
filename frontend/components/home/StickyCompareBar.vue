@@ -259,6 +259,7 @@ onBeforeUnmount(() => {
                 id="sheet-from-country"
                 v-model="form.from"
                 label="Sending from"
+                :exclude-country="form.to"
                 placeholder="United States"
               />
             </div>
@@ -274,6 +275,7 @@ onBeforeUnmount(() => {
                 id="sheet-to-country"
                 v-model="form.to"
                 label="Receiving in"
+                :exclude-country="form.from"
                 placeholder="Type in Country"
               />
             </div>

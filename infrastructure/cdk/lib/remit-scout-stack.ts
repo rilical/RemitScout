@@ -46,6 +46,15 @@ const toList = (value: string | string[] | undefined): string[] => {
   return []
 }
 
+const normalizeOrigin = (value?: string): string => {
+  if (!value) return ''
+  try {
+    return new URL(value).origin
+  } catch {
+    return value.replace(/\/$/, '')
+  }
+}
+
 export type RemitScoutStackProps = StackProps & {
   envName?: string
 }
@@ -115,18 +124,30 @@ export class RemitScoutStack extends Stack {
     const redisSsmName =
       this.node.tryGetContext('redisSsmName') ??
       process.env.REDIS_SSM_NAME
+    const redisUrl = `rediss://${cache.replicationGroup.attrPrimaryEndPointAddress}:${cache.replicationGroup.attrPrimaryEndPointPort}`
+    const devSharedSecretArn =
+      this.node.tryGetContext('devSharedSecretArn') ??
+      process.env.DEV_SHARED_SECRET_ARN ??
+      (envName === 'dev'
+        ? 'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K'
+        : undefined)
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
-      process.env.SUPABASE_SECRET_ARN
+      process.env.SUPABASE_SECRET_ARN ??
+      devSharedSecretArn
     const supabaseSsmName =
       this.node.tryGetContext('supabaseSsmName') ??
       process.env.SUPABASE_SSM_NAME
     const stripeSecretArn =
       this.node.tryGetContext('stripeSecretArn') ??
-      process.env.STRIPE_SECRET_ARN
+      process.env.STRIPE_SECRET_ARN ??
+      devSharedSecretArn
     const stripeSsmName =
       this.node.tryGetContext('stripeSsmName') ??
       process.env.STRIPE_SSM_NAME
+    const communicationsSecretArn =
+      this.node.tryGetContext('communicationsSecretArn') ??
+      process.env.COMMUNICATIONS_SECRET_ARN
     const oandaSecretArn =
       this.node.tryGetContext('oandaSecretArn') ??
       process.env.OANDA_SECRET_ARN
@@ -169,13 +190,30 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBOpsAlertsMode') ??
       process.env.PLANE_B_OPS_ALERT_QUEUE_MODE ??
       (envName === 'prod' ? 'queue' : 'off')
+    const b2cRefreshServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('planeBB2cRefreshServiceEnabled') ??
+        process.env.PLANE_B_B2C_REFRESH_SERVICE_ENABLED,
+    ) ?? (envName === 'prod')
     const b2cQueueInSweep =
       this.node.tryGetContext('planeBB2cQueueInSweep') ??
-      process.env.PLANE_B_B2C_QUEUE_IN_SWEEP
+      process.env.PLANE_B_B2C_QUEUE_IN_SWEEP ??
+      (b2cRefreshServiceEnabled ? undefined : (envName === 'dev' ? '1' : undefined))
+    const quoteRefreshQueueMode =
+      this.node.tryGetContext('quoteRefreshQueueMode') ??
+      process.env.QUOTE_REFRESH_QUEUE_MODE ??
+      (envName === 'dev' ? 'queue' : (envName === 'prod' ? 'queue' : 'off'))
     const exportJobQueueMode =
       this.node.tryGetContext('exportJobQueueMode') ??
       process.env.EXPORT_JOB_QUEUE_MODE ??
       (envName === 'prod' ? 'queue' : 'off')
+    const planeBIngestDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBIngestDesiredCount') ??
+        process.env.PLANE_B_INGEST_DESIRED_COUNT,
+    ) ?? (envName === 'dev' ? 1 : undefined)
+    const planeBQueueWorkerDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
+        process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
+    ) ?? (envName === 'dev' ? 1 : undefined)
     const bronzePrefix =
       this.node.tryGetContext('bronzePrefix') ??
       process.env.BRONZE_S3_PREFIX ??
@@ -198,11 +236,11 @@ export class RemitScoutStack extends Stack {
     const enableCloudFront = toOptionalBool(
       this.node.tryGetContext('enableCloudFront') ??
         process.env.ENABLE_CLOUDFRONT,
-    )
+    ) ?? (envName === 'prod')
     const enableWaf = toOptionalBool(
       this.node.tryGetContext('enableWaf') ??
         process.env.ENABLE_WAF,
-    )
+    ) ?? (envName === 'prod')
     const enablePlaneAJwtAuth = toOptionalBool(
       this.node.tryGetContext('enablePlaneAJwtAuth') ??
         process.env.PLANE_A_ENABLE_JWT_AUTH,
@@ -232,7 +270,7 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeAAdminEmails') ??
       process.env.PLANE_A_ADMIN_EMAILS,
     )
-    const planeACorsOrigins = toList(
+    const planeACorsOriginsRaw = toList(
       this.node.tryGetContext('planeACorsOrigins') ??
       process.env.PLANE_A_CORS_ORIGINS,
     )
@@ -248,10 +286,18 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeACorsAllowCredentials') ??
         process.env.PLANE_A_CORS_ALLOW_CREDENTIALS,
     )
+    const frontendDomainName =
+      this.node.tryGetContext('frontendDomainName') ??
+      process.env.FRONTEND_DOMAIN_NAME
     const frontendBaseUrl =
       this.node.tryGetContext('frontendBaseUrl') ??
       process.env.FRONTEND_BASE_URL ??
-      process.env.PUBLIC_SITE_URL
+      process.env.PUBLIC_SITE_URL ??
+      (frontendDomainName ? `https://${frontendDomainName}` : undefined)
+    const normalizedFrontendOrigin = normalizeOrigin(frontendBaseUrl)
+    const planeACorsOrigins = planeACorsOriginsRaw.length
+      ? planeACorsOriginsRaw
+      : (normalizedFrontendOrigin ? [normalizedFrontendOrigin] : [])
     const publicSupabaseUrl =
       this.node.tryGetContext('publicSupabaseUrl') ??
       process.env.PUBLIC_SUPABASE_URL ??
@@ -364,10 +410,12 @@ export class RemitScoutStack extends Stack {
       redisSecretArn,
       redisSecretJsonKey,
       redisSsmName,
+      redisUrl,
       planeBDbHost,
       planeBDbPort,
       planeBDbName,
       quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+      quoteRefreshQueueMode,
       ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
       notificationsQueueUrl: queues.notificationsQueue.queueUrl,
       opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
@@ -382,6 +430,7 @@ export class RemitScoutStack extends Stack {
       bronzeBucketName: storage.bronzeBucket.bucketName,
       bronzePrefix,
       b2cQueueInSweep,
+      b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
       ingestFanoutMode,
       notificationsMode,
       opsAlertsMode,
@@ -394,6 +443,7 @@ export class RemitScoutStack extends Stack {
       planeASecurityGroup: networking.planeASecurityGroup,
       planeCSecurityGroup: networking.planeCSecurityGroup,
       quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+      quoteRefreshQueueMode,
       exportJobQueueUrl: queues.exportJobQueue.queueUrl,
       exportJobQueueMode,
       exportsBucketName: storage.exportsBucket.bucketName,
@@ -410,6 +460,7 @@ export class RemitScoutStack extends Stack {
       supabaseSsmName,
       stripeSecretArn,
       stripeSsmName,
+      communicationsSecretArn,
       planeAAdminEmails,
       planeACorsOrigins,
       planeACorsAllowedHeaders,
@@ -425,6 +476,7 @@ export class RemitScoutStack extends Stack {
       redisSecretArn,
       redisSecretJsonKey,
       redisSsmName,
+      redisUrl,
       planeCBaseUrl,
       enableCloudFront,
       enableWaf,
@@ -455,7 +507,7 @@ export class RemitScoutStack extends Stack {
     const frontend = createFrontend(this, {
       envName,
       frontendDomainName:
-        this.node.tryGetContext('frontendDomainName') ?? process.env.FRONTEND_DOMAIN_NAME,
+        frontendDomainName,
       frontendCertificateArn:
         this.node.tryGetContext('frontendCertificateArn') ?? process.env.FRONTEND_CERT_ARN,
       frontendHostedZoneId:
@@ -477,6 +529,7 @@ export class RemitScoutStack extends Stack {
       cluster: compute.cluster,
       planeBSecurityGroup: networking.planeBSecurityGroup,
       planeBIngestTask: tasks.planeBIngestTask,
+      b2cRefreshTask: tasks.b2cRefreshTask,
       ingestFanoutTask: tasks.ingestFanoutTask,
       notificationsQueueTask: tasks.notificationsQueueTask,
       opsAlertsQueueTask: tasks.opsAlertsQueueTask,
@@ -484,6 +537,9 @@ export class RemitScoutStack extends Stack {
       ingestFanoutMode,
       notificationsMode,
       opsAlertsMode,
+      b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? 1 : 0,
+      planeBIngestDesiredCount,
+      queueWorkerDesiredCount: planeBQueueWorkerDesiredCount,
     })
 
     // Create SNS subscriptions for alert routing (Slack, PagerDuty)
@@ -528,6 +584,7 @@ export class RemitScoutStack extends Stack {
       frontendBucket: frontend?.bucket,
       frontendDistribution: frontend?.distribution,
       planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
+      planeAApiEndpoint: api.planeAApi.apiEndpoint,
       publicSupabaseUrl,
       publicSupabaseAnonKey,
     })
@@ -537,7 +594,11 @@ export class RemitScoutStack extends Stack {
       roles: iam,
       cluster: compute.cluster,
       b2cRefreshTask: tasks.b2cRefreshTask,
+      b2cRefreshServiceEnabled,
+      vpc: networking.vpc,
+      planeASecurityGroup: networking.planeASecurityGroup,
       planeBSecurityGroup: networking.planeBSecurityGroup,
+      planeCSecurityGroup: networking.planeCSecurityGroup,
       otelLambdaLayerArn,
       planeBDbSecretArn,
       planeBDbSsmName,
@@ -545,13 +606,17 @@ export class RemitScoutStack extends Stack {
       planeCDbSsmName,
       redisSecretArn,
       redisSsmName,
+      redisUrl,
       oandaSecretArn,
       oandaSsmName,
+      communicationsSecretArn,
       planeADbSecretArn,
       planeADbSsmName,
       planeADbHost,
       planeADbPort,
       planeADbName,
+      quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+      quoteRefreshQueueMode,
       exportJobQueueUrl: queues.exportJobQueue.queueUrl,
       exportJobQueueMode,
       exportsBucketName: storage.exportsBucket.bucketName,
@@ -579,10 +644,13 @@ export class RemitScoutStack extends Stack {
     queues.alertEvaluationQueue.grantConsumeMessages(iam.planeALambdaRole)
     queues.ingestFanoutQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.ingestFanoutDlq.grantSendMessages(iam.planeBEcsTaskRole)
     queues.notificationsQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.notificationsQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.notificationsDlq.grantSendMessages(iam.planeBEcsTaskRole)
     queues.opsAlertsQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.opsAlertsQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.opsAlertsDlq.grantSendMessages(iam.planeBEcsTaskRole)
 
     new CfnOutput(this, 'VpcId', {
       value: networking.vpc.vpcId,

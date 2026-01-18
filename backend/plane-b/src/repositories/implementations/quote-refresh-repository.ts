@@ -75,11 +75,11 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
           FOR UPDATE
        )
        UPDATE silver.quote_refresh_request AS req
-          SET status = $5,
-              locked_at = NOW(),
-              retry_count = CASE
-                WHEN $6 IS NULL THEN req.retry_count
-                ELSE GREATEST(req.retry_count, $6)
+        SET status = $5,
+            locked_at = NOW(),
+            retry_count = CASE
+                WHEN $6::int IS NULL THEN req.retry_count
+                ELSE GREATEST(req.retry_count, $6::int)
               END
         FROM next
         WHERE req.request_id = next.request_id

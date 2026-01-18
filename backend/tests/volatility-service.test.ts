@@ -5,7 +5,15 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 
+const planeBUrl = process.env.DATABASE_URL_PLANE_B || process.env.DATABASE_URL
+const shouldRun = Boolean(planeBUrl)
+
 describe('VolatilityService', () => {
+  if (!shouldRun) {
+    it.skip('DATABASE_URL_PLANE_B or DATABASE_URL required', () => {})
+    return
+  }
+
   let pool: Pool
   let service: VolatilityService
   const corridorIds = ['US-BR-USD-BRL', 'US-TH-USD-THB', 'GB-ZA-GBP-ZAR', 'CA-JP-CAD-JPY']

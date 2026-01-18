@@ -77,7 +77,7 @@ describe('alert-evaluation-worker', () => {
       {
         messageId: 'msg-1',
         receiptHandle: 'receipt-1',
-        payload: { frequency: 'hourly' },
+        payload: { frequency: 'weekly' },
         attributes: {},
         raw: {},
       },
@@ -89,7 +89,7 @@ describe('alert-evaluation-worker', () => {
     expect(mockGetQueueDepth).toHaveBeenCalled()
     expect(mockEvaluateAlertsForFrequency).toHaveBeenCalledWith(
       expect.any(Object),
-      'hourly',
+      'weekly',
       undefined,
     )
     expect(mockDeleteMessages).toHaveBeenCalledWith(

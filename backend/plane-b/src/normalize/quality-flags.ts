@@ -44,6 +44,9 @@ export const qualityFlags = {
   /** Quote is stale (older than freshness threshold) */
   stale: 'stale',
 
+  /** Delivery time is estimated from method profile defaults */
+  estimated_delivery: 'estimated_delivery',
+
   /** Send amount is below provider's minimum send amount */
   min_send_violation: 'min_send_violation',
 

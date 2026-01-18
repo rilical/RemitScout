@@ -487,6 +487,577 @@
     "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/VPCGW"
    }
   },
+  "RemitScoutVpcS3GatewayEndpoint66EF5A09": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "RouteTableIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1RouteTable6680C817"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2RouteTableDFA3A160"
+     }
+    ],
+    "ServiceName": {
+     "Fn::Join": [
+      "",
+      [
+       "com.amazonaws.",
+       {
+        "Ref": "AWS::Region"
+       },
+       ".s3"
+      ]
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcEndpointType": "Gateway",
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/S3GatewayEndpoint/Resource"
+   }
+  },
+  "RemitScoutVpcEcrApiEndpointSecurityGroupD8FC1DE5": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "remit-scout-dev/RemitScoutVpc/EcrApiEndpoint/SecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "RemitScoutVpc880ACCCD",
+        "CidrBlock"
+       ]
+      },
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "from ",
+         {
+          "Fn::GetAtt": [
+           "RemitScoutVpc880ACCCD",
+           "CidrBlock"
+          ]
+         },
+         ":443"
+        ]
+       ]
+      },
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/EcrApiEndpoint/SecurityGroup/Resource"
+   }
+  },
+  "RemitScoutVpcEcrApiEndpoint009DD3C0": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RemitScoutVpcEcrApiEndpointSecurityGroupD8FC1DE5",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.us-east-1.ecr.api",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/EcrApiEndpoint/Resource"
+   }
+  },
+  "RemitScoutVpcEcrDockerEndpointSecurityGroupB8D38D21": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "remit-scout-dev/RemitScoutVpc/EcrDockerEndpoint/SecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "RemitScoutVpc880ACCCD",
+        "CidrBlock"
+       ]
+      },
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "from ",
+         {
+          "Fn::GetAtt": [
+           "RemitScoutVpc880ACCCD",
+           "CidrBlock"
+          ]
+         },
+         ":443"
+        ]
+       ]
+      },
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/EcrDockerEndpoint/SecurityGroup/Resource"
+   }
+  },
+  "RemitScoutVpcEcrDockerEndpoint83257DB1": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RemitScoutVpcEcrDockerEndpointSecurityGroupB8D38D21",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.us-east-1.ecr.dkr",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/EcrDockerEndpoint/Resource"
+   }
+  },
+  "RemitScoutVpcCloudWatchLogsEndpointSecurityGroup992A266F": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "remit-scout-dev/RemitScoutVpc/CloudWatchLogsEndpoint/SecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "RemitScoutVpc880ACCCD",
+        "CidrBlock"
+       ]
+      },
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "from ",
+         {
+          "Fn::GetAtt": [
+           "RemitScoutVpc880ACCCD",
+           "CidrBlock"
+          ]
+         },
+         ":443"
+        ]
+       ]
+      },
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/CloudWatchLogsEndpoint/SecurityGroup/Resource"
+   }
+  },
+  "RemitScoutVpcCloudWatchLogsEndpoint3E26CFF2": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RemitScoutVpcCloudWatchLogsEndpointSecurityGroup992A266F",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.us-east-1.logs",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/CloudWatchLogsEndpoint/Resource"
+   }
+  },
+  "RemitScoutVpcSecretsManagerEndpointSecurityGroup1BE15ED2": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "remit-scout-dev/RemitScoutVpc/SecretsManagerEndpoint/SecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "RemitScoutVpc880ACCCD",
+        "CidrBlock"
+       ]
+      },
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "from ",
+         {
+          "Fn::GetAtt": [
+           "RemitScoutVpc880ACCCD",
+           "CidrBlock"
+          ]
+         },
+         ":443"
+        ]
+       ]
+      },
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/SecretsManagerEndpoint/SecurityGroup/Resource"
+   }
+  },
+  "RemitScoutVpcSecretsManagerEndpoint35E50F97": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RemitScoutVpcSecretsManagerEndpointSecurityGroup1BE15ED2",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.us-east-1.secretsmanager",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/SecretsManagerEndpoint/Resource"
+   }
+  },
+  "RemitScoutVpcSsmEndpointSecurityGroup249C3AE9": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "remit-scout-dev/RemitScoutVpc/SsmEndpoint/SecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "RemitScoutVpc880ACCCD",
+        "CidrBlock"
+       ]
+      },
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "from ",
+         {
+          "Fn::GetAtt": [
+           "RemitScoutVpc880ACCCD",
+           "CidrBlock"
+          ]
+         },
+         ":443"
+        ]
+       ]
+      },
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/SsmEndpoint/SecurityGroup/Resource"
+   }
+  },
+  "RemitScoutVpcSsmEndpointFC4A3F32": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RemitScoutVpcSsmEndpointSecurityGroup249C3AE9",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.us-east-1.ssm",
+    "SubnetIds": [
+     {
+      "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+     },
+     {
+      "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "Name",
+      "Value": "remit-scout-dev/RemitScoutVpc"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "RemitScoutVpc880ACCCD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutVpc/SsmEndpoint/Resource"
+   }
+  },
   "PlaneASecurityGroupAAB7E8B7": {
    "Type": "AWS::EC2::SecurityGroup",
    "Properties": {
@@ -877,7 +1448,10 @@
         "secretsmanager:DescribeSecret"
        ],
        "Effect": "Allow",
-       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+       "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+       ]
       },
       {
        "Action": [
@@ -1198,7 +1772,10 @@
         "secretsmanager:DescribeSecret"
        ],
        "Effect": "Allow",
-       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+       "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+       ]
       },
       {
        "Action": [
@@ -1313,7 +1890,10 @@
         "secretsmanager:DescribeSecret"
        ],
        "Effect": "Allow",
-       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+       "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+       ]
       },
       {
        "Action": [
@@ -1416,7 +1996,10 @@
         "secretsmanager:DescribeSecret"
        ],
        "Effect": "Allow",
-       "Resource": "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*"
+       "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+       ]
       },
       {
        "Action": [
@@ -1490,33 +2073,7 @@
        "Effect": "Allow",
        "Resource": {
         "Fn::GetAtt": [
-         "PlaneBIngestOtelLogGroupA9D18DF9",
-         "Arn"
-        ]
-       }
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
          "B2cRefreshLogGroupDC2A3BB4",
-         "Arn"
-        ]
-       }
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
-         "B2cRefreshOtelLogGroup4D21F34B",
          "Arn"
         ]
        }
@@ -1542,19 +2099,6 @@
        "Effect": "Allow",
        "Resource": {
         "Fn::GetAtt": [
-         "IngestFanoutOtelLogGroup6BF15611",
-         "Arn"
-        ]
-       }
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
          "NotificationsQueueLogGroupF541F644",
          "Arn"
         ]
@@ -1568,33 +2112,7 @@
        "Effect": "Allow",
        "Resource": {
         "Fn::GetAtt": [
-         "NotificationsQueueOtelLogGroupE39CC762",
-         "Arn"
-        ]
-       }
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
          "OpsAlertsQueueLogGroup2404481D",
-         "Arn"
-        ]
-       }
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
-         "OpsAlertsQueueOtelLogGroup2B6C87D0",
          "Arn"
         ]
        }
@@ -1660,6 +2178,22 @@
        ],
        "Effect": "Allow",
        "Resource": "*"
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+       ]
+      },
+      {
+       "Action": "events:PutEvents",
+       "Effect": "Allow",
+       "Resource": "arn:aws:events:*:*:event-bus/default"
       },
       {
        "Action": [
@@ -1753,6 +2287,20 @@
        "Effect": "Allow",
        "Resource": {
         "Fn::GetAtt": [
+         "IngestFanoutDlq3CC657DF",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
          "NotificationsQueue3B766469",
          "Arn"
         ]
@@ -1783,6 +2331,20 @@
        "Effect": "Allow",
        "Resource": {
         "Fn::GetAtt": [
+         "NotificationsDlq12302AF4",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
          "OpsAlertsQueue3B41FDE7",
          "Arn"
         ]
@@ -1800,6 +2362,20 @@
        "Resource": {
         "Fn::GetAtt": [
          "OpsAlertsQueue3B41FDE7",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "OpsAlertsDlq793A9410",
          "Arn"
         ]
        }
@@ -1951,6 +2527,11 @@
      ]
     },
     "Port": 5432,
+    "ServerlessV2ScalingConfiguration": {
+     "MaxCapacity": 1,
+     "MinCapacity": 0,
+     "SecondsUntilAutoPause": 1800
+    },
     "StorageEncrypted": true,
     "Tags": [
      {
@@ -1977,17 +2558,15 @@
     "aws:cdk:path": "remit-scout-dev/RemitScoutAuroraCluster/Resource"
    }
   },
-  "RemitScoutAuroraClusterInstance140ECBA32": {
+  "RemitScoutAuroraClusterWriter8452F24C": {
    "Type": "AWS::RDS::DBInstance",
    "Properties": {
     "DBClusterIdentifier": {
      "Ref": "RemitScoutAuroraCluster4AA33BAB"
     },
-    "DBInstanceClass": "db.r6g.large",
-    "DBSubnetGroupName": {
-     "Ref": "RemitScoutAuroraClusterSubnets4D3BB01A"
-    },
+    "DBInstanceClass": "db.serverless",
     "Engine": "aurora-postgresql",
+    "PromotionTier": 0,
     "PubliclyAccessible": false,
     "Tags": [
      {
@@ -2009,7 +2588,7 @@
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete",
    "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/RemitScoutAuroraCluster/Instance1"
+    "aws:cdk:path": "remit-scout-dev/RemitScoutAuroraCluster/Writer/Resource"
    }
   },
   "RemitScoutDbProxyIAMRole9CB56781": {
@@ -2143,8 +2722,8 @@
     "TargetGroupName": "default"
    },
    "DependsOn": [
-    "RemitScoutAuroraClusterInstance140ECBA32",
-    "RemitScoutAuroraCluster4AA33BAB"
+    "RemitScoutAuroraCluster4AA33BAB",
+    "RemitScoutAuroraClusterWriter8452F24C"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RemitScoutDbProxy/ProxyTargetGroup"
@@ -2769,6 +3348,22 @@
     "aws:cdk:path": "remit-scout-dev/RemitScoutCluster/Resource"
    }
   },
+  "RemitScoutClusterA5FF9737": {
+   "Type": "AWS::ECS::ClusterCapacityProviderAssociations",
+   "Properties": {
+    "CapacityProviders": [
+     "FARGATE",
+     "FARGATE_SPOT"
+    ],
+    "Cluster": {
+     "Ref": "RemitScoutCluster47990504"
+    },
+    "DefaultCapacityProviderStrategy": []
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RemitScoutCluster/RemitScoutCluster"
+   }
+  },
   "PlaneBIngestTask41725D6D": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -2784,12 +3379,20 @@
         "Value": "production"
        },
        {
+        "Name": "NODE_OPTIONS",
+        "Value": "--require /app/backend/shared/node-polyfills.js"
+       },
+       {
         "Name": "PGSSLMODE",
         "Value": "require"
        },
        {
+        "Name": "DB_DISABLE_STATEMENT_TIMEOUT",
+        "Value": "1"
+       },
+       {
         "Name": "TRACING_EXPORTER",
-        "Value": "xray"
+        "Value": "none"
        },
        {
         "Name": "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -2797,7 +3400,7 @@
        },
        {
         "Name": "CLOUDWATCH_METRICS_ENABLED",
-        "Value": "1"
+        "Value": "0"
        },
        {
         "Name": "CLOUDWATCH_NAMESPACE",
@@ -2812,6 +3415,10 @@
         "Value": "0"
        },
        {
+        "Name": "QUOTE_REFRESH_DB_FALLBACK",
+        "Value": "1"
+       },
+       {
         "Name": "PLANE_B_DB_HOST",
         "Value": {
          "Fn::GetAtt": [
@@ -2821,12 +3428,42 @@
         }
        },
        {
+        "Name": "PLANE_B_DB_SECRET_ARN",
+        "Value": {
+         "Ref": "AuroraMasterSecret66504F3D"
+        }
+       },
+       {
         "Name": "PLANE_B_DB_PORT",
         "Value": "5432"
        },
        {
         "Name": "PLANE_B_DB_NAME",
         "Value": "remit_scout"
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "rediss://",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
@@ -2853,6 +3490,10 @@
         }
        },
        {
+        "Name": "QUOTE_REFRESH_QUEUE_MODE",
+        "Value": "queue"
+       },
+       {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
         "Value": "off"
        },
@@ -2873,6 +3514,10 @@
        {
         "Name": "BRONZE_S3_PREFIX",
         "Value": "bronze"
+       },
+       {
+        "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
+        "Value": "1"
        }
       ],
       "Essential": true,
@@ -2921,7 +3566,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":latest"
+         ":cw-off-20260117213034"
         ]
        ]
       },
@@ -2966,39 +3611,6 @@
         }
        }
       ]
-     },
-     {
-      "Cpu": 32,
-      "Environment": [
-       {
-        "Name": "AWS_REGION",
-        "Value": "us-east-1"
-       },
-       {
-        "Name": "AWS_OTEL_CONFIG_CONTENT",
-        "Value": "receivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 0.0.0.0:4318\nexporters:\n  awsxray:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awsxray]"
-       }
-      ],
-      "Essential": true,
-      "Image": "public.ecr.aws/aws-observability/aws-otel-collector:latest",
-      "LogConfiguration": {
-       "LogDriver": "awslogs",
-       "Options": {
-        "awslogs-group": {
-         "Ref": "PlaneBIngestOtelLogGroupA9D18DF9"
-        },
-        "awslogs-stream-prefix": "plane-b-ingest-otel",
-        "awslogs-region": "us-east-1"
-       }
-      },
-      "Memory": 256,
-      "Name": "PlaneBIngestOtelCollector",
-      "PortMappings": [
-       {
-        "ContainerPort": 4318,
-        "Protocol": "tcp"
-       }
-      ]
      }
     ],
     "Cpu": "512",
@@ -3039,7 +3651,7 @@
    "Type": "AWS::Logs::LogGroup",
    "Properties": {
     "LogGroupName": "/remit-scout/dev/plane-b-ingest",
-    "RetentionInDays": 14,
+    "RetentionInDays": 3,
     "Tags": [
      {
       "Key": "environment",
@@ -3057,28 +3669,6 @@
     "aws:cdk:path": "remit-scout-dev/PlaneBIngestLogGroup/Resource"
    }
   },
-  "PlaneBIngestOtelLogGroupA9D18DF9": {
-   "Type": "AWS::Logs::LogGroup",
-   "Properties": {
-    "LogGroupName": "/remit-scout/dev/plane-b-ingest-otel",
-    "RetentionInDays": 14,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/PlaneBIngestOtelLogGroup/Resource"
-   }
-  },
   "B2cRefreshWorkerTask3DA7DC15": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -3094,12 +3684,20 @@
         "Value": "production"
        },
        {
+        "Name": "NODE_OPTIONS",
+        "Value": "--require /app/backend/shared/node-polyfills.js"
+       },
+       {
         "Name": "PGSSLMODE",
         "Value": "require"
        },
        {
+        "Name": "DB_DISABLE_STATEMENT_TIMEOUT",
+        "Value": "1"
+       },
+       {
         "Name": "TRACING_EXPORTER",
-        "Value": "xray"
+        "Value": "none"
        },
        {
         "Name": "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -3107,7 +3705,7 @@
        },
        {
         "Name": "CLOUDWATCH_METRICS_ENABLED",
-        "Value": "1"
+        "Value": "0"
        },
        {
         "Name": "CLOUDWATCH_NAMESPACE",
@@ -3122,6 +3720,10 @@
         "Value": "0"
        },
        {
+        "Name": "QUOTE_REFRESH_DB_FALLBACK",
+        "Value": "1"
+       },
+       {
         "Name": "PLANE_B_DB_HOST",
         "Value": {
          "Fn::GetAtt": [
@@ -3131,12 +3733,42 @@
         }
        },
        {
+        "Name": "PLANE_B_DB_SECRET_ARN",
+        "Value": {
+         "Ref": "AuroraMasterSecret66504F3D"
+        }
+       },
+       {
         "Name": "PLANE_B_DB_PORT",
         "Value": "5432"
        },
        {
         "Name": "PLANE_B_DB_NAME",
         "Value": "remit_scout"
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "rediss://",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
@@ -3163,6 +3795,10 @@
         }
        },
        {
+        "Name": "QUOTE_REFRESH_QUEUE_MODE",
+        "Value": "queue"
+       },
+       {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
         "Value": "off"
        },
@@ -3185,12 +3821,16 @@
         "Value": "bronze"
        },
        {
+        "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
+        "Value": "1"
+       },
+       {
         "Name": "B2C_REFRESH_LIMIT",
-        "Value": "50"
+        "Value": "25"
        },
        {
         "Name": "B2C_REFRESH_CONCURRENCY",
-        "Value": "5"
+        "Value": "2"
        },
        {
         "Name": "B2C_REFRESH_HEALTH_ENABLED",
@@ -3243,7 +3883,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":latest"
+         ":cw-off-20260117213034"
         ]
        ]
       },
@@ -3286,39 +3926,6 @@
           ]
          ]
         }
-       }
-      ]
-     },
-     {
-      "Cpu": 32,
-      "Environment": [
-       {
-        "Name": "AWS_REGION",
-        "Value": "us-east-1"
-       },
-       {
-        "Name": "AWS_OTEL_CONFIG_CONTENT",
-        "Value": "receivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 0.0.0.0:4318\nexporters:\n  awsxray:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awsxray]"
-       }
-      ],
-      "Essential": true,
-      "Image": "public.ecr.aws/aws-observability/aws-otel-collector:latest",
-      "LogConfiguration": {
-       "LogDriver": "awslogs",
-       "Options": {
-        "awslogs-group": {
-         "Ref": "B2cRefreshOtelLogGroup4D21F34B"
-        },
-        "awslogs-stream-prefix": "b2c-refresh-worker-otel",
-        "awslogs-region": "us-east-1"
-       }
-      },
-      "Memory": 256,
-      "Name": "B2cRefreshOtelCollector",
-      "PortMappings": [
-       {
-        "ContainerPort": 4318,
-        "Protocol": "tcp"
        }
       ]
      }
@@ -3467,7 +4074,7 @@
    "Type": "AWS::Logs::LogGroup",
    "Properties": {
     "LogGroupName": "/remit-scout/dev/b2c-refresh-worker",
-    "RetentionInDays": 14,
+    "RetentionInDays": 3,
     "Tags": [
      {
       "Key": "environment",
@@ -3485,28 +4092,6 @@
     "aws:cdk:path": "remit-scout-dev/B2cRefreshLogGroup/Resource"
    }
   },
-  "B2cRefreshOtelLogGroup4D21F34B": {
-   "Type": "AWS::Logs::LogGroup",
-   "Properties": {
-    "LogGroupName": "/remit-scout/dev/b2c-refresh-worker-otel",
-    "RetentionInDays": 14,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/B2cRefreshOtelLogGroup/Resource"
-   }
-  },
   "IngestFanoutWorkerTask160E255A": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -3514,7 +4099,7 @@
      {
       "Command": [
        "node",
-       "backend/dist/scripts/ingest-fanout-worker.js"
+       "backend/dist/scripts/aws/ingest-fanout-worker-ecs.js"
       ],
       "Environment": [
        {
@@ -3522,12 +4107,20 @@
         "Value": "production"
        },
        {
+        "Name": "NODE_OPTIONS",
+        "Value": "--require /app/backend/shared/node-polyfills.js"
+       },
+       {
         "Name": "PGSSLMODE",
         "Value": "require"
        },
        {
+        "Name": "DB_DISABLE_STATEMENT_TIMEOUT",
+        "Value": "1"
+       },
+       {
         "Name": "TRACING_EXPORTER",
-        "Value": "xray"
+        "Value": "none"
        },
        {
         "Name": "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -3535,7 +4128,7 @@
        },
        {
         "Name": "CLOUDWATCH_METRICS_ENABLED",
-        "Value": "1"
+        "Value": "0"
        },
        {
         "Name": "CLOUDWATCH_NAMESPACE",
@@ -3550,6 +4143,10 @@
         "Value": "0"
        },
        {
+        "Name": "QUOTE_REFRESH_DB_FALLBACK",
+        "Value": "1"
+       },
+       {
         "Name": "PLANE_B_DB_HOST",
         "Value": {
          "Fn::GetAtt": [
@@ -3559,12 +4156,42 @@
         }
        },
        {
+        "Name": "PLANE_B_DB_SECRET_ARN",
+        "Value": {
+         "Ref": "AuroraMasterSecret66504F3D"
+        }
+       },
+       {
         "Name": "PLANE_B_DB_PORT",
         "Value": "5432"
        },
        {
         "Name": "PLANE_B_DB_NAME",
         "Value": "remit_scout"
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "rediss://",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
@@ -3591,6 +4218,10 @@
         }
        },
        {
+        "Name": "QUOTE_REFRESH_QUEUE_MODE",
+        "Value": "queue"
+       },
+       {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
         "Value": "off"
        },
@@ -3611,6 +4242,10 @@
        {
         "Name": "BRONZE_S3_PREFIX",
         "Value": "bronze"
+       },
+       {
+        "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
+        "Value": "1"
        }
       ],
       "Essential": true,
@@ -3659,7 +4294,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":latest"
+         ":cw-off-20260117213034"
         ]
        ]
       },
@@ -3704,39 +4339,6 @@
         }
        }
       ]
-     },
-     {
-      "Cpu": 32,
-      "Environment": [
-       {
-        "Name": "AWS_REGION",
-        "Value": "us-east-1"
-       },
-       {
-        "Name": "AWS_OTEL_CONFIG_CONTENT",
-        "Value": "receivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 0.0.0.0:4318\nexporters:\n  awsxray:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awsxray]"
-       }
-      ],
-      "Essential": true,
-      "Image": "public.ecr.aws/aws-observability/aws-otel-collector:latest",
-      "LogConfiguration": {
-       "LogDriver": "awslogs",
-       "Options": {
-        "awslogs-group": {
-         "Ref": "IngestFanoutOtelLogGroup6BF15611"
-        },
-        "awslogs-stream-prefix": "ingest-fanout-worker-otel",
-        "awslogs-region": "us-east-1"
-       }
-      },
-      "Memory": 256,
-      "Name": "IngestFanoutOtelCollector",
-      "PortMappings": [
-       {
-        "ContainerPort": 4318,
-        "Protocol": "tcp"
-       }
-      ]
      }
     ],
     "Cpu": "512",
@@ -3777,7 +4379,7 @@
    "Type": "AWS::Logs::LogGroup",
    "Properties": {
     "LogGroupName": "/remit-scout/dev/ingest-fanout-worker",
-    "RetentionInDays": 14,
+    "RetentionInDays": 3,
     "Tags": [
      {
       "Key": "environment",
@@ -3795,28 +4397,6 @@
     "aws:cdk:path": "remit-scout-dev/IngestFanoutLogGroup/Resource"
    }
   },
-  "IngestFanoutOtelLogGroup6BF15611": {
-   "Type": "AWS::Logs::LogGroup",
-   "Properties": {
-    "LogGroupName": "/remit-scout/dev/ingest-fanout-worker-otel",
-    "RetentionInDays": 14,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/IngestFanoutOtelLogGroup/Resource"
-   }
-  },
   "NotificationsQueueWorkerTask7919B5A7": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -3824,7 +4404,7 @@
      {
       "Command": [
        "node",
-       "backend/dist/scripts/notifications-queue-worker.js"
+       "backend/dist/scripts/aws/notifications-queue-worker-ecs.js"
       ],
       "Environment": [
        {
@@ -3832,12 +4412,20 @@
         "Value": "production"
        },
        {
+        "Name": "NODE_OPTIONS",
+        "Value": "--require /app/backend/shared/node-polyfills.js"
+       },
+       {
         "Name": "PGSSLMODE",
         "Value": "require"
        },
        {
+        "Name": "DB_DISABLE_STATEMENT_TIMEOUT",
+        "Value": "1"
+       },
+       {
         "Name": "TRACING_EXPORTER",
-        "Value": "xray"
+        "Value": "none"
        },
        {
         "Name": "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -3845,7 +4433,7 @@
        },
        {
         "Name": "CLOUDWATCH_METRICS_ENABLED",
-        "Value": "1"
+        "Value": "0"
        },
        {
         "Name": "CLOUDWATCH_NAMESPACE",
@@ -3860,6 +4448,10 @@
         "Value": "0"
        },
        {
+        "Name": "QUOTE_REFRESH_DB_FALLBACK",
+        "Value": "1"
+       },
+       {
         "Name": "PLANE_B_DB_HOST",
         "Value": {
          "Fn::GetAtt": [
@@ -3869,12 +4461,42 @@
         }
        },
        {
+        "Name": "PLANE_B_DB_SECRET_ARN",
+        "Value": {
+         "Ref": "AuroraMasterSecret66504F3D"
+        }
+       },
+       {
         "Name": "PLANE_B_DB_PORT",
         "Value": "5432"
        },
        {
         "Name": "PLANE_B_DB_NAME",
         "Value": "remit_scout"
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "rediss://",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
@@ -3901,6 +4523,10 @@
         }
        },
        {
+        "Name": "QUOTE_REFRESH_QUEUE_MODE",
+        "Value": "queue"
+       },
+       {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
         "Value": "off"
        },
@@ -3921,6 +4547,10 @@
        {
         "Name": "BRONZE_S3_PREFIX",
         "Value": "bronze"
+       },
+       {
+        "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
+        "Value": "1"
        }
       ],
       "Essential": true,
@@ -3969,7 +4599,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":latest"
+         ":cw-off-20260117213034"
         ]
        ]
       },
@@ -4014,39 +4644,6 @@
         }
        }
       ]
-     },
-     {
-      "Cpu": 32,
-      "Environment": [
-       {
-        "Name": "AWS_REGION",
-        "Value": "us-east-1"
-       },
-       {
-        "Name": "AWS_OTEL_CONFIG_CONTENT",
-        "Value": "receivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 0.0.0.0:4318\nexporters:\n  awsxray:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awsxray]"
-       }
-      ],
-      "Essential": true,
-      "Image": "public.ecr.aws/aws-observability/aws-otel-collector:latest",
-      "LogConfiguration": {
-       "LogDriver": "awslogs",
-       "Options": {
-        "awslogs-group": {
-         "Ref": "NotificationsQueueOtelLogGroupE39CC762"
-        },
-        "awslogs-stream-prefix": "notifications-queue-worker-otel",
-        "awslogs-region": "us-east-1"
-       }
-      },
-      "Memory": 256,
-      "Name": "NotificationsQueueOtelCollector",
-      "PortMappings": [
-       {
-        "ContainerPort": 4318,
-        "Protocol": "tcp"
-       }
-      ]
      }
     ],
     "Cpu": "256",
@@ -4087,7 +4684,7 @@
    "Type": "AWS::Logs::LogGroup",
    "Properties": {
     "LogGroupName": "/remit-scout/dev/notifications-queue-worker",
-    "RetentionInDays": 14,
+    "RetentionInDays": 3,
     "Tags": [
      {
       "Key": "environment",
@@ -4105,28 +4702,6 @@
     "aws:cdk:path": "remit-scout-dev/NotificationsQueueLogGroup/Resource"
    }
   },
-  "NotificationsQueueOtelLogGroupE39CC762": {
-   "Type": "AWS::Logs::LogGroup",
-   "Properties": {
-    "LogGroupName": "/remit-scout/dev/notifications-queue-worker-otel",
-    "RetentionInDays": 14,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/NotificationsQueueOtelLogGroup/Resource"
-   }
-  },
   "OpsAlertsQueueWorkerTask9089B6AC": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -4134,7 +4709,7 @@
      {
       "Command": [
        "node",
-       "backend/dist/scripts/ops-alerts-queue-worker.js"
+       "backend/dist/scripts/aws/ops-alerts-queue-worker-ecs.js"
       ],
       "Environment": [
        {
@@ -4142,12 +4717,20 @@
         "Value": "production"
        },
        {
+        "Name": "NODE_OPTIONS",
+        "Value": "--require /app/backend/shared/node-polyfills.js"
+       },
+       {
         "Name": "PGSSLMODE",
         "Value": "require"
        },
        {
+        "Name": "DB_DISABLE_STATEMENT_TIMEOUT",
+        "Value": "1"
+       },
+       {
         "Name": "TRACING_EXPORTER",
-        "Value": "xray"
+        "Value": "none"
        },
        {
         "Name": "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -4155,7 +4738,7 @@
        },
        {
         "Name": "CLOUDWATCH_METRICS_ENABLED",
-        "Value": "1"
+        "Value": "0"
        },
        {
         "Name": "CLOUDWATCH_NAMESPACE",
@@ -4170,6 +4753,10 @@
         "Value": "0"
        },
        {
+        "Name": "QUOTE_REFRESH_DB_FALLBACK",
+        "Value": "1"
+       },
+       {
         "Name": "PLANE_B_DB_HOST",
         "Value": {
          "Fn::GetAtt": [
@@ -4179,12 +4766,42 @@
         }
        },
        {
+        "Name": "PLANE_B_DB_SECRET_ARN",
+        "Value": {
+         "Ref": "AuroraMasterSecret66504F3D"
+        }
+       },
+       {
         "Name": "PLANE_B_DB_PORT",
         "Value": "5432"
        },
        {
         "Name": "PLANE_B_DB_NAME",
         "Value": "remit_scout"
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "rediss://",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "RedisReplicationGroup",
+             "PrimaryEndPoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_URL",
@@ -4211,6 +4828,10 @@
         }
        },
        {
+        "Name": "QUOTE_REFRESH_QUEUE_MODE",
+        "Value": "queue"
+       },
+       {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
         "Value": "off"
        },
@@ -4231,6 +4852,10 @@
        {
         "Name": "BRONZE_S3_PREFIX",
         "Value": "bronze"
+       },
+       {
+        "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
+        "Value": "1"
        }
       ],
       "Essential": true,
@@ -4279,7 +4904,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":latest"
+         ":cw-off-20260117213034"
         ]
        ]
       },
@@ -4324,39 +4949,6 @@
         }
        }
       ]
-     },
-     {
-      "Cpu": 32,
-      "Environment": [
-       {
-        "Name": "AWS_REGION",
-        "Value": "us-east-1"
-       },
-       {
-        "Name": "AWS_OTEL_CONFIG_CONTENT",
-        "Value": "receivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 0.0.0.0:4318\nexporters:\n  awsxray:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awsxray]"
-       }
-      ],
-      "Essential": true,
-      "Image": "public.ecr.aws/aws-observability/aws-otel-collector:latest",
-      "LogConfiguration": {
-       "LogDriver": "awslogs",
-       "Options": {
-        "awslogs-group": {
-         "Ref": "OpsAlertsQueueOtelLogGroup2B6C87D0"
-        },
-        "awslogs-stream-prefix": "ops-alerts-queue-worker-otel",
-        "awslogs-region": "us-east-1"
-       }
-      },
-      "Memory": 256,
-      "Name": "OpsAlertsQueueOtelCollector",
-      "PortMappings": [
-       {
-        "ContainerPort": 4318,
-        "Protocol": "tcp"
-       }
-      ]
      }
     ],
     "Cpu": "256",
@@ -4397,7 +4989,7 @@
    "Type": "AWS::Logs::LogGroup",
    "Properties": {
     "LogGroupName": "/remit-scout/dev/ops-alerts-queue-worker",
-    "RetentionInDays": 14,
+    "RetentionInDays": 3,
     "Tags": [
      {
       "Key": "environment",
@@ -4415,42 +5007,21 @@
     "aws:cdk:path": "remit-scout-dev/OpsAlertsQueueLogGroup/Resource"
    }
   },
-  "OpsAlertsQueueOtelLogGroup2B6C87D0": {
-   "Type": "AWS::Logs::LogGroup",
-   "Properties": {
-    "LogGroupName": "/remit-scout/dev/ops-alerts-queue-worker-otel",
-    "RetentionInDays": 14,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/OpsAlertsQueueOtelLogGroup/Resource"
-   }
-  },
   "PlaneCApiFunction02CF465E": {
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "f11cbb63cf80ee3ea1eb8806377fe40e2014971890110a57236b0e8302d608b6.zip"
+     "S3Key": "9c300d0af6f2abbd3913009610635534a3613a0797d03c100f6377d77a70dffd.zip"
     },
     "Environment": {
      "Variables": {
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -4462,6 +5033,27 @@
       },
       "PLANE_C_DB_PORT": "5432",
       "PLANE_C_DB_NAME": "remit_scout",
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
+      },
       "PLANE_C_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
       }
@@ -4487,9 +5079,6 @@
      }
     ],
     "Timeout": 30,
-    "TracingConfig": {
-     "Mode": "Active"
-    },
     "VpcConfig": {
      "SecurityGroupIds": [
       {
@@ -4519,7 +5108,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/PlaneCApiFunction/Resource",
-    "aws:asset:path": "asset.f11cbb63cf80ee3ea1eb8806377fe40e2014971890110a57236b0e8302d608b6",
+    "aws:asset:path": "asset.9c300d0af6f2abbd3913009610635534a3613a0797d03c100f6377d77a70dffd",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -4816,15 +5405,16 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "bd1df68fde784853d40b3710f146e13bbc95919b7ea60eb94832c41c749cde29.zip"
+     "S3Key": "b23016faa9197ccc118aede409335797193a47f15145f24e136769ad974a7c66.zip"
     },
     "Environment": {
      "Variables": {
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -4839,6 +5429,7 @@
       "QUOTE_REFRESH_QUEUE_URL": {
        "Ref": "QuoteRefreshQueue342D1DBA"
       },
+      "QUOTE_REFRESH_QUEUE_MODE": "queue",
       "EXPORT_JOB_QUEUE_URL": {
        "Ref": "ExportJobQueue5D8CA1FF"
       },
@@ -4851,6 +5442,28 @@
        "Ref": "UserAssetsBucket8B59E294"
       },
       "USER_ASSETS_S3_PREFIX": "avatars",
+      "PLANE_A_ADMIN_EMAILS": "omar@remit-scout.com",
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
+      },
       "PLANE_C_BASE_URL": {
        "Fn::GetAtt": [
         "PlaneCHttpApi95BE662B",
@@ -4884,9 +5497,6 @@
      }
     ],
     "Timeout": 30,
-    "TracingConfig": {
-     "Mode": "Active"
-    },
     "VpcConfig": {
      "SecurityGroupIds": [
       {
@@ -4916,7 +5526,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/PlaneAApiFunction/Resource",
-    "aws:asset:path": "asset.bd1df68fde784853d40b3710f146e13bbc95919b7ea60eb94832c41c749cde29",
+    "aws:asset:path": "asset.b23016faa9197ccc118aede409335797193a47f15145f24e136769ad974a7c66",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -6006,7 +6616,7 @@
      "MaximumPercent": 200,
      "MinimumHealthyPercent": 50
     },
-    "DesiredCount": 0,
+    "DesiredCount": 1,
     "EnableECSManagedTags": false,
     "LaunchType": "FARGATE",
     "NetworkConfiguration": {
@@ -6052,9 +6662,15 @@
     "aws:cdk:path": "remit-scout-dev/PlaneBIngestService/Service"
    }
   },
-  "IngestFanoutWorkerService58DE2198": {
+  "B2cRefreshWorkerService63E3776D": {
    "Type": "AWS::ECS::Service",
    "Properties": {
+    "CapacityProviderStrategy": [
+     {
+      "CapacityProvider": "FARGATE_SPOT",
+      "Weight": 1
+     }
+    ],
     "Cluster": {
      "Ref": "RemitScoutCluster47990504"
     },
@@ -6069,7 +6685,72 @@
     },
     "DesiredCount": 0,
     "EnableECSManagedTags": false,
-    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "PlaneBSecurityGroup1D22FE93",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+       },
+       {
+        "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+       }
+      ]
+     }
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "B2cRefreshWorkerTask3DA7DC15"
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/B2cRefreshWorkerService/Service"
+   }
+  },
+  "IngestFanoutWorkerService58DE2198": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "CapacityProviderStrategy": [
+     {
+      "CapacityProvider": "FARGATE_SPOT",
+      "Weight": 1
+     }
+    ],
+    "Cluster": {
+     "Ref": "RemitScoutCluster47990504"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 0,
+    "EnableECSManagedTags": false,
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
       "AssignPublicIp": "DISABLED",
@@ -6116,6 +6797,12 @@
   "NotificationsQueueWorkerService2727E158": {
    "Type": "AWS::ECS::Service",
    "Properties": {
+    "CapacityProviderStrategy": [
+     {
+      "CapacityProvider": "FARGATE_SPOT",
+      "Weight": 1
+     }
+    ],
     "Cluster": {
      "Ref": "RemitScoutCluster47990504"
     },
@@ -6130,7 +6817,6 @@
     },
     "DesiredCount": 0,
     "EnableECSManagedTags": false,
-    "LaunchType": "FARGATE",
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
       "AssignPublicIp": "DISABLED",
@@ -6293,482 +6979,6 @@
    },
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/OpsAlertsTopic/Resource"
-   }
-  },
-  "SyntheticsArtifactsBucketD0DC82F9": {
-   "Type": "AWS::S3::Bucket",
-   "Properties": {
-    "BucketName": "remit-scout-dev-synthetics-artifacts",
-    "Tags": [
-     {
-      "Key": "aws-cdk:auto-delete-objects",
-      "Value": "true"
-     },
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/SyntheticsArtifactsBucket/Resource"
-   }
-  },
-  "SyntheticsArtifactsBucketPolicy0B961147": {
-   "Type": "AWS::S3::BucketPolicy",
-   "Properties": {
-    "Bucket": {
-     "Ref": "SyntheticsArtifactsBucketD0DC82F9"
-    },
-    "PolicyDocument": {
-     "Statement": [
-      {
-       "Action": [
-        "s3:PutBucketPolicy",
-        "s3:GetBucket*",
-        "s3:List*",
-        "s3:DeleteObject*"
-       ],
-       "Effect": "Allow",
-       "Principal": {
-        "AWS": {
-         "Fn::GetAtt": [
-          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
-          "Arn"
-         ]
-        }
-       },
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SyntheticsArtifactsBucketD0DC82F9",
-          "Arn"
-         ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           {
-            "Fn::GetAtt": [
-             "SyntheticsArtifactsBucketD0DC82F9",
-             "Arn"
-            ]
-           },
-           "/*"
-          ]
-         ]
-        }
-       ]
-      }
-     ],
-     "Version": "2012-10-17"
-    }
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/SyntheticsArtifactsBucket/Policy/Resource"
-   }
-  },
-  "SyntheticsArtifactsBucketAutoDeleteObjectsCustomResourceEC7C601F": {
-   "Type": "Custom::S3AutoDeleteObjects",
-   "Properties": {
-    "ServiceToken": {
-     "Fn::GetAtt": [
-      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
-      "Arn"
-     ]
-    },
-    "BucketName": {
-     "Ref": "SyntheticsArtifactsBucketD0DC82F9"
-    }
-   },
-   "DependsOn": [
-    "SyntheticsArtifactsBucketPolicy0B961147"
-   ],
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/SyntheticsArtifactsBucket/AutoDeleteObjectsCustomResource/Default"
-   }
-  },
-  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
-   "Type": "AWS::IAM::Role",
-   "Properties": {
-    "AssumeRolePolicyDocument": {
-     "Version": "2012-10-17",
-     "Statement": [
-      {
-       "Action": "sts:AssumeRole",
-       "Effect": "Allow",
-       "Principal": {
-        "Service": "lambda.amazonaws.com"
-       }
-      }
-     ]
-    },
-    "ManagedPolicyArns": [
-     {
-      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
-   }
-  },
-  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
-   "Type": "AWS::Lambda::Function",
-   "Properties": {
-    "Code": {
-     "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
-    },
-    "Timeout": 900,
-    "MemorySize": 128,
-    "Handler": "index.handler",
-    "Role": {
-     "Fn::GetAtt": [
-      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
-      "Arn"
-     ]
-    },
-    "Runtime": "nodejs22.x",
-    "Description": {
-     "Fn::Join": [
-      "",
-      [
-       "Lambda function for auto-deleting objects in ",
-       {
-        "Ref": "SyntheticsArtifactsBucketD0DC82F9"
-       },
-       " S3 bucket."
-      ]
-     ]
-    }
-   },
-   "DependsOn": [
-    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
-   ],
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
-    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
-    "aws:asset:property": "Code"
-   }
-  },
-  "SyntheticsExecutionRole7C51B804": {
-   "Type": "AWS::IAM::Role",
-   "Properties": {
-    "AssumeRolePolicyDocument": {
-     "Statement": [
-      {
-       "Action": "sts:AssumeRole",
-       "Effect": "Allow",
-       "Principal": {
-        "Service": "lambda.amazonaws.com"
-       }
-      }
-     ],
-     "Version": "2012-10-17"
-    },
-    "Description": "Role for CloudWatch Synthetics canaries",
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/SyntheticsExecutionRole/Resource"
-   }
-  },
-  "SyntheticsExecutionRoleDefaultPolicy77898CB7": {
-   "Type": "AWS::IAM::Policy",
-   "Properties": {
-    "PolicyDocument": {
-     "Statement": [
-      {
-       "Action": [
-        "s3:PutObject",
-        "s3:GetBucketLocation",
-        "s3:ListAllMyBuckets",
-        "xray:PutTraceSegments",
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": "*"
-      },
-      {
-       "Action": [
-        "s3:GetObject*",
-        "s3:GetBucket*",
-        "s3:List*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging",
-        "s3:Abort*"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SyntheticsArtifactsBucketD0DC82F9",
-          "Arn"
-         ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           {
-            "Fn::GetAtt": [
-             "SyntheticsArtifactsBucketD0DC82F9",
-             "Arn"
-            ]
-           },
-           "/*"
-          ]
-         ]
-        }
-       ]
-      }
-     ],
-     "Version": "2012-10-17"
-    },
-    "PolicyName": "SyntheticsExecutionRoleDefaultPolicy77898CB7",
-    "Roles": [
-     {
-      "Ref": "SyntheticsExecutionRole7C51B804"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/SyntheticsExecutionRole/DefaultPolicy/Resource"
-   }
-  },
-  "HealthCheckCanary": {
-   "Type": "AWS::Synthetics::Canary",
-   "Properties": {
-    "ArtifactS3Location": {
-     "Fn::Join": [
-      "",
-      [
-       "s3://",
-       {
-        "Ref": "SyntheticsArtifactsBucketD0DC82F9"
-       },
-       "/health-check"
-      ]
-     ]
-    },
-    "Code": {
-     "Handler": "index.handler",
-     "Script": {
-      "Fn::Join": [
-       "",
-       [
-        "const synthetics = require('Synthetics');\nconst log = require('SyntheticsLogger');\n\nconst apiCanaryBlueprint = async function () {\n  const targetUrl = '",
-        {
-         "Fn::GetAtt": [
-          "PlaneAHttpApi827058CE",
-          "ApiEndpoint"
-         ]
-        },
-        "/healthz';\n  const parsedUrl = new URL(targetUrl);\n  const requestOptions = {\n    hostname: parsedUrl.hostname,\n    method: 'GET',\n    path: parsedUrl.pathname,\n    port: parsedUrl.port || (targetUrl.startsWith('https') ? 443 : 80),\n    protocol: parsedUrl.protocol.replace(':', ''),\n    headers: {\n      'User-Agent': 'CloudWatch-Synthetics',\n    },\n  };\n\n  const stepConfig = {\n    includeRequestHeaders: true,\n    includeResponseHeaders: true,\n    includeRequestBody: true,\n    includeResponseBody: true,\n    logRequestBody: true,\n    logResponseBody: true,\n    restrictedHeaders: [],\n    restrictedUrlParameters: [],\n  };\n\n  await synthetics.executeHttpStep('HealthCheck', requestOptions, stepConfig);\n};\n\nexports.handler = async () => {\n  return await apiCanaryBlueprint();\n};"
-       ]
-      ]
-     }
-    },
-    "ExecutionRoleArn": {
-     "Fn::GetAtt": [
-      "SyntheticsExecutionRole7C51B804",
-      "Arn"
-     ]
-    },
-    "FailureRetentionPeriod": 30,
-    "Name": "remit-scout-dev-health-check",
-    "RunConfig": {
-     "ActiveTracing": true,
-     "MemoryInMB": 1000,
-     "TimeoutInSeconds": 30
-    },
-    "RuntimeVersion": "syn-nodejs-puppeteer-7.0",
-    "Schedule": {
-     "Expression": "rate(1 minute)"
-    },
-    "SuccessRetentionPeriod": 30,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/HealthCheckCanary"
-   }
-  },
-  "QuotesCanary": {
-   "Type": "AWS::Synthetics::Canary",
-   "Properties": {
-    "ArtifactS3Location": {
-     "Fn::Join": [
-      "",
-      [
-       "s3://",
-       {
-        "Ref": "SyntheticsArtifactsBucketD0DC82F9"
-       },
-       "/quotes"
-      ]
-     ]
-    },
-    "Code": {
-     "Handler": "index.handler",
-     "Script": {
-      "Fn::Join": [
-       "",
-       [
-        "const synthetics = require('Synthetics');\nconst log = require('SyntheticsLogger');\n\nconst apiCanaryBlueprint = async function () {\n  const targetUrl = '",
-        {
-         "Fn::GetAtt": [
-          "PlaneAHttpApi827058CE",
-          "ApiEndpoint"
-         ]
-        },
-        "/api/quotes/current?from=USD&to=EUR&amount=100';\n  const parsedUrl = new URL(targetUrl);\n  const requestOptions = {\n    hostname: parsedUrl.hostname,\n    method: 'GET',\n    path: parsedUrl.pathname,\n    port: parsedUrl.port || (targetUrl.startsWith('https') ? 443 : 80),\n    protocol: parsedUrl.protocol.replace(':', ''),\n    headers: {\n      'User-Agent': 'CloudWatch-Synthetics',\n    },\n  };\n\n  const stepConfig = {\n    includeRequestHeaders: true,\n    includeResponseHeaders: true,\n    includeRequestBody: true,\n    includeResponseBody: true,\n    logRequestBody: true,\n    logResponseBody: true,\n    restrictedHeaders: [],\n    restrictedUrlParameters: [],\n  };\n\n  await synthetics.executeHttpStep('Quotes', requestOptions, stepConfig);\n};\n\nexports.handler = async () => {\n  return await apiCanaryBlueprint();\n};"
-       ]
-      ]
-     }
-    },
-    "ExecutionRoleArn": {
-     "Fn::GetAtt": [
-      "SyntheticsExecutionRole7C51B804",
-      "Arn"
-     ]
-    },
-    "FailureRetentionPeriod": 30,
-    "Name": "remit-scout-dev-quotes",
-    "RunConfig": {
-     "ActiveTracing": true,
-     "MemoryInMB": 1000,
-     "TimeoutInSeconds": 60
-    },
-    "RuntimeVersion": "syn-nodejs-puppeteer-7.0",
-    "Schedule": {
-     "Expression": "rate(5 minutes)"
-    },
-    "SuccessRetentionPeriod": 30,
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/QuotesCanary"
-   }
-  },
-  "HealthCheckCanaryAlarmA833E8ED": {
-   "Type": "AWS::CloudWatch::Alarm",
-   "Properties": {
-    "AlarmActions": [
-     {
-      "Ref": "CriticalAlertsTopicF16F2E77"
-     }
-    ],
-    "AlarmDescription": "Health check synthetic test is failing",
-    "AlarmName": "remit-scout-dev-synthetic-health-check-failure",
-    "ComparisonOperator": "LessThanThreshold",
-    "Dimensions": [
-     {
-      "Name": "CanaryName",
-      "Value": "remit-scout-dev-health-check"
-     }
-    ],
-    "EvaluationPeriods": 1,
-    "MetricName": "SuccessPercent",
-    "Namespace": "CloudWatchSynthetics",
-    "Period": 300,
-    "Statistic": "Average",
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ],
-    "Threshold": 100,
-    "TreatMissingData": "breaching"
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/HealthCheckCanaryAlarm/Resource"
-   }
-  },
-  "QuotesCanaryAlarm9FB57ED8": {
-   "Type": "AWS::CloudWatch::Alarm",
-   "Properties": {
-    "AlarmActions": [
-     {
-      "Ref": "CriticalAlertsTopicF16F2E77"
-     }
-    ],
-    "AlarmDescription": "Quotes synthetic test is failing",
-    "AlarmName": "remit-scout-dev-synthetic-quotes-failure",
-    "ComparisonOperator": "LessThanThreshold",
-    "Dimensions": [
-     {
-      "Name": "CanaryName",
-      "Value": "remit-scout-dev-quotes"
-     }
-    ],
-    "EvaluationPeriods": 1,
-    "MetricName": "SuccessPercent",
-    "Namespace": "CloudWatchSynthetics",
-    "Period": 300,
-    "Statistic": "Average",
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ],
-    "Threshold": 100,
-    "TreatMissingData": "breaching"
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/QuotesCanaryAlarm/Resource"
    }
   },
   "RemitScoutDashboardC279D8C6": {
@@ -8784,16 +8994,17 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "b5d9b24db2cc0876b791ab99b549bb1db49b72a799d81568e285b3b1e0ed5e46.zip"
+     "S3Key": "0f884c32f701c5dae5ca74d52a83ea955207ebaee2021c58fb6d026d544dc7c5.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -8807,6 +9018,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -8830,17 +9062,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldFxRatesJobFunction/Resource",
-    "aws:asset:path": "asset.b5d9b24db2cc0876b791ab99b549bb1db49b72a799d81568e285b3b1e0ed5e46",
+    "aws:asset:path": "asset.0f884c32f701c5dae5ca74d52a83ea955207ebaee2021c58fb6d026d544dc7c5",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -8865,8 +9116,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldFxRatesJobFunction/LogRetention/Resource"
    }
@@ -8933,16 +9190,17 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "33320bbc6dd568a6fe73994e1b6d96c514fc11fa16e0e0f9b70ec2f1af37a439.zip"
+     "S3Key": "94f8e9aeb64c5be58695cadd09938619db087059f402d8619a2d7c6896a8c3c9.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -8964,6 +9222,27 @@
       "EXPORTS_S3_PREFIX": "exports",
       "PLANE_A_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -8987,17 +9266,36 @@
      }
     ],
     "Timeout": 900,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/ExportWorkerFunction/Resource",
-    "aws:asset:path": "asset.33320bbc6dd568a6fe73994e1b6d96c514fc11fa16e0e0f9b70ec2f1af37a439",
+    "aws:asset:path": "asset.94f8e9aeb64c5be58695cadd09938619db087059f402d8619a2d7c6896a8c3c9",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9022,8 +9320,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/ExportWorkerFunction/LogRetention/Resource"
    }
@@ -9090,15 +9394,15 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "98c83d825d1a5f7325746637e3309a4839a07c77d310d455a7c28e1b20d73214.zip"
+     "S3Key": "1e80b3549cf56aab45ade9d6d2ba6c147295930681e78ff478e23217f4a0b2f4.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
-      "TRACING_EXPORTER": "xray",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -9128,17 +9432,36 @@
      }
     ],
     "Timeout": 60,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationSchedulerFunction/Resource",
-    "aws:asset:path": "asset.98c83d825d1a5f7325746637e3309a4839a07c77d310d455a7c28e1b20d73214",
+    "aws:asset:path": "asset.1e80b3549cf56aab45ade9d6d2ba6c147295930681e78ff478e23217f4a0b2f4",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9163,8 +9486,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationSchedulerFunction/LogRetention/Resource"
    }
@@ -9348,16 +9677,17 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "051554fc5af4978cea20bf954105889b607b4f7f4e6b83496cba8c7f3a8239e8.zip"
+     "S3Key": "2fec413806826eb7493731933e389c4735177ef46cc0a2e8d7f3bf85b8d62b82.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -9398,17 +9728,36 @@
      }
     ],
     "Timeout": 900,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationWorkerFunction/Resource",
-    "aws:asset:path": "asset.051554fc5af4978cea20bf954105889b607b4f7f4e6b83496cba8c7f3a8239e8",
+    "aws:asset:path": "asset.2fec413806826eb7493731933e389c4735177ef46cc0a2e8d7f3bf85b8d62b82",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9433,8 +9782,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationWorkerFunction/LogRetention/Resource"
    }
@@ -9501,16 +9856,17 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "68b69a1d46e2e6c4073c6a2896ef64b9e62ff593c526839a3aa532c1384c2c4a.zip"
+     "S3Key": "71b837a277afa715fd77a4c961d90d1ec5ea71030b3babd5e5868192d148097f.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -9547,17 +9903,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/TelemetryAnalyticsJobFunction/Resource",
-    "aws:asset:path": "asset.68b69a1d46e2e6c4073c6a2896ef64b9e62ff593c526839a3aa532c1384c2c4a",
+    "aws:asset:path": "asset.71b837a277afa715fd77a4c961d90d1ec5ea71030b3babd5e5868192d148097f",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9582,8 +9957,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/TelemetryAnalyticsJobFunction/LogRetention/Resource"
    }
@@ -9650,16 +10031,17 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "43f24f43100bffa9820369577eac9752ebfe5eff8c930db1389ad190b919400e.zip"
+     "S3Key": "24fb770152ba850fa56da804e73ae48955800c95bd3d5d21226ca0c240f354a3.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -9696,17 +10078,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/SessionCleanupFunction/Resource",
-    "aws:asset:path": "asset.43f24f43100bffa9820369577eac9752ebfe5eff8c930db1389ad190b919400e",
+    "aws:asset:path": "asset.24fb770152ba850fa56da804e73ae48955800c95bd3d5d21226ca0c240f354a3",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9731,8 +10132,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/SessionCleanupFunction/LogRetention/Resource"
    }
@@ -9794,21 +10201,222 @@
     "aws:cdk:path": "remit-scout-dev/SessionCleanupSchedule/AllowEventRuleremitscoutdevSessionCleanupFunction71922E5B"
    }
   },
-  "AuditLogCleanupFunction158B53A0": {
+  "BankVsSpecialistRefreshFunction102C8EC4": {
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "ee95ab00105d8bba27ca49e78accb8a0085d1bf9d51af35f740f5483018cd628.zip"
+     "S3Key": "078ebad360398b4a878014211d4889ceec7e94536b40970d8487c52f2c545567.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
+      "CLOUDWATCH_NAMESPACE": "RemitScout",
+      "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
+      "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
+      "PLANE_A_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_A_DB_PORT": "5432",
+      "PLANE_A_DB_NAME": "remit_scout",
+      "QUOTE_REFRESH_QUEUE_URL": {
+       "Ref": "QuoteRefreshQueue342D1DBA"
+      },
+      "QUOTE_REFRESH_QUEUE_MODE": "queue",
+      "PLANE_A_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneALambdaRole53C31A9E",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "PlaneALambdaRoleDefaultPolicy47A3B050",
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/BankVsSpecialistRefreshFunction/Resource",
+    "aws:asset:path": "asset.078ebad360398b4a878014211d4889ceec7e94536b40970d8487c52f2c545567",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "BankVsSpecialistRefreshFunctionLogRetentionF19A5CA5": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "BankVsSpecialistRefreshFunction102C8EC4"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3
+   },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/BankVsSpecialistRefreshFunction/LogRetention/Resource"
+   }
+  },
+  "BankVsSpecialistRefreshScheduleC43BEB60": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Enqueues bank vs specialist refresh requests every 30 minutes.",
+    "ScheduleExpression": "rate(30 minutes)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "BankVsSpecialistRefreshFunction102C8EC4",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/BankVsSpecialistRefreshSchedule/Resource"
+   }
+  },
+  "BankVsSpecialistRefreshScheduleAllowEventRuleremitscoutdevBankVsSpecialistRefreshFunctionE446B5D0891EB09E": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BankVsSpecialistRefreshFunction102C8EC4",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "BankVsSpecialistRefreshScheduleC43BEB60",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/BankVsSpecialistRefreshSchedule/AllowEventRuleremitscoutdevBankVsSpecialistRefreshFunctionE446B5D0"
+   }
+  },
+  "AuditLogCleanupFunction158B53A0": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
+     "S3Key": "5e510f8ad787b60a83a86ffb239a139ec78ed53a4a1ddb2deb91b9d1fc2f4171.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PGSSLMODE": "require",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
+      "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -9849,17 +10457,36 @@
      }
     ],
     "Timeout": 600,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AuditLogCleanupFunction/Resource",
-    "aws:asset:path": "asset.ee95ab00105d8bba27ca49e78accb8a0085d1bf9d51af35f740f5483018cd628",
+    "aws:asset:path": "asset.5e510f8ad787b60a83a86ffb239a139ec78ed53a4a1ddb2deb91b9d1fc2f4171",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9884,8 +10511,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AuditLogCleanupFunction/LogRetention/Resource"
    }
@@ -9952,19 +10585,21 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "5dee459ac5a56eb8601009f9d3f0f4814991405255dfb480c5333e074896ac53.zip"
+     "S3Key": "a834a1d24152e19410e30df5ae590645b13e083e68baf29ffd29e107bf23c186.zip"
     },
     "Environment": {
      "Variables": {
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
+      "OANDA_SYNC_INCLUDE_CAPABILITY": "1",
       "PLANE_A_DB_HOST": {
        "Fn::GetAtt": [
         "RemitScoutDbProxy00B4B69D",
@@ -9975,6 +10610,27 @@
       "PLANE_A_DB_NAME": "remit_scout",
       "PLANE_A_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -9998,17 +10654,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneASecurityGroupAAB7E8B7",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneALambdaRoleDefaultPolicy47A3B050",
-    "PlaneALambdaRole53C31A9E"
+    "PlaneALambdaRole53C31A9E",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/OandaSyncJobFunction/Resource",
-    "aws:asset:path": "asset.5dee459ac5a56eb8601009f9d3f0f4814991405255dfb480c5333e074896ac53",
+    "aws:asset:path": "asset.a834a1d24152e19410e30df5ae590645b13e083e68baf29ffd29e107bf23c186",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10033,8 +10708,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/OandaSyncJobFunction/LogRetention/Resource"
    }
@@ -10101,7 +10782,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "4eb8f7a49441f1500bfda0400e5eeebc586701ef5caf50f62012348ffb62a1bc.zip"
+     "S3Key": "49b8f612f4c1ca3b9ce5b69f14b9651f0000fa48f5df9e7f0458b3b33f1337c5.zip"
     },
     "Environment": {
      "Variables": {
@@ -10109,9 +10790,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -10125,6 +10807,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -10148,17 +10851,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPopularCorridorsJobFunction/Resource",
-    "aws:asset:path": "asset.4eb8f7a49441f1500bfda0400e5eeebc586701ef5caf50f62012348ffb62a1bc",
+    "aws:asset:path": "asset.49b8f612f4c1ca3b9ce5b69f14b9651f0000fa48f5df9e7f0458b3b33f1337c5",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10183,8 +10905,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPopularCorridorsJobFunction/LogRetention/Resource"
    }
@@ -10251,7 +10979,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "6b02856153238da74f8330f39d5bfacd12c3dbb94890e10c79375cec925c9477.zip"
+     "S3Key": "bb065e840f5c6be3054000d1b9d52f119e0bd43c49684c1ff7c76a71ccb83791.zip"
     },
     "Environment": {
      "Variables": {
@@ -10259,9 +10987,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -10275,6 +11004,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -10298,17 +11048,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPulseCacheJobFunction/Resource",
-    "aws:asset:path": "asset.6b02856153238da74f8330f39d5bfacd12c3dbb94890e10c79375cec925c9477",
+    "aws:asset:path": "asset.bb065e840f5c6be3054000d1b9d52f119e0bd43c49684c1ff7c76a71ccb83791",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10333,8 +11102,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPulseCacheJobFunction/LogRetention/Resource"
    }
@@ -10401,7 +11176,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "5685285051557d66d61405720796f1c5feebcca230eb77321f9a7bfbeab08a69.zip"
+     "S3Key": "5bf54daefcdbace5a3e7b3168b5997d926dbf1d9b4aa79df44ea7a6504530284.zip"
     },
     "Environment": {
      "Variables": {
@@ -10409,9 +11184,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -10425,6 +11201,27 @@
       "PLANE_C_DB_NAME": "remit_scout",
       "PLANE_C_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -10448,17 +11245,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneCSecurityGroup8E635584",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneCLambdaRoleDefaultPolicy7F08ADF6",
-    "PlaneCLambdaRoleE46EF278"
+    "PlaneCLambdaRoleE46EF278",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPublisherJobFunction/Resource",
-    "aws:asset:path": "asset.5685285051557d66d61405720796f1c5feebcca230eb77321f9a7bfbeab08a69",
+    "aws:asset:path": "asset.5bf54daefcdbace5a3e7b3168b5997d926dbf1d9b4aa79df44ea7a6504530284",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10483,8 +11299,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPublisherJobFunction/LogRetention/Resource"
    }
@@ -10551,7 +11373,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "2779e095a2919b36bd9098717f4e6efd75f8f671c25b5aa16a930ce22b704551.zip"
+     "S3Key": "658828160213b27532a6c82d78330c21598acb3584bfb9a3822d408acccc35c8.zip"
     },
     "Environment": {
      "Variables": {
@@ -10559,9 +11381,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -10575,6 +11398,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -10598,17 +11442,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/B2cRetryFailedJobFunction/Resource",
-    "aws:asset:path": "asset.2779e095a2919b36bd9098717f4e6efd75f8f671c25b5aa16a930ce22b704551",
+    "aws:asset:path": "asset.658828160213b27532a6c82d78330c21598acb3584bfb9a3822d408acccc35c8",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10633,8 +11496,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/B2cRetryFailedJobFunction/LogRetention/Resource"
    }
@@ -10701,7 +11570,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "d32b38a95809a2ea8a319e5829180f2706cb0c607e2c9a968e408518c9a8a53b.zip"
+     "S3Key": "6f0a6b2e35fe74b894e9595998c410c1f4b704887343c2440568ecce2f620181.zip"
     },
     "Environment": {
      "Variables": {
@@ -10709,9 +11578,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -10725,6 +11595,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -10748,17 +11639,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/B2cQueueCleanupJobFunction/Resource",
-    "aws:asset:path": "asset.d32b38a95809a2ea8a319e5829180f2706cb0c607e2c9a968e408518c9a8a53b",
+    "aws:asset:path": "asset.6f0a6b2e35fe74b894e9595998c410c1f4b704887343c2440568ecce2f620181",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10783,8 +11693,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/B2cQueueCleanupJobFunction/LogRetention/Resource"
    }
@@ -10851,7 +11767,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "829dc835bfb12fd3e4a54f5146aec2bbdba0df2763d5aa926777c64d9ed87cdc.zip"
+     "S3Key": "570cc5bf5965a65ed07fa41bc0d6d359fdae16068e003238eb716c7832618c72.zip"
     },
     "Environment": {
      "Variables": {
@@ -10859,9 +11775,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -10875,6 +11792,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -10898,17 +11836,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobFunction/Resource",
-    "aws:asset:path": "asset.829dc835bfb12fd3e4a54f5146aec2bbdba0df2763d5aa926777c64d9ed87cdc",
+    "aws:asset:path": "asset.570cc5bf5965a65ed07fa41bc0d6d359fdae16068e003238eb716c7832618c72",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10933,8 +11890,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobFunction/LogRetention/Resource"
    }
@@ -10996,11 +11959,208 @@
     "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobSchedule/AllowEventRuleremitscoutdevStoplistAutoResumeJobFunction11023268"
    }
   },
+  "RightsMatrixSyncCountriesJobFunction8C61AB64": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
+     "S3Key": "7add31b877a6320531504001b582e1b2298b897fad4b45cb5a14d7bb0716b96a.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "rights-matrix-sync-countries",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PGSSLMODE": "require",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
+      "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
+      "CLOUDWATCH_NAMESPACE": "RemitScout",
+      "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
+      "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
+      "PLANE_B_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_B_DB_PORT": "5432",
+      "PLANE_B_DB_NAME": "remit_scout",
+      "PLANE_B_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneBLambdaRole635FBF0A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "PlaneBLambdaRoleDefaultPolicyBF46AA01",
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RightsMatrixSyncCountriesJobFunction/Resource",
+    "aws:asset:path": "asset.7add31b877a6320531504001b582e1b2298b897fad4b45cb5a14d7bb0716b96a",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "RightsMatrixSyncCountriesJobFunctionLogRetentionE33A0773": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "RightsMatrixSyncCountriesJobFunction8C61AB64"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3
+   },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RightsMatrixSyncCountriesJobFunction/LogRetention/Resource"
+   }
+  },
+  "RightsMatrixSyncCountriesJobSchedule5BE9ED4A": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs rights-matrix-sync-countries on a schedule.",
+    "ScheduleExpression": "rate(1 hour)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "RightsMatrixSyncCountriesJobFunction8C61AB64",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RightsMatrixSyncCountriesJobSchedule/Resource"
+   }
+  },
+  "RightsMatrixSyncCountriesJobScheduleAllowEventRuleremitscoutdevRightsMatrixSyncCountriesJobFunction17B3DD33F6F7A5C6": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "RightsMatrixSyncCountriesJobFunction8C61AB64",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "RightsMatrixSyncCountriesJobSchedule5BE9ED4A",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/RightsMatrixSyncCountriesJobSchedule/AllowEventRuleremitscoutdevRightsMatrixSyncCountriesJobFunction17B3DD33"
+   }
+  },
   "B2cRefreshWorkerScheduleC6D481F4": {
    "Type": "AWS::Events::Rule",
    "Properties": {
-    "Description": "Runs the B2C refresh worker on a 2-minute cadence (matches legacy K8s schedule).",
-    "ScheduleExpression": "rate(2 minutes)",
+    "Description": "Runs the B2C refresh worker on a 1-minute cadence.",
+    "ScheduleExpression": "rate(1 minute)",
     "State": "ENABLED",
     "Tags": [
      {
@@ -11069,7 +12229,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "855edb224423d80998b189cb196b27a917e66096e476baa8d81a8fe0418d61fb.zip"
+     "S3Key": "8aeeba23d35f6565b79e556ed6c6264cbca539167a804e97aea961314d970162.zip"
     },
     "Environment": {
      "Variables": {
@@ -11077,9 +12237,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11093,6 +12254,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -11116,17 +12298,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RemitlyProbeFunction/Resource",
-    "aws:asset:path": "asset.855edb224423d80998b189cb196b27a917e66096e476baa8d81a8fe0418d61fb",
+    "aws:asset:path": "asset.8aeeba23d35f6565b79e556ed6c6264cbca539167a804e97aea961314d970162",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11151,8 +12352,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RemitlyProbeFunction/LogRetention/Resource"
    }
@@ -11219,7 +12426,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "06a24cf67c8b1891f5ad892de358a1399eb7a618e128559cf4a085dffec93d70.zip"
+     "S3Key": "593e1f04fb23df1ddde85938c96b51866da3f6097e3a5efbc581171a720b8bc4.zip"
     },
     "Environment": {
      "Variables": {
@@ -11227,9 +12434,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11243,6 +12451,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -11266,17 +12495,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WesternUnionProbeFunction/Resource",
-    "aws:asset:path": "asset.06a24cf67c8b1891f5ad892de358a1399eb7a618e128559cf4a085dffec93d70",
+    "aws:asset:path": "asset.593e1f04fb23df1ddde85938c96b51866da3f6097e3a5efbc581171a720b8bc4",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11301,8 +12549,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WesternUnionProbeFunction/LogRetention/Resource"
    }
@@ -11369,7 +12623,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "c5d4b66d323cc7f65476f2910cbd15bdaa8ad737cd643afb0a81af1790a1fc58.zip"
+     "S3Key": "b540c25ca47214dfef9c85a6e1b39fe24c51b542480b3a492a3f2e2914cdbc3a.zip"
     },
     "Environment": {
      "Variables": {
@@ -11377,9 +12631,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11393,6 +12648,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -11416,17 +12692,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WiseProbeFunction/Resource",
-    "aws:asset:path": "asset.c5d4b66d323cc7f65476f2910cbd15bdaa8ad737cd643afb0a81af1790a1fc58",
+    "aws:asset:path": "asset.b540c25ca47214dfef9c85a6e1b39fe24c51b542480b3a492a3f2e2914cdbc3a",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11451,8 +12746,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WiseProbeFunction/LogRetention/Resource"
    }
@@ -11519,7 +12820,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "fba6eee9a62048a27b70da2943653f48473c0cd4059655d5f3e84fac431b249e.zip"
+     "S3Key": "af0f2b3a69a1354c066a2771bc44504f768e6afd3933e6fcc4df83300830150a.zip"
     },
     "Environment": {
      "Variables": {
@@ -11527,9 +12828,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11543,6 +12845,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -11566,17 +12889,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WorldRemitProbeFunction/Resource",
-    "aws:asset:path": "asset.fba6eee9a62048a27b70da2943653f48473c0cd4059655d5f3e84fac431b249e",
+    "aws:asset:path": "asset.af0f2b3a69a1354c066a2771bc44504f768e6afd3933e6fcc4df83300830150a",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11601,8 +12943,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WorldRemitProbeFunction/LogRetention/Resource"
    }
@@ -11669,7 +13017,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "f41afef0b61dd97772d28f0d602dc0d4d9534240fef87ef75f7deb96188c5caf.zip"
+     "S3Key": "69ff4c9e465d8d5af6553b5914d11d13dced0407af21dd59718117c6755033a0.zip"
     },
     "Environment": {
      "Variables": {
@@ -11677,9 +13025,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11693,6 +13042,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -11716,17 +13086,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RiaProbeFunction/Resource",
-    "aws:asset:path": "asset.f41afef0b61dd97772d28f0d602dc0d4d9534240fef87ef75f7deb96188c5caf",
+    "aws:asset:path": "asset.69ff4c9e465d8d5af6553b5914d11d13dced0407af21dd59718117c6755033a0",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11751,8 +13140,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RiaProbeFunction/LogRetention/Resource"
    }
@@ -11819,7 +13214,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "812e884a34c90eec8c08bf96f907970098e60663446e47da22e0be538602ac49.zip"
+     "S3Key": "c5e3178ea6c5e20445b6eb85ae112d8b822a57c62a0103dec3fce6d41762ebd1.zip"
     },
     "Environment": {
      "Variables": {
@@ -11827,9 +13222,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11843,6 +13239,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -11866,17 +13283,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/DahabshiilProbeFunction/Resource",
-    "aws:asset:path": "asset.812e884a34c90eec8c08bf96f907970098e60663446e47da22e0be538602ac49",
+    "aws:asset:path": "asset.c5e3178ea6c5e20445b6eb85ae112d8b822a57c62a0103dec3fce6d41762ebd1",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11901,8 +13337,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/DahabshiilProbeFunction/LogRetention/Resource"
    }
@@ -11969,7 +13411,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "eeadf9d14cf2ab826321be777818ecc44aa95df2d018df24836d30771163f360.zip"
+     "S3Key": "55fe57e1ebb973a58fcb4832e2faea710482cf8b7f0ce68f2c95a843c4422041.zip"
     },
     "Environment": {
      "Variables": {
@@ -11977,9 +13419,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -11993,6 +13436,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -12016,17 +13480,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/SendwaveProbeFunction/Resource",
-    "aws:asset:path": "asset.eeadf9d14cf2ab826321be777818ecc44aa95df2d018df24836d30771163f360",
+    "aws:asset:path": "asset.55fe57e1ebb973a58fcb4832e2faea710482cf8b7f0ce68f2c95a843c4422041",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12051,8 +13534,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/SendwaveProbeFunction/LogRetention/Resource"
    }
@@ -12119,7 +13608,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "63f70f297d3ff96b8b25630a38a819ed3ac3ed2590727f8d976ec1bdaa827dbb.zip"
+     "S3Key": "4218d25e6145a71b6c07c207ed6b05573f72ba3d96650a9f93bec8a104e43b3a.zip"
     },
     "Environment": {
      "Variables": {
@@ -12127,9 +13616,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -12143,6 +13633,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -12166,17 +13677,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/MukuruProbeFunction/Resource",
-    "aws:asset:path": "asset.63f70f297d3ff96b8b25630a38a819ed3ac3ed2590727f8d976ec1bdaa827dbb",
+    "aws:asset:path": "asset.4218d25e6145a71b6c07c207ed6b05573f72ba3d96650a9f93bec8a104e43b3a",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12201,8 +13731,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/MukuruProbeFunction/LogRetention/Resource"
    }
@@ -12269,7 +13805,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "a724072010b000d470fc3c243068d31ffff3aa4ca0db72dd1310caff96ff9d6a.zip"
+     "S3Key": "51d9a99ac1326d6032a69e6ddd5f9439cb661e9238576d3dc11ee89f5dd61cc8.zip"
     },
     "Environment": {
      "Variables": {
@@ -12277,9 +13813,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -12293,6 +13830,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -12316,17 +13874,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/XeProbeFunction/Resource",
-    "aws:asset:path": "asset.a724072010b000d470fc3c243068d31ffff3aa4ca0db72dd1310caff96ff9d6a",
+    "aws:asset:path": "asset.51d9a99ac1326d6032a69e6ddd5f9439cb661e9238576d3dc11ee89f5dd61cc8",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12351,8 +13928,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/XeProbeFunction/LogRetention/Resource"
    }
@@ -12419,7 +14002,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "759fcc2a20a27b8173d61c47cdc5e36833cf63ff532ae99d82d93eb93af1037b.zip"
+     "S3Key": "15595169bb62ad10d239c5b8a8d94a06dc793ed5cfbec091008390ea2822f59f.zip"
     },
     "Environment": {
      "Variables": {
@@ -12427,9 +14010,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -12443,6 +14027,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -12466,17 +14071,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WireBarleyProbeFunction/Resource",
-    "aws:asset:path": "asset.759fcc2a20a27b8173d61c47cdc5e36833cf63ff532ae99d82d93eb93af1037b",
+    "aws:asset:path": "asset.15595169bb62ad10d239c5b8a8d94a06dc793ed5cfbec091008390ea2822f59f",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12501,8 +14125,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WireBarleyProbeFunction/LogRetention/Resource"
    }
@@ -12569,7 +14199,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "53123197e60a7eb57e575b6c7c979b67bfae1eba9fc0bbd637555feac9fbaa18.zip"
+     "S3Key": "9d3885248c4146321de047e4deefc97798cef1b20b2ee7ff905d9ec7788d3a55.zip"
     },
     "Environment": {
      "Variables": {
@@ -12577,9 +14207,10 @@
       "ENVIRONMENT": "dev",
       "NODE_ENV": "production",
       "PGSSLMODE": "require",
-      "TRACING_EXPORTER": "xray",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
       "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
-      "CLOUDWATCH_METRICS_ENABLED": "1",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
       "CLOUDWATCH_NAMESPACE": "RemitScout",
       "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
       "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
@@ -12593,6 +14224,27 @@
       "PLANE_B_DB_NAME": "remit_scout",
       "PLANE_B_DB_SECRET_ARN": {
        "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
       }
      }
     },
@@ -12616,17 +14268,36 @@
      }
     ],
     "Timeout": 300,
-    "TracingConfig": {
-     "Mode": "Active"
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneBSecurityGroup1D22FE93",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
     }
    },
    "DependsOn": [
     "PlaneBLambdaRoleDefaultPolicyBF46AA01",
-    "PlaneBLambdaRole635FBF0A"
+    "PlaneBLambdaRole635FBF0A",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/IntermexProbeFunction/Resource",
-    "aws:asset:path": "asset.53123197e60a7eb57e575b6c7c979b67bfae1eba9fc0bbd637555feac9fbaa18",
+    "aws:asset:path": "asset.9d3885248c4146321de047e4deefc97798cef1b20b2ee7ff905d9ec7788d3a55",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12651,8 +14322,14 @@
       ]
      ]
     },
-    "RetentionInDays": 14
+    "RetentionInDays": 3
    },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/IntermexProbeFunction/LogRetention/Resource"
    }
@@ -12717,7 +14394,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31U227bMAz9lr2r2pp8QZqsXYChy5KirwUts44SW/JEKV1g+N9HSY4dZNhezEOKEm+HnsnZfC6/fIIPulPl8a7Whex2HtRRsOmtQzWT3WurxPLdvG6WYhOKWqtdKAz6aJvQ1gaPL1DUONkn24LIKg1eWzM6R/B1vYniGfwTePyAs9g4fWI4Pbw2Hh3ji0POZNAWnnPdN2i82KEKTvvzk7OhTTn817A2lUOiXmhoZLe1Oe8kN5ZrTIEy6gUqxz7YWtLeunQ0ab0gPkdPDRiokD13SR9CRpTFC7gK/VXKo8PtSS9cSbJbgYcCCJd1IG6CyE0Z61k9/GW4eCZlbciDUSgu72yc/X3OZ7cwZ5Be4nJrIK8VJ4OyG6c5huHSuS1pmMMFmsvuIahjLnpAWTxw3AFOfb3W+fYvrvVnwJBGkEBsORuvyrnAR04UIqvouMJ3bfSFU7cWazxog+7KNtzdoTtplXmaYS9qW3G877Yaqxwxgy16ngo/wY7QFCW8GVvigeRzEo/BqBSA5m9AxFSQiygG59TD0SfSCl2jidJ70Ooqc/nEq/bN+3bR6ugURVTzrkQUN6Fy4xLdqJMf72+Vq4uA+2u4tBfb6rTGGaTvNJArtRcFr39oeaJJvkKo81iv1Iw3NZjpJGkZ7rDGsdobE+dzNn6PTDCScbC8NbxSqrah/ACv9rJb1OCa1IMEVkD7woIrE18vClPkxEPh0rZhWF6WfS+2SDY4nm+aQeyBNlXm7XCwZCrZ5h8qr8NJl+gScfnWj+DbwBsZJy4P9Pk0m8v7e/5nHkjrOxeYFw3KbZZ/ANRb8QFQBQAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31UwW7bMAz9lt1VbU2+IE27LsDQeUnRa0HLrKvGljxRSlcY/vdRkmMbKbCL+Ug9S3wkpZVcrdfy2xd4pytVHa8aXcr+4EEdBYeee1Qr2T91SmxfzFOxFUUoG60OoTToY2xGexs8PkLZ4ByfYxsiqzR4bc1EjuBuV0TzAP4ePL7DhyicPjGcN94Zj47xmZAzGb2N51xfWzRejBFO9s5UndXGj9TJTTu9gMIl54AqOO0/7p0NXUr9v4GdqR0SDUJDK/u9zXKTLSyXJuWX0SBQOeZgZ0l769LS7A2CeB09tWCgRmYekj8eGVE2j+Bq9AulE+FyZRCuItnfgocSCLdNIFYsci0nPbc3nwJnZnJ2hjwYheK8T+Hs34+8dglzBmknltsAea04GZT9NATTMSydy5JmYPyB1rK/CeqYRY8omxs+lwl/WM7vgCFVOYFYVQ4uMv4Mt9CB4o5xiiddoVtMH4nvnDLEsaTjLb5oo89DeRmxxoM26Bax8d8DupNWedAzHERja07rp60nvRNmsEfP/eEtmAhtWcGzsRW+kXxI5nswKh1A62cg4qGQm2hGcqrmxIkDhq7VRGk/6HSdR//Ed/WH992m05EUTXTzZYsoXoDaTbfwwp15/ADUWV0E3AbD0h5tp9M7kEH6ziO/cAdR8vsROu5tsk8QmtzghZtx0YCZV5KX4QEbnNRehAahGhuqd/DqNQ47vZYWXJWmcnI2Dbg2VSECHpoT159V7MN4Y9kOg9gj2eC4lancUa42dR7WcYHxr+C7wJcrtky+0dfTai2vr/nVfCOtr1zgxrYo99n+Awv8HBVSBQAA"
    },
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/CDKMetadata/Default"
@@ -12998,10 +14675,6 @@
    "Value": {
     "Ref": "OpsAlertsTopicF77DA89B"
    }
-  },
-  "SyntheticsCanaryNames": {
-   "Description": "CloudWatch Synthetics canary names",
-   "Value": "remit-scout-dev-health-check,remit-scout-dev-quotes"
   }
  },
  "Parameters": {

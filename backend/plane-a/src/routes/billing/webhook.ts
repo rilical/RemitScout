@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
-import { getStripeClient } from '../../services/stripe-client'
+import { getStripeClient, isStripeMockEnabled, isStripeMockMisconfigured } from '../../services/stripe-client'
 import { sendPlusConfirmationEmail } from '../../services/billing-email'
 import { BillingWebhookEventRepository, UserPlanRepository } from '../../repositories'
 
@@ -37,7 +37,12 @@ const toUnixTimestamp = (value: unknown) => {
 
 export const webhookRoutes = async (app: FastifyInstance) => {
   app.post('/billing/webhook', async (request, reply) => {
-    const isMock = config.billing.stripe.mockEnabled
+    if (isStripeMockMisconfigured()) {
+      reply.code(500)
+      return { error: 'billing_misconfigured' }
+    }
+
+    const isMock = isStripeMockEnabled()
 
     if (!isMock && (!config.billing.stripe.webhookSecret || !config.billing.stripe.secretKey)) {
       reply.code(500)
@@ -45,22 +50,33 @@ export const webhookRoutes = async (app: FastifyInstance) => {
     }
 
     const rawBody = request.body
+    const rawBodyBuffer = Buffer.isBuffer(rawBody)
+      ? rawBody
+      : Buffer.from(
+          typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody ?? {}),
+          'utf8',
+        )
     let event: Stripe.Event
     if (isMock) {
       const payload = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : rawBody
-      let parsed: any = payload
+      let parsed: Record<string, unknown> = {}
       if (typeof payload === 'string') {
         try {
-          parsed = JSON.parse(payload)
+          parsed = JSON.parse(payload) as Record<string, unknown>
         } catch {
           parsed = {}
         }
+      } else if (typeof payload === 'object' && payload !== null) {
+        parsed = payload as Record<string, unknown>
       }
+      const dataValue = (parsed.data && typeof parsed.data === 'object' && parsed.data !== null)
+        ? parsed.data as Record<string, unknown>
+        : { object: parsed }
       event = {
-        id: parsed?.id ?? `evt_mock_${Date.now()}`,
-        type: parsed?.type ?? 'checkout.session.completed',
-        data: parsed?.data ?? { object: parsed },
-      } as Stripe.Event
+        id: typeof parsed.id === 'string' ? parsed.id : `evt_mock_${Date.now()}`,
+        type: typeof parsed.type === 'string' ? parsed.type : 'checkout.session.completed',
+        data: dataValue,
+      } as unknown as Stripe.Event
     } else {
       const signature = request.headers['stripe-signature']
       if (typeof signature !== 'string') {
@@ -86,7 +102,7 @@ export const webhookRoutes = async (app: FastifyInstance) => {
     const webhookEventRepo = new BillingWebhookEventRepository(planeAPool)
     const userPlanRepo = new UserPlanRepository(planeAPool)
 
-    const payloadHash = hashPayload(rawBody)
+    const payloadHash = hashPayload(rawBodyBuffer)
     const isNewEvent = await webhookEventRepo.insertEvent({
       eventId: event.id,
       type: event.type,

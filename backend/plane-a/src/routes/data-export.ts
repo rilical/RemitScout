@@ -152,7 +152,7 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
 
   app.get('/data/export/:id', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
-    const jobId = String(request.params.id)
+    const jobId = String((request.params as { id: string }).id)
 
     try {
       const job = await exportJobRepository.getById(jobId)
@@ -186,7 +186,7 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
 
   app.get('/data/export/:id/download', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
-    const jobId = String(request.params.id)
+    const jobId = String((request.params as { id: string }).id)
 
     try {
       const job = await exportJobRepository.getById(jobId)

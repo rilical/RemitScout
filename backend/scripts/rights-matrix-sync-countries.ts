@@ -119,7 +119,7 @@ const corridorSupportEntries: CorridorSupport[] = [
   { providerId: 'mukuru', corridors: MUKURU_SUPPORTED_CORRIDORS },
 ]
 
-const main = async () => {
+export const runRightsMatrixSyncCountries = async (): Promise<void> => {
   const pool = createPool(config.db.planeBUrl)
   const repo = new RightsMatrixRepository(pool)
 
@@ -165,7 +165,13 @@ const main = async () => {
   }
 }
 
-main().catch((error) => {
-  console.error('[rights-matrix] country support sync failed', error)
-  process.exitCode = 1
-})
+if (require.main === module) {
+  runRightsMatrixSyncCountries()
+    .then(() => {
+      process.exit(0)
+    })
+    .catch((error) => {
+      console.error('[rights-matrix] country support sync failed', error)
+      process.exit(1)
+    })
+}

@@ -4,7 +4,9 @@ import { fetchJwks } from './jwks-fetch'
 import { getCachedJwks, setCachedJwks } from './jwks-cache'
 import { verifyWithJwks } from './jwks-verify'
 import { remoteVerify } from './remote-verify'
+import type { AuthResult } from './types'
 import { AuthError, AuthUser } from './types'
+import { isSupabaseMockEnabled, isSupabaseMockMisconfigured } from './mock-config'
 
 const parseBearerToken = (header?: string) => {
   if (!header) {
@@ -51,15 +53,17 @@ const resolveMockUserId = (value: string, fallback: string) => {
   return toDeterministicUuid(candidate)
 }
 
-import type { AuthResult } from './types'
-
 export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<AuthResult> => {
   const token = parseBearerToken(authorizationHeader)
   if (!token) {
     return makeError('missing_token', 'Missing or invalid Authorization header')
   }
 
-  if (config.auth.supabase.mock.enabled) {
+  if (isSupabaseMockMisconfigured()) {
+    return makeError('invalid_token', 'Mock auth disabled in production')
+  }
+
+  if (isSupabaseMockEnabled()) {
     const { token: userToken, adminToken, userId, email, role, adminEmail } =
       config.auth.supabase.mock
     const adminMatch = parseMockToken(token, adminToken)

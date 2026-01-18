@@ -85,10 +85,12 @@
             <CountrySelect
               v-model="fromCountry"
               label="From"
+              :exclude-country="toCountry"
             />
             <CountrySelect
               v-model="toCountry"
               label="To"
+              :exclude-country="fromCountry"
             />
             <AmountInput
               v-model="amount"

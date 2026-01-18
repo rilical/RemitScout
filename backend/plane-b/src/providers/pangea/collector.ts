@@ -223,7 +223,7 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
     return proxyTier
   }
 
-  await ensureProvider(pool, providerId, 'Wells Fargo')
+  await ensureProvider(pool, providerId, 'Pangea')
 
   const resumeStatus = await resumeProviderIfCooldownExpired(pool, providerId)
   if (!resumeStatus.canCollect) {
@@ -421,29 +421,21 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
             rateLimitCount += 1
           }
 
-          await insertOpsAlert(pool, providerId, {
+          const alertId = await insertOpsAlert(pool, providerId, {
             corridorId,
-            reason: reason ?? 'unknown_block',
-            severity: rateLimited ? 'warning' : 'critical',
+            amountBucket,
+            payinMethod,
+            payoutMethod,
             httpStatus: fetchResult.status,
-            bodyPreview: fetchResult.bodyText?.slice(0, 500) ?? null,
+            blockReason: reason ?? 'unknown_block',
+            bronzeObjectKey,
+            collectorType,
             traceId,
+            requestFingerprint,
           })
 
-          if (rateLimited) {
-            await notifyBlockAlert(pool, providerId, {
-              corridorId,
-              reason: reason ?? 'rate_limit',
-              severity: 'warning',
-              httpStatus: fetchResult.status,
-            })
-          } else {
-            await notifyBlockAlert(pool, providerId, {
-              corridorId,
-              reason: reason ?? 'blocked',
-              severity: 'critical',
-              httpStatus: fetchResult.status,
-            })
+          if (alertId) {
+            await notifyBlockAlert(pool, alertId, { force: true })
           }
 
           if (fetchResult.status === 429 || fetchResult.status === 403) {
@@ -492,7 +484,13 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
             continue
           }
 
-          await pauseProviderForBlock(pool, providerId, corridorId, reason, blockCooldownMs)
+          await pauseProviderForBlock(
+            pool,
+            providerId,
+            corridorId,
+            reason ?? 'blocked',
+            blockCooldownMs,
+          )
           blocked = true
           blockReason = reason
           const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
@@ -607,6 +605,7 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
         const normalized = normalizeQuote({
           provider_id: providerId,
           corridor_id: corridorId,
+          amount_bucket: amountBucket,
           send_amount: parsed.send_amount,
           fee_amount: parsed.fee_amount,
           fee_currency: parsed.fee_currency,

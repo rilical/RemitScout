@@ -35,6 +35,7 @@ export function getProviderLogoPath(slug: string): string {
     'wells-fargo': '/png/SVG/PROVIDERS/WELLS_FARGO_LOGO.svg',
     'singx': '/png/SVG/PROVIDERS/SINGX_LOGO.png',
     'placid': '/png/SVG/PROVIDERS/PLACID_LOGO.png',
+    'dahabshiil': '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.svg',
   }
 
   const normalizedSlug = slug.toLowerCase().trim()

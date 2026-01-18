@@ -9,6 +9,8 @@ type CacheEntry<T> = {
 
 type TtlCacheOptions = {
   namespace?: string
+  maxEntries?: number
+  pruneIntervalMs?: number
 }
 
 export type TtlCache<T> = {
@@ -19,6 +21,8 @@ export type TtlCache<T> = {
 }
 
 const logger = createLogger('shared.cache')
+const DEFAULT_MAX_ENTRIES = 10000
+const DEFAULT_PRUNE_INTERVAL_MS = 60000
 
 const buildKey = (namespace: string | undefined, key: string) => {
   if (!namespace) return key
@@ -28,6 +32,39 @@ const buildKey = (namespace: string | undefined, key: string) => {
 export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> => {
   const entries = new Map<string, CacheEntry<T>>()
   const namespace = options.namespace?.trim()
+  const maxEntries = Math.max(0, options.maxEntries ?? DEFAULT_MAX_ENTRIES)
+  const pruneIntervalMs = Math.max(1000, options.pruneIntervalMs ?? DEFAULT_PRUNE_INTERVAL_MS)
+  let lastPruneAt = 0
+
+  const pruneExpired = () => {
+    if (entries.size === 0) return
+    const now = Date.now()
+    for (const [key, entry] of entries) {
+      if (now >= entry.expiresAt) {
+        entries.delete(key)
+      }
+    }
+  }
+
+  const enforceMaxEntries = () => {
+    if (maxEntries <= 0 || entries.size <= maxEntries) return
+    const overflow = entries.size - maxEntries
+    const keys = entries.keys()
+    for (let i = 0; i < overflow; i += 1) {
+      const key = keys.next().value
+      if (key === undefined) break
+      entries.delete(key)
+    }
+  }
+
+  const pruneIfNeeded = () => {
+    const now = Date.now()
+    if (now - lastPruneAt >= pruneIntervalMs) {
+      pruneExpired()
+      lastPruneAt = now
+    }
+    enforceMaxEntries()
+  }
 
   const getFromMemory = (key: string): T | null => {
     const entry = entries.get(key)
@@ -45,6 +82,7 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
   }
 
   const get = async (key: string): Promise<T | null> => {
+    pruneIfNeeded()
     const redis = await getRedisClient()
     if (!redis) {
       return getFromMemory(key)
@@ -72,6 +110,7 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
 
   const set = async (key: string, value: T, ttlMs: number) => {
     setInMemory(key, value, ttlMs)
+    pruneIfNeeded()
     const redis = await getRedisClient()
     if (!redis) {
       return

@@ -13,6 +13,7 @@ import { createLogger } from '../shared/logger'
 import { deleteMessages, receiveJsonMessages, sendToDLQ, createVisibilityTimeoutExtender } from '../shared/sqs'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { providerRegistry } from '../plane-b/src/providers'
+import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
 
@@ -114,6 +115,23 @@ const processMessage = async (
       )
 
       stopExtending()
+      if (ok) {
+        try {
+          const volatilityService = new VolatilityService(pool)
+          const corridors = Array.from(new Set(payload.corridors))
+          const updated = await volatilityService.refreshCacheForCorridors(corridors)
+          logger.info('fanout_volatility_refreshed', {
+            provider_id: payload.providerId,
+            corridors: corridors.length,
+            updated,
+          })
+        } catch (error) {
+          logger.warn('fanout_volatility_refresh_failed', {
+            provider_id: payload.providerId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
       await recordWorkerMetric('ingest-fanout-worker', 'message_processed', 1)
       logger.info('fanout_item_done', {
         provider_id: payload.providerId,
@@ -191,13 +209,14 @@ const runWorker = async () => {
       const deleteHandles: string[] = []
 
       for (const message of messages) {
-        if (!validatePayload(message.payload)) {
+        const payload = message.payload
+        if (!validatePayload(payload)) {
           logger.warn('fanout_item_invalid', { message_id: message.messageId })
           deleteHandles.push(message.receiptHandle)
           continue
         }
 
-        const processed = await processMessage(pool, message)
+        const processed = await processMessage(pool, { ...message, payload })
         if (processed) {
           deleteHandles.push(message.receiptHandle)
         }

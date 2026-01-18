@@ -213,7 +213,8 @@ export const buildApp = async () => {
   app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (request, body, done) => {
     // Preserve raw body for Stripe webhook signature verification
     // Works with both /api/billing/webhook and /api/v1/billing/webhook
-    if (request.url === '/api/billing/webhook' || request.url === '/api/v1/billing/webhook') {
+    const path = request.url.split('?')[0]
+    if (path === '/api/billing/webhook' || path === '/api/v1/billing/webhook') {
       done(null, body)
       return
     }

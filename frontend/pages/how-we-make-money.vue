@@ -58,13 +58,13 @@
                 </NuxtLink>
                 <NuxtLink
                   to="/affiliate-disclosure"
-                  class="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50"
+                  class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
                 >
                   Affiliate disclosure
                 </NuxtLink>
                 <NuxtLink
                   to="/contact"
-                  class="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50"
+                  class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
                 >
                   Report a rate issue
                 </NuxtLink>
@@ -112,7 +112,7 @@
                     commission. <strong class="font-semibold text-neutral-900">You do not pay extra</strong>. The commission comes from the
                     provider's marketing budget, not your transfer amount.
                   </p>
-                  <div class="rounded-xl border border-gray-900 bg-gray-900 p-6">
+                  <div class="rounded-xl border border-brand-600 bg-brand-600 p-6">
                     <p class="text-base font-semibold text-white mb-2">
                       Does this affect rankings?
                     </p>
@@ -145,11 +145,11 @@
                     those links, we may earn a commission. These relationships are disclosed. Editorial content and comparisons remain
                     independent.
                   </p>
-                  <div class="rounded-xl border border-brand-100 bg-brand-50 p-6">
-                    <p class="text-base font-semibold text-brand-900 mb-2">
+                  <div class="rounded-xl border border-brand-600 bg-brand-600 p-6">
+                    <p class="text-base font-semibold text-white mb-2">
                       Does this affect rankings?
                     </p>
-                    <p class="text-base text-brand-800 leading-relaxed">
+                    <p class="text-base text-white/90 leading-relaxed">
                       <strong>No.</strong> This applies only to guide content and never changes Remit-Score or comparison sorting. Money transfer
                       rankings remain independent.
                     </p>
@@ -179,7 +179,7 @@
                     Plus is a feature upgrade, not a different comparison engine. Every user sees the same provider set, the same
                     rankings, and the same scoring rules.
                   </p>
-                  <div class="rounded-xl border border-gray-900 bg-gray-900 p-6">
+                  <div class="rounded-xl border border-brand-600 bg-brand-600 p-6">
                     <p class="text-base font-semibold text-white mb-2">
                       Does this affect rankings?
                     </p>
@@ -303,7 +303,7 @@
               <div class="rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-sm">
                 <div class="text-center mb-4">
                   <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 mb-3">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                   </div>
@@ -474,9 +474,9 @@
           </div>
 
           <div class="grid gap-6 md:grid-cols-2">
-            <div class="rounded-2xl border-2 border-orange-200 bg-orange-50 p-8">
+            <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-8">
               <h3 class="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                <MegaphoneIcon class="h-5 w-5 text-orange-700" />
+                <MegaphoneIcon class="h-5 w-5 text-brand-700" />
                 Ads and sponsorships
               </h3>
               <p class="text-base leading-relaxed text-neutral-700 mb-4">
@@ -489,9 +489,9 @@
               </p>
             </div>
 
-            <div class="rounded-2xl border-2 border-blue-200 bg-blue-50 p-8">
+            <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-8">
               <h3 class="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                <DocumentTextIcon class="h-5 w-5 text-blue-700" />
+                <DocumentTextIcon class="h-5 w-5 text-brand-700" />
                 Disclosures
               </h3>
               <p class="text-base leading-relaxed text-neutral-700 mb-4">
@@ -527,7 +527,7 @@
           <!-- Stepper Diagram -->
           <div class="grid gap-6 md:grid-cols-4 mb-10">
             <div class="text-center">
-              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+              <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6 mb-3">
                 <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
                   <MagnifyingGlassIcon class="h-6 w-6 text-brand-600" />
                 </div>
@@ -541,7 +541,7 @@
             </div>
 
             <div class="text-center">
-              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+              <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6 mb-3">
                 <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
                   <CursorArrowRaysIcon class="h-6 w-6 text-brand-600" />
                 </div>
@@ -555,7 +555,7 @@
             </div>
 
             <div class="text-center">
-              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+              <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6 mb-3">
                 <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
                   <BanknotesIcon class="h-6 w-6 text-brand-600" />
                 </div>
@@ -569,7 +569,7 @@
             </div>
 
             <div class="text-center">
-              <div class="rounded-xl border-2 border-gray-900 bg-gray-900 p-6 mb-3">
+              <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6 mb-3">
                 <div class="flex items-center justify-center h-12 w-12 rounded-full bg-white mx-auto mb-3">
                   <CurrencyDollarIcon class="h-6 w-6 text-brand-600" />
                 </div>

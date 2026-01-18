@@ -32,14 +32,16 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
           AND allowed_collect = true
           AND stoplist_status = 'active'
           AND (
-            source_countries IS NULL
-            OR array_length(source_countries, 1) IS NULL
-            OR $1 = ANY(source_countries)
+            source_countries IS NOT NULL
+            AND array_length(source_countries, 1) > 0
+            AND $1 = ANY(source_countries)
           )
           AND (
-            destination_countries IS NULL
-            OR array_length(destination_countries, 1) IS NULL
-            OR $2 = ANY(destination_countries)
+            (
+              destination_countries IS NOT NULL
+              AND array_length(destination_countries, 1) > 0
+              AND $2 = ANY(destination_countries)
+            )
             OR provider_id = 'wise'
           )`,
       [sourceCountry, destCountry],

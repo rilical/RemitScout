@@ -235,6 +235,7 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
   const queueUrl = config.queues.fxRateRefreshUrl || null
   const dlqUrl = config.queues.fxRateRefreshDlqUrl || null
   const useQueue = queueMode === 'queue' && Boolean(queueUrl)
+  const activeQueueUrl = useQueue ? (queueUrl as string) : null
   const dbFallbackEnabled = config.queues.fxRateRefreshDbFallback && queueMode === 'queue'
   const writeDb = true
   const repo = new FxRateRefreshRepository(pool)
@@ -316,13 +317,16 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
     })
 
     if (useQueue) {
-      const messages = await receiveJsonMessages<FxRateRefreshMessage>(queueUrl, limit)
+      if (!activeQueueUrl) {
+        throw new Error('fx_rate_refresh_queue_missing')
+      }
+      const messages = await receiveJsonMessages<FxRateRefreshMessage>(activeQueueUrl, limit)
       logger.info('queue_claimed', {
         requested_limit: limit,
         claimed_count: messages.length,
         source: 'sqs',
       })
-      await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
+      await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
 
       const deleteHandles: string[] = []
       const workItems: Array<{
@@ -461,7 +465,7 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
           })
         }
 
-        await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
+        await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
       })
 
       logger.info('queue_sqs_processed', {
@@ -470,7 +474,7 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
         delete_count: deleteHandles.length,
       })
 
-      await deleteMessages(queueUrl, deleteHandles)
+      await deleteMessages(activeQueueUrl, deleteHandles)
 
       if (dbFallbackEnabled) {
         const fallbackRequests = await repo.claimPendingRequests(limit, maxRetries)
@@ -483,7 +487,7 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
             sqs_message_count: messages.length,
           })
         }
-        await processDbRequests(fallbackRequests, 'db_fallback', queueUrl)
+        await processDbRequests(fallbackRequests, 'db_fallback', activeQueueUrl)
       }
     } else {
       if (queueMode === 'queue' && !queueUrl) {

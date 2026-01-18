@@ -1,0 +1,10 @@
+FROM node:20-alpine
+
+WORKDIR /app
+RUN corepack enable
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY backend/package.json backend/
+RUN pnpm install --filter remit-scout-backend... --frozen-lockfile
+
+COPY backend backend

@@ -41,8 +41,19 @@ GRANT SELECT ON silver.corridor_tier TO plane_c;
 GRANT SELECT ON silver.corridor_tier TO plane_a;
 
 -- Replace corridor_priority table with a dynamic view derived from corridor_tier.
-DROP VIEW IF EXISTS silver.corridor_priority;
-DROP TABLE IF EXISTS silver.corridor_priority;
+DO $$
+BEGIN
+  BEGIN
+    EXECUTE 'DROP VIEW IF EXISTS silver.corridor_priority';
+  EXCEPTION WHEN wrong_object_type THEN
+    NULL;
+  END;
+  BEGIN
+    EXECUTE 'DROP TABLE IF EXISTS silver.corridor_priority';
+  EXCEPTION WHEN wrong_object_type THEN
+    NULL;
+  END;
+END $$;
 
 CREATE VIEW silver.corridor_priority AS
 SELECT

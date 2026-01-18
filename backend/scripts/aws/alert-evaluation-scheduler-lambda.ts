@@ -5,7 +5,7 @@ import { sendJsonMessage } from '../../shared/sqs'
 const logger = createLogger('script.alert-evaluation-scheduler')
 
 type SchedulerEvent = {
-  frequency?: 'realtime' | 'hourly' | 'daily'
+  frequency?: 'weekly' | 'daily'
 }
 
 const toBoolean = (value: string | undefined) => value === '1' || value === 'true'
@@ -26,9 +26,10 @@ export const handler = async (event: SchedulerEvent = {}): Promise<{ status: str
       ? toBoolean(process.env.ALERT_EVALUATION_ENABLED)
       : true
 
-  const frequency = (event.frequency ||
+  const rawFrequency = (event.frequency ||
     process.env.ALERT_EVALUATION_FREQUENCY ||
-    'realtime') as 'realtime' | 'hourly' | 'daily'
+    'weekly') as string
+  const frequency = rawFrequency === 'daily' ? 'daily' : 'weekly'
 
   if (!enabled) {
     logger.info('alert_evaluation_scheduler_disabled', { frequency })
@@ -42,7 +43,7 @@ export const handler = async (event: SchedulerEvent = {}): Promise<{ status: str
   }
 
   const message: { frequency: string; timeBucket?: number } = { frequency }
-  if (frequency === 'daily') {
+  if (frequency === 'daily' || frequency === 'weekly') {
     message.timeBucket = new Date().getUTCHours()
   }
 

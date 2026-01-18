@@ -31,6 +31,7 @@
                     id="from-country"
                     v-model="from"
                     label="Sending from"
+                    :exclude-country="to"
                     :error="errors.from ? 'Select a country' : ''"
                     :select-class="errors.from ? 'border-danger-600' : 'border-neutral-300'"
                   />
@@ -47,6 +48,7 @@
                     id="to-country"
                     v-model="to"
                     label="Receiving in"
+                    :exclude-country="from"
                     :error="errors.to ? 'Select a country' : ''"
                     :select-class="errors.to ? 'border-danger-600' : 'border-neutral-300'"
                   />

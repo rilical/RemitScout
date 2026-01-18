@@ -44,6 +44,7 @@ export type ApiOptions = {
   supabaseSsmName?: string
   stripeSecretArn?: string
   stripeSsmName?: string
+  communicationsSecretArn?: string
   planeAAdminEmails?: string[]
   planeACorsOrigins?: string[]
   planeACorsAllowedHeaders?: string[]
@@ -59,8 +60,10 @@ export type ApiOptions = {
   redisSecretArn?: string
   redisSecretJsonKey?: string
   redisSsmName?: string
+  redisUrl?: string
   planeCBaseUrl?: string
   quoteRefreshQueueUrl?: string
+  quoteRefreshQueueMode?: string
   exportJobQueueUrl?: string
   exportJobQueueMode?: string
   exportsBucketName?: string
@@ -102,17 +105,28 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : RetentionDays.TWO_WEEKS
+  const isDev = options.envName === 'dev'
+  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
+  const tracingExporter = isDev ? 'none' : 'xray'
+  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
 
   const planeAEnvironment: Record<string, string> = {
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (options.envName !== 'prod' && !options.supabaseSecretArn && !options.supabaseSsmName) {
+    planeAEnvironment.SUPABASE_MOCK = '1'
+  }
+  if (options.envName !== 'prod' && !options.stripeSecretArn && !options.stripeSsmName) {
+    planeAEnvironment.STRIPE_MOCK = '1'
   }
   if (options.planeADbHost) {
     planeAEnvironment.PLANE_A_DB_HOST = options.planeADbHost
@@ -125,6 +139,9 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.quoteRefreshQueueUrl) {
     planeAEnvironment.QUOTE_REFRESH_QUEUE_URL = options.quoteRefreshQueueUrl
+  }
+  if (options.quoteRefreshQueueMode) {
+    planeAEnvironment.QUOTE_REFRESH_QUEUE_MODE = options.quoteRefreshQueueMode
   }
   if (options.exportJobQueueUrl) {
     planeAEnvironment.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
@@ -168,9 +185,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const planeCEnvironment: Record<string, string> = {
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -188,6 +206,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   if (options.planeCDbName) {
     planeCEnvironment.PLANE_C_DB_NAME = options.planeCDbName
   }
+  if (options.redisUrl && !options.redisSecretArn && !options.redisSsmName) {
+    planeAEnvironment.REDIS_URL = options.redisUrl
+    planeCEnvironment.REDIS_URL = options.redisUrl
+  }
 
   const planeCFunction = new NodejsFunction(scope, 'PlaneCApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-c', 'src', 'lambda.ts'),
@@ -196,7 +218,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     memorySize: 1024,
     timeout: Duration.seconds(30),
     role: options.roles.planeCLambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
     securityGroups: [options.planeCSecurityGroup],
@@ -277,7 +299,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     memorySize: 1024,
     timeout: Duration.seconds(30),
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
     securityGroups: [options.planeASecurityGroup],
@@ -339,6 +361,43 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.stripeSsmName) {
     planeAFunction.addEnvironment('STRIPE_SSM_NAME', options.stripeSsmName)
+  }
+  if (options.communicationsSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'PlaneACommunicationsSecret',
+      options.communicationsSecretArn,
+    )
+    secret.grantRead(planeAFunction)
+    const communicationsEnvKeys = [
+      'ALERT_UNSUBSCRIBE_SECRET',
+      'ALERT_UNSUBSCRIBE_BASE_URL',
+      'ALERT_UNSUBSCRIBE_TOKEN_TTL_HOURS',
+      'ALERTS_EMAIL_ENABLED',
+      'ALERTS_EMAIL_FROM',
+      'ALERTS_EMAIL_FROM_NAME',
+      'ALERTS_SMS_ENABLED',
+      'NEWSLETTER_EMAIL_ENABLED',
+      'NEWSLETTER_EMAIL_FROM',
+      'NEWSLETTER_EMAIL_FROM_NAME',
+      'NEWSLETTER_BASE_URL',
+      'NEWSLETTER_TOKEN_EXPIRY_HOURS',
+      'NEWSLETTER_WELCOME_ENABLED',
+      'PUSH_WEB_ENABLED',
+      'PUSH_WEB_VAPID_PUBLIC_KEY',
+      'PUSH_WEB_VAPID_PRIVATE_KEY',
+      'PUSH_WEB_VAPID_SUBJECT',
+      'PUSH_SNS_ENABLED',
+      'PUSH_SNS_IOS_PLATFORM_ARN',
+      'PUSH_SNS_ANDROID_PLATFORM_ARN',
+      'PUSH_SNS_APNS_SANDBOX',
+      'SES_FROM_ADDRESS',
+      'SES_REGION',
+      'SNS_REGION',
+    ]
+    for (const envKey of communicationsEnvKeys) {
+      planeAFunction.addEnvironment(envKey, secret.secretValueFromJson(envKey).toString())
+    }
   }
 
   const enablePlaneAJwtAuth = options.enablePlaneAJwtAuth ?? options.envName === 'prod'
@@ -435,19 +494,40 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       const regionReady = Token.isUnresolved(region) || region === 'us-east-1'
 
       if (regionReady) {
-        const ipSetRules: CfnWebACL.RuleProperty[] = []
+        const rules: CfnWebACL.RuleProperty[] = []
+        const buildPathMatch = (paths: string[]): CfnWebACL.StatementProperty => ({
+          orStatement: {
+            statements: paths.map((pathMatch) => ({
+              byteMatchStatement: {
+                fieldToMatch: { uriPath: {} },
+                positionalConstraint: 'STARTS_WITH',
+                searchString: pathMatch,
+                textTransformations: [{ priority: 0, type: 'NONE' }],
+              },
+            })),
+          },
+        })
+        const withApiPrefixes = (pathMatch: string): string[] => [
+          `/api${pathMatch}`,
+          `/api/v1${pathMatch}`,
+        ]
 
-        let allowIpSet: CfnIPSet | undefined
+        const pushRule = (rule: Omit<CfnWebACL.RuleProperty, 'priority'>): void => {
+          rules.push({
+            ...rule,
+            priority: rules.length,
+          })
+        }
+
         if (wafAllowList.length > 0) {
-          allowIpSet = new CfnIPSet(scope, 'PlaneAAllowIpSet', {
+          const allowIpSet = new CfnIPSet(scope, 'PlaneAAllowIpSet', {
             addresses: wafAllowList,
             ipAddressVersion: 'IPV4',
             name: `remit-scout-${options.envName}-allow`,
             scope: 'CLOUDFRONT',
           })
-          ipSetRules.push({
+          pushRule({
             name: 'AllowList',
-            priority: 0,
             action: { allow: {} },
             statement: {
               ipSetReferenceStatement: {
@@ -469,9 +549,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
             name: `remit-scout-${options.envName}-block`,
             scope: 'CLOUDFRONT',
           })
-          ipSetRules.push({
+          pushRule({
             name: 'BlockList',
-            priority: allowIpSet ? 1 : 0,
             action: { block: {} },
             statement: {
               ipSetReferenceStatement: {
@@ -486,6 +565,121 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
           })
         }
 
+        const managedRuleGroups = [
+          { name: 'AWSManagedRulesCommonRuleSet', metric: 'common' },
+          { name: 'AWSManagedRulesKnownBadInputsRuleSet', metric: 'bad-inputs' },
+          { name: 'AWSManagedRulesSQLiRuleSet', metric: 'sqli' },
+          { name: 'AWSManagedRulesAmazonIpReputationList', metric: 'ip-reputation' },
+        ]
+
+        for (const ruleGroup of managedRuleGroups) {
+          pushRule({
+            name: ruleGroup.name,
+            overrideAction: { none: {} },
+            statement: {
+              managedRuleGroupStatement: {
+                vendorName: 'AWS',
+                name: ruleGroup.name,
+              },
+            },
+            visibilityConfig: {
+              cloudWatchMetricsEnabled: true,
+              metricName: `remit-scout-${options.envName}-${ruleGroup.metric}`,
+              sampledRequestsEnabled: true,
+            },
+          })
+        }
+
+        if (wafEnableBotControl) {
+          pushRule({
+            name: 'AWSManagedRulesBotControlRuleSet',
+            overrideAction: { none: {} },
+            statement: {
+              managedRuleGroupStatement: {
+                vendorName: 'AWS',
+                name: 'AWSManagedRulesBotControlRuleSet',
+              },
+            },
+            visibilityConfig: {
+              cloudWatchMetricsEnabled: true,
+              metricName: `remit-scout-${options.envName}-bot-control`,
+              sampledRequestsEnabled: true,
+            },
+          })
+        }
+
+        const rateLimitRules = [
+          {
+            name: 'RateLimitContact',
+            metric: 'rate-contact',
+            limit: 200,
+            paths: withApiPrefixes('/contact'),
+          },
+          {
+            name: 'RateLimitNewsletter',
+            metric: 'rate-newsletter',
+            limit: 200,
+            paths: withApiPrefixes('/newsletter'),
+          },
+          {
+            name: 'RateLimitMarketing',
+            metric: 'rate-marketing',
+            limit: 500,
+            paths: withApiPrefixes('/marketing'),
+          },
+          {
+            name: 'RateLimitTelemetry',
+            metric: 'rate-telemetry',
+            limit: 2000,
+            paths: withApiPrefixes('/telemetry'),
+          },
+          {
+            name: 'RateLimitAdminOps',
+            metric: 'rate-admin-ops',
+            limit: 300,
+            paths: [
+              ...withApiPrefixes('/admin'),
+              ...withApiPrefixes('/ops'),
+              ...withApiPrefixes('/audit'),
+            ],
+          },
+        ]
+
+        for (const rateRule of rateLimitRules) {
+          pushRule({
+            name: rateRule.name,
+            action: { block: {} },
+            statement: {
+              rateBasedStatement: {
+                limit: rateRule.limit,
+                aggregateKeyType: 'IP',
+                scopeDownStatement: buildPathMatch(rateRule.paths),
+              },
+            },
+            visibilityConfig: {
+              cloudWatchMetricsEnabled: true,
+              metricName: `remit-scout-${options.envName}-${rateRule.metric}`,
+              sampledRequestsEnabled: true,
+            },
+          })
+        }
+
+        pushRule({
+          name: 'RateLimitGlobal',
+          action: { block: {} },
+          statement: {
+            rateBasedStatement: {
+              limit: 2000,
+              aggregateKeyType: 'IP',
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `remit-scout-${options.envName}-rate-global`,
+            sampledRequestsEnabled: true,
+          },
+        })
+
         planeAWaf = new CfnWebACL(scope, 'PlaneAWebAcl', {
           name: `remit-scout-${options.envName}-edge`,
           scope: 'CLOUDFRONT',
@@ -495,59 +689,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
             metricName: `remit-scout-${options.envName}-edge`,
             sampledRequestsEnabled: true,
           },
-          rules: [
-            ...ipSetRules,
-            {
-              name: 'AWSManagedRulesCommonRuleSet',
-              priority: ipSetRules.length + 0,
-              overrideAction: { none: {} },
-              statement: {
-                managedRuleGroupStatement: {
-                  vendorName: 'AWS',
-                  name: 'AWSManagedRulesCommonRuleSet',
-                },
-              },
-              visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: `remit-scout-${options.envName}-common`,
-                sampledRequestsEnabled: true,
-              },
-            },
-            ...(wafEnableBotControl
-              ? [{
-                name: 'AWSManagedRulesBotControlRuleSet',
-                priority: ipSetRules.length + 1,
-                overrideAction: { none: {} },
-                statement: {
-                  managedRuleGroupStatement: {
-                    vendorName: 'AWS',
-                    name: 'AWSManagedRulesBotControlRuleSet',
-                  },
-                },
-                visibilityConfig: {
-                  cloudWatchMetricsEnabled: true,
-                  metricName: `remit-scout-${options.envName}-bot-control`,
-                  sampledRequestsEnabled: true,
-                },
-              }]
-              : []),
-            {
-              name: 'RateLimit',
-              priority: ipSetRules.length + (wafEnableBotControl ? 2 : 1),
-              action: { block: {} },
-              statement: {
-                rateBasedStatement: {
-                  limit: 2000,
-                  aggregateKeyType: 'IP',
-                },
-              },
-              visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: `remit-scout-${options.envName}-rate`,
-                sampledRequestsEnabled: true,
-              },
-            },
-          ],
+          rules,
         })
       } else {
         Annotations.of(scope).addWarning(

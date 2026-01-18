@@ -36,7 +36,7 @@ const isSuppressedEmail = async (pool: Pool, email: string): Promise<boolean> =>
     [hashEmail(email)],
     pool,
   )
-  return result.rowCount > 0
+  return (result.rowCount ?? 0) > 0
 }
 
 const getUserEmail = async (pool: Pool, userId: string): Promise<string | null> => {
@@ -80,7 +80,11 @@ export const sendPlusConfirmationEmail = async (
     const fromName = process.env.BILLING_EMAIL_FROM_NAME || 'Remit-Scout Billing'
     const planName = options?.planName || 'Remit-Scout Plus'
     const trialDays = options?.trialDays ?? null
-    const siteUrl = config.billing.stripe.frontendBaseUrl || 'http://localhost:3000'
+    const siteUrl = config.billing.stripe.frontendBaseUrl
+    if (!siteUrl) {
+      logger.warn('billing_email_site_url_missing', { user_id: userId })
+      return false
+    }
     const dashboardUrl = `${siteUrl.replace(/\/$/, '')}/dashboard`
 
     const subject = `Your ${planName} subscription is active`

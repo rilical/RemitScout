@@ -1,4 +1,5 @@
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { CloudWatchClient, PutMetricDataCommand, type MetricDatum, StandardUnit } from '@aws-sdk/client-cloudwatch'
+import { config } from './config'
 import { createLogger } from './logger'
 import { formatError } from './utils/error-handling'
 
@@ -23,25 +24,29 @@ export const recordWorkerMetric = async (
   additionalDimensions?: Record<string, string>,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
+    const metricData: MetricDatum[] = [
+      {
+        MetricName: operation,
+        Value: count,
+        Unit: StandardUnit.Count,
+        Timestamp: new Date(),
+        Dimensions: [
+          { Name: 'WorkerName', Value: workerName },
+          ...Object.entries(additionalDimensions || {}).map(([key, value]) => ({
+            Name: key,
+            Value: value,
+          })),
+        ],
+      },
+    ]
     await client.send(
       new PutMetricDataCommand({
         Namespace: 'RemitScout/Workers',
-        MetricData: [
-          {
-            MetricName: operation,
-            Value: count,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'WorkerName', Value: workerName },
-              ...Object.entries(additionalDimensions || {}).map(([key, value]) => ({
-                Name: key,
-                Value: value,
-              })),
-            ],
-          },
-        ],
+        MetricData: metricData,
       }),
     )
   } catch (error: unknown) {
@@ -64,12 +69,15 @@ export const recordBatchJobMetric = async (
   additionalDimensions?: Record<string, string>,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
-    const metricData = [
+    const metricData: MetricDatum[] = [
       {
         MetricName: operation,
         Value: 1,
-        Unit: 'Count',
+        Unit: StandardUnit.Count,
         Timestamp: new Date(),
         Dimensions: [
           { Name: 'JobName', Value: jobName },
@@ -85,7 +93,7 @@ export const recordBatchJobMetric = async (
       metricData.push({
         MetricName: 'job_duration',
         Value: durationSeconds,
-        Unit: 'Seconds',
+        Unit: StandardUnit.Seconds,
         Timestamp: new Date(),
         Dimensions: [
           { Name: 'JobName', Value: jobName },
@@ -120,6 +128,9 @@ export const recordQueueDepthMetric = async (
   depth: number,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -152,6 +163,9 @@ export const recordDLQMessageCount = async (
   count: number,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -177,7 +191,5 @@ export const recordDLQMessageCount = async (
     })
   }
 }
-
-
 
 

@@ -3,7 +3,6 @@ import { createLogger } from './logger'
 const logger = createLogger('shared.aws-errors')
 
 export interface AWSRetryableError extends Error {
-  name?: string
   $metadata?: {
     httpStatusCode?: number
   }
@@ -184,4 +183,3 @@ export const classifyError = (error: unknown): {
     httpStatusCode: awsError.$metadata?.httpStatusCode,
   }
 }
-

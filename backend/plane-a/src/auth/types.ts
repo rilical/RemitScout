@@ -67,7 +67,7 @@ export type AuthErrorCode =
  * const result = await verifySupabaseJwt(authHeader)
  * if ('code' in result) {
  *   // result is AuthError
- *   console.error('Auth failed:', result.code, result.message)
+ *   return { error: result.code, message: result.message }
  * }
  * ```
  */
@@ -101,10 +101,10 @@ export type AuthError = {
  * const result: AuthResult = await verifySupabaseJwt(authHeader)
  * if (isAuthUser(result)) {
  *   // result is AuthUser
- *   console.log('User:', result.user_id)
+ *   return { user_id: result.user_id }
  * } else {
  *   // result is AuthError
- *   console.error('Error:', result.code, result.message)
+ *   return { error: result.code, message: result.message }
  * }
  * ```
  */

@@ -4,9 +4,9 @@ import { computeBucketSelection } from '../shared/amount-bucket'
 describe('computeBucketSelection', () => {
   it('returns nearest bucket and floor bucket', () => {
     const result = computeBucketSelection(353)
-    expect(result.bucket_used).toBe(500)
-    expect(result.fee_bucket_used).toBe(100)
-    expect(result.approximate).toBe(true)
+    expect(result.bucket_used).toBe(353)
+    expect(result.fee_bucket_used).toBe(353)
+    expect(result.approximate).toBe(false)
   })
 
   it('returns exact bucket without approximate flag', () => {
@@ -18,9 +18,9 @@ describe('computeBucketSelection', () => {
 
   it('prefers the higher bucket on ties', () => {
     const result = computeBucketSelection(300)
-    expect(result.bucket_used).toBe(500)
-    expect(result.fee_bucket_used).toBe(100)
-    expect(result.approximate).toBe(true)
+    expect(result.bucket_used).toBe(300)
+    expect(result.fee_bucket_used).toBe(300)
+    expect(result.approximate).toBe(false)
   })
 
   it('handles invalid amounts', () => {

@@ -11,6 +11,7 @@
             id="compare-from"
             v-model="form.from"
             label="From"
+            :exclude-country="form.to"
             placeholder="United States"
           />
         </div>
@@ -36,6 +37,7 @@
             id="compare-to"
             v-model="form.to"
             label="To"
+            :exclude-country="form.from"
             :placeholder="toPlaceholder"
           />
         </div>
@@ -77,6 +79,7 @@
               id="compare-from-mobile"
               v-model="form.from"
               label="From"
+              :exclude-country="form.to"
               placeholder="United States"
             />
           </div>
@@ -102,6 +105,7 @@
               id="compare-to-mobile"
               v-model="form.to"
               label="To"
+              :exclude-country="form.from"
               :placeholder="toPlaceholder"
             />
           </div>

@@ -457,8 +457,8 @@ import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
 
-const lastUpdatedIso = '2026-01-10'
-const lastUpdatedLabel = 'January 10, 2026'
+const lastUpdatedIso = '2026-01-17'
+const lastUpdatedLabel = 'January 17, 2026'
 
 const highlights = [
   {

@@ -35,6 +35,7 @@
               id="from-country"
               v-model="from"
               label="Sending from"
+              :exclude-country="to"
               :error="errors.from ? 'Select a country' : ''"
               :select-class="errors.from ? 'border-red-500' : 'border-gray-300'"
             />
@@ -51,6 +52,7 @@
               id="to-country"
               v-model="to"
               label="Receiving in"
+              :exclude-country="from"
               :error="errors.to ? 'Select a country' : ''"
               :select-class="errors.to ? 'border-red-500' : 'border-gray-300'"
             />

@@ -24,7 +24,7 @@ import { evaluateAlertsForFrequency } from '../plane-a/src/services/alert-evalua
 import { createShutdownHandler } from '../shared/shutdown'
 
 type AlertEvaluationMessage = {
-  frequency: 'realtime' | 'hourly' | 'daily'
+  frequency: 'weekly' | 'daily'
   timeBucket?: number
 }
 
@@ -55,7 +55,7 @@ const resolveQueueName = (url: string) => {
 
 const validatePayload = (payload: AlertEvaluationMessage | null): payload is AlertEvaluationMessage => {
   if (!payload) return false
-  if (payload.frequency !== 'realtime' && payload.frequency !== 'hourly' && payload.frequency !== 'daily') {
+  if (payload.frequency !== 'weekly' && payload.frequency !== 'daily') {
     return false
   }
   if (payload.timeBucket !== undefined && !Number.isFinite(payload.timeBucket)) {

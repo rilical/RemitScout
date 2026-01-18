@@ -526,7 +526,7 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     slug: 'wells-fargo',
     name: 'Wells Fargo',
     displayName: 'Wells Fargo',
-    type: 'HYBRID_MTO',
+    type: 'BANK',
     url: 'https://www.wellsfargo.com/international-remittances/',
     affiliateUrl: null,
     isAffiliate: false,

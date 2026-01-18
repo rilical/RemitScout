@@ -36,6 +36,7 @@
           <CountrySelect
             v-model="form.from"
             label="Sending from"
+            :exclude-country="form.to"
             placeholder="Select country"
             dark
           />
@@ -48,6 +49,7 @@
           <CountrySelect
             v-model="form.to"
             label="Receiving in"
+            :exclude-country="form.from"
             placeholder="Select country"
             dark
           />

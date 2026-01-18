@@ -69,6 +69,9 @@ export const createSynthetics = (
   const isProd = options.envName === 'prod'
   const canaries: CfnCanary[] = []
   const alarms: Alarm[] = []
+  if (options.envName === 'dev') {
+    return { canaries, alarms }
+  }
 
   const syntheticsBucket = new Bucket(scope, 'SyntheticsArtifactsBucket', {
     bucketName: `remit-scout-${options.envName}-synthetics-artifacts`,

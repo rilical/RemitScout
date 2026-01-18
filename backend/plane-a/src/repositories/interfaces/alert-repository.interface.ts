@@ -4,7 +4,7 @@ export type AlertRuleInput = {
   comparator: 'gt' | 'gte' | 'lt' | 'lte' | 'crosses_above' | 'crosses_below'
   threshold: number
   currency?: string | null
-  frequency: 'realtime' | 'hourly' | 'daily'
+  frequency: 'weekly' | 'daily'
   enabled: boolean
   cooldown_minutes?: number
 }

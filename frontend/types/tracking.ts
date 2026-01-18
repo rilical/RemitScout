@@ -30,7 +30,7 @@ export type WatchlistItem = {
 }
 
 export type AlertComparator = 'gt' | 'gte' | 'lt' | 'lte'
-export type AlertFrequency = 'realtime' | 'hourly' | 'daily'
+export type AlertFrequency = 'weekly' | 'daily'
 
 export type AlertRule = {
   metric: 'rate' | 'midMarketRate' | 'recipientGets' | 'totalCost' | 'fee' | 'index' | 'sendScore'

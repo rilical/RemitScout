@@ -64,6 +64,16 @@ const getServerUrls = (): Array<{ url: string; description: string }> => {
 }
 
 export const swaggerPlugin = async (app: FastifyInstance) => {
+  const isAwsRuntime = Boolean(
+    process.env.AWS_EXECUTION_ENV ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.AWS_REGION,
+  )
+  if (isAwsRuntime && process.env.SWAGGER_ENABLED !== '1') {
+    app.log.info('Swagger UI disabled in AWS runtime')
+    return
+  }
+
   try {
     await app.register(swagger, {
       openapi: {

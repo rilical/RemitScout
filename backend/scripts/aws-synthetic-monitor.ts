@@ -12,6 +12,7 @@
  */
 
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { formatError } from '../shared/utils/error-handling'
 
@@ -160,6 +161,9 @@ const recordTestMetric = async (
   duration: number,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     await cloudWatchClient.send(
       new PutMetricDataCommand({
         Namespace: 'RemitScout/Synthetic',
@@ -262,7 +266,6 @@ export const handler = async (): Promise<{ success: boolean; results: TestResult
     results: testResults,
   }
 }
-
 
 
 

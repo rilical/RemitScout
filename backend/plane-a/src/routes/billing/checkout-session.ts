@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
-import { getStripeClient } from '../../services/stripe-client'
+import { getStripeClient, isStripeConfigured, isStripeMockMisconfigured } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan, updatePlanFromStripe } from '../../services/user-plan'
 import { getErrorMessage, isStripeError } from '../../types/errors'
 
@@ -11,7 +11,12 @@ const planeAPool = getPool(config.db.planeAUrl)
 const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   const user = request.user!
 
-  if ((!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) || !config.billing.stripe.priceIdPlus) {
+  if (isStripeMockMisconfigured()) {
+    reply.code(500)
+    return { error: 'billing_misconfigured' }
+  }
+
+  if (!isStripeConfigured() || !config.billing.stripe.priceIdPlus) {
     reply.code(500)
     return { error: 'billing_not_configured' }
   }

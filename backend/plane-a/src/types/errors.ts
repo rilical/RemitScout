@@ -93,11 +93,10 @@ export const createApiError = (
 ): ApiError => {
   return {
     error,
-    ...(message && { message }),
-    ...(details && { details }),
+    ...(message ? { message } : {}),
+    ...(details !== undefined ? { details } : {}),
   }
 }
-
 
 
 

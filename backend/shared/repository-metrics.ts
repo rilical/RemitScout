@@ -1,4 +1,5 @@
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { config } from './config'
 import { createLogger } from './logger'
 import { formatError } from './utils/error-handling'
 
@@ -33,6 +34,9 @@ export const recordRepositoryMetric = async (
   errorType?: string,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -80,6 +84,9 @@ export const recordQueueDepthMetric = async (
   depth: number,
 ): Promise<void> => {
   try {
+    if (!config.observability.cloudwatch.enabled) {
+      return
+    }
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -114,25 +121,26 @@ export const recordFxRateChange = async (
 ): Promise<void> => {
   try {
     const changePercent = Math.abs((newRate - oldRate) / oldRate) * 100
-    const client = getCloudWatchClient()
-    
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/FX',
-        MetricData: [
-          {
-            MetricName: 'rate_change_percent',
-            Value: changePercent,
-            Unit: 'Percent',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'BaseCurrency', Value: baseCurrency },
-              { Name: 'QuoteCurrency', Value: quoteCurrency },
-            ],
-          },
-        ],
-      }),
-    )
+    if (config.observability.cloudwatch.enabled) {
+      const client = getCloudWatchClient()
+      await client.send(
+        new PutMetricDataCommand({
+          Namespace: 'RemitScout/FX',
+          MetricData: [
+            {
+              MetricName: 'rate_change_percent',
+              Value: changePercent,
+              Unit: 'Percent',
+              Timestamp: new Date(),
+              Dimensions: [
+                { Name: 'BaseCurrency', Value: baseCurrency },
+                { Name: 'QuoteCurrency', Value: quoteCurrency },
+              ],
+            },
+          ],
+        }),
+      )
+    }
 
     // Trigger SNS notification if change > 5%
     if (changePercent > 5) {
@@ -198,7 +206,6 @@ const notifyFxRateChange = async (
     })
   }
 }
-
 
 
 

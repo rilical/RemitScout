@@ -1,0 +1,4 @@
+# Baseline commit for staging deployments
+# Set this to the commit hash of the last successful staging deploy.
+
+<unset>

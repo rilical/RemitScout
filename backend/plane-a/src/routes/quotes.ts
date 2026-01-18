@@ -8,7 +8,7 @@ import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { parseCorridorId } from '../../../shared/corridor'
-import { isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
+import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { createTtlCache } from '../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
@@ -203,6 +203,8 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     const destCountry = corridorParts.destCountry.toUpperCase()
     const sourceCurrency = corridorParts.sourceCurrency.toUpperCase()
     const destCurrency = corridorParts.destCurrency.toUpperCase()
+    const defaultDestCurrency = getCountryByCode(destCountry)?.currency?.toUpperCase() ?? null
+    const isNonDefaultDestCurrency = Boolean(defaultDestCurrency && destCurrency !== defaultDestCurrency)
     if (!isCurrencyAllowedForRequest(sourceCountry, sourceCurrency, 'source')) {
       reply.code(400)
       return { error: 'bad_request', details: [{ message: 'invalid source currency' }] }
@@ -346,7 +348,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       )
       let capabilityProviderIds: string[] = []
 
-      if (allowLive) {
+      if (allowLive || isNonDefaultDestCurrency) {
         try {
           const capabilityIds = await corridorCapabilityRepository.listSupportedProviderIds(
             corridor_id,
@@ -367,9 +369,35 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      const expectedProviders = capabilityProviderIds.length
-        ? Array.from(new Set(capabilityProviderIds))
-        : Array.from(new Set(supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean)))
+      if (isNonDefaultDestCurrency && capabilityProviderIds.length === 0) {
+        reply.code(404)
+        return {
+          error: 'corridor_unsupported',
+          message: 'No providers support this currency for the selected corridor.',
+          corridor: corridor_id,
+        }
+      }
+
+      const allowedProviderSet = capabilityProviderIds.length
+        ? new Set(capabilityProviderIds)
+        : supportedProviderSet
+
+      if (!allowedProviderSet.size) {
+        reply.code(404)
+        return {
+          error: 'corridor_unsupported',
+          message: 'No providers currently support this corridor.',
+          corridor: corridor_id,
+        }
+      }
+
+      result.rows = result.rows.filter((row) => {
+        const providerId = row.provider_id ? normalizeProviderId(row.provider_id) : ''
+        return providerId && allowedProviderSet.has(providerId)
+      })
+      result.rowCount = result.rows.length
+
+      const expectedProviders = Array.from(allowedProviderSet)
 
       const providerCollectedAt = new Map<string, number>()
       for (const row of result.rows) {
@@ -395,6 +423,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       const cacheFresh = expectedProviders.length
         ? expectedProviders.every(isProviderFresh)
         : cacheAgeSeconds !== null && cacheAgeSeconds <= freshnessSeconds
+      const staleProviders = expectedProviders.filter((providerId) => !isProviderFresh(providerId))
 
       let refreshAttempted = false
       let refreshEnqueued = false
@@ -406,7 +435,9 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         refreshAttempted = true
         const jitterMs = await getCorridorJitterMs(corridor_id)
         await sleepWithJitter(jitterMs)
-        const refreshRequests = expectedProviders.map((providerId) => ({
+        const refreshTargets = staleProviders.length ? staleProviders : expectedProviders
+        refreshProviderIds = refreshTargets
+        const refreshRequests = refreshTargets.map((providerId) => ({
           providerId,
           payinMethod: payin,
           payoutMethod: payout,

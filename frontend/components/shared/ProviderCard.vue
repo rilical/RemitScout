@@ -4,12 +4,12 @@
     <div class="relative bg-gradient-to-br from-neutral-50 via-white to-brand-50/30 px-6 py-6">
       <!-- Logo and Name -->
       <div class="mb-6 grid grid-cols-[auto_1fr] gap-4 items-center">
-        <div class="flex h-24 w-24 items-center justify-center">
+        <div class="flex h-20 w-20 items-center justify-center">
           <ProviderLogo
             :slug="provider?.slug || ''"
             :alt="provider?.name"
             size="large"
-            class="max-h-20 w-auto object-contain"
+            class="max-h-16 w-auto object-contain"
           />
         </div>
         <div>

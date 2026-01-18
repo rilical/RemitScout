@@ -5,7 +5,15 @@ import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 
+const planeBUrl = process.env.DATABASE_URL_PLANE_B || process.env.DATABASE_URL
+const shouldRun = Boolean(planeBUrl)
+
 describe('Cache Freshness Integration', () => {
+  if (!shouldRun) {
+    it.skip('DATABASE_URL_PLANE_B or DATABASE_URL required', () => {})
+    return
+  }
+
   let pool: Pool
   let volatilityService: VolatilityService
   const corridorIds = ['US-AR-USD-ARS', 'GB-NG-GBP-NGN', 'CA-AU-CAD-AUD']

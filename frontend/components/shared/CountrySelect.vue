@@ -104,6 +104,7 @@ interface Props {
   labelClass?: string
   selectClass?: string
   theme?: 'light' | 'dark'
+  excludeCountry?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -114,6 +115,7 @@ const props = withDefaults(defineProps<Props>(), {
   labelClass: '',
   selectClass: '',
   theme: 'light',
+  excludeCountry: undefined,
 })
 
 const emit = defineEmits<{
@@ -137,19 +139,27 @@ const filteredCountries = ref(allCountries)
 const dropdownStyle = ref({})
 
 const filterCountries = () => {
+  let countries = allCountries
+  
+  // Exclude the specified country if provided
+  if (props.excludeCountry) {
+    countries = countries.filter(country => country.value !== props.excludeCountry)
+  }
+  
   if (!searchQuery.value) {
-    filteredCountries.value = allCountries
+    filteredCountries.value = countries
   }
   else {
     const query = searchQuery.value.toLowerCase().trim()
     // Filter by searchText (name only, no emoji) for lookup
-    filteredCountries.value = allCountries.filter(country =>
+    filteredCountries.value = countries.filter(country =>
       country.searchText.includes(query),
     )
   }
 }
 
 watch(searchQuery, filterCountries)
+watch(() => props.excludeCountry, filterCountries)
 
 const selectCountry = (country: typeof allCountries[0]) => {
   emit('update:modelValue', country.value)

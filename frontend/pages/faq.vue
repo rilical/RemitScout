@@ -1,42 +1,42 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-gray-900">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative bg-white py-12 lg:py-16">
+    <section class="relative bg-gray-900 py-12 lg:py-16">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" dark />
 
         <div class="mx-auto max-w-4xl text-center mt-8">
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-neutral-900 mb-4">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-600 mb-4">
             Frequently Asked Questions
           </h1>
-          <p class="text-lg sm:text-xl text-neutral-600 max-w-3xl mx-auto mb-8">
+          <p class="text-lg sm:text-xl text-neutral-300 max-w-3xl mx-auto mb-8">
             Answers about how Remit‑Scout works: how we collect quotes, how we rank providers, how to read results, and what you get with Remit‑Scout Plus.
           </p>
 
           <!-- Trust Note Banner -->
-          <div class="mx-auto max-w-3xl mb-8 rounded-xl border border-neutral-200 bg-neutral-50 px-6 py-4">
-            <p class="text-sm text-neutral-700 leading-relaxed">
-              <strong class="font-semibold text-neutral-900">Remit‑Scout is a comparison and research product.</strong> We don't hold, move, or transmit money. When you choose a provider, you complete your transfer directly on the provider's licensed website or app.
+          <div class="mx-auto max-w-3xl mb-8 rounded-xl border border-neutral-700 bg-neutral-800 px-6 py-4">
+            <p class="text-sm text-neutral-300 leading-relaxed">
+              <strong class="font-semibold text-white">Remit‑Scout is a comparison and research product.</strong> We don't hold, move, or transmit money. When you choose a provider, you complete your transfer directly on the provider's licensed website or app.
             </p>
           </div>
 
           <!-- Trust Badges -->
           <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200">
+            <div class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700">
               <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
               No pay-to-rank
             </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200">
+            <div class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700">
               <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Quotes timestamped
             </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200">
+            <div class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700">
               <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -44,7 +44,7 @@
             </div>
             <NuxtLink
               to="/contact"
-              class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50"
+              class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700 hover:bg-neutral-700"
             >
               <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -60,7 +60,7 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search questions..."
-                class="w-full rounded-xl border border-neutral-300 bg-white px-6 py-4 pl-12 text-neutral-900 placeholder-neutral-500 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                class="w-full rounded-xl border border-neutral-700 bg-neutral-800 px-6 py-4 pl-12 text-white placeholder-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
               >
               <svg
                 class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400"
@@ -82,12 +82,12 @@
     </section>
 
     <!-- Main Content -->
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20">
-      <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20 pt-12">
+      <div class="lg:grid lg:grid-cols-12 lg:gap-12">
         <!-- Sticky Navigation (Desktop) -->
         <aside class="hidden lg:block lg:col-span-3">
           <div class="sticky top-24 space-y-2">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-4">
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-4">
               Quick Navigation
             </h3>
             <nav class="space-y-1">
@@ -98,8 +98,8 @@
                 :class="[
                   'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   activeCategory === category.id
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-neutral-700 hover:bg-neutral-50',
+                    ? 'bg-brand-600/20 text-brand-400'
+                    : 'text-neutral-300 hover:bg-neutral-800',
                 ]"
                 @click="activeCategory = category.id"
               >
@@ -114,9 +114,9 @@
           <!-- Getting Started -->
           <section
             id="getting-started"
-            class="scroll-mt-24 mb-16"
+            class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Getting started
             </h2>
             <div class="space-y-4">
@@ -127,9 +127,9 @@
           <!-- Pricing, quotes, and accuracy -->
           <section
             id="pricing-quotes"
-            class="scroll-mt-24 mb-16"
+            class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Pricing, quotes, and accuracy
             </h2>
             <div class="space-y-4">
@@ -140,9 +140,9 @@
           <!-- Rankings and Remit‑Score -->
           <section
             id="rankings"
-            class="scroll-mt-24 mb-16"
+            class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Rankings and Remit‑Score
             </h2>
             <div class="space-y-4">
@@ -153,9 +153,9 @@
           <!-- Providers, safety, and availability -->
           <section
             id="providers-safety"
-            class="scroll-mt-24 mb-16"
+            class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Providers, safety, and availability
             </h2>
             <div class="space-y-4">
@@ -166,9 +166,9 @@
           <!-- Remit‑Scout Plus -->
           <section
             id="remit-scout-plus"
-            class="scroll-mt-24 mb-16"
+            class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Remit‑Scout Plus
             </h2>
             <div class="space-y-4">
@@ -181,7 +181,7 @@
             id="partnerships"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Partnerships and how we make money
             </h2>
             <div class="space-y-4">
@@ -194,7 +194,7 @@
             id="privacy"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Privacy and data
             </h2>
             <div class="space-y-4">
@@ -207,7 +207,7 @@
             id="reporting"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-8">
               Reporting issues and support
             </h2>
             <div class="space-y-4">
@@ -427,12 +427,12 @@
       </section>
 
       <!-- Final CTA Section -->
-      <section class="mb-16 rounded-3xl border border-neutral-200 bg-white p-10 lg:p-14 shadow-lg">
+      <section class="mb-16">
         <div class="text-center">
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
             Still have questions?
           </h2>
-          <p class="text-lg text-neutral-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p class="text-lg text-neutral-300 max-w-2xl mx-auto mb-8 leading-relaxed">
             If you can't find what you need here, contact us or report an issue — we read every message and use them to improve accuracy and clarity.
           </p>
           <div class="flex flex-wrap items-center justify-center gap-4">
@@ -444,19 +444,19 @@
             </NuxtLink>
             <NuxtLink
               to="/contact"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-8 py-4 text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-50"
+              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
             >
               Report a rate issue
             </NuxtLink>
             <NuxtLink
               to="/methodology"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-8 py-4 text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-50"
+              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
             >
               Read Methodology
             </NuxtLink>
             <NuxtLink
               to="/partnerships"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-8 py-4 text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-50"
+              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
             >
               How we make money
             </NuxtLink>

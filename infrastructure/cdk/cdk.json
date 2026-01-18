@@ -1,7 +1,10 @@
 {
   "app": "npx ts-node --project tsconfig.json bin/app.ts",
   "context": {
-    "@aws-cdk/core:newStyleStackSynthesis": true
+    "@aws-cdk/core:newStyleStackSynthesis": true,
+    "planeAAdminEmails": [
+      "omar@remit-scout.com"
+    ]
   },
   "watch": {
     "include": [

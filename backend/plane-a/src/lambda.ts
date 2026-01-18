@@ -1,10 +1,6 @@
 import awsLambdaFastify from '@fastify/aws-lambda'
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
-import { assertRuntimeConfig, config } from '../../shared/config'
-import { initErrorTracking } from '../../shared/error-tracker'
 import { createLogger } from '../../shared/logger'
-import { initTracing } from '../../shared/tracing'
-import { buildApp } from './app'
 
 const logger = createLogger('plane-a.lambda')
 
@@ -145,6 +141,11 @@ const init = async () => {
       },
     ])
 
+    const { config, assertRuntimeConfig } = await import('../../shared/config')
+    const { initErrorTracking } = await import('../../shared/error-tracker')
+    const { initTracing } = await import('../../shared/tracing')
+    const { buildApp } = await import('./app')
+
     assertRuntimeConfig({
       requirePlaneA: true,
       requireRedis: true,
@@ -157,8 +158,8 @@ const init = async () => {
     initTracing('plane-a')
 
     const app = await buildApp()
-    await app.ready()
     proxy = awsLambdaFastify(app)
+    await app.ready()
     logger.info('lambda_initialized')
   })()
 

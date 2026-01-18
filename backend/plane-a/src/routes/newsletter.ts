@@ -4,9 +4,9 @@ import { createHash } from 'crypto'
 import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { getRedisClient } from '../../../shared/redis'
 import { NewsletterRepository } from '../repositories'
 import { generateToken, hashToken } from '../utils/token-generator'
+import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import { sendConfirmationEmail, sendWelcomeEmail } from '../services/newsletter-email'
@@ -36,29 +36,7 @@ const isEmailSuppressed = async (email: string): Promise<boolean> => {
     `SELECT 1 FROM silver.email_suppression WHERE email_hash = $1 LIMIT 1`,
     [emailHash],
   )
-  return result.rowCount > 0
-}
-
-const checkRateLimit = async (email: string): Promise<boolean> => {
-  try {
-    const redis = await getRedisClient()
-    if (!redis) {
-      logger.warn('newsletter_rate_limit_disabled', { reason: 'redis_unavailable' })
-      return false
-    }
-
-    const key = `newsletter:rate:${hashEmail(email)}`
-    const count = await redis.incr(key)
-    if (count === 1) {
-      await redis.expire(key, 3600)
-    }
-    return count > 3
-  } catch (error) {
-    logger.warn('newsletter_rate_limit_failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return false
-  }
+  return (result.rowCount ?? 0) > 0
 }
 
 const renderHtml = (title: string, message: string) => {
@@ -82,8 +60,8 @@ const sendHtml = (reply: { type: (arg0: string) => void; send: (arg0: string) =>
 }
 
 const buildRedirect = (path: string, status: string) => {
-  const base = config.newsletter.baseUrl || config.billing.stripe.frontendBaseUrl
-  const normalized = base.replace(/\/$/, '')
+  const base = config.newsletter.baseUrl || config.billing.stripe.frontendBaseUrl || ''
+  const normalized = base ? base.replace(/\/$/, '') : ''
   return `${normalized}${path}?status=${encodeURIComponent(status)}`
 }
 
@@ -104,7 +82,8 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
         return { success: true, status: 'active' }
       }
 
-      if (await checkRateLimit(email)) {
+      const rateKey = buildRateLimitKey('newsletter:rate', email)
+      if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: 3600, component: 'newsletter' })) {
         reply.code(429)
         return { error: 'rate_limited', message: 'Please wait before requesting another confirmation email.' }
       }

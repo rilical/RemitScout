@@ -190,6 +190,7 @@
                     id="from-country"
                     v-model="moneyForm.from"
                     label="Sending from"
+                    :exclude-country="moneyForm.to"
                     placeholder="United States"
                   />
                 </div>
@@ -205,6 +206,7 @@
                     id="to-country"
                     v-model="moneyForm.to"
                     label="Receiving in"
+                    :exclude-country="moneyForm.from"
                     placeholder="Type in Country"
                   />
                 </div>
@@ -239,6 +241,7 @@
                     v-model="moneyForm.fromCurrency"
                     :country-code="moneyForm.from"
                     :currencies="availableFromCurrencies"
+                    :exclude-currency="moneyForm.toCurrency"
                     placeholder="Choose currency"
                   />
                 </div>
@@ -255,6 +258,7 @@
                     v-model="moneyForm.toCurrency"
                     :country-code="moneyForm.to"
                     :currencies="availableToCurrencies"
+                    :exclude-currency="moneyForm.fromCurrency"
                     :placeholder="
                       moneyForm.to ? 'Choose currency' : 'Select receiving country first'
                     "

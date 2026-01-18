@@ -6,6 +6,7 @@ import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { recordRequest } from '../../../shared/api-metrics'
 import { formatError } from '../../../shared/utils/error-handling'
+import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 
 const logger = createLogger('plane-a.contact')
 
@@ -184,6 +185,18 @@ export const contactRoutes = async (app: FastifyInstance) => {
 
     try {
       const body = contactFormSchema.parse(request.body)
+      const seed = `${request.ip || 'unknown'}:${body.email.toLowerCase().trim()}`
+      const rateKey = buildRateLimitKey('contact:rate', seed)
+      if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: 3600, component: 'contact' })) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('POST', '/contact', 429, durationSeconds)
+        reply.code(429)
+        return {
+          success: false,
+          error: 'rate_limited',
+          message: 'Please wait before sending another message.',
+        }
+      }
 
       // Log the contact form submission
       logger.info('contact_form_submission', {
@@ -287,4 +300,3 @@ export const contactRoutes = async (app: FastifyInstance) => {
     }
   })
 }
-

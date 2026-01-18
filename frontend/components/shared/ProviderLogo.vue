@@ -1,12 +1,8 @@
 <template>
   <div class="inline-block">
-    <NuxtImg
+    <img
       :src="logoSrc"
       :alt="alt || slug"
-      width="96"
-      height="32"
-      loading="lazy"
-      :placeholder="[50, 25, 75, 5]"
       :class="[logoSize, 'object-contain']"
       @error="handleImageError"
     />
@@ -33,7 +29,7 @@ const logoSize = computed(() => getProviderLogoSize(props.slug, props.size))
 
 const handleImageError = (event: Event | string) => {
   if (typeof event === 'string') return
-  // Fallback to text-based logo if SVG fails to load
+  // Fallback to text-based logo if image fails to load
   const target = event.target as HTMLImageElement
   if (!target) return
   const fallback = document.createElement('div')

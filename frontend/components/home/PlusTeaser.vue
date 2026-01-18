@@ -152,7 +152,7 @@
               Unlimited Intelligent Alerts
             </h4>
             <p class="text-sm text-slate-300 leading-relaxed mb-4">
-              Smart score alerts analyze rate patterns and volatility, scoring 0–100. Only triggers when score hits your threshold. Real-time, hourly, or daily checks. Unlimited alerts.
+              Smart score alerts analyze rate patterns and volatility, scoring 0–100. Only triggers when score hits your threshold. Weekly smart alerts plus daily alerts for Plus.
             </p>
             <div class="text-xs text-slate-500 mt-auto">
               Free: 1 alert | Plus: Unlimited
@@ -285,7 +285,6 @@
 
 <script setup lang="ts">
 </script>
-
 
 
 

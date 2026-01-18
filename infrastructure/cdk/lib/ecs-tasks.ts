@@ -35,6 +35,7 @@ export type EcsTaskOptions = {
   redisSecretArn?: string
   redisSecretJsonKey?: string
   redisSsmName?: string
+  redisUrl?: string
   proxyResidentialSecretArn?: string
   proxyResidentialSecretJsonKey?: string
   proxyResidentialSsmName?: string
@@ -44,12 +45,14 @@ export type EcsTaskOptions = {
   proxyDatacenterSsmName?: string
   proxyDatacenterUrl?: string
   quoteRefreshQueueUrl?: string
+  quoteRefreshQueueMode?: string
   ingestFanoutQueueUrl?: string
   notificationsQueueUrl?: string
   opsAlertsQueueUrl?: string
   bronzeBucketName?: string
   bronzePrefix?: string
   b2cQueueInSweep?: string
+  b2cRefreshLoopEnabled?: boolean
   ingestFanoutMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
@@ -60,8 +63,21 @@ export const createEcsTasks = (
   options: EcsTaskOptions,
 ): EcsTaskResources => {
   const isProd = options.envName === 'prod'
-  const logRetention = isProd ? RetentionDays.ONE_MONTH : RetentionDays.TWO_WEEKS
+  const isDev = options.envName === 'dev'
+  const logRetention = isProd
+    ? RetentionDays.ONE_MONTH
+    : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
+  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
+  const tracingExporter = isDev ? 'none' : 'xray'
+  const enableTelemetry = !isDev
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
+  const useTsxRuntime = options.envName === 'dev' && process.env.ECS_USE_TSX_RUNTIME === '1'
+  const resolveCommand = (distEntry: string, tsEntry: string): string[] => {
+    if (useTsxRuntime) {
+      return ['/app/backend/node_modules/.bin/tsx', `/app/backend/${tsEntry}`]
+    }
+    return ['node', `backend/dist/${distEntry}`]
+  }
   const otelConfigContent = [
     'receivers:',
     '  otlp:',
@@ -92,6 +108,7 @@ export const createEcsTasks = (
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
   const redisSsmName = options.redisSsmName
+  const redisUrl = options.redisUrl
   const proxyResidentialSecretArn = options.proxyResidentialSecretArn
   const proxyResidentialSecretJsonKey = options.proxyResidentialSecretJsonKey
   const proxyResidentialSsmName = options.proxyResidentialSsmName
@@ -101,12 +118,16 @@ export const createEcsTasks = (
   const proxyDatacenterSsmName = options.proxyDatacenterSsmName
   const proxyDatacenterUrl = options.proxyDatacenterUrl
   const quoteRefreshQueueUrl = options.quoteRefreshQueueUrl
+  const quoteRefreshQueueMode = options.quoteRefreshQueueMode
   const ingestFanoutQueueUrl = options.ingestFanoutQueueUrl
   const notificationsQueueUrl = options.notificationsQueueUrl
   const opsAlertsQueueUrl = options.opsAlertsQueueUrl
   const bronzeBucketName = options.bronzeBucketName
   const bronzePrefix = options.bronzePrefix
   const b2cQueueInSweep = options.b2cQueueInSweep
+  const b2cRefreshLoopEnabled = options.b2cRefreshLoopEnabled ?? false
+  const b2cRefreshLimit = isDev ? '25' : '50'
+  const b2cRefreshConcurrency = isDev ? '2' : '5'
   const ingestFanoutMode = options.ingestFanoutMode
   const notificationsMode = options.notificationsMode
   const opsAlertsMode = options.opsAlertsMode
@@ -189,23 +210,37 @@ export const createEcsTasks = (
     Object.keys(sharedSecrets).length > 0 ? { secrets: sharedSecrets } : {}
   const sharedEnv: Record<string, string> = {
     NODE_ENV: 'production',
+    NODE_OPTIONS: '--require /app/backend/shared/node-polyfills.js',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
+  if (!isProd) {
+    sharedEnv.QUOTE_REFRESH_DB_FALLBACK = '1'
+  }
+  if (process.env.DB_DISABLE_STATEMENT_TIMEOUT) {
+    sharedEnv.DB_DISABLE_STATEMENT_TIMEOUT = process.env.DB_DISABLE_STATEMENT_TIMEOUT
+  }
 
   if (planeBDbHost) {
     sharedEnv.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (planeBDbSecretArn) {
+    sharedEnv.PLANE_B_DB_SECRET_ARN = planeBDbSecretArn
   }
   if (planeBDbPort) {
     sharedEnv.PLANE_B_DB_PORT = planeBDbPort
   }
   if (planeBDbName) {
     sharedEnv.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (redisUrl && !sharedSecrets.REDIS_URL) {
+    sharedEnv.REDIS_URL = redisUrl
   }
   if (ingestFanoutQueueUrl) {
     sharedEnv.PLANE_B_INGEST_FANOUT_QUEUE_URL = ingestFanoutQueueUrl
@@ -218,6 +253,9 @@ export const createEcsTasks = (
   }
   if (quoteRefreshQueueUrl) {
     sharedEnv.QUOTE_REFRESH_QUEUE_URL = quoteRefreshQueueUrl
+  }
+  if (quoteRefreshQueueMode) {
+    sharedEnv.QUOTE_REFRESH_QUEUE_MODE = quoteRefreshQueueMode
   }
   if (ingestFanoutMode) {
     sharedEnv.PLANE_B_INGEST_FANOUT_QUEUE_MODE = ingestFanoutMode
@@ -249,15 +287,12 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const planeBIngestOtelLogGroup = new LogGroup(scope, 'PlaneBIngestOtelLogGroup', {
-    logGroupName: `/remit-scout/${options.envName}/plane-b-ingest-otel`,
-    retention: logRetention,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-  })
-
   planeBIngestTask.addContainer('PlaneBIngestContainer', {
     image,
-    command: ['node', 'backend/dist/scripts/aws/plane-b-ingest-ecs.js'],
+    command: resolveCommand(
+      'scripts/aws/plane-b-ingest-ecs.js',
+      'scripts/aws/plane-b-ingest-ecs.ts',
+    ),
     environment: sharedEnv,
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
@@ -265,20 +300,29 @@ export const createEcsTasks = (
       logGroup: planeBIngestLogGroup,
     }),
   })
-  planeBIngestTask.addContainer('PlaneBIngestOtelCollector', {
-    image: ContainerImage.fromRegistry('public.ecr.aws/aws-observability/aws-otel-collector:latest'),
-    cpu: 32,
-    memoryLimitMiB: 256,
-    environment: {
-      AWS_REGION: Stack.of(scope).region,
-      AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
-    },
-    logging: LogDrivers.awsLogs({
-      streamPrefix: 'plane-b-ingest-otel',
-      logGroup: planeBIngestOtelLogGroup,
-    }),
-    portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
-  })
+  if (enableTelemetry) {
+    const planeBIngestOtelLogGroup = new LogGroup(scope, 'PlaneBIngestOtelLogGroup', {
+      logGroupName: `/remit-scout/${options.envName}/plane-b-ingest-otel`,
+      retention: logRetention,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    })
+    planeBIngestTask.addContainer('PlaneBIngestOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'plane-b-ingest-otel',
+        logGroup: planeBIngestOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
 
   const b2cRefreshTask = new FargateTaskDefinition(scope, 'B2cRefreshWorkerTask', {
     cpu: 256,
@@ -292,20 +336,18 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const b2cRefreshOtelLogGroup = new LogGroup(scope, 'B2cRefreshOtelLogGroup', {
-    logGroupName: `/remit-scout/${options.envName}/b2c-refresh-worker-otel`,
-    retention: logRetention,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-  })
-
   b2cRefreshTask.addContainer('B2cRefreshWorkerContainer', {
     image,
-    command: ['node', 'backend/dist/scripts/aws/b2c-refresh-worker-ecs.js'],
+    command: resolveCommand(
+      'scripts/aws/b2c-refresh-worker-ecs.js',
+      'scripts/aws/b2c-refresh-worker-ecs.ts',
+    ),
     environment: {
       ...sharedEnv,
-      B2C_REFRESH_LIMIT: '50',
-      B2C_REFRESH_CONCURRENCY: '5',
+      B2C_REFRESH_LIMIT: b2cRefreshLimit,
+      B2C_REFRESH_CONCURRENCY: b2cRefreshConcurrency,
       B2C_REFRESH_HEALTH_ENABLED: '0',
+      ...(b2cRefreshLoopEnabled ? { B2C_REFRESH_LOOP: '1' } : {}),
       ...(quoteRefreshQueueUrl ? { QUOTE_REFRESH_QUEUE_URL: quoteRefreshQueueUrl } : {}),
     },
     ...secretsConfig,
@@ -314,20 +356,29 @@ export const createEcsTasks = (
       logGroup: b2cRefreshLogGroup,
     }),
   })
-  b2cRefreshTask.addContainer('B2cRefreshOtelCollector', {
-    image: ContainerImage.fromRegistry('public.ecr.aws/aws-observability/aws-otel-collector:latest'),
-    cpu: 32,
-    memoryLimitMiB: 256,
-    environment: {
-      AWS_REGION: Stack.of(scope).region,
-      AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
-    },
-    logging: LogDrivers.awsLogs({
-      streamPrefix: 'b2c-refresh-worker-otel',
-      logGroup: b2cRefreshOtelLogGroup,
-    }),
-    portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
-  })
+  if (enableTelemetry) {
+    const b2cRefreshOtelLogGroup = new LogGroup(scope, 'B2cRefreshOtelLogGroup', {
+      logGroupName: `/remit-scout/${options.envName}/b2c-refresh-worker-otel`,
+      retention: logRetention,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    })
+    b2cRefreshTask.addContainer('B2cRefreshOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'b2c-refresh-worker-otel',
+        logGroup: b2cRefreshOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
 
   const ingestFanoutTask = new FargateTaskDefinition(scope, 'IngestFanoutWorkerTask', {
     cpu: 512,
@@ -341,15 +392,12 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const ingestFanoutOtelLogGroup = new LogGroup(scope, 'IngestFanoutOtelLogGroup', {
-    logGroupName: `/remit-scout/${options.envName}/ingest-fanout-worker-otel`,
-    retention: logRetention,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-  })
-
   ingestFanoutTask.addContainer('IngestFanoutWorkerContainer', {
     image,
-    command: ['node', 'backend/dist/scripts/ingest-fanout-worker.js'],
+    command: resolveCommand(
+      'scripts/aws/ingest-fanout-worker-ecs.js',
+      'scripts/aws/ingest-fanout-worker-ecs.ts',
+    ),
     environment: sharedEnv,
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
@@ -357,20 +405,29 @@ export const createEcsTasks = (
       logGroup: ingestFanoutLogGroup,
     }),
   })
-  ingestFanoutTask.addContainer('IngestFanoutOtelCollector', {
-    image: ContainerImage.fromRegistry('public.ecr.aws/aws-observability/aws-otel-collector:latest'),
-    cpu: 32,
-    memoryLimitMiB: 256,
-    environment: {
-      AWS_REGION: Stack.of(scope).region,
-      AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
-    },
-    logging: LogDrivers.awsLogs({
-      streamPrefix: 'ingest-fanout-worker-otel',
-      logGroup: ingestFanoutOtelLogGroup,
-    }),
-    portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
-  })
+  if (enableTelemetry) {
+    const ingestFanoutOtelLogGroup = new LogGroup(scope, 'IngestFanoutOtelLogGroup', {
+      logGroupName: `/remit-scout/${options.envName}/ingest-fanout-worker-otel`,
+      retention: logRetention,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    })
+    ingestFanoutTask.addContainer('IngestFanoutOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'ingest-fanout-worker-otel',
+        logGroup: ingestFanoutOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
 
   const notificationsQueueTask = new FargateTaskDefinition(
     scope,
@@ -388,19 +445,12 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const notificationsOtelLogGroup = new LogGroup(
-    scope,
-    'NotificationsQueueOtelLogGroup',
-    {
-      logGroupName: `/remit-scout/${options.envName}/notifications-queue-worker-otel`,
-      retention: logRetention,
-      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-    },
-  )
-
   notificationsQueueTask.addContainer('NotificationsQueueWorkerContainer', {
     image,
-    command: ['node', 'backend/dist/scripts/notifications-queue-worker.js'],
+    command: resolveCommand(
+      'scripts/aws/notifications-queue-worker-ecs.js',
+      'scripts/aws/notifications-queue-worker-ecs.ts',
+    ),
     environment: sharedEnv,
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
@@ -408,20 +458,33 @@ export const createEcsTasks = (
       logGroup: notificationsLogGroup,
     }),
   })
-  notificationsQueueTask.addContainer('NotificationsQueueOtelCollector', {
-    image: ContainerImage.fromRegistry('public.ecr.aws/aws-observability/aws-otel-collector:latest'),
-    cpu: 32,
-    memoryLimitMiB: 256,
-    environment: {
-      AWS_REGION: Stack.of(scope).region,
-      AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
-    },
-    logging: LogDrivers.awsLogs({
-      streamPrefix: 'notifications-queue-worker-otel',
-      logGroup: notificationsOtelLogGroup,
-    }),
-    portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
-  })
+  if (enableTelemetry) {
+    const notificationsOtelLogGroup = new LogGroup(
+      scope,
+      'NotificationsQueueOtelLogGroup',
+      {
+        logGroupName: `/remit-scout/${options.envName}/notifications-queue-worker-otel`,
+        retention: logRetention,
+        removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      },
+    )
+    notificationsQueueTask.addContainer('NotificationsQueueOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'notifications-queue-worker-otel',
+        logGroup: notificationsOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
 
   const opsAlertsQueueTask = new FargateTaskDefinition(
     scope,
@@ -439,15 +502,12 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const opsAlertsOtelLogGroup = new LogGroup(scope, 'OpsAlertsQueueOtelLogGroup', {
-    logGroupName: `/remit-scout/${options.envName}/ops-alerts-queue-worker-otel`,
-    retention: logRetention,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-  })
-
   opsAlertsQueueTask.addContainer('OpsAlertsQueueWorkerContainer', {
     image,
-    command: ['node', 'backend/dist/scripts/ops-alerts-queue-worker.js'],
+    command: resolveCommand(
+      'scripts/aws/ops-alerts-queue-worker-ecs.js',
+      'scripts/aws/ops-alerts-queue-worker-ecs.ts',
+    ),
     environment: sharedEnv,
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
@@ -455,20 +515,29 @@ export const createEcsTasks = (
       logGroup: opsAlertsLogGroup,
     }),
   })
-  opsAlertsQueueTask.addContainer('OpsAlertsQueueOtelCollector', {
-    image: ContainerImage.fromRegistry('public.ecr.aws/aws-observability/aws-otel-collector:latest'),
-    cpu: 32,
-    memoryLimitMiB: 256,
-    environment: {
-      AWS_REGION: Stack.of(scope).region,
-      AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
-    },
-    logging: LogDrivers.awsLogs({
-      streamPrefix: 'ops-alerts-queue-worker-otel',
-      logGroup: opsAlertsOtelLogGroup,
-    }),
-    portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
-  })
+  if (enableTelemetry) {
+    const opsAlertsOtelLogGroup = new LogGroup(scope, 'OpsAlertsQueueOtelLogGroup', {
+      logGroupName: `/remit-scout/${options.envName}/ops-alerts-queue-worker-otel`,
+      retention: logRetention,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    })
+    opsAlertsQueueTask.addContainer('OpsAlertsQueueOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'ops-alerts-queue-worker-otel',
+        logGroup: opsAlertsOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
 
   return {
     planeBIngestTask,

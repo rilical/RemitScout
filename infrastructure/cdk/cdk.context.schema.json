@@ -63,6 +63,10 @@
       "type": "string",
       "description": "ARN of Secrets Manager secret for Supabase config (URL + keys)"
     },
+    "devSharedSecretArn": {
+      "type": "string",
+      "description": "Shared dev secret ARN for Supabase/Stripe/Redis (dev only)"
+    },
     "supabaseSsmName": {
       "type": "string",
       "description": "SSM Parameter Store path for Supabase config"
@@ -74,6 +78,10 @@
     "stripeSsmName": {
       "type": "string",
       "description": "SSM Parameter Store path for Stripe config"
+    },
+    "communicationsSecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for alerts/newsletter/push configuration"
     },
     "oandaSecretArn": {
       "type": "string",
@@ -130,9 +138,22 @@
       "enum": ["off", "queue", "shadow"],
       "description": "Ops alerts queue mode"
     },
+    "quoteRefreshQueueMode": {
+      "type": "string",
+      "enum": ["off", "queue", "shadow"],
+      "description": "Quote refresh queue mode"
+    },
     "planeBB2cQueueInSweep": {
       "type": "boolean",
       "description": "Enable B2C queue in sweep"
+    },
+    "planeBIngestDesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B ingest service"
+    },
+    "planeBQueueWorkerDesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B queue worker services"
     },
     "bronzePrefix": {
       "type": "string",

@@ -331,14 +331,9 @@ const computeCorridorIndices = (
   }
 }
 
-const getBucketCandidates = (amount: number, fallback: number) => {
-  const sorted = [...DEFAULT_AMOUNT_BUCKETS]
-    .filter(bucket => Number.isFinite(bucket))
-    .sort((a, b) => Math.abs(amount - a) - Math.abs(amount - b))
-  if (!sorted.includes(fallback)) {
-    sorted.unshift(fallback)
-  }
-  return sorted
+const getBucketCandidates = (amount: number) => {
+  if (!Number.isFinite(amount) || amount <= 0) return []
+  return DEFAULT_AMOUNT_BUCKETS.includes(amount) ? [amount] : []
 }
 
 
@@ -407,10 +402,18 @@ const formatTransferTime = (minMinutes: number | null, maxMinutes: number | null
 
   const minHrs = Math.round(minMinutes / 60)
   const maxHrs = Math.round(maxMinutes / 60)
+  const minDays = Math.round(minHrs / 24)
+  const maxDays = Math.round(maxHrs / 24)
 
   let label = ''
   if (minHrs === 0 && maxHrs === 0) {
     label = 'Instant'
+  } else if (maxHrs >= 24) {
+    if (minDays === maxDays) {
+      label = `${minDays} ${minDays === 1 ? 'day' : 'days'}`
+    } else {
+      label = `${minDays}-${maxDays} days`
+    }
   } else if (minHrs === maxHrs) {
     label = `${minHrs} ${minHrs === 1 ? 'hour' : 'hours'}`
   } else {
@@ -666,6 +669,8 @@ export const providersRoutes = async (app: FastifyInstance) => {
       const destCountry = corridorParts.destCountry.toUpperCase()
       const sourceCurrency = corridorParts.sourceCurrency.toUpperCase()
       const destCurrency = corridorParts.destCurrency.toUpperCase()
+      const defaultDestCurrency = getCountryByCode(destCountry)?.currency?.toUpperCase() ?? null
+      const isNonDefaultDestCurrency = Boolean(defaultDestCurrency && destCurrency !== defaultDestCurrency)
       if (!isCurrencyAllowedForRequest(sourceCountry, sourceCurrency, 'source')) {
         reply.code(400)
         return { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] }
@@ -698,6 +703,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
         supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean),
       )
       const capabilityMethods = new Set<'bank' | 'cash' | 'wallet' | 'airtime'>()
+      const capabilityProviderSet = new Set<string>()
 
       try {
         const capabilityRows = await corridorCapabilityRepository.listByCorridor(corridorId)
@@ -706,11 +712,21 @@ export const providersRoutes = async (app: FastifyInstance) => {
           const providerId = row.provider_id ? normalizeProviderId(row.provider_id) : ''
           if (!providerId) continue
           if (supportedProviderSet.size && !supportedProviderSet.has(providerId)) continue
+          capabilityProviderSet.add(providerId)
+          const metadata = getProviderMetadata(providerId)
+          if (!metadata || metadata.type === 'BANK') continue
+          const providerKey = metadata?.slug ?? null
           const payoutMethods = Array.isArray(row.payout_methods) ? row.payout_methods : []
           for (const payoutMethod of payoutMethods) {
             const methodValue = toAvailableMethod(payoutMethod)
             if (!methodValue) continue
             capabilityMethods.add(methodValue)
+            if (providerKey) {
+              if (!methodsByProvider.has(providerKey)) {
+                methodsByProvider.set(providerKey, new Set())
+              }
+              methodsByProvider.get(providerKey)!.add(methodValue)
+            }
           }
         }
       } catch (error) {
@@ -718,6 +734,28 @@ export const providersRoutes = async (app: FastifyInstance) => {
           corridor_id: corridorId,
           error: error instanceof Error ? error.message : String(error),
         })
+      }
+
+      if (isNonDefaultDestCurrency && capabilityProviderSet.size === 0) {
+        reply.code(404)
+        return {
+          error: 'corridor_unsupported',
+          message: 'No providers support this currency for the selected corridor.',
+          corridor: corridorId,
+        }
+      }
+
+      const allowedProviderSet = capabilityProviderSet.size
+        ? capabilityProviderSet
+        : supportedProviderSet
+
+      if (!allowedProviderSet.size) {
+        reply.code(404)
+        return {
+          error: 'corridor_unsupported',
+          message: 'No providers currently support this corridor.',
+          corridor: corridorId,
+        }
       }
 
       for (const methodValue of capabilityMethods) {
@@ -737,7 +775,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
       }
 
       if (!quotes.length && requestedAmount) {
-        const candidates = getBucketCandidates(requestedAmount, amountBucket)
+        const candidates = getBucketCandidates(requestedAmount)
         for (const candidate of candidates) {
           if (candidate === amountBucket) continue
           const fallbackQuotes = await latestQuoteRepository.listLatestByCorridorAllMethods(
@@ -754,12 +792,24 @@ export const providersRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      if (allowedProviderSet.size) {
+        quotes = quotes.filter((quote) => {
+          const providerId = quote.provider_id ? normalizeProviderId(quote.provider_id) : ''
+          return providerId && allowedProviderSet.has(providerId)
+        })
+      }
+
+      quotes = quotes.filter((quote) => {
+        const metadata = getProviderMetadata(quote.provider_id)
+        return metadata && metadata.type !== 'BANK'
+      })
+
       for (const quote of quotes) {
         const methodValue = toAvailableMethod(quote.payout)
         if (!methodValue) continue
         availableMethods.add(methodValue)
         const metadata = getProviderMetadata(quote.provider_id)
-        if (!metadata) continue
+        if (!metadata || metadata.type === 'BANK') continue
         const key = metadata.slug
         if (!methodsByProvider.has(key)) {
           methodsByProvider.set(key, new Set())
@@ -790,14 +840,16 @@ export const providersRoutes = async (app: FastifyInstance) => {
       }
 
       if (!filteredQuotes.length) {
-        if (supportedProviderIds.length === 0) {
-          reply.code(404)
-          return {
-            error: 'corridor_unsupported',
-            message: 'No providers currently support this corridor.',
-            corridor: corridorId,
-            availableMethods: orderMethods(availableMethods),
-          }
+        const message = 'Quotes are being collected for this corridor. Please try again shortly.'
+        return {
+          error: { code: 'quotes_unavailable', message },
+          message,
+          corridor: corridorId,
+          amount: requestedAmount || amountBucket,
+          method: requestedMethod,
+          bucketUsed,
+          approximate,
+          availableMethods: orderMethods(availableMethods),
         }
       }
 
@@ -870,12 +922,12 @@ export const providersRoutes = async (app: FastifyInstance) => {
         const deliveryLabel = quote.deliveryLabel
 
         const providerMethods = methodsByProvider.get(pq.psp.slug)
-        const methods = providerMethods && providerMethods.size
+        const methods = (providerMethods && providerMethods.size
           ? orderMethods(providerMethods)
           : (() => {
               const fallback = toAvailableMethod(quote.originalQuote.payout)
               return fallback ? [fallback] : ['bank']
-            })()
+            })()) as FrontendProviderQuote['methods']
 
         const bestFor = quote.payout === 'CASH'
           ? 'Fast cash pickup'
@@ -922,7 +974,10 @@ export const providersRoutes = async (app: FastifyInstance) => {
       for (const quote of flattenedQuotes) {
         if (!Array.isArray(quote.methods)) continue
         for (const method of quote.methods) {
-          availableMethods.add(method)
+          const methodValue = toAvailableMethod(method)
+          if (methodValue) {
+            availableMethods.add(methodValue)
+          }
         }
       }
 

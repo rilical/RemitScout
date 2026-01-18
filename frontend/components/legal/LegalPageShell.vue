@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50">
-    <section class="relative overflow-hidden border-b border-brand-700 bg-brand-700">
+    <section class="relative overflow-hidden border-b border-blue-600 bg-blue-600">
       <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
@@ -16,7 +16,7 @@
             <div class="mt-6 flex flex-wrap gap-3 text-sm text-white">
               <div
                 v-if="lastUpdatedLabel"
-                class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1"
+                class="inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1"
               >
                 <span class="font-semibold text-white">Last updated</span>
                 <time :datetime="lastUpdatedIso" class="text-white/90">{{ lastUpdatedLabel }}</time>

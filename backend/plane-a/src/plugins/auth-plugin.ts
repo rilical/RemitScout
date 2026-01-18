@@ -3,6 +3,7 @@ import { config } from '../../../shared/config'
 import { getPool, query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
+import { isSupabaseMockEnabled } from '../auth/mock-config'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
@@ -70,7 +71,7 @@ export const requireAdmin = () => async (request: FastifyRequest, reply: Fastify
     return reply.send({ error: 'unauthorized' })
   }
 
-  if (config.auth.supabase.mock.enabled && config.env !== 'production') {
+  if (isSupabaseMockEnabled()) {
     return
   }
 

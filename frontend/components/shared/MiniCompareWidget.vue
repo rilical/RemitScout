@@ -19,6 +19,7 @@
             <CountrySelect
               v-model="from"
               label="From country"
+              :exclude-country="to"
               placeholder="United States"
               select-class="h-11"
             />
@@ -28,6 +29,7 @@
             <CountrySelect
               v-model="to"
               label="To country"
+              :exclude-country="from"
               placeholder="India"
               select-class="h-11"
             />
@@ -65,6 +67,7 @@
               v-model="fromCurrency"
               label="Send currency"
               :country-code="from"
+              :exclude-currency="toCurrency"
               select-class="h-11"
             />
           </div>
@@ -74,6 +77,7 @@
               v-model="toCurrency"
               label="Receive currency"
               :country-code="to"
+              :exclude-currency="fromCurrency"
               select-class="h-11"
             />
           </div>

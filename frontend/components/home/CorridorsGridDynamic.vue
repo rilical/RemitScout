@@ -1,16 +1,13 @@
 <template>
-  <section :class="['relative py-12 sm:py-16', props.dark ? 'bg-gray-900' : '']">
-    <!-- Transitional Background -->
-    <div v-if="!props.dark" class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700" />
-
+  <section :class="['relative py-12 sm:py-16', props.dark ? 'bg-gray-900' : 'bg-white']">
     <!-- Content -->
     <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center animate-fade-in-up mb-8">
-        <h2 :class="['text-3xl sm:text-4xl font-bold mb-4', props.dark ? 'text-white' : 'text-white']">
-          Popular Corridors Our Expats Searched Today
+        <h2 :class="['text-3xl sm:text-4xl font-bold mb-4', props.dark ? 'text-white' : 'text-neutral-900']">
+          Popular Corridors Searched Today
         </h2>
-        <p :class="['text-lg sm:text-xl max-w-3xl mx-auto', props.dark ? 'text-white/70' : 'text-white/90']">
-          Join thousands of expats who trust Remit-Scout to find the best transfer rates.
+        <p :class="['text-lg sm:text-xl max-w-3xl mx-auto', props.dark ? 'text-white/70' : 'text-neutral-600']">
+          Join thousands who trust Remit-Scout to find the best transfer rates.
         </p>
       </div>
 
@@ -99,13 +96,13 @@
               'p-2 rounded-full border transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
               props.dark
                 ? 'border-gray-700 hover:border-gray-600 hover:bg-gray-800'
-                : 'border-white/40 hover:border-white hover:bg-white/10',
+                : 'border-neutral-300 hover:border-brand-600 hover:bg-brand-50',
             ]"
             aria-label="Previous slide"
             @click="scrollLeft"
           >
             <svg
-              :class="['w-5 h-5', props.dark ? 'text-white' : 'text-white']"
+              :class="['w-5 h-5', props.dark ? 'text-white' : 'text-neutral-600']"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -127,10 +124,10 @@
               :class="[
                 'h-2 rounded-full transition-all',
                 currentSlide === slide - 1
-                  ? 'w-8 bg-white'
+                  ? props.dark ? 'w-8 bg-white' : 'w-8 bg-brand-600'
                   : props.dark
                     ? 'w-2 bg-gray-700 hover:bg-gray-600'
-                    : 'w-2 bg-white/40 hover:bg-white/60',
+                    : 'w-2 bg-neutral-300 hover:bg-brand-400',
               ]"
               :aria-label="`Go to slide ${slide}`"
               @click="goToSlide(slide - 1)"
@@ -143,13 +140,13 @@
               'p-2 rounded-full border transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
               props.dark
                 ? 'border-gray-700 hover:border-gray-600 hover:bg-gray-800'
-                : 'border-white/40 hover:border-white hover:bg-white/10',
+                : 'border-neutral-300 hover:border-brand-600 hover:bg-brand-50',
             ]"
             aria-label="Next slide"
             @click="scrollRight"
           >
             <svg
-              :class="['w-5 h-5', props.dark ? 'text-white' : 'text-white']"
+              :class="['w-5 h-5', props.dark ? 'text-white' : 'text-neutral-600']"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

@@ -3,6 +3,8 @@ import { createLogger } from '../../../shared/logger'
 import { query } from '../../../shared/db'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 import { parseCorridorId } from '../../../shared/corridor'
+import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
+import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { AlertRepository, FxRateRepository, LatestQuoteRepository } from '../repositories'
 import { sendAlertEmail, sendAlertPush, sendAlertSms } from './alert-notifications'
@@ -106,6 +108,33 @@ const toNumberOrNull = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+const resolveUsdEquivalentBucket = (payload: Record<string, unknown>): number => {
+  const explicit = toNumberOrNull(payload.amountBucket)
+  if (explicit !== null && explicit > 0) return Math.round(explicit)
+
+  const payloadCurrency = typeof payload.fromCurrency === 'string' ? payload.fromCurrency.toUpperCase() : null
+  const from = typeof payload.from === 'string' ? payload.from.toUpperCase() : null
+  const corridorId = typeof payload.corridorId === 'string' ? payload.corridorId : null
+  const corridorCurrency = corridorId ? parseCorridorId(corridorId)?.sourceCurrency?.toUpperCase() ?? null : null
+  const fromCurrency = payloadCurrency
+    || corridorCurrency
+    || (from ? getCountryByCode(from)?.currency?.toUpperCase() ?? null : null)
+  const rate = fromCurrency ? FIXED_EXCHANGE_RATES[fromCurrency] ?? 1 : 1
+  const amount = 500 * rate
+  return computeBucketSelection(amount).bucket_used
+}
+
+const toPositiveInt = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.floor(parsed)
+}
+
+const SMART_ALERT_MIN_CONFIDENCE = toPositiveInt(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70)
+const SMART_ALERT_MIN_SAMPLE_DAYS = toPositiveInt(process.env.SMART_ALERTS_MIN_SAMPLE_DAYS, 21)
+const WEEKLY_SEND_DOW = Math.min(7, Math.max(1, toPositiveInt(process.env.ALERTS_WEEKLY_SEND_DOW, 1)))
+const WEEKLY_SEND_HOUR = Math.min(23, Math.max(0, toPositiveInt(process.env.ALERTS_WEEKLY_SEND_HOUR, 9)))
+
 export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolean> {
   try {
     // Get alert rule and watchlist item
@@ -149,6 +178,8 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
     // Get current value based on metric
     let currentValue: number | null = null
     let alertEligible = true
+    let smartWindowStart: Date | null = null
+    let smartWindowEnd: Date | null = null
     const fxRateRepository = new FxRateRepository(pool)
     const latestQuoteRepository = new LatestQuoteRepository(pool)
 
@@ -173,7 +204,7 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         })
         return false
       }
-      const amountBucket = (targetPayload.amountBucket as number) || 500
+      const amountBucket = resolveUsdEquivalentBucket(targetPayload)
       const payin = (targetPayload.method as string) || 'bank'
       const payout = 'bank'
 
@@ -212,7 +243,7 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         })
         return false
       }
-      const amountBucket = (targetPayload.amountBucket as number) || 500
+      const amountBucket = resolveUsdEquivalentBucket(targetPayload)
       const payin = (targetPayload.method as string) || 'bank'
       const payout = 'bank'
 
@@ -285,8 +316,20 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         return false
       }
 
-      const result = await query<{ send_score: number; alert_eligible: boolean }>(
-        `SELECT send_score::double precision AS send_score, alert_eligible
+      const result = await query<{
+        send_score: number
+        alert_eligible: boolean
+        best_window_start: Date | null
+        best_window_end: Date | null
+        confidence: number | null
+        sample_days: number | null
+      }>(
+        `SELECT send_score::double precision AS send_score,
+                alert_eligible,
+                best_window_start,
+                best_window_end,
+                confidence,
+                sample_days
          FROM silver.corridor_signals
          WHERE corridor_id = $1`,
         [corridorId],
@@ -296,7 +339,42 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
       const row = result.rows[0]
       if (row) {
         currentValue = parseFloat(String(row.send_score))
-        alertEligible = row.alert_eligible === true
+        smartWindowStart = row.best_window_start ? new Date(row.best_window_start) : null
+        smartWindowEnd = row.best_window_end ? new Date(row.best_window_end) : null
+
+        const confidence = toNumberOrNull(row.confidence)
+        const sampleDays = toNumberOrNull(row.sample_days)
+        const now = new Date()
+        const inWindow = !!(
+          smartWindowStart
+          && smartWindowEnd
+          && now >= smartWindowStart
+          && now <= smartWindowEnd
+        )
+        const hasConfidence = confidence !== null && confidence >= SMART_ALERT_MIN_CONFIDENCE
+        const hasSamples = sampleDays !== null && sampleDays >= SMART_ALERT_MIN_SAMPLE_DAYS
+
+        alertEligible = row.alert_eligible === true && inWindow && hasConfidence && hasSamples
+
+        if (!inWindow) {
+          logger.debug('smart_alert_outside_window', {
+            alert_id: alertId,
+            corridor_id: corridorId,
+            window_start: smartWindowStart,
+            window_end: smartWindowEnd,
+          })
+        }
+
+        if (!hasSamples || !hasConfidence) {
+          logger.debug('smart_alert_insufficient_data', {
+            alert_id: alertId,
+            corridor_id: corridorId,
+            sample_days: sampleDays,
+            confidence,
+            min_sample_days: SMART_ALERT_MIN_SAMPLE_DAYS,
+            min_confidence: SMART_ALERT_MIN_CONFIDENCE,
+          })
+        }
       }
     }
 
@@ -304,14 +382,12 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
       logger.warn('alert_value_unavailable', {
         alert_id: alertId,
         metric: alert.metric,
-        target_type: alert.target_type,
       })
       return false
     }
 
     const threshold = alert.threshold
     const lastValue = state?.last_value ?? null
-    const inAlarm = state?.in_alarm || false
 
     // Evaluate comparator
     let shouldTrigger = false
@@ -366,6 +442,18 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         threshold,
       })
       shouldTrigger = false
+    }
+
+    if (alert.metric === 'sendScore' && shouldTrigger && smartWindowStart && state?.last_notified_at) {
+      const lastNotified = new Date(state.last_notified_at)
+      if (lastNotified >= smartWindowStart) {
+        logger.debug('smart_alert_already_notified_in_window', {
+          alert_id: alertId,
+          window_start: smartWindowStart,
+          last_notified_at: state.last_notified_at,
+        })
+        shouldTrigger = false
+      }
     }
 
     // Check cooldown
@@ -462,7 +550,7 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
 
 export async function evaluateAlertsForFrequency(
   pool: Pool,
-  frequency: 'realtime' | 'hourly' | 'daily',
+  frequency: 'weekly' | 'daily',
   timeBucket?: number,
 ): Promise<number> {
   try {
@@ -476,20 +564,26 @@ export async function evaluateAlertsForFrequency(
     ]
     let joins = 'JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id'
 
-    if (frequency === 'realtime') {
+    if (frequency === 'daily') {
       joins += ' JOIN silver.user_plan up ON up.user_id = wi.user_id'
       conditions.push(`up.plan_code IN ('plus', 'enterprise')`)
       conditions.push(`up.status IN ('active', 'trialing')`)
     }
 
-    if (frequency === 'daily') {
+    if (frequency === 'daily' || frequency === 'weekly') {
       joins += ` LEFT JOIN silver.notification_pref np
         ON np.user_id = wi.user_id AND np.owner_type = 'user' AND np.channel = 'email'`
       conditions.push('COALESCE(np.unsubscribed, FALSE) = FALSE')
       conditions.push(
         `EXTRACT(HOUR FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))
-         = COALESCE(np.daily_send_hour, 9)`,
+         = COALESCE(np.daily_send_hour, ${frequency === 'weekly' ? WEEKLY_SEND_HOUR : 9})`,
       )
+      if (frequency === 'weekly') {
+        conditions.push(
+          `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))
+           = ${WEEKLY_SEND_DOW}`,
+        )
+      }
       if (Number.isFinite(timeBucket)) {
         params.push(timeBucket as number)
         conditions.push(

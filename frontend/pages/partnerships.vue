@@ -3,26 +3,26 @@
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
         <div class="mt-12">
           <div>
-            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl mb-6 leading-tight">
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 leading-tight">
               Partner with <span class="text-brand-600">Remit-Scout</span>
             </h1>
 
-            <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed">
+            <p class="text-xl text-white sm:text-2xl font-medium mb-6 leading-relaxed">
               Reach users who compare international transfer options before they send
             </p>
 
-            <p class="text-lg text-neutral-700 leading-relaxed mb-4">
-              Remit-Scout is an independent comparison platform for international money transfers. When users search corridors you serve, <strong class="font-semibold text-neutral-900">you show up in results</strong>. If they choose you, they click through and complete the transfer on your checkout.
+            <p class="text-lg text-gray-300 leading-relaxed mb-4">
+              Remit-Scout is an independent comparison platform for international money transfers. When users search corridors you serve, <strong class="font-semibold text-brand-600">you show up in results</strong>. If they choose you, they click through and complete the transfer on your checkout.
             </p>
 
-            <p class="text-base text-neutral-600 leading-relaxed mb-8">
-              We rank providers by <strong class="font-semibold text-neutral-900">what the recipient should receive</strong> after fees and FX markup, not marketing claims. If your pricing is competitive, you rank higher, whether or not we have an affiliate relationship.
+            <p class="text-base text-gray-400 leading-relaxed mb-8">
+              We rank providers by <strong class="font-semibold text-brand-600">what the recipient should receive</strong> after fees and FX markup, not marketing claims. If your pricing is competitive, you rank higher, whether or not we have an affiliate relationship.
             </p>
 
             <div class="mb-6">
@@ -47,7 +47,7 @@
               </NuxtLink>
             </div>
 
-            <p class="text-sm text-neutral-600">
+            <p class="text-sm text-gray-400">
               Last updated: December 2025
             </p>
           </div>
@@ -59,6 +59,12 @@
     <section class="py-16 lg:py-20 bg-white">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
+          <h2 class="text-3xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            Providers We Compare
+          </h2>
           <p class="text-lg leading-relaxed text-neutral-700 mb-4">
             Examples of providers you'll see in our comparison results. Some have affiliate or data partnerships with us; others don't. Either way, rankings follow the same rules and are driven by pricing and performance data.
           </p>
@@ -111,8 +117,9 @@
     </section>
 
     <!-- Partnership opportunities at a glance -->
-    <section class="py-16 lg:py-20 bg-brand-600">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-gradient-to-br from-brand-600 via-brand-700 to-blue-700 relative overflow-hidden">
+      <div class="absolute inset-0 bg-brand-600/90"></div>
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-3xl font-bold text-white mb-4 flex items-center gap-3">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +137,7 @@
           </p>
 
           <div class="space-y-6">
-            <div class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all">
+            <div class="rounded-2xl border-2 border-brand-700 bg-gray-900 p-8 hover:bg-gray-800 transition-all">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
                   <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +171,7 @@
 
             <div
               v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED"
-              class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all"
+              class="rounded-2xl border-2 border-brand-700 bg-gray-900 p-8 hover:bg-gray-800 transition-all"
             >
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
@@ -197,7 +204,7 @@
               </div>
             </div>
 
-            <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all">
+            <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="rounded-2xl border-2 border-brand-700 bg-gray-900 p-8 hover:bg-gray-800 transition-all">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
                   <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,7 +236,7 @@
               </div>
             </div>
 
-            <div class="rounded-2xl border-2 border-brand-700 bg-brand-700 p-8 hover:bg-brand-600 transition-all">
+            <div class="rounded-2xl border-2 border-brand-700 bg-gray-900 p-8 hover:bg-gray-800 transition-all">
               <div class="flex items-start gap-4">
                 <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
                   <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,21 +309,21 @@
     </section>
 
     <!-- More Partnership Opportunities -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-3xl text-center">
-          <h2 class="text-3xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-3xl font-bold text-white mb-4">
             More Partnership Opportunities Coming Soon
           </h2>
-          <p class="text-lg leading-relaxed text-neutral-700 mb-6">
+          <p class="text-lg leading-relaxed text-white/90 mb-6">
             We're actively developing additional partnership models to better serve our partners and the remittance community. Stay tuned for updates on new collaboration opportunities.
           </p>
-          <p class="text-base leading-relaxed text-neutral-600 mb-8">
+          <p class="text-base leading-relaxed text-white/80 mb-8">
             Have ideas for partnership opportunities? We'd love to hear from you.
           </p>
           <NuxtLink
             to="/contact?type=partnership"
-            class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+            class="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-sm transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600"
           >
             Contact us about partnerships
             <svg
@@ -503,7 +510,7 @@
             </div>
           </div>
 
-          <div class="rounded-2xl border-2 border-brand-600 bg-gradient-to-br from-brand-600 to-brand-700 p-8 text-white">
+          <div class="rounded-2xl border-2 border-brand-600 bg-brand-600 p-8 text-white">
             <h3 class="text-2xl font-bold mb-6">
               Ready to get started?
             </h3>
@@ -977,13 +984,13 @@
             </p>
           </div>
 
-          <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div class="rounded-2xl border-2 border-blue-700 bg-blue-700 p-6 shadow-sm">
             <div class="space-y-6">
               <details class="group">
-                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-white hover:text-white/80 transition-colors">
                   <span class="text-base">Can providers pay to rank higher on Remit-Scout?</span>
                   <svg
-                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    class="h-5 w-5 flex-shrink-0 text-white/70 group-open:rotate-180 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -996,18 +1003,18 @@
                     />
                   </svg>
                 </summary>
-                <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
+                <div class="pb-4 pt-2 text-sm leading-relaxed text-white/90">
                   No. Providers cannot pay to change ranking order, Remit-Score, or sorting logic. Rankings are determined by comparison data (recipient gets, total cost, speed, trust signals) and our consistent methodology.
                 </div>
               </details>
 
-              <div class="border-t border-neutral-200" />
+              <div class="border-t border-white/20" />
 
               <details class="group">
-                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-white hover:text-white/80 transition-colors">
                   <span class="text-base">How do affiliate partnerships work? Do I have to pay to be listed?</span>
                   <svg
-                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    class="h-5 w-5 flex-shrink-0 text-white/70 group-open:rotate-180 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1020,9 +1027,9 @@
                     />
                   </svg>
                 </summary>
-                <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
+                <div class="pb-4 pt-2 text-sm leading-relaxed text-white/90">
                   <p class="mb-3">
-                    <strong class="font-semibold text-neutral-900">No upfront costs.</strong> There's no fee to be listed on Remit-Scout. If you share pricing documentation or allow quote capture from public pages, we'll list you for free.
+                    <strong class="font-semibold text-white">No upfront costs.</strong> There's no fee to be listed on Remit-Scout. If you share pricing documentation or allow quote capture from public pages, we'll list you for free.
                   </p>
                   <p class="mb-3">
                     Affiliate partnerships are optional. If we have an affiliate relationship, we only earn a commission when a user clicks through from Remit-Scout and completes a transfer with you. If you don't want an affiliate relationship, we'll still list you — you just won't pay any commissions.
@@ -1033,13 +1040,13 @@
                 </div>
               </details>
 
-              <div class="border-t border-neutral-200" />
+              <div class="border-t border-white/20" />
 
               <details class="group">
-                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-white hover:text-white/80 transition-colors">
                   <span class="text-base">What's the benefit to me if I don't want an affiliate relationship?</span>
                   <svg
-                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    class="h-5 w-5 flex-shrink-0 text-white/70 group-open:rotate-180 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1052,15 +1059,15 @@
                     />
                   </svg>
                 </summary>
-                <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
+                <div class="pb-4 pt-2 text-sm leading-relaxed text-white/90">
                   <p class="mb-3">
                     Even without an affiliate relationship, you still benefit from:
                   </p>
                   <ul class="space-y-2 ml-4 list-disc">
-                    <li><strong class="font-semibold text-neutral-900">Free exposure:</strong> You appear in comparison results when users search your corridors, driving qualified traffic to your site at no cost.</li>
-                    <li><strong class="font-semibold text-neutral-900">Fair ranking:</strong> If your pricing is competitive, you rank higher — you're not penalized for not having an affiliate relationship.</li>
-                    <li><strong class="font-semibold text-neutral-900">Brand visibility:</strong> Users discover your service and build awareness, even if they don't click through immediately.</li>
-                    <li><strong class="font-semibold text-neutral-900">New customer acquisition:</strong> Users who click through to your site become customers — you just don't pay us a commission.</li>
+                    <li><strong class="font-semibold text-white">Free exposure:</strong> You appear in comparison results when users search your corridors, driving qualified traffic to your site at no cost.</li>
+                    <li><strong class="font-semibold text-white">Fair ranking:</strong> If your pricing is competitive, you rank higher — you're not penalized for not having an affiliate relationship.</li>
+                    <li><strong class="font-semibold text-white">Brand visibility:</strong> Users discover your service and build awareness, even if they don't click through immediately.</li>
+                    <li><strong class="font-semibold text-white">New customer acquisition:</strong> Users who click through to your site become customers — you just don't pay us a commission.</li>
                   </ul>
                   <p class="mt-3">
                     Many providers start without affiliate relationships and add them later if the traffic volume justifies it. You can always opt in to affiliate tracking later.
@@ -1068,13 +1075,13 @@
                 </div>
               </details>
 
-              <div class="border-t border-neutral-200" />
+              <div class="border-t border-white/20" />
 
               <details class="group">
-                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-white hover:text-white/80 transition-colors">
                   <span class="text-base">Can I improve my ranking by paying more or having a stronger affiliate relationship?</span>
                   <svg
-                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    class="h-5 w-5 flex-shrink-0 text-white/70 group-open:rotate-180 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1087,9 +1094,9 @@
                     />
                   </svg>
                 </summary>
-                <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
+                <div class="pb-4 pt-2 text-sm leading-relaxed text-white/90">
                   <p class="mb-3">
-                    <strong class="font-semibold text-neutral-900">No.</strong> Our ranking algorithm is completely independent of commercial relationships. We don't offer "pay-to-rank" or "premium placement" options.
+                    <strong class="font-semibold text-white">No.</strong> Our ranking algorithm is completely independent of commercial relationships. We don't offer "pay-to-rank" or "premium placement" options.
                   </p>
                   <p>
                     Rankings are determined solely by comparison data: what recipients receive (after fees and FX markup), total cost, transfer speed, and trust signals. Our scoring formula is public (see our methodology page). If you want to improve your ranking, improve your pricing and service quality — that's the only way.
@@ -1097,13 +1104,13 @@
                 </div>
               </details>
 
-              <div class="border-t border-neutral-200" />
+              <div class="border-t border-white/20" />
 
               <details class="group">
-                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-white hover:text-white/80 transition-colors">
                   <span class="text-base">What if my pricing changes or I notice an error in how I'm listed?</span>
                   <svg
-                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    class="h-5 w-5 flex-shrink-0 text-white/70 group-open:rotate-180 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1116,9 +1123,9 @@
                     />
                   </svg>
                 </summary>
-                <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
+                <div class="pb-4 pt-2 text-sm leading-relaxed text-white/90">
                   <p class="mb-3">
-                    <strong class="font-semibold text-neutral-900">We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate and resolve confirmed issues within 48 hours.
+                    <strong class="font-semibold text-white">We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate and resolve confirmed issues within 48 hours.
                   </p>
                   <p>
                     For pricing changes: If we have direct data feeds, updates are automatic. If we pull quotes manually, just let us know when pricing changes and we'll update our system. For new corridors, promotions, or service changes, keep your partnership contact updated and we'll reflect changes on the site.
@@ -1126,13 +1133,13 @@
                 </div>
               </details>
 
-              <div class="border-t border-neutral-200" />
+              <div class="border-t border-white/20" />
 
               <details class="group">
-                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+                <summary class="flex cursor-pointer items-center justify-between py-4 text-left font-semibold text-white hover:text-white/80 transition-colors">
                   <span class="text-base">How long does onboarding take? What's the process?</span>
                   <svg
-                    class="h-5 w-5 flex-shrink-0 text-neutral-400 group-open:rotate-180 transition-transform"
+                    class="h-5 w-5 flex-shrink-0 text-white/70 group-open:rotate-180 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1145,16 +1152,16 @@
                     />
                   </svg>
                 </summary>
-                <div class="pb-4 pt-2 text-sm leading-relaxed text-neutral-700">
+                <div class="pb-4 pt-2 text-sm leading-relaxed text-white/90">
                   <p class="mb-3">
-                    Most providers can be listed within <strong class="font-semibold text-neutral-900">1-2 weeks</strong> of initial contact. Here's the typical process:
+                    Most providers can be listed within <strong class="font-semibold text-white">1-2 weeks</strong> of initial contact. Here's the typical process:
                   </p>
                   <ol class="space-y-2 ml-4 list-decimal">
-                    <li><strong class="font-semibold text-neutral-900">Initial contact:</strong> Fill out our provider inquiry form or email us with basic info about your service.</li>
-                    <li><strong class="font-semibold text-neutral-900">Data sharing:</strong> Share pricing documentation, corridor details, or access to public quote flows.</li>
-                    <li><strong class="font-semibold text-neutral-900">Integration:</strong> We integrate your data into our comparison system (usually 3-5 business days).</li>
-                    <li><strong class="font-semibold text-neutral-900">Testing & verification:</strong> We test quotes across your corridors and verify accuracy.</li>
-                    <li><strong class="font-semibold text-neutral-900">Go live:</strong> You appear in comparison results!</li>
+                    <li><strong class="font-semibold text-white">Initial contact:</strong> Fill out our provider inquiry form or email us with basic info about your service.</li>
+                    <li><strong class="font-semibold text-white">Data sharing:</strong> Share pricing documentation, corridor details, or access to public quote flows.</li>
+                    <li><strong class="font-semibold text-white">Integration:</strong> We integrate your data into our comparison system (usually 3-5 business days).</li>
+                    <li><strong class="font-semibold text-white">Testing & verification:</strong> We test quotes across your corridors and verify accuracy.</li>
+                    <li><strong class="font-semibold text-white">Go live:</strong> You appear in comparison results!</li>
                   </ol>
                   <p class="mt-3">
                     If you can provide structured data, the process is faster. If we need to pull quotes manually, it may take a bit longer. We'll keep you updated throughout the process.

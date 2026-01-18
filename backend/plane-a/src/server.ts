@@ -4,7 +4,6 @@ import { createShutdownHandler } from '../../shared/shutdown'
 import { initErrorTracking } from '../../shared/error-tracker'
 import { initTracing, shutdownTracing } from '../../shared/tracing'
 import { buildApp } from './app'
-import { runSmartAlertsJob } from '../../scripts/smart-alerts-job'
 
 if (config.env === 'production' || config.env === 'staging' || process.env.STRICT_CONFIG === '1') {
   assertRuntimeConfig({
@@ -20,6 +19,19 @@ initErrorTracking('plane-a')
 initTracing('plane-a')
 
 const logger = createLogger('plane-a.server')
+
+const loadSmartAlertsJob = async (): Promise<(() => Promise<void>) | null> => {
+  try {
+    const modulePath = '../../scripts/smart-alerts-job'
+    const module = await import(modulePath) as { runSmartAlertsJob?: () => Promise<void> }
+    return module.runSmartAlertsJob ?? null
+  } catch (error) {
+    logger.warn('smart_alerts_loader_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -78,6 +90,11 @@ const start = async () => {
           smartAlertsRunning = true
           const startedAt = Date.now()
           try {
+            const runSmartAlertsJob = await loadSmartAlertsJob()
+            if (!runSmartAlertsJob) {
+              logger.warn('smart_alerts_job_missing')
+              return
+            }
             await runSmartAlertsJob()
             logger.info('smart_alerts_complete', { duration_ms: Date.now() - startedAt })
           } catch (error) {

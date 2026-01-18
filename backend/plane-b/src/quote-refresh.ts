@@ -249,6 +249,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
   const queueUrl = config.queues.quoteRefreshUrl || null
   const dlqUrl = config.queues.quoteRefreshDlqUrl || null
   const useQueue = queueMode === 'queue' && Boolean(queueUrl)
+  const activeQueueUrl = useQueue ? (queueUrl as string) : null
   const dbFallbackEnabled = config.queues.quoteRefreshDbFallback && queueMode === 'queue'
   // Always update DB statuses so refresh-status can track SQS-backed runs.
   const writeDb = true
@@ -331,13 +332,16 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
     })
 
     if (useQueue) {
-      const messages = await receiveJsonMessages<QuoteRefreshMessage>(queueUrl, limit)
+      if (!activeQueueUrl) {
+        throw new Error('quote_refresh_queue_missing')
+      }
+      const messages = await receiveJsonMessages<QuoteRefreshMessage>(activeQueueUrl, limit)
       logger.info('queue_claimed', {
         requested_limit: limit,
         claimed_count: messages.length,
         source: 'sqs',
       })
-      await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
+      await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
 
       const deleteHandles: string[] = []
       const workItems: Array<{
@@ -486,7 +490,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
           })
         }
 
-        await reportQueueDepth(repo, queueUrl, options.onQueueDepth)
+        await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
       })
 
       logger.info('queue_sqs_processed', {
@@ -495,7 +499,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         delete_count: deleteHandles.length,
       })
 
-      await deleteMessages(queueUrl, deleteHandles)
+      await deleteMessages(activeQueueUrl, deleteHandles)
 
       if (dbFallbackEnabled) {
         const fallbackRequests = await repo.claimPendingRequests(limit, maxRetries)
@@ -508,7 +512,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
             sqs_message_count: messages.length,
           })
         }
-        await processDbRequests(fallbackRequests, 'db_fallback', queueUrl)
+        await processDbRequests(fallbackRequests, 'db_fallback', activeQueueUrl)
       }
     } else {
       if (queueMode === 'queue' && !queueUrl) {

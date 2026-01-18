@@ -5,10 +5,19 @@ on:
     branches:
       - main
       - master
+      - develop
     tags:
       - "v*"
   pull_request:
   workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 20
+  PNPM_VERSION: 10.19.0
 
 jobs:
   lint-typecheck-build:
@@ -17,12 +26,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C backend lint
       - run: pnpm -C frontend lint
+      - name: Boundary enforcement (Golden Rule)
+        shell: bash
+        run: |
+          set +e
+          pnpm exec eslint backend/plane-a/ForbiddenImport.test.js --no-ignore
+          eslint_exit=$?
+          if [ $eslint_exit -eq 0 ]; then
+            echo "ERROR: Boundary rule did NOT trigger on forbidden import!"
+            exit 1
+          fi
+          echo "Golden Rule enforcement working (forbidden import was blocked)."
       - run: pnpm -C frontend type-check
       - run: pnpm -C backend build
 
@@ -52,9 +74,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C backend db:migrate
       - run: pnpm -C backend test:coverage
@@ -62,6 +86,33 @@ jobs:
         with:
           name: backend-coverage
           path: backend/coverage
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'pull_request'
+        uses: codecov/codecov-action@v4
+        continue-on-error: true
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+  guardrail:
+    if: ${{ secrets.DATABASE_URL_PLANE_A != '' }}
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
+      RUN_BRONZE_GUARDRAIL_TEST: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C backend test -- tests/guardrails.test.ts
 
   frontend-unit:
     runs-on: ubuntu-latest
@@ -69,9 +120,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C frontend test:coverage
       - uses: actions/upload-artifact@v4
@@ -85,10 +138,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm -C frontend exec playwright install --with-deps
       - run: pnpm -C frontend build
       - run: pnpm -C frontend test:e2e
@@ -119,9 +178,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C backend db:migrate
       - run: pnpm -C backend ci:seed-sanity
@@ -151,9 +212,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C backend ci:config-validate
       - run: pnpm -C backend ci:observability
@@ -164,9 +227,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level=high
 
@@ -192,9 +257,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C infrastructure/cdk build
       - uses: bridgecrewio/checkov-action@v12
@@ -236,9 +303,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - run: pnpm install --frozen-lockfile
       - run: node scripts/check-version-tag.mjs
       - run: pnpm -C backend db:migrate

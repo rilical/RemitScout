@@ -26,6 +26,7 @@ const defaultOptions: Required<Omit<RetryOptions, 'timeoutMs' | 'signal'>> & {
   backoffMultiplier: 2,
   jitter: true,
   retryable: (error) => isRetryableError(error) || error instanceof Error,
+  operation: 'unknown',
 }
 
 const calculateDelay = (

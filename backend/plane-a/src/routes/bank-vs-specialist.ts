@@ -19,6 +19,7 @@ const fxRateRepository = new FxRateRepository(planeAPool)
 const CORRIDOR_ID = 'US-MX-USD-MXN'
 const DEFAULT_AMOUNT = 500
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
+const WELLS_FARGO_PROVIDER_KEY = 'wellsfargo'
 
 const bankVsSpecialistCache = createTtlCache<BankVsSpecialistResponse>({
   namespace: 'plane_a:bank_vs_specialist',
@@ -122,6 +123,8 @@ const parseNumeric = (value: number | string | null | undefined, fallback = 0) =
   return Number.isFinite(num) ? num : fallback
 }
 
+const normalizeProviderKey = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '')
+
 const computeRecipientGets = (row: QuoteRow, amount: number) => {
   const sendAmount = amount
   const feeAmount = parseNumeric(row.promotional_fee_amount, parseNumeric(row.fee_amount, 0))
@@ -157,10 +160,8 @@ const computeRecipientGets = (row: QuoteRow, amount: number) => {
 }
 
 const isWellsFargo = (row: QuoteRow) => {
-  const id = row.provider_id.toLowerCase()
-  const name = row.display_name.toLowerCase()
-  return id.includes('wells') && id.includes('fargo')
-    || name.includes('wells fargo')
+  const id = normalizeProviderKey(row.provider_id)
+  return id.startsWith(WELLS_FARGO_PROVIDER_KEY)
 }
 
 const isBankProvider = (row: QuoteRow) => {
@@ -185,7 +186,7 @@ const buildProviderQuote = (
   const recipientGets = computeRecipientGets(row, amount)
   
   // Calculate fxRate: prioritize promotional_rate, then implied_fx_rate, then calculate from receive_amount
-  let fxRate = parseNumeric(row.promotional_rate, parseNumeric(row.implied_fx_rate, null))
+  let fxRate = parseNumeric(row.promotional_rate, parseNumeric(row.implied_fx_rate, 0))
   
   // If rate is still missing, try to calculate it from stored receive_amount and send_amount
   if ((!fxRate || fxRate <= 0) && recipientGets > 0 && sendAmount > fee) {
@@ -256,7 +257,7 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
     }
 
     const amountBucket = computeBucketSelection(amount).bucket_used
-    const cacheKey = `bank-vs-specialist:${amountBucket}`
+    const cacheKey = `bank-vs-specialist:v2:${amountBucket}`
     const cached = await bankVsSpecialistCache.get(cacheKey)
     if (cached) {
       logger.debug('bank_vs_specialist_cache_hit', { cache_key: cacheKey })
@@ -348,9 +349,11 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
 
       const bankQuote = buildProviderQuote(bankRow, amount, midRate)
       const topQuote = buildProviderQuote(topRow, amount, midRate)
-      const bankName = getProviderMetadata(bankRow.provider_id)?.displayName
-        ?? bankRow.display_name
-        ?? 'Your bank'
+      const bankName = isWellsFargo(bankRow)
+        ? 'Wells Fargo'
+        : getProviderMetadata(bankRow.provider_id)?.displayName
+          ?? bankRow.display_name
+          ?? 'Your bank'
 
       const { id: _ignoredId, name: _ignoredName, ...bankPayload } = bankQuote
       const updatedAtValue = [bankRow.collected_at, topRow.collected_at]

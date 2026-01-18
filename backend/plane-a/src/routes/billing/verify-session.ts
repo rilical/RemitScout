@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
-import { getStripeClient } from '../../services/stripe-client'
+import { getStripeClient, isStripeConfigured, isStripeMockEnabled, isStripeMockMisconfigured } from '../../services/stripe-client'
 import { getUserPlan, updatePlanFromStripe } from '../../services/user-plan'
 import { sendPlusConfirmationEmail } from '../../services/billing-email'
 import { getErrorMessage, isStripeError } from '../../types/errors'
@@ -13,7 +13,12 @@ export const verifySessionRoutes = async (app: FastifyInstance) => {
   app.post('/billing/verify-session', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
     
-    if (!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) {
+    if (isStripeMockMisconfigured()) {
+      reply.code(500)
+      return { error: 'billing_misconfigured' }
+    }
+
+    if (!isStripeConfigured()) {
       reply.code(500)
       return { error: 'billing_not_configured' }
     }
@@ -36,7 +41,7 @@ export const verifySessionRoutes = async (app: FastifyInstance) => {
         return { error: 'session_mismatch' }
       }
 
-      if (config.billing.stripe.mockEnabled) {
+      if (isStripeMockEnabled()) {
         const isComplete = session.status === 'complete' || session.payment_status === 'paid'
         if (isComplete) {
           const wasPlus =

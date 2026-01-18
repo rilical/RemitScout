@@ -116,6 +116,7 @@ interface Props {
   currencies?: string[]
   theme?: 'light' | 'dark'
   codeOnly?: boolean
+  excludeCurrency?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -128,6 +129,7 @@ const props = withDefaults(defineProps<Props>(), {
   currencies: undefined,
   theme: 'light',
   codeOnly: false,
+  excludeCurrency: undefined,
 })
 
 const emit = defineEmits<{
@@ -205,12 +207,19 @@ const allCurrencies = computed(() => {
 const filteredCurrencies = ref<CurrencyOption[]>([])
 
 const filterCurrencies = () => {
+  let currencies = allCurrencies.value
+  
+  // Exclude the specified currency if provided
+  if (props.excludeCurrency) {
+    currencies = currencies.filter(currency => currency.code !== props.excludeCurrency)
+  }
+  
   if (!searchQuery.value) {
-    filteredCurrencies.value = allCurrencies.value
+    filteredCurrencies.value = currencies
   }
   else {
     const query = searchQuery.value.toLowerCase()
-    filteredCurrencies.value = allCurrencies.value.filter(currency =>
+    filteredCurrencies.value = currencies.filter(currency =>
       currency.label.toLowerCase().includes(query)
       || currency.code.toLowerCase().includes(query),
     )
@@ -221,6 +230,7 @@ watch(searchQuery, filterCurrencies)
 watch(allCurrencies, () => {
   filterCurrencies()
 })
+watch(() => props.excludeCurrency, filterCurrencies)
 
 const selectCurrency = (currency: CurrencyOption) => {
   console.log('=== Select Currency ===')

@@ -10,24 +10,10 @@
 import { createLogger } from '../../shared/logger'
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { formatError } from '../../shared/utils/error-handling'
-import { createShutdownHandler } from '../../shared/shutdown'
 
 const logger = createLogger('script.b2c-refresh-worker-ecs')
 
-export const handler = async (): Promise<void> => {
-  const { isShutdownRequested } = createShutdownHandler({
-    timeoutMs: 30000,
-    logger,
-    onShutdown: async () => {
-      logger.info('b2c_refresh_worker_shutdown', { reason: 'shutdown_requested' })
-    },
-  })
-
-  if (isShutdownRequested()) {
-    logger.info('b2c_refresh_worker_skipped', { reason: 'shutdown_requested' })
-    return
-  }
-
+export const handler = async (): Promise<number> => {
   // Resolve database URL with error handling
   try {
     await resolveDatabaseUrl({
@@ -67,6 +53,20 @@ export const handler = async (): Promise<void> => {
     throw new Error(`Failed to resolve database URL: ${message}`)
   }
 
+  const { createShutdownHandler } = await import('../../shared/shutdown')
+  const { isShutdownRequested } = createShutdownHandler({
+    timeoutMs: 30000,
+    logger,
+    onShutdown: async () => {
+      logger.info('b2c_refresh_worker_shutdown', { reason: 'shutdown_requested' })
+    },
+  })
+
+  if (isShutdownRequested()) {
+    logger.info('b2c_refresh_worker_skipped', { reason: 'shutdown_requested' })
+    return 0
+  }
+
   // Resolve AWS environment variables with error handling
   try {
     await resolveAwsEnv([
@@ -96,8 +96,8 @@ export const handler = async (): Promise<void> => {
 
   // Import and run worker (using direct import path, not path.resolve)
   try {
-    const { runB2cRefreshWorker } = await import('../b2c-refresh-worker')
-    await runB2cRefreshWorker()
+    const { runB2cRefreshWorkerLoop } = await import('../b2c-refresh-worker')
+    return await runB2cRefreshWorkerLoop()
   } catch (error: unknown) {
     const { message, stack } = formatError(error)
     logger.error('b2c_refresh_worker_failed', {
@@ -110,7 +110,7 @@ export const handler = async (): Promise<void> => {
 
 if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
   handler()
-    .then(() => process.exit(0))
+    .then(code => process.exit(code))
     .catch((error: unknown) => {
       const { message, stack } = formatError(error)
       logger.error('b2c_refresh_worker_fatal', {

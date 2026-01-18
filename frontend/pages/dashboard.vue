@@ -312,7 +312,7 @@
           <!-- Tabs -->
           <nav class="flex gap-8 -mb-px">
             <button
-              v-for="tab in tabs"
+              v-for="tab in visibleTabs"
               :key="tab.id"
               type="button"
               class="py-4 text-sm font-medium border-b-2 transition-colors"
@@ -1628,7 +1628,7 @@
                 </div>
                 <div>
                   <h4 class="font-semibold mb-1">Need More Alerts?</h4>
-                  <p class="text-sm text-slate-300">Free accounts are limited to 1 alert. Upgrade to Plus for unlimited smart alerts with real-time notifications.</p>
+                  <p class="text-sm text-slate-300">Free accounts are limited to 1 weekly alert. Upgrade to Plus for daily alerts and unlimited smart alerts.</p>
                 </div>
               </div>
               <NuxtLink to="/plus" class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
@@ -2793,7 +2793,7 @@
                     <div>
                       <div class="text-sm font-medium text-slate-900">Browser Notifications</div>
                       <div class="text-xs text-slate-500">
-                        Receive real-time alerts in your browser
+                        Receive alert notifications in your browser
                       </div>
                       <div class="mt-1 text-xs text-slate-500">
                         Status: {{ notificationSettings.pushEnabled ? 'Enabled' : 'Disabled' }}
@@ -3494,14 +3494,41 @@ const alertsLimitPercent = computed(() => {
 const watchlistLimitReached = computed(() => !isPlus.value && watchlistLimitPercent.value >= 100)
 const alertsLimitReached = computed(() => !isPlus.value && alertsLimitPercent.value >= 100)
 
+const hasAdminAccess = ref(false)
+const adminAccessChecked = ref(false)
+
+const checkAdminAccess = async () => {
+  if (!import.meta.client) return
+  if (!isAuthenticated.value) {
+    hasAdminAccess.value = false
+    adminAccessChecked.value = true
+    return
+  }
+  if (adminAccessChecked.value) return
+  try {
+    await request('/admin/users', { query: { limit: 1 } })
+    hasAdminAccess.value = true
+  } catch {
+    hasAdminAccess.value = false
+  } finally {
+    adminAccessChecked.value = true
+  }
+}
+
+const visibleTabs = computed(() => (
+  hasAdminAccess.value ? tabs : tabs.filter(tab => tab.id !== 'ops')
+))
+
 const activeTab = computed<DashboardTab>(() => {
   const raw = route.query.tab
   const tab = Array.isArray(raw) ? raw[0] : raw
+  if (tab === 'ops' && !hasAdminAccess.value) return 'overview'
   if (tab === 'watchlist' || tab === 'alerts' || tab === 'history' || tab === 'ops' || tab === 'account') return tab
   return 'overview'
 })
 
 function setTab(tab: DashboardTab) {
+  if (tab === 'ops' && !hasAdminAccess.value) return
   const nextQuery = { ...route.query } as Record<string, unknown>
   if (tab === 'overview') {
     delete nextQuery.tab
@@ -3986,6 +4013,9 @@ watch(() => activeTab.value, (tab) => {
   } else {
     stopOpsAutoRefresh()
   }
+  if (tab === 'ops' && !hasAdminAccess.value) {
+    return
+  }
   if (tab === 'ops' && !opsHasLoaded.value) {
     void refreshAllOps()
   }
@@ -4004,6 +4034,16 @@ watch([() => telemetryMetric.value, () => telemetryHours.value], () => {
   if (activeTab.value !== 'ops') return
   void loadTelemetryAnalytics()
 })
+
+watch(isAuthenticated, (loggedIn) => {
+  adminAccessChecked.value = false
+  if (loggedIn) {
+    void checkAdminAccess()
+    return
+  }
+  hasAdminAccess.value = false
+  adminAccessChecked.value = true
+}, { immediate: true })
 
 // Form state
 const newWatchlist = ref({ from: 'US', to: 'PH' })
@@ -4942,8 +4982,8 @@ function formatComparator(comparator: string) {
 function formatFrequency(frequency: string) {
   switch (frequency) {
     case 'once': return 'Notify once'
-    case 'daily': return 'Daily digest'
-    case 'realtime': return 'Real-time alerts'
+    case 'weekly': return 'Weekly alerts'
+    case 'daily': return 'Daily alerts'
     default: return frequency
   }
 }

@@ -76,8 +76,3 @@ export function getUserAgentForCorridor(corridorId: string): string {
   return USER_AGENT_POOL[index]
 }
 
-/**
- * Legacy User-Agent (deprecated)
- */
-export const LEGACY_USER_AGENT = 'RemitScoutCollector/1.0'
-

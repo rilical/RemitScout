@@ -47,6 +47,7 @@
                     id="corridor-from"
                     v-model="corridorFrom"
                     label="From country"
+                    :exclude-country="corridorTo"
                     placeholder="Type to search..."
                   />
                 </div>
@@ -60,6 +61,7 @@
                     id="corridor-to"
                     v-model="corridorTo"
                     label="To country"
+                    :exclude-country="corridorFrom"
                     placeholder="Type to search..."
                   />
                 </div>
@@ -221,7 +223,7 @@
                 :disabled="formLocked"
               />
               <p class="mt-2 text-xs text-slate-500">
-                Hourly and real-time alerts require Plus.
+                Free plans are weekly. Plus unlocks daily alerts.
               </p>
             </div>
 
@@ -347,7 +349,7 @@ const limitState = ref<{ feature: 'watchlist' | 'alert'; limit: number } | null>
 const metric = ref<AlertRule['metric']>('rate')
 const comparator = ref<AlertComparator>('gte')
 const value = ref<number>(0)
-const frequency = ref<AlertFrequency>('daily')
+const frequency = ref<AlertFrequency>('weekly')
 const currency = ref<string>('')
 
 const targetType = computed(() => context.value?.target?.type ?? 'corridor')
@@ -543,11 +545,13 @@ const currencyOptions = computed(() => {
   return []
 })
 
-const frequencyOptions = computed(() => [
-  { value: 'daily' as const, label: 'Daily' },
-  { value: 'hourly' as const, label: 'Hourly', disabled: !isPlus.value },
-  { value: 'realtime' as const, label: 'Real-time', disabled: !isPlus.value },
-])
+const frequencyOptions = computed(() => {
+  const isSmart = metric.value === 'sendScore'
+  return [
+    { value: 'weekly' as const, label: 'Weekly' },
+    { value: 'daily' as const, label: 'Daily', disabled: !isPlus.value || isSmart },
+  ]
+})
 
 const limitTitle = computed(() => {
   if (!limitState.value) return ''
@@ -797,7 +801,7 @@ watch(
       metric.value = defaultMetric
       comparator.value = 'gte'
       value.value = defaultValueForMetric(metric.value)
-      frequency.value = 'daily'
+      frequency.value = isPlus.value && defaultMetric !== 'sendScore' ? 'daily' : 'weekly'
       currency.value = showCurrency.value ? defaultCurrencyForMetric(metric.value) : ''
     }
 
@@ -836,14 +840,19 @@ watch(metric, (nextMetric) => {
   value.value = defaultValueForMetric(nextMetric)
   if (nextMetric === 'sendScore') {
     currency.value = ''
+    frequency.value = 'weekly'
     return
   }
   syncCurrency()
 })
 
-watch([isPlus, frequency], ([plus, nextFrequency]) => {
-  if (!plus && (nextFrequency === 'hourly' || nextFrequency === 'realtime')) {
-    frequency.value = 'daily'
+watch([isPlus, metric, frequency], ([plus, nextMetric, nextFrequency]) => {
+  if (nextMetric === 'sendScore' && nextFrequency !== 'weekly') {
+    frequency.value = 'weekly'
+    return
+  }
+  if (!plus && nextFrequency === 'daily') {
+    frequency.value = 'weekly'
   }
 })
 </script>

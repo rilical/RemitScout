@@ -257,7 +257,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
   app.get('/exports/:id', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const user = request.user!
-    const jobId = String(request.params.id)
+    const jobId = String((request.params as { id: string }).id)
 
     try {
       const job = await exportJobRepository.getById(jobId)
@@ -292,7 +292,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
   app.get('/exports/:id/download', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const user = request.user!
-    const jobId = String(request.params.id)
+    const jobId = String((request.params as { id: string }).id)
 
     try {
       const job = await exportJobRepository.getById(jobId)

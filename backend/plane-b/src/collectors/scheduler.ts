@@ -320,3 +320,5 @@ export const createScheduler = (options: SchedulerOptions) => {
     cleanup,
   }
 }
+
+export type Scheduler = ReturnType<typeof createScheduler>

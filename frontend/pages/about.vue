@@ -7,40 +7,27 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs :items="breadcrumbItems" />
 
-        <div class="mt-12 grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div>
-            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 whitespace-nowrap">
-              Remittance Intelligence.
-            </h1>
+        <div class="mt-12 max-w-4xl">
+          <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 whitespace-nowrap">
+            Remittance Intelligence.
+          </h1>
 
-            <p class="text-xl text-white sm:text-2xl font-medium mb-6 leading-relaxed">
-              Global finance is <span class="text-brand-600">opaque</span> by design.<br>We are the <span class="text-brand-600">auditor</span>.
-            </p>
+          <p class="text-xl text-white sm:text-2xl font-medium mb-6 leading-relaxed">
+            Banks profit from <span class="text-blue-600">confusion</span>.<br>We profit from <span class="text-blue-600">clarity</span>.
+          </p>
 
-            <p class="text-lg text-slate-200 leading-relaxed mb-4 max-w-3xl">
-              Remit-Scout is a <strong class="font-semibold text-white">quantitative comparison engine</strong> for cross border capital. We aggregate real time FX data to expose the true cost of international transfers, stripping away hidden spreads to reveal the only metric that matters: <span class="font-semibold text-brand-400">Net Delivered Value</span>.
-            </p>
+          <p class="text-lg text-slate-200 leading-relaxed mb-4 max-w-3xl">
+            Remit-Scout is a <strong class="font-semibold text-white">quantitative comparison engine</strong> for cross border capital. We aggregate real time FX data to expose the true cost of international transfers, stripping away hidden spreads to reveal the only metric that matters: <span class="font-semibold text-brand-400">Net Delivered Value</span>.
+          </p>
 
-            <p class="text-base text-slate-300 leading-relaxed mb-8 max-w-3xl">
-              Incubated at the <a
-                href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="font-medium text-brand-400 underline decoration-brand-400/30 hover:text-brand-300 hover:decoration-brand-300"
-              >Swartz Center for Entrepreneurship, CMU</a>.
-            </p>
-          </div>
-
-          <div class="lg:pl-8">
-            <div class="rounded-3xl bg-white border border-neutral-200 p-8 shadow-lg">
-              <p class="text-lg sm:text-xl font-bold text-neutral-900 leading-relaxed">
-                Banks profit from confusion.<br>We profit from clarity.
-              </p>
-              <p class="text-sm text-neutral-600 mt-4 whitespace-nowrap">
-                — Remit-Scout Philosophy
-              </p>
-            </div>
-          </div>
+          <p class="text-base text-slate-300 leading-relaxed mb-8 max-w-3xl">
+            Incubated at the <a
+              href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-brand-400 underline decoration-brand-400/30 hover:text-brand-300 hover:decoration-brand-300"
+            >Swartz Center for Entrepreneurship, CMU</a>.
+          </p>
         </div>
       </div>
     </section>

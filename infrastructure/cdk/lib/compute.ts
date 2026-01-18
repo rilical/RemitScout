@@ -18,6 +18,7 @@ export const createCompute = (scope: Construct, options: ComputeOptions): Comput
   const cluster = new Cluster(scope, 'RemitScoutCluster', {
     vpc: options.vpc,
     clusterName: `remit-scout-${options.envName}`,
+    enableFargateCapacityProviders: true,
   })
 
   return { cluster }

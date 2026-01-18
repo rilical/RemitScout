@@ -35,6 +35,7 @@ const logger = createLogger('plane-b.normalize.quote-normalizer')
 export type NormalizeQuoteInput = {
   provider_id: string
   corridor_id: string
+  amount_bucket?: number
   send_amount: number
   fee_amount: number
   fee_currency?: string | null
@@ -93,7 +94,8 @@ export type NormalizedQuote = {
 /**
  * Checks if a value is a finite number.
  */
-const isFiniteNumber = (value: number): boolean => Number.isFinite(value)
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
 
 /**
  * Checks if a value is a non-empty string.
@@ -264,8 +266,8 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   const sendAmount = sendAmountParsed ?? 0
   const feeAmount = feeAmountParsed ?? 0
   const receiveAmount = receiveAmountParsed ?? 0
-  const deliveryTimeMinMinutes = deliveryTimeMinParsed !== null ? Math.round(deliveryTimeMinParsed) : null
-  const deliveryTimeMaxMinutes = deliveryTimeMaxParsed !== null ? Math.round(deliveryTimeMaxParsed) : null
+  let deliveryTimeMinMinutes = deliveryTimeMinParsed !== null ? Math.round(deliveryTimeMinParsed) : null
+  let deliveryTimeMaxMinutes = deliveryTimeMaxParsed !== null ? Math.round(deliveryTimeMaxParsed) : null
 
   const payin = toCanonicalPayinMethod(input.payin_method)
   const payout = toCanonicalPayoutMethod(input.payout_method)
@@ -274,8 +276,15 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     flags.add(qualityFlags.unknown_method)
   }
 
-  const bucketSelection = computeBucketSelection(sendAmount)
-  if (bucketSelection.approximate) {
+  const hasBucketHint = isFiniteNumber(input.amount_bucket) && input.amount_bucket > 0
+  const bucketBase = hasBucketHint ? input.amount_bucket : sendAmount
+  const bucketSelection = computeBucketSelection(bucketBase)
+  const bucketApprox = hasBucketHint && isFiniteNumber(sendAmountParsed)
+    ? Math.round(sendAmountParsed) !== Math.round(input.amount_bucket as number)
+    : bucketSelection.approximate
+  const approximate = bucketApprox
+
+  if (approximate) {
     flags.add(qualityFlags.bucket_approx)
   }
 
@@ -290,19 +299,29 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     promotionalFeeAmount,
   )
 
-  // Calculate implied FX rate, prioritizing promotional_rate when available
-  // Promotional rate is the actual rate offered and should be used for accurate comparisons
+  const derivedRate = isFiniteNumber(sendAmount) && sendAmount > 0 && isFiniteNumber(receiveAmount)
+    ? receiveAmount / sendAmount
+    : null
+  const rateMatchesDerived = (rate: number | null) => {
+    if (!isFiniteNumber(rate) || rate <= 0 || derivedRate === null || derivedRate <= 0) return false
+    const tolerance = Math.max(1e-6, Math.abs(derivedRate) * 0.002)
+    return Math.abs(rate - derivedRate) <= tolerance
+  }
+
+  // Prefer the rate that matches the actual receive amount when available.
   let impliedFxRate = 0
-  if (isFiniteNumber(promotionalRate) && promotionalRate > 0) {
-    // Use promotional rate directly when available (most accurate)
+  if (derivedRate !== null && derivedRate > 0) {
+    if (isFiniteNumber(promotionalRate) && rateMatchesDerived(promotionalRate)) {
+      impliedFxRate = promotionalRate
+    } else if (isFiniteNumber(baseRate) && rateMatchesDerived(baseRate)) {
+      impliedFxRate = baseRate
+    } else {
+      impliedFxRate = derivedRate
+    }
+  } else if (isFiniteNumber(promotionalRate) && promotionalRate > 0) {
     impliedFxRate = promotionalRate
   } else if (isFiniteNumber(baseRate) && baseRate > 0) {
-    // Fallback to base rate if promotional rate not available
     impliedFxRate = baseRate
-  } else if (isFiniteNumber(sendAmount) && sendAmount > 0 && isFiniteNumber(receiveAmount)) {
-    // Last resort: calculate from receive_amount / send_amount
-    // This accounts for fees already applied in receive_amount
-    impliedFxRate = receiveAmount / sendAmount
   }
 
   const ingestedAt = new Date().toISOString()
@@ -311,6 +330,29 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   const methodProfile = deriveMethodProfile(payin, payout)
   if (methodProfile === null) {
     flags.add(qualityFlags.invalid_method_profile)
+  }
+
+  if (deliveryTimeMinMinutes === null && deliveryTimeMaxMinutes === null) {
+    if (methodProfile === 'standard_bank') {
+      deliveryTimeMinMinutes = 24 * 60
+      deliveryTimeMaxMinutes = 72 * 60
+    } else if (methodProfile === 'standard_card') {
+      deliveryTimeMinMinutes = 60
+      deliveryTimeMaxMinutes = 24 * 60
+    } else if (methodProfile === 'cash_pickup') {
+      deliveryTimeMinMinutes = 30
+      deliveryTimeMaxMinutes = 6 * 60
+    } else if (payout === 'mobile_wallet') {
+      deliveryTimeMinMinutes = 5
+      deliveryTimeMaxMinutes = 2 * 60
+    } else if (payout === 'airtime') {
+      deliveryTimeMinMinutes = 5
+      deliveryTimeMaxMinutes = 60
+    }
+
+    if (deliveryTimeMinMinutes !== null && deliveryTimeMaxMinutes !== null) {
+      flags.add(qualityFlags.estimated_delivery)
+    }
   }
 
   const hasRequiredFields = isNonEmptyString(input.provider_id)
@@ -331,7 +373,7 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     amount_bucket: bucketSelection.bucket_used,
     bucket_used: bucketSelection.bucket_used,
     fee_bucket_used: bucketSelection.fee_bucket_used,
-    approximate: bucketSelection.approximate,
+    approximate,
     payin,
     payout,
     send_amount: sendAmount,

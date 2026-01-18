@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'crypto'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 
 const logger = createLogger('plane-a.marketing')
 const pool = getPool(config.db.planeAUrl)
@@ -37,7 +38,8 @@ const toTimestamp = (value?: number) => {
   if (!value || !Number.isFinite(value)) {
     return Math.floor(Date.now() / 1000)
   }
-  return Math.floor(value)
+  const normalized = value > 1e12 ? value / 1000 : value
+  return Math.floor(normalized)
 }
 
 const insertEvent = async (input: {
@@ -178,6 +180,12 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     const input = parsed.data
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
+    const seed = `${request.ip || 'unknown'}:${input.event_name}`
+    const rateKey = buildRateLimitKey('marketing:meta', seed)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
+      reply.code(429)
+      return { error: 'rate_limited' }
+    }
     const user = request.user
     const userAgent = typeof request.headers['user-agent'] === 'string'
       ? request.headers['user-agent']

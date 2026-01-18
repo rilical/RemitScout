@@ -19,9 +19,8 @@ const alertRepository = new AlertRepository(pool)
 const fxRateRepository = new FxRateRepository(pool)
 const watchlistRepository = new WatchlistRepository(pool)
 const PLUS_ALERTS_SOFT_LIMIT = 16
-const ALERT_COOLDOWN_MINUTES: Record<'realtime' | 'hourly' | 'daily', number> = {
-  realtime: 15,
-  hourly: 60,
+const ALERT_COOLDOWN_MINUTES: Record<'weekly' | 'daily', number> = {
+  weekly: 10080,
   daily: 1440,
 }
 
@@ -47,13 +46,13 @@ const alertRuleSchema = z.object({
 const createAlertSchema = z.object({
   watchlistItemId: z.string().uuid(),
   rule: alertRuleSchema,
-  frequency: z.enum(['realtime', 'hourly', 'daily']).default('daily'),
+  frequency: z.enum(['weekly', 'daily']).default('weekly'),
   enabled: z.boolean().default(true),
 })
 
 const updateAlertSchema = z.object({
   rule: alertRuleSchema.partial().optional(),
-  frequency: z.enum(['realtime', 'hourly', 'daily']).optional(),
+  frequency: z.enum(['weekly', 'daily']).optional(),
   enabled: z.boolean().optional(),
 })
 
@@ -75,13 +74,17 @@ const resolveAlertLimit = (plan: Awaited<ReturnType<typeof getUserPlan>> | null)
   return entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max
 }
 
-const resolveCooldownMinutes = (frequency: 'realtime' | 'hourly' | 'daily') => {
+const resolveCooldownMinutes = (frequency: 'weekly' | 'daily') => {
   return ALERT_COOLDOWN_MINUTES[frequency] ?? 360
 }
 
 const isValidSendScore = (value: number) => {
   const numeric = Number(value)
   return Number.isFinite(numeric) && numeric >= 0 && numeric <= 100
+}
+
+const normalizeFrequency = (frequency: string | null | undefined): 'weekly' | 'daily' => {
+  return frequency === 'daily' ? 'daily' : 'weekly'
 }
 
 async function getAlertCount(userId: string): Promise<number> {
@@ -311,7 +314,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
             id: existing.id,
             watchlistItemId: body.watchlistItemId,
             rule: body.rule,
-            frequency: body.frequency,
+            frequency: existing.frequency,
             enabled: body.enabled,
             createdAt: existing.created_at.toISOString(),
             updatedAt: existing.updated_at.toISOString(),
@@ -321,7 +324,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
 
       const plan = await getUserPlan(pool, user.user_id)
 
-      if ((body.frequency === 'hourly' || body.frequency === 'realtime') && !isPlusEntitled(plan)) {
+      if (body.frequency === 'daily' && !isPlusEntitled(plan)) {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('POST', '/alerts', 403, durationSeconds)
 
@@ -329,7 +332,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         return {
           success: false,
           error: 'forbidden',
-          message: 'Hourly and real-time alerts are available for Plus members only.',
+          message: 'Daily alerts are available for Plus members only.',
         }
       }
 
@@ -392,15 +395,16 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       }
 
       // Create alert
+      const resolvedFrequency = body.rule.metric === 'sendScore' ? 'weekly' : body.frequency
       const row = await alertRepository.create({
         watchlist_item_id: body.watchlistItemId,
         metric: body.rule.metric,
         comparator: body.rule.comparator,
         threshold: body.rule.value,
         currency: body.rule.currency || null,
-        frequency: body.frequency,
+        frequency: resolvedFrequency,
         enabled: body.enabled,
-        cooldown_minutes: resolveCooldownMinutes(body.frequency),
+        cooldown_minutes: resolveCooldownMinutes(resolvedFrequency),
       })
 
       const durationSeconds = (Date.now() - startTime) / 1000
@@ -455,7 +459,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
             value: row.threshold,
             currency: row.currency || undefined,
           },
-          frequency: row.frequency as typeof body.frequency,
+          frequency: row.frequency as typeof resolvedFrequency,
           enabled: row.enabled,
           createdAt: row.created_at.toISOString(),
           updatedAt: row.updated_at.toISOString(),
@@ -541,13 +545,13 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       const nextMetric = updates.metric ?? existing.metric
       const nextThreshold = updates.threshold ?? existing.threshold
       const nextFrequency = body.frequency ?? existing.frequency
-      const requiresPlus = nextMetric === 'sendScore'
-        || nextFrequency === 'hourly'
-        || nextFrequency === 'realtime'
+      const normalizedFrequency = normalizeFrequency(nextFrequency)
+      const resolvedFrequency = nextMetric === 'sendScore' ? 'weekly' : normalizedFrequency
+      const requiresPlus = nextMetric === 'sendScore' || resolvedFrequency === 'daily'
 
       const plan = requiresPlus ? await getUserPlan(pool, user.user_id) : null
 
-      if ((nextFrequency === 'hourly' || nextFrequency === 'realtime') && !isPlusEntitled(plan)) {
+      if (resolvedFrequency === 'daily' && !isPlusEntitled(plan)) {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
 
@@ -555,7 +559,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         return {
           success: false,
           error: 'forbidden',
-          message: 'Hourly and real-time alerts are available for Plus members only.',
+          message: 'Daily alerts are available for Plus members only.',
         }
       }
 
@@ -585,9 +589,9 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      if (body.frequency !== undefined) {
-        updates.frequency = body.frequency
-        updates.cooldown_minutes = resolveCooldownMinutes(body.frequency)
+      if (body.frequency !== undefined || nextMetric === 'sendScore') {
+        updates.frequency = resolvedFrequency
+        updates.cooldown_minutes = resolveCooldownMinutes(resolvedFrequency)
       }
 
       if (body.enabled !== undefined) {
@@ -655,14 +659,19 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         await updateAlertUsage(user.user_id)
       }
 
+      const rule = body.rule ?? {
+        metric: row.metric,
+        comparator: row.comparator,
+      }
+
       return {
         success: true,
         alert: {
           id: row.id,
           watchlistItemId: row.watchlist_item_id,
           rule: {
-            metric: row.metric as typeof body.rule.metric,
-            comparator: row.comparator as typeof body.rule.comparator,
+            metric: row.metric as typeof rule.metric,
+            comparator: row.comparator as typeof rule.comparator,
             value: row.threshold,
             currency: row.currency || undefined,
           },
@@ -817,12 +826,13 @@ export const alertsRoutes = async (app: FastifyInstance) => {
 
       return {
         success: true,
-        message: 'Smart Notifier is available for Plus members.',
+        message: 'Smart alerts send weekly best-time notifications when sufficient data is available.',
+        cadence: 'weekly',
+        availability: 'data-dependent',
         features: [
-          'AI-powered rate predictions',
-          'Optimal send time recommendations',
-          'Market trend analysis',
-          'Personalized alerts based on your transfer patterns',
+          'Weekly best-time window recommendations',
+          'Confidence-gated notifications',
+          'Latest-available data coverage',
         ],
       }
     } catch (error: unknown) {

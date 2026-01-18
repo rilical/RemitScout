@@ -41,6 +41,7 @@
                     id="methodology-from"
                     v-model="compareForm.from"
                     label="From"
+                    :exclude-country="compareForm.to"
                     placeholder="United States"
                   />
                 </div>
@@ -53,6 +54,7 @@
                     id="methodology-to"
                     v-model="compareForm.to"
                     label="To"
+                    :exclude-country="compareForm.from"
                     placeholder="Select destination"
                   />
                 </div>

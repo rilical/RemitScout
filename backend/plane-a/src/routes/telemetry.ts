@@ -4,9 +4,9 @@ import { randomUUID } from 'crypto'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { getRedisClient } from '../../../shared/redis'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { requireAdmin } from '../plugins/auth-plugin'
+import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 import { TelemetryRepository, UserAccountRepository } from '../repositories'
 
 const logger = createLogger('plane-a.telemetry')
@@ -84,26 +84,6 @@ const sanitizeTargetUrl = (raw: string): string => {
   } catch {
     const stripped = raw.split('?')[0] || raw
     return stripped.split('#')[0] || raw
-  }
-}
-
-const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<boolean> => {
-  try {
-    const redis = await getRedisClient()
-    if (!redis) {
-      logger.warn('telemetry_rate_limit_disabled', { reason: 'redis_unavailable' })
-      return false
-    }
-    const count = await redis.incr(key)
-    if (count === 1) {
-      await redis.expire(key, ttlSeconds)
-    }
-    return count > limit
-  } catch (error) {
-    logger.warn('telemetry_rate_limit_failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return false
   }
 }
 
@@ -230,8 +210,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     const input = parsed.data
-    const rateKey = `telemetry:search:${input.session_id}`
-    if (await checkRateLimit(rateKey, 100, 60)) {
+    const rateKey = buildRateLimitKey('telemetry:search', input.session_id)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 100, ttlSeconds: 60, component: 'telemetry' })) {
       reply.code(429)
       return { error: 'rate_limited' }
     }
@@ -292,8 +272,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     const input = parsed.data
-    const rateKey = `telemetry:click:${input.session_id}`
-    if (await checkRateLimit(rateKey, 50, 60)) {
+    const rateKey = buildRateLimitKey('telemetry:click', input.session_id)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 50, ttlSeconds: 60, component: 'telemetry' })) {
       reply.code(429)
       return { error: 'rate_limited' }
     }
@@ -362,8 +342,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     const input = parsed.data
-    const rateKey = `telemetry:conversion:${input.session_id}`
-    if (await checkRateLimit(rateKey, 40, 60)) {
+    const rateKey = buildRateLimitKey('telemetry:conversion', input.session_id)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 40, ttlSeconds: 60, component: 'telemetry' })) {
       reply.code(429)
       return { error: 'rate_limited' }
     }

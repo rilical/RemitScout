@@ -47,9 +47,17 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
   })
 
+  const secretsPolicyResources = [
+    `arn:aws:secretsmanager:*:*:secret:remit-scout/${options.envName}/*`,
+  ]
+  if (options.envName === 'dev') {
+    secretsPolicyResources.push(
+      'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*',
+    )
+  }
   const secretsPolicy = new PolicyStatement({
     actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
-    resources: [`arn:aws:secretsmanager:*:*:secret:remit-scout/${options.envName}/*`],
+    resources: secretsPolicyResources,
   })
   const ssmPolicy = new PolicyStatement({
     actions: ['ssm:GetParameter', 'ssm:GetParameters', 'ssm:GetParametersByPath'],
@@ -90,6 +98,11 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
 
   planeBEcsTaskRole.addToPolicy(cloudWatchPolicy)
   planeBEcsTaskRole.addToPolicy(xrayPolicy)
+  planeBEcsTaskRole.addToPolicy(secretsPolicy)
+  planeBEcsTaskRole.addToPolicy(new PolicyStatement({
+    actions: ['events:PutEvents'],
+    resources: ['arn:aws:events:*:*:event-bus/default'],
+  }))
 
   return {
     planeALambdaRole,

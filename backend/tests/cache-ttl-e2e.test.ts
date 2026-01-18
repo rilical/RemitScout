@@ -6,7 +6,15 @@ import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implementations/corridor-volatility-repository'
 
+const planeBUrl = process.env.DATABASE_URL_PLANE_B || process.env.DATABASE_URL
+const shouldRun = Boolean(planeBUrl)
+
 describe('Cache TTL End-to-End', () => {
+  if (!shouldRun) {
+    it.skip('DATABASE_URL_PLANE_B or DATABASE_URL required', () => {})
+    return
+  }
+
   let pool: Pool
   let volatilityService: VolatilityService
   let volatilityRepo: CorridorVolatilityRepository

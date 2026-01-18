@@ -1,11 +1,15 @@
 import './load-env'
+import './error-extensions'
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-const toBoolean = (value: string | undefined) => value === '1' || value === 'true'
+const toBoolean = (value: string | undefined, fallback = false) => {
+  if (value === undefined || value === '') return fallback
+  return value === '1' || value === 'true' || value === 'yes'
+}
 
 const toQueueMode = (value: string | undefined) => {
   if (value === 'queue' || value === 'shadow') return value
@@ -46,6 +50,7 @@ const stripeMockEnabled = toBoolean(process.env.STRIPE_MOCK)
   || (!isStrictConfig && !process.env.STRIPE_SECRET_KEY)
 
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
+const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
 
 const getDatabaseUrl = (primary?: string, fallback?: string) => {
   if (primary && primary.trim()) {
@@ -521,7 +526,7 @@ export const config = {
         process.env.ALERT_UNSUBSCRIBE_BASE_URL ||
         process.env.FRONTEND_BASE_URL ||
         process.env.PUBLIC_SITE_URL ||
-        'http://localhost:3000',
+        frontendFallbackUrl,
       tokenExpiryHours: toNumber(process.env.ALERT_UNSUBSCRIBE_TOKEN_TTL_HOURS, 720),
     },
     email: {
@@ -610,6 +615,8 @@ export const config = {
       publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || '',
       serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
       jwksUrl: toSupabaseJwksUrl(process.env.SUPABASE_URL, process.env.SUPABASE_JWKS_URL),
+      jwtIssuer: process.env.SUPABASE_JWT_ISSUER || '',
+      jwtAudience: process.env.SUPABASE_JWT_AUDIENCE || process.env.SUPABASE_JWT_AUD || '',
       verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
       remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 30),
       mock: {
@@ -631,7 +638,10 @@ export const config = {
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
       priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || (stripeMockEnabled ? 'price_mock' : ''),
       priceIdPlusAnnual: process.env.STRIPE_PRICE_ID_PLUS_ANNUAL || '',
-      frontendBaseUrl: process.env.FRONTEND_BASE_URL || 'http://localhost:3000',
+      frontendBaseUrl:
+        process.env.FRONTEND_BASE_URL ||
+        process.env.PUBLIC_SITE_URL ||
+        frontendFallbackUrl,
       trialDays: toNumber(process.env.STRIPE_TRIAL_DAYS, 14),
     },
   },
@@ -642,7 +652,11 @@ export const config = {
         : true,
     from: process.env.NEWSLETTER_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
     fromName: process.env.NEWSLETTER_EMAIL_FROM_NAME || 'RemitScout Newsletter',
-    baseUrl: process.env.NEWSLETTER_BASE_URL || process.env.FRONTEND_BASE_URL || 'http://localhost:3000',
+    baseUrl:
+      process.env.NEWSLETTER_BASE_URL ||
+      process.env.FRONTEND_BASE_URL ||
+      process.env.PUBLIC_SITE_URL ||
+      frontendFallbackUrl,
     tokenExpiryHours: toNumber(process.env.NEWSLETTER_TOKEN_EXPIRY_HOURS, 168),
     welcomeEnabled: toBoolean(process.env.NEWSLETTER_WELCOME_ENABLED),
   },

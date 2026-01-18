@@ -27,8 +27,8 @@
  * - Queue depth and per-request metrics
  */
 
-import { processQuoteRefreshQueue, type QuoteRefreshQueueEvent } from '../plane-b/src/quote-refresh'
-import { WorkerLock } from '../plane-b/src/lib/worker-lock'
+import type { QuoteRefreshQueueEvent } from '../plane-b/src/quote-refresh'
+import type { WorkerLock as WorkerLockType } from '../plane-b/src/lib/worker-lock'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { startHealthServer } from './b2c-refresh-worker-health'
@@ -45,6 +45,30 @@ const toBoolean = (value: string | undefined, fallback = false) => {
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+const loadPlaneBDeps = async () => {
+  try {
+    const [quoteRefresh, workerLock] = await Promise.all([
+      import('../plane-b/src/quote-refresh'),
+      import('../plane-b/src/lib/worker-lock'),
+    ])
+    return {
+      processQuoteRefreshQueue: quoteRefresh.processQuoteRefreshQueue,
+      WorkerLock: workerLock.WorkerLock,
+    }
+  } catch {
+    const distQuoteRefreshPath = '../plane-b/quote-refresh'
+    const distWorkerLockPath = '../plane-b/lib/worker-lock'
+    const [quoteRefresh, workerLock] = await Promise.all([
+      import(distQuoteRefreshPath),
+      import(distWorkerLockPath),
+    ])
+    return {
+      processQuoteRefreshQueue: quoteRefresh.processQuoteRefreshQueue,
+      WorkerLock: workerLock.WorkerLock,
+    }
+  }
+}
 
 const limit = toNumber(process.env.B2C_REFRESH_LIMIT, config.planeB.b2cRefreshBatchLimit)
 const maxRetries = config.planeB.b2cRefreshMaxRetries
@@ -73,7 +97,7 @@ const loopDelayMs = Math.max(50, toNumber(process.env.B2C_REFRESH_LOOP_DELAY_MS,
 const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.B2C_REFRESH_IDLE_DELAY_MS, 750))
 
 let shutdownRequested = false
-let lock: WorkerLock | null = null
+let lock: WorkerLockType | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
@@ -124,9 +148,12 @@ export const runB2cRefreshWorker = async (): Promise<number> => {
     queue_url_set: Boolean(queueUrl),
   })
 
+  const { processQuoteRefreshQueue, WorkerLock } = await loadPlaneBDeps()
+
   if (useLock) {
-    lock = new WorkerLock('b2c-refresh-worker', lockTtlSeconds)
-    const acquired = await lock.acquire()
+    const localLock = new WorkerLock('b2c-refresh-worker', lockTtlSeconds)
+    lock = localLock
+    const acquired = await localLock.acquire()
 
     if (!acquired) {
       logger.info('worker_skipped', { reason: 'lock_already_held' })
@@ -197,7 +224,9 @@ const closeHealthServer = async () => {
   }
 }
 
-const main = async (options: { enableHealthServer?: boolean } = {}) => {
+export const runB2cRefreshWorkerLoop = async (
+  options: { enableHealthServer?: boolean } = {},
+): Promise<number> => {
   const enableHealthServer = options.enableHealthServer ?? (!isLambdaRuntime && healthEnabled)
   if (enableHealthServer) {
     try {
@@ -236,9 +265,17 @@ const main = async (options: { enableHealthServer?: boolean } = {}) => {
     }
   }
 
-  process.exit(exitCode)
+  return exitCode
 }
 
 if (require.main === module && !isLambdaRuntime) {
-  void main()
+  runB2cRefreshWorkerLoop()
+    .then(code => process.exit(code))
+    .catch((error) => {
+      logger.error('worker_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
 }

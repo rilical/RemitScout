@@ -1,6 +1,7 @@
 import { Pool } from 'pg'
 import { UserPlanRepository } from '../repositories'
 import { config } from '../../../shared/config'
+import { isSupabaseMockEnabled } from '../auth/mock-config'
 
 export type UserPlan = {
   user_id: string
@@ -21,7 +22,7 @@ export const getUserPlan = async (pool: Pool, userId: string): Promise<UserPlan 
   const plan = await repo.getUserPlan(userId)
   
   // In dev mode with mock auth, allow plan override via SUPABASE_MOCK_PLAN
-  if (plan && config.auth.supabase.mock.enabled && config.auth.supabase.mock.planOverride) {
+  if (plan && isSupabaseMockEnabled() && config.auth.supabase.mock.planOverride) {
     const override = config.auth.supabase.mock.planOverride
     if (override === 'plus' || override === 'free' || override === 'enterprise') {
       return {

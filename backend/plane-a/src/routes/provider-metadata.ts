@@ -56,7 +56,9 @@ const serializeProvider = (provider: ReturnType<typeof getProviderMetadata>): Pr
 
 export const providerMetadataRoutes = async (app: FastifyInstance) => {
   app.get('/providers/metadata', async () => {
-    const providers = getAllProviderMetadata().map((provider) => serializeProvider(provider))
+    const providers = getAllProviderMetadata()
+      .filter((provider) => provider.type !== 'BANK')
+      .map((provider) => serializeProvider(provider))
     return { data: providers }
   })
 
@@ -71,7 +73,7 @@ export const providerMetadataRoutes = async (app: FastifyInstance) => {
     const provider =
       getProviderMetadata(id) || getProviderMetadataBySlug(id)
 
-    if (!provider) {
+    if (!provider || provider.type === 'BANK') {
       reply.code(404)
       return { error: 'not_found' }
     }

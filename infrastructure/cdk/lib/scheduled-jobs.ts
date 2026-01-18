@@ -7,7 +7,7 @@ import { Runtime, Tracing, LayerVersion, type IFunction, type ILayerVersion } fr
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
-import { SubnetType, type SecurityGroup } from 'aws-cdk-lib/aws-ec2'
+import { SubnetType, type SecurityGroup, type Vpc } from 'aws-cdk-lib/aws-ec2'
 import {
   Cluster,
   FargatePlatformVersion,
@@ -23,8 +23,7 @@ export type ScheduledJobsResources = {
   exportWorkerFunction: IFunction
   exportWorkerRule: Rule
   alertEvaluationSchedulerFunction: IFunction
-  alertEvaluationRealtimeRule: Rule
-  alertEvaluationHourlyRule: Rule
+  alertEvaluationWeeklyRule: Rule
   alertEvaluationDailyRule: Rule
   alertEvaluationWorkerFunction: IFunction
   alertEvaluationWorkerRule: Rule
@@ -32,6 +31,8 @@ export type ScheduledJobsResources = {
   telemetryAnalyticsRule: Rule
   sessionCleanupFunction: IFunction
   sessionCleanupRule: Rule
+  bankVsSpecialistRefreshFunction: IFunction
+  bankVsSpecialistRefreshRule: Rule
   auditLogCleanupFunction: IFunction
   auditLogCleanupRule: Rule
   goldPopularCorridorsRule: Rule
@@ -40,6 +41,7 @@ export type ScheduledJobsResources = {
   b2cRetryFailedRule: Rule
   b2cQueueCleanupRule: Rule
   stoplistAutoResumeRule: Rule
+  rightsMatrixSyncCountriesRule: Rule
   b2cRefreshRule: Rule
   oandaSyncFunction: IFunction
   oandaSyncRule: Rule
@@ -66,15 +68,22 @@ export type ScheduledJobsResources = {
 export type ScheduledJobsOptions = {
   envName: string
   roles: IamResources
+  vpc: Vpc
   cluster: Cluster
   b2cRefreshTask: FargateTaskDefinition
+  b2cRefreshServiceEnabled?: boolean
+  planeASecurityGroup: SecurityGroup
   planeBSecurityGroup: SecurityGroup
+  planeCSecurityGroup: SecurityGroup
   otelLambdaLayerArn?: string
   planeADbSecretArn?: string
   planeADbSsmName?: string
   planeADbHost?: string
   planeADbPort?: string
   planeADbName?: string
+  communicationsSecretArn?: string
+  quoteRefreshQueueUrl?: string
+  quoteRefreshQueueMode?: string
   exportJobQueueUrl?: string
   exportJobQueueMode?: string
   exportsBucketName?: string
@@ -88,6 +97,7 @@ export type ScheduledJobsOptions = {
   planeCDbSsmName?: string
   redisSecretArn?: string
   redisSsmName?: string
+  redisUrl?: string
   oandaSecretArn?: string
   oandaSsmName?: string
   planeBDbHost?: string
@@ -98,13 +108,100 @@ export type ScheduledJobsOptions = {
   planeCDbName?: string
 }
 
+type LambdaNetworking = {
+  vpc: Vpc
+  vpcSubnets: { subnetType: SubnetType }
+  securityGroups: SecurityGroup[]
+}
+
+const applyRedisEnv = (
+  scope: Construct,
+  fn: NodejsFunction,
+  id: string,
+  redisSecretArn?: string,
+  redisSsmName?: string,
+  redisUrl?: string,
+): void => {
+  if (redisSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(scope, id, redisSecretArn)
+    secret.grantRead(fn)
+    fn.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
+  }
+  if (redisSsmName) {
+    fn.addEnvironment('REDIS_SSM_NAME', redisSsmName)
+  }
+  if (!redisSecretArn && !redisSsmName && redisUrl) {
+    fn.addEnvironment('REDIS_URL', redisUrl)
+  }
+}
+
+const applyCommunicationsEnv = (
+  scope: Construct,
+  fn: NodejsFunction,
+  id: string,
+  communicationsSecretArn?: string,
+): void => {
+  if (!communicationsSecretArn) return
+  const secret = Secret.fromSecretCompleteArn(scope, id, communicationsSecretArn)
+  secret.grantRead(fn)
+  const communicationsEnvKeys = [
+    'ALERT_UNSUBSCRIBE_SECRET',
+    'ALERT_UNSUBSCRIBE_BASE_URL',
+    'ALERT_UNSUBSCRIBE_TOKEN_TTL_HOURS',
+    'ALERTS_EMAIL_ENABLED',
+    'ALERTS_EMAIL_FROM',
+    'ALERTS_EMAIL_FROM_NAME',
+    'ALERTS_SMS_ENABLED',
+    'NEWSLETTER_EMAIL_ENABLED',
+    'NEWSLETTER_EMAIL_FROM',
+    'NEWSLETTER_EMAIL_FROM_NAME',
+    'NEWSLETTER_BASE_URL',
+    'NEWSLETTER_TOKEN_EXPIRY_HOURS',
+    'NEWSLETTER_WELCOME_ENABLED',
+    'PUSH_WEB_ENABLED',
+    'PUSH_WEB_VAPID_PUBLIC_KEY',
+    'PUSH_WEB_VAPID_PRIVATE_KEY',
+    'PUSH_WEB_VAPID_SUBJECT',
+    'PUSH_SNS_ENABLED',
+    'PUSH_SNS_IOS_PLATFORM_ARN',
+    'PUSH_SNS_ANDROID_PLATFORM_ARN',
+    'PUSH_SNS_APNS_SANDBOX',
+    'SES_FROM_ADDRESS',
+    'SES_REGION',
+    'SNS_REGION',
+  ]
+  for (const envKey of communicationsEnvKeys) {
+    fn.addEnvironment(envKey, secret.secretValueFromJson(envKey).toString())
+  }
+}
+
 export const createScheduledJobs = (
   scope: Construct,
   options: ScheduledJobsOptions,
 ): ScheduledJobsResources => {
+  const isDev = options.envName === 'dev'
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
-    : RetentionDays.TWO_WEEKS
+    : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
+  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
+  const tracingExporter = isDev ? 'none' : 'xray'
+  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
+  const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+  const planeALambdaNetworking = {
+    vpc: options.vpc,
+    vpcSubnets: lambdaSubnets,
+    securityGroups: [options.planeASecurityGroup],
+  }
+  const planeBLambdaNetworking = {
+    vpc: options.vpc,
+    vpcSubnets: lambdaSubnets,
+    securityGroups: [options.planeBSecurityGroup],
+  }
+  const planeCLambdaNetworking = {
+    vpc: options.vpc,
+    vpcSubnets: lambdaSubnets,
+    securityGroups: [options.planeCSecurityGroup],
+  }
   const otelLambdaLayer = options.otelLambdaLayerArn
     ? LayerVersion.fromLayerVersionArn(scope, 'ScheduledJobsOtelLambdaLayer', options.otelLambdaLayerArn)
     : undefined
@@ -129,14 +226,17 @@ export const createScheduledJobs = (
   const planeCDbName = options.planeCDbName
   const auditLogsBucketName = options.auditLogsBucketName
   const auditLogsPrefix = options.auditLogsPrefix
+  const redisUrl = options.redisUrl
+  const b2cRefreshServiceEnabled = options.b2cRefreshServiceEnabled ?? false
 
   const goldFxRatesEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -166,8 +266,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(5),
+    ...planeBLambdaNetworking,
     role: options.roles.planeBLambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: goldFxRatesEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -185,18 +286,14 @@ export const createScheduledJobs = (
   if (planeBDbSsmName) {
     goldFxRatesFunction.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
   }
-  if (redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'RedisSecret',
-      redisSecretArn,
-    )
-    secret.grantRead(goldFxRatesFunction)
-    goldFxRatesFunction.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
-  }
-  if (redisSsmName) {
-    goldFxRatesFunction.addEnvironment('REDIS_SSM_NAME', redisSsmName)
-  }
+  applyRedisEnv(
+    scope,
+    goldFxRatesFunction,
+    'RedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
 
   const goldFxRatesRule = new Rule(scope, 'GoldFxRatesSchedule', {
     schedule: Schedule.rate(Duration.minutes(15)),
@@ -209,9 +306,10 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -253,8 +351,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 1024,
     timeout: Duration.minutes(15),
+    ...planeALambdaNetworking,
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: exportWorkerEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -272,14 +371,14 @@ export const createScheduledJobs = (
   if (planeADbSsmName) {
     exportWorkerFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
   }
-  if (redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(scope, 'ExportWorkerRedisSecret', redisSecretArn)
-    secret.grantRead(exportWorkerFunction)
-    exportWorkerFunction.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
-  }
-  if (redisSsmName) {
-    exportWorkerFunction.addEnvironment('REDIS_SSM_NAME', redisSsmName)
-  }
+  applyRedisEnv(
+    scope,
+    exportWorkerFunction,
+    'ExportWorkerRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
 
   const exportWorkerRule = new Rule(scope, 'ExportWorkerSchedule', {
     schedule: Schedule.rate(Duration.minutes(1)),
@@ -291,9 +390,9 @@ export const createScheduledJobs = (
   const alertEvaluationSchedulerEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
-    TRACING_EXPORTER: 'xray',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -321,33 +420,23 @@ export const createScheduledJobs = (
       runtime: Runtime.NODEJS_18_X,
       memorySize: 256,
       timeout: Duration.minutes(1),
+      ...planeALambdaNetworking,
       role: options.roles.planeALambdaRole,
-      tracing: Tracing.ACTIVE,
+      tracing: tracingMode,
       environment: alertEvaluationSchedulerEnvironment,
       logRetention,
       layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
     },
   )
 
-  const alertEvaluationRealtimeRule = new Rule(scope, 'AlertEvaluationRealtimeSchedule', {
-    schedule: Schedule.rate(Duration.minutes(5)),
-    description: 'Enqueues realtime alerts every 5 minutes.',
-  })
-  alertEvaluationRealtimeRule.addTarget(
-    new LambdaFunction(alertEvaluationSchedulerFunction, {
-      retryAttempts: 1,
-      event: RuleTargetInput.fromObject({ frequency: 'realtime' }),
-    }),
-  )
-
-  const alertEvaluationHourlyRule = new Rule(scope, 'AlertEvaluationHourlySchedule', {
+  const alertEvaluationWeeklyRule = new Rule(scope, 'AlertEvaluationWeeklySchedule', {
     schedule: Schedule.rate(Duration.hours(1)),
-    description: 'Enqueues hourly alerts every hour.',
+    description: 'Enqueues weekly alerts by timezone bucket every hour.',
   })
-  alertEvaluationHourlyRule.addTarget(
+  alertEvaluationWeeklyRule.addTarget(
     new LambdaFunction(alertEvaluationSchedulerFunction, {
       retryAttempts: 1,
-      event: RuleTargetInput.fromObject({ frequency: 'hourly' }),
+      event: RuleTargetInput.fromObject({ frequency: 'weekly' }),
     }),
   )
 
@@ -366,9 +455,10 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -402,8 +492,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 1024,
     timeout: Duration.minutes(15),
+    ...planeALambdaNetworking,
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: alertEvaluationWorkerEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -421,6 +512,12 @@ export const createScheduledJobs = (
   if (planeADbSsmName) {
     alertEvaluationWorkerFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
   }
+  applyCommunicationsEnv(
+    scope,
+    alertEvaluationWorkerFunction,
+    'AlertEvaluationWorkerCommunicationsSecret',
+    options.communicationsSecretArn,
+  )
 
   const alertEvaluationWorkerRule = new Rule(scope, 'AlertEvaluationWorkerSchedule', {
     schedule: Schedule.rate(Duration.minutes(1)),
@@ -434,9 +531,10 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -466,8 +564,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(5),
+    ...planeALambdaNetworking,
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: telemetryAnalyticsEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -497,9 +596,10 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -529,8 +629,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(5),
+    ...planeALambdaNetworking,
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: sessionCleanupEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -556,13 +657,99 @@ export const createScheduledJobs = (
 
   sessionCleanupRule.addTarget(new LambdaFunction(sessionCleanupFunction, { retryAttempts: 1 }))
 
+  const bankVsSpecialistRefreshEnvironment: Record<string, string> = {
+    ENVIRONMENT: options.envName,
+    NODE_ENV: 'production',
+    PGSSLMODE: 'require',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
+    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+    CLOUDWATCH_NAMESPACE: 'RemitScout',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (planeADbHost) {
+    bankVsSpecialistRefreshEnvironment.PLANE_A_DB_HOST = planeADbHost
+  }
+  if (planeADbPort) {
+    bankVsSpecialistRefreshEnvironment.PLANE_A_DB_PORT = planeADbPort
+  }
+  if (planeADbName) {
+    bankVsSpecialistRefreshEnvironment.PLANE_A_DB_NAME = planeADbName
+  }
+  if (options.quoteRefreshQueueUrl) {
+    bankVsSpecialistRefreshEnvironment.QUOTE_REFRESH_QUEUE_URL = options.quoteRefreshQueueUrl
+  }
+  if (options.quoteRefreshQueueMode) {
+    bankVsSpecialistRefreshEnvironment.QUOTE_REFRESH_QUEUE_MODE = options.quoteRefreshQueueMode
+  }
+
+  const bankVsSpecialistRefreshFunction = new NodejsFunction(
+    scope,
+    'BankVsSpecialistRefreshFunction',
+    {
+      entry: path.resolve(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'backend',
+        'scripts',
+        'aws',
+        'bank-vs-specialist-refresh-lambda.ts',
+      ),
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      memorySize: 512,
+      timeout: Duration.minutes(5),
+      ...planeALambdaNetworking,
+      role: options.roles.planeALambdaRole,
+      tracing: tracingMode,
+      environment: bankVsSpecialistRefreshEnvironment,
+      logRetention,
+      layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+    },
+  )
+
+  if (planeADbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'BankVsSpecialistRefreshDbSecret',
+      planeADbSecretArn,
+    )
+    secret.grantRead(bankVsSpecialistRefreshFunction)
+    bankVsSpecialistRefreshFunction.addEnvironment('PLANE_A_DB_SECRET_ARN', planeADbSecretArn)
+  }
+  if (planeADbSsmName) {
+    bankVsSpecialistRefreshFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
+  }
+  applyRedisEnv(
+    scope,
+    bankVsSpecialistRefreshFunction,
+    'BankVsSpecialistRefreshRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
+
+  const bankVsSpecialistRefreshRule = new Rule(scope, 'BankVsSpecialistRefreshSchedule', {
+    schedule: Schedule.rate(Duration.minutes(30)),
+    description: 'Enqueues bank vs specialist refresh requests every 30 minutes.',
+  })
+
+  bankVsSpecialistRefreshRule.addTarget(
+    new LambdaFunction(bankVsSpecialistRefreshFunction, { retryAttempts: 1 }),
+  )
+
   const auditLogCleanupEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -598,8 +785,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(10),
+    ...planeALambdaNetworking,
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: auditLogCleanupEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -629,12 +817,16 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (options.envName !== 'prod') {
+    oandaSyncEnvironment.OANDA_SYNC_INCLUDE_CAPABILITY = '1'
   }
   if (oandaSecretArn || oandaSsmName) {
     oandaSyncEnvironment.OANDA_USE_AUTHENTICATED_API = '1'
@@ -664,8 +856,9 @@ export const createScheduledJobs = (
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(5),
+    ...planeALambdaNetworking,
     role: options.roles.planeALambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment: oandaSyncEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -683,14 +876,14 @@ export const createScheduledJobs = (
   if (planeADbSsmName) {
     oandaSyncFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
   }
-  if (redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(scope, 'OandaRedisSecret', redisSecretArn)
-    secret.grantRead(oandaSyncFunction)
-    oandaSyncFunction.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
-  }
-  if (redisSsmName) {
-    oandaSyncFunction.addEnvironment('REDIS_SSM_NAME', redisSsmName)
-  }
+  applyRedisEnv(
+    scope,
+    oandaSyncFunction,
+    'OandaRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
   if (oandaSecretArn) {
     const secret = Secret.fromSecretCompleteArn(scope, 'OandaApiSecret', oandaSecretArn)
     secret.grantRead(oandaSyncFunction)
@@ -725,6 +918,7 @@ export const createScheduledJobs = (
     schedule: Schedule.rate(Duration.hours(1)),
     logRetention,
     otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
     planeBDbSecretArn,
     planeBDbSsmName,
     planeBDbHost,
@@ -752,6 +946,7 @@ export const createScheduledJobs = (
     schedule: Schedule.rate(Duration.hours(1)),
     logRetention,
     otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
     planeBDbSecretArn,
     planeBDbSsmName,
     planeBDbHost,
@@ -779,6 +974,7 @@ export const createScheduledJobs = (
     schedule: Schedule.rate(Duration.minutes(30)),
     logRetention,
     otelLambdaLayer,
+    lambdaNetworking: planeCLambdaNetworking,
     planeCDbSecretArn,
     planeCDbSsmName,
     planeCDbHost,
@@ -806,6 +1002,7 @@ export const createScheduledJobs = (
     schedule: Schedule.rate(Duration.minutes(15)),
     logRetention,
     otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
     planeBDbSecretArn,
     planeBDbSsmName,
     planeBDbHost,
@@ -831,6 +1028,7 @@ export const createScheduledJobs = (
     schedule: Schedule.cron({ minute: '30', hour: '2' }),
     logRetention,
     otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
     planeBDbSecretArn,
     planeBDbSsmName,
     planeBDbHost,
@@ -856,6 +1054,7 @@ export const createScheduledJobs = (
     schedule: Schedule.cron({ minute: '0', hour: '2' }),
     logRetention,
     otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
     planeBDbSecretArn,
     planeBDbSsmName,
     planeBDbHost,
@@ -865,9 +1064,37 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
+  const rightsMatrixSyncCountriesRule = createPlaneBLambdaJob({
+    scope,
+    options,
+    id: 'RightsMatrixSyncCountriesJob',
+    jobName: 'rights-matrix-sync-countries',
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'rights-matrix-sync-countries-lambda.ts',
+    ),
+    schedule: Schedule.rate(Duration.hours(options.envName === 'dev' ? 1 : 6)),
+    logRetention,
+    otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
+    planeBDbSecretArn,
+    planeBDbSsmName,
+    planeBDbHost,
+    planeBDbPort,
+    planeBDbName,
+  })
+
+  const b2cRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
   const b2cRefreshRule = new Rule(scope, 'B2cRefreshWorkerSchedule', {
-    schedule: Schedule.rate(Duration.minutes(2)),
-    description: 'Runs the B2C refresh worker on a 2-minute cadence (matches legacy K8s schedule).',
+    schedule: Schedule.rate(Duration.minutes(b2cRefreshIntervalMinutes)),
+    description: `Runs the B2C refresh worker on a ${b2cRefreshIntervalMinutes}-minute cadence.`,
+    enabled: !b2cRefreshServiceEnabled,
   })
 
   b2cRefreshRule.addTarget(
@@ -916,16 +1143,18 @@ export const createScheduledJobs = (
       runtime: Runtime.NODEJS_18_X,
       memorySize: 512,
       timeout: Duration.minutes(5),
+      ...planeBLambdaNetworking,
       role: options.roles.planeBLambdaRole,
-      tracing: Tracing.ACTIVE,
+      tracing: tracingMode,
       environment: {
         JOB_NAME: `${providerId}-probe`,
         ENVIRONMENT: options.envName,
         NODE_ENV: 'production',
         PGSSLMODE: 'require',
-        TRACING_EXPORTER: 'xray',
+        DB_DISABLE_STATEMENT_TIMEOUT: '1',
+        TRACING_EXPORTER: tracingExporter,
         OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-        CLOUDWATCH_METRICS_ENABLED: '1',
+        CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
         CLOUDWATCH_NAMESPACE: 'RemitScout',
         CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
         CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -949,18 +1178,14 @@ export const createScheduledJobs = (
     if (planeBDbSsmName) {
       fn.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
     }
-    if (redisSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(
-        scope,
-        `${id}ProbeRedisSecret`,
-        redisSecretArn,
-      )
-      secret.grantRead(fn)
-      fn.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
-    }
-    if (redisSsmName) {
-      fn.addEnvironment('REDIS_SSM_NAME', redisSsmName)
-    }
+    applyRedisEnv(
+      scope,
+      fn,
+      `${id}ProbeRedisSecret`,
+      redisSecretArn,
+      redisSsmName,
+      redisUrl,
+    )
 
     const rule = new Rule(scope, `${id}ProbeSchedule`, {
       schedule: Schedule.rate(Duration.minutes(5)),
@@ -979,8 +1204,7 @@ export const createScheduledJobs = (
     exportWorkerFunction,
     exportWorkerRule,
     alertEvaluationSchedulerFunction,
-    alertEvaluationRealtimeRule,
-    alertEvaluationHourlyRule,
+    alertEvaluationWeeklyRule,
     alertEvaluationDailyRule,
     alertEvaluationWorkerFunction,
     alertEvaluationWorkerRule,
@@ -988,6 +1212,8 @@ export const createScheduledJobs = (
     telemetryAnalyticsRule,
     sessionCleanupFunction,
     sessionCleanupRule,
+    bankVsSpecialistRefreshFunction,
+    bankVsSpecialistRefreshRule,
     auditLogCleanupFunction,
     auditLogCleanupRule,
     goldPopularCorridorsRule,
@@ -996,6 +1222,7 @@ export const createScheduledJobs = (
     b2cRetryFailedRule,
     b2cQueueCleanupRule,
     stoplistAutoResumeRule,
+    rightsMatrixSyncCountriesRule,
     b2cRefreshRule,
     oandaSyncFunction,
     oandaSyncRule,
@@ -1029,6 +1256,7 @@ type LambdaJobOptions = {
   schedule: Schedule
   logRetention: RetentionDays
   otelLambdaLayer?: ILayerVersion
+  lambdaNetworking: LambdaNetworking
   planeBDbSecretArn?: string
   planeBDbSsmName?: string
   planeBDbHost?: string
@@ -1052,6 +1280,7 @@ const createPlaneBLambdaJob = ({
   schedule,
   logRetention,
   otelLambdaLayer,
+  lambdaNetworking,
   planeBDbSecretArn,
   planeBDbSsmName,
   planeBDbHost,
@@ -1060,14 +1289,19 @@ const createPlaneBLambdaJob = ({
   redisSecretArn,
   redisSsmName,
 }: LambdaJobOptions): Rule => {
+  const isDev = options.envName === 'dev'
+  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
+  const tracingExporter = isDev ? 'none' : 'xray'
+  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -1088,8 +1322,9 @@ const createPlaneBLambdaJob = ({
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(5),
+    ...lambdaNetworking,
     role: options.roles.planeBLambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -1104,14 +1339,14 @@ const createPlaneBLambdaJob = ({
     fn.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
   }
 
-  if (redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(scope, `${id}RedisSecret`, redisSecretArn)
-    secret.grantRead(fn)
-    fn.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
-  }
-  if (redisSsmName) {
-    fn.addEnvironment('REDIS_SSM_NAME', redisSsmName)
-  }
+  applyRedisEnv(
+    scope,
+    fn,
+    `${id}RedisSecret`,
+    redisSecretArn,
+    redisSsmName,
+    options.redisUrl,
+  )
 
   const rule = new Rule(scope, `${id}Schedule`, {
     schedule,
@@ -1132,6 +1367,7 @@ const createPlaneCLambdaJob = ({
   schedule,
   logRetention,
   otelLambdaLayer,
+  lambdaNetworking,
   planeCDbSecretArn,
   planeCDbSsmName,
   planeCDbHost,
@@ -1140,14 +1376,19 @@ const createPlaneCLambdaJob = ({
   redisSecretArn,
   redisSsmName,
 }: LambdaJobOptions): Rule => {
+  const isDev = options.envName === 'dev'
+  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
+  const tracingExporter = isDev ? 'none' : 'xray'
+  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    TRACING_EXPORTER: 'xray',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
-    CLOUDWATCH_METRICS_ENABLED: '1',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
@@ -1168,8 +1409,9 @@ const createPlaneCLambdaJob = ({
     runtime: Runtime.NODEJS_18_X,
     memorySize: 512,
     timeout: Duration.minutes(5),
+    ...lambdaNetworking,
     role: options.roles.planeCLambdaRole,
-    tracing: Tracing.ACTIVE,
+    tracing: tracingMode,
     environment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
@@ -1184,14 +1426,14 @@ const createPlaneCLambdaJob = ({
     fn.addEnvironment('PLANE_C_DB_SSM_NAME', planeCDbSsmName)
   }
 
-  if (redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(scope, `${id}RedisSecret`, redisSecretArn)
-    secret.grantRead(fn)
-    fn.addEnvironment('REDIS_SECRET_ARN', redisSecretArn)
-  }
-  if (redisSsmName) {
-    fn.addEnvironment('REDIS_SSM_NAME', redisSsmName)
-  }
+  applyRedisEnv(
+    scope,
+    fn,
+    `${id}RedisSecret`,
+    redisSecretArn,
+    redisSsmName,
+    options.redisUrl,
+  )
 
   const rule = new Rule(scope, `${id}Schedule`, {
     schedule,

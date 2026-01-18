@@ -3,6 +3,9 @@ import { z } from 'zod'
 import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { getCountryByCode } from '../../../shared/countries-currencies'
+import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
+import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
@@ -16,6 +19,7 @@ const logger = createLogger('plane-a.watchlist')
 const pool = getPool(config.db.planeAUrl)
 const watchlistRepository = new WatchlistRepository(pool)
 const PLUS_WATCHLIST_SOFT_LIMIT = 16
+const USD_EQUIVALENT_AMOUNT = 500
 
 const updateWatchlistUsage = async (userId: string) => {
   try {
@@ -27,6 +31,13 @@ const updateWatchlistUsage = async (userId: string) => {
       error: getErrorMessage(error),
     })
   }
+}
+
+const resolveUsdEquivalentBucket = (fromCountry: string): number => {
+  const currency = getCountryByCode(fromCountry.toUpperCase())?.currency?.toUpperCase() || 'USD'
+  const rate = FIXED_EXCHANGE_RATES[currency] ?? 1
+  const amount = USD_EQUIVALENT_AMOUNT * rate
+  return computeBucketSelection(amount).bucket_used
 }
 
 const watchTargetSchema = z.discriminatedUnion('type', [
@@ -67,6 +78,7 @@ function targetToPayload(target: z.infer<typeof watchTargetSchema>): Record<stri
         from: target.from.toUpperCase(),
         to: target.to.toUpperCase(),
         method: target.method ?? 'bank',
+        amountBucket: resolveUsdEquivalentBucket(target.from),
       }
     case 'fxPair':
       return {
@@ -220,9 +232,27 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
 
       // Check if item already exists
       const targetPayload = targetToPayload(target)
-      const existing = await watchlistRepository.findByTarget(user.user_id, target.type, targetPayload)
+      const matchPayload = target.type === 'corridor'
+        ? {
+            from: (targetPayload.from as string),
+            to: (targetPayload.to as string),
+            method: (targetPayload.method as string | undefined) ?? 'bank',
+          }
+        : targetPayload
+      const existing = await watchlistRepository.findByTarget(user.user_id, target.type, matchPayload)
 
       if (existing) {
+        if (target.type === 'corridor') {
+          const existingPayload = existing.target_payload as Record<string, unknown>
+          if (existingPayload.amountBucket === undefined) {
+            await pool.query(
+              `UPDATE silver.watchlist_item
+               SET target_payload = target_payload || $1::jsonb, updated_at = NOW()
+               WHERE id = $2`,
+              [JSON.stringify({ amountBucket: (targetPayload as Record<string, unknown>).amountBucket }), existing.id],
+            )
+          }
+        }
         // Update existing item
         const beforeLabel = existing.label
         const updated = await watchlistRepository.update(existing.id, user.user_id, { label: body.label })

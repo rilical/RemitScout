@@ -12,6 +12,8 @@
             <CountrySelect
               id="corridor-from-country"
               v-model="localFromCountry"
+              label="From"
+              :exclude-country="localToCountry"
               placeholder="Sending from"
               @country-selected="emitUpdate"
             />
@@ -24,6 +26,8 @@
             <CountrySelect
               id="corridor-to-country"
               v-model="localToCountry"
+              label="To"
+              :exclude-country="localFromCountry"
               placeholder="Receiving in"
               @country-selected="emitUpdate"
             />
@@ -59,6 +63,7 @@
               v-model="localFromCurrency"
               :currencies="availableFromCurrenciesArray"
               :country-code="localFromCountry"
+              :exclude-currency="localToCurrency"
               placeholder="USD"
               code-only
               @currency-selected="emitUpdate"
@@ -73,6 +78,7 @@
               v-model="localToCurrency"
               :currencies="availableToCurrenciesArray"
               :country-code="localToCountry"
+              :exclude-currency="localFromCurrency"
               placeholder="USD"
               code-only
               @currency-selected="emitUpdate"
@@ -590,6 +596,8 @@ function emitUpdate() {
     payoutMethod: localPayoutMethod.value,
     currency: localToCurrency.value,
     fromCurrency: localFromCurrency.value,
+    fromCountry: localFromCountry.value,
+    toCountry: localToCountry.value,
   })
 }
 

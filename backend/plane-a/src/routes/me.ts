@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify'
+import type Stripe from 'stripe'
 import { z } from 'zod'
 import { getPool } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
@@ -7,11 +8,12 @@ import { upsertUserAccount } from '../services/user-account'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { getUsageForUser } from '../services/plan-usage'
-import { getStripeClient } from '../services/stripe-client'
+import { getStripeClient, isStripeConfigured, isStripeMockMisconfigured } from '../services/stripe-client'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
 import { UserAccountRepository } from '../repositories'
+import { isSupabaseMockEnabled, isSupabaseMockMisconfigured } from '../auth/mock-config'
 
 const planeAPool = getPool(config.db.planeAUrl)
 const logger = createLogger('plane-a.me')
@@ -46,7 +48,7 @@ const toIsoFromSeconds = (value: number | null | undefined) => {
 }
 
 const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): Promise<BillingInfo> => {
-  if (!plan || (!config.billing.stripe.secretKey && !config.billing.stripe.mockEnabled) || !plan.stripe_customer_id) {
+  if (!plan || isStripeMockMisconfigured() || !isStripeConfigured() || !plan.stripe_customer_id) {
     return {
       next_billing_date: null,
       amount: null,
@@ -59,12 +61,12 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
   try {
     const stripe = getStripeClient()
     const subscriptionId = plan.stripe_subscription_id
-    let subscription = null as null | Awaited<ReturnType<typeof stripe.subscriptions.retrieve>>
+    let subscription: Stripe.Subscription | null = null
 
     if (subscriptionId) {
       subscription = await stripe.subscriptions.retrieve(subscriptionId, {
         expand: ['default_payment_method', 'items.data.price'],
-      })
+      }) as Stripe.Subscription
     } else {
       const list = await stripe.subscriptions.list({
         customer: plan.stripe_customer_id,
@@ -88,7 +90,9 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
     const price = subscription.items.data[0]?.price
     const unitAmount = typeof price?.unit_amount === 'number' ? price.unit_amount / 100 : null
     const currency = price?.currency ? price.currency.toUpperCase() : null
-    const nextBillingDate = toIsoFromSeconds(subscription.current_period_end)
+    const subscriptionWithPeriodEnd =
+      subscription as Stripe.Subscription & { current_period_end?: number | null }
+    const nextBillingDate = toIsoFromSeconds(subscriptionWithPeriodEnd.current_period_end ?? null)
 
     const paymentMethod = subscription.default_payment_method
     const paymentMethodDetails =
@@ -134,7 +138,7 @@ const parseBearerToken = (header?: string) => {
 }
 
 const verifySupabasePassword = async (email: string, password: string): Promise<boolean> => {
-  if (config.auth.supabase.mock.enabled) {
+  if (isSupabaseMockEnabled()) {
     return true
   }
   const baseUrl = config.auth.supabase.url.replace(/\/$/, '')
@@ -164,7 +168,7 @@ const verifySupabasePassword = async (email: string, password: string): Promise<
 }
 
 const updateSupabasePassword = async (accessToken: string, newPassword: string): Promise<void> => {
-  if (config.auth.supabase.mock.enabled) {
+  if (isSupabaseMockEnabled()) {
     return
   }
   const baseUrl = config.auth.supabase.url.replace(/\/$/, '')
@@ -322,7 +326,12 @@ export const meRoutes = async (app: FastifyInstance) => {
       return { error: 'invalid_request', details: parsed.error.flatten() }
     }
 
-    if (!config.auth.supabase.mock.enabled && (!config.auth.supabase.url || !config.auth.supabase.publishableKey)) {
+    if (isSupabaseMockMisconfigured()) {
+      reply.code(500)
+      return { error: 'supabase_mock_disabled_in_prod' }
+    }
+
+    if (!isSupabaseMockEnabled() && (!config.auth.supabase.url || !config.auth.supabase.publishableKey)) {
       reply.code(500)
       return { error: 'supabase_not_configured' }
     }

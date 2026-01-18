@@ -6,7 +6,7 @@
  */
 
 import { createLogger } from '../../shared/logger'
-import { getHealthCorridors } from '../../shared/health-corridors'
+import { getHealthCorridors, type ProviderId } from '../../shared/health-corridors'
 import { getProvider, providerRegistry } from '../../plane-b/src/providers'
 import { createProbeRunner, outputProbeResult, type ProbeResult } from './probe-utils'
 import { createPool } from '../../shared/db'
@@ -41,7 +41,11 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
     throw new Error(error)
   }
 
-  const corridors = [...getHealthCorridors(providerId)]
+  const corridors = [...getHealthCorridors(providerId as ProviderId)]
+  const maxCorridors = Number(process.env.PROBE_MAX_CORRIDORS)
+  const limitedCorridors = Number.isFinite(maxCorridors) && maxCorridors > 0
+    ? corridors.slice(0, maxCorridors)
+    : corridors
   const timeoutMs = options.timeoutMs ?? (Number(process.env.PROBE_TIMEOUT_MS) || 300000)
   const retries = options.retries ?? (Number(process.env.PROBE_RETRIES) || 0)
   const amountBucketsEnv = process.env.PROBE_AMOUNT_BUCKETS
@@ -58,7 +62,7 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
 
   const runner = createProbeRunner({
     providerId,
-    corridors,
+      corridors: limitedCorridors,
     timeoutMs,
     retries,
   })
@@ -70,7 +74,7 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
       return await provider.run({
         pool,
         collectorType: 'health_probe',
-        corridors,
+      corridors: limitedCorridors,
         amountBuckets,
         payinMethod,
         payoutMethod,
@@ -96,5 +100,3 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
     await pool.end()
   }
 }
-
-

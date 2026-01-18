@@ -5,7 +5,15 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implementations/corridor-volatility-repository'
 
+const planeBUrl = process.env.DATABASE_URL_PLANE_B || process.env.DATABASE_URL
+const shouldRun = Boolean(planeBUrl)
+
 describe('CorridorVolatilityRepository', () => {
+  if (!shouldRun) {
+    it.skip('DATABASE_URL_PLANE_B or DATABASE_URL required', () => {})
+    return
+  }
+
   let pool: Pool
   let repo: CorridorVolatilityRepository
   let ingestionRunId: string

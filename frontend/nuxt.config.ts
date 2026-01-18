@@ -1,9 +1,53 @@
-import { promises as fs } from 'node:fs'
+import { promises as fs, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const isAwsEnvironment = Boolean(
   process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
 )
+const envFileCandidates = [
+  join(process.cwd(), '.env.local'),
+  join(process.cwd(), '.env'),
+]
+const readEnvValue = (key: string) => {
+  const direct = process.env[key]
+  if (direct) return direct
+  for (const filePath of envFileCandidates) {
+    if (!existsSync(filePath)) continue
+    const contents = readFileSync(filePath, 'utf8')
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const match = trimmed.match(/^([A-Z0-9_]+)\s*=\s*(.*)$/)
+      if (!match) continue
+      const [, envKey, rawValue] = match
+      if (envKey !== key) continue
+      return rawValue.replace(/^['"]|['"]$/g, '')
+    }
+  }
+  return undefined
+}
+const isAbsoluteUrl = (value?: string) => Boolean(value && /^https?:\/\//.test(value))
+const resolvePublicApiBase = () => {
+  const publicBase = readEnvValue('PUBLIC_API_BASE')
+  if (publicBase) return publicBase
+  const cloudFrontDomain = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+  if (cloudFrontDomain) {
+    return `https://${cloudFrontDomain.replace(/\/$/, '')}/api/v1`
+  }
+  const apiEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
+  if (apiEndpoint) {
+    return `${apiEndpoint.replace(/\/$/, '')}/api/v1`
+  }
+  return isAwsEnvironment ? '/api' : '/api'
+}
+const resolveServerApiBase = () => {
+  const apiBase = readEnvValue('API_BASE')
+  if (apiBase) return apiBase
+  const publicBase = resolvePublicApiBase()
+  if (isAbsoluteUrl(publicBase)) return publicBase as string
+  if (!isAwsEnvironment) return 'http://127.0.0.1:4000/api/v1'
+  return ''
+}
 const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
 const isrRouteRules = isStagingOrProd ? {
   '/send-money/**': { isr: 600 }, // 10 minutes
@@ -134,7 +178,7 @@ export default defineNuxtConfig({
         await fs.mkdir(providersDestDir, { recursive: true })
         const providerFiles = await fs.readdir(providersSourceDirForPublic)
         for (const file of providerFiles) {
-          if (file.endsWith('.svg')) {
+          if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.webp')) {
             const sourcePath = join(providersSourceDirForPublic, file)
             const destPath = join(providersDestDir, file)
             await fs.copyFile(sourcePath, destPath)
@@ -280,16 +324,16 @@ export default defineNuxtConfig({
   // Runtime Configuration
   runtimeConfig: {
     // Server-only backend base URL for BFF proxying (must be absolute).
-    apiBase: process.env.API_BASE || 'http://127.0.0.1:4000/api/v1',
+    apiBase: resolveServerApiBase(),
     public: {
       siteUrl:
         process.env.PUBLIC_SITE_URL ||
         (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
           : 'https://Remit-Scout.com'),
-      apiBase: process.env.PUBLIC_API_BASE || '/api',
-      b2cRefreshPollMs: Number(process.env.PUBLIC_B2C_REFRESH_POLL_MS) || 1500,
-      b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 750,
+      apiBase: resolvePublicApiBase(),
+      b2cRefreshPollMs: Number(process.env.PUBLIC_B2C_REFRESH_POLL_MS) || 2500,
+      b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 2500,
       b2cBackgroundRefreshEnabled: process.env.PUBLIC_B2C_BACKGROUND_REFRESH_ENABLED === '1',
       imageBase:
         process.env.PUBLIC_IMAGE_BASE ||

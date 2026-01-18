@@ -53,7 +53,7 @@ describe('alert-evaluator', () => {
     comparator: 'gt',
     threshold: 100,
     currency: null,
-    frequency: 'realtime',
+    frequency: 'weekly',
     enabled: true,
     cooldown_minutes: 60,
     created_at: new Date('2024-01-01T00:00:00Z'),
@@ -191,7 +191,14 @@ describe('alert-evaluator', () => {
     } as any)
 
     vi.mocked(query).mockResolvedValue({
-      rows: [{ send_score: 90, alert_eligible: false }],
+      rows: [{
+        send_score: 90,
+        alert_eligible: false,
+        best_window_start: new Date('2024-01-01T00:00:00Z'),
+        best_window_end: new Date('2024-01-02T00:00:00Z'),
+        confidence: 80,
+        sample_days: 30,
+      }],
     })
 
     const result = await evaluateAlert(mockPool, 'alert-1')

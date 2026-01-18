@@ -63,7 +63,7 @@ export abstract class BaseCollector {
   protected readonly displayName: string
   protected readonly pool: Pool
   protected readonly shouldClose: boolean
-  protected readonly logger = createLogger(`plane-b.collectors.${this.providerId}`)
+  protected readonly logger: ReturnType<typeof createLogger>
 
   protected corridors: string[] = []
   protected buckets: number[] = []
@@ -109,6 +109,7 @@ export abstract class BaseCollector {
   ) {
     this.providerId = providerId
     this.displayName = displayName
+    this.logger = createLogger(`plane-b.collectors.${this.providerId}`)
     this.pool = options.pool ?? createPool(config.db.planeBUrl)
     this.shouldClose = !options.pool
   }
@@ -486,7 +487,16 @@ export abstract class BaseCollector {
     if (isRateLimit) {
       this.rateLimitCount += 1
       this.applyRateLimitPenalty()
-      penalizeRpmImmediately(this.scheduler!, 0.5) // Reduce RPM by 50%
+      const penalized = await penalizeRpmImmediately(
+        this.pool,
+        this.providerId,
+        this.currentRates,
+        0.5,
+      )
+      if (penalized) {
+        this.currentRates = penalized
+        this.scheduler?.updateRates(penalized.rpm, penalized.perCorridorRpm)
+      }
     }
 
     await insertOpsAlert(this.pool, this.providerId, {
@@ -538,16 +548,13 @@ export abstract class BaseCollector {
   ): Promise<number | null> {
     try {
       const repo = new LatestQuoteRepository(this.pool)
-      const quote = await repo.getLatestByCorridor(
+      return await repo.getLatestQuoteAgeMinutes(
         this.providerId,
         corridorId,
         amountBucket,
         payinMethod,
         payoutMethod,
       )
-      if (!quote?.collected_at) return null
-      const ageMs = Date.now() - new Date(quote.collected_at).getTime()
-      return Math.floor(ageMs / 60000)
     } catch {
       return null
     }
