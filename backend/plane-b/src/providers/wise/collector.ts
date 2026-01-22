@@ -835,5 +835,5 @@ export const runWiseCollector = async (options: WiseCollectorOptions = {}) => {
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

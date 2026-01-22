@@ -141,8 +141,6 @@ export class StoplistService {
     }
 
     const now = Date.now()
-    const cooldownMs = config.planeB.blockCooldownMs || 86400000
-
     for (const circuit of openCircuits) {
       if (circuit.cooldown_until) {
         const cooldownUntil = new Date(circuit.cooldown_until).getTime()
@@ -190,4 +188,3 @@ export class StoplistService {
     }
   }
 }
-

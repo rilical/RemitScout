@@ -4,7 +4,6 @@ import {
   ensureUserPlan,
   getUserPlan,
   updatePlanFromStripe,
-  type UserPlan,
 } from '../plane-a/src/services/user-plan'
 import { UserPlanRepository } from '../plane-a/src/repositories'
 
@@ -111,7 +110,6 @@ describe('user-plan service', () => {
     })
   })
 })
-
 
 
 

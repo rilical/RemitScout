@@ -11,6 +11,11 @@ export type ProviderCorridorRecord = {
   corridor_id: string | null
 }
 
+export type ProviderUnsupportedCorridorRecord = {
+  corridor_id: string | null
+  last_verified_at: Date | null
+}
+
 export type ProviderCorridorPriorityRecord = {
   corridor_id: string | null
   priority_tier: string | null
@@ -30,6 +35,7 @@ export interface IProviderCapabilityRepository {
   getCapability(providerId: string, corridorId: string): Promise<ProviderCapabilityRecord | null>
   loadObservedCorridors(providerId: string): Promise<ProviderCorridorRecord[]>
   loadUnsupportedCorridors(providerId: string): Promise<ProviderCorridorRecord[]>
+  loadUnsupportedCorridorsWithAge(providerId: string): Promise<ProviderUnsupportedCorridorRecord[]>
   upsertCapability(input: ProviderCapabilityInput): Promise<void>
   markCorridorUnsupported(
     providerId: string,
@@ -37,5 +43,8 @@ export interface IProviderCapabilityRepository {
     source: string,
   ): Promise<void>
   loadCoverageCorridors(minProviders: number): Promise<ProviderCorridorRecord[]>
-  loadPriorityCorridors(providerId: string): Promise<ProviderCorridorPriorityRecord[]>
+  loadPriorityCorridors(
+    providerId: string,
+    tierVersion?: string,
+  ): Promise<ProviderCorridorPriorityRecord[]>
 }

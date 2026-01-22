@@ -8,9 +8,14 @@ export class PublisherRepository implements IPublisherRepository {
   async getContributorCount(corridorId: string): Promise<number> {
     const result = await query<{ contributor_count: number }>(
       `SELECT COUNT(DISTINCT provider_id)::int AS contributor_count
-         FROM silver.provider_corridor_capability
-        WHERE corridor_id = $1
-          AND is_supported = true`,
+         FROM silver.provider_corridor_capability pcc
+         JOIN silver.rights_matrix rm
+           ON rm.provider_id = pcc.provider_id
+        WHERE pcc.corridor_id = $1
+          AND pcc.is_supported = true
+          AND rm.allowed_collect = true
+          AND rm.allowed_b2b = true
+          AND rm.stoplist_status = 'active'`,
       [corridorId],
       this.pool,
     )

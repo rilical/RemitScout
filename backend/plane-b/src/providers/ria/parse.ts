@@ -25,13 +25,51 @@ type RiaSettlementProxy = {
   defaultSettlementMethod?: string | null
 }
 
+type RiaTransferSelections = {
+  paymentMethod?: string | null
+  deliveryMethod?: string | null
+}
+
+type RiaTransferCalculations = {
+  amountFrom?: number | null
+  amountTo?: number | null
+  transferFee?: number | null
+  totalFeesAndTaxes?: number | null
+  totalAmount?: number | null
+  exchangeRate?: number | null
+  exchangeRatePromo?: number | null
+}
+
+type RiaTransferOption = {
+  value?: string | null
+  text?: string | null
+}
+
+type RiaTransferOptions = {
+  paymentMethods?: RiaTransferOption[] | null
+  deliveryMethods?: RiaTransferOption[] | null
+}
+
+type RiaTransferDetails = {
+  selections?: RiaTransferSelections | null
+  calculations?: RiaTransferCalculations | null
+  transferOptions?: RiaTransferOptions | null
+}
+
 type RiaPayload = {
   quote?: {
     individualQuotes?: RiaIndividualQuote[] | null
     errorMessages?: Record<string, { message?: string }> | null
     availableSettlementProxies?: RiaSettlementProxy[] | null
   } | null
+  model?: {
+    transferDetails?: RiaTransferDetails | null
+  } | null
   errorMessages?: Record<string, { message?: string }> | null
+  errorResponse?: {
+    errors?: Array<{ message?: string }> | string[] | null
+  } | null
+  statusMessage?: string | null
 }
 
 export type RiaParsedQuote = {
@@ -126,6 +164,39 @@ const getQuotes = (payload: RiaPayload) => {
   return payload.quote?.individualQuotes ?? []
 }
 
+const getTransferDetails = (payload: RiaPayload) => {
+  return payload.model?.transferDetails ?? null
+}
+
+export const extractRiaErrorMessages = (payload: RiaPayload) => {
+  const errorMessages: string[] = []
+  const appendError = (value: unknown) => {
+    if (!value) return
+    if (typeof value === 'string') {
+      errorMessages.push(value)
+      return
+    }
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      const message = (value as { message?: string }).message
+      if (message) errorMessages.push(message)
+    }
+  }
+  const responseErrors = payload.errorResponse?.errors ?? []
+  if (Array.isArray(responseErrors)) {
+    for (const entry of responseErrors) appendError(entry)
+  }
+  if (payload.errorMessages) {
+    for (const entry of Object.values(payload.errorMessages)) appendError(entry)
+  }
+  if (payload.quote?.errorMessages) {
+    for (const entry of Object.values(payload.quote.errorMessages)) appendError(entry)
+  }
+  if (payload.statusMessage) {
+    errorMessages.push(payload.statusMessage)
+  }
+  return errorMessages
+}
+
 export const extractRiaMethodPairs = (payload: RiaPayload) => {
   const pairs = new Map<string, { payin_method: string; payout_method: string }>()
   const quotes = getQuotes(payload)
@@ -133,6 +204,30 @@ export const extractRiaMethodPairs = (payload: RiaPayload) => {
     const key = `${payin}:${payout}`
     if (!pairs.has(key)) {
       pairs.set(key, { payin_method: payin, payout_method: payout })
+    }
+  }
+  const transferDetails = getTransferDetails(payload)
+  const selections = transferDetails?.selections ?? null
+  const selectionPayin = selections ? mapPayin(selections.paymentMethod) : 'other'
+  const selectionPayout = selections ? mapPayout(selections.deliveryMethod) : 'other'
+  if (selectionPayin !== 'other' && selectionPayout !== 'other') {
+    addPair(selectionPayin, selectionPayout)
+  }
+  const transferOptions = transferDetails?.transferOptions ?? null
+  if (transferOptions && selectionPayin !== 'other') {
+    for (const method of transferOptions.deliveryMethods ?? []) {
+      const payout = mapPayout(method.value)
+      if (payout !== 'other') {
+        addPair(selectionPayin, payout)
+      }
+    }
+  }
+  if (transferOptions && selectionPayout !== 'other') {
+    for (const method of transferOptions.paymentMethods ?? []) {
+      const payin = mapPayin(method.value)
+      if (payin !== 'other') {
+        addPair(payin, selectionPayout)
+      }
     }
   }
   const payoutsByPayin = new Map<string, Set<string>>()
@@ -202,23 +297,83 @@ export const parseRiaPayload = (
   payload: RiaPayload,
   request: CollectorRequest,
 ): RiaParsedQuote | null => {
-  if (payload.errorMessages && Object.keys(payload.errorMessages).length > 0) {
+  const errorMessages = extractRiaErrorMessages(payload)
+  const hasErrorMessages = errorMessages.length > 0
+  if (hasErrorMessages) {
     logger.warn('ria_parse_error_messages', {
       corridor_id: request.corridor_id,
-      error_messages: payload.errorMessages,
+      error_messages: errorMessages,
     })
-    return null
   }
 
-  if (payload.quote?.errorMessages && Object.keys(payload.quote.errorMessages).length > 0) {
-    logger.warn('ria_parse_error_messages', {
-      corridor_id: request.corridor_id,
-      error_messages: payload.quote.errorMessages,
-    })
+  const transferDetails = getTransferDetails(payload)
+  const calculations = transferDetails?.calculations ?? null
+  if (!calculations && getQuotes(payload).length === 0 && hasErrorMessages) {
     return null
+  }
+  if (calculations) {
+    const { sourceCurrency } = requireCorridorId(request.corridor_id)
+    const selections = transferDetails?.selections ?? null
+    const payin = mapPayin(selections?.paymentMethod)
+    const payout = mapPayout(selections?.deliveryMethod)
+
+    const sendAmount = parseNumber(calculations.amountFrom)
+    const resolvedSend = Number.isFinite(sendAmount) ? sendAmount : request.send_amount
+    const receiveAmountValue = parseNumber(calculations.amountTo)
+    const rate = parseNumber(calculations.exchangeRate)
+    const promoRate = parseNumber(calculations.exchangeRatePromo)
+    const feeAmountValue = parseNumber(
+      calculations.transferFee ?? calculations.totalFeesAndTaxes,
+    )
+    const totalCostValue = parseNumber(calculations.totalAmount)
+
+    const receiveAmount = Number.isFinite(receiveAmountValue)
+      ? receiveAmountValue
+      : Number.isFinite(rate)
+        ? resolvedSend * rate
+        : Number.NaN
+
+    if (!Number.isFinite(resolvedSend) || !Number.isFinite(receiveAmount)) {
+      return null
+    }
+
+    const flags: QualityFlag[] = hasErrorMessages ? [qualityFlags.partial_data] : []
+    if (!Number.isFinite(feeAmountValue)) {
+      flags.push(qualityFlags.partial_data)
+    }
+    if (!Number.isFinite(rate)) {
+      flags.push(qualityFlags.partial_data)
+    }
+
+    const feeAmount = Number.isFinite(feeAmountValue) ? feeAmountValue : 0
+    const totalDebit = Number.isFinite(totalCostValue)
+      ? totalCostValue
+      : resolvedSend + feeAmount
+
+    return {
+      send_amount: resolvedSend,
+      receive_amount: receiveAmount,
+      fee_amount: feeAmount,
+      total_debit_amount: totalDebit,
+      payin_method: payin !== 'other' ? payin : request.payin_method,
+      payout_method: payout !== 'other' ? payout : request.payout_method,
+      fee_currency: sourceCurrency,
+      promotional_fee_amount: null,
+      promotional_rate: Number.isFinite(promoRate) ? promoRate : null,
+      base_rate: Number.isFinite(rate) ? rate : null,
+      promotional_cap_amount: null,
+      delivery_time_min_minutes: null,
+      delivery_time_max_minutes: null,
+      collected_at: new Date().toISOString(),
+      parser_version: 'ria_quote_v2',
+      parse_flags: flags,
+    }
   }
 
   const { quote, parse_flags } = selectQuote(getQuotes(payload), request)
+  if (hasErrorMessages && !parse_flags.includes(qualityFlags.partial_data)) {
+    parse_flags.push(qualityFlags.partial_data)
+  }
   if (!quote) return null
 
   const { sourceCurrency } = requireCorridorId(request.corridor_id)

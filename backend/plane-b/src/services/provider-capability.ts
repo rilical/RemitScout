@@ -358,38 +358,61 @@ const probeProviderCapability = async (
 export const resolveProviderSupport = async (
   pool: Pool,
   request: CollectorRequest,
-  options: { allowProbe?: boolean } = {},
+  options: {
+    allowProbe?: boolean
+    skipCatalog?: boolean
+    refreshUnsupportedAfterDays?: number
+  } = {},
 ): Promise<ProviderSupportDecision> => {
   const allowProbe = options.allowProbe ?? true
+  const skipCatalog = options.skipCatalog ?? false
+  const refreshUnsupportedAfterDays = Number.isFinite(options.refreshUnsupportedAfterDays)
+    ? Math.max(0, options.refreshUnsupportedAfterDays ?? 0)
+    : 0
   const catalogSet = catalogSupportedCorridors[request.provider_id]
-  if (request.provider_id === 'wise') {
-    if (!isWiseCurrencyCorridor(request.corridor_id)) {
+  if (!skipCatalog) {
+    if (request.provider_id === 'wise') {
+      if (!isWiseCurrencyCorridor(request.corridor_id)) {
+        await ensureCorridor(pool, request.corridor_id)
+        const repo = new ProviderCapabilityRepository(pool)
+        await repo.markCorridorUnsupported(
+          request.provider_id,
+          request.corridor_id,
+          'wise_currency_unsupported',
+        )
+        return { supported: false, reason: 'catalog_unsupported', source: 'cache' }
+      }
+    } else if (catalogSet && !catalogSet.has(request.corridor_id)) {
       await ensureCorridor(pool, request.corridor_id)
       const repo = new ProviderCapabilityRepository(pool)
       await repo.markCorridorUnsupported(
         request.provider_id,
         request.corridor_id,
-        'wise_currency_unsupported',
+        'catalog_unsupported',
       )
       return { supported: false, reason: 'catalog_unsupported', source: 'cache' }
     }
-  } else if (catalogSet && !catalogSet.has(request.corridor_id)) {
-    await ensureCorridor(pool, request.corridor_id)
-    const repo = new ProviderCapabilityRepository(pool)
-    await repo.markCorridorUnsupported(
-      request.provider_id,
-      request.corridor_id,
-      'catalog_unsupported',
-    )
-    return { supported: false, reason: 'catalog_unsupported', source: 'cache' }
   }
 
   const repo = new ProviderCapabilityRepository(pool)
-  const existing = await repo.getCapability(request.provider_id, request.corridor_id)
+  let existing = await repo.getCapability(request.provider_id, request.corridor_id)
   if (existing) {
     if (!existing.is_supported) {
-      return { supported: false, reason: 'capability_unsupported', source: 'cache' }
+      const lastVerifiedAt = existing.last_verified_at
+        ? new Date(existing.last_verified_at).getTime()
+        : null
+      const refreshAfterMs = refreshUnsupportedAfterDays > 0
+        ? refreshUnsupportedAfterDays * 24 * 60 * 60 * 1000
+        : 0
+      const shouldRefresh = refreshAfterMs > 0
+        && (lastVerifiedAt === null || Date.now() - lastVerifiedAt > refreshAfterMs)
+      if (!shouldRefresh) {
+        return { supported: false, reason: 'capability_unsupported', source: 'cache' }
+      }
+      existing = null
     }
+  }
+  if (existing) {
     if (!methodAllowed(existing.payin_methods, request.payin_method) || !methodAllowed(existing.payout_methods, request.payout_method)) {
       return { supported: false, reason: 'capability_method_mismatch', source: 'cache' }
     }

@@ -319,7 +319,7 @@ export default defineNuxtConfig({
   },
 
   // CSS
-  css: ['./assets/css/tailwind.css', './assets/css/reduced-motion.css'],
+  css: ['./assets/css/tailwind.css', './assets/css/reduced-motion.css', 'katex/dist/katex.min.css'],
 
   // Runtime Configuration
   runtimeConfig: {
@@ -348,17 +348,6 @@ export default defineNuxtConfig({
         process.env.PUBLIC_SUPABASE_ANON_KEY ||
         process.env.SUPABASE_PUBLISHABLE_KEY ||
         '',
-      devControls: process.env.PUBLIC_DEV_CONTROLS === '1' && !isAwsEnvironment && !isStagingOrProd,
-      devAuthEnabled: process.env.PUBLIC_DEV_AUTH === '1' && !isAwsEnvironment && !isStagingOrProd,
-      devAuthToken:
-        process.env.PUBLIC_DEV_AUTH_TOKEN ||
-        process.env.SUPABASE_MOCK_ADMIN_TOKEN ||
-        process.env.SUPABASE_MOCK_TOKEN ||
-        'admin-token',
-      devSuperAdminEmail:
-        process.env.DEV_SUPER_ADMIN_EMAIL ||
-        process.env.PUBLIC_DEV_SUPER_ADMIN_EMAIL ||
-        'admin@remitscout.test',
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',

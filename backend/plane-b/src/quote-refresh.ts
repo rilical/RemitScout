@@ -164,7 +164,6 @@ const processRequest = async (
 ): Promise<{ status: QuoteRefreshStatusValue; skipReason: string | null }> => {
   let status: QuoteRefreshStatusValue = QuoteRefreshStatus.FAILED
   let skipReason: string | null = null
-  let freshnessAgeSeconds: number | null = null
 
   try {
     const freshness = await checkQuoteFreshness(
@@ -175,7 +174,6 @@ const processRequest = async (
       request.payout_method,
       request.provider_id,
     )
-    freshnessAgeSeconds = freshness.ageSeconds
 
     if (freshness.exists && freshness.isFresh) {
       status = QuoteRefreshStatus.SKIPPED

@@ -78,7 +78,7 @@ const upsertCapability = async (
   corridorId: string,
   payload: Record<string, unknown>,
 ) => {
-  const pairs = extractPangeaMethodPairs(payload as PangeaPayload)
+  const pairs = extractPangeaMethodPairs()
   const payinMethods = Array.from(new Set(pairs.map(pair => pair.payin_method))).filter(
     method => method !== 'other',
   )
@@ -190,10 +190,6 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
   const sleepRateLimit = async () => {
     const jitter = rateLimitJitterMs > 0 ? Math.floor(Math.random() * rateLimitJitterMs) : 0
     await sleep(rateLimitBackoffMs + jitter)
-  }
-  const applyRateLimitPenalty = () => {
-    extraDelayMs = Math.min(extraDelayMs + rateLimitBackoffMs, rateLimitBackoffMs * 3)
-    extraJitterMs = Math.min(extraJitterMs + rateLimitJitterMs, rateLimitJitterMs * 3)
   }
   const decayRateLimitPenalty = () => {
     extraDelayMs = Math.max(0, Math.floor(extraDelayMs * 0.7))
@@ -728,5 +724,5 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

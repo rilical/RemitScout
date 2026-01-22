@@ -7,6 +7,7 @@ import { getUserAgentForCorridor } from '../../collectors/user-agent'
 import { REMITBEE_DESTINATION_CURRENCY_OPTIONS } from './supported-corridors'
 
 const remitbeeEndpoint = 'https://api.remitbee.com/public-services/compressed/calculate-money-transfer'
+const remitbeeSessionWarmupUrl = 'https://www.remitbee.com/'
 
 const formatAmount = (value: number) => {
   if (!Number.isFinite(value)) return '0.00'
@@ -16,6 +17,41 @@ const formatAmount = (value: number) => {
 type FetchOptions = {
   jitterMs?: number
   proxyTier?: ProxyTier
+  cookie?: string
+  extraHeaders?: Record<string, string>
+}
+
+const buildCookieHeader = (cookies?: string[] | null) => {
+  if (!cookies || cookies.length === 0) return null
+  const parts = cookies
+    .map((cookie) => cookie.split(';')[0]?.trim())
+    .filter(Boolean)
+  return parts.length ? parts.join('; ') : null
+}
+
+export const fetchRemitbeeSessionCookie = async (input: {
+  locale: string
+  corridorId: string
+  proxyTier?: ProxyTier
+  warmupUrl?: string | null
+}) => {
+  const url = input.warmupUrl || remitbeeSessionWarmupUrl
+  if (!url) return null
+
+  const response = await httpRequest({
+    url,
+    method: 'GET',
+    headers: {
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'accept-language': input.locale,
+      'user-agent': getUserAgentForCorridor(input.corridorId),
+      referer: remitbeeSessionWarmupUrl,
+    },
+    proxyTier: input.proxyTier,
+    corridorId: input.corridorId,
+  })
+
+  return buildCookieHeader(response.setCookie)
 }
 
 export const fetchRemitbeeQuote = async (
@@ -55,17 +91,31 @@ export const fetchRemitbeeQuote = async (
 
   const locale = request.locale || 'en-US'
 
+  const headers: Record<string, string> = {
+    accept: 'application/json, text/plain, */*',
+    'content-type': 'application/json',
+    origin: 'https://www.remitbee.com',
+    referer: 'https://www.remitbee.com/',
+    'accept-language': locale,
+    'user-agent': getUserAgentForCorridor(request.corridor_id),
+  }
+
+  if (options.extraHeaders) {
+    for (const [key, value] of Object.entries(options.extraHeaders)) {
+      if (value) {
+        headers[key] = value
+      }
+    }
+  }
+
+  if (options.cookie) {
+    headers.cookie = options.cookie
+  }
+
   const response = await httpRequest({
     url: remitbeeEndpoint,
     method: 'POST',
-    headers: {
-      accept: 'application/json, text/plain, */*',
-      'content-type': 'application/json',
-      origin: 'https://www.remitbee.com',
-      referer: 'https://www.remitbee.com/',
-      'accept-language': locale,
-      'user-agent': getUserAgentForCorridor(request.corridor_id),
-    },
+    headers,
     body,
     jitterMs: options.jitterMs,
     proxyTier: options.proxyTier,

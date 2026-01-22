@@ -306,7 +306,6 @@ const insertDevice = async (options: {
   subscription?: Record<string, unknown> | null
   deviceLabel?: string | null
 }) => {
-  const now = new Date()
   if (options.endpoint) {
     const result = await query(
       `INSERT INTO silver.notification_device (

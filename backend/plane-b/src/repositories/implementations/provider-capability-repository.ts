@@ -7,6 +7,7 @@ import type {
   ProviderCapabilityRecord,
   ProviderCorridorPriorityRecord,
   ProviderCorridorRecord,
+  ProviderUnsupportedCorridorRecord,
 } from '../interfaces/provider-capability-repository.interface'
 
 export class ProviderCapabilityRepository implements IProviderCapabilityRepository {
@@ -49,6 +50,18 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
   async loadUnsupportedCorridors(providerId: string): Promise<ProviderCorridorRecord[]> {
     const result = await query<ProviderCorridorRecord>(
       `SELECT corridor_id
+       FROM silver.provider_corridor_capability
+       WHERE provider_id = $1
+         AND is_supported = false`,
+      [providerId],
+      this.pool,
+    )
+    return result.rows
+  }
+
+  async loadUnsupportedCorridorsWithAge(providerId: string): Promise<ProviderUnsupportedCorridorRecord[]> {
+    const result = await query<ProviderUnsupportedCorridorRecord>(
+      `SELECT corridor_id, last_verified_at
        FROM silver.provider_corridor_capability
        WHERE provider_id = $1
          AND is_supported = false`,
@@ -116,12 +129,37 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
 
   async loadPriorityCorridors(
     providerId: string,
+    tierVersion?: string,
   ): Promise<ProviderCorridorPriorityRecord[]> {
+    const version = tierVersion?.trim()
+    if (version) {
+      const result = await query<ProviderCorridorPriorityRecord>(
+        `WITH tier_snapshot AS (
+           SELECT corridor_id,
+                  CASE
+                    WHEN corridor_tier = 'tier_1' THEN 'tier_1_alpha'
+                    WHEN corridor_tier = 'tier_2' THEN 'tier_2_reference'
+                    ELSE 'tier_3_discovery'
+                  END AS priority_tier
+             FROM silver.corridor_tier_snapshot
+            WHERE tier_version = $2
+         )
+         SELECT pcc.corridor_id, ts.priority_tier
+           FROM silver.provider_corridor_capability pcc
+           LEFT JOIN tier_snapshot ts
+             ON ts.corridor_id = pcc.corridor_id
+          WHERE pcc.provider_id = $1
+            AND pcc.is_supported = true
+          ORDER BY pcc.corridor_id`,
+        [providerId, version],
+        this.pool,
+      )
+      return result.rows
+    }
+
     const result = await query<ProviderCorridorPriorityRecord>(
-      `SELECT pcc.corridor_id, cp.priority_tier
+      `SELECT pcc.corridor_id, NULL::text AS priority_tier
          FROM silver.provider_corridor_capability pcc
-         LEFT JOIN silver.corridor_priority cp
-           ON cp.corridor_id = pcc.corridor_id
         WHERE pcc.provider_id = $1
           AND pcc.is_supported = true
         ORDER BY pcc.corridor_id`,

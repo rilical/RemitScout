@@ -91,8 +91,31 @@ type WesternUnionCollectorOptions = {
   closePool?: boolean
 }
 
+type MethodPreference = {
+  payinMethod: string
+  payoutMethod: string
+  reason: string | null
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.westernunion.collector')
+
+const shouldEnableCashFallback = (collectorType: string, payinMethod: string) =>
+  payinMethod === 'bank_transfer'
+  && (collectorType.startsWith('b2b_') || collectorType === 'health_probe')
+
+const shouldRetryWithCash = (parseFailureReason: string, responseMessage: string) => {
+  const message = responseMessage.toLowerCase()
+  return (
+    parseFailureReason.startsWith('response_status_')
+    || parseFailureReason === 'no_service_groups'
+    || parseFailureReason === 'no_pay_groups'
+    || message.includes('missing pricing')
+    || message.includes('missing fee')
+    || message.includes('not supported')
+    || message.includes('not available')
+  )
+}
 
 /**
  * Updates provider capability information for a corridor.
@@ -163,6 +186,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
   const providerId = 'westernunion'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = options.closePool ?? !options.pool
+  const capabilityRepo = new ProviderCapabilityRepository(pool)
+  const capabilityCache = new Map<string, Awaited<ReturnType<typeof capabilityRepo.getCapability>>>()
   let corridors: string[]
 
   if (options.corridors?.length) {
@@ -264,6 +289,56 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
     proxyTierCache.set(corridorId, proxyTier)
     return proxyTier
   }
+  const resolveMethodPreference = async (corridorId: string): Promise<MethodPreference> => {
+    if (!isScheduledSweep) {
+      return { payinMethod, payoutMethod, reason: null }
+    }
+    if (capabilityCache.has(corridorId)) {
+      const cached = capabilityCache.get(corridorId) ?? null
+      if (!cached || cached.is_supported === false) {
+        return { payinMethod, payoutMethod, reason: null }
+      }
+      const payinMethods = cached.payin_methods ?? []
+      const payoutMethods = cached.payout_methods ?? []
+      if (!payinMethods.length && !payoutMethods.length) {
+        return { payinMethod, payoutMethod, reason: null }
+      }
+      const supportsRequested =
+        payinMethods.includes(payinMethod) && payoutMethods.includes(payoutMethod)
+      if (supportsRequested) {
+        return { payinMethod, payoutMethod, reason: null }
+      }
+      if (payinMethods.includes('cash') && payoutMethods.includes('cash_pickup')) {
+        return { payinMethod: 'cash', payoutMethod: 'cash_pickup', reason: 'capability_cash_only' }
+      }
+      if (payinMethods.includes('bank_transfer') && payoutMethods.includes('bank_deposit')) {
+        return { payinMethod: 'bank_transfer', payoutMethod: 'bank_deposit', reason: 'capability_bank_only' }
+      }
+      return { payinMethod, payoutMethod, reason: null }
+    }
+    const capability = await capabilityRepo.getCapability(providerId, corridorId)
+    capabilityCache.set(corridorId, capability ?? null)
+    if (!capability || capability.is_supported === false) {
+      return { payinMethod, payoutMethod, reason: null }
+    }
+    const payinMethods = capability.payin_methods ?? []
+    const payoutMethods = capability.payout_methods ?? []
+    if (!payinMethods.length && !payoutMethods.length) {
+      return { payinMethod, payoutMethod, reason: null }
+    }
+    const supportsRequested =
+      payinMethods.includes(payinMethod) && payoutMethods.includes(payoutMethod)
+    if (supportsRequested) {
+      return { payinMethod, payoutMethod, reason: null }
+    }
+    if (payinMethods.includes('cash') && payoutMethods.includes('cash_pickup')) {
+      return { payinMethod: 'cash', payoutMethod: 'cash_pickup', reason: 'capability_cash_only' }
+    }
+    if (payinMethods.includes('bank_transfer') && payoutMethods.includes('bank_deposit')) {
+      return { payinMethod: 'bank_transfer', payoutMethod: 'bank_deposit', reason: 'capability_bank_only' }
+    }
+    return { payinMethod, payoutMethod, reason: null }
+  }
 
   await ensureProvider(pool, providerId, 'Western Union')
 
@@ -307,6 +382,19 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
     logger.debug('corridor_start', { corridor_id: corridorId })
     await ensureCorridor(pool, corridorId)
     const proxyTier = await resolveProxyTier(corridorId)
+    const methodPreference = await resolveMethodPreference(corridorId)
+    const corridorPayinMethod = methodPreference.payinMethod
+    const corridorPayoutMethod = methodPreference.payoutMethod
+    if (methodPreference.reason) {
+      logger.info('wu_method_override', {
+        corridor_id: corridorId,
+        from_payin_method: payinMethod,
+        from_payout_method: payoutMethod,
+        to_payin_method: corridorPayinMethod,
+        to_payout_method: corridorPayoutMethod,
+        reason: methodPreference.reason,
+      })
+    }
 
     for (const amountBucket of buckets) {
       if (skipCorridor) {
@@ -319,8 +407,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           providerId,
           corridorId,
           amountBucket,
-          payinMethod,
-          payoutMethod,
+          corridorPayinMethod,
+          corridorPayoutMethod,
         )
         if (ageMinutes !== null && ageMinutes <= freshnessSloMinutes) {
           freshnessSkipped += 1
@@ -340,6 +428,9 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           slo_minutes: freshnessSloMinutes,
         })
       }
+      let currentPayinMethod = corridorPayinMethod
+      let currentPayoutMethod = corridorPayoutMethod
+      let cashFallbackAttempted = false
       let rateLimitRetries = 0
       let completed = false
 
@@ -365,22 +456,22 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           provider_id: providerId,
           corridor_id: corridorId,
           amount_bucket: amountBucket,
-          payin_method: payinMethod,
-          payout_method: payoutMethod,
+          payin_method: currentPayinMethod,
+          payout_method: currentPayoutMethod,
           send_amount: amountBucket,
           locale,
         }
 
         const requestFingerprint = createHash('sha256')
-          .update(`${corridorId}:${amountBucket}:${payinMethod}:${payoutMethod}`)
+          .update(`${corridorId}:${amountBucket}:${currentPayinMethod}:${currentPayoutMethod}`)
           .digest('hex')
 
         logger.debug('quote_attempt_start', {
           trace_id: traceId,
           corridor_id: corridorId,
           amount_bucket: amountBucket,
-          payin_method: payinMethod,
-          payout_method: payoutMethod,
+          payin_method: currentPayinMethod,
+          payout_method: currentPayoutMethod,
           request_fingerprint: requestFingerprint,
         })
 
@@ -398,8 +489,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
-            payout_method: payoutMethod,
+            payin_method: currentPayinMethod,
+            payout_method: currentPayoutMethod,
             http_status: fetchResult.status,
             duration_ms: fetchDurationMs,
           })
@@ -412,16 +503,16 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
-            payout_method: payoutMethod,
+            payin_method: currentPayinMethod,
+            payout_method: currentPayoutMethod,
             duration_ms: fetchDurationMs,
             error,
           })
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
-            payoutMethod,
+            payinMethod: currentPayinMethod,
+            payoutMethod: currentPayoutMethod,
             success: false,
             errorType: 'network_error',
             httpStatus: null,
@@ -470,8 +561,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
-            payout_method: payoutMethod,
+            payin_method: currentPayinMethod,
+            payout_method: currentPayoutMethod,
             http_status: fetchResult.status,
             reason,
             rate_limited: rateLimited,
@@ -480,8 +571,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
-            payoutMethod,
+            payinMethod: currentPayinMethod,
+            payoutMethod: currentPayoutMethod,
             success: false,
             errorType: rateLimited ? 'rate_limit' : 'blocked',
             httpStatus: fetchResult.status,
@@ -492,8 +583,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           const alertId = await insertOpsAlert(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
-            payoutMethod,
+            payinMethod: currentPayinMethod,
+            payoutMethod: currentPayoutMethod,
             httpStatus: fetchResult.status,
             blockReason: reason,
             bronzeObjectKey,
@@ -572,8 +663,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
-            payout_method: payoutMethod,
+            payin_method: currentPayinMethod,
+            payout_method: currentPayoutMethod,
             http_status: fetchResult.status,
           })
           if (fetchResult.status === 400) {
@@ -589,8 +680,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
-            payoutMethod,
+            payinMethod: currentPayinMethod,
+            payoutMethod: currentPayoutMethod,
             success: false,
             errorType: 'http_error',
             httpStatus: fetchResult.status,
@@ -609,11 +700,6 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           })
           completed = true
           continue
-        }
-
-        if (!capabilityUpdated.has(corridorId)) {
-          await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
-          capabilityUpdated.add(corridorId)
         }
 
         const parseStartedAt = Date.now()
@@ -648,12 +734,16 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             || responseMessage.includes('not available')
             || responseMessage.includes('pricing')
             || responseMessage.includes('not supported')
+          const allowCashFallback =
+            shouldEnableCashFallback(collectorType, currentPayinMethod)
+            && !cashFallbackAttempted
+            && shouldRetryWithCash(parseFailureReason, responseMessage)
           logger.warn('quote_parse_failed', {
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
-            payout_method: payoutMethod,
+            payin_method: currentPayinMethod,
+            payout_method: currentPayoutMethod,
             duration_ms: parseDurationMs,
             parse_failure_reason: parseFailureReason,
             response_status: payload.response_status?.status ?? null,
@@ -663,17 +753,13 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             service_group_count: serviceGroups.length,
             pay_group_count: payGroupCount,
           })
-          if (shouldMarkUnsupported) {
-            await markCorridorUnsupported(pool, providerId, corridorId, 'auto_parse_unsupported')
-            skipCorridor = true
-          }
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
-            payoutMethod,
+            payinMethod: currentPayinMethod,
+            payoutMethod: currentPayoutMethod,
             success: false,
-            errorType: shouldMarkUnsupported ? 'unsupported' : 'parse_error',
+            errorType: allowCashFallback ? 'parse_error' : (shouldMarkUnsupported ? 'unsupported' : 'parse_error'),
             httpStatus: fetchResult.status,
             errorMessage: `parse_failed:${parseFailureReason}`,
             bronzeObjectKey,
@@ -689,8 +775,49 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
             bronze_duration_ms: bronzeDurationMs,
             parse_duration_ms: parseDurationMs,
           })
+          if (allowCashFallback) {
+            logger.info('wu_cash_fallback', {
+              corridor_id: corridorId,
+              amount_bucket: amountBucket,
+              from_payin_method: currentPayinMethod,
+              from_payout_method: currentPayoutMethod,
+              to_payin_method: 'cash',
+              to_payout_method: 'cash_pickup',
+              parse_failure_reason: parseFailureReason,
+              response_message: payload.response_status?.message ?? null,
+            })
+            cashFallbackAttempted = true
+            currentPayinMethod = 'cash'
+            currentPayoutMethod = 'cash_pickup'
+            rateLimitRetries = 0
+            continue
+          }
+          if (shouldMarkUnsupported) {
+            await markCorridorUnsupported(pool, providerId, corridorId, 'auto_parse_unsupported')
+            skipCorridor = true
+          }
           completed = true
           continue
+        }
+
+        if (!capabilityUpdated.has(corridorId)) {
+          await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
+          capabilityUpdated.add(corridorId)
+        }
+
+        if (
+          parsed.payin_method !== currentPayinMethod
+          || parsed.payout_method !== currentPayoutMethod
+        ) {
+          logger.debug('wu_method_mismatch', {
+            trace_id: traceId,
+            corridor_id: corridorId,
+            amount_bucket: amountBucket,
+            requested_payin_method: currentPayinMethod,
+            requested_payout_method: currentPayoutMethod,
+            resolved_payin_method: parsed.payin_method,
+            resolved_payout_method: parsed.payout_method,
+          })
         }
 
         logger.debug('quote_parse_ok', {
@@ -751,8 +878,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           trace_id: traceId,
           corridor_id: corridorId,
           amount_bucket: amountBucket,
-          payin_method: payinMethod,
-          payout_method: payoutMethod,
+          payin_method: normalized.payin,
+          payout_method: normalized.payout,
           receive_amount: normalized.receive_amount,
           implied_fx_rate: normalized.implied_fx_rate,
           duration_ms: persistDurationMs,
@@ -760,8 +887,8 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
         await insertAttempt(pool, providerId, {
           corridorId,
           amountBucket,
-          payinMethod,
-          payoutMethod,
+          payinMethod: currentPayinMethod,
+          payoutMethod: currentPayoutMethod,
           success: true,
           httpStatus: fetchResult.status,
           bronzeObjectKey,
@@ -828,5 +955,5 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

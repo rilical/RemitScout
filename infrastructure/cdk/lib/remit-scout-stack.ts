@@ -71,9 +71,18 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('backendImageTag') ??
       process.env.BACKEND_IMAGE_TAG ??
       'latest'
+    const devSharedSecretArn =
+      this.node.tryGetContext('devSharedSecretArn') ??
+      process.env.DEV_SHARED_SECRET_ARN ??
+      (envName === 'dev'
+        ? 'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K'
+        : undefined)
 
     const networking = createNetworking(this, { envName })
-    const iam = createIam(this, { envName })
+    const iam = createIam(this, {
+      envName,
+      sharedSecretArns: devSharedSecretArn ? [devSharedSecretArn] : [],
+    })
     const registry = createRegistry(this, { envName })
     const database = createDatabase(this, {
       envName,
@@ -125,12 +134,6 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('redisSsmName') ??
       process.env.REDIS_SSM_NAME
     const redisUrl = `rediss://${cache.replicationGroup.attrPrimaryEndPointAddress}:${cache.replicationGroup.attrPrimaryEndPointPort}`
-    const devSharedSecretArn =
-      this.node.tryGetContext('devSharedSecretArn') ??
-      process.env.DEV_SHARED_SECRET_ARN ??
-      (envName === 'dev'
-        ? 'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K'
-        : undefined)
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
       process.env.SUPABASE_SECRET_ARN ??
@@ -198,6 +201,18 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBB2cQueueInSweep') ??
       process.env.PLANE_B_B2C_QUEUE_IN_SWEEP ??
       (b2cRefreshServiceEnabled ? undefined : (envName === 'dev' ? '1' : undefined))
+    const planeBB2bTargetMinutes =
+      this.node.tryGetContext('planeBB2bTargetMinutes') ??
+      process.env.PLANE_B_B2B_TARGET_MINUTES ??
+      (envName === 'dev' ? '360' : undefined)
+    const planeBB2bObservationMode =
+      this.node.tryGetContext('planeBB2bObservationMode') ??
+      process.env.PLANE_B_B2B_OBSERVATION_MODE ??
+      (envName === 'dev' ? '1' : undefined)
+    const planeBB2bMaxQueueDepth =
+      this.node.tryGetContext('planeBB2bMaxQueueDepth') ??
+      process.env.PLANE_B_B2B_MAX_QUEUE_DEPTH ??
+      (envName === 'dev' ? '5000' : undefined)
     const quoteRefreshQueueMode =
       this.node.tryGetContext('quoteRefreshQueueMode') ??
       process.env.QUOTE_REFRESH_QUEUE_MODE ??
@@ -214,6 +229,14 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
     ) ?? (envName === 'dev' ? 1 : undefined)
+    const planeBQueueWorkerMaxCount = toOptionalNumber(
+      this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
+        process.env.PLANE_B_QUEUE_WORKER_MAX,
+    ) ?? (envName === 'prod' ? 20 : 50)
+    const planeBQueueWorkerSpotOnly = toOptionalBool(
+      this.node.tryGetContext('planeBQueueWorkerSpotOnly') ??
+        process.env.PLANE_B_QUEUE_WORKER_SPOT_ONLY,
+    )
     const bronzePrefix =
       this.node.tryGetContext('bronzePrefix') ??
       process.env.BRONZE_S3_PREFIX ??
@@ -431,6 +454,9 @@ export class RemitScoutStack extends Stack {
       bronzePrefix,
       b2cQueueInSweep,
       b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
+      planeBB2bTargetMinutes,
+      planeBB2bObservationMode,
+      planeBB2bMaxQueueDepth,
       ingestFanoutMode,
       notificationsMode,
       opsAlertsMode,
@@ -540,6 +566,8 @@ export class RemitScoutStack extends Stack {
       b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? 1 : 0,
       planeBIngestDesiredCount,
       queueWorkerDesiredCount: planeBQueueWorkerDesiredCount,
+      queueWorkerMaxCount: planeBQueueWorkerMaxCount,
+      queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
     })
 
     // Create SNS subscriptions for alert routing (Slack, PagerDuty)

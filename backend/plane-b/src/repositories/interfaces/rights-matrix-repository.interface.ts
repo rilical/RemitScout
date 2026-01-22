@@ -9,6 +9,8 @@ export type RightsMatrixEntryRecord = {
   allowed_b2c: boolean
   allowed_b2b: boolean
   stoplist_status: string
+  source_countries?: string[] | null
+  destination_countries?: string[] | null
 }
 
 export type RightsMatrixStoplistRecord = {

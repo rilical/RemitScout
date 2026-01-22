@@ -26,6 +26,10 @@ export type RampThresholds = {
   moderateBlockRate: number
   lowBlockRate: number
   http2xxStableThreshold: number
+  errorBudgetMinAttempts: number
+  errorBudgetRateLimitRate: number
+  errorBudgetBlockRate: number
+  errorBudgetDecreasePercent: number
   decreaseBasePercent: number
   decreaseMaxPercent: number
   increaseBasePercent: number
@@ -39,6 +43,10 @@ const DEFAULT_THRESHOLDS: RampThresholds = {
   moderateBlockRate: 0.005,
   lowBlockRate: 0.0,
   http2xxStableThreshold: 0.95,
+  errorBudgetMinAttempts: 25,
+  errorBudgetRateLimitRate: 0.02,
+  errorBudgetBlockRate: 0.01,
+  errorBudgetDecreasePercent: 0.4,
   decreaseBasePercent: 0.05,
   decreaseMaxPercent: 0.3,
   increaseBasePercent: 0.05,
@@ -49,19 +57,14 @@ const DEFAULT_THRESHOLDS: RampThresholds = {
 
 const logger = createLogger('plane-b.rpm-ramp')
 
-const isSweepCollector = (collectorType: string) =>
-  collectorType === 'b2b_full_sweep'
-  || collectorType === 'b2b_full_sweep_monthly'
-  || collectorType === 'b2b_tier_1_alpha'
-  || collectorType === 'b2b_tier_2_reference'
-  || collectorType === 'b2b_tier_3_discovery'
+const isSweepCollector = (collectorType: string) => collectorType.startsWith('b2b_')
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 
 const isNonNegativeInteger = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0
 
-const validateStats = (stats: SweepStats, providerId: string): void => {
+const validateStats = (stats: SweepStats): void => {
   if (!isNonNegativeInteger(stats.attemptCount)) {
     throw new Error(`Invalid attemptCount: must be a non-negative integer, got ${stats.attemptCount}`)
   }
@@ -132,7 +135,7 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
   }
 
   try {
-    validateStats(stats, providerId)
+    validateStats(stats)
   } catch (error) {
     logger.error('rpm_ramp_validation_failed', {
       provider_id: providerId,
@@ -170,8 +173,20 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
 
   const poorHttp2xxThreshold = thresholds.http2xxStableThreshold * 0.75
   const isHttp2xxPoor = http2xxRate < poorHttp2xxThreshold
+  const errorBudgetTriggered = stats.attemptCount >= thresholds.errorBudgetMinAttempts
+    && (
+      rateLimitRate >= thresholds.errorBudgetRateLimitRate
+      || blockRate >= thresholds.errorBudgetBlockRate
+    )
 
-  if (stats.rateLimitCount > 0 || blockRate >= thresholds.highBlockRate) {
+  if (errorBudgetTriggered) {
+    decision = 'decrease'
+    changePercent = thresholds.errorBudgetDecreasePercent
+    nextRpm = Math.max(1, Math.round(rates.rpm * (1 - changePercent)))
+    reason = rateLimitRate >= thresholds.errorBudgetRateLimitRate
+      ? 'error_budget_rate_limit'
+      : 'error_budget_block'
+  } else if (stats.rateLimitCount > 0 || blockRate >= thresholds.highBlockRate) {
     decision = 'decrease'
     const pressureRate = stats.rateLimitCount > 0 ? rateLimitRate : blockRate
     const normalized = clamp(pressureRate / (thresholds.highBlockRate * 5), 0, 1)

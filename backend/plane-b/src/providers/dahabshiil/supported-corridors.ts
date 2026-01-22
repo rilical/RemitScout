@@ -1,6 +1,7 @@
 import { COUNTRIES } from '../../../../shared/countries-currencies'
 
 export const DAHABSHIIL_SOURCE_COUNTRIES = [
+  'US',
   'GB',
   'HR',
   'GR',

@@ -260,7 +260,6 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           throw new Error('Failed to update watchlist item')
         }
 
-        const targetObj = payloadToTarget(target.type, targetPayload)
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('POST', '/watchlist', 200, durationSeconds)
 

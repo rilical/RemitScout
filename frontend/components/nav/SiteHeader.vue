@@ -2,16 +2,15 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useAuth } from '~/composables/useAuth'
-import { useEntitlements, type Plan } from '~/composables/useEntitlements'
-import { FEATURE_FLAGS } from '~/utils/constants'
+import { useEntitlements } from '~/composables/useEntitlements'
 
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
 const logoError = ref(false)
 
 const { compareUrl } = useCompareForm()
-const { isAuthenticated, signIn, signOut } = useAuth()
-const { isPlus, plan, refreshPlan, getEffectivePlan } = useEntitlements()
+const { isAuthenticated } = useAuth()
+const { isPlus } = useEntitlements()
 
 const logoPlusSrc = computed(() => {
   // Route to SVG file in public/png/SVG directory
@@ -26,82 +25,6 @@ const logoRegularSrc = computed(() => {
 
 function handleLogoError() {
   logoError.value = true
-}
-
-const runtimeConfig = useRuntimeConfig()
-type PublicDevConfig = { devControls?: boolean; devSuperAdminEmail?: string }
-const devControlsEnabled = computed(() => import.meta.dev || Boolean((runtimeConfig.public as unknown as PublicDevConfig).devControls))
-const devSuperAdminEmail = computed(() => (runtimeConfig.public as unknown as PublicDevConfig).devSuperAdminEmail || 'admin@remitscout.test')
-
-// Dev-only plan override state (shared with useEntitlements)
-const devPlanOverride = useState<Plan | null>('dev:plan-override', () => null)
-
-const devStatusLabel = computed(() => {
-  if (!isAuthenticated.value) return 'Logged out'
-  const currentPlan = devPlanOverride.value || plan.value
-  return currentPlan === 'plus' ? 'Plus' : 'Free'
-})
-
-const devStatusNextLabel = computed(() => {
-  if (!isAuthenticated.value) return 'Sign in (Free)'
-  const currentPlan = devPlanOverride.value || plan.value
-  if (currentPlan === 'free') return 'Upgrade to Plus'
-  return 'Sign out'
-})
-
-const effectivePlan = computed(() => {
-  if (!isAuthenticated.value) return 'free' as Plan
-  return devPlanOverride.value || plan.value
-})
-
-async function cycleDevStatus() {
-  try {
-    if (!isAuthenticated.value) {
-      // Step 1: Sign in as super admin (if feature flag enabled) or dev user
-      const emailToUse = FEATURE_FLAGS.DEV_AUTO_LOGIN && devSuperAdminEmail.value 
-        ? devSuperAdminEmail.value 
-        : 'dev@remitscout.test'
-      
-      const result = await signIn(emailToUse)
-      if (result && result.ok) {
-        devPlanOverride.value = 'free'
-        await refreshPlan()
-      } else {
-        console.error('Dev sign in failed:', result?.error || 'Unknown error')
-      }
-      return
-    }
-
-    const currentPlan = devPlanOverride.value || plan.value
-
-    if (currentPlan === 'free') {
-      // Step 2: Upgrade to Plus (dev override)
-      devPlanOverride.value = 'plus'
-      // Also update the plan state directly for immediate UI update
-      const planState = useState<Plan>('entitlements:plan')
-      if (planState.value) {
-        planState.value = 'plus'
-      }
-      return
-    }
-
-    if (currentPlan === 'plus') {
-      // Step 3: Sign out
-      devPlanOverride.value = null
-      const result = await signOut()
-      if (result && result.ok) {
-        await refreshPlan()
-      }
-      return
-    }
-  } catch (error) {
-    console.error('Dev status cycle error:', error)
-  }
-}
-
-function handleDevCycleFromMenu() {
-  cycleDevStatus()
-  closeMobileMenu()
 }
 
 function toggleMobileMenu() {
@@ -235,16 +158,6 @@ watch(() => route.path, () => {
 
       <!-- Right: Identity + Plan -->
       <div class="flex items-center gap-3">
-        <button
-          v-if="devControlsEnabled"
-          type="button"
-          class="hidden sm:inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer"
-          :title="`Dev: ${devStatusLabel} → ${devStatusNextLabel}`"
-          @click="cycleDevStatus"
-        >
-          DEV: {{ devStatusLabel }}
-        </button>
-
         <!-- Logged out state -->
         <template v-if="!isAuthenticated">
           <NuxtLink
@@ -264,7 +177,7 @@ watch(() => route.path, () => {
         <!-- Logged in state -->
         <template v-else>
           <NuxtLink
-            v-if="effectivePlan !== 'plus'"
+            v-if="!isPlus"
             to="/plus"
             class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
@@ -446,17 +359,6 @@ watch(() => route.path, () => {
 
             <div class="my-3 border-t border-slate-200" />
 
-            <button
-              v-if="devControlsEnabled"
-              type="button"
-              class="w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-amber-900 bg-amber-50 border border-amber-200 hover:bg-amber-100 motion-safe:transition"
-              :title="`Dev: ${devStatusLabel} → ${devStatusNextLabel}`"
-              @click="handleDevCycleFromMenu"
-            >
-              <span>DEV: {{ devStatusLabel }}</span>
-              <span aria-hidden="true">↻</span>
-            </button>
-
             <template v-if="!isAuthenticated">
               <NuxtLink
                 to="/sign-in"
@@ -476,7 +378,7 @@ watch(() => route.path, () => {
 
             <template v-else>
               <NuxtLink
-                v-if="effectivePlan !== 'plus'"
+                v-if="!isPlus"
                 to="/plus"
                 class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
               >

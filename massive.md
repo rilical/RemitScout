@@ -129,11 +129,10 @@ Checklist Status Summary (Code)
 - Broken routes removed or redirected (e.g., /institutions to /partnerships).
 
 Known Local-Only Mocks (Keep Local, Remove for Prod)
-- Stripe mock enabled by STRIPE_MOCK.
-- Supabase mock enabled by SUPABASE_MOCK.
+- None (Supabase/Stripe mocks removed).
 
 Issues Log (Fill As We Go)
-- [x] AUTH-01: Dev auth bypass guarded for staging/prod; passwordless requires `PUBLIC_DEV_AUTH`.
+- [x] AUTH-01: Dev auth bypass removed; Supabase auth required in all envs.
 - [x] B2C-01: Local pipeline refresh interval lowered; verify with a new corridor that refresh completes within 30s.
 - [x] PIPE-01: Local pipeline depends on manual `dev:pipeline` for continuous jobs; added `scripts/dev/start-local.sh`.
 - [x] DATA-01: Pulse defaults/synthetic charts removed; RateAlertForm now pulls real history.
@@ -158,9 +157,9 @@ Local-Only Targets We Must Hit Before AWS
 - Dashboard is usable without mock data.
 
 New Observations (Code Scan)
-- Dev auth bypass now guarded by `PUBLIC_DEV_AUTH` and disabled in staging/prod.
+- Dev auth bypass removed; Supabase auth required in all envs.
 - Entitlements default to free on any /me failure; Plus gating can silently drop (frontend/composables/useEntitlements.ts).
-- Stripe client can run in mock mode; must be off outside local (backend/plane-a/src/services/stripe-client.ts, backend/shared/config.ts).
+- Stripe mock removed; real Stripe keys required (backend/plane-a/src/services/stripe-client.ts, backend/shared/config.ts).
 - Analytics require the telemetry aggregation job; otherwise admin dashboards look empty (backend/scripts/telemetry-analytics-job.ts).
 - Local rate limiting bypass applied to avoid 429s during ops/audit testing.
 - Cache fallback is memory-only; no cross-process invalidation in local (backend/shared/cache.ts).
@@ -188,8 +187,6 @@ Additional Gaps to Wire
 - ~~Watchlist/alert sync mismatch: frontend creates local IDs for logged-in users, then POSTs without reconciling server IDs; alerts created from local watchlist IDs can 404 and local + server items can duplicate. Needs merge/sync on login and server IDs returned/used (frontend/composables/useWatchlist.ts, frontend/composables/useAlerts.ts, backend/plane-a/src/routes/watchlist.ts, backend/plane-a/src/routes/alerts.ts).~~ Implemented local→server merge on login with alert ID remapping.
 - ~~Plan usage counters are never incremented; /me returns empty usage and limit-reached UI cannot be accurate without write paths (backend/plane-a/src/services/plan-usage.ts, backend/plane-a/src/repositories/implementations/plan-usage-repository.ts).~~
 - ~~Corridor currency lists are force-adding USD/EUR/GBP regardless of capability data; this can surface unsupported currencies and wrong corridors (frontend/composables/useCorridorCurrencies.ts).~~
-- ~~Stripe mock checkout/portal URLs point to missing pages; UI also claims a 14-day trial, but checkout session does not set a trial period (frontend/pages/plus/checkout.vue, backend/plane-a/src/services/stripe-mock.ts, backend/plane-a/src/routes/billing/checkout-session.ts).~~
-- ~~Stripe mock checkout does not update user plan (no mock webhook or local plan update), so local checkout completes but Plus does not activate without SUPABASE_MOCK_PLAN (backend/plane-a/src/routes/billing/webhook.ts, backend/plane-a/src/routes/billing/verify-session.ts).~~
 - ~~Checkout UI collects card data but never sends it (Stripe Checkout redirect only); replace with Stripe Elements or remove faux card fields to avoid compliance/UX mismatch (frontend/pages/plus/checkout.vue).~~
 - ~~Avatar upload requires S3; no local fallback means profile avatar update fails when bucket is unset (backend/plane-a/src/services/avatar-upload.ts, backend/plane-a/src/routes/me.ts).~~ Removed feature; no local support needed.
 - ~~Smart alerts need `silver.corridor_signals` populated; `smart-alerts-job` is not scheduled by default, so sendScore alerts never trigger (backend/scripts/smart-alerts-job.ts, backend/plane-a/src/services/alert-evaluator.ts).~~

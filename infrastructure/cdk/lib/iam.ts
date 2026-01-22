@@ -11,6 +11,7 @@ export type IamResources = {
 
 export type IamOptions = {
   envName: string
+  sharedSecretArns?: string[]
 }
 
 export const createIam = (scope: Construct, options: IamOptions): IamResources => {
@@ -50,7 +51,10 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   const secretsPolicyResources = [
     `arn:aws:secretsmanager:*:*:secret:remit-scout/${options.envName}/*`,
   ]
-  if (options.envName === 'dev') {
+  const sharedSecretArns = (options.sharedSecretArns ?? []).filter(Boolean)
+  if (sharedSecretArns.length > 0) {
+    secretsPolicyResources.push(...sharedSecretArns)
+  } else if (options.envName === 'dev') {
     secretsPolicyResources.push(
       'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*',
     )
@@ -103,6 +107,18 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     actions: ['events:PutEvents'],
     resources: ['arn:aws:events:*:*:event-bus/default'],
   }))
+  if (options.envName !== 'prod') {
+    planeBEcsTaskRole.addToPolicy(new PolicyStatement({
+      actions: [
+        'ssmmessages:CreateControlChannel',
+        'ssmmessages:CreateDataChannel',
+        'ssmmessages:OpenControlChannel',
+        'ssmmessages:OpenDataChannel',
+        'ssm:UpdateInstanceInformation',
+      ],
+      resources: ['*'],
+    }))
+  }
 
   return {
     planeALambdaRole,

@@ -1303,7 +1303,7 @@ type CorridorIndices = {
   providerCount: number
   amount: number
   midMarketRate: number | null
-  weights: 'equal'
+  weights: 'equal' | 'provider_volume'
 }
 
 type Guide = {

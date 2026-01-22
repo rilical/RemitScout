@@ -21,6 +21,8 @@ export type FetchResult<T = unknown> = {
   status: number
   /** Raw response body as string (before parsing) */
   bodyText: string
+  /** Whether JSON parsing failed for an expected JSON payload */
+  parseError?: boolean
   /** Parsed payload (type depends on provider, defaults to unknown) */
   payload: T
 }

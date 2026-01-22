@@ -222,6 +222,6 @@ describe('Cache Freshness Integration', () => {
 
     expect(freshness.exists).toBe(false)
     expect(freshness.isFresh).toBe(false)
-    expect(freshness.ttlSeconds).toBe(2 * 60 * 60)
+    expect(freshness.ttlSeconds).toBe(4 * 60 * 60)
   })
 })

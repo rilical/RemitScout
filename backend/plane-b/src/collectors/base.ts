@@ -164,6 +164,10 @@ export const loadUnsupportedCorridors = async (pool: Pool, providerId: string): 
     return new Set()
   }
 
+  if (config.planeB.b2bObservationMode || config.planeB.b2bObservationBypassCatalog) {
+    return new Set()
+  }
+
   try {
     const repo = new ProviderCapabilityRepository(pool)
     const rows = await repo.loadUnsupportedCorridors(providerId)
@@ -552,7 +556,6 @@ export const runAnomalyDetection = async (input: AnomalyDetectionInput) => {
       input.currentRate,
     )
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.warn('anomaly_detection_error', {
       provider_id: input.providerId,
       corridor_id: input.corridorId,

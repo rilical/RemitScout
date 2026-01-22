@@ -51,8 +51,6 @@ type ArchiveFilter = {
 
 const normalizePrefix = (prefix: string) => prefix.replace(/\/+$/, '')
 
-const toIso = (value: Date | null) => (value ? value.toISOString() : null)
-
 const formatNdjson = (rows: AuditLogRow[]) =>
   rows
     .map((row) =>

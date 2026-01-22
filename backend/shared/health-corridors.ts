@@ -217,8 +217,8 @@ export const HEALTH_CORRIDORS: Record<ProviderId, readonly string[]> = {
     'AU-IN-AUD-INR',
   ] as const,
   dahabshiil: [
-    'US-KE-USD-USD',
     'US-KE-USD-KES',
+    'US-KE-USD-USD',
     'US-SO-USD-USD',
     'US-SD-USD-USD',
     'US-DJ-USD-USD',

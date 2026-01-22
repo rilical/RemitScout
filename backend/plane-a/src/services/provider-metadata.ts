@@ -227,8 +227,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     displayName: 'Instarem',
     type: 'ONLINE_MTO',
     url: 'https://www.instarem.com',
-    affiliateUrl: null,
-    isAffiliate: false,
+    affiliateUrl: 'https://instarem.prf.hn/click/camref:1101l5hXkw/[p_id:1110l11228]',
+    isAffiliate: true,
     logo: {
       sm: '/logos/instarem.png',
       ico: '/logos/instarem.png',

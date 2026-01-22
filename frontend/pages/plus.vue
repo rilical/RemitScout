@@ -544,12 +544,10 @@ import { FEATURE_FLAGS } from '~/utils/constants'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 
 const { isAuthenticated } = useAuth()
-const { plan, isPlus } = useEntitlements()
+const { isPlus } = useEntitlements()
 const billingActions = useBilling()
-const runtimeConfig = useRuntimeConfig()
 
 const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'month')
-const devAutoUpgrade = computed(() => Boolean(runtimeConfig.public.devAuthEnabled) || import.meta.dev)
 
 async function handleUpgrade() {
   if (!isAuthenticated.value) {
@@ -567,14 +565,6 @@ async function handleUpgrade() {
 
   const checkoutResult = await billingActions.createCheckoutSession('plus', billingInterval.value)
   if (checkoutResult.ok) {
-    if (devAutoUpgrade.value && checkoutResult.sessionId) {
-      const verifyResult = await billingActions.verifyCheckoutSession(checkoutResult.sessionId)
-      if (verifyResult.ok) {
-        await navigateTo('/plus/success')
-        return
-      }
-    }
-
     if (checkoutResult.url && process.client) {
       window.location.href = checkoutResult.url
       return

@@ -23,7 +23,7 @@ export const setupRdsProxyMonitor = (app: FastifyInstance): void => {
   // Log connection pool info on first request
   let poolInfoLogged = false
 
-  app.addHook('onRequest', async (request) => {
+  app.addHook('onRequest', async () => {
     if (poolInfoLogged) return
 
     try {
@@ -59,4 +59,3 @@ export const setupRdsProxyMonitor = (app: FastifyInstance): void => {
     }
   })
 }
-

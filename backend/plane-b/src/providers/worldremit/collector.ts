@@ -163,17 +163,13 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
   const providerId = 'worldremit'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = options.closePool ?? !options.pool
-  let corridors: string[]
-
-  if (options.corridors?.length) {
-    corridors = options.corridors
-  } else {
-    const allPossibleCorridors = WORLDREMIT_SUPPORTED_CORRIDORS
-    const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
-    corridors = allPossibleCorridors.filter(
-      corridor => !unsupportedCorridors.has(corridor)
-    )
-  }
+  const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
+  const candidateCorridors = options.corridors?.length
+    ? options.corridors
+    : WORLDREMIT_SUPPORTED_CORRIDORS
+  const corridors = candidateCorridors.filter(
+    corridor => !unsupportedCorridors.has(corridor)
+  )
   const buckets = options.amountBuckets ?? defaultAmountBuckets
   const payinMethod = options.payinMethod ?? 'bank_transfer'
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
@@ -576,6 +572,7 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
           })
           if (fetchResult.status === 400) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_http_400')
+            unsupportedCorridors.add(corridorId)
             logger.warn('corridor_marked_unsupported', {
               trace_id: traceId,
               corridor_id: corridorId,
@@ -623,6 +620,7 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
             payout_method: payoutMethod,
           })
           await markCorridorUnsupported(pool, providerId, corridorId, 'auto_no_payout_methods')
+          unsupportedCorridors.add(corridorId)
           skipCorridor = true
           await insertAttempt(pool, providerId, {
             corridorId,
@@ -685,6 +683,7 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
           })
           if (shouldMarkUnsupported) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_parse_unsupported')
+            unsupportedCorridors.add(corridorId)
             skipCorridor = true
           }
           await insertAttempt(pool, providerId, {
@@ -848,5 +847,5 @@ export const runWorldRemitCollector = async (options: WorldRemitCollectorOptions
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

@@ -87,7 +87,7 @@ const getCharges = (payload: DahabshiilPayload): DahabshiilCharges | null => {
   return payload.data?.charges ?? null
 }
 
-export const extractDahabshiilMethodPairs = (_payload: DahabshiilPayload) => {
+export const extractDahabshiilMethodPairs = () => {
   return [
     { payin_method: 'bank_transfer', payout_method: 'cash_pickup' },
   ]

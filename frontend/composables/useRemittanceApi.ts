@@ -146,7 +146,7 @@ export const useRemittanceApi = () => {
               providerCount: number
               amount: number
               midMarketRate: number | null
-              weights: 'equal'
+              weights: 'equal' | 'provider_volume'
             }
             error?: { code: string; message: string }
           }>(

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
@@ -41,6 +41,14 @@ const formatIso = (value?: Date | null) => {
   return value.toISOString()
 }
 
+const resolveUserId = (request: FastifyRequest, reply: FastifyReply): string | null => {
+  if (request.user) return request.user.user_id
+  if (request.apiKey) return request.apiKey.user_id
+  reply.code(401)
+  reply.send({ error: 'unauthorized' })
+  return null
+}
+
 export const historyRoutes = async (app: FastifyInstance) => {
   app.get('/history/corridor', { preHandler: requireEntitlement('history') }, async (request, reply) => {
     const parsed = historyQuerySchema.safeParse(request.query)
@@ -49,8 +57,9 @@ export const historyRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const user = request.user!
-    const plan = await getUserPlan(planeAPool, user.user_id)
+    const userId = resolveUserId(request, reply)
+    if (!userId) return
+    const plan = await getUserPlan(planeAPool, userId)
     const entitlements = getEntitlementsForPlan(plan?.plan_code)
     const maxDays = entitlements.history_max_days
 

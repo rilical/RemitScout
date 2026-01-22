@@ -9,6 +9,7 @@ export type Corridor = {
 
 export type ProviderQuote = {
   id: string
+  providerId?: string
   name: string
   logoUrl?: string
   fee: number // in sendCurrency

@@ -4,6 +4,7 @@ import type { Pool } from 'pg'
 import { createPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
+import { getRedisClient } from '../../../../shared/redis'
 import { detectBlock } from '../../collectors/block-detection'
 import { notifyBlockAlert } from '../../collectors/alert-routing'
 import { persistAttemptMetrics } from '../../collectors/attempt-metrics'
@@ -44,7 +45,7 @@ import { normalizeQuote } from '../../normalize/quote-normalizer'
 import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { REMITBEE_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
-import { fetchRemitbeeQuote } from './fetch'
+import { fetchRemitbeeQuote, fetchRemitbeeSessionCookie } from './fetch'
 import { extractRemitbeeMethodPairs, parseRemitbeePayload } from './parse'
 
 /**
@@ -93,6 +94,12 @@ type RemitbeeCollectorOptions = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.remitbee.collector')
+
+const normalizeProxyTier = (value: unknown): ProxyTier | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed ? (trimmed as ProxyTier) : null
+}
 
 /**
  * Updates provider capability information for a corridor.
@@ -187,6 +194,18 @@ export const runRemitbeeCollector = async (options: RemitbeeCollectorOptions = {
   const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.remitbee.freshnessSloMinutes
   const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.remitbee.freshnessSloEnabled
   const blockCooldownMs = config.planeB.remitbee.blockCooldownMs
+  const proxyTierOverride = normalizeProxyTier(config.planeB.remitbee.proxyTier)
+  const proxyTierFallback = normalizeProxyTier(config.planeB.remitbee.proxyTierFallback)
+  const sessionWarmupUrl = (config.planeB.remitbee.sessionWarmupUrl || '').trim()
+  const sessionTtlMs = Math.max(0, config.planeB.remitbee.sessionTtlMs ?? 0)
+  const sessionCookieRequired = Boolean(sessionWarmupUrl)
+  const sessionSeedCookie = (config.planeB.remitbee.sessionCookie || '').trim()
+  const sessionTtlSeconds = sessionTtlMs > 0 ? Math.max(1, Math.floor(sessionTtlMs / 1000)) : 0
+  const sessionCookieCache = new Map<string, { value: string; expiresAt: number }>()
+  const sessionRefreshAttempts = new Map<string, number>()
+  const sessionRefreshForced = new Set<string>()
+  const redisClient = await getRedisClient()
+  const sessionRefreshCooldownMs = 5 * 60 * 1000
   const startedAt = new Date()
   const capabilityUpdated = new Set<string>() // Cache to prevent duplicate capability updates per corridor
   let freshnessChecked = 0
@@ -282,7 +301,9 @@ export const runRemitbeeCollector = async (options: RemitbeeCollectorOptions = {
     || collectorType === 'b2b_tier_2_reference'
     || collectorType === 'b2b_tier_3_discovery'
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
-  const defaultProxyTier = getDefaultProxyTierForCollector(collectorType)
+  const baseProxyTier = getDefaultProxyTierForCollector(collectorType)
+  const defaultProxyTier = proxyTierOverride
+    ?? (baseProxyTier === 'NONE' ? 'DATACENTER_ROTATING' : baseProxyTier)
   // Cache proxy tier lookups to avoid repeated database queries
   const proxyTierCache = new Map<string, ProxyTier>()
   /**
@@ -296,6 +317,107 @@ export const runRemitbeeCollector = async (options: RemitbeeCollectorOptions = {
     const proxyTier = await getProxyTierForCorridor(pool, corridorId, defaultProxyTier)
     proxyTierCache.set(corridorId, proxyTier)
     return proxyTier
+  }
+
+  const getSessionCacheKey = (corridorId: string) => `session_cookie:${providerId}:${corridorId}`
+  const resolveSessionExpiry = () =>
+    sessionTtlMs > 0 ? Date.now() + sessionTtlMs : Number.MAX_SAFE_INTEGER
+
+  const cacheSessionCookie = async (corridorId: string, cookie: string) => {
+    if (!cookie) return
+    sessionCookieCache.set(corridorId, { value: cookie, expiresAt: resolveSessionExpiry() })
+    if (!redisClient) return
+    try {
+      const key = getSessionCacheKey(corridorId)
+      if (sessionTtlSeconds > 0) {
+        await redisClient.set(key, cookie, { EX: sessionTtlSeconds })
+      } else {
+        await redisClient.set(key, cookie)
+      }
+    } catch (error) {
+      logger.warn('session_cookie_cache_write_failed', {
+        corridor_id: corridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  const loadSessionCookieFromCache = async (corridorId: string, allowSeed: boolean) => {
+    const cached = sessionCookieCache.get(corridorId)
+    if (cached) {
+      if (sessionTtlMs === 0 || Date.now() < cached.expiresAt) {
+        return cached.value
+      }
+      sessionCookieCache.delete(corridorId)
+    }
+
+    if (redisClient) {
+      try {
+        const stored = await redisClient.get(getSessionCacheKey(corridorId))
+        if (stored) {
+          sessionCookieCache.set(corridorId, { value: stored, expiresAt: resolveSessionExpiry() })
+          return stored
+        }
+      } catch (error) {
+        logger.warn('session_cookie_cache_read_failed', {
+          corridor_id: corridorId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    if (allowSeed && sessionSeedCookie) {
+      await cacheSessionCookie(corridorId, sessionSeedCookie)
+      return sessionSeedCookie
+    }
+
+    return null
+  }
+
+  const refreshSessionCookie = async (corridorId: string, proxyTier: ProxyTier) => {
+    if (!sessionWarmupUrl) return null
+    sessionRefreshAttempts.set(corridorId, Date.now())
+    try {
+      const refreshed = await fetchRemitbeeSessionCookie({
+        locale,
+        corridorId,
+        proxyTier,
+        warmupUrl: sessionWarmupUrl,
+      })
+      if (refreshed) {
+        await cacheSessionCookie(corridorId, refreshed)
+      }
+      return refreshed
+    } catch (error) {
+      logger.warn('session_refresh_failed', {
+        corridor_id: corridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return null
+    }
+  }
+
+  const resolveSessionCookie = async (
+    corridorId: string,
+    proxyTier: ProxyTier,
+    forceRefresh = false,
+  ) => {
+    const cached = await loadSessionCookieFromCache(corridorId, !forceRefresh)
+    if (cached && !forceRefresh) {
+      return cached
+    }
+    if (!sessionWarmupUrl) {
+      return forceRefresh ? null : cached
+    }
+    const lastAttempt = sessionRefreshAttempts.get(corridorId) ?? 0
+    if (!forceRefresh && Date.now() - lastAttempt < sessionRefreshCooldownMs) {
+      return cached
+    }
+    const refreshed = await refreshSessionCookie(corridorId, proxyTier)
+    if (refreshed) {
+      return refreshed
+    }
+    return forceRefresh ? null : cached
   }
 
   // Ensure provider exists in database, create if missing
@@ -435,25 +557,100 @@ export const runRemitbeeCollector = async (options: RemitbeeCollectorOptions = {
         // extraDelayMs/extraJitterMs apply penalty from previous rate limit errors
         await scheduler.waitForSlot(corridorId, extraDelayMs, extraJitterMs)
         let fetchResult: Awaited<ReturnType<typeof fetchRemitbeeQuote>>
-        const fetchStartedAt = Date.now()
-        // Fetch quote from Remitbee API
-        try {
-          fetchResult = await fetchRemitbeeQuote(request, { jitterMs, proxyTier })
-          fetchDurationMs = Date.now() - fetchStartedAt
-          logger.debug('quote_fetch_result', {
-            trace_id: traceId,
+        const forceSessionRefresh = collectorType === 'health_probe'
+          && !sessionRefreshForced.has(corridorId)
+        let sessionCookieHeader = await resolveSessionCookie(
+          corridorId,
+          proxyTier,
+          forceSessionRefresh,
+        )
+        if (forceSessionRefresh) {
+          sessionRefreshForced.add(corridorId)
+        }
+        if (!sessionCookieHeader && proxyTierFallback && proxyTierFallback !== proxyTier) {
+          sessionCookieHeader = await resolveSessionCookie(corridorId, proxyTierFallback, true)
+          sessionRefreshForced.add(corridorId)
+        }
+        if (sessionCookieRequired && !sessionCookieHeader) {
+          logger.warn('session_cookie_missing_skip', {
             corridor_id: corridorId,
             amount_bucket: amountBucket,
             payin_method: payinMethod,
             payout_method: payoutMethod,
-            http_status: fetchResult.status,
-            duration_ms: fetchDurationMs,
+            proxy_tier: proxyTier,
           })
+          await insertAttempt(pool, providerId, {
+            corridorId,
+            amountBucket,
+            payinMethod,
+            payoutMethod,
+            success: false,
+            errorType: 'session_missing',
+            httpStatus: null,
+            errorMessage: 'session_cookie_missing',
+            requestFingerprint,
+          })
+          const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
+          logger.info('quote_attempt_finish', {
+            trace_id: traceId,
+            status: 'session_missing',
+            stage: 'session',
+            total_duration_ms: attemptDurationMs,
+          })
+          completed = true
+          continue
+        }
+        const fetchStartAt = Date.now()
+        // Fetch quote from Remitbee API
+        try {
+          const runFetch = async (tier: ProxyTier, cookie: string | null, label: string) => {
+            const attemptStartedAt = Date.now()
+            const result = await fetchRemitbeeQuote(request, {
+              jitterMs,
+              proxyTier: tier,
+              cookie: cookie || undefined,
+            })
+            fetchDurationMs = Date.now() - attemptStartedAt
+            logger.debug('quote_fetch_result', {
+              trace_id: traceId,
+              corridor_id: corridorId,
+              amount_bucket: amountBucket,
+              payin_method: payinMethod,
+              payout_method: payoutMethod,
+              http_status: result.status,
+              duration_ms: fetchDurationMs,
+              attempt: label,
+              proxy_tier: tier,
+            })
+            return result
+          }
+
+          fetchResult = await runFetch(proxyTier, sessionCookieHeader, 'primary')
+
+          if (fetchResult.status === 403 && sessionWarmupUrl) {
+            const refreshed = await refreshSessionCookie(corridorId, proxyTier)
+            if (refreshed) {
+              fetchResult = await runFetch(proxyTier, refreshed, 'session_refresh')
+            }
+          }
+
+          if (fetchResult.status === 403 && proxyTierFallback && proxyTierFallback !== proxyTier) {
+            const fallbackCookie = await resolveSessionCookie(corridorId, proxyTierFallback, true)
+            fetchResult = await runFetch(proxyTierFallback, fallbackCookie, 'proxy_fallback')
+            if (fetchResult.status >= 200 && fetchResult.status < 300) {
+              proxyTierCache.set(corridorId, proxyTierFallback)
+              logger.info('proxy_tier_fallback_used', {
+                provider_id: providerId,
+                corridor_id: corridorId,
+                proxy_tier: proxyTierFallback,
+              })
+            }
+          }
           if (fetchResult.status >= 200 && fetchResult.status < 300) {
             http2xxCount += 1
           }
         } catch (error) {
-          fetchDurationMs = Date.now() - fetchStartedAt
+          fetchDurationMs = Date.now() - fetchStartAt
           logger.error('quote_fetch_error', {
             trace_id: traceId,
             corridor_id: corridorId,
@@ -861,5 +1058,5 @@ export const runRemitbeeCollector = async (options: RemitbeeCollectorOptions = {
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

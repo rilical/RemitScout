@@ -123,7 +123,6 @@ const RIA_DESTINATION_PAIRS: Array<[string, string]> = [
   ['GQ', 'XAF'],
   ['ER', 'ERN'],
   ['EE', 'EUR'],
-  ['EE', 'EEK'],
   ['SZ', 'SZL'],
   ['ET', 'ETB'],
   ['FJ', 'FJD'],
@@ -182,7 +181,6 @@ const RIA_DESTINATION_PAIRS: Array<[string, string]> = [
   ['LA', 'LAK'],
   ['LA', 'USD'],
   ['LV', 'EUR'],
-  ['LV', 'LVL'],
   ['LB', 'LBP'],
   ['LB', 'USD'],
   ['LS', 'LSL'],
@@ -192,7 +190,6 @@ const RIA_DESTINATION_PAIRS: Array<[string, string]> = [
   ['LI', 'EUR'],
   ['LT', 'EUR'],
   ['LT', 'GBP'],
-  ['LT', 'LTL'],
   ['LU', 'EUR'],
   ['MO', 'MOP'],
   ['MG', 'MGA'],
@@ -262,7 +259,6 @@ const RIA_DESTINATION_PAIRS: Array<[string, string]> = [
   ['RS', 'RSD'],
   ['SC', 'SCR'],
   ['SL', 'SLE'],
-  ['SL', 'SLL'],
   ['SG', 'SGD'],
   ['SK', 'EUR'],
   ['SI', 'EUR'],
@@ -325,7 +321,6 @@ const RIA_DESTINATION_PAIRS: Array<[string, string]> = [
   ['ZM', 'USD'],
   ['ZM', 'ZMW'],
   ['ZW', 'USD'],
-  ['ZW', 'ZWD'],
 ]
 
 const currencyByCountry = new Map(COUNTRIES.map(country => [country.code, country.currency]))

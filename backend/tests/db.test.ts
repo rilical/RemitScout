@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Pool } from 'pg'
 import { createPool, getPool, query } from '../shared/db'
 import * as dbMetrics from '../shared/db-metrics'
-import * as configModule from '../shared/config'
 
 vi.mock('../shared/db-metrics', () => ({
   recordQueryFromSql: vi.fn(),
@@ -176,7 +175,6 @@ describe('db', () => {
     })
   })
 })
-
 
 
 

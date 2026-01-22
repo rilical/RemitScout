@@ -155,9 +155,6 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
   const blockCooldownMs = config.planeB.alansari.blockCooldownMs
   const startedAt = new Date()
   const capabilityUpdated = new Set<string>()
-  let freshnessChecked = 0
-  let freshnessSkipped = 0
-  let freshnessStale = 0
   const providerRates = await resolveProviderRates(pool, providerId, {
     rpm: httpLimits.rpm,
     perCorridorRpm: httpLimits.perCorridorRpm,
@@ -186,7 +183,6 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
   let rateLimitCount = 0
   let http2xxCount = 0
   let attemptDurationMsTotal = 0
-  let lastSuccessAt: Date | null = null
   let shouldStop = false
   let blocked = false
   let blockReason: string | null = null
@@ -273,7 +269,6 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
         }
 
         if (shouldApplyFreshnessSlo) {
-          freshnessChecked += 1
           const ageMinutes = await getLatestQuoteAgeMinutes(
             pool,
             providerId,
@@ -283,10 +278,8 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
             payoutMethod,
           )
           if (ageMinutes !== null && ageMinutes <= freshnessSloMinutes) {
-            freshnessSkipped += 1
             continue
           }
-          freshnessStale += 1
         }
 
         const requestFingerprint = createHash('sha256')
@@ -466,7 +459,6 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
           await dispatchSignal(pool, corridorId, providerId, anomaly)
         }
         successCount += 1
-        lastSuccessAt = new Date()
 
         if (isHalfOpen) {
           await closeCircuit(pool, providerId, corridorId)
@@ -510,5 +502,5 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
     }
   }
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

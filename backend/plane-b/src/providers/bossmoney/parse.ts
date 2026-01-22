@@ -127,7 +127,7 @@ export const parseBossMoneyPayload = (
     return null
   }
 
-  const { sourceCurrency, destCurrency } = requireCorridorId(request.corridor_id)
+  const { sourceCurrency } = requireCorridorId(request.corridor_id)
 
   const sendAmountRaw = parseNumber(payload.amounts?.sender)
   const sendAmount = Number.isFinite(sendAmountRaw) ? sendAmountRaw : request.send_amount

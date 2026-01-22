@@ -1,5 +1,5 @@
-import { Duration } from 'aws-cdk-lib'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { Duration, Stack } from 'aws-cdk-lib'
+import { CfnQueue, Queue } from 'aws-cdk-lib/aws-sqs'
 import type { Construct } from 'constructs'
 
 export type QueueResources = {
@@ -72,8 +72,9 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     retentionPeriod: Duration.days(14),
   })
 
+  const ingestFanoutQueueName = `remit-scout-${options.envName}-ingest-fanout`
   const ingestFanoutQueue = new Queue(scope, 'IngestFanoutQueue', {
-    queueName: `remit-scout-${options.envName}-ingest-fanout`,
+    queueName: ingestFanoutQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
     deadLetterQueue: {
@@ -81,6 +82,15 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
       maxReceiveCount: 5,
     },
   })
+  const ingestFanoutDlqResource = ingestFanoutDlq.node.defaultChild as CfnQueue
+  const ingestFanoutQueueArn = Stack.of(scope).formatArn({
+    service: 'sqs',
+    resource: ingestFanoutQueueName,
+  })
+  ingestFanoutDlqResource.redriveAllowPolicy = {
+    redrivePermission: 'byQueue',
+    sourceQueueArns: [ingestFanoutQueueArn],
+  }
 
   const notificationsDlq = new Queue(scope, 'NotificationsDlq', {
     queueName: `remit-scout-${options.envName}-notifications-dlq`,

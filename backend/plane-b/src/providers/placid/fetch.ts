@@ -7,10 +7,46 @@ import { PLACID_DESTINATION_CURRENCY_BY_COUNTRY } from './supported-corridors'
 import { parsePlacidHtml, type PlacidPayload } from './parse'
 
 const placidEndpoint = 'https://www.placid.net/rates-fees.php'
+const placidSessionWarmupUrl = 'https://www.placid.net/'
 
 type FetchOptions = {
   jitterMs?: number
   proxyTier?: ProxyTier
+  cookie?: string
+  extraHeaders?: Record<string, string>
+}
+
+const buildCookieHeader = (cookies?: string[] | null) => {
+  if (!cookies || cookies.length === 0) return null
+  const parts = cookies
+    .map((cookie) => cookie.split(';')[0]?.trim())
+    .filter(Boolean)
+  return parts.length ? parts.join('; ') : null
+}
+
+export const fetchPlacidSessionCookie = async (input: {
+  locale: string
+  corridorId: string
+  proxyTier?: ProxyTier
+  warmupUrl?: string | null
+}) => {
+  const url = input.warmupUrl || placidSessionWarmupUrl
+  if (!url) return null
+
+  const response = await httpRequest({
+    url,
+    method: 'GET',
+    headers: {
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'accept-language': input.locale,
+      'user-agent': getUserAgentForCorridor(input.corridorId),
+      referer: placidSessionWarmupUrl,
+    },
+    proxyTier: input.proxyTier,
+    corridorId: input.corridorId,
+  })
+
+  return buildCookieHeader(response.setCookie)
 }
 
 export const fetchPlacidQuote = async (
@@ -36,15 +72,33 @@ export const fetchPlacidQuote = async (
     )
   }
 
+  const headers: Record<string, string> = {
+    accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': request.locale || 'en-US',
+    'user-agent': getUserAgentForCorridor(request.corridor_id),
+    origin: 'https://www.placid.net',
+    referer: 'https://www.placid.net/',
+    'sec-fetch-site': 'same-origin',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-dest': 'empty',
+  }
+
+  if (options.extraHeaders) {
+    for (const [key, value] of Object.entries(options.extraHeaders)) {
+      if (value) {
+        headers[key] = value
+      }
+    }
+  }
+
+  if (options.cookie) {
+    headers.cookie = options.cookie
+  }
+
   const response = await httpRequest({
     url: placidEndpoint,
     method: 'GET',
-    headers: {
-      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'accept-language': request.locale || 'en-US',
-      'user-agent': getUserAgentForCorridor(request.corridor_id),
-      referer: 'https://www.placid.net/',
-    },
+    headers,
     jitterMs: options.jitterMs,
     proxyTier: options.proxyTier,
     corridorId: request.corridor_id,

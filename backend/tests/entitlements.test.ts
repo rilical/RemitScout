@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getEntitlementsForPlan, type Entitlements, type PlanCode } from '../plane-a/src/services/entitlements'
+import { getEntitlementsForPlan } from '../plane-a/src/services/entitlements'
 
 describe('entitlements', () => {
   describe('getEntitlementsForPlan', () => {

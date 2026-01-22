@@ -44,8 +44,10 @@ const buildHomeHeaders = (request: CollectorRequest) => {
 }
 
 const extractAjaxNonce = (html: string): string | null => {
-  const match = html.match(/CC_Ajax_Object\s*=\s*\{[^}]*?ajax_nonce\s*:\s*['"]([^'"]+)['"]/)
+  const match = html.match(/CC_Ajax_Object\s*=\s*\{[^}]*?["']?ajax_nonce["']?\s*:\s*["']([^"']+)["']/)
   if (match?.[1]) return match[1]
+  const fallback = html.match(/BN_Ajax_Object\s*=\s*\{[^}]*?["']?ajax_nonce["']?\s*:\s*["']([^"']+)["']/)
+  if (fallback?.[1]) return fallback[1]
   return null
 }
 

@@ -35,11 +35,11 @@ const expandKeys = (key: string) => {
 export const payinMethodMap: Record<string, string> = Object.fromEntries(
   Object.entries(PAYMENT_TYPE_TO_CANONICAL)
     .flatMap(([key, value]) => expandKeys(key).map(expanded => [expanded, value]))
-    .concat(Object.entries(PAYMENT_TYPE_TO_CANONICAL).map(([key, value]) => [value, value])),
+    .concat(Object.entries(PAYMENT_TYPE_TO_CANONICAL).map(([, value]) => [value, value])),
 )
 
 export const payoutMethodMap: Record<string, string> = Object.fromEntries(
   Object.entries(DISBURSEMENT_TYPE_TO_CANONICAL)
     .flatMap(([key, value]) => expandKeys(key).map(expanded => [expanded, value]))
-    .concat(Object.entries(DISBURSEMENT_TYPE_TO_CANONICAL).map(([key, value]) => [value, value])),
+    .concat(Object.entries(DISBURSEMENT_TYPE_TO_CANONICAL).map(([, value]) => [value, value])),
 )

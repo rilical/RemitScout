@@ -53,6 +53,9 @@ export type EcsTaskOptions = {
   bronzePrefix?: string
   b2cQueueInSweep?: string
   b2cRefreshLoopEnabled?: boolean
+  planeBB2bTargetMinutes?: string
+  planeBB2bObservationMode?: string
+  planeBB2bMaxQueueDepth?: string
   ingestFanoutMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
@@ -126,6 +129,10 @@ export const createEcsTasks = (
   const bronzePrefix = options.bronzePrefix
   const b2cQueueInSweep = options.b2cQueueInSweep
   const b2cRefreshLoopEnabled = options.b2cRefreshLoopEnabled ?? false
+  const planeBB2bTargetMinutes = options.planeBB2bTargetMinutes
+  const planeBB2bObservationMode =
+    options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
+  const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
   const b2cRefreshLimit = isDev ? '25' : '50'
   const b2cRefreshConcurrency = isDev ? '2' : '5'
   const ingestFanoutMode = options.ingestFanoutMode
@@ -219,9 +226,24 @@ export const createEcsTasks = (
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+    LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   }
   if (!isProd) {
     sharedEnv.QUOTE_REFRESH_DB_FALLBACK = '1'
+  }
+  if (isDev) {
+    sharedEnv.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE =
+      process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE || '1'
+    sharedEnv.PLANE_B_B2B_RPM_SAFETY_FACTOR =
+      process.env.PLANE_B_B2B_RPM_SAFETY_FACTOR || '1'
+    sharedEnv.PLANE_B_B2B_RPM_MULTIPLIER =
+      process.env.PLANE_B_B2B_RPM_MULTIPLIER || '8'
+    sharedEnv.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER =
+      process.env.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER || '8'
+    sharedEnv.PLANE_B_B2B_OBSERVATION_TIER2_RPM =
+      process.env.PLANE_B_B2B_OBSERVATION_TIER2_RPM || '60'
+    sharedEnv.PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM =
+      process.env.PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM || '60'
   }
   if (process.env.DB_DISABLE_STATEMENT_TIMEOUT) {
     sharedEnv.DB_DISABLE_STATEMENT_TIMEOUT = process.env.DB_DISABLE_STATEMENT_TIMEOUT
@@ -275,11 +297,71 @@ export const createEcsTasks = (
   if (b2cQueueInSweep) {
     sharedEnv.PLANE_B_B2C_QUEUE_IN_SWEEP = b2cQueueInSweep
   }
+  if (planeBB2bTargetMinutes) {
+    sharedEnv.PLANE_B_B2B_TARGET_MINUTES = planeBB2bTargetMinutes
+  }
+  if (planeBB2bObservationMode !== undefined) {
+    sharedEnv.PLANE_B_B2B_OBSERVATION_MODE = planeBB2bObservationMode
+  }
+  if (planeBB2bMaxQueueDepth) {
+    sharedEnv.PLANE_B_B2B_MAX_QUEUE_DEPTH = planeBB2bMaxQueueDepth
+  }
+  if (process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY) {
+    sharedEnv.PLANE_B_B2B_NATIVE_CURRENCY_ONLY = process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY
+  }
+  if (process.env.PLANE_B_B2B_FRESHNESS_SLO_ENABLED) {
+    sharedEnv.PLANE_B_B2B_FRESHNESS_SLO_ENABLED = process.env.PLANE_B_B2B_FRESHNESS_SLO_ENABLED
+  }
+  if (process.env.PLANE_B_B2B_FANOUT_MODE) {
+    sharedEnv.PLANE_B_B2B_FANOUT_MODE = process.env.PLANE_B_B2B_FANOUT_MODE
+  }
+  if (process.env.PLANE_B_B2B_TIER_VERSION) {
+    sharedEnv.PLANE_B_B2B_TIER_VERSION = process.env.PLANE_B_B2B_TIER_VERSION
+  }
+  if (process.env.PLANE_B_B2B_MAX_TARGET_MINUTES) {
+    sharedEnv.PLANE_B_B2B_MAX_TARGET_MINUTES = process.env.PLANE_B_B2B_MAX_TARGET_MINUTES
+  }
+  if (process.env.PLANE_B_B2B_RPM_SAFETY_FACTOR) {
+    sharedEnv.PLANE_B_B2B_RPM_SAFETY_FACTOR = process.env.PLANE_B_B2B_RPM_SAFETY_FACTOR
+  }
+  if (process.env.PLANE_B_B2B_RPM_MULTIPLIER) {
+    sharedEnv.PLANE_B_B2B_RPM_MULTIPLIER = process.env.PLANE_B_B2B_RPM_MULTIPLIER
+  }
+  if (process.env.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER) {
+    sharedEnv.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER =
+      process.env.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER
+  }
+  if (process.env.PLANE_B_INGEST_LOOP) {
+    sharedEnv.PLANE_B_INGEST_LOOP = process.env.PLANE_B_INGEST_LOOP
+  }
+  if (process.env.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS) {
+    sharedEnv.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS =
+      process.env.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS
+  }
+  if (process.env.PLANE_B_B2B_MAX_CORRIDORS_PER_SHARD) {
+    sharedEnv.PLANE_B_B2B_MAX_CORRIDORS_PER_SHARD =
+      process.env.PLANE_B_B2B_MAX_CORRIDORS_PER_SHARD
+  }
+  if (process.env.PLANE_B_B2B_MIN_SHARDS) {
+    sharedEnv.PLANE_B_B2B_MIN_SHARDS = process.env.PLANE_B_B2B_MIN_SHARDS
+  }
+  if (process.env.PLANE_B_B2B_FRESHNESS_CHUNK_SIZE) {
+    sharedEnv.PLANE_B_B2B_FRESHNESS_CHUNK_SIZE =
+      process.env.PLANE_B_B2B_FRESHNESS_CHUNK_SIZE
+  }
   if (proxyResidentialUrl && !sharedSecrets.PROXY_RESIDENTIAL_URL) {
     sharedEnv.PROXY_RESIDENTIAL_URL = proxyResidentialUrl
   }
   if (proxyDatacenterUrl && !sharedSecrets.PROXY_DATACENTER_URL) {
     sharedEnv.PROXY_DATACENTER_URL = proxyDatacenterUrl
+  }
+
+  const planeBIngestEnv = { ...sharedEnv }
+  if (!planeBIngestEnv.PLANE_B_INGEST_LOOP) {
+    planeBIngestEnv.PLANE_B_INGEST_LOOP = '1'
+  }
+  if (!planeBIngestEnv.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS) {
+    planeBIngestEnv.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS = '60'
   }
 
   const planeBIngestLogGroup = new LogGroup(scope, 'PlaneBIngestLogGroup', {
@@ -293,7 +375,7 @@ export const createEcsTasks = (
       'scripts/aws/plane-b-ingest-ecs.js',
       'scripts/aws/plane-b-ingest-ecs.ts',
     ),
-    environment: sharedEnv,
+    environment: planeBIngestEnv,
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
       streamPrefix: 'plane-b-ingest',
@@ -392,13 +474,44 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
+  const ingestFanoutEnv = { ...sharedEnv }
+  if (process.env.INGEST_FANOUT_BATCH_SIZE) {
+    ingestFanoutEnv.INGEST_FANOUT_BATCH_SIZE = process.env.INGEST_FANOUT_BATCH_SIZE
+  } else if (isDev) {
+    ingestFanoutEnv.INGEST_FANOUT_BATCH_SIZE = '10'
+  }
+  if (process.env.INGEST_FANOUT_CONCURRENCY) {
+    ingestFanoutEnv.INGEST_FANOUT_CONCURRENCY = process.env.INGEST_FANOUT_CONCURRENCY
+  } else if (isDev) {
+    ingestFanoutEnv.INGEST_FANOUT_CONCURRENCY = '10'
+  }
+  if (process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY) {
+    ingestFanoutEnv.INGEST_FANOUT_PROVIDER_CONCURRENCY =
+      process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY
+  } else if (isDev) {
+    ingestFanoutEnv.INGEST_FANOUT_PROVIDER_CONCURRENCY = '8'
+  }
+  if (process.env.INGEST_FANOUT_IDLE_SLEEP_MS) {
+    ingestFanoutEnv.INGEST_FANOUT_IDLE_SLEEP_MS = process.env.INGEST_FANOUT_IDLE_SLEEP_MS
+  } else if (isDev) {
+    ingestFanoutEnv.INGEST_FANOUT_IDLE_SLEEP_MS = '250'
+  }
+  if (process.env.INGEST_FANOUT_MAX_ATTEMPTS) {
+    ingestFanoutEnv.INGEST_FANOUT_MAX_ATTEMPTS = process.env.INGEST_FANOUT_MAX_ATTEMPTS
+  }
+  if (process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP) {
+    ingestFanoutEnv.DB_DISABLE_POOL_SIGNAL_CLEANUP =
+      process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP
+  } else if (isDev) {
+    ingestFanoutEnv.DB_DISABLE_POOL_SIGNAL_CLEANUP = '1'
+  }
   ingestFanoutTask.addContainer('IngestFanoutWorkerContainer', {
     image,
     command: resolveCommand(
       'scripts/aws/ingest-fanout-worker-ecs.js',
       'scripts/aws/ingest-fanout-worker-ecs.ts',
     ),
-    environment: sharedEnv,
+    environment: ingestFanoutEnv,
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
       streamPrefix: 'ingest-fanout-worker',

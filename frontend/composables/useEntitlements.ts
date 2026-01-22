@@ -1,4 +1,4 @@
-export type Plan = 'free' | 'plus'
+export type Plan = 'free' | 'plus' | 'enterprise'
 
 export type Limit = number | 'unlimited'
 
@@ -40,6 +40,9 @@ type MeResponse = {
     alerts_max: number | null
     history_max_days: number | null
     watchlist_items: number | null
+    api_access: boolean
+    api_tier: number | null
+    api_cadence_hours: number | null
   }
   usage: {
     alerts_count?: number
@@ -67,21 +70,21 @@ export const useEntitlements = () => {
     historyDays: 30,
     exports: false,
   }))
+  const apiAccess = useState<boolean>('entitlements:api-access', () => false)
+  const apiTier = useState<number | null>('entitlements:api-tier', () => null)
+  const apiCadenceHours = useState<number | null>('entitlements:api-cadence', () => null)
   const billing = useState<MeResponse['billing'] | null>('entitlements:billing', () => null)
   const loading = useState<boolean>('entitlements:loading', () => false)
   const error = useState<string | null>('entitlements:error', () => null)
   const hydrated = useState<boolean>('entitlements:hydrated', () => false)
   const refreshInFlight = useState<boolean>('entitlements:refreshing', () => false)
 
-  // Check for dev plan override
-  const devPlanOverride = useState<Plan | null>('dev:plan-override', () => null)
-  
   const isPlus = computed(() => {
-    // In dev mode, use override if available
-    if (import.meta.dev && devPlanOverride.value) {
-      return devPlanOverride.value === 'plus'
-    }
-    return plan.value === 'plus'
+    return plan.value === 'plus' || plan.value === 'enterprise'
+  })
+
+  const isEnterprise = computed(() => {
+    return plan.value === 'enterprise'
   })
 
   async function fetchPlan() {
@@ -93,6 +96,9 @@ export const useEntitlements = () => {
         historyDays: 30,
         exports: false,
       }
+      apiAccess.value = false
+      apiTier.value = null
+      apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
       return
@@ -105,9 +111,15 @@ export const useEntitlements = () => {
       const data = await request<MeResponse>('/me')
       
       if (data.success && data.plan) {
-        const planCode = data.plan.plan_code === 'plus' ? 'plus' : 'free'
+        const planCode =
+          data.plan.plan_code === 'enterprise'
+            ? 'enterprise'
+            : (data.plan.plan_code === 'plus' ? 'plus' : 'free')
         plan.value = planCode
         limits.value = mapEntitlementsToLimits(data.entitlements)
+        apiAccess.value = Boolean(data.entitlements.api_access)
+        apiTier.value = data.entitlements.api_tier
+        apiCadenceHours.value = data.entitlements.api_cadence_hours
         billing.value = data.billing ?? null
         if (data.user) {
           applyBackendProfile(data.user)
@@ -126,6 +138,9 @@ export const useEntitlements = () => {
         historyDays: 30,
         exports: false,
       }
+      apiAccess.value = false
+      apiTier.value = null
+      apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
     } finally {
@@ -164,18 +179,13 @@ export const useEntitlements = () => {
         historyDays: 30,
         exports: false,
       }
+      apiAccess.value = false
+      apiTier.value = null
+      apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
     }
   })
-
-  // Expose dev plan override for components that need it
-  const getEffectivePlan = () => {
-    if (import.meta.dev && devPlanOverride.value) {
-      return devPlanOverride.value
-    }
-    return plan.value
-  }
 
   return {
     plan: readonly(plan),
@@ -185,7 +195,10 @@ export const useEntitlements = () => {
     loading: readonly(loading),
     error: readonly(error),
     isPlus,
-    getEffectivePlan,
+    isEnterprise,
+    apiAccess: readonly(apiAccess),
+    apiTier: readonly(apiTier),
+    apiCadenceHours: readonly(apiCadenceHours),
     refreshPlan,
   }
 }

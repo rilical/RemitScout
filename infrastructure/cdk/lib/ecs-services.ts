@@ -28,7 +28,9 @@ export type EcsServiceOptions = {
   opsAlertsMode?: string
   planeBIngestDesiredCount?: number
   queueWorkerDesiredCount?: number
+  queueWorkerMaxCount?: number
   b2cRefreshDesiredCount?: number
+  queueWorkerSpotOnly?: boolean
 }
 
 export const createEcsServices = (
@@ -44,13 +46,19 @@ export const createEcsServices = (
     options.queueWorkerDesiredCount ?? baseQueueDesired
   const b2cRefreshDesired =
     options.b2cRefreshDesiredCount ?? baseB2cRefreshDesired
-  const spotCapacityProviderStrategies =
-    options.envName === 'prod'
+  const spotOnly = options.queueWorkerSpotOnly ?? false
+  const spotCapacityProviderStrategies = spotOnly
+    ? [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
+    : options.envName === 'prod'
       ? [
           { capacityProvider: 'FARGATE', base: 1, weight: 1 },
           { capacityProvider: 'FARGATE_SPOT', weight: 2 },
         ]
-      : [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
+      : [
+          { capacityProvider: 'FARGATE', base: 1, weight: 1 },
+          { capacityProvider: 'FARGATE_SPOT', weight: 1 },
+        ]
+  const enableExecuteCommand = options.envName !== 'prod'
 
   const planeBIngestService = new FargateService(scope, 'PlaneBIngestService', {
     cluster: options.cluster,
@@ -59,6 +67,7 @@ export const createEcsServices = (
     assignPublicIp: false,
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
+    enableExecuteCommand,
   })
 
   const b2cRefreshService = new FargateService(scope, 'B2cRefreshWorkerService', {
@@ -69,6 +78,7 @@ export const createEcsServices = (
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
     capacityProviderStrategies: spotCapacityProviderStrategies,
+    enableExecuteCommand,
   })
 
   const ingestFanoutService = new FargateService(scope, 'IngestFanoutWorkerService', {
@@ -80,6 +90,7 @@ export const createEcsServices = (
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
     capacityProviderStrategies: spotCapacityProviderStrategies,
+    enableExecuteCommand,
   })
 
   const notificationsQueueService = new FargateService(
@@ -94,6 +105,7 @@ export const createEcsServices = (
       vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [options.planeBSecurityGroup],
       capacityProviderStrategies: spotCapacityProviderStrategies,
+      enableExecuteCommand,
     },
   )
 
@@ -105,13 +117,16 @@ export const createEcsServices = (
     assignPublicIp: false,
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
+    enableExecuteCommand,
   })
 
+  const scaleMax = options.queueWorkerMaxCount ?? (options.envName === 'prod' ? 5 : 10)
   const scaleDefaults = {
     min: queueWorkerDesired,
-    max: options.envName === 'prod' ? 5 : 2,
+    max: Math.max(queueWorkerDesired, scaleMax),
     targetValue: options.envName === 'prod' ? 50 : 10,
   }
+  const queueAgeTargetSeconds = options.envName === 'prod' ? 900 : 1800
 
   if (options.ingestFanoutMode === 'queue') {
     const scaling = ingestFanoutService.autoScaleTaskCount({
@@ -123,6 +138,12 @@ export const createEcsServices = (
       targetValue: scaleDefaults.targetValue,
       scaleInCooldown: Duration.minutes(2),
       scaleOutCooldown: Duration.minutes(1),
+    })
+    scaling.scaleToTrackCustomMetric('IngestFanoutQueueAge', {
+      metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage(),
+      targetValue: queueAgeTargetSeconds,
+      scaleInCooldown: Duration.minutes(5),
+      scaleOutCooldown: Duration.minutes(2),
     })
   }
 

@@ -11,12 +11,11 @@ import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import { verifyAlertUnsubscribeToken } from '../services/alert-unsubscribe'
-import { AlertRepository, FxRateRepository, WatchlistRepository } from '../repositories'
+import { AlertRepository, WatchlistRepository } from '../repositories'
 
 const logger = createLogger('plane-a.alerts')
 const pool = getPool(config.db.planeAUrl)
 const alertRepository = new AlertRepository(pool)
-const fxRateRepository = new FxRateRepository(pool)
 const watchlistRepository = new WatchlistRepository(pool)
 const PLUS_ALERTS_SOFT_LIMIT = 16
 const ALERT_COOLDOWN_MINUTES: Record<'weekly' | 'daily', number> = {
@@ -89,33 +88,6 @@ const normalizeFrequency = (frequency: string | null | undefined): 'weekly' | 'd
 
 async function getAlertCount(userId: string): Promise<number> {
   return alertRepository.countByUserId(userId)
-}
-
-async function getCurrentRateForAlert(alertId: string): Promise<number | null> {
-  const alertData = await alertRepository.getAlertWithWatchlist(alertId)
-
-  if (!alertData) {
-    return null
-  }
-
-  const { alert, watchlist_item } = alertData
-  const targetPayload = watchlist_item.target_payload
-
-  if (alert.metric === 'midMarketRate' || alert.metric === 'rate') {
-    if (watchlist_item.target_type === 'corridor' && targetPayload.from && targetPayload.to) {
-      const from = targetPayload.from as string
-      const to = targetPayload.to as string
-      const rate = await fxRateRepository.getRate(from, to)
-      return rate
-    } else if (watchlist_item.target_type === 'fxPair' && targetPayload.base && targetPayload.quote) {
-      const base = targetPayload.base as string
-      const quote = targetPayload.quote as string
-      const rate = await fxRateRepository.getRate(base, quote)
-      return rate
-    }
-  }
-
-  return null
 }
 
 export const alertsRoutes = async (app: FastifyInstance) => {

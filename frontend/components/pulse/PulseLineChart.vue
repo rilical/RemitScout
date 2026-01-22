@@ -335,6 +335,8 @@ function formatValue(value: number): string {
       return `${Math.round(value)} bps`
     case 'currency':
       return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    case 'rate':
+      return value.toFixed(4)
     case 'minutes':
       return `${Math.round(value)} min`
     case 'count':
@@ -364,5 +366,4 @@ function getAreaPath(points: { x: number; y: number }[]): string {
   return `${start} ${line} ${end}`
 }
 </script>
-
 

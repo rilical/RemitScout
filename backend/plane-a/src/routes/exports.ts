@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
@@ -46,6 +46,29 @@ const exportJobTypeMap: Record<string, Record<string, ExportJobType>> = {
   watchlist: { csv: 'watchlist_csv', pdf: 'watchlist_pdf' },
   alerts: { csv: 'alerts_csv', pdf: 'alerts_pdf' },
   all: { csv: 'all_csv', pdf: 'all_pdf' },
+}
+
+const resolveActor = (
+  request: FastifyRequest,
+  reply: FastifyReply,
+): { userId: string; actorType: 'user' | 'api_key'; actorRole?: string; apiKeyId?: string } | null => {
+  if (request.user) {
+    return {
+      userId: request.user.user_id,
+      actorType: 'user',
+      actorRole: request.user.role ?? undefined,
+    }
+  }
+  if (request.apiKey) {
+    return {
+      userId: request.apiKey.user_id,
+      actorType: 'api_key',
+      apiKeyId: request.apiKey.key_id,
+    }
+  }
+  reply.code(401)
+  reply.send({ error: 'unauthorized' })
+  return null
 }
 
 const getBucket = () => config.storage.exports?.bucket || ''
@@ -115,7 +138,8 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const user = request.user!
+    const actor = resolveActor(request, reply)
+    if (!actor) return
     const pipeline = getExportPipelineStatus()
     if (!pipeline.ok) {
       reply.code(503)
@@ -153,7 +177,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
 
     try {
-      const activeCount = await exportJobRepository.countByUserAndStatus(user.user_id)
+      const activeCount = await exportJobRepository.countByUserAndStatus(actor.userId)
       const maxActive = config.exports?.maxActivePerUser ?? 2
       if (activeCount >= maxActive) {
         reply.code(429)
@@ -165,18 +189,18 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       }
 
       const job = await exportJobRepository.create({
-        user_id: user.user_id,
+        user_id: actor.userId,
         job_type: jobType,
         params,
       })
 
-      await enqueueExportJob(job.id, job.job_type, user.user_id)
+      await enqueueExportJob(job.id, job.job_type, actor.userId)
 
       try {
         await logAuditEvent(planeAPool, {
-          actorId: user.user_id,
-          actorType: 'user',
-          actorRole: user.role ?? undefined,
+          actorId: actor.actorType === 'api_key' ? actor.apiKeyId ?? actor.userId : actor.userId,
+          actorType: actor.actorType,
+          actorRole: actor.actorRole,
           action: 'export.request',
           entityType: 'export_job',
           entityId: job.id,
@@ -185,13 +209,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
             status: job.status,
             params,
           },
+          metadata: actor.apiKeyId ? { api_key_id: actor.apiKeyId, user_id: actor.userId } : undefined,
           category: 'user_action',
           severity: 'info',
           ...getRequestContext(request),
         })
       } catch (error) {
         logger.warn('audit_log_failed', {
-          user_id: user.user_id,
+          user_id: actor.userId,
           error: getErrorMessage(error),
         })
       }
@@ -207,7 +232,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       }
     } catch (error) {
       logger.error('export_job_create_failed', {
-        user_id: user.user_id,
+        user_id: actor.userId,
         error: error instanceof Error ? error.message : String(error),
       })
       reply.code(500)
@@ -222,12 +247,13 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const user = request.user!
+    const actor = resolveActor(request, reply)
+    if (!actor) return
     const limit = parsed.data.limit ?? 50
     const offset = parsed.data.offset ?? 0
 
     try {
-      const jobs = await exportJobRepository.listByUserId(user.user_id, limit, offset)
+      const jobs = await exportJobRepository.listByUserId(actor.userId, limit, offset)
       const filtered = parsed.data.status
         ? jobs.filter((job) => job.status === parsed.data.status)
         : jobs
@@ -247,7 +273,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       }
     } catch (error) {
       logger.error('export_job_list_failed', {
-        user_id: user.user_id,
+        user_id: actor.userId,
         error: error instanceof Error ? error.message : String(error),
       })
       reply.code(500)
@@ -256,12 +282,13 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/exports/:id', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
-    const user = request.user!
+    const actor = resolveActor(request, reply)
+    if (!actor) return
     const jobId = String((request.params as { id: string }).id)
 
     try {
       const job = await exportJobRepository.getById(jobId)
-      if (!job || job.user_id !== user.user_id) {
+      if (!job || job.user_id !== actor.userId) {
         reply.code(404)
         return { error: 'not_found' }
       }
@@ -281,7 +308,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       }
     } catch (error) {
       logger.error('export_job_get_failed', {
-        user_id: user.user_id,
+        user_id: actor.userId,
         job_id: jobId,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -291,12 +318,13 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/exports/:id/download', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
-    const user = request.user!
+    const actor = resolveActor(request, reply)
+    if (!actor) return
     const jobId = String((request.params as { id: string }).id)
 
     try {
       const job = await exportJobRepository.getById(jobId)
-      if (!job || job.user_id !== user.user_id) {
+      if (!job || job.user_id !== actor.userId) {
         reply.code(404)
         return { error: 'not_found' }
       }
@@ -325,24 +353,30 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       )
 
       try {
+        const metadata: Record<string, unknown> = {
+          job_type: job.job_type,
+          s3_key: job.s3_key,
+        }
+        if (actor.apiKeyId) {
+          metadata.api_key_id = actor.apiKeyId
+          metadata.user_id = actor.userId
+        }
+
         await logAuditEvent(planeAPool, {
-          actorId: user.user_id,
-          actorType: 'user',
-          actorRole: user.role ?? undefined,
+          actorId: actor.actorType === 'api_key' ? actor.apiKeyId ?? actor.userId : actor.userId,
+          actorType: actor.actorType,
+          actorRole: actor.actorRole,
           action: 'export.download',
           entityType: 'export_job',
           entityId: job.id,
-          metadata: {
-            job_type: job.job_type,
-            s3_key: job.s3_key,
-          },
+          metadata,
           category: 'user_action',
           severity: 'info',
           ...getRequestContext(request),
         })
       } catch (error) {
         logger.warn('audit_log_failed', {
-          user_id: user.user_id,
+          user_id: actor.userId,
           error: getErrorMessage(error),
         })
       }
@@ -354,7 +388,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       }
     } catch (error) {
       logger.error('export_job_download_failed', {
-        user_id: user.user_id,
+        user_id: actor.userId,
         job_id: jobId,
         error: error instanceof Error ? error.message : String(error),
       })

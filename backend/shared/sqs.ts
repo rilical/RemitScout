@@ -56,7 +56,7 @@ export type SqsMessage<T> = {
 const DEFAULT_VISIBILITY_TIMEOUT = 30
 const VISIBILITY_EXTENSION_THRESHOLD = 0.5
 
-let visibilityTimeoutCache = new Map<string, number>()
+const visibilityTimeoutCache = new Map<string, number>()
 
 const getVisibilityTimeout = async (queueUrl: string): Promise<number> => {
   if (visibilityTimeoutCache.has(queueUrl)) {
@@ -126,7 +126,6 @@ export const createVisibilityTimeoutExtender = (
   onExtend?: () => void,
 ): (() => Promise<void>) => {
   let intervalId: NodeJS.Timeout | null = null
-  let startTime = Date.now()
   let lastExtension = Date.now()
 
   const start = async () => {
@@ -462,6 +461,42 @@ export const getQueueDepth = async (queueUrl: string): Promise<number> => {
       error: error instanceof Error ? error.message : String(error),
     })
     return 0
+  }
+}
+
+export type QueueStats = {
+  visible: number
+  inFlight: number
+  delayed: number
+  total: number
+}
+
+export const getQueueStats = async (queueUrl: string): Promise<QueueStats> => {
+  try {
+    const sqs = getClient()
+    const response = await sqs.send(
+      new GetQueueAttributesCommand({
+        QueueUrl: queueUrl,
+        AttributeNames: [
+          'ApproximateNumberOfMessages',
+          'ApproximateNumberOfMessagesNotVisible',
+          'ApproximateNumberOfMessagesDelayed',
+        ],
+      }),
+    )
+    const visible = Number(response.Attributes?.ApproximateNumberOfMessages ?? 0)
+    const inFlight = Number(response.Attributes?.ApproximateNumberOfMessagesNotVisible ?? 0)
+    const delayed = Number(response.Attributes?.ApproximateNumberOfMessagesDelayed ?? 0)
+    const total = visible + inFlight + delayed
+    trackQueueDepth(queueUrl, total)
+    return { visible, inFlight, delayed, total }
+  } catch (error) {
+    trackMessageFailed(queueUrl, 'get_stats')
+    logger.error('stats_failed', {
+      queue_url: queueUrl,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return { visible: 0, inFlight: 0, delayed: 0, total: 0 }
   }
 }
 

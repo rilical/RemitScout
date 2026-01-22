@@ -45,7 +45,7 @@ import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { RIA_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
 import { fetchRiaQuote } from './fetch'
-import { extractRiaMethodPairs, parseRiaPayload } from './parse'
+import { extractRiaErrorMessages, extractRiaMethodPairs, parseRiaPayload } from './parse'
 
 /**
  * Ria Collector
@@ -93,6 +93,48 @@ type RiaCollectorOptions = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.ria.collector')
+const CORRIDOR_UNSUPPORTED_PHRASES = [
+  'corridor not supported',
+  'unsupported corridor',
+  'country pair not supported',
+  'country corridor not supported',
+]
+const METHOD_UNSUPPORTED_PHRASES = [
+  'payment method not supported',
+  'payment method is not supported',
+  'delivery method not supported',
+  'delivery method is not supported',
+  'settlement method not supported',
+  'settlement method is not supported',
+  'unsupported payment method',
+  'unsupported delivery method',
+  'unsupported settlement method',
+  'payment method not available',
+  'delivery method not available',
+  'settlement method not available',
+]
+
+const buildPayinFallbacks = (primary: string) => {
+  const candidates = [primary]
+  const fallbackOrder = ['bank_transfer', 'debit_card']
+  for (const method of fallbackOrder) {
+    if (!candidates.includes(method)) {
+      candidates.push(method)
+    }
+  }
+  return candidates
+}
+
+const buildErrorText = (messages: string[], bodyText: string) => {
+  const source = messages.length ? messages.join(' ') : bodyText
+  return source.toLowerCase()
+}
+
+const isExplicitUnsupportedCorridor = (text: string) =>
+  CORRIDOR_UNSUPPORTED_PHRASES.some((phrase) => text.includes(phrase))
+
+const isExplicitMethodUnsupported = (text: string) =>
+  METHOD_UNSUPPORTED_PHRASES.some((phrase) => text.includes(phrase))
 
 /**
  * Updates provider capability information for a corridor.
@@ -173,7 +215,10 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
     )
   }
   const buckets = options.amountBuckets ?? defaultAmountBuckets
-  const payinMethod = options.payinMethod ?? 'debit_card'
+  const collectorType = options.collectorType ?? 'collector'
+  const requestedPayinMethod = options.payinMethod ?? 'bank_transfer'
+  const payinMethod = requestedPayinMethod
+  const payinMethodFallbacks = buildPayinFallbacks(requestedPayinMethod)
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
   const locale = options.locale ?? 'en-US'
   const delayMs = options.delayMs ?? config.planeB.ria.delayMs
@@ -183,7 +228,6 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
   const rateLimitMaxRetries = options.rateLimitMaxRetries ?? config.planeB.ria.rateLimitMaxRetries
   const corridorDelayMs = options.corridorDelayMs ?? config.planeB.ria.corridorDelayMs
   const corridorJitterMs = options.corridorJitterMs ?? config.planeB.ria.corridorJitterMs
-  const collectorType = options.collectorType ?? 'collector'
   const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.ria.freshnessSloMinutes
   const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.ria.freshnessSloEnabled
   const blockCooldownMs = config.planeB.ria.blockCooldownMs
@@ -385,6 +429,8 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
       // Retry loop: handles rate limit retries and error recovery
       let rateLimitRetries = 0
       let completed = false
+      let payinAttemptIndex = 0
+      let activePayinMethod = payinMethodFallbacks[0] ?? payinMethod
 
       while (!completed) {
         // Check circuit breaker: skip if circuit is open (provider/corridor disabled)
@@ -405,13 +451,14 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
         let parseDurationMs = 0
         let normalizeDurationMs = 0
         let persistDurationMs = 0
+        const payinMethodForRequest = activePayinMethod
 
         // Build request object for this quote attempt
         const request: CollectorRequest = {
           provider_id: providerId,
           corridor_id: corridorId,
           amount_bucket: amountBucket,
-          payin_method: payinMethod,
+          payin_method: payinMethodForRequest,
           payout_method: payoutMethod,
           send_amount: amountBucket,
           locale,
@@ -419,14 +466,14 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
 
         // Create fingerprint for deduplication and tracking
         const requestFingerprint = createHash('sha256')
-          .update(`${corridorId}:${amountBucket}:${payinMethod}:${payoutMethod}`)
+          .update(`${corridorId}:${amountBucket}:${payinMethodForRequest}:${payoutMethod}`)
           .digest('hex')
 
         logger.debug('quote_attempt_start', {
           trace_id: traceId,
           corridor_id: corridorId,
           amount_bucket: amountBucket,
-          payin_method: payinMethod,
+          payin_method: payinMethodForRequest,
           payout_method: payoutMethod,
           request_fingerprint: requestFingerprint,
         })
@@ -444,7 +491,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
+            payin_method: payinMethodForRequest,
             payout_method: payoutMethod,
             http_status: fetchResult.status,
             duration_ms: fetchDurationMs,
@@ -458,7 +505,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
+            payin_method: payinMethodForRequest,
             payout_method: payoutMethod,
             duration_ms: fetchDurationMs,
             error,
@@ -466,7 +513,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
+            payinMethod: payinMethodForRequest,
             payoutMethod,
             success: false,
             errorType: 'network_error',
@@ -521,7 +568,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
+            payin_method: payinMethodForRequest,
             payout_method: payoutMethod,
             http_status: fetchResult.status,
             reason,
@@ -531,7 +578,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
+            payinMethod: payinMethodForRequest,
             payoutMethod,
             success: false,
             errorType: rateLimited ? 'rate_limit' : 'blocked',
@@ -543,7 +590,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           const alertId = await insertOpsAlert(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
+            payinMethod: payinMethodForRequest,
             payoutMethod,
             httpStatus: fetchResult.status,
             blockReason: reason,
@@ -622,17 +669,55 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
         }
 
         // Validate response: must be 200 with valid JSON payload
-        if (fetchResult.status !== 200 || !fetchResult.payload || typeof fetchResult.payload !== 'object') {
+        const payloadIsObject = Boolean(fetchResult.payload) && typeof fetchResult.payload === 'object'
+        const parseError = fetchResult.parseError === true
+          || (fetchResult.status === 200 && !payloadIsObject)
+        if (fetchResult.status !== 200 || !payloadIsObject) {
+          const errorMessages = payloadIsObject
+            ? extractRiaErrorMessages(fetchResult.payload as Record<string, unknown>)
+            : []
+          const errorText = buildErrorText(errorMessages, fetchResult.bodyText ?? '')
+          const methodUnsupported = isExplicitMethodUnsupported(errorText)
+          if (methodUnsupported && payinAttemptIndex < payinMethodFallbacks.length - 1) {
+            await insertAttempt(pool, providerId, {
+              corridorId,
+              amountBucket,
+              payinMethod: payinMethodForRequest,
+              payoutMethod,
+              success: false,
+              errorType: 'method_unsupported',
+              httpStatus: fetchResult.status,
+              errorMessage: 'payin_method_unsupported',
+              bronzeObjectKey,
+              requestFingerprint,
+            })
+            payinAttemptIndex += 1
+            const nextPayinMethod = payinMethodFallbacks[payinAttemptIndex]
+            logger.warn('payin_method_retry', {
+              trace_id: traceId,
+              corridor_id: corridorId,
+              amount_bucket: amountBucket,
+              payin_method: payinMethodForRequest,
+              next_payin_method: nextPayinMethod,
+              error_messages: errorMessages.length ? errorMessages : null,
+            })
+            activePayinMethod = nextPayinMethod
+            completed = false
+            continue
+          }
+
           logger.warn('quote_fetch_non_200', {
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
+            payin_method: payinMethodForRequest,
             payout_method: payoutMethod,
             http_status: fetchResult.status,
+            parse_error: parseError,
+            error_messages: errorMessages.length ? errorMessages : null,
           })
-          // Mark corridor as unsupported if 400 error (invalid corridor)
           const unsupportedCorridor = fetchResult.status === 400
+            && isExplicitUnsupportedCorridor(errorText)
           if (unsupportedCorridor) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_http_400')
             logger.warn('corridor_marked_unsupported', {
@@ -646,12 +731,16 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
+            payinMethod: payinMethodForRequest,
             payoutMethod,
             success: false,
-            errorType: unsupportedCorridor ? 'unsupported' : 'http_error',
+            errorType: parseError
+              ? 'parse_error'
+              : (unsupportedCorridor ? 'unsupported' : 'http_error'),
             httpStatus: fetchResult.status,
-            errorMessage: unsupportedCorridor ? 'corridor_unsupported' : 'non_200_response',
+            errorMessage: parseError
+              ? 'json_parse_error'
+              : (unsupportedCorridor ? 'corridor_unsupported' : 'non_200_response'),
             bronzeObjectKey,
             requestFingerprint,
           })
@@ -659,7 +748,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           logger.info('quote_attempt_finish', {
             trace_id: traceId,
             status: 'error',
-            stage: 'http',
+            stage: parseError ? 'parse' : 'http',
             total_duration_ms: attemptDurationMs,
             fetch_duration_ms: fetchDurationMs,
             bronze_duration_ms: bronzeDurationMs,
@@ -679,23 +768,70 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
         const parsed = parseRiaPayload(fetchResult.payload as Record<string, unknown>, request)
         parseDurationMs = Date.now() - parseStartedAt
         if (!parsed) {
+          const payload = fetchResult.payload as Record<string, unknown>
+          const errorMessages = extractRiaErrorMessages(payload)
+          const errorText = buildErrorText(errorMessages, fetchResult.bodyText ?? '')
+          const hasQuoteData = Boolean(
+            (payload as { quote?: { individualQuotes?: Array<unknown> | null } | null })
+              .quote?.individualQuotes?.length,
+          ) || Boolean(
+            (payload as { model?: { transferDetails?: { calculations?: unknown } | null } | null })
+              .model?.transferDetails?.calculations,
+          )
+          const methodUnsupported = isExplicitMethodUnsupported(errorText)
+          if (methodUnsupported && payinAttemptIndex < payinMethodFallbacks.length - 1) {
+            await insertAttempt(pool, providerId, {
+              corridorId,
+              amountBucket,
+              payinMethod: payinMethodForRequest,
+              payoutMethod,
+              success: false,
+              errorType: 'method_unsupported',
+              httpStatus: fetchResult.status,
+              errorMessage: 'payin_method_unsupported',
+              bronzeObjectKey,
+              requestFingerprint,
+            })
+            payinAttemptIndex += 1
+            const nextPayinMethod = payinMethodFallbacks[payinAttemptIndex]
+            logger.warn('payin_method_retry', {
+              trace_id: traceId,
+              corridor_id: corridorId,
+              amount_bucket: amountBucket,
+              payin_method: payinMethodForRequest,
+              next_payin_method: nextPayinMethod,
+              error_messages: errorMessages.length ? errorMessages : null,
+            })
+            activePayinMethod = nextPayinMethod
+            completed = false
+            continue
+          }
+          const shouldMarkUnsupported = errorMessages.length > 0
+            && isExplicitUnsupportedCorridor(errorText)
           logger.warn('quote_parse_failed', {
             trace_id: traceId,
             corridor_id: corridorId,
             amount_bucket: amountBucket,
-            payin_method: payinMethod,
+            payin_method: payinMethodForRequest,
             payout_method: payoutMethod,
             duration_ms: parseDurationMs,
+            parse_failure_reason: shouldMarkUnsupported ? 'unsupported_payload' : 'parse_error',
+            error_messages: errorMessages.length ? errorMessages : null,
+            has_quote_data: hasQuoteData,
           })
+          if (shouldMarkUnsupported) {
+            await markCorridorUnsupported(pool, providerId, corridorId, 'auto_parse_unsupported')
+            skipCorridor = true
+          }
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
-            payinMethod,
+            payinMethod: payinMethodForRequest,
             payoutMethod,
             success: false,
-            errorType: 'parse_error',
+            errorType: shouldMarkUnsupported ? 'unsupported' : 'parse_error',
             httpStatus: fetchResult.status,
-            errorMessage: 'parse_failed',
+            errorMessage: shouldMarkUnsupported ? 'corridor_unsupported' : 'parse_failed',
             bronzeObjectKey,
             requestFingerprint,
           })
@@ -775,7 +911,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           trace_id: traceId,
           corridor_id: corridorId,
           amount_bucket: amountBucket,
-          payin_method: payinMethod,
+          payin_method: payinMethodForRequest,
           payout_method: payoutMethod,
           receive_amount: normalized.receive_amount,
           implied_fx_rate: normalized.implied_fx_rate,
@@ -786,7 +922,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
         await insertAttempt(pool, providerId, {
           corridorId,
           amountBucket,
-          payinMethod,
+          payinMethod: payinMethodForRequest,
           payoutMethod,
           success: true,
           httpStatus: fetchResult.status,
@@ -861,5 +997,5 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

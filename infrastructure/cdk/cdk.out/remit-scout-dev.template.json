@@ -1450,7 +1450,7 @@
        "Effect": "Allow",
        "Resource": [
         "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
-        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K"
        ]
       },
       {
@@ -1774,7 +1774,7 @@
        "Effect": "Allow",
        "Resource": [
         "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
-        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K"
        ]
       },
       {
@@ -1892,7 +1892,7 @@
        "Effect": "Allow",
        "Resource": [
         "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
-        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K"
        ]
       },
       {
@@ -1998,7 +1998,7 @@
        "Effect": "Allow",
        "Resource": [
         "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
-        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K"
        ]
       },
       {
@@ -2187,13 +2187,48 @@
        "Effect": "Allow",
        "Resource": [
         "arn:aws:secretsmanager:*:*:secret:remit-scout/dev/*",
-        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*"
+        "arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K"
        ]
       },
       {
        "Action": "events:PutEvents",
        "Effect": "Allow",
        "Resource": "arn:aws:events:*:*:event-bus/default"
+      },
+      {
+       "Action": [
+        "ssmmessages:CreateControlChannel",
+        "ssmmessages:CreateDataChannel",
+        "ssmmessages:OpenControlChannel",
+        "ssmmessages:OpenDataChannel",
+        "ssm:UpdateInstanceInformation"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "ssmmessages:CreateControlChannel",
+        "ssmmessages:CreateDataChannel",
+        "ssmmessages:OpenControlChannel",
+        "ssmmessages:OpenDataChannel"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "logs:DescribeLogGroups",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
       },
       {
        "Action": [
@@ -3172,6 +3207,23 @@
    "Properties": {
     "MessageRetentionPeriod": 1209600,
     "QueueName": "remit-scout-dev-ingest-fanout-dlq",
+    "RedriveAllowPolicy": {
+     "redrivePermission": "byQueue",
+     "sourceQueueArns": [
+      {
+       "Fn::Join": [
+        "",
+        [
+         "arn:",
+         {
+          "Ref": "AWS::Partition"
+         },
+         ":sqs:us-east-1:716156543157:remit-scout-dev-ingest-fanout"
+        ]
+       ]
+      }
+     ]
+    },
     "Tags": [
      {
       "Key": "environment",
@@ -3415,8 +3467,32 @@
         "Value": "0"
        },
        {
+        "Name": "LOG_LEVEL",
+        "Value": "info"
+       },
+       {
         "Name": "QUOTE_REFRESH_DB_FALLBACK",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_RPM",
+        "Value": "30"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM",
+        "Value": "30"
        },
        {
         "Name": "PLANE_B_DB_HOST",
@@ -3495,7 +3571,7 @@
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
-        "Value": "off"
+        "Value": "queue"
        },
        {
         "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
@@ -3518,6 +3594,26 @@
        {
         "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_TARGET_MINUTES",
+        "Value": "360"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_MODE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_MAX_QUEUE_DEPTH",
+        "Value": "5000"
+       },
+       {
+        "Name": "PLANE_B_INGEST_LOOP",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_INGEST_LOOP_INTERVAL_SECONDS",
+        "Value": "60"
        }
       ],
       "Essential": true,
@@ -3566,7 +3662,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":cw-off-20260117213034"
+         ":b2b-concurrency-20260122-171707"
         ]
        ]
       },
@@ -3720,8 +3816,32 @@
         "Value": "0"
        },
        {
+        "Name": "LOG_LEVEL",
+        "Value": "info"
+       },
+       {
         "Name": "QUOTE_REFRESH_DB_FALLBACK",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_RPM",
+        "Value": "30"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM",
+        "Value": "30"
        },
        {
         "Name": "PLANE_B_DB_HOST",
@@ -3800,7 +3920,7 @@
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
-        "Value": "off"
+        "Value": "queue"
        },
        {
         "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
@@ -3823,6 +3943,18 @@
        {
         "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_TARGET_MINUTES",
+        "Value": "360"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_MODE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_MAX_QUEUE_DEPTH",
+        "Value": "5000"
        },
        {
         "Name": "B2C_REFRESH_LIMIT",
@@ -3883,7 +4015,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":cw-off-20260117213034"
+         ":b2b-concurrency-20260122-171707"
         ]
        ]
       },
@@ -4143,8 +4275,32 @@
         "Value": "0"
        },
        {
+        "Name": "LOG_LEVEL",
+        "Value": "info"
+       },
+       {
         "Name": "QUOTE_REFRESH_DB_FALLBACK",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_RPM",
+        "Value": "30"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM",
+        "Value": "30"
        },
        {
         "Name": "PLANE_B_DB_HOST",
@@ -4223,7 +4379,7 @@
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
-        "Value": "off"
+        "Value": "queue"
        },
        {
         "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
@@ -4246,6 +4402,30 @@
        {
         "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_TARGET_MINUTES",
+        "Value": "360"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_MODE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_MAX_QUEUE_DEPTH",
+        "Value": "5000"
+       },
+       {
+        "Name": "INGEST_FANOUT_BATCH_SIZE",
+        "Value": "20"
+       },
+       {
+        "Name": "INGEST_FANOUT_CONCURRENCY",
+        "Value": "20"
+       },
+       {
+        "Name": "INGEST_FANOUT_PROVIDER_CONCURRENCY",
+        "Value": "4"
        }
       ],
       "Essential": true,
@@ -4294,7 +4474,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":cw-off-20260117213034"
+         ":b2b-concurrency-20260122-171707"
         ]
        ]
       },
@@ -4448,8 +4628,32 @@
         "Value": "0"
        },
        {
+        "Name": "LOG_LEVEL",
+        "Value": "info"
+       },
+       {
         "Name": "QUOTE_REFRESH_DB_FALLBACK",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_RPM",
+        "Value": "30"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM",
+        "Value": "30"
        },
        {
         "Name": "PLANE_B_DB_HOST",
@@ -4528,7 +4732,7 @@
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
-        "Value": "off"
+        "Value": "queue"
        },
        {
         "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
@@ -4551,6 +4755,18 @@
        {
         "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_TARGET_MINUTES",
+        "Value": "360"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_MODE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_MAX_QUEUE_DEPTH",
+        "Value": "5000"
        }
       ],
       "Essential": true,
@@ -4599,7 +4815,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":cw-off-20260117213034"
+         ":b2b-concurrency-20260122-171707"
         ]
        ]
       },
@@ -4753,8 +4969,32 @@
         "Value": "0"
        },
        {
+        "Name": "LOG_LEVEL",
+        "Value": "info"
+       },
+       {
         "Name": "QUOTE_REFRESH_DB_FALLBACK",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER",
+        "Value": "5"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_RPM",
+        "Value": "30"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM",
+        "Value": "30"
        },
        {
         "Name": "PLANE_B_DB_HOST",
@@ -4833,7 +5073,7 @@
        },
        {
         "Name": "PLANE_B_INGEST_FANOUT_QUEUE_MODE",
-        "Value": "off"
+        "Value": "queue"
        },
        {
         "Name": "PLANE_B_NOTIFICATIONS_QUEUE_MODE",
@@ -4856,6 +5096,18 @@
        {
         "Name": "PLANE_B_B2C_QUEUE_IN_SWEEP",
         "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_TARGET_MINUTES",
+        "Value": "360"
+       },
+       {
+        "Name": "PLANE_B_B2B_OBSERVATION_MODE",
+        "Value": "1"
+       },
+       {
+        "Name": "PLANE_B_B2B_MAX_QUEUE_DEPTH",
+        "Value": "5000"
        }
       ],
       "Essential": true,
@@ -4904,7 +5156,7 @@
          {
           "Ref": "BackendRepository9B711290"
          },
-         ":cw-off-20260117213034"
+         ":b2b-concurrency-20260122-171707"
         ]
        ]
       },
@@ -5012,7 +5264,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "9c300d0af6f2abbd3913009610635534a3613a0797d03c100f6377d77a70dffd.zip"
+     "S3Key": "09451b224ebd569233ca86801a02e2a3363fe6166d9e78e8f59c1d7945ad835e.zip"
     },
     "Environment": {
      "Variables": {
@@ -5108,7 +5360,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/PlaneCApiFunction/Resource",
-    "aws:asset:path": "asset.9c300d0af6f2abbd3913009610635534a3613a0797d03c100f6377d77a70dffd",
+    "aws:asset:path": "asset.09451b224ebd569233ca86801a02e2a3363fe6166d9e78e8f59c1d7945ad835e",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -5405,7 +5657,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "b23016faa9197ccc118aede409335797193a47f15145f24e136769ad974a7c66.zip"
+     "S3Key": "9308cfb8fd7917bbbb3d123f33f9716a844995ea580e26a7be36b8d74bac5954.zip"
     },
     "Environment": {
      "Variables": {
@@ -5526,7 +5778,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/PlaneAApiFunction/Resource",
-    "aws:asset:path": "asset.b23016faa9197ccc118aede409335797193a47f15145f24e136769ad974a7c66",
+    "aws:asset:path": "asset.9308cfb8fd7917bbbb3d123f33f9716a844995ea580e26a7be36b8d74bac5954",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -6618,6 +6870,7 @@
     },
     "DesiredCount": 1,
     "EnableECSManagedTags": false,
+    "EnableExecuteCommand": true,
     "LaunchType": "FARGATE",
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
@@ -6667,6 +6920,11 @@
    "Properties": {
     "CapacityProviderStrategy": [
      {
+      "Base": 1,
+      "CapacityProvider": "FARGATE",
+      "Weight": 1
+     },
+     {
       "CapacityProvider": "FARGATE_SPOT",
       "Weight": 1
      }
@@ -6685,6 +6943,7 @@
     },
     "DesiredCount": 0,
     "EnableECSManagedTags": false,
+    "EnableExecuteCommand": true,
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
       "AssignPublicIp": "DISABLED",
@@ -6733,6 +6992,11 @@
    "Properties": {
     "CapacityProviderStrategy": [
      {
+      "Base": 1,
+      "CapacityProvider": "FARGATE",
+      "Weight": 1
+     },
+     {
       "CapacityProvider": "FARGATE_SPOT",
       "Weight": 1
      }
@@ -6749,8 +7013,9 @@
      "MaximumPercent": 200,
      "MinimumHealthyPercent": 50
     },
-    "DesiredCount": 0,
+    "DesiredCount": 1,
     "EnableECSManagedTags": false,
+    "EnableExecuteCommand": true,
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
       "AssignPublicIp": "DISABLED",
@@ -6794,10 +7059,137 @@
     "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerService/Service"
    }
   },
+  "IngestFanoutWorkerServiceTaskCountTargetAA141881": {
+   "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+   "Properties": {
+    "MaxCapacity": 50,
+    "MinCapacity": 1,
+    "ResourceId": {
+     "Fn::Join": [
+      "",
+      [
+       "service/",
+       {
+        "Ref": "RemitScoutCluster47990504"
+       },
+       "/",
+       {
+        "Fn::GetAtt": [
+         "IngestFanoutWorkerService58DE2198",
+         "Name"
+        ]
+       }
+      ]
+     ]
+    },
+    "RoleARN": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::716156543157:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ]
+     ]
+    },
+    "ScalableDimension": "ecs:service:DesiredCount",
+    "ServiceNamespace": "ecs"
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerService/TaskCount/Target/Resource"
+   }
+  },
+  "IngestFanoutWorkerServiceTaskCountTargetIngestFanoutQueueDepth67A7BF34": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "remitscoutdevIngestFanoutWorkerServiceTaskCountTargetIngestFanoutQueueDepth691F915F",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "IngestFanoutWorkerServiceTaskCountTargetAA141881"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "CustomizedMetricSpecification": {
+      "Dimensions": [
+       {
+        "Name": "QueueName",
+        "Value": {
+         "Fn::GetAtt": [
+          "IngestFanoutQueue4638B0A9",
+          "QueueName"
+         ]
+        }
+       }
+      ],
+      "MetricName": "ApproximateNumberOfMessagesVisible",
+      "Namespace": "AWS/SQS",
+      "Statistic": "Maximum"
+     },
+     "ScaleInCooldown": 120,
+     "ScaleOutCooldown": 60,
+     "TargetValue": 10
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerService/TaskCount/Target/IngestFanoutQueueDepth/Resource"
+   }
+  },
+  "IngestFanoutWorkerServiceTaskCountTargetIngestFanoutQueueAgeD44D5A6D": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "remitscoutdevIngestFanoutWorkerServiceTaskCountTargetIngestFanoutQueueAge2F040E00",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "IngestFanoutWorkerServiceTaskCountTargetAA141881"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "CustomizedMetricSpecification": {
+      "Dimensions": [
+       {
+        "Name": "QueueName",
+        "Value": {
+         "Fn::GetAtt": [
+          "IngestFanoutQueue4638B0A9",
+          "QueueName"
+         ]
+        }
+       }
+      ],
+      "MetricName": "ApproximateAgeOfOldestMessage",
+      "Namespace": "AWS/SQS",
+      "Statistic": "Maximum"
+     },
+     "ScaleInCooldown": 300,
+     "ScaleOutCooldown": 120,
+     "TargetValue": 1800
+    }
+   },
+   "DependsOn": [
+    "PlaneBEcsTaskRoleDefaultPolicy7221FD5D",
+    "PlaneBEcsTaskRoleE3D3CC2D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutWorkerService/TaskCount/Target/IngestFanoutQueueAge/Resource"
+   }
+  },
   "NotificationsQueueWorkerService2727E158": {
    "Type": "AWS::ECS::Service",
    "Properties": {
     "CapacityProviderStrategy": [
+     {
+      "Base": 1,
+      "CapacityProvider": "FARGATE",
+      "Weight": 1
+     },
      {
       "CapacityProvider": "FARGATE_SPOT",
       "Weight": 1
@@ -6817,6 +7209,7 @@
     },
     "DesiredCount": 0,
     "EnableECSManagedTags": false,
+    "EnableExecuteCommand": true,
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
       "AssignPublicIp": "DISABLED",
@@ -6877,6 +7270,7 @@
     },
     "DesiredCount": 0,
     "EnableECSManagedTags": false,
+    "EnableExecuteCommand": true,
     "LaunchType": "FARGATE",
     "NetworkConfiguration": {
      "AwsvpcConfiguration": {
@@ -7779,7 +8173,7 @@
       "Ref": "CriticalAlertsTopicF16F2E77"
      }
     ],
-    "AlarmDescription": "Gold publisher job has not completed in 15 minutes",
+    "AlarmDescription": "Gold publisher job has not completed in 4.5 hours",
     "AlarmName": "remit-scout-dev-gold-publisher-stuck",
     "ComparisonOperator": "GreaterThanThreshold",
     "EvaluationPeriods": 1,
@@ -7797,7 +8191,7 @@
       "Value": "remit-scout"
      }
     ],
-    "Threshold": 900,
+    "Threshold": 16200,
     "TreatMissingData": "breaching"
    },
    "Metadata": {
@@ -8199,6 +8593,94 @@
    },
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/OpsAlertsQueueDepthAlarm/Resource"
+   }
+  },
+  "IngestFanoutAgeAlarm5FA3A946": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CriticalAlertsTopicF16F2E77"
+     }
+    ],
+    "AlarmDescription": "Ingest fanout queue age exceeds sweep deadline",
+    "AlarmName": "remit-scout-dev-ingest-fanout-age",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "QueueName",
+      "Value": {
+       "Fn::GetAtt": [
+        "IngestFanoutQueue4638B0A9",
+        "QueueName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "ApproximateAgeOfOldestMessage",
+    "Namespace": "AWS/SQS",
+    "Period": 300,
+    "Statistic": "Maximum",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Threshold": 21600,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutAgeAlarm/Resource"
+   }
+  },
+  "IngestFanoutAgeHardMaxAlarm8FFECFB6": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CriticalAlertsTopicF16F2E77"
+     }
+    ],
+    "AlarmDescription": "Ingest fanout queue age exceeds 24h hard max",
+    "AlarmName": "remit-scout-dev-ingest-fanout-age-hard-max",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "QueueName",
+      "Value": {
+       "Fn::GetAtt": [
+        "IngestFanoutQueue4638B0A9",
+        "QueueName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "ApproximateAgeOfOldestMessage",
+    "Namespace": "AWS/SQS",
+    "Period": 300,
+    "Statistic": "Maximum",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Threshold": 86400,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/IngestFanoutAgeHardMaxAlarm/Resource"
    }
   },
   "WorkerLockFailureAlarmD25EF379": {
@@ -8994,7 +9476,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "0f884c32f701c5dae5ca74d52a83ea955207ebaee2021c58fb6d026d544dc7c5.zip"
+     "S3Key": "abba88768d3c4a1710f780b16f6fa926c31181f4ea3214f59a0cbc73eb761522.zip"
     },
     "Environment": {
      "Variables": {
@@ -9091,7 +9573,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldFxRatesJobFunction/Resource",
-    "aws:asset:path": "asset.0f884c32f701c5dae5ca74d52a83ea955207ebaee2021c58fb6d026d544dc7c5",
+    "aws:asset:path": "asset.abba88768d3c4a1710f780b16f6fa926c31181f4ea3214f59a0cbc73eb761522",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9190,7 +9672,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "94f8e9aeb64c5be58695cadd09938619db087059f402d8619a2d7c6896a8c3c9.zip"
+     "S3Key": "af0badbcc51e480e3134dada0db33e36f8842f3a10085c37b892dcbf5a563d9e.zip"
     },
     "Environment": {
      "Variables": {
@@ -9295,7 +9777,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/ExportWorkerFunction/Resource",
-    "aws:asset:path": "asset.94f8e9aeb64c5be58695cadd09938619db087059f402d8619a2d7c6896a8c3c9",
+    "aws:asset:path": "asset.af0badbcc51e480e3134dada0db33e36f8842f3a10085c37b892dcbf5a563d9e",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9394,7 +9876,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "1e80b3549cf56aab45ade9d6d2ba6c147295930681e78ff478e23217f4a0b2f4.zip"
+     "S3Key": "c92a2bfa54ba01a4f7d5a6231d0d94618365c8c7ee80d5dd2655aa41bd039749.zip"
     },
     "Environment": {
      "Variables": {
@@ -9461,7 +9943,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationSchedulerFunction/Resource",
-    "aws:asset:path": "asset.1e80b3549cf56aab45ade9d6d2ba6c147295930681e78ff478e23217f4a0b2f4",
+    "aws:asset:path": "asset.c92a2bfa54ba01a4f7d5a6231d0d94618365c8c7ee80d5dd2655aa41bd039749",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9498,68 +9980,10 @@
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationSchedulerFunction/LogRetention/Resource"
    }
   },
-  "AlertEvaluationRealtimeSchedule5B4C44BE": {
+  "AlertEvaluationWeeklySchedule17983C36": {
    "Type": "AWS::Events::Rule",
    "Properties": {
-    "Description": "Enqueues realtime alerts every 5 minutes.",
-    "ScheduleExpression": "rate(5 minutes)",
-    "State": "ENABLED",
-    "Tags": [
-     {
-      "Key": "environment",
-      "Value": "dev"
-     },
-     {
-      "Key": "project",
-      "Value": "remit-scout"
-     }
-    ],
-    "Targets": [
-     {
-      "Arn": {
-       "Fn::GetAtt": [
-        "AlertEvaluationSchedulerFunction7E617175",
-        "Arn"
-       ]
-      },
-      "Id": "Target0",
-      "Input": "{\"frequency\":\"realtime\"}",
-      "RetryPolicy": {
-       "MaximumRetryAttempts": 1
-      }
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/AlertEvaluationRealtimeSchedule/Resource"
-   }
-  },
-  "AlertEvaluationRealtimeScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219CAB73FADA": {
-   "Type": "AWS::Lambda::Permission",
-   "Properties": {
-    "Action": "lambda:InvokeFunction",
-    "FunctionName": {
-     "Fn::GetAtt": [
-      "AlertEvaluationSchedulerFunction7E617175",
-      "Arn"
-     ]
-    },
-    "Principal": "events.amazonaws.com",
-    "SourceArn": {
-     "Fn::GetAtt": [
-      "AlertEvaluationRealtimeSchedule5B4C44BE",
-      "Arn"
-     ]
-    }
-   },
-   "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/AlertEvaluationRealtimeSchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C"
-   }
-  },
-  "AlertEvaluationHourlyScheduleDF69C381": {
-   "Type": "AWS::Events::Rule",
-   "Properties": {
-    "Description": "Enqueues hourly alerts every hour.",
+    "Description": "Enqueues weekly alerts by timezone bucket every hour.",
     "ScheduleExpression": "rate(1 hour)",
     "State": "ENABLED",
     "Tags": [
@@ -9581,7 +10005,7 @@
        ]
       },
       "Id": "Target0",
-      "Input": "{\"frequency\":\"hourly\"}",
+      "Input": "{\"frequency\":\"weekly\"}",
       "RetryPolicy": {
        "MaximumRetryAttempts": 1
       }
@@ -9589,10 +10013,10 @@
     ]
    },
    "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/AlertEvaluationHourlySchedule/Resource"
+    "aws:cdk:path": "remit-scout-dev/AlertEvaluationWeeklySchedule/Resource"
    }
   },
-  "AlertEvaluationHourlyScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C9C598FE9": {
+  "AlertEvaluationWeeklyScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219CF862B238": {
    "Type": "AWS::Lambda::Permission",
    "Properties": {
     "Action": "lambda:InvokeFunction",
@@ -9605,13 +10029,13 @@
     "Principal": "events.amazonaws.com",
     "SourceArn": {
      "Fn::GetAtt": [
-      "AlertEvaluationHourlyScheduleDF69C381",
+      "AlertEvaluationWeeklySchedule17983C36",
       "Arn"
      ]
     }
    },
    "Metadata": {
-    "aws:cdk:path": "remit-scout-dev/AlertEvaluationHourlySchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C"
+    "aws:cdk:path": "remit-scout-dev/AlertEvaluationWeeklySchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C"
    }
   },
   "AlertEvaluationDailySchedule845E33A8": {
@@ -9677,7 +10101,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "2fec413806826eb7493731933e389c4735177ef46cc0a2e8d7f3bf85b8d62b82.zip"
+     "S3Key": "ea6d404a6e79b1eef3444a6297102bd403b78a0679e638c7c71221dcbb924a13.zip"
     },
     "Environment": {
      "Variables": {
@@ -9757,7 +10181,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AlertEvaluationWorkerFunction/Resource",
-    "aws:asset:path": "asset.2fec413806826eb7493731933e389c4735177ef46cc0a2e8d7f3bf85b8d62b82",
+    "aws:asset:path": "asset.ea6d404a6e79b1eef3444a6297102bd403b78a0679e638c7c71221dcbb924a13",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -9856,7 +10280,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "71b837a277afa715fd77a4c961d90d1ec5ea71030b3babd5e5868192d148097f.zip"
+     "S3Key": "06a84167d1903ee1dc9749b38316c2aa53c303cd5ad4da1a3f79f563e97bd7ac.zip"
     },
     "Environment": {
      "Variables": {
@@ -9932,7 +10356,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/TelemetryAnalyticsJobFunction/Resource",
-    "aws:asset:path": "asset.71b837a277afa715fd77a4c961d90d1ec5ea71030b3babd5e5868192d148097f",
+    "aws:asset:path": "asset.06a84167d1903ee1dc9749b38316c2aa53c303cd5ad4da1a3f79f563e97bd7ac",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10031,7 +10455,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "24fb770152ba850fa56da804e73ae48955800c95bd3d5d21226ca0c240f354a3.zip"
+     "S3Key": "c06f233be77d9da13ce46934836d8bc226a92e416dea3eb41ecd90a7b3bf110a.zip"
     },
     "Environment": {
      "Variables": {
@@ -10107,7 +10531,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/SessionCleanupFunction/Resource",
-    "aws:asset:path": "asset.24fb770152ba850fa56da804e73ae48955800c95bd3d5d21226ca0c240f354a3",
+    "aws:asset:path": "asset.c06f233be77d9da13ce46934836d8bc226a92e416dea3eb41ecd90a7b3bf110a",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10206,7 +10630,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "078ebad360398b4a878014211d4889ceec7e94536b40970d8487c52f2c545567.zip"
+     "S3Key": "456436075c260d3468c9034dc0ad4a333d40580f7870d1694881c0cd32b73030.zip"
     },
     "Environment": {
      "Variables": {
@@ -10307,7 +10731,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/BankVsSpecialistRefreshFunction/Resource",
-    "aws:asset:path": "asset.078ebad360398b4a878014211d4889ceec7e94536b40970d8487c52f2c545567",
+    "aws:asset:path": "asset.456436075c260d3468c9034dc0ad4a333d40580f7870d1694881c0cd32b73030",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10406,7 +10830,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "5e510f8ad787b60a83a86ffb239a139ec78ed53a4a1ddb2deb91b9d1fc2f4171.zip"
+     "S3Key": "b282a3faf01aff8b195fba3f777d16c7f247794ea321feedecd1c636301b035d.zip"
     },
     "Environment": {
      "Variables": {
@@ -10486,7 +10910,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/AuditLogCleanupFunction/Resource",
-    "aws:asset:path": "asset.5e510f8ad787b60a83a86ffb239a139ec78ed53a4a1ddb2deb91b9d1fc2f4171",
+    "aws:asset:path": "asset.b282a3faf01aff8b195fba3f777d16c7f247794ea321feedecd1c636301b035d",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10585,7 +11009,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "a834a1d24152e19410e30df5ae590645b13e083e68baf29ffd29e107bf23c186.zip"
+     "S3Key": "b07b3d7b38b5c51a02e257a5883a469e507517c036fd98bd44030e6d04c21c7e.zip"
     },
     "Environment": {
      "Variables": {
@@ -10683,7 +11107,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/OandaSyncJobFunction/Resource",
-    "aws:asset:path": "asset.a834a1d24152e19410e30df5ae590645b13e083e68baf29ffd29e107bf23c186",
+    "aws:asset:path": "asset.b07b3d7b38b5c51a02e257a5883a469e507517c036fd98bd44030e6d04c21c7e",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10782,7 +11206,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "49b8f612f4c1ca3b9ce5b69f14b9651f0000fa48f5df9e7f0458b3b33f1337c5.zip"
+     "S3Key": "e87025d80b0202669c3e4e5127c8d36ade7c15f552e4899834341c2a4101fcaf.zip"
     },
     "Environment": {
      "Variables": {
@@ -10880,7 +11304,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPopularCorridorsJobFunction/Resource",
-    "aws:asset:path": "asset.49b8f612f4c1ca3b9ce5b69f14b9651f0000fa48f5df9e7f0458b3b33f1337c5",
+    "aws:asset:path": "asset.e87025d80b0202669c3e4e5127c8d36ade7c15f552e4899834341c2a4101fcaf",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -10979,7 +11403,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "bb065e840f5c6be3054000d1b9d52f119e0bd43c49684c1ff7c76a71ccb83791.zip"
+     "S3Key": "9240c348d75b516936db5675f9b53f126f6d6c834d507c79ad540957a510666f.zip"
     },
     "Environment": {
      "Variables": {
@@ -11077,7 +11501,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPulseCacheJobFunction/Resource",
-    "aws:asset:path": "asset.bb065e840f5c6be3054000d1b9d52f119e0bd43c49684c1ff7c76a71ccb83791",
+    "aws:asset:path": "asset.9240c348d75b516936db5675f9b53f126f6d6c834d507c79ad540957a510666f",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11176,7 +11600,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "5bf54daefcdbace5a3e7b3168b5997d926dbf1d9b4aa79df44ea7a6504530284.zip"
+     "S3Key": "16d66042bbdedb07e3939cdc93ae662b07188bc8c839ef9374ea4f11a35d3e8b.zip"
     },
     "Environment": {
      "Variables": {
@@ -11274,7 +11698,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/GoldPublisherJobFunction/Resource",
-    "aws:asset:path": "asset.5bf54daefcdbace5a3e7b3168b5997d926dbf1d9b4aa79df44ea7a6504530284",
+    "aws:asset:path": "asset.16d66042bbdedb07e3939cdc93ae662b07188bc8c839ef9374ea4f11a35d3e8b",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11315,7 +11739,7 @@
    "Type": "AWS::Events::Rule",
    "Properties": {
     "Description": "Runs gold-publisher on a schedule.",
-    "ScheduleExpression": "rate(30 minutes)",
+    "ScheduleExpression": "rate(4 hours)",
     "State": "ENABLED",
     "Tags": [
      {
@@ -11368,12 +11792,209 @@
     "aws:cdk:path": "remit-scout-dev/GoldPublisherJobSchedule/AllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8F"
    }
   },
+  "GoldIndicesJobFunction077F472E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
+     "S3Key": "ba5bc827dc96a746cc7a24c78e837b058df41dcb3214aa6127ae92ff60b66bc1.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "JOB_NAME": "gold-indices",
+      "ENVIRONMENT": "dev",
+      "NODE_ENV": "production",
+      "PGSSLMODE": "require",
+      "DB_DISABLE_STATEMENT_TIMEOUT": "1",
+      "TRACING_EXPORTER": "none",
+      "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318/v1/traces",
+      "CLOUDWATCH_METRICS_ENABLED": "0",
+      "CLOUDWATCH_NAMESPACE": "RemitScout",
+      "CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS": "15000",
+      "CLOUDWATCH_HIGH_CARDINALITY_METRICS": "0",
+      "PLANE_C_DB_HOST": {
+       "Fn::GetAtt": [
+        "RemitScoutDbProxy00B4B69D",
+        "Endpoint"
+       ]
+      },
+      "PLANE_C_DB_PORT": "5432",
+      "PLANE_C_DB_NAME": "remit_scout",
+      "PLANE_C_DB_SECRET_ARN": {
+       "Ref": "AuroraMasterSecret66504F3D"
+      },
+      "REDIS_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "rediss://",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Address"
+          ]
+         },
+         ":",
+         {
+          "Fn::GetAtt": [
+           "RedisReplicationGroup",
+           "PrimaryEndPoint.Port"
+          ]
+         }
+        ]
+       ]
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PlaneCLambdaRoleE46EF278",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Timeout": 300,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "PlaneCSecurityGroup8E635584",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "RemitScoutVpcprivateSubnet1Subnet12105B45"
+      },
+      {
+       "Ref": "RemitScoutVpcprivateSubnet2SubnetA7F4D8D0"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "PlaneCLambdaRoleDefaultPolicy7F08ADF6",
+    "PlaneCLambdaRoleE46EF278",
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldIndicesJobFunction/Resource",
+    "aws:asset:path": "asset.ba5bc827dc96a746cc7a24c78e837b058df41dcb3214aa6127ae92ff60b66bc1",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "GoldIndicesJobFunctionLogRetentionFD400D16": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "GoldIndicesJobFunction077F472E"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3
+   },
+   "DependsOn": [
+    "RemitScoutVpcprivateSubnet1DefaultRoute165BC06C",
+    "RemitScoutVpcprivateSubnet1RouteTableAssociationFED61E61",
+    "RemitScoutVpcprivateSubnet2DefaultRouteA40203CE",
+    "RemitScoutVpcprivateSubnet2RouteTableAssociation9EBB5607"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldIndicesJobFunction/LogRetention/Resource"
+   }
+  },
+  "GoldIndicesJobScheduleC27E6971": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Runs gold-indices on a schedule.",
+    "ScheduleExpression": "rate(4 hours)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "project",
+      "Value": "remit-scout"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "GoldIndicesJobFunction077F472E",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 1
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldIndicesJobSchedule/Resource"
+   }
+  },
+  "GoldIndicesJobScheduleAllowEventRuleremitscoutdevGoldIndicesJobFunctionDD5353100E374A78": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GoldIndicesJobFunction077F472E",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "GoldIndicesJobScheduleC27E6971",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "remit-scout-dev/GoldIndicesJobSchedule/AllowEventRuleremitscoutdevGoldIndicesJobFunctionDD535310"
+   }
+  },
   "B2cRetryFailedJobFunction5D0A7238": {
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "658828160213b27532a6c82d78330c21598acb3584bfb9a3822d408acccc35c8.zip"
+     "S3Key": "00876e814ab0219d0d8c2efc66d110455a98ad40663e8da23d56b0451545f144.zip"
     },
     "Environment": {
      "Variables": {
@@ -11471,7 +12092,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/B2cRetryFailedJobFunction/Resource",
-    "aws:asset:path": "asset.658828160213b27532a6c82d78330c21598acb3584bfb9a3822d408acccc35c8",
+    "aws:asset:path": "asset.00876e814ab0219d0d8c2efc66d110455a98ad40663e8da23d56b0451545f144",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11570,7 +12191,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "6f0a6b2e35fe74b894e9595998c410c1f4b704887343c2440568ecce2f620181.zip"
+     "S3Key": "4f9ec28b0f666f29056cbe8799d24564cc6443df4e54311441960af41e20e755.zip"
     },
     "Environment": {
      "Variables": {
@@ -11668,7 +12289,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/B2cQueueCleanupJobFunction/Resource",
-    "aws:asset:path": "asset.6f0a6b2e35fe74b894e9595998c410c1f4b704887343c2440568ecce2f620181",
+    "aws:asset:path": "asset.4f9ec28b0f666f29056cbe8799d24564cc6443df4e54311441960af41e20e755",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11767,7 +12388,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "570cc5bf5965a65ed07fa41bc0d6d359fdae16068e003238eb716c7832618c72.zip"
+     "S3Key": "ae502682ce31bc22a0c99aa611a7e902761ed26f810e95eea173a025bd314c4d.zip"
     },
     "Environment": {
      "Variables": {
@@ -11865,7 +12486,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/StoplistAutoResumeJobFunction/Resource",
-    "aws:asset:path": "asset.570cc5bf5965a65ed07fa41bc0d6d359fdae16068e003238eb716c7832618c72",
+    "aws:asset:path": "asset.ae502682ce31bc22a0c99aa611a7e902761ed26f810e95eea173a025bd314c4d",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -11964,7 +12585,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "7add31b877a6320531504001b582e1b2298b897fad4b45cb5a14d7bb0716b96a.zip"
+     "S3Key": "70a1083f745045976cbdcf1afce1254be6396c78e1aaf8b5cf217ae272297d8c.zip"
     },
     "Environment": {
      "Variables": {
@@ -12062,7 +12683,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RightsMatrixSyncCountriesJobFunction/Resource",
-    "aws:asset:path": "asset.7add31b877a6320531504001b582e1b2298b897fad4b45cb5a14d7bb0716b96a",
+    "aws:asset:path": "asset.70a1083f745045976cbdcf1afce1254be6396c78e1aaf8b5cf217ae272297d8c",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12229,7 +12850,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "8aeeba23d35f6565b79e556ed6c6264cbca539167a804e97aea961314d970162.zip"
+     "S3Key": "c73b9228203137808146d494453000a2de47847cc50aef46f4aedd081e0c6e82.zip"
     },
     "Environment": {
      "Variables": {
@@ -12327,7 +12948,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RemitlyProbeFunction/Resource",
-    "aws:asset:path": "asset.8aeeba23d35f6565b79e556ed6c6264cbca539167a804e97aea961314d970162",
+    "aws:asset:path": "asset.c73b9228203137808146d494453000a2de47847cc50aef46f4aedd081e0c6e82",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12426,7 +13047,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "593e1f04fb23df1ddde85938c96b51866da3f6097e3a5efbc581171a720b8bc4.zip"
+     "S3Key": "790db06fd82c39895274347a9f69495854660fc2dc61c1c3b1e4050c60e71ea7.zip"
     },
     "Environment": {
      "Variables": {
@@ -12524,7 +13145,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WesternUnionProbeFunction/Resource",
-    "aws:asset:path": "asset.593e1f04fb23df1ddde85938c96b51866da3f6097e3a5efbc581171a720b8bc4",
+    "aws:asset:path": "asset.790db06fd82c39895274347a9f69495854660fc2dc61c1c3b1e4050c60e71ea7",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12623,7 +13244,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "b540c25ca47214dfef9c85a6e1b39fe24c51b542480b3a492a3f2e2914cdbc3a.zip"
+     "S3Key": "c0c0a5dbd159442409ed3c5368edcf57d7d2ddd56d192e1ecf9f51e0dddfd6f0.zip"
     },
     "Environment": {
      "Variables": {
@@ -12721,7 +13342,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WiseProbeFunction/Resource",
-    "aws:asset:path": "asset.b540c25ca47214dfef9c85a6e1b39fe24c51b542480b3a492a3f2e2914cdbc3a",
+    "aws:asset:path": "asset.c0c0a5dbd159442409ed3c5368edcf57d7d2ddd56d192e1ecf9f51e0dddfd6f0",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -12820,7 +13441,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "af0f2b3a69a1354c066a2771bc44504f768e6afd3933e6fcc4df83300830150a.zip"
+     "S3Key": "dda16b7678d380020caf29220e085817af70d4eb0b493d02ebb6ec0cf10f7663.zip"
     },
     "Environment": {
      "Variables": {
@@ -12918,7 +13539,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WorldRemitProbeFunction/Resource",
-    "aws:asset:path": "asset.af0f2b3a69a1354c066a2771bc44504f768e6afd3933e6fcc4df83300830150a",
+    "aws:asset:path": "asset.dda16b7678d380020caf29220e085817af70d4eb0b493d02ebb6ec0cf10f7663",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -13017,7 +13638,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "69ff4c9e465d8d5af6553b5914d11d13dced0407af21dd59718117c6755033a0.zip"
+     "S3Key": "8737e7ff6bdd063827fbf125ed7215eb4200431f76a14b14c0397211440bf283.zip"
     },
     "Environment": {
      "Variables": {
@@ -13115,7 +13736,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/RiaProbeFunction/Resource",
-    "aws:asset:path": "asset.69ff4c9e465d8d5af6553b5914d11d13dced0407af21dd59718117c6755033a0",
+    "aws:asset:path": "asset.8737e7ff6bdd063827fbf125ed7215eb4200431f76a14b14c0397211440bf283",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -13214,7 +13835,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "c5e3178ea6c5e20445b6eb85ae112d8b822a57c62a0103dec3fce6d41762ebd1.zip"
+     "S3Key": "c48cf5997c36056307fb8235bf39e698d0f87a4a07e7e2139210b932a6453e94.zip"
     },
     "Environment": {
      "Variables": {
@@ -13312,7 +13933,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/DahabshiilProbeFunction/Resource",
-    "aws:asset:path": "asset.c5e3178ea6c5e20445b6eb85ae112d8b822a57c62a0103dec3fce6d41762ebd1",
+    "aws:asset:path": "asset.c48cf5997c36056307fb8235bf39e698d0f87a4a07e7e2139210b932a6453e94",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -13411,7 +14032,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "55fe57e1ebb973a58fcb4832e2faea710482cf8b7f0ce68f2c95a843c4422041.zip"
+     "S3Key": "7b118be54dfcea48012efe5e3ad1055eafdedf71a22b428ccc9ec28ca0703471.zip"
     },
     "Environment": {
      "Variables": {
@@ -13509,7 +14130,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/SendwaveProbeFunction/Resource",
-    "aws:asset:path": "asset.55fe57e1ebb973a58fcb4832e2faea710482cf8b7f0ce68f2c95a843c4422041",
+    "aws:asset:path": "asset.7b118be54dfcea48012efe5e3ad1055eafdedf71a22b428ccc9ec28ca0703471",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -13608,7 +14229,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "4218d25e6145a71b6c07c207ed6b05573f72ba3d96650a9f93bec8a104e43b3a.zip"
+     "S3Key": "82514b6622c12b2e25473c8d9c906fb16cd9643de1c45aa8185299730fe0b850.zip"
     },
     "Environment": {
      "Variables": {
@@ -13706,7 +14327,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/MukuruProbeFunction/Resource",
-    "aws:asset:path": "asset.4218d25e6145a71b6c07c207ed6b05573f72ba3d96650a9f93bec8a104e43b3a",
+    "aws:asset:path": "asset.82514b6622c12b2e25473c8d9c906fb16cd9643de1c45aa8185299730fe0b850",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -13805,7 +14426,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "51d9a99ac1326d6032a69e6ddd5f9439cb661e9238576d3dc11ee89f5dd61cc8.zip"
+     "S3Key": "0e8136d9afa914bae42fa7a1d5ba497111f0ee0b922b0ccca49939cb8dc6ec79.zip"
     },
     "Environment": {
      "Variables": {
@@ -13903,7 +14524,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/XeProbeFunction/Resource",
-    "aws:asset:path": "asset.51d9a99ac1326d6032a69e6ddd5f9439cb661e9238576d3dc11ee89f5dd61cc8",
+    "aws:asset:path": "asset.0e8136d9afa914bae42fa7a1d5ba497111f0ee0b922b0ccca49939cb8dc6ec79",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -14002,7 +14623,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "15595169bb62ad10d239c5b8a8d94a06dc793ed5cfbec091008390ea2822f59f.zip"
+     "S3Key": "816202622e9949cf09bfeb526fea46fe3237753ab07c1b99303e264b1d07b14f.zip"
     },
     "Environment": {
      "Variables": {
@@ -14100,7 +14721,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/WireBarleyProbeFunction/Resource",
-    "aws:asset:path": "asset.15595169bb62ad10d239c5b8a8d94a06dc793ed5cfbec091008390ea2822f59f",
+    "aws:asset:path": "asset.816202622e9949cf09bfeb526fea46fe3237753ab07c1b99303e264b1d07b14f",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -14199,7 +14820,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-716156543157-us-east-1",
-     "S3Key": "9d3885248c4146321de047e4deefc97798cef1b20b2ee7ff905d9ec7788d3a55.zip"
+     "S3Key": "f75acb0f06ebf7d6b8f2ec70cbc7ecc0a93e71fde2986f632eccb459d9456df5.zip"
     },
     "Environment": {
      "Variables": {
@@ -14297,7 +14918,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/IntermexProbeFunction/Resource",
-    "aws:asset:path": "asset.9d3885248c4146321de047e4deefc97798cef1b20b2ee7ff905d9ec7788d3a55",
+    "aws:asset:path": "asset.f75acb0f06ebf7d6b8f2ec70cbc7ecc0a93e71fde2986f632eccb459d9456df5",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -14394,7 +15015,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31UwW7bMAz9lt1VbU2+IE27LsDQeUnRa0HLrKvGljxRSlcY/vdRkmMbKbCL+Ug9S3wkpZVcrdfy2xd4pytVHa8aXcr+4EEdBYeee1Qr2T91SmxfzFOxFUUoG60OoTToY2xGexs8PkLZ4ByfYxsiqzR4bc1EjuBuV0TzAP4ePL7DhyicPjGcN94Zj47xmZAzGb2N51xfWzRejBFO9s5UndXGj9TJTTu9gMIl54AqOO0/7p0NXUr9v4GdqR0SDUJDK/u9zXKTLSyXJuWX0SBQOeZgZ0l769LS7A2CeB09tWCgRmYekj8eGVE2j+Bq9AulE+FyZRCuItnfgocSCLdNIFYsci0nPbc3nwJnZnJ2hjwYheK8T+Hs34+8dglzBmknltsAea04GZT9NATTMSydy5JmYPyB1rK/CeqYRY8omxs+lwl/WM7vgCFVOYFYVQ4uMv4Mt9CB4o5xiiddoVtMH4nvnDLEsaTjLb5oo89DeRmxxoM26Bax8d8DupNWedAzHERja07rp60nvRNmsEfP/eEtmAhtWcGzsRW+kXxI5nswKh1A62cg4qGQm2hGcqrmxIkDhq7VRGk/6HSdR//Ed/WH992m05EUTXTzZYsoXoDaTbfwwp15/ADUWV0E3AbD0h5tp9M7kEH6ziO/cAdR8vsROu5tsk8QmtzghZtx0YCZV5KX4QEbnNRehAahGhuqd/DqNQ47vZYWXJWmcnI2Dbg2VSECHpoT159V7MN4Y9kOg9gj2eC4lancUa42dR7WcYHxr+C7wJcrtky+0dfTai2vr/nVfCOtr1zgxrYo99n+Awv8HBVSBQAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31U227bMAz9lr2r2pp8QZp2XYCh8+KgrwUts64aW/J0SVcY/vdRkiO7KbAX85CiKV4OteKr9Zp/+wJv9krUx6tWVnwoHYgjI9PTgGLFh8desO2zeiy2rPBVK0XpK4Uu2Ga0197hAaoWZ/ts21irhQQntcrOAdztiiAewN2Dwzd4Z4WRJ4Jz4J1yaAifHVImk7ZxlOtLh8qxyULJ3qm611K5yTWrMdIzCFz6lCi8ke793mjfx9T/a9ipxqC1I5PQ8WGvU7lRFppaE/NLaGQoDPlgr6102sSjWRuZpXN0tgMFDZJnGfXpyoCSOIBp0C0qzQ6XJyMzteXDLTiowOK29ZYqZqmXuZ7bm0+Gs2dUdso6UALZOU5h9N/3dHYJUwYxEpXbgnVSUDLIh0yCfA2VTm2JHJh+sGs+3HhxTEVPKIkbupcc/lA5vz362OUIQlfJuMj4M9xCD4ImRimeZI1mwT7LvlPKEGhpj7f4LJU8k/LSopUDqdAsbNO/JZqTFInoEywFtIHoIchW+zCLVjeU6E/d5A5kTGCPjiZGQckRuqqGJ6VrfLX8IYrvXol4pV0/gbVEE74JYnKO/c0+gXJoOmltjAe9bNIynGh7fzjXb3oZnIIIalq/gMJKNCbv5YU6+9GT0KR6A6DBKCrtoHsZX4YE4ndegoU6sopeFN/TtKN8BN+mkS/UhIsW1HwStQRLbDFXe2EKJWdugXfa0jSkamil8lgCT2MBHy1JHAwFpB/K9N9cxAfDyESrff0GTryELbMvlQZTx3XIyqYF08VmB0BsPdGYqVl7Pz0VJMeR7dFqb4g4caqhq3RN2pLpgPAv73pPTArM4K/262m15tfX9Fy/WimvDLFMdsj3Sf4D4YuMW8sFAAA="
    },
    "Metadata": {
     "aws:cdk:path": "remit-scout-dev/CDKMetadata/Default"

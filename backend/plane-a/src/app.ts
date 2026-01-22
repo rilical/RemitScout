@@ -41,6 +41,7 @@ import { newsletterRoutes } from './routes/newsletter'
 import { recentSearchRoutes } from './routes/recent-searches'
 import { telemetryRoutes } from './routes/telemetry'
 import { historyRoutes } from './routes/history'
+import { indicesRoutes } from './routes/indices'
 import { exportsRoutes } from './routes/exports'
 import { dataExportRoutes } from './routes/data-export'
 import { bankVsSpecialistRoutes } from './routes/bank-vs-specialist'
@@ -329,6 +330,7 @@ export const buildApp = async () => {
   app.register(recentSearchRoutes, { prefix: '/api/v1' })
   app.register(telemetryRoutes, { prefix: '/api/v1' })
   app.register(historyRoutes, { prefix: '/api/v1' })
+  app.register(indicesRoutes, { prefix: '/api/v1' })
   app.register(exportsRoutes, { prefix: '/api/v1' })
   app.register(dataExportRoutes, { prefix: '/api/v1' })
   app.register(sessionsRoutes, { prefix: '/api/v1' })
@@ -362,6 +364,7 @@ export const buildApp = async () => {
   app.register(recentSearchRoutes, { prefix: '/api' })
   app.register(telemetryRoutes, { prefix: '/api' })
   app.register(historyRoutes, { prefix: '/api' })
+  app.register(indicesRoutes, { prefix: '/api' })
   app.register(exportsRoutes, { prefix: '/api' })
   app.register(dataExportRoutes, { prefix: '/api' })
   app.register(sessionsRoutes, { prefix: '/api' })

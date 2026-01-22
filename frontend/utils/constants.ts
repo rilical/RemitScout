@@ -256,5 +256,4 @@ export const BANK_VS_SPECIALIST_DATA = {
 export const FEATURE_FLAGS = {
   PULSE_ENABLED: false,
   ENTERPRISE_ENABLED: false,
-  DEV_AUTO_LOGIN: false,
 } as const

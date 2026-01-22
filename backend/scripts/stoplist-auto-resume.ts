@@ -92,7 +92,7 @@ export const runStoplistAutoResume = async (): Promise<void> => {
       }
 
       const batch = pausedProviders.slice(i, i + batchSize)
-      const results = await Promise.allSettled(
+      await Promise.allSettled(
         batch.map(async (status) => {
           try {
             const shouldResume = await stoplistService.shouldAutoResume(status.provider_id)
@@ -177,4 +177,3 @@ if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
       process.exit(1)
     })
 }
-

@@ -9,8 +9,6 @@ import { getUserAgentForCorridor } from '../../collectors/user-agent'
 const PAYSEND_BASE_URL = 'https://paysend.com/api'
 
 const BOOTSTRAP_CORRIDOR_ID = 'US-MX-USD-MXN'
-const BOOTSTRAP_FROM_COUNTRY = 'US'
-const BOOTSTRAP_TO_COUNTRY = 'MX'
 const BOOTSTRAP_FROM_CURRENCY_ID = '840'
 const BOOTSTRAP_TO_CURRENCY_ID = '484'
 const BOOTSTRAP_FROM_SLUG = 'the-united-states-of-america'

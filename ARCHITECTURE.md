@@ -39,6 +39,8 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 ## Sweep mechanics (B2B vs B2C)
 - **B2C sweeps**: user-initiated refresh requests enqueue SQS; Plane B refresh workers fetch quotes, write Silver, update refresh status, and warm caches.
 - **B2B sweeps**: scheduled ingestion (EventBridge -> ECS ingest) runs provider collectors, writes Bronze/Silver, and triggers Gold aggregation on cadence.
+- **Tier snapshots**: when `PLANE_B_B2B_TIER_VERSION` is set, B2B sweeps read tiers from `silver.corridor_tier_snapshot` for that version (no live rewrites).
+- **Tier versions (v0)**: when the version matches a hard-coded list in `backend/plane-b/src/services/corridor-tier-lists.ts`, the list is authoritative (only listed corridors are scheduled). Versions are immutable to preserve backtesting.
 - **Storage**: Bronze raw payloads -> Silver normalized quotes -> Gold aggregates (FX history, pulse, popular corridors).
 
 ## Readiness gates
@@ -47,9 +49,10 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 - Tier changes only apply to future periods (monthly/quarterly snapshots).
 
 ## Cadence tiers (labels vs reality)
-- **Tier-1 label** = Tier-2 cadence (3 hours), true 1–2 min is future.
-- **Tier-2 label** = Tier-3 cadence (daily).
-- **Tier-3 label** = daily aggregates only.
+- **Tier-1 label** = disabled for now (reserved for curated hot corridors); cadence when enabled: every 2 minutes.
+- **Tier-2 label** = corridors with >= 3 active B2B-eligible providers; cadence: every 6 hours.
+- **Tier-3 label** = corridors with < 3 active B2B-eligible providers; cadence: every 24 hours.
+- **Observation mode** = when `PLANE_B_B2B_OBSERVATION_MODE=1`, all corridors are queued via tier-2 and cadence is driven by `PLANE_B_B2B_TARGET_MINUTES` (dev default 360 minutes).
 
 ## SLO targets (defaults)
 - Dev: p95 API <= 1500ms, freshness <= 60m (tier-3), DLQ = 0.
@@ -82,7 +85,7 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 - `agents/**`: agent registry + RAG files.
 
 ## Local/dev-only assets (not deployed to AWS)
-- `frontend/pages/mock-stripe/*` local billing mock flows.
+- None currently tracked.
 
 ## AWS dev snapshot (last known, us-east-1)
 - Last updated: 2026-01-17 (refresh via CloudFormation outputs)
@@ -219,7 +222,7 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 - Profile (inputs): repo interfaces, external APIs (Stripe, OANDA, Supabase).
 - Profile (outputs): business decisions, notifications, emails, entitlements.
 - Alerts + notifications: `backend/plane-a/src/services/alert-evaluator.ts`, `backend/plane-a/src/services/alert-notifications.ts`, `backend/plane-a/src/services/alert-unsubscribe.ts`, `backend/plane-a/src/services/push-delivery.ts`.
-- Billing + email: `backend/plane-a/src/services/billing-email.ts`, `backend/plane-a/src/services/stripe-client.ts`, `backend/plane-a/src/services/stripe-admin.ts`, `backend/plane-a/src/services/stripe-mock.ts`.
+- Billing + email: `backend/plane-a/src/services/billing-email.ts`, `backend/plane-a/src/services/stripe-client.ts`, `backend/plane-a/src/services/stripe-admin.ts`.
 - Accounts + entitlements: `backend/plane-a/src/services/account-deletion.ts`, `backend/plane-a/src/services/session-utils.ts`, `backend/plane-a/src/services/user-account.ts`, `backend/plane-a/src/services/user-plan.ts`, `backend/plane-a/src/services/plan-usage.ts`, `backend/plane-a/src/services/entitlements.ts`.
 - FX + provider metadata: `backend/plane-a/src/services/oanda-rate-fetcher.ts`, `backend/plane-a/src/services/oanda-code-map.ts`, `backend/plane-a/src/services/volatility-service.ts`, `backend/plane-a/src/services/provider-metadata.ts`.
 - Audit + telemetry: `backend/plane-a/src/services/audit-log.ts`, `backend/plane-a/src/services/telemetry-anonymization.ts`.
@@ -336,9 +339,9 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 - Profile (role): scheduled Gold outputs, FX sync, and compare adjunct jobs.
 - Profile (inputs): Silver datasets, FX sources, schedule triggers.
 - Profile (outputs): Gold tables, publisher outputs, refreshed rate caches.
-- Gold jobs: `backend/scripts/gold-fx-rates-job.ts`, `backend/scripts/gold-popular-corridors-job.ts`, `backend/scripts/gold-publisher-job.ts`, `backend/scripts/gold-pulse-cache-job.ts`.
-- Gold job health/metrics: `backend/scripts/gold-fx-rates-job-health.ts`, `backend/scripts/gold-fx-rates-job-metrics.ts`, `backend/scripts/gold-popular-corridors-job-health.ts`, `backend/scripts/gold-popular-corridors-job-metrics.ts`, `backend/scripts/gold-publisher-job-health.ts`, `backend/scripts/gold-publisher-job-metrics.ts`, `backend/scripts/gold-pulse-cache-job-health.ts`, `backend/scripts/gold-pulse-cache-job-metrics.ts`.
-- Gold job entrypoints: `backend/scripts/aws/gold-fx-rates-lambda.ts`, `backend/scripts/aws/gold-popular-corridors-lambda.ts`, `backend/scripts/aws/gold-publisher-lambda.ts`, `backend/scripts/aws/gold-pulse-cache-lambda.ts`.
+- Gold jobs: `backend/scripts/gold-fx-rates-job.ts`, `backend/scripts/gold-popular-corridors-job.ts`, `backend/scripts/gold-publisher-job.ts`, `backend/scripts/gold-pulse-cache-job.ts`, `backend/scripts/gold-indices-job.ts`.
+- Gold job health/metrics: `backend/scripts/gold-fx-rates-job-health.ts`, `backend/scripts/gold-fx-rates-job-metrics.ts`, `backend/scripts/gold-popular-corridors-job-health.ts`, `backend/scripts/gold-popular-corridors-job-metrics.ts`, `backend/scripts/gold-publisher-job-health.ts`, `backend/scripts/gold-publisher-job-metrics.ts`, `backend/scripts/gold-pulse-cache-job-health.ts`, `backend/scripts/gold-pulse-cache-job-metrics.ts`, `backend/scripts/gold-indices-job-health.ts`, `backend/scripts/gold-indices-job-metrics.ts`.
+- Gold job entrypoints: `backend/scripts/aws/gold-fx-rates-lambda.ts`, `backend/scripts/aws/gold-popular-corridors-lambda.ts`, `backend/scripts/aws/gold-publisher-lambda.ts`, `backend/scripts/aws/gold-pulse-cache-lambda.ts`, `backend/scripts/aws/gold-indices-job-lambda.ts`.
 - FX refresh: `backend/scripts/oanda-rates-sync.ts`, `backend/scripts/fx-rate-refresh-worker.ts`, `backend/scripts/aws/oanda-sync-lambda.ts`.
 - Compare adjacencies: `backend/scripts/bank-vs-specialist-refresh.ts`, `backend/scripts/aws/bank-vs-specialist-refresh-lambda.ts`.
 
@@ -393,7 +396,7 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 - Content/locales: `frontend/content/*`, `frontend/locales/en.json`, `frontend/locales/es.json`.
 - Public assets: `frontend/public/*`.
 - Core routes: `frontend/pages/compare/*`, `frontend/pages/send-money/*`, `frontend/pages/exchange-rates/*`, `frontend/pages/alerts.vue`, `frontend/pages/watchlist.vue`.
-- Auth/account/billing: `frontend/pages/sign-in.vue`, `frontend/pages/sign-up.vue`, `frontend/pages/forgot-password.vue`, `frontend/pages/reset-password.vue`, `frontend/pages/dashboard.vue`, `frontend/pages/plus/*`, `frontend/pages/mock-stripe/*`.
+- Auth/account/billing: `frontend/pages/sign-in.vue`, `frontend/pages/sign-up.vue`, `frontend/pages/forgot-password.vue`, `frontend/pages/reset-password.vue`, `frontend/pages/dashboard.vue`, `frontend/pages/plus/*`.
 - Admin/ops: `frontend/pages/admin/*`.
 - Pulse/embeds: `frontend/pages/pulse/*`, `frontend/pages/embed/pulse/*`.
 - Providers/learn: `frontend/pages/learn/*`, `frontend/pages/learn/providers/*`, `frontend/pages/go/*`.
@@ -530,7 +533,7 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 | Gold FX rates | `backend/scripts/oanda-rates-sync.ts`, `backend/scripts/gold-fx-rates-job.ts` | Plane A/Plane B DB + caches | OANDA sync hourly; gold-fx-rates job every 15 min (EventBridge) | Plane A rates endpoints, publisher outputs |
 | Gold popular corridors | `backend/scripts/gold-popular-corridors-job.ts` | Gold tables + cache | Hourly (EventBridge) | Plane A popular corridors |
 | Gold pulse cache | `backend/scripts/gold-pulse-cache-job.ts` | Gold cache + Pulse cache keys | Hourly (EventBridge) | Plane A `/pulse/*` |
-| Gold publisher outputs | `backend/scripts/gold-publisher-job.ts` + Plane C publisher | Plane C DB / publisher outputs | Every 30 min (EventBridge) | Plane C `/internal/publisher/validate` and downstream consumers |
+| Gold publisher outputs | `backend/scripts/gold-publisher-job.ts` + Plane C publisher | Plane C DB / publisher outputs | Every 6 hours (EventBridge) | Plane C `/internal/publisher/validate` and downstream consumers |
 
 ## Database schema inventory (from migrations)
 
@@ -642,8 +645,8 @@ Canonical flow definitions live in the Data lineage table below; treat this as a
 - Export limits: `EXPORT_JOB_MAX_ACTIVE_PER_USER` (default 2).
 - Alerts config: `ALERT_SLACK_WEBHOOK_URL`, `ALERT_UNSUBSCRIBE_SECRET`, `ALERT_UNSUBSCRIBE_BASE_URL`, `ALERT_UNSUBSCRIBE_TOKEN_TTL_HOURS`, `ALERT_EMAIL_*`, `ALERT_EVALUATION_*`, `ALERTS_WEEKLY_SEND_DOW`, `ALERTS_WEEKLY_SEND_HOUR`, `SMART_ALERTS_LOOKBACK_DAYS`, `SMART_ALERTS_MIN_PROVIDERS`, `SMART_ALERTS_MIN_SAMPLE_DAYS`, `SMART_ALERTS_MIN_CONFIDENCE`, `SMART_ALERTS_WEEKLY_SEND_HOUR`.
 - Observability: `CLOUDWATCH_METRICS_ENABLED`, `CLOUDWATCH_NAMESPACE`, `CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS`, `CLOUDWATCH_HIGH_CARDINALITY_METRICS`, `TRACING_EXPORTER`, `OTEL_EXPORTER_OTLP_ENDPOINT`.
-- Auth/Supabase: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWKS_URL`, `SUPABASE_AUTH_VERIFY_MODE`, `SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS`, plus `SUPABASE_MOCK_*` for dev.
-- Billing/Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PLUS`, `STRIPE_PRICE_ID_PLUS_ANNUAL`, `STRIPE_TRIAL_DAYS`, `STRIPE_MOCK`, `FRONTEND_BASE_URL`.
+- Auth/Supabase: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWKS_URL`, `SUPABASE_AUTH_VERIFY_MODE`, `SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS`.
+- Billing/Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PLUS`, `STRIPE_PRICE_ID_PLUS_ANNUAL`, `STRIPE_TRIAL_DAYS`, `FRONTEND_BASE_URL`.
 - Newsletter: `NEWSLETTER_EMAIL_ENABLED`, `NEWSLETTER_EMAIL_FROM`, `NEWSLETTER_EMAIL_FROM_NAME`, `NEWSLETTER_BASE_URL`, `NEWSLETTER_TOKEN_EXPIRY_HOURS`, `NEWSLETTER_WELCOME_ENABLED`, `SES_FROM_ADDRESS`.
 - Geo: `GEO_COUNTRY_HEADER` (default `cf-ipcountry`).
 
@@ -906,7 +909,7 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 - Storage config: `config.storage.bronze.bucket` + `config.storage.bronze.prefix` in `backend/shared/config.ts`.
 
 ### Gold publisher (Plane C) internals
-- Aggregates `silver.latest_quote_by_provider` into 4-hour buckets and writes `gold_export.corridor_rates`.
+- Aggregates `silver.latest_quote_by_provider` into 6-hour buckets and writes `gold_export.corridor_rates`.
 - Gate rules (`backend/plane-c/src/services/publisher-gates.ts`):
   - `contributor_count >= 3`.
   - `top_provider_share <= 0.5`.
@@ -928,7 +931,8 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 | oanda sync | hourly | `backend/scripts/aws/oanda-sync-lambda.ts` |
 | gold-popular-corridors | hourly | `backend/scripts/aws/gold-popular-corridors-lambda.ts` |
 | gold-pulse-cache | hourly | `backend/scripts/aws/gold-pulse-cache-lambda.ts` |
-| gold-publisher | every 30 min | `backend/scripts/aws/gold-publisher-lambda.ts` |
+| gold-publisher | every 4 hours | `backend/scripts/aws/gold-publisher-lambda.ts` |
+| gold-indices | every 4 hours | `backend/scripts/aws/gold-indices-job-lambda.ts` |
 | b2c-retry-failed | every 15 min | `backend/scripts/aws/b2c-retry-failed-lambda.ts` |
 | b2c-queue-cleanup | daily 02:30 | `backend/scripts/aws/quote-refresh-queue-cleanup-lambda.ts` |
 | stoplist-auto-resume | daily 02:00 | `backend/scripts/aws/stoplist-auto-resume-lambda.ts` |
@@ -944,7 +948,7 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 
 ## Definitions
 ### Works
-- `/api/v1/quotes/current` returns quotes for Tier-1 corridors after explicit Compare.
+- `/api/v1/quotes/current` returns quotes for enabled corridors after explicit Compare.
 - `/api/v1/quotes/refresh-status` completes with `completed|skipped` and zero pending.
 - B2C refresh queue drains; DB queue depth stable.
 - Plane B ingest writes fresh Silver quotes.
@@ -954,7 +958,7 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 
 ### Flawless
 - 0% 5xx on core endpoints; p95 < 200ms for search/compare.
-- Tier-1 freshness <= 15m, Tier-3 freshness <= 4h.
+- Tier-2 freshness <= 6h; Tier-3 export cadence every 24h.
 - Provider coverage >= 3 in published datasets.
 - No DLQ growth for refresh queues; no sustained queue backlog.
 - Hidden markup math consistent: mid-rate present or explicit fallback.
@@ -975,9 +979,9 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 - Launch sequencing: ship B2C/B2B core product first, then enable indices exports after 2-3 months of history.
 
 ### Recommended tier model (non-free)
-- **Tier-3 (Baseline)**: stable corridors only, 15–60 min cadence, daily aggregates, limited history.
-- **Tier-2 (Expanded)**: Tier-3 + volatile corridors, 5–15 min cadence, richer history, export jobs.
-- **Tier-1 (Real-time)**: Tier-2 + new/high-volatility corridors, 1–5 min cadence, webhooks, custom SLAs.
+- **Tier-3 (Baseline)**: stable corridors only, 24-hour aggregates, limited history.
+- **Tier-2 (Expanded)**: Tier-3 + volatile corridors, 6-hour cadence, richer history, export jobs.
+- **Tier-1 (Real-time)**: disabled until corridor assignment is finalized.
 - Everything in higher tiers includes lower tiers; tier gating is additive.
 
 ### AWS architecture for fast indices
@@ -1082,6 +1086,7 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 - **Tier stability**: tier assignments are versioned and never rewritten.
 - **Tier snapshots**: lock corridor tiers per period (monthly/quarterly).
 - **Tier change cadence**: promotions/demotions only on period boundaries with a change log.
+- **Tier list versions**: hard-coded lists in `backend/plane-b/src/services/corridor-tier-lists.ts` are immutable snapshots; create new versions for promotions/demotions.
 - **Normalization**: exports normalize to **$500 USD equivalent** in send currency; always include destination currency equivalent.
 - **Option B now**: hot cache from Silver + batch Gold jobs. Event-driven Gold is Phase 2.
 - **Alerts**: Silver for real-time triggers; Gold for aggregate/long-window alerts.
@@ -1092,9 +1097,9 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 - Volatility bands are deterministic initially; re-evaluated weekly.
 
 ### Tier model (labels vs reality)
-- **Tier-1 label** = Tier-2 cadence (5–15 min), **coming soon** for true 1–2 min.
-- **Tier-2 label** = Tier-3 cadence (15–60 min).
-- **Tier-3 label** = daily aggregates only.
+- **Tier-1 label** = disabled for B2B sweeps until corridor assignment is finalized.
+- **Tier-2 label** = 6-hour cadence.
+- **Tier-3 label** = 24-hour cadence.
 - Higher tiers include lower tiers; gating is additive.
 
 ### Coverage gating for Gold publish
@@ -1104,7 +1109,7 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 
 ### Option B wiring (now)
 - Plane B writes Silver normalized quotes.
-- Hot cache keys in Redis for Tier-1/2 corridors updated directly from Silver.
+- Hot cache keys in Redis for Tier-2 corridors (and Tier-1 when enabled) updated directly from Silver.
 - Gold jobs remain authoritative for history and nightly aggregates.
 - Plane A reads Redis first, falls back to Gold/Silver as needed.
 
@@ -1135,7 +1140,7 @@ Canonical route-level mapping lives in "Route auth map" below; keep this section
 - Re-evaluate weekly; only apply tier changes at period boundaries.
 
 ## Silver -> Gold strategy (current + future)
-- **Option B (current)**: Redis hot cache fed directly from Silver for Tier-1/2 corridors; Gold batch jobs for history.
+- **Option B (current)**: Redis hot cache fed directly from Silver for Tier-2 corridors (Tier-1 when enabled); Gold batch jobs for history.
 - **Option A (future)**: event-driven Gold updates via SQS/EventBridge on Silver writes; Redis remains the hot cache.
 
 ## Alerting sources (real-time vs aggregate)

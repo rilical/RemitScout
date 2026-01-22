@@ -84,7 +84,7 @@ const upsertCapability = async (
   corridorId: string,
   payload: Record<string, unknown>,
 ) => {
-  const pairs = extractSingxMethodPairs(payload)
+  const pairs = extractSingxMethodPairs()
   const payinMethods = Array.from(new Set(pairs.map(pair => pair.payin_method))).filter(
     method => method !== 'other',
   )
@@ -752,5 +752,5 @@ export const runSingxCollector = async (options: SingxCollectorOptions = {}) => 
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

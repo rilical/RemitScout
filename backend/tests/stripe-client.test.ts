@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
-const loadModule = async (mockEnabled: boolean) => {
+const loadModule = async (secretKey?: string) => {
   vi.resetModules()
   vi.doMock('../shared/config', () => ({
     config: {
       billing: {
         stripe: {
-          mockEnabled,
-          secretKey: 'sk_test',
+          secretKey: secretKey ?? '',
         },
       },
     },
@@ -16,27 +15,19 @@ const loadModule = async (mockEnabled: boolean) => {
 }
 
 describe('stripe-client', () => {
-  it('returns mock client when enabled', async () => {
-    const mockCreate = vi.fn().mockReturnValue({ mock: true })
-    vi.doMock('../plane-a/src/services/stripe-mock', () => ({
-      createMockStripeClient: () => mockCreate(),
-    }))
-
-    const { getStripeClient } = await loadModule(true)
-    const client = getStripeClient()
-
-    expect(mockCreate).toHaveBeenCalled()
-    expect(client).toEqual({ mock: true })
-  })
-
-  it('returns real Stripe client when mock disabled', async () => {
+  it('returns Stripe client when configured', async () => {
     const StripeMock = vi.fn().mockImplementation(() => ({ live: true }))
     vi.doMock('stripe', () => ({ default: StripeMock }))
 
-    const { getStripeClient } = await loadModule(false)
+    const { getStripeClient } = await loadModule('sk_test')
     const client = getStripeClient()
 
     expect(StripeMock).toHaveBeenCalledWith('sk_test', { apiVersion: '2025-12-15.clover' })
     expect(client).toEqual({ live: true })
+  })
+
+  it('throws when secret key missing', async () => {
+    const { getStripeClient } = await loadModule('')
+    expect(() => getStripeClient()).toThrow('Stripe secret key missing')
   })
 })

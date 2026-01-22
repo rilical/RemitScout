@@ -1,4 +1,30 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
+import { createLogger } from '../../shared/logger'
+import { formatError } from '../../shared/utils/error-handling'
+
+const logger = createLogger('script.plane-b-ingest-ecs')
+
+let shutdownRequested = false
+
+const requestShutdown = (signal: string) => {
+  if (shutdownRequested) return
+  shutdownRequested = true
+  logger.info('ingest_loop_shutdown_requested', { signal })
+}
+
+process.on('SIGTERM', () => requestShutdown('SIGTERM'))
+process.on('SIGINT', () => requestShutdown('SIGINT'))
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+const resolveLoopIntervalMs = () => {
+  const rawSeconds = process.env.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS
+  const seconds = rawSeconds ? Number(rawSeconds) : NaN
+  if (Number.isFinite(seconds) && seconds > 0) {
+    return Math.floor(seconds * 1000)
+  }
+  return 60_000
+}
 
 export const handler = async (): Promise<void> => {
   await resolveDatabaseUrl({
@@ -48,14 +74,41 @@ export const handler = async (): Promise<void> => {
       `Failed to load plane-b ingestion module (tried ${candidates.join(', ')}): ${message}`,
     )
   }
-  await runIngestion()
+
+  const loopEnabled = process.env.PLANE_B_INGEST_LOOP === '1'
+  if (!loopEnabled) {
+    await runIngestion()
+    return
+  }
+
+  const loopIntervalMs = resolveLoopIntervalMs()
+  logger.info('ingest_loop_started', { interval_ms: loopIntervalMs })
+
+  while (!shutdownRequested) {
+    const startedAt = Date.now()
+    try {
+      await runIngestion()
+    } catch (error) {
+      const { message, stack } = formatError(error)
+      logger.error('ingest_run_failed', { error: message, stack })
+    }
+
+    if (shutdownRequested) break
+    const elapsed = Date.now() - startedAt
+    const sleepMs = Math.max(0, loopIntervalMs - elapsed)
+    logger.info('ingest_loop_sleep', { sleep_ms: sleepMs })
+    if (sleepMs > 0) {
+      await sleep(sleepMs)
+    }
+  }
 }
 
 if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
   handler()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error(error)
+      const { message, stack } = formatError(error)
+      logger.error('ingest_loop_fatal', { error: message, stack })
       process.exit(1)
     })
 }

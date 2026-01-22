@@ -355,7 +355,9 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
           ?? bankRow.display_name
           ?? 'Your bank'
 
-      const { id: _ignoredId, name: _ignoredName, ...bankPayload } = bankQuote
+      const { id, name, ...bankPayload } = bankQuote
+      void id
+      void name
       const updatedAtValue = [bankRow.collected_at, topRow.collected_at]
         .map((value) => (value ? new Date(value).getTime() : 0))
         .filter((value) => Number.isFinite(value))

@@ -122,12 +122,6 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
-  if (options.envName !== 'prod' && !options.supabaseSecretArn && !options.supabaseSsmName) {
-    planeAEnvironment.SUPABASE_MOCK = '1'
-  }
-  if (options.envName !== 'prod' && !options.stripeSecretArn && !options.stripeSsmName) {
-    planeAEnvironment.STRIPE_MOCK = '1'
-  }
   if (options.planeADbHost) {
     planeAEnvironment.PLANE_A_DB_HOST = options.planeADbHost
   }

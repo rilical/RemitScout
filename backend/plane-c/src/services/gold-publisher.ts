@@ -40,15 +40,31 @@ export class GoldPublisher {
 
   async aggregateCorridorData(corridorId: string): Promise<AggregatedData | null> {
     const timestampBucket = this.getCurrent4HourBucket()
+    const bucketEnd = new Date(timestampBucket.getTime() + 4 * 60 * 60 * 1000)
+    const amountBucket = 500
+    const payoutMethod = 'bank_deposit'
+    const payinMethods = ['bank_transfer', 'debit_card']
 
     const result = await query<QuoteRecord>(
-      `SELECT provider_id, implied_fx_rate, collected_at
-         FROM silver.latest_quote_by_provider
-        WHERE corridor_id = $1
-          AND status = 'ok'
-          AND collected_at >= $2::timestamptz - INTERVAL '4 hours'
-          AND collected_at < $2::timestamptz + INTERVAL '4 hours'`,
-      [corridorId, timestampBucket],
+      `SELECT l.provider_id, l.implied_fx_rate, l.collected_at
+         FROM silver.latest_quote_by_provider l
+         JOIN silver.rights_matrix rm
+           ON rm.provider_id = l.provider_id
+         JOIN silver.provider_corridor_capability pcc
+           ON pcc.provider_id = l.provider_id
+          AND pcc.corridor_id = l.corridor_id
+        WHERE l.corridor_id = $1
+          AND l.status = 'ok'
+          AND l.amount_bucket = $2
+          AND l.payout_method = $3
+          AND l.payin_method = ANY($4)
+          AND rm.allowed_collect = true
+          AND rm.allowed_b2b = true
+          AND rm.stoplist_status = 'active'
+          AND pcc.is_supported = true
+          AND l.collected_at >= $5::timestamptz
+          AND l.collected_at < $6::timestamptz`,
+      [corridorId, amountBucket, payoutMethod, payinMethods, timestampBucket, bucketEnd],
       this.pool,
     )
 
@@ -254,4 +270,3 @@ export class GoldPublisher {
     return bucket
   }
 }
-

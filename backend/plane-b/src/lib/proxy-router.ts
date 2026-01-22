@@ -15,13 +15,17 @@ export const getDefaultProxyTierForCollector = (collectorType: string): ProxyTie
   if (collectorType === 'b2b_tier_1_alpha') {
     return 'RESIDENTIAL_PREMIUM'
   }
-  if (collectorType === 'b2b_tier_2_reference') {
+  if (
+    collectorType === 'b2b_tier_2_reference'
+    || collectorType === 'b2b_observation'
+    || collectorType === 'b2b_full_sweep_monthly'
+  ) {
     return 'DATACENTER_ROTATING'
   }
   return 'NONE'
 }
 
-let proxyUrlCache: Map<ProxyTier, string | null> = new Map()
+const proxyUrlCache: Map<ProxyTier, string | null> = new Map()
 let proxyUrlResolved = false
 
 /**

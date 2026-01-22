@@ -2,6 +2,9 @@ import { Pool, type PoolClient, type QueryResultRow } from 'pg'
 import { config } from './config'
 import { recordQueryFromSql, updateConnectionPoolMetrics } from './db-metrics'
 import { registerDatabasePool } from './connection-manager'
+import { createLogger } from './logger'
+
+const logger = createLogger('shared.db')
 
 /**
  * Gets pool size limits based on runtime environment.
@@ -26,6 +29,10 @@ export const createPool = (connectionString?: string) => {
   const sslEnabled = sslMode === 'require' || sslMode === 'verify-full' || sslMode === 'verify-ca'
   const queryTimeoutMs = Number(process.env.DB_QUERY_TIMEOUT_MS) || 30000 // 30 seconds default
   const connectionTimeoutMs = Number(process.env.DB_CONNECTION_TIMEOUT_MS) || 10000 // 10 seconds
+  const idleTimeoutMs = Number(process.env.DB_IDLE_TIMEOUT_MS) || 30000
+  const keepAliveEnabled = process.env.DB_KEEPALIVE !== '0'
+  const keepAliveInitialDelayMs = Number(process.env.DB_KEEPALIVE_INITIAL_DELAY_MS) || 10000
+  const maxUses = Number(process.env.DB_MAX_USES) || 0
   const isProduction = process.env.NODE_ENV === 'production'
   const poolLimits = getPoolSizeLimits()
   const resolvedConnectionString = connectionString || config.db.url
@@ -56,7 +63,10 @@ export const createPool = (connectionString?: string) => {
     connectionTimeoutMillis: connectionTimeoutMs,
     max: poolLimits.max,
     min: poolLimits.min,
-    idleTimeoutMillis: 30000,
+    idleTimeoutMillis: idleTimeoutMs,
+    keepAlive: keepAliveEnabled,
+    keepAliveInitialDelayMillis: keepAliveInitialDelayMs,
+    ...(maxUses > 0 ? { maxUses } : {}),
     allowExitOnIdle: true,
   })
   ;(pool as { __skipStatementTimeout?: boolean }).__skipStatementTimeout = disableStatementTimeout
@@ -75,15 +85,25 @@ export const createPool = (connectionString?: string) => {
     return originalEnd(cb as never)
   }) as typeof pool.end
 
-  // Cleanup pool on process exit
+  // Cleanup pool on process exit.
   const cleanup = () => {
     pool.end().catch(() => {
       // Silently fail on cleanup
     })
   }
   process.once('exit', cleanup)
-  process.once('SIGTERM', cleanup)
-  process.once('SIGINT', cleanup)
+  if (process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP !== '1') {
+    process.once('SIGTERM', cleanup)
+    process.once('SIGINT', cleanup)
+  }
+
+  // Prevent unhandled pool errors from crashing long-running workers.
+  pool.on('error', (error) => {
+    logger.error('db_pool_error', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+  })
 
   return pool
 }

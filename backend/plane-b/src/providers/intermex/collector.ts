@@ -154,9 +154,6 @@ export const runIntermexCollector = async (options: IntermexCollectorOptions = {
   const blockCooldownMs = config.planeB.intermex.blockCooldownMs
   const startedAt = new Date()
   const capabilityUpdated = new Set<string>()
-  let freshnessChecked = 0
-  let freshnessSkipped = 0
-  let freshnessStale = 0
   const providerRates = await resolveProviderRates(pool, providerId, {
     rpm: httpLimits.rpm,
     perCorridorRpm: httpLimits.perCorridorRpm,
@@ -185,7 +182,6 @@ export const runIntermexCollector = async (options: IntermexCollectorOptions = {
   let rateLimitCount = 0
   let http2xxCount = 0
   let attemptDurationMsTotal = 0
-  let lastSuccessAt: Date | null = null
   let shouldStop = false
   let blocked = false
   let blockReason: string | null = null
@@ -272,7 +268,6 @@ export const runIntermexCollector = async (options: IntermexCollectorOptions = {
         }
 
         if (shouldApplyFreshnessSlo) {
-          freshnessChecked += 1
           const ageMinutes = await getLatestQuoteAgeMinutes(
             pool,
             providerId,
@@ -282,10 +277,8 @@ export const runIntermexCollector = async (options: IntermexCollectorOptions = {
             payoutMethod,
           )
           if (ageMinutes !== null && ageMinutes <= freshnessSloMinutes) {
-            freshnessSkipped += 1
             continue
           }
-          freshnessStale += 1
         }
 
         const requestFingerprint = createHash('sha256')
@@ -461,7 +454,6 @@ export const runIntermexCollector = async (options: IntermexCollectorOptions = {
           await dispatchSignal(pool, corridorId, providerId, anomaly)
         }
         successCount += 1
-        lastSuccessAt = new Date()
 
         if (isHalfOpen) {
           await closeCircuit(pool, providerId, corridorId)
@@ -505,5 +497,5 @@ export const runIntermexCollector = async (options: IntermexCollectorOptions = {
     }
   }
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

@@ -1,4 +1,5 @@
 export * from './interfaces/alert-repository.interface'
+export * from './interfaces/api-key-repository.interface'
 export * from './interfaces/audit-log-repository.interface'
 export * from './interfaces/analytics-repository.interface'
 export * from './interfaces/billing-webhook-event-repository.interface'
@@ -26,6 +27,7 @@ export * from './interfaces/user-plan-repository.interface'
 export * from './interfaces/watchlist-repository.interface'
 
 export { AlertRepository } from './implementations/alert-repository'
+export { ApiKeyRepository } from './implementations/api-key-repository'
 export { AuditLogRepository } from './implementations/audit-log-repository'
 export { AnalyticsRepository } from './implementations/analytics-repository'
 export { BillingWebhookEventRepository } from './implementations/billing-webhook-event-repository'

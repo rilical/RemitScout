@@ -785,5 +785,5 @@ export const runInstaremCollector = async (options: InstaremCollectorOptions = {
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

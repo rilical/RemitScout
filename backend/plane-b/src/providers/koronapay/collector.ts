@@ -94,6 +94,18 @@ type KoronaPayCollectorOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.koronapay.collector')
 
+const isKoronaPayErrorPayload = (value: unknown) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const candidate = value as { type?: unknown; code?: unknown; message?: unknown }
+  return Boolean(candidate.type || candidate.code || candidate.message)
+}
+
+const shouldMarkKoronaPayUnsupported = (payload: Record<string, unknown>) => {
+  const tariffs = Array.isArray(payload.tariffs) ? payload.tariffs : []
+  const hasError = isKoronaPayErrorPayload(payload.tariffs) || isKoronaPayErrorPayload(payload.tariffInfo)
+  return tariffs.length === 0 || hasError
+}
+
 /**
  * Updates provider capability information for a corridor.
  * Extracts available payin/payout methods from the API response and stores them
@@ -159,19 +171,13 @@ export const runKoronaPayCollector = async (options: KoronaPayCollectorOptions =
   const providerId = 'koronapay'
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = options.closePool ?? !options.pool
-  let corridors: string[]
-
-  // Resolve corridors to collect: use provided list or filter supported corridors
-  // by removing those marked as unsupported in the database
-  if (options.corridors?.length) {
-    corridors = options.corridors
-  } else {
-    const allPossibleCorridors = KORONAPAY_SUPPORTED_CORRIDORS
-    const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
-    corridors = allPossibleCorridors.filter(
-      corridor => !unsupportedCorridors.has(corridor)
-    )
-  }
+  const unsupportedCorridors = await loadUnsupportedCorridors(pool, providerId)
+  const candidateCorridors = options.corridors?.length
+    ? options.corridors
+    : KORONAPAY_SUPPORTED_CORRIDORS
+  const corridors = candidateCorridors.filter(
+    corridor => !unsupportedCorridors.has(corridor)
+  )
   const buckets = options.amountBuckets ?? defaultAmountBuckets
   const payinMethod = options.payinMethod ?? 'debit_card'
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
@@ -635,6 +641,7 @@ export const runKoronaPayCollector = async (options: KoronaPayCollectorOptions =
           const unsupportedCorridor = fetchResult.status === 400
           if (unsupportedCorridor) {
             await markCorridorUnsupported(pool, providerId, corridorId, 'auto_http_400')
+            unsupportedCorridors.add(corridorId)
             logger.warn('corridor_marked_unsupported', {
               trace_id: traceId,
               corridor_id: corridorId,
@@ -679,6 +686,8 @@ export const runKoronaPayCollector = async (options: KoronaPayCollectorOptions =
         const parsed = parseKoronaPayPayload(fetchResult.payload as Record<string, unknown>, request)
         parseDurationMs = Date.now() - parseStartedAt
         if (!parsed) {
+          const payload = fetchResult.payload as Record<string, unknown>
+          const shouldMarkUnsupported = shouldMarkKoronaPayUnsupported(payload)
           logger.warn('quote_parse_failed', {
             trace_id: traceId,
             corridor_id: corridorId,
@@ -686,16 +695,22 @@ export const runKoronaPayCollector = async (options: KoronaPayCollectorOptions =
             payin_method: payinMethod,
             payout_method: payoutMethod,
             duration_ms: parseDurationMs,
+            parse_failure_reason: shouldMarkUnsupported ? 'empty_tariffs' : 'parse_error',
           })
+          if (shouldMarkUnsupported) {
+            await markCorridorUnsupported(pool, providerId, corridorId, 'auto_empty_tariffs')
+            unsupportedCorridors.add(corridorId)
+            skipCorridor = true
+          }
           await insertAttempt(pool, providerId, {
             corridorId,
             amountBucket,
             payinMethod,
             payoutMethod,
             success: false,
-            errorType: 'parse_error',
+            errorType: shouldMarkUnsupported ? 'unsupported' : 'parse_error',
             httpStatus: fetchResult.status,
-            errorMessage: 'parse_failed',
+            errorMessage: shouldMarkUnsupported ? 'corridor_unsupported' : 'parse_failed',
             bronzeObjectKey,
             requestFingerprint,
           })
@@ -861,5 +876,5 @@ export const runKoronaPayCollector = async (options: KoronaPayCollectorOptions =
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

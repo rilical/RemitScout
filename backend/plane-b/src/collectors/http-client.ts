@@ -23,6 +23,8 @@ export type HttpResponse = {
   status: number
   bodyText: string
   json?: unknown
+  setCookie?: string[]
+  parseError?: boolean
 }
 
 const logger = createLogger('plane-b.http-client')
@@ -152,11 +154,15 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       }
 
       let json: unknown
+      let parseError = false
+      const contentType = response.headers.get('content-type') ?? ''
+      const expectsJson = contentType.includes('application/json') || contentType.includes('+json')
       try {
         json = JSON.parse(bodyText)
-      } catch (parseError) {
+      } catch (error) {
         json = undefined
-        if (response.headers.get('content-type')?.includes('application/json')) {
+        if (expectsJson) {
+          parseError = true
           logger.debug('http_response_json_parse_failed', {
             url,
             status: response.status,
@@ -171,10 +177,21 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
         throw new Error(`HTTP ${response.status}: ${url}`)
       }
 
+      const responseHeaders = response.headers as unknown as {
+        getSetCookie?: () => string[]
+      }
+      const setCookie = typeof responseHeaders.getSetCookie === 'function'
+        ? responseHeaders.getSetCookie()
+        : (response.headers.get('set-cookie')
+          ? [response.headers.get('set-cookie') as string]
+          : [])
+
       return {
         status: response.status,
         bodyText,
         json,
+        setCookie,
+        parseError,
       }
     } catch (error: unknown) {
       clearTimeout(requestTimeout)

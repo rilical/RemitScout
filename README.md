@@ -22,12 +22,17 @@ docker-compose up -d
 cp backend/.env.local.example backend/.env.local
 ```
 
-Mock auth/billing (local):
+Supabase/Stripe test config (local):
 ```
-SUPABASE_MOCK=1
-STRIPE_MOCK=1
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> # optional for admin actions
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_ID_PLUS=price_...
+STRIPE_PRICE_ID_PLUS_ANNUAL=price_...
 ```
-Use `Authorization: Bearer dev-token` (or `admin-token`) for protected endpoints.
+Use `Authorization: Bearer <access_token>` from Supabase auth for protected endpoints (see `docs/manual-smoke-test-alerts-dev.md`).
 
 3) Run migrations and seed local data:
 ```

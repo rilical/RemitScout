@@ -75,7 +75,6 @@ const logger = createLogger('plane-b.wellsfargo.collector')
 const upsertCapability = async (
   pool: Pool,
   corridorId: string,
-  payload: Record<string, unknown>,
 ) => {
   const repo = new ProviderCapabilityRepository(pool)
   await repo.upsertCapability({
@@ -179,10 +178,6 @@ export const runWellsFargoCollector = async (options: WellsFargoCollectorOptions
   const sleepRateLimit = async () => {
     const jitter = rateLimitJitterMs > 0 ? Math.floor(Math.random() * rateLimitJitterMs) : 0
     await sleep(rateLimitBackoffMs + jitter)
-  }
-  const applyRateLimitPenalty = () => {
-    extraDelayMs = Math.min(extraDelayMs + rateLimitBackoffMs, rateLimitBackoffMs * 3)
-    extraJitterMs = Math.min(extraJitterMs + rateLimitJitterMs, rateLimitJitterMs * 3)
   }
   const decayRateLimitPenalty = () => {
     extraDelayMs = Math.max(0, Math.floor(extraDelayMs * 0.7))
@@ -540,12 +535,12 @@ export const runWellsFargoCollector = async (options: WellsFargoCollectorOptions
         }
 
         if (!capabilityUpdated.has(corridorId)) {
-          await upsertCapability(pool, corridorId, fetchResult.payload as Record<string, unknown>)
+          await upsertCapability(pool, corridorId)
           capabilityUpdated.add(corridorId)
         }
 
         const parseStartedAt = Date.now()
-        const parsed = parseWellsFargoPayload(fetchResult.payload as Record<string, unknown>, request)
+        const parsed = parseWellsFargoPayload(fetchResult.payload as Record<string, unknown>)
         parseDurationMs = Date.now() - parseStartedAt
         if (!parsed) {
           logger.warn('quote_parse_failed', {
@@ -717,5 +712,5 @@ export const runWellsFargoCollector = async (options: WellsFargoCollectorOptions
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

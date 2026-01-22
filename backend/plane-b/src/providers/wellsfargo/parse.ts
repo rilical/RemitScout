@@ -1,4 +1,3 @@
-import type { CollectorRequest } from '../../collectors/types'
 import { qualityFlags, QualityFlag } from '../../normalize/quality-flags'
 import { payinMethodMap, payoutMethodMap } from './code-map'
 
@@ -130,7 +129,6 @@ const mapPayout = (code?: string | null) => {
 
 export const parseWellsFargoPayload = (
   payload: WellsFargoPayload,
-  request: CollectorRequest,
 ): WellsFargoParsedQuote | null => {
   const flags: QualityFlag[] = []
 
@@ -204,4 +202,3 @@ export const parseWellsFargoPayload = (
     parse_flags: flags,
   }
 }
-

@@ -145,8 +145,6 @@ const billingActions = useBilling()
 const userEmail = computed(() => user.value?.email || '')
 const { trackCheckoutStart } = useMarketingAnalytics()
 const currentRoute = useRoute()
-const runtimeConfig = useRuntimeConfig()
-const devAutoUpgrade = computed(() => Boolean(runtimeConfig.public.devAuthEnabled) || import.meta.dev)
 
 async function handleCheckout() {
   if (!isAuthenticated.value) {
@@ -165,14 +163,6 @@ async function handleCheckout() {
     })
     const result = await billingActions.createCheckoutSession('plus')
     if (result.ok) {
-      if (devAutoUpgrade.value && result.sessionId) {
-        const verifyResult = await billingActions.verifyCheckoutSession(result.sessionId)
-        if (verifyResult.ok) {
-          await navigateTo('/plus/success')
-          return
-        }
-      }
-
       if (result.url) {
         window.location.href = result.url
         return
@@ -200,6 +190,5 @@ useHead({
   ],
 })
 </script>
-
 
 

@@ -67,50 +67,8 @@ export const useAuth = () => {
     config.public.supabaseUrl && config.public.supabaseAnonKey,
   ))
 
-  const isDevAuthEnabled = () => {
-    return Boolean(config.public.devAuthEnabled) || (import.meta.dev && !isConfigured.value)
-  }
-
-  const shouldEnforceEmailConfirmation = () => !isDevAuthEnabled()
-
-  const resolveDevEmail = (value: string) => {
-    const trimmed = value.trim()
-    if (trimmed) return trimmed
-    return config.public.devSuperAdminEmail || 'dev@example.com'
-  }
-
-  const buildDevSession = (email: string, name?: string): Session => {
-    const normalizedEmail = resolveDevEmail(email)
-    const fallbackName = normalizedEmail.includes('@')
-      ? normalizedEmail.split('@')[0]
-      : 'Dev User'
-    const displayName = name?.trim() || fallbackName
-    const now = new Date().toISOString()
-    const accessTokenValue = `${config.public.devAuthToken || 'admin-token'}:${normalizedEmail}`
-    const devUser = {
-      id: `dev_${normalizedEmail}`,
-      email: normalizedEmail,
-      role: 'authenticated',
-      aud: 'authenticated',
-      created_at: now,
-      updated_at: now,
-      app_metadata: { provider: 'dev' },
-      user_metadata: { full_name: displayName },
-    } as SupabaseUser
-
-    return {
-      access_token: accessTokenValue,
-      refresh_token: 'dev-refresh',
-      token_type: 'bearer',
-      expires_in: 60 * 60 * 24 * 365,
-      expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365,
-      user: devUser,
-    } as Session
-  }
-
   const setSession = (nextSession: Session | null) => {
-    const enforceEmail = shouldEnforceEmailConfirmation()
-    const effectiveSession = enforceEmail && nextSession?.user && !isEmailConfirmed(nextSession.user)
+    const effectiveSession = nextSession?.user && !isEmailConfirmed(nextSession.user)
       ? null
       : nextSession
     session.value = effectiveSession
@@ -191,11 +149,6 @@ export const useAuth = () => {
   const signIn = async (email: string, password?: string): Promise<AuthResult> => {
     lastError.value = null
 
-    if (isDevAuthEnabled()) {
-      setSession(buildDevSession(email))
-      return { ok: true }
-    }
-
     if (!password) {
       lastError.value = 'Password is required.'
       return { ok: false, error: lastError.value }
@@ -219,7 +172,7 @@ export const useAuth = () => {
     }
 
     const authUser = data.user ?? data.session?.user ?? null
-    if (shouldEnforceEmailConfirmation() && authUser && !isEmailConfirmed(authUser)) {
+    if (authUser && !isEmailConfirmed(authUser)) {
       await supabase.auth.signOut()
       lastError.value = 'Please verify your email before signing in.'
       return { ok: false, error: lastError.value }
@@ -231,11 +184,6 @@ export const useAuth = () => {
 
   const signUp = async (input: SignUpInput): Promise<AuthResult> => {
     lastError.value = null
-
-    if (isDevAuthEnabled()) {
-      setSession(buildDevSession(input.email, input.name))
-      return { ok: true }
-    }
 
     if (!isConfigured.value) {
       lastError.value = 'Supabase is not configured.'
@@ -270,7 +218,7 @@ export const useAuth = () => {
     }
 
     const authUser = data.user ?? data.session?.user ?? null
-    if (shouldEnforceEmailConfirmation() && authUser && !isEmailConfirmed(authUser)) {
+    if (authUser && !isEmailConfirmed(authUser)) {
       if (data.session) {
         await supabase.auth.signOut()
       }

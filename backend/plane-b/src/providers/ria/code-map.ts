@@ -4,16 +4,18 @@ export const countryCodeMap: Record<string, string> = {
 
 export const currencyCodeMap: Record<string, string> = {}
 
-const normalizeToken = (value: string) => value.trim().toLowerCase().replace(/\s+/g, '_')
+const normalizeToken = (value: string) => value.trim().toLowerCase().replace(/[\s\-./]+/g, '_')
 
 const PAYIN_TO_CANONICAL: Record<string, string> = {
   DirectDebit: 'bank_transfer',
   BankTransfer: 'bank_transfer',
+  BankAccount: 'bank_transfer',
   DebitCard: 'debit_card',
   CreditCard: 'credit_card',
   ApplePay: 'apple_pay',
   GooglePay: 'google_pay',
   Cash: 'cash',
+  PayNearMe: 'cash',
 }
 
 const PAYOUT_TO_CANONICAL: Record<string, string> = {
@@ -21,7 +23,9 @@ const PAYOUT_TO_CANONICAL: Record<string, string> = {
   BankDeposit: 'bank_deposit',
   CashPayout: 'cash_pickup',
   CashPickup: 'cash_pickup',
+  OfficePickup: 'cash_pickup',
   MobileWallet: 'mobile_wallet',
+  MobilePayment: 'mobile_wallet',
   FundsOnBalance: 'other',
 }
 
@@ -38,7 +42,7 @@ export const payinMethodMap: Record<string, string> = buildMethodMap(PAYIN_TO_CA
 export const payoutMethodMap: Record<string, string> = buildMethodMap(PAYOUT_TO_CANONICAL)
 
 const CANONICAL_PAYIN_TO_RIA: Record<string, string> = {
-  bank_transfer: 'DirectDebit',
+  bank_transfer: 'BankAccount',
   debit_card: 'DebitCard',
   credit_card: 'CreditCard',
   apple_pay: 'ApplePay',

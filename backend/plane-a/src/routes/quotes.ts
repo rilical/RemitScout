@@ -59,7 +59,7 @@ const sleepWithJitter = async (jitterMs: number) => {
 }
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
-const TIER2_FRESHNESS_SECONDS = 120 * 60
+const TIER2_FRESHNESS_SECONDS = 4 * 60 * 60
 const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
 const TIER_JITTER_MS: Record<string, number> = {
   tier_1_alpha: 0,
@@ -336,9 +336,9 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         return result
       }
 
-      let result = await fetchLatest(freshnessSeconds)
-      let newestCollectedAt = getNewestCollectedAt(result.rows)
-      let cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
+      const result = await fetchLatest(freshnessSeconds)
+      const newestCollectedAt = getNewestCollectedAt(result.rows)
+      const cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
 
       const supportedProviderIds = allowLive
         ? await loadSupportedProviderIds(sourceCountry, destCountry)
@@ -428,7 +428,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       let refreshAttempted = false
       let refreshEnqueued = false
       let refreshRequestId: string | null = null
-      let refreshRequestIds: string[] = []
+      const refreshRequestIds: string[] = []
       let refreshProviderIds: string[] = expectedProviders
 
       if (allowLive && !cacheFresh && expectedProviders.length > 0) {

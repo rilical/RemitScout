@@ -52,7 +52,13 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
 
   async loadProviderRights(): Promise<RightsMatrixEntryRecord[]> {
     const result = await query<RightsMatrixEntryRecord>(
-      `SELECT provider_id, allowed_collect, allowed_b2c, allowed_b2b, stoplist_status
+      `SELECT provider_id,
+              allowed_collect,
+              allowed_b2c,
+              allowed_b2b,
+              stoplist_status,
+              source_countries,
+              destination_countries
          FROM silver.rights_matrix`,
       [],
       this.pool,

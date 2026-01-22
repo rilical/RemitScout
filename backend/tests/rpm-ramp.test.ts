@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Pool } from 'pg'
 
-import { applyRpmRamp, type SweepStats, type RampThresholds } from '../plane-b/src/collectors/rpm-ramp'
+import { applyRpmRamp, type RampThresholds } from '../plane-b/src/collectors/rpm-ramp'
 import type { ProviderRates } from '../plane-b/src/collectors/rate-config'
 import * as rateConfig from '../plane-b/src/collectors/rate-config'
 
@@ -640,4 +640,3 @@ describe('applyRpmRamp', () => {
     })
   })
 })
-

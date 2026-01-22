@@ -8,12 +8,12 @@ import { upsertUserAccount } from '../services/user-account'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { getUsageForUser } from '../services/plan-usage'
-import { getStripeClient, isStripeConfigured, isStripeMockMisconfigured } from '../services/stripe-client'
+import { countActiveApiKeys, createApiKey, listApiKeys, revokeApiKey, rotateApiKey } from '../services/api-keys'
+import { getStripeClient, isStripeConfigured } from '../services/stripe-client'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
 import { UserAccountRepository } from '../repositories'
-import { isSupabaseMockEnabled, isSupabaseMockMisconfigured } from '../auth/mock-config'
 
 const planeAPool = getPool(config.db.planeAUrl)
 const logger = createLogger('plane-a.me')
@@ -26,6 +26,11 @@ const profileUpdateSchema = z.object({
 const passwordUpdateSchema = z.object({
   current_password: z.string().min(8),
   new_password: z.string().min(8),
+})
+
+const apiKeyCreateSchema = z.object({
+  name: z.string().max(80).optional(),
+  scopes: z.array(z.string().max(64)).max(20).optional(),
 })
 
 type BillingInfo = {
@@ -48,7 +53,7 @@ const toIsoFromSeconds = (value: number | null | undefined) => {
 }
 
 const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): Promise<BillingInfo> => {
-  if (!plan || isStripeMockMisconfigured() || !isStripeConfigured() || !plan.stripe_customer_id) {
+  if (!plan || !isStripeConfigured() || !plan.stripe_customer_id) {
     return {
       next_billing_date: null,
       amount: null,
@@ -137,10 +142,17 @@ const parseBearerToken = (header?: string) => {
   return token
 }
 
+const isEnterprisePlan = (plan?: Awaited<ReturnType<typeof getUserPlan>> | null) => {
+  if (!plan) return false
+  return plan.plan_code === 'enterprise' && (plan.status === 'active' || plan.status === 'trialing')
+}
+
+const hasTierOneScope = (scopes?: string[]) => {
+  if (!scopes || scopes.length === 0) return false
+  return scopes.some((scope) => scope.trim().toLowerCase() === 'tier:1')
+}
+
 const verifySupabasePassword = async (email: string, password: string): Promise<boolean> => {
-  if (isSupabaseMockEnabled()) {
-    return true
-  }
   const baseUrl = config.auth.supabase.url.replace(/\/$/, '')
   const key = config.auth.supabase.publishableKey
   const response = await fetch(`${baseUrl}/auth/v1/token?grant_type=password`, {
@@ -168,9 +180,6 @@ const verifySupabasePassword = async (email: string, password: string): Promise<
 }
 
 const updateSupabasePassword = async (accessToken: string, newPassword: string): Promise<void> => {
-  if (isSupabaseMockEnabled()) {
-    return
-  }
   const baseUrl = config.auth.supabase.url.replace(/\/$/, '')
   const key = config.auth.supabase.publishableKey
   const response = await fetch(`${baseUrl}/auth/v1/user`, {
@@ -246,6 +255,232 @@ export const meRoutes = async (app: FastifyInstance) => {
         error: 'internal_error', 
         message: 'An unexpected error occurred' 
       }
+    }
+  })
+
+  app.get('/me/api-keys', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+
+    try {
+      await upsertUserAccount(planeAPool, user)
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+      if (!isEnterprisePlan(plan)) {
+        reply.code(403)
+        return { error: 'enterprise_required' }
+      }
+
+      const keys = await listApiKeys(planeAPool, user.user_id)
+      return {
+        success: true,
+        keys: keys.map((key) => ({
+          key_id: key.key_id,
+          key_prefix: key.key_prefix,
+          name: key.name,
+          scopes: key.scopes,
+          created_at: key.created_at.toISOString(),
+          last_used_at: key.last_used_at ? key.last_used_at.toISOString() : null,
+          revoked_at: key.revoked_at ? key.revoked_at.toISOString() : null,
+        })),
+      }
+    } catch (error: unknown) {
+      logger.error('api_key_list_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.post('/me/api-keys', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    const parsed = apiKeyCreateSchema.safeParse(request.body)
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    try {
+      await upsertUserAccount(planeAPool, user)
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+      if (!isEnterprisePlan(plan)) {
+        reply.code(403)
+        return { error: 'enterprise_required' }
+      }
+
+      if (hasTierOneScope(parsed.data.scopes)) {
+        reply.code(400)
+        return { error: 'tier_disabled', message: 'Tier 1 API access is disabled.' }
+      }
+
+      const activeCount = await countActiveApiKeys(planeAPool, user.user_id)
+      const maxKeys = config.planeA.enterpriseApiKeyMax
+      if (activeCount >= maxKeys) {
+        reply.code(429)
+        return { error: 'api_key_limit_reached', maxKeys }
+      }
+
+      const record = await createApiKey(planeAPool, user.user_id, {
+        name: parsed.data.name?.trim() || null,
+        scopes: parsed.data.scopes,
+      })
+
+      try {
+        await logAuditEvent(planeAPool, {
+          actorId: user.user_id,
+          actorType: 'user',
+          actorRole: user.role ?? undefined,
+          action: 'api_key.create',
+          entityType: 'api_key',
+          entityId: record.key_id,
+          afterSnapshot: {
+            key_prefix: record.key_prefix,
+            name: record.name,
+            scopes: record.scopes,
+          },
+          category: 'security',
+          severity: 'info',
+          ...getRequestContext(request),
+        })
+      } catch (error) {
+        logger.warn('audit_log_failed', {
+          user_id: user.user_id,
+          error: getErrorMessage(error),
+        })
+      }
+
+      return {
+        success: true,
+        api_key: {
+          key_id: record.key_id,
+          key_prefix: record.key_prefix,
+          name: record.name,
+          scopes: record.scopes,
+          created_at: record.created_at.toISOString(),
+        },
+        token: record.token,
+      }
+    } catch (error: unknown) {
+      logger.error('api_key_create_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.post('/me/api-keys/:keyId/rotate', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    const keyId = String((request.params as { keyId: string }).keyId)
+
+    try {
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+      if (!isEnterprisePlan(plan)) {
+        reply.code(403)
+        return { error: 'enterprise_required' }
+      }
+
+      const rotated = await rotateApiKey(planeAPool, user.user_id, keyId)
+      if (!rotated) {
+        reply.code(404)
+        return { error: 'not_found' }
+      }
+
+      try {
+        await logAuditEvent(planeAPool, {
+          actorId: user.user_id,
+          actorType: 'user',
+          actorRole: user.role ?? undefined,
+          action: 'api_key.rotate',
+          entityType: 'api_key',
+          entityId: keyId,
+          afterSnapshot: {
+            key_prefix: rotated.key_prefix,
+            scopes: rotated.scopes,
+          },
+          category: 'security',
+          severity: 'info',
+          ...getRequestContext(request),
+        })
+      } catch (error) {
+        logger.warn('audit_log_failed', {
+          user_id: user.user_id,
+          error: getErrorMessage(error),
+        })
+      }
+
+      return {
+        success: true,
+        api_key: {
+          key_id: rotated.key_id,
+          key_prefix: rotated.key_prefix,
+          name: rotated.name,
+          scopes: rotated.scopes,
+          created_at: rotated.created_at.toISOString(),
+        },
+        token: rotated.token,
+      }
+    } catch (error: unknown) {
+      logger.error('api_key_rotate_failed', {
+        user_id: user.user_id,
+        key_id: keyId,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.delete('/me/api-keys/:keyId', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    const keyId = String((request.params as { keyId: string }).keyId)
+
+    try {
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+      if (!isEnterprisePlan(plan)) {
+        reply.code(403)
+        return { error: 'enterprise_required' }
+      }
+
+      const revoked = await revokeApiKey(planeAPool, user.user_id, keyId)
+      if (!revoked) {
+        reply.code(404)
+        return { error: 'not_found' }
+      }
+
+      try {
+        await logAuditEvent(planeAPool, {
+          actorId: user.user_id,
+          actorType: 'user',
+          actorRole: user.role ?? undefined,
+          action: 'api_key.revoke',
+          entityType: 'api_key',
+          entityId: keyId,
+          category: 'security',
+          severity: 'info',
+          ...getRequestContext(request),
+        })
+      } catch (error) {
+        logger.warn('audit_log_failed', {
+          user_id: user.user_id,
+          error: getErrorMessage(error),
+        })
+      }
+
+      return { success: true }
+    } catch (error: unknown) {
+      logger.error('api_key_revoke_failed', {
+        user_id: user.user_id,
+        key_id: keyId,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
     }
   })
 
@@ -326,12 +561,7 @@ export const meRoutes = async (app: FastifyInstance) => {
       return { error: 'invalid_request', details: parsed.error.flatten() }
     }
 
-    if (isSupabaseMockMisconfigured()) {
-      reply.code(500)
-      return { error: 'supabase_mock_disabled_in_prod' }
-    }
-
-    if (!isSupabaseMockEnabled() && (!config.auth.supabase.url || !config.auth.supabase.publishableKey)) {
+    if (!config.auth.supabase.url || !config.auth.supabase.publishableKey) {
       reply.code(500)
       return { error: 'supabase_not_configured' }
     }

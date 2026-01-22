@@ -20,6 +20,8 @@ const main = async () => {
       timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
       retries: Number(process.env.PROBE_RETRIES) || 0,
       outputFormat: process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json',
+      payinMethod: 'bank_transfer',
+      payoutMethod: 'cash_pickup',
     })
 
     process.exit(result.success ? 0 : 1)

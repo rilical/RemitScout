@@ -18,6 +18,7 @@ import {
   RightsMatrixRepository,
 } from '../repositories'
 import { getProviderMetadata } from '../services/provider-metadata'
+import { getProviderVolumeWeight, PROVIDER_WEIGHTING_MODEL, type ProviderWeightModel } from '../../../shared/provider-weights'
 import type { LatestQuoteByCorridorRecord } from '../repositories/interfaces/latest-quote-repository.interface'
 const normalizeToken = (value: string): string => {
   if (!value || typeof value !== 'string') return ''
@@ -160,6 +161,7 @@ type ProviderQuoteResponse = {
 
 type FrontendProviderQuote = {
   id: string
+  providerId?: string
   name: string
   logoUrl?: string
   fee: number
@@ -201,7 +203,7 @@ type CorridorIndices = {
   providerCount: number
   amount: number
   midMarketRate: number | null
-  weights: 'equal'
+  weights: ProviderWeightModel
 }
 
 const providersCache = createTtlCache<ProvidersResponse>({ namespace: 'plane_a:providers' })
@@ -221,7 +223,7 @@ const querySchema = z.object({
 })
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
-const TIER2_FRESHNESS_SECONDS = 120 * 60
+const TIER2_FRESHNESS_SECONDS = 4 * 60 * 60
 const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
 const loadActiveB2cProviderIdsByCountry = async (
   sourceCountry: string,
@@ -263,6 +265,8 @@ const isCurrencyAllowedForRequest = (
 
 const computeCorridorIndices = (
   quotes: Array<{
+    id: string
+    providerId?: string
     fxRate: number
     fee: number
     hasPromo?: boolean
@@ -271,8 +275,13 @@ const computeCorridorIndices = (
   amount: number,
   midMarketRate: number | null,
 ): CorridorIndices => {
-  const effectiveRates: number[] = []
-  const costRatios: number[] = []
+  let providerCount = 0
+  let sumWeight = 0
+  let sumWeightSq = 0
+  let weightedEffectiveSum = 0
+  let weightedEffectiveSqSum = 0
+  let weightedCostSum = 0
+  let sumWeightCost = 0
 
   for (const quote of quotes) {
     const promoRate = quote.hasPromo && quote.promoInfo && Number.isFinite(quote.promoInfo.rate)
@@ -290,32 +299,41 @@ const computeCorridorIndices = (
 
     const amountAfterFee = Math.max(amount - fee, 0)
     const effectiveRate = (amountAfterFee * rate) / amount
-    if (Number.isFinite(effectiveRate)) {
-      effectiveRates.push(effectiveRate)
-    }
+    if (!Number.isFinite(effectiveRate)) continue
+
+    const providerKey = quote.providerId || quote.id
+    const weight = getProviderVolumeWeight(providerKey)
+    providerCount += 1
+    sumWeight += weight
+    sumWeightSq += weight * weight
+    weightedEffectiveSum += weight * effectiveRate
+    weightedEffectiveSqSum += weight * effectiveRate * effectiveRate
 
     if (midMarketRate && midMarketRate > 0) {
       const hiddenMarkup = (amountAfterFee * (midMarketRate - rate)) / midMarketRate
       const totalCost = fee + (Number.isFinite(hiddenMarkup) ? hiddenMarkup : 0)
       const ratio = totalCost / amount
       if (Number.isFinite(ratio)) {
-        costRatios.push(ratio)
+        weightedCostSum += weight * ratio
+        sumWeightCost += weight
       }
     }
   }
 
-  const providerCount = effectiveRates.length
   let rvi: number | null = null
-  if (providerCount >= 2) {
-    const mean = effectiveRates.reduce((sum, value) => sum + value, 0) / providerCount
-    const variance = effectiveRates.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (providerCount - 1)
-    rvi = Number.isFinite(variance) ? Math.sqrt(variance) : null
+  if (providerCount >= 2 && sumWeight > 0) {
+    const numerator = weightedEffectiveSqSum - (weightedEffectiveSum * weightedEffectiveSum) / sumWeight
+    const denominator = sumWeight - (sumWeightSq / sumWeight)
+    if (denominator > 0) {
+      const variance = numerator / denominator
+      rvi = Number.isFinite(variance) ? Math.sqrt(Math.max(0, variance)) : null
+    }
   }
 
   let rci: number | null = null
   let teer: number | null = null
-  if (midMarketRate && midMarketRate > 0 && costRatios.length > 0) {
-    rci = costRatios.reduce((sum, value) => sum + value, 0) / costRatios.length
+  if (midMarketRate && midMarketRate > 0 && sumWeightCost > 0) {
+    rci = weightedCostSum / sumWeightCost
     const rawTeer = midMarketRate * (1 - rci)
     teer = Number.isFinite(rawTeer) ? Math.max(0, rawTeer) : null
   }
@@ -327,7 +345,7 @@ const computeCorridorIndices = (
     providerCount,
     amount,
     midMarketRate: midMarketRate ?? null,
-    weights: 'equal',
+    weights: PROVIDER_WEIGHTING_MODEL,
   }
 }
 
@@ -952,6 +970,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
         return [{
           id: pq.psp.slug,
+          providerId: normalizeProviderId(quote.originalQuote.provider_id),
           name: pq.psp.name,
           logoUrl: pq.psp.logo.sm,
           fee: feeTotal,

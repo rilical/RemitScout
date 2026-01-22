@@ -1,4 +1,3 @@
-import type { Pool } from 'pg'
 import { createLogger } from './logger'
 import { formatError, isError } from './utils/error-handling'
 
@@ -196,6 +195,5 @@ export const withCircuitBreaker = async <T>(
 export const resetCircuitBreakers = (): void => {
   circuitBreakers.clear()
 }
-
 
 

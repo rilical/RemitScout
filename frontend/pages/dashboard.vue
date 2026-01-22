@@ -230,7 +230,7 @@
       <div v-if="!isPlus" class="bg-blue-600 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <div class="flex items-center justify-center gap-3 text-sm">
-            <span><strong>Upgrade to Plus</strong> — Unlimited alerts, 90-day history, export, and ad-free experience</span>
+            <span><strong>Upgrade to Plus</strong> — Unlimited alerts, 365-day history, export, and ad-free experience</span>
             <NuxtLink to="/plus" class="inline-flex items-center gap-1 font-semibold text-white hover:text-blue-100 underline underline-offset-2">
               Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </NuxtLink>
@@ -264,7 +264,7 @@
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <span class="font-semibold">Plus Member</span>
+                <span class="font-semibold">{{ isEnterprise ? 'Enterprise' : 'Plus Member' }}</span>
               </div>
               <NuxtLink
                 v-else
@@ -969,7 +969,7 @@
                   </div>
                   <div class="flex-1">
                     <h4 class="font-semibold text-sm mb-1">Remove Ads with Plus</h4>
-                    <p class="text-xs text-white/90 mb-3">Get unlimited alerts, 90-day history, and an ad-free experience.</p>
+                    <p class="text-xs text-white/90 mb-3">Get unlimited alerts, 365-day history, and an ad-free experience.</p>
                     <NuxtLink to="/plus" class="inline-flex items-center gap-1 text-xs font-semibold text-white hover:text-blue-100">
                       Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </NuxtLink>
@@ -2051,7 +2051,7 @@
               </div>
               <div class="flex-1">
                 <h4 class="font-semibold text-brand-600 text-sm mb-1">Limited to 30-Day History</h4>
-                <p class="text-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 90-day history and export.</p>
+                <p class="text-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 365-day history and export.</p>
                 <NuxtLink to="/plus" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
                   Upgrade to Plus <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </NuxtLink>
@@ -2081,6 +2081,253 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+        </div>
+
+        <!-- Enterprise Tab -->
+        <div v-else-if="activeTab === 'enterprise'">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">Enterprise API & Embeds</h2>
+              <p class="text-sm text-slate-500">Manage API access, refresh tokens, and generate TEER/RCI/RVI embeds.</p>
+            </div>
+            <div class="text-xs text-slate-500">
+              Tier 2: {{ tier2CadenceLabel }}h cadence · Tier 3: {{ tier3CadenceLabel }}h cadence
+            </div>
+          </div>
+
+          <div v-if="!apiAccess" class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            API access is not enabled for this account. Contact support to enable enterprise API access.
+          </div>
+
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-semibold text-slate-900">API Keys</h3>
+                  <p class="text-xs text-slate-500">Default tier: {{ apiTier || 2 }}. Tier 1 is disabled.</p>
+                </div>
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  :disabled="apiKeysLoading || !apiAccess"
+                  @click="fetchApiKeys"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-3">
+                <input
+                  v-model="apiKeyName"
+                  type="text"
+                  placeholder="Key name"
+                  class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <select
+                  v-model="apiKeyTier"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="2">Tier 2 ({{ tier2CadenceLabel }}h cadence)</option>
+                  <option value="3">Tier 3 ({{ tier3CadenceLabel }}h cadence)</option>
+                </select>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
+                  :disabled="apiKeysLoading || !apiAccess"
+                  @click="createEnterpriseApiKey"
+                >
+                  Create Key
+                </button>
+              </div>
+
+              <p v-if="apiKeysError" class="text-xs text-red-600">
+                {{ apiKeysError }}
+              </p>
+
+              <div v-if="apiKeyToken" class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-xs text-emerald-900">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="font-semibold">New token (save now)</div>
+                  <button
+                    type="button"
+                    class="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                    @click="copyApiKeyToken"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div class="mt-2 break-all font-mono text-[11px] text-emerald-800">
+                  {{ apiKeyToken }}
+                </div>
+                <div v-if="apiKeyTokenLabel" class="mt-1 text-[11px] text-emerald-700">
+                  Prefix: {{ apiKeyTokenLabel }}
+                </div>
+                <div v-if="apiKeyCopyStatus" class="mt-1 text-[11px] text-emerald-700">
+                  {{ apiKeyCopyStatus }}
+                </div>
+              </div>
+
+              <div v-if="apiKeysLoading" class="text-sm text-slate-500">Loading keys...</div>
+              <div v-else-if="apiKeys.length === 0" class="text-sm text-slate-500">No API keys yet.</div>
+              <div v-else class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                  <thead class="text-left text-xs uppercase text-slate-400">
+                    <tr>
+                      <th class="py-2 pr-3">Name</th>
+                      <th class="py-2 pr-3">Prefix</th>
+                      <th class="py-2 pr-3">Scopes</th>
+                      <th class="py-2 pr-3">Last Used</th>
+                      <th class="py-2 pr-3">Status</th>
+                      <th class="py-2 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr v-for="key in apiKeys" :key="key.key_id">
+                      <td class="py-2 pr-3 text-slate-900">{{ key.name || 'Untitled' }}</td>
+                      <td class="py-2 pr-3 font-mono text-xs text-slate-600">{{ key.key_prefix }}••••</td>
+                      <td class="py-2 pr-3 text-xs text-slate-500">{{ key.scopes.join(', ') || '—' }}</td>
+                      <td class="py-2 pr-3 text-xs text-slate-500">{{ key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : '—' }}</td>
+                      <td class="py-2 pr-3 text-xs">
+                        <span v-if="key.revoked_at" class="rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">Revoked</span>
+                        <span v-else class="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Active</span>
+                      </td>
+                      <td class="py-2 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            class="text-xs font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                            :disabled="apiKeysLoading || !apiAccess || Boolean(key.revoked_at)"
+                            @click="rotateEnterpriseApiKey(key)"
+                          >
+                            Rotate
+                          </button>
+                          <button
+                            v-if="!key.revoked_at"
+                            type="button"
+                            class="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+                            :disabled="apiKeysLoading || !apiAccess"
+                            @click="revokeEnterpriseApiKey(key)"
+                          >
+                            Revoke
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+              <div>
+                <h3 class="text-base font-semibold text-slate-900">Embed Generator</h3>
+                <p class="text-xs text-slate-500">Create shareable index charts for your site with proper citation.</p>
+              </div>
+
+              <div class="grid gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">Corridor ID</label>
+                  <input
+                    v-model="embedCorridorId"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    placeholder="US-PH-USD-PHP"
+                  />
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">Amount Bucket</label>
+                    <input
+                      v-model.number="embedAmountBucket"
+                      type="number"
+                      min="1"
+                      class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">Method Profile</label>
+                    <select
+                      v-model="embedMethodProfile"
+                      class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    >
+                      <option value="standard_bank">Bank to Bank</option>
+                      <option value="standard_card">Card to Bank</option>
+                      <option value="cash_pickup">Cash Pickup</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">Days</label>
+                    <input
+                      v-model.number="embedDays"
+                      type="number"
+                      min="1"
+                      max="365"
+                      class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">Theme</label>
+                    <select
+                      v-model="embedTheme"
+                      class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    >
+                      <option value="dark">Dark</option>
+                      <option value="light">Light</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">API Key</label>
+                  <input
+                    v-model="embedApiKey"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    placeholder="Paste API key token"
+                  />
+                  <p v-if="!embedApiKey" class="mt-1 text-[11px] text-amber-600">
+                    Paste a dedicated API key before sharing embeds publicly.
+                  </p>
+                </div>
+              </div>
+
+              <div v-if="embedCopyStatus" class="text-xs text-emerald-600">
+                {{ embedCopyStatus }}
+              </div>
+
+              <div class="space-y-4">
+                <div v-for="item in embedIndices" :key="item.key" class="rounded-lg border border-slate-200 p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-semibold text-slate-900">{{ item.label }} Embed</div>
+                    <button
+                      type="button"
+                      class="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                      @click="copyEmbedCode(item.key)"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <textarea
+                    class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700"
+                    rows="5"
+                    readonly
+                    :value="embedCodes[item.key]"
+                  />
+                  <div class="mt-3">
+                    <div class="text-xs text-slate-500 mb-2">Preview</div>
+                    <div class="w-full overflow-hidden rounded-lg border border-slate-200" style="height: 240px;">
+                      <iframe
+                        v-if="embedUrls[item.key]"
+                        :src="embedUrls[item.key]"
+                        class="h-full w-full"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3197,7 +3444,7 @@ import { COUNTRIES } from '~/utils/countries-currencies'
 const { ensureHydrated } = useAuth()
 await ensureHydrated()
 
-type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'ops' | 'account'
+type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'enterprise' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
 
 const tabs: { id: DashboardTab; label: string }[] = [
@@ -3205,6 +3452,7 @@ const tabs: { id: DashboardTab; label: string }[] = [
   { id: 'watchlist', label: 'Watchlist' },
   { id: 'alerts', label: 'Alerts' },
   { id: 'history', label: 'History' },
+  { id: 'enterprise', label: 'Enterprise' },
   { id: 'ops', label: 'Ops' },
   { id: 'account', label: 'Account' },
 ]
@@ -3266,10 +3514,8 @@ const {
   revokeAllSessions,
 } = useSessions()
 const { updateProfile } = useMe()
-const { isPlus, limits, billing, refreshPlan } = useEntitlements()
+const { isPlus, isEnterprise, apiAccess, apiTier, apiCadenceHours, limits, billing, refreshPlan } = useEntitlements()
 const billingActions = useBilling()
-const runtimeConfig = useRuntimeConfig()
-const devAutoUpgrade = computed(() => Boolean(runtimeConfig.public.devAuthEnabled) || import.meta.dev)
 const exportsApi = useExports()
 const dataExportApi = useDataExport()
 const accountApi = useAccount()
@@ -3347,6 +3593,27 @@ type RateSnapshot = {
 
 type BestProviderSnapshot = ProviderRateEntry & {
   slug: string
+}
+
+type ApiKeyRecord = {
+  key_id: string
+  key_prefix: string
+  name: string | null
+  scopes: string[]
+  created_at: string
+  last_used_at: string | null
+  revoked_at: string | null
+}
+
+type ApiKeyListResponse = {
+  success: boolean
+  keys: ApiKeyRecord[]
+}
+
+type ApiKeyCreateResponse = {
+  success: boolean
+  api_key: ApiKeyRecord
+  token: string
 }
 
 const historyDaysByTimeframe: Record<string, number> = {
@@ -3494,6 +3761,202 @@ const alertsLimitPercent = computed(() => {
 const watchlistLimitReached = computed(() => !isPlus.value && watchlistLimitPercent.value >= 100)
 const alertsLimitReached = computed(() => !isPlus.value && alertsLimitPercent.value >= 100)
 
+const runtimeConfig = useRuntimeConfig()
+
+const apiKeys = ref<ApiKeyRecord[]>([])
+const apiKeysLoading = ref(false)
+const apiKeysError = ref<string | null>(null)
+const apiKeysLoaded = ref(false)
+const apiKeyName = ref('')
+const apiKeyTier = ref<'2' | '3'>('2')
+const apiKeyToken = ref<string | null>(null)
+const apiKeyTokenLabel = ref<string | null>(null)
+const apiKeyCopyStatus = ref<string | null>(null)
+
+const embedCorridorId = ref('US-PH-USD-PHP')
+const embedAmountBucket = ref(500)
+const embedMethodProfile = ref<'standard_bank' | 'standard_card' | 'cash_pickup'>('standard_bank')
+const embedDays = ref(30)
+const embedTheme = ref<'dark' | 'light'>('dark')
+const embedApiKey = ref('')
+const embedCopyStatus = ref<string | null>(null)
+
+const embedIndices = [
+  { key: 'teer', label: 'TEER' },
+  { key: 'rci', label: 'RCI' },
+  { key: 'rvi', label: 'RVI' },
+] as const
+
+type EmbedIndexKey = typeof embedIndices[number]['key']
+
+const tier2CadenceLabel = computed(() => apiCadenceHours.value ?? 6)
+const tier3CadenceLabel = computed(() => 24)
+
+const embedSiteOrigin = computed(() => {
+  if (runtimeConfig.public?.siteUrl) return runtimeConfig.public.siteUrl
+  if (process.client) return window.location.origin
+  return ''
+})
+
+const embedApiKeyValue = computed(() => embedApiKey.value.trim() || 'YOUR_API_KEY')
+
+const buildEmbedUrl = (indexKey: EmbedIndexKey) => {
+  const baseUrl = embedSiteOrigin.value
+  if (!baseUrl) return ''
+  const params = new URLSearchParams({
+    corridor_id: embedCorridorId.value.toUpperCase(),
+    amount_bucket: String(embedAmountBucket.value || 500),
+    method_profile: embedMethodProfile.value,
+    days: String(embedDays.value || 30),
+    theme: embedTheme.value,
+    api_key: embedApiKeyValue.value,
+  })
+  return `${baseUrl}/embed/indices/${indexKey}?${params.toString()}`
+}
+
+const embedUrls = computed(() => ({
+  teer: buildEmbedUrl('teer'),
+  rci: buildEmbedUrl('rci'),
+  rvi: buildEmbedUrl('rvi'),
+}))
+
+const embedCodes = computed(() => {
+  const retrieved = new Date().toLocaleDateString()
+  const buildCode = (indexKey: EmbedIndexKey, label: string) => {
+    const url = buildEmbedUrl(indexKey)
+    if (!url) return ''
+    const citation = `Source: Remit-Scout (${label}) · Weighted by provider volume · Retrieved ${retrieved}`
+    return [
+      '<figure class="remit-scout-embed">',
+      `  <iframe src="${url}" width="100%" height="320" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`,
+      `  <figcaption style="font-size:12px;color:#64748b;">${citation}</figcaption>`,
+      '</figure>',
+    ].join('\n')
+  }
+  return {
+    teer: buildCode('teer', 'TEER'),
+    rci: buildCode('rci', 'RCI'),
+    rvi: buildCode('rvi', 'RVI'),
+  }
+})
+
+const toApiKeyErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return fallback
+}
+
+const copyApiKeyToken = async () => {
+  if (!apiKeyToken.value || !process.client) return
+  try {
+    await navigator.clipboard.writeText(apiKeyToken.value)
+    apiKeyCopyStatus.value = 'Token copied.'
+  } catch {
+    apiKeyCopyStatus.value = 'Copy failed.'
+  } finally {
+    setTimeout(() => {
+      apiKeyCopyStatus.value = null
+    }, 2000)
+  }
+}
+
+const copyEmbedCode = async (key: EmbedIndexKey) => {
+  const code = embedCodes.value[key]
+  if (!code || !process.client) return
+  try {
+    await navigator.clipboard.writeText(code)
+    embedCopyStatus.value = `${key.toUpperCase()} embed copied.`
+  } catch {
+    embedCopyStatus.value = 'Copy failed.'
+  } finally {
+    setTimeout(() => {
+      embedCopyStatus.value = null
+    }, 2000)
+  }
+}
+
+const fetchApiKeys = async () => {
+  if (apiKeysLoading.value) return
+  apiKeysLoading.value = true
+  apiKeysError.value = null
+  try {
+    const response = await request<ApiKeyListResponse>('/me/api-keys')
+    apiKeys.value = response.keys ?? []
+    apiKeysLoaded.value = true
+  } catch (error) {
+    apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to load API keys.')
+  } finally {
+    apiKeysLoading.value = false
+  }
+}
+
+const createEnterpriseApiKey = async () => {
+  if (apiKeysLoading.value) return
+  apiKeysLoading.value = true
+  apiKeysError.value = null
+  apiKeyToken.value = null
+  apiKeyTokenLabel.value = null
+  try {
+    const tierScope = apiKeyTier.value === '3' ? 'tier:3' : 'tier:2'
+    const response = await request<ApiKeyCreateResponse>('/me/api-keys', {
+      method: 'POST',
+      body: {
+        name: apiKeyName.value.trim() || undefined,
+        scopes: [tierScope, 'indices:read'],
+      },
+    })
+    apiKeys.value = [response.api_key, ...apiKeys.value.filter(key => key.key_id !== response.api_key.key_id)]
+    apiKeyToken.value = response.token
+    apiKeyTokenLabel.value = response.api_key.key_prefix
+    embedApiKey.value = response.token
+    apiKeyName.value = ''
+    apiKeyTier.value = '2'
+  } catch (error) {
+    apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to create API key.')
+  } finally {
+    apiKeysLoading.value = false
+  }
+}
+
+const rotateEnterpriseApiKey = async (key: ApiKeyRecord) => {
+  if (apiKeysLoading.value) return
+  apiKeysLoading.value = true
+  apiKeysError.value = null
+  apiKeyToken.value = null
+  apiKeyTokenLabel.value = null
+  try {
+    const response = await request<ApiKeyCreateResponse>(`/me/api-keys/${key.key_id}/rotate`, {
+      method: 'POST',
+    })
+    apiKeys.value = apiKeys.value.map((item) => (
+      item.key_id === key.key_id ? response.api_key : item
+    ))
+    apiKeyToken.value = response.token
+    apiKeyTokenLabel.value = response.api_key.key_prefix
+    embedApiKey.value = response.token
+  } catch (error) {
+    apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to rotate API key.')
+  } finally {
+    apiKeysLoading.value = false
+  }
+}
+
+const revokeEnterpriseApiKey = async (key: ApiKeyRecord) => {
+  if (apiKeysLoading.value) return
+  apiKeysLoading.value = true
+  apiKeysError.value = null
+  try {
+    await request(`/me/api-keys/${key.key_id}`, { method: 'DELETE' })
+    apiKeys.value = apiKeys.value.map((item) => (
+      item.key_id === key.key_id ? { ...item, revoked_at: new Date().toISOString() } : item
+    ))
+  } catch (error) {
+    apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to revoke API key.')
+  } finally {
+    apiKeysLoading.value = false
+  }
+}
+
 const hasAdminAccess = ref(false)
 const adminAccessChecked = ref(false)
 
@@ -3515,20 +3978,23 @@ const checkAdminAccess = async () => {
   }
 }
 
-const visibleTabs = computed(() => (
-  hasAdminAccess.value ? tabs : tabs.filter(tab => tab.id !== 'ops')
-))
+const visibleTabs = computed(() => {
+  const baseTabs = hasAdminAccess.value ? tabs : tabs.filter(tab => tab.id !== 'ops')
+  return isEnterprise.value ? baseTabs : baseTabs.filter(tab => tab.id !== 'enterprise')
+})
 
 const activeTab = computed<DashboardTab>(() => {
   const raw = route.query.tab
   const tab = Array.isArray(raw) ? raw[0] : raw
   if (tab === 'ops' && !hasAdminAccess.value) return 'overview'
-  if (tab === 'watchlist' || tab === 'alerts' || tab === 'history' || tab === 'ops' || tab === 'account') return tab
+  if (tab === 'enterprise' && !isEnterprise.value) return 'overview'
+  if (tab === 'watchlist' || tab === 'alerts' || tab === 'history' || tab === 'enterprise' || tab === 'ops' || tab === 'account') return tab
   return 'overview'
 })
 
 function setTab(tab: DashboardTab) {
   if (tab === 'ops' && !hasAdminAccess.value) return
+  if (tab === 'enterprise' && !isEnterprise.value) return
   const nextQuery = { ...route.query } as Record<string, unknown>
   if (tab === 'overview') {
     delete nextQuery.tab
@@ -3552,14 +4018,6 @@ async function startCheckout() {
   if (!result.ok) {
     billingActionMessage.value = result.error || 'Unable to start checkout.'
     return
-  }
-
-  if (devAutoUpgrade.value && result.sessionId) {
-    const verifyResult = await billingActions.verifyCheckoutSession(result.sessionId)
-    if (verifyResult.ok) {
-      await navigateTo('/plus/success')
-      return
-    }
   }
 
   if (!result.url) {
@@ -4027,6 +4485,9 @@ watch(() => activeTab.value, (tab) => {
   }
   if (tab === 'ops' && !opsAuditHasLoaded.value) {
     void loadOpsAudit()
+  }
+  if (tab === 'enterprise' && isEnterprise.value && !apiKeysLoaded.value) {
+    void fetchApiKeys()
   }
 })
 

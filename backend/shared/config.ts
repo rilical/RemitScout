@@ -44,10 +44,6 @@ const isAwsRuntime = Boolean(
 const isStaging = process.env.NODE_ENV === 'staging'
 const isStrictConfig =
   process.env.NODE_ENV === 'production' || isStaging || process.env.STRICT_CONFIG === '1'
-const supabaseMockEnabled = toBoolean(process.env.SUPABASE_MOCK)
-  || (!isStrictConfig && (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY))
-const stripeMockEnabled = toBoolean(process.env.STRIPE_MOCK)
-  || (!isStrictConfig && !process.env.STRIPE_SECRET_KEY)
 
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
@@ -65,6 +61,35 @@ const getDatabaseUrl = (primary?: string, fallback?: string) => {
 const toList = (value: string | undefined) =>
   (value || '').split(',').map(item => item.trim()).filter(Boolean)
 
+const observationModeEnabled = toBoolean(process.env.PLANE_B_B2B_OBSERVATION_MODE)
+const observationDelayFactor = observationModeEnabled
+  ? Math.min(1, Math.max(0, toNumber(process.env.PLANE_B_B2B_OBSERVATION_DELAY_FACTOR, 0.25)))
+  : 1
+
+const fullSweepDays = toNumber(process.env.PLANE_B_B2B_FULL_SWEEP_DAYS, 30)
+const observationRunDays = toNumber(process.env.PLANE_B_B2B_OBSERVATION_RUN_DAYS, fullSweepDays)
+const observationSweepEnabled = toBoolean(process.env.PLANE_B_B2B_OBSERVATION_SWEEP_ENABLED)
+const observationBypassRightsMatrix = toBoolean(
+  process.env.PLANE_B_B2B_OBSERVATION_BYPASS_RIGHTS_MATRIX,
+  observationModeEnabled,
+)
+const observationBypassCatalog = toBoolean(
+  process.env.PLANE_B_B2B_OBSERVATION_BYPASS_CATALOG,
+  observationModeEnabled,
+)
+const observationUnsupportedTtlDays = toNumber(
+  process.env.PLANE_B_B2B_OBSERVATION_UNSUPPORTED_TTL_DAYS,
+  observationRunDays,
+)
+const observationBatchSize = toNumber(process.env.PLANE_B_B2B_OBSERVATION_BATCH_SIZE, 200)
+const observationMaxQueueDepth = toNumber(
+  process.env.PLANE_B_B2B_OBSERVATION_MAX_QUEUE_DEPTH,
+  0,
+)
+
+const applyObservationDelay = (value: number) =>
+  observationDelayFactor === 1 ? value : Math.max(0, Math.round(value * observationDelayFactor))
+
 export const config = {
   env: process.env.NODE_ENV || 'development',
   runtime: {
@@ -74,6 +99,11 @@ export const config = {
     port: toNumber(process.env.PLANE_A_PORT, 4000),
     rateLimitMax: toNumber(process.env.PLANE_A_RATE_LIMIT_MAX, 120),
     rateLimitWindowMs: toNumber(process.env.PLANE_A_RATE_LIMIT_WINDOW_MS, 60000),
+    enterpriseApiRateLimitMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_MAX, 600),
+    enterpriseApiRateLimitWindowMs: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_WINDOW_MS, 60000),
+    enterpriseApiKeyMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_KEY_MAX, 5),
+    enterpriseApiTier2CadenceHours: toNumber(process.env.PLANE_A_ENTERPRISE_API_TIER2_CADENCE_HOURS, 6),
+    enterpriseApiTier3CadenceHours: toNumber(process.env.PLANE_A_ENTERPRISE_API_TIER3_CADENCE_HOURS, 24),
     requireApiKey: process.env.PLANE_A_REQUIRE_API_KEY === '1',
     requireJwt: process.env.PLANE_A_REQUIRE_JWT === '1',
     apiKeys: (process.env.PLANE_A_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean),
@@ -107,23 +137,46 @@ export const config = {
     useSeedData: toBoolean(process.env.PLANE_B_USE_SEED_DATA),
     b2bSweepIntervalMinutes: toNumber(process.env.PLANE_B_B2B_SWEEP_INTERVAL_MINUTES, 15),
     b2bMinProviderCount: toNumber(process.env.PLANE_B_B2B_MIN_PROVIDER_COUNT, 0),
-    b2bFullSweepDays: toNumber(process.env.PLANE_B_B2B_FULL_SWEEP_DAYS, 30),
+    b2bTier1MinProviderCount: toNumber(process.env.PLANE_B_B2B_TIER1_MIN_PROVIDER_COUNT, 5),
+    b2bTier1VolatilityThreshold: toNumber(process.env.PLANE_B_B2B_TIER1_VOLATILITY_MIN, 0.05),
+    b2bFullSweepDays: fullSweepDays,
     b2bTargetMinutes: toNumber(process.env.PLANE_B_B2B_TARGET_MINUTES, 0),
+    b2bMaxTargetMinutes: toNumber(process.env.PLANE_B_B2B_MAX_TARGET_MINUTES, 1440),
+    b2bMaxQueueDepth: toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_DEPTH, 0),
+    b2bMinShards: toNumber(process.env.PLANE_B_B2B_MIN_SHARDS, 0),
+    b2bMaxCorridorsPerShard: toNumber(process.env.PLANE_B_B2B_MAX_CORRIDORS_PER_SHARD, 250),
     b2bTier1Enabled: toBoolean(process.env.PLANE_B_B2B_TIER1_ENABLED, false),
+    b2bObservationMode: observationModeEnabled,
+    b2bObservationSweepEnabled: observationSweepEnabled,
+    b2bObservationRunDays: observationRunDays,
+    b2bObservationBatchSize: observationBatchSize,
+    b2bObservationMaxQueueDepth: observationMaxQueueDepth,
+    b2bObservationBypassRightsMatrix: observationBypassRightsMatrix,
+    b2bObservationBypassCatalog: observationBypassCatalog,
+    b2bObservationUnsupportedTtlDays: observationUnsupportedTtlDays,
+    b2bTierSuggestionVersion: process.env.PLANE_B_TIER_SUGGESTION_VERSION || '',
+    b2bTierVersion: process.env.PLANE_B_B2B_TIER_VERSION || '',
     b2bFreshnessSloMinutes: toNumber(process.env.PLANE_B_B2B_FRESHNESS_SLO_MINUTES, 30),
     b2bFreshnessSloEnabled: toBoolean(process.env.PLANE_B_B2B_FRESHNESS_SLO_ENABLED),
+    b2bFreshnessChunkSize: toNumber(process.env.PLANE_B_B2B_FRESHNESS_CHUNK_SIZE, 250),
     b2bNativeCurrencyOnly: toBoolean(process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY ?? '1'),
     b2bWiseCurrencyOverride: toBoolean(process.env.PLANE_B_B2B_WISE_CURRENCY_OVERRIDE),
+    b2bRpmSafetyFactor: toNumber(process.env.PLANE_B_B2B_RPM_SAFETY_FACTOR, 0.7),
+    b2bRpmMultiplier: toNumber(process.env.PLANE_B_B2B_RPM_MULTIPLIER, 1),
+    b2bPerCorridorRpmMultiplier: toNumber(
+      process.env.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER,
+      1,
+    ),
     circuitOpenMs: toNumber(process.env.PLANE_B_CIRCUIT_OPEN_MS, 300000),
     circuitHalfOpenMs: toNumber(process.env.PLANE_B_CIRCUIT_HALF_OPEN_MS, 60000),
     blockCooldownMs: toNumber(process.env.PLANE_B_BLOCK_COOLDOWN_MS, 86400000),
     remitly: {
-      delayMs: toNumber(process.env.PLANE_B_REMITLY_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_REMITLY_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_REMITLY_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_REMITLY_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_REMITLY_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_REMITLY_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_REMITLY_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_REMITLY_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_REMITLY_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_REMITLY_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_REMITLY_BLOCK_COOLDOWN_MS, 3600000),
@@ -133,12 +186,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_REMITLY_FRESHNESS_SLO_ENABLED),
     },
     wise: {
-      delayMs: toNumber(process.env.PLANE_B_WISE_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WISE_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_WISE_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_WISE_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_WISE_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_WISE_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_WISE_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WISE_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_WISE_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_WISE_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_WISE_BLOCK_COOLDOWN_MS, 3600000),
@@ -148,12 +201,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_WISE_FRESHNESS_SLO_ENABLED),
     },
     xe: {
-      delayMs: toNumber(process.env.PLANE_B_XE_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_XE_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_XE_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_XE_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_XE_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_XE_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_XE_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_XE_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_XE_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_XE_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_XE_BLOCK_COOLDOWN_MS, 3600000),
@@ -163,12 +216,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_XE_FRESHNESS_SLO_ENABLED),
     },
     transfergo: {
-      delayMs: toNumber(process.env.PLANE_B_TRANSFERGO_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_TRANSFERGO_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_TRANSFERGO_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_TRANSFERGO_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_TRANSFERGO_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_TRANSFERGO_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_TRANSFERGO_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_TRANSFERGO_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_TRANSFERGO_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_TRANSFERGO_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_TRANSFERGO_BLOCK_COOLDOWN_MS, 3600000),
@@ -178,12 +231,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_TRANSFERGO_FRESHNESS_SLO_ENABLED),
     },
     paysend: {
-      delayMs: toNumber(process.env.PLANE_B_PAYSEND_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_PAYSEND_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_PAYSEND_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_PAYSEND_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_PAYSEND_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_PAYSEND_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_PAYSEND_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_PAYSEND_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_PAYSEND_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_PAYSEND_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_PAYSEND_BLOCK_COOLDOWN_MS, 3600000),
@@ -193,12 +246,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_PAYSEND_FRESHNESS_SLO_ENABLED),
     },
     pangea: {
-      delayMs: toNumber(process.env.PLANE_B_PANGEA_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_PANGEA_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_PANGEA_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_PANGEA_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_PANGEA_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_PANGEA_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_PANGEA_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_PANGEA_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_PANGEA_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_PANGEA_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_PANGEA_BLOCK_COOLDOWN_MS, 3600000),
@@ -208,12 +261,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_PANGEA_FRESHNESS_SLO_ENABLED),
     },
     orbitremit: {
-      delayMs: toNumber(process.env.PLANE_B_ORBITREMIT_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_ORBITREMIT_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_ORBITREMIT_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_ORBITREMIT_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_ORBITREMIT_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_ORBITREMIT_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_ORBITREMIT_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_ORBITREMIT_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_ORBITREMIT_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_ORBITREMIT_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_ORBITREMIT_BLOCK_COOLDOWN_MS, 3600000),
@@ -223,12 +276,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_ORBITREMIT_FRESHNESS_SLO_ENABLED),
     },
     bossmoney: {
-      delayMs: toNumber(process.env.PLANE_B_BOSSMONEY_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_BOSSMONEY_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_BOSSMONEY_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_BOSSMONEY_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_BOSSMONEY_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_BOSSMONEY_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_BOSSMONEY_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_BOSSMONEY_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_BOSSMONEY_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_BOSSMONEY_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_BOSSMONEY_BLOCK_COOLDOWN_MS, 3600000),
@@ -239,12 +292,12 @@ export const config = {
       stateCode: process.env.PLANE_B_BOSSMONEY_STATE_CODE ?? 'NJ',
     },
     worldremit: {
-      delayMs: toNumber(process.env.PLANE_B_WORLDREMIT_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WORLDREMIT_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_WORLDREMIT_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_WORLDREMIT_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_WORLDREMIT_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_WORLDREMIT_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_WORLDREMIT_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WORLDREMIT_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_WORLDREMIT_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_WORLDREMIT_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_WORLDREMIT_BLOCK_COOLDOWN_MS, 3600000),
@@ -254,12 +307,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_WORLDREMIT_FRESHNESS_SLO_ENABLED),
     },
     westernunion: {
-      delayMs: toNumber(process.env.PLANE_B_WESTERNUNION_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WESTERNUNION_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_WESTERNUNION_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_WESTERNUNION_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_WESTERNUNION_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_WESTERNUNION_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_WESTERNUNION_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WESTERNUNION_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_WESTERNUNION_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_WESTERNUNION_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_WESTERNUNION_BLOCK_COOLDOWN_MS, 3600000),
@@ -269,12 +322,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_WESTERNUNION_FRESHNESS_SLO_ENABLED),
     },
     xoom: {
-      delayMs: toNumber(process.env.PLANE_B_XOOM_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_XOOM_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_XOOM_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_XOOM_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_XOOM_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_XOOM_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_XOOM_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_XOOM_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_XOOM_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_XOOM_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_XOOM_BLOCK_COOLDOWN_MS, 3600000),
@@ -284,12 +337,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_XOOM_FRESHNESS_SLO_ENABLED),
     },
     instarem: {
-      delayMs: toNumber(process.env.PLANE_B_INSTAREM_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_INSTAREM_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_INSTAREM_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_INSTAREM_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_INSTAREM_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_INSTAREM_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_INSTAREM_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_INSTAREM_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_INSTAREM_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_INSTAREM_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_INSTAREM_BLOCK_COOLDOWN_MS, 3600000),
@@ -299,12 +352,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_INSTAREM_FRESHNESS_SLO_ENABLED),
     },
     wirebarley: {
-      delayMs: toNumber(process.env.PLANE_B_WIREBARLEY_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WIREBARLEY_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_WIREBARLEY_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_WIREBARLEY_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_WIREBARLEY_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_WIREBARLEY_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_WIREBARLEY_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_WIREBARLEY_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_WIREBARLEY_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_WIREBARLEY_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_WIREBARLEY_BLOCK_COOLDOWN_MS, 3600000),
@@ -314,12 +367,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_WIREBARLEY_FRESHNESS_SLO_ENABLED),
     },
     alansari: {
-      delayMs: toNumber(process.env.PLANE_B_ALANSARI_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_ALANSARI_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_ALANSARI_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_ALANSARI_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_ALANSARI_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_ALANSARI_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_ALANSARI_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_ALANSARI_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_ALANSARI_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_ALANSARI_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_ALANSARI_BLOCK_COOLDOWN_MS, 3600000),
@@ -329,12 +382,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_ALANSARI_FRESHNESS_SLO_ENABLED),
     },
     intermex: {
-      delayMs: toNumber(process.env.PLANE_B_INTERMEX_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_INTERMEX_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_INTERMEX_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_INTERMEX_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_INTERMEX_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_INTERMEX_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_INTERMEX_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_INTERMEX_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_INTERMEX_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_INTERMEX_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_INTERMEX_BLOCK_COOLDOWN_MS, 3600000),
@@ -344,12 +397,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_INTERMEX_FRESHNESS_SLO_ENABLED),
     },
     koronapay: {
-      delayMs: toNumber(process.env.PLANE_B_KORONAPAY_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_KORONAPAY_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_KORONAPAY_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_KORONAPAY_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_KORONAPAY_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_KORONAPAY_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_KORONAPAY_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_KORONAPAY_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_KORONAPAY_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_KORONAPAY_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_KORONAPAY_BLOCK_COOLDOWN_MS, 3600000),
@@ -359,12 +412,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_KORONAPAY_FRESHNESS_SLO_ENABLED),
     },
     remitbee: {
-      delayMs: toNumber(process.env.PLANE_B_REMITBEE_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_REMITBEE_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_REMITBEE_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_REMITBEE_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_REMITBEE_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_REMITBEE_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_REMITBEE_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_REMITBEE_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_REMITBEE_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_REMITBEE_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_REMITBEE_BLOCK_COOLDOWN_MS, 3600000),
@@ -372,14 +425,19 @@ export const config = {
       sweepShardCount: toNumber(process.env.PLANE_B_REMITBEE_SWEEP_SHARD_COUNT, 1),
       freshnessSloMinutes: toNumber(process.env.PLANE_B_REMITBEE_FRESHNESS_SLO_MINUTES, 30),
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_REMITBEE_FRESHNESS_SLO_ENABLED),
+      proxyTier: process.env.PLANE_B_REMITBEE_PROXY_TIER || '',
+      proxyTierFallback: process.env.PLANE_B_REMITBEE_PROXY_TIER_FALLBACK || '',
+      sessionCookie: process.env.PLANE_B_REMITBEE_SESSION_COOKIE || '',
+      sessionWarmupUrl: process.env.PLANE_B_REMITBEE_SESSION_WARMUP_URL || 'https://www.remitbee.com/',
+      sessionTtlMs: toNumber(process.env.PLANE_B_REMITBEE_SESSION_TTL_MS, 1800000),
     },
     singx: {
-      delayMs: toNumber(process.env.PLANE_B_SINGX_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_SINGX_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_SINGX_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_SINGX_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_SINGX_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_SINGX_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_SINGX_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_SINGX_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_SINGX_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_SINGX_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_SINGX_BLOCK_COOLDOWN_MS, 3600000),
@@ -389,12 +447,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_SINGX_FRESHNESS_SLO_ENABLED),
     },
     placid: {
-      delayMs: toNumber(process.env.PLANE_B_PLACID_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_PLACID_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_PLACID_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_PLACID_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_PLACID_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_PLACID_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_PLACID_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_PLACID_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_PLACID_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_PLACID_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_PLACID_BLOCK_COOLDOWN_MS, 3600000),
@@ -402,14 +460,19 @@ export const config = {
       sweepShardCount: toNumber(process.env.PLANE_B_PLACID_SWEEP_SHARD_COUNT, 1),
       freshnessSloMinutes: toNumber(process.env.PLANE_B_PLACID_FRESHNESS_SLO_MINUTES, 30),
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_PLACID_FRESHNESS_SLO_ENABLED),
+      proxyTier: process.env.PLANE_B_PLACID_PROXY_TIER || '',
+      proxyTierFallback: process.env.PLANE_B_PLACID_PROXY_TIER_FALLBACK || '',
+      sessionCookie: process.env.PLANE_B_PLACID_SESSION_COOKIE || '',
+      sessionWarmupUrl: process.env.PLANE_B_PLACID_SESSION_WARMUP_URL || 'https://www.placid.net/',
+      sessionTtlMs: toNumber(process.env.PLANE_B_PLACID_SESSION_TTL_MS, 1800000),
     },
     ria: {
-      delayMs: toNumber(process.env.PLANE_B_RIA_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_RIA_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_RIA_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_RIA_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_RIA_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_RIA_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_RIA_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_RIA_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_RIA_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_RIA_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_RIA_BLOCK_COOLDOWN_MS, 3600000),
@@ -419,12 +482,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_RIA_FRESHNESS_SLO_ENABLED),
     },
     dahabshiil: {
-      delayMs: toNumber(process.env.PLANE_B_DAHABSHIIL_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_DAHABSHIIL_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_DAHABSHIIL_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_DAHABSHIIL_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_DAHABSHIIL_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_DAHABSHIIL_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_DAHABSHIIL_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_DAHABSHIIL_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_DAHABSHIIL_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_DAHABSHIIL_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_DAHABSHIIL_BLOCK_COOLDOWN_MS, 3600000),
@@ -434,12 +497,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_DAHABSHIIL_FRESHNESS_SLO_ENABLED),
     },
     sendwave: {
-      delayMs: toNumber(process.env.PLANE_B_SENDWAVE_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_SENDWAVE_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_SENDWAVE_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_SENDWAVE_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_SENDWAVE_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_SENDWAVE_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_SENDWAVE_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_SENDWAVE_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_SENDWAVE_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_SENDWAVE_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_SENDWAVE_BLOCK_COOLDOWN_MS, 3600000),
@@ -449,12 +512,12 @@ export const config = {
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_SENDWAVE_FRESHNESS_SLO_ENABLED),
     },
     mukuru: {
-      delayMs: toNumber(process.env.PLANE_B_MUKURU_DELAY_MS, 1500),
+      delayMs: applyObservationDelay(toNumber(process.env.PLANE_B_MUKURU_DELAY_MS, 1500)),
       jitterMs: toNumber(process.env.PLANE_B_MUKURU_JITTER_MS, 600),
       rateLimitBackoffMs: toNumber(process.env.PLANE_B_MUKURU_RATE_LIMIT_BACKOFF_MS, 5000),
       rateLimitJitterMs: toNumber(process.env.PLANE_B_MUKURU_RATE_LIMIT_JITTER_MS, 2000),
       rateLimitMaxRetries: toNumber(process.env.PLANE_B_MUKURU_RATE_LIMIT_MAX_RETRIES, 2),
-      corridorDelayMs: toNumber(process.env.PLANE_B_MUKURU_CORRIDOR_DELAY_MS, 2000),
+      corridorDelayMs: applyObservationDelay(toNumber(process.env.PLANE_B_MUKURU_CORRIDOR_DELAY_MS, 2000)),
       corridorJitterMs: toNumber(process.env.PLANE_B_MUKURU_CORRIDOR_JITTER_MS, 1000),
       b2bAmount: toNumber(process.env.PLANE_B_MUKURU_B2B_AMOUNT, 500),
       blockCooldownMs: toNumber(process.env.PLANE_B_MUKURU_BLOCK_COOLDOWN_MS, 3600000),
@@ -619,24 +682,13 @@ export const config = {
       jwtAudience: process.env.SUPABASE_JWT_AUDIENCE || process.env.SUPABASE_JWT_AUD || '',
       verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
       remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 30),
-      mock: {
-        enabled: supabaseMockEnabled,
-        token: process.env.SUPABASE_MOCK_TOKEN || 'dev-token',
-        adminToken: process.env.SUPABASE_MOCK_ADMIN_TOKEN || 'admin-token',
-        userId: process.env.SUPABASE_MOCK_USER_ID || 'dev-user',
-        email: process.env.SUPABASE_MOCK_EMAIL || 'dev@example.com',
-        role: process.env.SUPABASE_MOCK_ROLE || 'authenticated',
-        adminEmail: process.env.SUPABASE_MOCK_ADMIN_EMAIL || 'admin@example.com',
-        planOverride: process.env.SUPABASE_MOCK_PLAN || undefined, // 'plus' or 'free' to override plan in dev mode
-      },
     },
   },
   billing: {
     stripe: {
-      mockEnabled: stripeMockEnabled,
       secretKey: process.env.STRIPE_SECRET_KEY || '',
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-      priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || (stripeMockEnabled ? 'price_mock' : ''),
+      priceIdPlus: process.env.STRIPE_PRICE_ID_PLUS || '',
       priceIdPlusAnnual: process.env.STRIPE_PRICE_ID_PLUS_ANNUAL || '',
       frontendBaseUrl:
         process.env.FRONTEND_BASE_URL ||
@@ -689,7 +741,7 @@ export const assertRuntimeConfig = (
   if (requirements.requireRedis && !config.redis.url) {
     missing.push('REDIS_URL')
   }
-  if (requirements.requireSupabase && !config.auth.supabase.mock.enabled) {
+  if (requirements.requireSupabase) {
     if (!config.auth.supabase.url) {
       missing.push('SUPABASE_URL')
     }
@@ -697,7 +749,7 @@ export const assertRuntimeConfig = (
       missing.push('SUPABASE_PUBLISHABLE_KEY')
     }
   }
-  if (requirements.requireStripe && !config.billing.stripe.mockEnabled) {
+  if (requirements.requireStripe) {
     if (!config.billing.stripe.secretKey) {
       missing.push('STRIPE_SECRET_KEY')
     }

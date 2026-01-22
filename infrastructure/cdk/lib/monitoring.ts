@@ -284,7 +284,7 @@ export const createMonitoring = (
   providerCoverageAlarm.addAlarmAction(alarmAction)
 
   // Batch Job Health Alarms
-  // Gold Publisher Job Stuck: Last success > 15 minutes ago
+  // Gold Publisher Job Stuck: Last success > 4.5 hours ago
   const goldPublisherStuckAlarm = new Alarm(scope, 'GoldPublisherStuckAlarm', {
     alarmName: `remit-scout-${options.envName}-gold-publisher-stuck`,
     metric: new Metric({
@@ -293,11 +293,11 @@ export const createMonitoring = (
       statistic: 'Maximum',
       period: Duration.minutes(5),
     }),
-    threshold: 900, // 15 minutes
+    threshold: 16200, // 4.5 hours
     evaluationPeriods: 1,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
     treatMissingData: TreatMissingData.BREACHING,
-    alarmDescription: 'Gold publisher job has not completed in 15 minutes',
+    alarmDescription: 'Gold publisher job has not completed in 4.5 hours',
   })
   goldPublisherStuckAlarm.addAlarmAction(alarmAction)
 
@@ -417,6 +417,35 @@ export const createMonitoring = (
   for (const alarm of queueDepthAlarms) {
     alarm.addAlarmAction(alarmAction)
   }
+
+  const ingestFanoutAgeThresholdSeconds =
+    options.envName === 'prod' ? 4 * 60 * 60 : 6 * 60 * 60
+  const ingestFanoutAgeAlarm = new Alarm(scope, 'IngestFanoutAgeAlarm', {
+    alarmName: `remit-scout-${options.envName}-ingest-fanout-age`,
+    metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage({
+      period: Duration.minutes(5),
+    }),
+    threshold: ingestFanoutAgeThresholdSeconds,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Ingest fanout queue age exceeds sweep deadline',
+  })
+  ingestFanoutAgeAlarm.addAlarmAction(alarmAction)
+
+  const ingestFanoutHardMaxSeconds = 24 * 60 * 60
+  const ingestFanoutHardMaxAlarm = new Alarm(scope, 'IngestFanoutAgeHardMaxAlarm', {
+    alarmName: `remit-scout-${options.envName}-ingest-fanout-age-hard-max`,
+    metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage({
+      period: Duration.minutes(5),
+    }),
+    threshold: ingestFanoutHardMaxSeconds,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Ingest fanout queue age exceeds 24h hard max',
+  })
+  ingestFanoutHardMaxAlarm.addAlarmAction(alarmAction)
 
   // Worker Lock Acquisition Failure Alarm
   const workerLockFailureAlarm = new Alarm(scope, 'WorkerLockFailureAlarm', {

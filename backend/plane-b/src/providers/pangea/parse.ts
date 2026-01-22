@@ -61,7 +61,7 @@ const mapPayout = (code?: string | null) => {
   return payoutMethodMap[code] ?? payoutMethodMap[token] ?? 'other'
 }
 
-export const extractPangeaMethodPairs = (_payload: PangeaPayload) => {
+export const extractPangeaMethodPairs = () => {
   return [
     { payin_method: 'bank_transfer', payout_method: 'bank_deposit' },
   ]

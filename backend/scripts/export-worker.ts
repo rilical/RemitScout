@@ -920,7 +920,7 @@ const runDbWorker = async (options?: { once?: boolean }) => {
   }
 }
 
-let pool = createPool(config.db.planeAUrl)
+const pool = createPool(config.db.planeAUrl)
 
 export const runExportWorker = async (options?: { once?: boolean }) => {
   if (!bucket) {

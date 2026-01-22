@@ -108,25 +108,6 @@ const getDeliveryTimeForPayinMethod = (payinMethod: string): {
   return { min: null, max: null }
 }
 
-/**
- * Determines which exchange rate to use based on payment method (following Monito's logic):
- * - Bank transfers: Use promotional rate (better rate)
- * - Card payments (debit/credit): Use base rate
- */
-const getEffectiveExchangeRate = (
-  payinMethod: string,
-  promotionalRate: number | null,
-  baseRate: number | null,
-): number | null => {
-  if (payinMethod === 'bank_transfer') {
-    // Bank transfers use promotional rate if available
-    return promotionalRate ?? baseRate
-  }
-
-  // Card payments use base rate
-  return baseRate
-}
-
 const getEstimates = (payload: RemitlyPayload): RemitlyEstimate[] => {
   const list = payload.pay_out_price_estimates?.estimates
   const estimates: RemitlyEstimate[] = Array.isArray(list) && list.length > 0
@@ -234,12 +215,6 @@ export const parseRemitlyPayload = (
   // Determine delivery time based on payment method (Monito logic)
   const deliveryTime = getDeliveryTimeForPayinMethod(payin)
 
-  // Determine effective exchange rate based on payment method (Monito logic)
-  // Bank transfers use promotional rate, cards use base rate
-  const effectiveRate = getEffectiveExchangeRate(payin, promotionalRate, baseRate)
-
-  // Store both rates for reference, but note which one is being used
-  // The effective rate logic matches Monito's display behavior
   return {
     send_amount: sendAmount,
     receive_amount: receiveAmount,

@@ -17,8 +17,6 @@ import type {
 
 const logger = createLogger('plane-b.fx-rate-repository')
 
-const QUERY_TIMEOUT_MS = 30000 // 30 seconds
-
 export class FxRateRepository implements IFxRateRepository {
   constructor(private readonly pool: Pool) {}
 

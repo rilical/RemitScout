@@ -53,7 +53,7 @@ describe('VolatilityService', () => {
     expect(result.hasData).toBe(true)
   })
 
-  it('assigns tier2 (1 hour) for moderate volatility (>= 0.08, < 0.15)', async () => {
+  it('assigns tier2 (4 hours) for moderate volatility (>= 0.08, < 0.15)', async () => {
     const corridorId = 'US-TH-USD-THB'
 
     await pool.query(
@@ -65,7 +65,7 @@ describe('VolatilityService', () => {
 
     const result = await service.getCacheTtlForCorridor(corridorId)
     expect(result.tier).toBe('tier2')
-    expect(result.ttlSeconds).toBe(60 * 60)
+    expect(result.ttlSeconds).toBe(4 * 60 * 60)
     expect(result.volatilityScore).toBe(0.10)
     expect(result.hasData).toBe(true)
   })
@@ -87,12 +87,12 @@ describe('VolatilityService', () => {
     expect(result.hasData).toBe(true)
   })
 
-  it('defaults to 2 hours when no volatility data exists', async () => {
+  it('defaults to 4 hours when no volatility data exists', async () => {
     const corridorId = 'CA-JP-CAD-JPY'
 
     const result = await service.getCacheTtlForCorridor(corridorId)
     expect(result.tier).toBe('tier2')
-    expect(result.ttlSeconds).toBe(2 * 60 * 60)
+    expect(result.ttlSeconds).toBe(4 * 60 * 60)
     expect(result.volatilityScore).toBeNull()
     expect(result.hasData).toBe(false)
   })

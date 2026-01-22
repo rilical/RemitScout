@@ -785,5 +785,5 @@ export const runTransferGoCollector = async (options: TransferGoCollectorOptions
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

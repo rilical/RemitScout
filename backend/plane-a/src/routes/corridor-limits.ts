@@ -115,7 +115,7 @@ export const corridorLimitsRoutes = async (app: FastifyInstance) => {
       let minAmount: number | null = fixedMin
       let maxAmount: number | null = fixedMax
       let source: 'observed' | 'observed_single' | 'fixed' = 'fixed'
-      let strict = true
+      const strict = true
 
       if (distinctCount >= 2 && Number.isFinite(observedMin) && Number.isFinite(observedMax)) {
         const normalizedMin = normalizeAmount(observedMin)

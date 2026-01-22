@@ -4,6 +4,7 @@ import type { Pool } from 'pg'
 import { createPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
+import { getRedisClient } from '../../../../shared/redis'
 import { detectBlock } from '../../collectors/block-detection'
 import { persistAttemptMetrics } from '../../collectors/attempt-metrics'
 import { notifyBlockAlert } from '../../collectors/alert-routing'
@@ -43,7 +44,7 @@ import { normalizeQuote } from '../../normalize/quote-normalizer'
 import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { PLACID_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
-import { fetchPlacidQuote } from './fetch'
+import { fetchPlacidQuote, fetchPlacidSessionCookie } from './fetch'
 import { extractPlacidMethodPairs, parsePlacidPayload, type PlacidPayload } from './parse'
 
 type PlacidCollectorOptions = {
@@ -70,6 +71,12 @@ type PlacidCollectorOptions = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const logger = createLogger('plane-b.placid.collector')
+
+const normalizeProxyTier = (value: unknown): ProxyTier | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed ? (trimmed as ProxyTier) : null
+}
 
 const upsertCapability = async (
   pool: Pool,
@@ -145,11 +152,20 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
   const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.placid.freshnessSloMinutes
   const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.placid.freshnessSloEnabled
   const blockCooldownMs = config.planeB.placid.blockCooldownMs
+  const proxyTierOverride = normalizeProxyTier(config.planeB.placid.proxyTier)
+  const proxyTierFallback = normalizeProxyTier(config.planeB.placid.proxyTierFallback)
+  const sessionWarmupUrl = (config.planeB.placid.sessionWarmupUrl || '').trim()
+  const sessionTtlMs = Math.max(0, config.planeB.placid.sessionTtlMs ?? 0)
+  const sessionCookieRequired = Boolean(sessionWarmupUrl)
+  const sessionSeedCookie = (config.planeB.placid.sessionCookie || '').trim()
+  const sessionTtlSeconds = sessionTtlMs > 0 ? Math.max(1, Math.floor(sessionTtlMs / 1000)) : 0
+  const sessionCookieCache = new Map<string, { value: string; expiresAt: number }>()
+  const sessionRefreshAttempts = new Map<string, number>()
+  const sessionRefreshForced = new Set<string>()
+  const redisClient = await getRedisClient()
+  const sessionRefreshCooldownMs = 5 * 60 * 1000
   const startedAt = new Date()
   const capabilityUpdated = new Set<string>()
-  let freshnessChecked = 0
-  let freshnessSkipped = 0
-  let freshnessStale = 0
   const providerRates = await resolveProviderRates(pool, providerId, {
     rpm: httpLimits.rpm,
     perCorridorRpm: httpLimits.perCorridorRpm,
@@ -209,7 +225,9 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
     || collectorType === 'b2b_tier_2_reference'
     || collectorType === 'b2b_tier_3_discovery'
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
-  const defaultProxyTier = getDefaultProxyTierForCollector(collectorType)
+  const baseProxyTier = getDefaultProxyTierForCollector(collectorType)
+  const defaultProxyTier = proxyTierOverride
+    ?? (baseProxyTier === 'NONE' ? 'DATACENTER_ROTATING' : baseProxyTier)
   const proxyTierCache = new Map<string, ProxyTier>()
   const resolveProxyTier = async (corridorId: string) => {
     if (proxyTierCache.has(corridorId)) {
@@ -218,6 +236,107 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
     const proxyTier = await getProxyTierForCorridor(pool, corridorId, defaultProxyTier)
     proxyTierCache.set(corridorId, proxyTier)
     return proxyTier
+  }
+
+  const getSessionCacheKey = (corridorId: string) => `session_cookie:${providerId}:${corridorId}`
+  const resolveSessionExpiry = () =>
+    sessionTtlMs > 0 ? Date.now() + sessionTtlMs : Number.MAX_SAFE_INTEGER
+
+  const cacheSessionCookie = async (corridorId: string, cookie: string) => {
+    if (!cookie) return
+    sessionCookieCache.set(corridorId, { value: cookie, expiresAt: resolveSessionExpiry() })
+    if (!redisClient) return
+    try {
+      const key = getSessionCacheKey(corridorId)
+      if (sessionTtlSeconds > 0) {
+        await redisClient.set(key, cookie, { EX: sessionTtlSeconds })
+      } else {
+        await redisClient.set(key, cookie)
+      }
+    } catch (error) {
+      logger.warn('session_cookie_cache_write_failed', {
+        corridor_id: corridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  const loadSessionCookieFromCache = async (corridorId: string, allowSeed: boolean) => {
+    const cached = sessionCookieCache.get(corridorId)
+    if (cached) {
+      if (sessionTtlMs === 0 || Date.now() < cached.expiresAt) {
+        return cached.value
+      }
+      sessionCookieCache.delete(corridorId)
+    }
+
+    if (redisClient) {
+      try {
+        const stored = await redisClient.get(getSessionCacheKey(corridorId))
+        if (stored) {
+          sessionCookieCache.set(corridorId, { value: stored, expiresAt: resolveSessionExpiry() })
+          return stored
+        }
+      } catch (error) {
+        logger.warn('session_cookie_cache_read_failed', {
+          corridor_id: corridorId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    if (allowSeed && sessionSeedCookie) {
+      await cacheSessionCookie(corridorId, sessionSeedCookie)
+      return sessionSeedCookie
+    }
+
+    return null
+  }
+
+  const refreshSessionCookie = async (corridorId: string, proxyTier: ProxyTier) => {
+    if (!sessionWarmupUrl) return null
+    sessionRefreshAttempts.set(corridorId, Date.now())
+    try {
+      const refreshed = await fetchPlacidSessionCookie({
+        locale,
+        corridorId,
+        proxyTier,
+        warmupUrl: sessionWarmupUrl,
+      })
+      if (refreshed) {
+        await cacheSessionCookie(corridorId, refreshed)
+      }
+      return refreshed
+    } catch (error) {
+      logger.warn('session_refresh_failed', {
+        corridor_id: corridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return null
+    }
+  }
+
+  const resolveSessionCookie = async (
+    corridorId: string,
+    proxyTier: ProxyTier,
+    forceRefresh = false,
+  ) => {
+    const cached = await loadSessionCookieFromCache(corridorId, !forceRefresh)
+    if (cached && !forceRefresh) {
+      return cached
+    }
+    if (!sessionWarmupUrl) {
+      return forceRefresh ? null : cached
+    }
+    const lastAttempt = sessionRefreshAttempts.get(corridorId) ?? 0
+    if (!forceRefresh && Date.now() - lastAttempt < sessionRefreshCooldownMs) {
+      return cached
+    }
+    const refreshed = await refreshSessionCookie(corridorId, proxyTier)
+    if (refreshed) {
+      return refreshed
+    }
+    return forceRefresh ? null : cached
   }
 
   await ensureProvider(pool, providerId, 'Placid')
@@ -264,7 +383,6 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
         }
 
         if (shouldApplyFreshnessSlo) {
-          freshnessChecked += 1
           const ageMinutes = await getLatestQuoteAgeMinutes(
             pool,
             providerId,
@@ -274,10 +392,8 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
             payoutMethod,
           )
           if (ageMinutes !== null && ageMinutes <= freshnessSloMinutes) {
-            freshnessSkipped += 1
             continue
           }
-          freshnessStale += 1
         }
 
         const requestFingerprint = createHash('sha256')
@@ -298,6 +414,48 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
         }
 
         const proxyTier: ProxyTier = await resolveProxyTier(corridorId)
+        const forceSessionRefresh = collectorType === 'health_probe'
+          && !sessionRefreshForced.has(corridorId)
+        let sessionCookieHeader = await resolveSessionCookie(
+          corridorId,
+          proxyTier,
+          forceSessionRefresh,
+        )
+        if (forceSessionRefresh) {
+          sessionRefreshForced.add(corridorId)
+        }
+        if (!sessionCookieHeader && proxyTierFallback && proxyTierFallback !== proxyTier) {
+          sessionCookieHeader = await resolveSessionCookie(corridorId, proxyTierFallback, true)
+          sessionRefreshForced.add(corridorId)
+        }
+        if (sessionCookieRequired && !sessionCookieHeader) {
+          logger.warn('session_cookie_missing_skip', {
+            corridor_id: corridorId,
+            amount_bucket: amount,
+            payin_method: payinMethod,
+            payout_method: payoutMethod,
+            proxy_tier: proxyTier,
+          })
+          await insertAttempt(pool, providerId, {
+            corridorId,
+            amountBucket: amount,
+            payinMethod,
+            payoutMethod,
+            success: false,
+            errorType: 'session_missing',
+            httpStatus: null,
+            errorMessage: 'session_cookie_missing',
+            requestFingerprint,
+          })
+          const attemptDurationMs = recordAttemptDuration(attemptStartedAt)
+          logger.info('quote_attempt_finish', {
+            trace_id: traceId,
+            status: 'session_missing',
+            stage: 'session',
+            total_duration_ms: attemptDurationMs,
+          })
+          continue
+        }
 
         let responseStatus: number | null = null
         let responsePayload: PlacidPayload | null = null
@@ -307,10 +465,55 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
         let bronzeObjectKey: string | null = null
 
         try {
-          const response = await fetchPlacidQuote(request, { proxyTier })
+          const runFetch = async (tier: ProxyTier, cookie: string | null, label: string) => {
+            const response = await fetchPlacidQuote(request, {
+              proxyTier: tier,
+              jitterMs,
+              cookie: cookie || undefined,
+            })
+            logger.debug('quote_fetch_result', {
+              trace_id: traceId,
+              corridor_id: corridorId,
+              amount_bucket: amount,
+              payin_method: payinMethod,
+              payout_method: payoutMethod,
+              http_status: response.status,
+              attempt: label,
+              proxy_tier: tier,
+            })
+            return response
+          }
+
+          let response = await runFetch(proxyTier, sessionCookieHeader, 'primary')
           responseStatus = response.status
           responseText = response.bodyText
           responsePayload = response.payload ?? null
+
+          if (responseStatus === 403 && sessionWarmupUrl) {
+            const refreshed = await refreshSessionCookie(corridorId, proxyTier)
+            if (refreshed) {
+              response = await runFetch(proxyTier, refreshed, 'session_refresh')
+              responseStatus = response.status
+              responseText = response.bodyText
+              responsePayload = response.payload ?? null
+            }
+          }
+
+          if (responseStatus === 403 && proxyTierFallback && proxyTierFallback !== proxyTier) {
+            const fallbackCookie = await resolveSessionCookie(corridorId, proxyTierFallback, true)
+            response = await runFetch(proxyTierFallback, fallbackCookie, 'proxy_fallback')
+            responseStatus = response.status
+            responseText = response.bodyText
+            responsePayload = response.payload ?? null
+            if (responseStatus >= 200 && responseStatus < 300) {
+              proxyTierCache.set(corridorId, proxyTierFallback)
+              logger.info('proxy_tier_fallback_used', {
+                provider_id: providerId,
+                corridor_id: corridorId,
+                proxy_tier: proxyTierFallback,
+              })
+            }
+          }
           if (responseStatus >= 200 && responseStatus < 300) {
             http2xxCount += 1
           }
@@ -494,5 +697,5 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
     }
   }
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

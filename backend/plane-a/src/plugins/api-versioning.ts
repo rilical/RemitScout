@@ -136,7 +136,6 @@ export const createBackwardCompatibilityLayer = (app: FastifyInstance) => {
 export const registerVersionedRoutes = async (
   app: FastifyInstance,
   routes: (app: FastifyInstance) => Promise<void> | void,
-  version: ApiVersion = 'v1',
 ) => {
   await routes(app)
 }

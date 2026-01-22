@@ -66,7 +66,7 @@ const parseFeeStore = (html: string): PlacidFee[] => {
   if (!feeMatch?.[1]) return []
 
   try {
-    let encoded = feeMatch[1].trim()
+    const encoded = feeMatch[1].trim()
     let decoded: string
     if (encoded.startsWith("'") && encoded.endsWith("'")) {
       decoded = encoded.slice(1, -1).replace(/\\'/g, "'")

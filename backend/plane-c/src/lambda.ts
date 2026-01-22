@@ -58,7 +58,6 @@ const init = async () => {
 export const handler = async (
   event: unknown,
   context: { callbackWaitsForEmptyEventLoop: boolean },
-  _callback: (err?: Error, result?: unknown) => void,
 ) => {
   context.callbackWaitsForEmptyEventLoop = false
   await init()

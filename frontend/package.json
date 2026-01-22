@@ -42,8 +42,8 @@
     "@nuxt/nitro": "^0.10.0",
     "@nuxtjs/robots": "^4.1.7",
     "@nuxtjs/tailwindcss": "^6.12.2",
-    "@types/node": "^22.10.2",
     "@playwright/test": "^1.50.1",
+    "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vitest/coverage-v8": "^2.1.9",
     "@vue/test-utils": "^2.4.6",
@@ -54,9 +54,9 @@
     "nuxt": "^3.20.2",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
-    "vitest": "^2.1.9",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^2.1.9",
     "vue-tsc": "^3.1.1"
   },
   "dependencies": {
@@ -66,6 +66,7 @@
     "@pinia/nuxt": "^0.11.3",
     "@supabase/supabase-js": "^2.49.1",
     "echarts": "^6.0.0",
+    "katex": "^0.16.27",
     "pinia": "^3.0.4",
     "vue-echarts": "^8.0.1"
   }

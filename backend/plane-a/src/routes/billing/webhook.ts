@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
-import { getStripeClient, isStripeMockEnabled, isStripeMockMisconfigured } from '../../services/stripe-client'
+import { getStripeClient } from '../../services/stripe-client'
 import { sendPlusConfirmationEmail } from '../../services/billing-email'
 import { BillingWebhookEventRepository, UserPlanRepository } from '../../repositories'
 
@@ -37,14 +37,7 @@ const toUnixTimestamp = (value: unknown) => {
 
 export const webhookRoutes = async (app: FastifyInstance) => {
   app.post('/billing/webhook', async (request, reply) => {
-    if (isStripeMockMisconfigured()) {
-      reply.code(500)
-      return { error: 'billing_misconfigured' }
-    }
-
-    const isMock = isStripeMockEnabled()
-
-    if (!isMock && (!config.billing.stripe.webhookSecret || !config.billing.stripe.secretKey)) {
+    if (!config.billing.stripe.webhookSecret || !config.billing.stripe.secretKey) {
       reply.code(500)
       return { error: 'billing_not_configured' }
     }
@@ -56,46 +49,24 @@ export const webhookRoutes = async (app: FastifyInstance) => {
           typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody ?? {}),
           'utf8',
         )
+    const signature = request.headers['stripe-signature']
+    if (typeof signature !== 'string') {
+      reply.code(400)
+      return { error: 'missing_signature' }
+    }
+
+    if (!Buffer.isBuffer(rawBody)) {
+      reply.code(400)
+      return { error: 'missing_raw_body' }
+    }
+
+    const stripe = getStripeClient()
     let event: Stripe.Event
-    if (isMock) {
-      const payload = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : rawBody
-      let parsed: Record<string, unknown> = {}
-      if (typeof payload === 'string') {
-        try {
-          parsed = JSON.parse(payload) as Record<string, unknown>
-        } catch {
-          parsed = {}
-        }
-      } else if (typeof payload === 'object' && payload !== null) {
-        parsed = payload as Record<string, unknown>
-      }
-      const dataValue = (parsed.data && typeof parsed.data === 'object' && parsed.data !== null)
-        ? parsed.data as Record<string, unknown>
-        : { object: parsed }
-      event = {
-        id: typeof parsed.id === 'string' ? parsed.id : `evt_mock_${Date.now()}`,
-        type: typeof parsed.type === 'string' ? parsed.type : 'checkout.session.completed',
-        data: dataValue,
-      } as unknown as Stripe.Event
-    } else {
-      const signature = request.headers['stripe-signature']
-      if (typeof signature !== 'string') {
-        reply.code(400)
-        return { error: 'missing_signature' }
-      }
-
-      if (!Buffer.isBuffer(rawBody)) {
-        reply.code(400)
-        return { error: 'missing_raw_body' }
-      }
-
-      const stripe = getStripeClient()
-      try {
-        event = stripe.webhooks.constructEvent(rawBody, signature, config.billing.stripe.webhookSecret)
-      } catch (_error) {
-        reply.code(400)
-        return { error: 'invalid_signature' }
-      }
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, signature, config.billing.stripe.webhookSecret)
+    } catch (_error) {
+      reply.code(400)
+      return { error: 'invalid_signature' }
     }
 
     const planeAPool = getPool(config.db.planeAUrl)

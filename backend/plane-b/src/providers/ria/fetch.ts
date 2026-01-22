@@ -28,7 +28,21 @@ export const fetchRiaQuote = async (
   const mapCountry = (code: string) => countryCodeMap[code] ?? code
   const mapCurrency = (code: string) => currencyCodeMap[code] ?? code
 
-  const body = {
+  const headers = {
+    accept: '*/*',
+    'content-type': 'application/json',
+    pragma: 'no-cache',
+    'cache-control': 'no-cache',
+    origin: 'https://www.riamoneytransfer.com',
+    referer: 'https://www.riamoneytransfer.com/',
+    'accept-language': locale,
+    'user-agent': getUserAgentForCorridor(request.corridor_id),
+    'client-type': 'PublicSite',
+    culturecode: locale,
+    appversion: '4.0',
+  }
+
+  const buildBody = (localeValue: string) => ({
     selections: {
       countryFrom: mapCountry(sourceCountry),
       countryTo: mapCountry(destCountry),
@@ -40,35 +54,37 @@ export const fetchRiaQuote = async (
       promoId: 0,
       shouldCalcAmountFrom: false,
       shouldCalcVariableRates: true,
-      locale: locale.toLowerCase(),
+      locale: localeValue,
     },
-  }
-
-  const response = await httpRequest({
-    url: riaEndpoint,
-    method: 'POST',
-    headers: {
-      accept: '*/*',
-      'content-type': 'application/json',
-      pragma: 'no-cache',
-      'cache-control': 'no-cache',
-      origin: 'https://www.riamoneytransfer.com',
-      referer: 'https://www.riamoneytransfer.com/',
-      'accept-language': locale,
-      'user-agent': getUserAgentForCorridor(request.corridor_id),
-      'client-type': 'PublicSite',
-      culturecode: locale,
-      appversion: '4.0',
-    },
-    body,
-    jitterMs: options.jitterMs,
-    proxyTier: options.proxyTier,
-    corridorId: request.corridor_id,
   })
+
+  const execute = async (localeValue: string) =>
+    httpRequest({
+      url: riaEndpoint,
+      method: 'POST',
+      headers,
+      body: buildBody(localeValue),
+      jitterMs: options.jitterMs,
+      proxyTier: options.proxyTier,
+      corridorId: request.corridor_id,
+    })
+
+  let response
+  try {
+    response = await execute(locale.toLowerCase())
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes('HTTP 500') && locale.toLowerCase() !== locale) {
+      response = await execute(locale)
+    } else {
+      throw error
+    }
+  }
 
   return {
     status: response.status,
     bodyText: response.bodyText,
+    parseError: response.parseError,
     payload: response.json ?? response.bodyText,
   }
 }

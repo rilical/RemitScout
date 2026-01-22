@@ -38,6 +38,7 @@ export type ScheduledJobsResources = {
   goldPopularCorridorsRule: Rule
   goldPulseCacheRule: Rule
   goldPublisherRule: Rule
+  goldIndicesRule: Rule
   b2cRetryFailedRule: Rule
   b2cQueueCleanupRule: Rule
   stoplistAutoResumeRule: Rule
@@ -971,7 +972,35 @@ export const createScheduledJobs = (
       'aws',
       'gold-publisher-lambda.ts',
     ),
-    schedule: Schedule.rate(Duration.minutes(30)),
+    schedule: Schedule.rate(Duration.hours(4)),
+    logRetention,
+    otelLambdaLayer,
+    lambdaNetworking: planeCLambdaNetworking,
+    planeCDbSecretArn,
+    planeCDbSsmName,
+    planeCDbHost,
+    planeCDbPort,
+    planeCDbName,
+    redisSecretArn,
+    redisSsmName,
+  })
+
+  const goldIndicesRule = createPlaneCLambdaJob({
+    scope,
+    options,
+    id: 'GoldIndicesJob',
+    jobName: 'gold-indices',
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'gold-indices-job-lambda.ts',
+    ),
+    schedule: Schedule.rate(Duration.hours(4)),
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeCLambdaNetworking,
@@ -1219,6 +1248,7 @@ export const createScheduledJobs = (
     goldPopularCorridorsRule,
     goldPulseCacheRule,
     goldPublisherRule,
+    goldIndicesRule,
     b2cRetryFailedRule,
     b2cQueueCleanupRule,
     stoplistAutoResumeRule,

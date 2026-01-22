@@ -108,6 +108,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/indices/series:
+    get:
+      summary: Get index series for a corridor
+      description: |
+        Returns TEER, RCI, and RVI time series derived from B2B queue quotes.
+      tags:
+        - Indices
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - name: X-API-Key
+          in: header
+          description: Enterprise API key (optional when using bearer auth)
+          required: false
+          schema:
+            type: string
+        - name: corridor_id
+          in: query
+          description: Full corridor ID (e.g., "US-PH-USD-PHP")
+          required: true
+          schema:
+            type: string
+        - name: amount_bucket
+          in: query
+          description: Amount bucket
+          required: false
+          schema:
+            type: integer
+            example: 500
+        - name: method_profile
+          in: query
+          description: Method profile
+          required: false
+          schema:
+            type: string
+            enum: [standard_bank, standard_card, cash_pickup]
+        - name: days
+          in: query
+          description: Number of days to return
+          required: false
+          schema:
+            type: integer
+            example: 30
+      responses:
+        '200':
+          description: Index series response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndicesSeriesResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/quotes/current:
     get:
       summary: Get current quotes for a corridor
@@ -355,6 +423,126 @@ paths:
                 $ref: '#/components/schemas/MeResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/me/api-keys:
+    get:
+      summary: List enterprise API keys
+      description: Returns API keys for the current user (enterprise only)
+      tags:
+        - API Keys
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: API keys list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create enterprise API key
+      description: Creates a new API key for the current user (enterprise only)
+      tags:
+        - API Keys
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: API key created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyCreateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/me/api-keys/{keyId}/rotate:
+    post:
+      summary: Rotate an enterprise API key
+      description: Rotates the API key token for the given key ID (enterprise only)
+      tags:
+        - API Keys
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key rotated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyCreateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/me/api-keys/{keyId}:
+    delete:
+      summary: Revoke an enterprise API key
+      description: Revokes the API key for the given key ID (enterprise only)
+      tags:
+        - API Keys
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -1666,6 +1854,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT token from Supabase Auth
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Enterprise API key for server-to-server access
 
   schemas:
     ProviderQuote:
@@ -1686,6 +1879,10 @@ components:
           type: string
           description: Provider slug
           example: remitly
+        providerId:
+          type: string
+          description: Provider ID (canonical)
+          example: westernunion
         name:
           type: string
           description: Provider display name
@@ -1784,6 +1981,79 @@ components:
           enum: [bank, cash, wallet]
           description: Payment method used
           example: bank
+        indices:
+          $ref: '#/components/schemas/CorridorIndices'
+
+    CorridorIndices:
+      type: object
+      properties:
+        teer:
+          type: number
+          nullable: true
+        rvi:
+          type: number
+          nullable: true
+        rci:
+          type: number
+          nullable: true
+        providerCount:
+          type: integer
+        amount:
+          type: number
+        midMarketRate:
+          type: number
+          nullable: true
+        weights:
+          type: string
+          enum: [provider_volume, equal]
+
+    IndicesSeriesPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 2024-01-15
+        teer:
+          type: number
+          nullable: true
+        rci:
+          type: number
+          nullable: true
+        rvi:
+          type: number
+          nullable: true
+        providerCountBinned:
+          type: integer
+          nullable: true
+        suppressionFlag:
+          type: boolean
+        suppressionReason:
+          type: string
+          nullable: true
+
+    IndicesSeriesResponse:
+      type: object
+      properties:
+        corridorId:
+          type: string
+          example: US-PH-USD-PHP
+        amountBucket:
+          type: integer
+          example: 500
+        methodProfile:
+          type: string
+          enum: [standard_bank, standard_card, cash_pickup]
+        weightingModel:
+          type: string
+          example: provider_volume
+        lastUpdated:
+          type: string
+          format: date-time
+          nullable: true
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndicesSeriesPoint'
 
     QuotesResponse:
       type: object
@@ -1892,14 +2162,83 @@ components:
           properties:
             plan_code:
               type: string
-              enum: [free, plus]
+              enum: [free, plus, enterprise]
             status:
               type: string
               enum: [active, cancelled, expired]
         entitlements:
           type: object
+          properties:
+            pulse_access:
+              type: string
+              enum: [none, full]
+            exports_enabled:
+              type: boolean
+            alerts_max:
+              type: integer
+              nullable: true
+            history_max_days:
+              type: integer
+              nullable: true
+            watchlist_items:
+              type: integer
+              nullable: true
+            api_access:
+              type: boolean
+            api_tier:
+              type: integer
+              nullable: true
+            api_cadence_hours:
+              type: integer
+              nullable: true
         usage:
           type: object
+
+    ApiKeyRecord:
+      type: object
+      properties:
+        key_id:
+          type: string
+        key_prefix:
+          type: string
+        name:
+          type: string
+          nullable: true
+        scopes:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ApiKeyListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyRecord'
+
+    ApiKeyCreateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        api_key:
+          $ref: '#/components/schemas/ApiKeyRecord'
+        token:
+          type: string
 
     ProviderHealthResponse:
       type: object
@@ -1976,5 +2315,3 @@ tags:
     description: Health check endpoints
   - name: Metrics
     description: Metrics endpoints
-
-

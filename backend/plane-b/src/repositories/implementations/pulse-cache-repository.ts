@@ -205,12 +205,10 @@ const buildChartSeries = (
   providerDaily: Array<Record<string, unknown>>,
   quoteAttempts: Array<Record<string, unknown>>,
   amount: number,
-  bucketUnit: 'hour' | 'day',
 ) => {
   const chart = buildChartData(chartId)
   const series: Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number; label?: string }> }> = []
 
-  const bucketKey = bucketUnit
   const dailyMap = dailyStats.map((row) => ({
     bucket: row.bucket as Date,
     avg_rate: toNumber(row.avg_rate, 0),
@@ -1146,7 +1144,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
       const charts = ['all-in-cost', 'fx-markup', 'fee-vs-markup', 'spread-distribution', 'provider-winner', 'leader-change-frequency', 'leader-edge', 'pass-through-latency', 'volatility-pulse', 'quote-anomalies', 'spread-volatility', 'quote-success', 'provider-availability', 'data-freshness', 'corridor-liquidity']
       const chartEntries = charts.map((chartId) => ({
         key: `pulse:chart:${chartId}`,
-        payload: buildChartSeries(chartId, dailyStats, providerDaily, attemptRows, amount, bucketUnit),
+        payload: buildChartSeries(chartId, dailyStats, providerDaily, attemptRows, amount),
       }))
 
       const map = new Map<string, unknown>()

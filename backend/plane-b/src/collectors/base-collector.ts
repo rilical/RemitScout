@@ -16,26 +16,20 @@ import {
   runAnomalyDetection,
   resumeProviderIfCooldownExpired,
   loadUnsupportedCorridors,
-  markCorridorUnsupported,
   pauseProviderForBlock,
   createIngestionRun,
   finishIngestionRun,
 } from './base'
 import { detectBlock } from './block-detection'
-import { persistAttemptMetrics } from './attempt-metrics'
 import { notifyBlockAlert } from './alert-routing'
 import { resolveProviderRates } from './rate-config'
-import { applyRpmRamp } from './rpm-ramp'
 import { writeBronzePayload } from './bronze-writer'
 import { createScheduler, type Scheduler } from './scheduler'
 import { resolveRateLimitScope } from './rate-limit-scope'
-import { checkCircuitState, closeCircuit, openCircuit, penalizeRpmImmediately } from '../lib/redis-circuit-breaker'
+import { checkCircuitState, penalizeRpmImmediately } from '../lib/redis-circuit-breaker'
 import { getDefaultProxyTierForCollector, getProxyTierForCorridor, type ProxyTier } from '../lib/proxy-router'
-import { dispatchSignal } from '../notifications/dispatcher'
 import { LatestQuoteRepository } from '../repositories'
-import { saveCheckpoint, loadCheckpoint, clearCheckpoint, type CheckpointState } from './checkpoint'
-
-const logger = createLogger('plane-b.collectors.base-collector')
+import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from './checkpoint'
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -179,9 +173,13 @@ export abstract class BaseCollector {
       // Main collection loop
       let blocked = false
       let blockReason: string | null = null
-      const unsupportedCorridors = await loadUnsupportedCorridors(this.pool, this.providerId)
-      const capabilityUpdated = new Set<string>()
-
+      const bypassUnsupported =
+        config.planeB.b2bObservationMode
+        || this.collectorType === 'b2b_observation'
+        || this.collectorType === 'b2b_full_sweep_monthly'
+      const unsupportedCorridors = bypassUnsupported
+        ? new Set<string>()
+        : await loadUnsupportedCorridors(this.pool, this.providerId)
       for (const corridorId of this.corridors) {
         if (checkpoint && checkpoint.completedCorridors.includes(corridorId)) {
           this.logger.debug('checkpoint_skip_corridor', { corridor_id: corridorId })
@@ -237,7 +235,6 @@ export abstract class BaseCollector {
             corridorId,
             amountBucket,
             proxyTier,
-            capabilityUpdated,
           )
 
           if (!success) {
@@ -361,7 +358,6 @@ export abstract class BaseCollector {
     corridorId: string,
     amountBucket: number,
     proxyTier: ProxyTier,
-    capabilityUpdated: Set<string>,
   ): Promise<boolean> {
     const traceId = randomUUID()
     const attemptStartedAt = Date.now()

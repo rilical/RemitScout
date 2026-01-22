@@ -12,8 +12,6 @@ import {
 const logger = createLogger('shared.redis')
 
 const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
-const LAMBDA_CONTAINER_REUSE_KEY = 'lambda_container_reuse'
-
 type RedisClient = ReturnType<typeof createClient>
 
 let client: RedisClient | null = null

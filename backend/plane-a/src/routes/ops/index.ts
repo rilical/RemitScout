@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { remitlyHealthRoutes } from './remitly-health'
 import { westernUnionHealthRoutes } from './westernunion-health'
+import { wellsFargoHealthRoutes } from './wellsfargo-health'
 import { xeHealthRoutes } from './xe-health'
 import { transferGoHealthRoutes } from './transfergo-health'
 import { paysendHealthRoutes } from './paysend-health'
@@ -22,10 +23,12 @@ import { placidHealthRoutes } from './placid-health'
 import { wirebarleyHealthRoutes } from './wirebarley-health'
 import { intermexHealthRoutes } from './intermex-health'
 import { alansariHealthRoutes } from './alansari-health'
+import { observationRoutes } from './observation'
 
 export const opsRoutes = async (app: FastifyInstance) => {
   remitlyHealthRoutes(app)
   westernUnionHealthRoutes(app)
+  wellsFargoHealthRoutes(app)
   xeHealthRoutes(app)
   transferGoHealthRoutes(app)
   paysendHealthRoutes(app)
@@ -47,4 +50,5 @@ export const opsRoutes = async (app: FastifyInstance) => {
   wirebarleyHealthRoutes(app)
   alansariHealthRoutes(app)
   intermexHealthRoutes(app)
+  observationRoutes(app)
 }

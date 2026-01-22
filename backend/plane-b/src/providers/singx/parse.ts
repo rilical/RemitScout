@@ -39,7 +39,7 @@ const parseNumber = (value?: string | number | null): number => {
   return Number.isFinite(parsed) ? parsed : Number.NaN
 }
 
-export const extractSingxMethodPairs = (_payload?: SingxPayload | null) => {
+export const extractSingxMethodPairs = () => {
   return [{ payin_method: 'bank_transfer', payout_method: 'bank_deposit' }]
 }
 

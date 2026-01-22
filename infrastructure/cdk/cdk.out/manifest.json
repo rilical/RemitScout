@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::716156543157:role/cdk-hnb659fds-deploy-role-716156543157-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::716156543157:role/cdk-hnb659fds-cfn-exec-role-716156543157-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-716156543157-us-east-1/5ac8db4e500bd728c2eca71d662dc7cd7b5ae91d7e6bbb68b31b61ed105b7fed.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-716156543157-us-east-1/04a741fb0846acf07956e66dfad16971ea7f5896e4c8cead3035793f93a7cb3d.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -939,8 +939,8 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:55:31)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:523:42)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:63:31)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:553:42)",
               "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
@@ -982,8 +982,8 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:64:29)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:523:42)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:73:29)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:553:42)",
               "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
@@ -1025,8 +1025,8 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:74:31)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:523:42)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:84:31)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:553:42)",
               "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
@@ -1058,6 +1058,24 @@
             "data": "IngestFanoutWorkerService58DE2198"
           }
         ],
+        "/remit-scout-dev/IngestFanoutWorkerService/TaskCount/Target/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutWorkerServiceTaskCountTargetAA141881"
+          }
+        ],
+        "/remit-scout-dev/IngestFanoutWorkerService/TaskCount/Target/IngestFanoutQueueDepth/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutWorkerServiceTaskCountTargetIngestFanoutQueueDepth67A7BF34"
+          }
+        ],
+        "/remit-scout-dev/IngestFanoutWorkerService/TaskCount/Target/IngestFanoutQueueAge/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutWorkerServiceTaskCountTargetIngestFanoutQueueAgeD44D5A6D"
+          }
+        ],
         "/remit-scout-dev/NotificationsQueueWorkerService": [
           {
             "type": "aws:cdk:warning",
@@ -1068,8 +1086,8 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:85:37)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:523:42)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:96:37)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:553:42)",
               "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
@@ -1111,8 +1129,8 @@
               "new BaseService (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:8675)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6318)",
               "new FargateService2 (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/aws-cdk-lib@2.233.0_constructs@10.4.4/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:681)",
-              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:100:33)",
-              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:523:42)",
+              "createEcsServices (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/ecs-services.ts:112:33)",
+              "new RemitScoutStack (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/remit-scout-stack.ts:553:42)",
               "Object.<anonymous> (/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/bin/app.ts:57:1)",
               "Module._compile (node:internal/modules/cjs/loader:1734:14)",
               "Module.m._compile (/Users/omarghabyen/Desktop/Remit-Scout Production V2/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.19.3_typescript@5.9.3/node_modules/ts-node/src/index.ts:1618:23)",
@@ -1300,6 +1318,18 @@
             "data": "OpsAlertsQueueDepthAlarmD8C0BB1C"
           }
         ],
+        "/remit-scout-dev/IngestFanoutAgeAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutAgeAlarm5FA3A946"
+          }
+        ],
+        "/remit-scout-dev/IngestFanoutAgeHardMaxAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IngestFanoutAgeHardMaxAlarm8FFECFB6"
+          }
+        ],
         "/remit-scout-dev/WorkerLockFailureAlarm/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -1480,28 +1510,16 @@
             "data": "AlertEvaluationSchedulerFunctionLogRetention84A64624"
           }
         ],
-        "/remit-scout-dev/AlertEvaluationRealtimeSchedule/Resource": [
+        "/remit-scout-dev/AlertEvaluationWeeklySchedule/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "AlertEvaluationRealtimeSchedule5B4C44BE"
+            "data": "AlertEvaluationWeeklySchedule17983C36"
           }
         ],
-        "/remit-scout-dev/AlertEvaluationRealtimeSchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C": [
+        "/remit-scout-dev/AlertEvaluationWeeklySchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "AlertEvaluationRealtimeScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219CAB73FADA"
-          }
-        ],
-        "/remit-scout-dev/AlertEvaluationHourlySchedule/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "AlertEvaluationHourlyScheduleDF69C381"
-          }
-        ],
-        "/remit-scout-dev/AlertEvaluationHourlySchedule/AllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "AlertEvaluationHourlyScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219C9C598FE9"
+            "data": "AlertEvaluationWeeklyScheduleAllowEventRuleremitscoutdevAlertEvaluationSchedulerFunction905E219CF862B238"
           }
         ],
         "/remit-scout-dev/AlertEvaluationDailySchedule/Resource": [
@@ -1730,6 +1748,30 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "GoldPublisherJobScheduleAllowEventRuleremitscoutdevGoldPublisherJobFunctionCD766D8FB72252DA"
+          }
+        ],
+        "/remit-scout-dev/GoldIndicesJobFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldIndicesJobFunction077F472E"
+          }
+        ],
+        "/remit-scout-dev/GoldIndicesJobFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldIndicesJobFunctionLogRetentionFD400D16"
+          }
+        ],
+        "/remit-scout-dev/GoldIndicesJobSchedule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldIndicesJobScheduleC27E6971"
+          }
+        ],
+        "/remit-scout-dev/GoldIndicesJobSchedule/AllowEventRuleremitscoutdevGoldIndicesJobFunctionDD535310": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GoldIndicesJobScheduleAllowEventRuleremitscoutdevGoldIndicesJobFunctionDD5353100E374A78"
           }
         ],
         "/remit-scout-dev/B2cRetryFailedJobFunction/Resource": [

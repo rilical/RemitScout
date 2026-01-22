@@ -1,8 +1,5 @@
-import { createLogger } from './logger'
-import { formatError, isError } from './utils/error-handling'
+import { isError } from './utils/error-handling'
 import { retry } from './retry'
-
-const logger = createLogger('shared.worker-retry')
 
 export type WorkerRetryOptions = {
   maxRetries?: number
@@ -80,7 +77,6 @@ export const withWorkerRetryAndDLQ = async <T>(
     throw err
   }
 }
-
 
 
 

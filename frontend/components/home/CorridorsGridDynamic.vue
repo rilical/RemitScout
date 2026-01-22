@@ -200,21 +200,7 @@ const emit = defineEmits<{
   'corridor-selected': [data: { from: string, to: string }]
 }>()
 
-const config = useRuntimeConfig()
 const { data, pending, error } = await useRemittanceApi().usePopularCorridors()
-
-const defaultCorridors = import.meta.dev
-  ? [
-  { route: 'US→PH', from: 'US', to: 'PH', count24h: 142 },
-  { route: 'US→IN', from: 'US', to: 'IN', count24h: 98 },
-  { route: 'GB→PK', from: 'GB', to: 'PK', count24h: 76 },
-  { route: 'US→MX', from: 'US', to: 'MX', count24h: 65 },
-  { route: 'CA→IN', from: 'CA', to: 'IN', count24h: 54 },
-  { route: 'DE→MA', from: 'DE', to: 'MA', count24h: 43 },
-  { route: 'FR→SN', from: 'FR', to: 'SN', count24h: 38 },
-  { route: 'US→NG', from: 'US', to: 'NG', count24h: 31 },
-]
-  : []
 
 const parseRoute = (route: string) => {
   if (!route) return { from: '', to: '' }
@@ -268,10 +254,6 @@ const corridors = computed(() => {
         count24h: c.count24h || c.count_24h || 0,
       }
     }).filter(c => c.from && c.to) // Filter out invalid corridors
-  }
-
-  if (import.meta.dev && config.public.devControls) {
-    return defaultCorridors
   }
 
   return []

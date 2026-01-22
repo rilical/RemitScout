@@ -217,7 +217,7 @@ const selectProduct = (
 }
 
 const parsePageValue = (html: string, field: string): string | null => {
-  const regex = new RegExp(`${field}\" value=\"([^\"]+)\"`)
+  const regex = new RegExp(`${field}" value="([^"]+)"`)
   const match = html.match(regex)
   return match?.[1] ?? null
 }

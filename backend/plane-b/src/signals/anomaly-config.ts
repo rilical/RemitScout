@@ -1,5 +1,3 @@
-import { config } from '../../../shared/config'
-
 /**
  * Configuration for anomaly detection system.
  * 
@@ -23,7 +21,6 @@ export const ANOMALY_CONFIG = {
 } as const
 
 export type AnomalyConfig = typeof ANOMALY_CONFIG
-
 
 
 

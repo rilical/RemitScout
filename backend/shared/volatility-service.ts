@@ -36,9 +36,9 @@ const VOLATILITY_TIER_THRESHOLDS = {
 
 const CACHE_TTL_SECONDS = {
   tier1: 30 * 60,
-  tier2: 60 * 60,
+  tier2: 4 * 60 * 60,
   tier3: 4 * 60 * 60,
-  default: 2 * 60 * 60,
+  default: 4 * 60 * 60,
 } as const
 
 export const computeVolatilityScore = (stats: VolatilityStats): number | null => {

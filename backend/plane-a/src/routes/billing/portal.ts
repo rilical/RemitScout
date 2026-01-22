@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { requireAuth } from '../../plugins/auth-plugin'
-import { getStripeClient, isStripeConfigured, isStripeMockMisconfigured } from '../../services/stripe-client'
+import { getStripeClient, isStripeConfigured } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
 import { getErrorMessage, isStripeError } from '../../types/errors'
 
@@ -11,11 +11,6 @@ const planeAPool = getPool(config.db.planeAUrl)
 export const billingPortalRoutes = async (app: FastifyInstance) => {
   app.get('/billing/portal', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
-
-    if (isStripeMockMisconfigured()) {
-      reply.code(500)
-      return { error: 'billing_misconfigured' }
-    }
 
     if (!isStripeConfigured()) {
       reply.code(500)

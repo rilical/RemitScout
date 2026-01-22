@@ -5,7 +5,7 @@
     <!-- Hero Section with improved design -->
     <section class="relative bg-gray-900 py-16 lg:py-20">
       <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" dark />
 
         <div class="mt-10">
           <div class="space-y-8">
@@ -835,6 +835,82 @@
       </div>
     </section>
 
+    <!-- Proprietary Indices Section -->
+    <section id="proprietary-indices" class="py-16 lg:py-20 bg-gray-900 scroll-mt-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-6">
+            Proprietary Indices
+          </h2>
+          <p class="text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Remit-Scout has developed three trademarked indices to quantify cross-border payment efficiency. Full formulations and citation rules live here, while enterprise accounts generate embeds and API access from the dashboard.
+          </p>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+          <NuxtLink
+            to="/dashboard?tab=enterprise"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
+          >
+            <h3 class="text-lg font-bold text-white mb-3 transition-colors">
+              TEER™
+            </h3>
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              The actual exchange rate recipients receive after all costs. Quantifies the "cost of liquidity" in any corridor.
+            </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Open enterprise tools
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </NuxtLink>
+
+          <NuxtLink
+            to="/dashboard?tab=enterprise"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
+          >
+            <h3 class="text-lg font-bold text-white mb-3 transition-colors">
+              RVI™
+            </h3>
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Measures pricing dispersion across providers. A market efficiency signal for cross-border corridors.
+            </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Open enterprise tools
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </NuxtLink>
+
+          <NuxtLink
+            to="/dashboard?tab=enterprise"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
+          >
+            <h3 class="text-lg font-bold text-white mb-3 transition-colors">
+              RCI™
+            </h3>
+            <p class="text-sm text-white/90 leading-relaxed mb-4 flex-1">
+              Total corridor cost as a percentage. Captures both explicit fees and hidden FX markup.
+            </p>
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
+              Open enterprise tools
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </NuxtLink>
+        </div>
+
+        <div class="mt-10 text-center">
+          <p class="text-sm text-gray-400">
+            TEER™, RVI™, and RCI™ are trademarks of Remit-Scout. See individual index pages for citation requirements.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- Technical Appendix (Institutional) -->
     <section
       id="technical-appendix"
@@ -1211,6 +1287,7 @@ const quickLinks = [
   { label: 'Remit-Score', href: '#remit-score' },
   { label: 'Show your work', href: '#show-your-work' },
   { label: 'Testing', href: '#testing-methodology' },
+  { label: 'Proprietary Indices', href: '#proprietary-indices' },
   ...(FEATURE_FLAGS.ENTERPRISE_ENABLED ? [{ label: 'Data pipeline', href: '#technical-appendix' }] : []),
 ]
 
@@ -1305,13 +1382,13 @@ const { public: { siteUrl } } = useRuntimeConfig()
 
 setSeo({
   title: 'The Evaluation Standard | Remit-Scout Methodology',
-  description: 'A quantitative framework for assessing cross-border liquidity, isolating execution fees from FX Spread to calculate Net Delivered Value with Data Latency controls.',
+  description: 'A quantitative framework for assessing cross-border liquidity. Learn about our proprietary indices (TEER™, RVI™, RCI™), data collection methodology, and how we calculate Net Delivered Value.',
   canonical: `${siteUrl}/methodology`,
   ogType: 'article',
   publishedTime: lastUpdatedIso,
   modifiedTime: lastUpdatedIso,
   author: 'Remit-Scout Editorial Team',
-  tags: ['methodology', 'remittances', 'comparison'],
+  tags: ['methodology', 'remittances', 'comparison', 'proprietary indices'],
 })
 
 jsonLdBreadcrumb([
@@ -1326,7 +1403,7 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'Article',
-        'headline': 'The Evaluation Standard.',
+        'headline': 'The Evaluation Standard',
         'url': `${siteUrl}/methodology`,
         'datePublished': lastUpdatedIso,
         'dateModified': lastUpdatedIso,

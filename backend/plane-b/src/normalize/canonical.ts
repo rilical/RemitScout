@@ -66,7 +66,7 @@ const normalizeToken = (value: string): string => {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[\s\-._\/]+/g, '_')
+    .replace(/[\s\-._/]+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '')
 }

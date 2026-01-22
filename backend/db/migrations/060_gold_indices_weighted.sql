@@ -1,0 +1,7 @@
+ALTER TABLE gold_export.cdp_daily
+  ADD COLUMN IF NOT EXISTS provider_count INT,
+  ADD COLUMN IF NOT EXISTS teer_rate NUMERIC,
+  ADD COLUMN IF NOT EXISTS rci_ratio NUMERIC,
+  ADD COLUMN IF NOT EXISTS rvi_value NUMERIC,
+  ADD COLUMN IF NOT EXISTS mid_market_rate NUMERIC,
+  ADD COLUMN IF NOT EXISTS weighting_model TEXT;

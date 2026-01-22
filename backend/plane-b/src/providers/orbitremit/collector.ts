@@ -562,7 +562,12 @@ export const runOrbitRemitCollector = async (options: OrbitRemitCollectorOptions
           continue
         }
 
-        if (fetchResult.status !== 200 || !fetchResult.payload || typeof fetchResult.payload !== 'object') {
+        if (
+          fetchResult.status < 200
+          || fetchResult.status >= 300
+          || !fetchResult.payload
+          || typeof fetchResult.payload !== 'object'
+        ) {
           logger.warn('quote_fetch_non_200', {
             trace_id: traceId,
             corridor_id: corridorId,
@@ -785,5 +790,5 @@ export const runOrbitRemitCollector = async (options: OrbitRemitCollectorOptions
     freshness_stale: freshnessStale,
   })
 
-  return !blocked
+  return !blocked && (collectorType !== 'health_probe' || successCount > 0)
 }

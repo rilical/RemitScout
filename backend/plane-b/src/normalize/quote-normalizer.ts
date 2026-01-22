@@ -277,7 +277,7 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   }
 
   const hasBucketHint = isFiniteNumber(input.amount_bucket) && input.amount_bucket > 0
-  const bucketBase = hasBucketHint ? input.amount_bucket : sendAmount
+  const bucketBase = hasBucketHint ? input.amount_bucket! : sendAmount
   const bucketSelection = computeBucketSelection(bucketBase)
   const bucketApprox = hasBucketHint && isFiniteNumber(sendAmountParsed)
     ? Math.round(sendAmountParsed) !== Math.round(input.amount_bucket as number)

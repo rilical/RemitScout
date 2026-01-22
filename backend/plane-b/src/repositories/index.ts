@@ -1,4 +1,5 @@
 export * from './interfaces/attempt-metrics-repository.interface'
+export * from './interfaces/b2b-sweep-repository.interface'
 export * from './interfaces/bronze-repository.interface'
 export * from './interfaces/circuit-breaker-repository.interface'
 export * from './interfaces/corridor-priority-repository.interface'
@@ -26,6 +27,7 @@ export * from './interfaces/signal-repository.interface'
 export * from './interfaces/webhook-repository.interface'
 
 export { AttemptMetricsRepository } from './implementations/attempt-metrics-repository'
+export { B2bSweepRepository } from './implementations/b2b-sweep-repository'
 export { BronzeRepository } from './implementations/bronze-repository'
 export { CircuitBreakerRepository } from './implementations/circuit-breaker-repository'
 export { CorridorPriorityRepository } from './implementations/corridor-priority-repository'

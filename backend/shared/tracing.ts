@@ -195,7 +195,6 @@ export const startChildSpan = async <T>(
   }
 
   const tracer = getTracer('remit-scout')
-  const parentSpan = trace.getSpan(context.active())
 
   const spanOptions: SpanOptions = {
     ...options,
