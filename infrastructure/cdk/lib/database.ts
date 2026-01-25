@@ -51,7 +51,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   }
 
-  const dbSubnetType = isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
+  const dbSubnetType = SubnetType.PRIVATE_WITH_EGRESS
 
   const cluster = isDev
     ? new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
@@ -60,7 +60,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
         vpcSubnets: { subnetType: dbSubnetType },
         securityGroups: [options.dbSecurityGroup],
         writer: ClusterInstance.serverlessV2('Writer', {
-          publiclyAccessible: isDev,
+          publiclyAccessible: false,
         }),
         serverlessV2MinCapacity: 0,
         serverlessV2MaxCapacity: 1,
