@@ -18,8 +18,7 @@ export type CacheOptions = {
 
 export const createCache = (scope: Construct, options: CacheOptions): CacheResources => {
   const isProd = options.envName === 'prod'
-  const isDev = options.envName === 'dev'
-  const subnets = isDev ? options.vpc.publicSubnets : options.vpc.privateSubnets
+  const subnets = options.vpc.privateSubnets
 
   const subnetGroup = new CfnSubnetGroup(scope, 'RedisSubnetGroup', {
     cacheSubnetGroupName: `remit-scout-${options.envName}-redis`,
