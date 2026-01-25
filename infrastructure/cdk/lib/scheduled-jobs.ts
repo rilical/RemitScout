@@ -74,6 +74,7 @@ export type ScheduledJobsOptions = {
   cluster: Cluster
   b2cRefreshTask: FargateTaskDefinition
   b2cRefreshServiceEnabled?: boolean
+  paused?: boolean
   planeASecurityGroup: SecurityGroup
   planeBSecurityGroup: SecurityGroup
   planeCSecurityGroup: SecurityGroup
@@ -182,6 +183,7 @@ export const createScheduledJobs = (
   options: ScheduledJobsOptions,
 ): ScheduledJobsResources => {
   const isDev = options.envName === 'dev'
+  const rulesEnabled = !options.paused
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
@@ -300,6 +302,7 @@ export const createScheduledJobs = (
   const goldFxRatesRule = new Rule(scope, 'GoldFxRatesSchedule', {
     schedule: Schedule.rate(Duration.minutes(15)),
     description: 'Runs gold-fx-rates job every 15 minutes.',
+    enabled: rulesEnabled,
   })
 
   goldFxRatesRule.addTarget(new LambdaFunction(goldFxRatesFunction, { retryAttempts: 1 }))
@@ -385,6 +388,7 @@ export const createScheduledJobs = (
   const exportWorkerRule = new Rule(scope, 'ExportWorkerSchedule', {
     schedule: Schedule.rate(Duration.minutes(1)),
     description: 'Runs export worker every minute to drain queued export jobs.',
+    enabled: rulesEnabled,
   })
 
   exportWorkerRule.addTarget(new LambdaFunction(exportWorkerFunction, { retryAttempts: 1 }))
@@ -434,6 +438,7 @@ export const createScheduledJobs = (
   const alertEvaluationWeeklyRule = new Rule(scope, 'AlertEvaluationWeeklySchedule', {
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Enqueues weekly alerts by timezone bucket every hour.',
+    enabled: rulesEnabled,
   })
   alertEvaluationWeeklyRule.addTarget(
     new LambdaFunction(alertEvaluationSchedulerFunction, {
@@ -445,6 +450,7 @@ export const createScheduledJobs = (
   const alertEvaluationDailyRule = new Rule(scope, 'AlertEvaluationDailySchedule', {
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Enqueues daily alerts by timezone bucket every hour.',
+    enabled: rulesEnabled,
   })
   alertEvaluationDailyRule.addTarget(
     new LambdaFunction(alertEvaluationSchedulerFunction, {
@@ -524,6 +530,7 @@ export const createScheduledJobs = (
   const alertEvaluationWorkerRule = new Rule(scope, 'AlertEvaluationWorkerSchedule', {
     schedule: Schedule.rate(Duration.minutes(1)),
     description: 'Runs alert evaluation worker every minute to drain queued alert evaluations.',
+    enabled: rulesEnabled,
   })
   alertEvaluationWorkerRule.addTarget(
     new LambdaFunction(alertEvaluationWorkerFunction, { retryAttempts: 1 }),
@@ -590,6 +597,7 @@ export const createScheduledJobs = (
   const telemetryAnalyticsRule = new Rule(scope, 'TelemetryAnalyticsSchedule', {
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Aggregates telemetry analytics hourly.',
+    enabled: rulesEnabled,
   })
 
   telemetryAnalyticsRule.addTarget(new LambdaFunction(telemetryAnalyticsFunction, { retryAttempts: 1 }))
@@ -655,6 +663,7 @@ export const createScheduledJobs = (
   const sessionCleanupRule = new Rule(scope, 'SessionCleanupSchedule', {
     schedule: Schedule.cron({ minute: '0', hour: '2' }),
     description: 'Revokes expired and inactive sessions daily.',
+    enabled: rulesEnabled,
   })
 
   sessionCleanupRule.addTarget(new LambdaFunction(sessionCleanupFunction, { retryAttempts: 1 }))
@@ -738,6 +747,7 @@ export const createScheduledJobs = (
   const bankVsSpecialistRefreshRule = new Rule(scope, 'BankVsSpecialistRefreshSchedule', {
     schedule: Schedule.rate(Duration.minutes(30)),
     description: 'Enqueues bank vs specialist refresh requests every 30 minutes.',
+    enabled: rulesEnabled,
   })
 
   bankVsSpecialistRefreshRule.addTarget(
@@ -811,6 +821,7 @@ export const createScheduledJobs = (
   const auditLogCleanupRule = new Rule(scope, 'AuditLogCleanupSchedule', {
     schedule: Schedule.cron({ minute: '0', hour: '3', day: '1' }),
     description: 'Archives and deletes expired audit logs monthly.',
+    enabled: rulesEnabled,
   })
 
   auditLogCleanupRule.addTarget(new LambdaFunction(auditLogCleanupFunction, { retryAttempts: 1 }))
@@ -898,6 +909,7 @@ export const createScheduledJobs = (
   const oandaSyncRule = new Rule(scope, 'OandaSyncSchedule', {
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Runs OANDA FX rates sync every hour.',
+    enabled: rulesEnabled,
   })
 
   oandaSyncRule.addTarget(new LambdaFunction(oandaSyncFunction, { retryAttempts: 1 }))
@@ -918,6 +930,7 @@ export const createScheduledJobs = (
       'gold-popular-corridors-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(1)),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeBLambdaNetworking,
@@ -946,6 +959,7 @@ export const createScheduledJobs = (
       'gold-pulse-cache-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(1)),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeBLambdaNetworking,
@@ -974,6 +988,7 @@ export const createScheduledJobs = (
       'gold-publisher-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(4)),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeCLambdaNetworking,
@@ -1002,6 +1017,7 @@ export const createScheduledJobs = (
       'gold-indices-job-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(4)),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeCLambdaNetworking,
@@ -1105,6 +1121,7 @@ export const createScheduledJobs = (
   const goldReconciliationRule = new Rule(scope, 'GoldReconciliationSchedule', {
     schedule: Schedule.rate(Duration.minutes(15)),
     description: 'Runs gold reconciliation job every 15 minutes to backfill missed Gold updates.',
+    enabled: rulesEnabled,
   })
 
   goldReconciliationRule.addTarget(new LambdaFunction(goldReconciliationFunction, { retryAttempts: 1 }))
@@ -1125,6 +1142,7 @@ export const createScheduledJobs = (
       'b2c-retry-failed-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.minutes(15)),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeBLambdaNetworking,
@@ -1151,6 +1169,7 @@ export const createScheduledJobs = (
       'quote-refresh-queue-cleanup-lambda.ts',
     ),
     schedule: Schedule.cron({ minute: '30', hour: '2' }),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeBLambdaNetworking,
@@ -1177,6 +1196,7 @@ export const createScheduledJobs = (
       'stoplist-auto-resume-lambda.ts',
     ),
     schedule: Schedule.cron({ minute: '0', hour: '2' }),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeBLambdaNetworking,
@@ -1205,6 +1225,7 @@ export const createScheduledJobs = (
       'rights-matrix-sync-countries-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(options.envName === 'dev' ? 1 : 6)),
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeBLambdaNetworking,
@@ -1219,7 +1240,7 @@ export const createScheduledJobs = (
   const b2cRefreshRule = new Rule(scope, 'B2cRefreshWorkerSchedule', {
     schedule: Schedule.rate(Duration.minutes(b2cRefreshIntervalMinutes)),
     description: `Runs the B2C refresh worker on a ${b2cRefreshIntervalMinutes}-minute cadence.`,
-    enabled: !b2cRefreshServiceEnabled,
+    enabled: rulesEnabled && !b2cRefreshServiceEnabled,
   })
 
   b2cRefreshRule.addTarget(
@@ -1315,6 +1336,7 @@ export const createScheduledJobs = (
     const rule = new Rule(scope, `${id}ProbeSchedule`, {
       schedule: Schedule.rate(Duration.minutes(5)),
       description: `Runs ${providerId} provider health probe every 5 minutes.`,
+      enabled: rulesEnabled,
     })
 
     rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
@@ -1381,6 +1403,7 @@ type LambdaJobOptions = {
   jobName: string
   entry: string
   schedule: Schedule
+  enabled?: boolean
   logRetention: RetentionDays
   otelLambdaLayer?: ILayerVersion
   lambdaNetworking: LambdaNetworking
@@ -1405,6 +1428,7 @@ const createPlaneBLambdaJob = ({
   jobName,
   entry,
   schedule,
+  enabled,
   logRetention,
   otelLambdaLayer,
   lambdaNetworking,
@@ -1478,6 +1502,7 @@ const createPlaneBLambdaJob = ({
   const rule = new Rule(scope, `${id}Schedule`, {
     schedule,
     description: `Runs ${jobName} on a schedule.`,
+    enabled,
   })
 
   rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
@@ -1492,6 +1517,7 @@ const createPlaneCLambdaJob = ({
   jobName,
   entry,
   schedule,
+  enabled,
   logRetention,
   otelLambdaLayer,
   lambdaNetworking,
@@ -1565,6 +1591,7 @@ const createPlaneCLambdaJob = ({
   const rule = new Rule(scope, `${id}Schedule`, {
     schedule,
     description: `Runs ${jobName} on a schedule.`,
+    enabled,
   })
 
   rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))

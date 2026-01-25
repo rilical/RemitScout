@@ -26,6 +26,7 @@ export type PipelineOptions = {
   repoBranch?: string
   enableDeploy?: boolean
   requireApproval?: boolean
+  devPaused?: boolean
   backendRepository?: Repository
   frontendBucket?: Bucket
   frontendDistribution?: Distribution
@@ -231,6 +232,9 @@ export const createPipeline = (
       deployEnvVars.PIPELINE_REQUIRE_APPROVAL = {
         value: options.requireApproval ? 'true' : 'false',
       }
+    }
+    if (options.devPaused !== undefined) {
+      deployEnvVars.DEV_PAUSED = { value: options.devPaused ? 'true' : 'false' }
     }
     deployProject = new PipelineProject(scope, 'RemitScoutDeployProject', {
       environment: {

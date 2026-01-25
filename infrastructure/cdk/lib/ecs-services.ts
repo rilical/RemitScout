@@ -34,21 +34,26 @@ export type EcsServiceOptions = {
   queueWorkerMaxCount?: number
   b2cRefreshDesiredCount?: number
   queueWorkerSpotOnly?: boolean
+  paused?: boolean
 }
 
 export const createEcsServices = (
   scope: Construct,
   options: EcsServiceOptions,
 ): EcsServiceResources => {
+  const isPaused = options.paused === true
   const baseIngestDesired = options.envName === 'prod' ? 1 : 0
   const baseQueueDesired = options.envName === 'prod' ? 1 : 0
   const baseB2cRefreshDesired = options.envName === 'prod' ? 1 : 0
-  const planeBIngestDesired =
-    options.planeBIngestDesiredCount ?? baseIngestDesired
-  const queueWorkerDesired =
-    options.queueWorkerDesiredCount ?? baseQueueDesired
-  const b2cRefreshDesired =
-    options.b2cRefreshDesiredCount ?? baseB2cRefreshDesired
+  const planeBIngestDesired = isPaused
+    ? 0
+    : (options.planeBIngestDesiredCount ?? baseIngestDesired)
+  const queueWorkerDesired = isPaused
+    ? 0
+    : (options.queueWorkerDesiredCount ?? baseQueueDesired)
+  const b2cRefreshDesired = isPaused
+    ? 0
+    : (options.b2cRefreshDesiredCount ?? baseB2cRefreshDesired)
   const spotOnly = options.queueWorkerSpotOnly ?? false
   const spotCapacityProviderStrategies = spotOnly
     ? [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
@@ -88,7 +93,7 @@ export const createEcsServices = (
     cluster: options.cluster,
     taskDefinition: options.ingestFanoutTask,
     desiredCount:
-      options.ingestFanoutMode === 'queue' ? queueWorkerDesired : 0,
+      options.ingestFanoutMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
     assignPublicIp: false,
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
@@ -100,7 +105,7 @@ export const createEcsServices = (
     cluster: options.cluster,
     taskDefinition: options.goldLiveTask,
     desiredCount:
-      options.goldLiveMode === 'queue' ? queueWorkerDesired : 0,
+      options.goldLiveMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
     assignPublicIp: false,
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
@@ -115,7 +120,7 @@ export const createEcsServices = (
       cluster: options.cluster,
       taskDefinition: options.notificationsQueueTask,
       desiredCount:
-        options.notificationsMode === 'queue' ? queueWorkerDesired : 0,
+        options.notificationsMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
       assignPublicIp: false,
       vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [options.planeBSecurityGroup],
@@ -128,7 +133,7 @@ export const createEcsServices = (
     cluster: options.cluster,
     taskDefinition: options.opsAlertsQueueTask,
     desiredCount:
-      options.opsAlertsMode === 'queue' ? queueWorkerDesired : 0,
+      options.opsAlertsMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
     assignPublicIp: false,
     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
     securityGroups: [options.planeBSecurityGroup],
@@ -136,14 +141,16 @@ export const createEcsServices = (
   })
 
   const scaleMax = options.queueWorkerMaxCount ?? 10
-  const scaleDefaults = {
-    min: Math.max(queueWorkerDesired, options.envName === 'prod' ? 3 : 1),
-    max: Math.max(queueWorkerDesired, scaleMax),
-    targetValue: options.envName === 'prod' ? 25 : 10,
-  }
+  const scaleDefaults = isPaused
+    ? { min: 0, max: 0, targetValue: options.envName === 'prod' ? 25 : 10 }
+    : {
+        min: Math.max(queueWorkerDesired, options.envName === 'prod' ? 3 : 1),
+        max: Math.max(queueWorkerDesired, scaleMax),
+        targetValue: options.envName === 'prod' ? 25 : 10,
+      }
   const queueAgeTargetSeconds = options.envName === 'prod' ? 900 : 1800
 
-  if (options.ingestFanoutMode === 'queue') {
+  if (!isPaused && options.ingestFanoutMode === 'queue') {
     const scaling = ingestFanoutService.autoScaleTaskCount({
       minCapacity: scaleDefaults.min,
       maxCapacity: scaleDefaults.max,
@@ -162,7 +169,7 @@ export const createEcsServices = (
     })
   }
 
-  if (options.goldLiveMode === 'queue') {
+  if (!isPaused && options.goldLiveMode === 'queue') {
     const scaling = goldLiveService.autoScaleTaskCount({
       minCapacity: scaleDefaults.min,
       maxCapacity: scaleDefaults.max,
@@ -181,7 +188,7 @@ export const createEcsServices = (
     })
   }
 
-  if (options.notificationsMode === 'queue') {
+  if (!isPaused && options.notificationsMode === 'queue') {
     const scaling = notificationsQueueService.autoScaleTaskCount({
       minCapacity: scaleDefaults.min,
       maxCapacity: scaleDefaults.max,
@@ -194,7 +201,7 @@ export const createEcsServices = (
     })
   }
 
-  if (options.opsAlertsMode === 'queue') {
+  if (!isPaused && options.opsAlertsMode === 'queue') {
     const scaling = opsAlertsQueueService.autoScaleTaskCount({
       minCapacity: scaleDefaults.min,
       maxCapacity: scaleDefaults.max,

@@ -13,8 +13,11 @@ build/
 .next/
 .nuxt/
 .output/
+.pnpm-store/
 
 # CDK Infrastructure
+cdk.out/
+cdk.context.json
 infrastructure/cdk/cdk.out/
 infrastructure/cdk/*.js
 infrastructure/cdk/*.d.ts

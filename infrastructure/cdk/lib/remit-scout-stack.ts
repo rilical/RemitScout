@@ -402,7 +402,10 @@ export class RemitScoutStack extends Stack {
       process.env.PAGERDUTY_INTEGRATION_KEY
     const pipelineConnectionArn =
       this.node.tryGetContext('pipelineConnectionArn') ??
-      process.env.PIPELINE_CONNECTION_ARN
+      process.env.PIPELINE_CONNECTION_ARN ??
+      (envName === 'dev'
+        ? 'arn:aws:codeconnections:us-east-1:716156543157:connection/0610da3e-f756-4f7e-8899-995d5830a4ef'
+        : undefined)
     const pipelineRepoOwner =
       this.node.tryGetContext('pipelineRepoOwner') ??
       process.env.PIPELINE_REPO_OWNER ??
@@ -425,6 +428,12 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('pipelineRequireApproval') ??
           process.env.PIPELINE_REQUIRE_APPROVAL,
       ) ?? envName !== 'dev'
+    const devPaused = envName === 'dev'
+      ? (toOptionalBool(
+          this.node.tryGetContext('devPaused') ??
+            process.env.DEV_PAUSED,
+        ) ?? false)
+      : false
 
     const compute = createCompute(this, {
       envName,
@@ -596,6 +605,7 @@ export class RemitScoutStack extends Stack {
       queueWorkerDesiredCount: planeBQueueWorkerDesiredCount,
       queueWorkerMaxCount: planeBQueueWorkerMaxCount,
       queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
+      paused: devPaused,
     })
 
     // Create SNS subscriptions for alert routing (Slack, PagerDuty)
@@ -647,6 +657,7 @@ export class RemitScoutStack extends Stack {
       publicSupabaseSecretArn: supabaseSecretArn,
       publicSupabaseUrlSecretJsonKey,
       publicSupabaseAnonKeySecretJsonKey,
+      devPaused,
     })
 
     createScheduledJobs(this, {
@@ -655,6 +666,7 @@ export class RemitScoutStack extends Stack {
       cluster: compute.cluster,
       b2cRefreshTask: tasks.b2cRefreshTask,
       b2cRefreshServiceEnabled,
+      paused: devPaused,
       vpc: networking.vpc,
       planeASecurityGroup: networking.planeASecurityGroup,
       planeBSecurityGroup: networking.planeBSecurityGroup,
