@@ -45,7 +45,6 @@ import { amountBuckets as defaultAmountBuckets } from './catalog'
 import { PANGEA_SUPPORTED_CORRIDORS } from './supported-corridors'
 import { httpLimits } from './limits'
 import { fetchPangeaQuote } from './fetch'
-import type { PangeaPayload } from './parse'
 import { extractPangeaMethodPairs, parsePangeaPayload } from './parse'
 
 type PangeaCollectorOptions = {
@@ -76,7 +75,7 @@ const logger = createLogger('plane-b.pangea.collector')
 const upsertCapability = async (
   pool: Pool,
   corridorId: string,
-  payload: Record<string, unknown>,
+  _payload: Record<string, unknown>,
 ) => {
   const pairs = extractPangeaMethodPairs()
   const payinMethods = Array.from(new Set(pairs.map(pair => pair.payin_method))).filter(
@@ -204,9 +203,9 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
     reason === 'http_429' || reason === 'keyword_too_many_requests'
   const isScheduledSweep = collectorType === 'collector'
     || collectorType === 'b2b_full_sweep'
-    || collectorType === 'b2b_tier_1_alpha'
-    || collectorType === 'b2b_tier_2_reference'
-    || collectorType === 'b2b_tier_3_discovery'
+    || collectorType === 'b2b_tier_1'
+    || collectorType === 'b2b_tier_2'
+    
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
   const defaultProxyTier = getDefaultProxyTierForCollector(collectorType)
   const proxyTierCache = new Map<string, ProxyTier>()
@@ -631,7 +630,7 @@ export const runPangeaCollector = async (options: PangeaCollectorOptions = {}) =
         })
 
         const persistStartedAt = Date.now()
-        await persistNormalizedQuote(pool, normalized)
+        await persistNormalizedQuote(pool, normalized, collectorType)
         persistDurationMs = Date.now() - persistStartedAt
         const anomaly = await runAnomalyDetection({
           pool,

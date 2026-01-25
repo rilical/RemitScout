@@ -12,11 +12,12 @@ const isProxyTier = (value: string | null | undefined): value is ProxyTier =>
   value === 'RESIDENTIAL_PREMIUM' || value === 'DATACENTER_ROTATING' || value === 'NONE'
 
 export const getDefaultProxyTierForCollector = (collectorType: string): ProxyTier => {
-  if (collectorType === 'b2b_tier_1_alpha') {
+  if (collectorType === 'b2b_tier_1' || collectorType === 'b2b_tier_1_alpha') {
     return 'RESIDENTIAL_PREMIUM'
   }
   if (
-    collectorType === 'b2b_tier_2_reference'
+    collectorType === 'b2b_tier_2'
+    || collectorType === 'b2b_tier_2_reference'
     || collectorType === 'b2b_observation'
     || collectorType === 'b2b_full_sweep_monthly'
   ) {

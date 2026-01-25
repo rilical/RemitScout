@@ -9,6 +9,7 @@ export type EcsServiceResources = {
   planeBIngestService: FargateService
   b2cRefreshService: FargateService
   ingestFanoutService: FargateService
+  goldLiveService: FargateService
   notificationsQueueService: FargateService
   opsAlertsQueueService: FargateService
 }
@@ -20,10 +21,12 @@ export type EcsServiceOptions = {
   planeBIngestTask: FargateTaskDefinition
   b2cRefreshTask: FargateTaskDefinition
   ingestFanoutTask: FargateTaskDefinition
+  goldLiveTask: FargateTaskDefinition
   notificationsQueueTask: FargateTaskDefinition
   opsAlertsQueueTask: FargateTaskDefinition
   queues: QueueResources
   ingestFanoutMode?: string
+  goldLiveMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
   planeBIngestDesiredCount?: number
@@ -93,6 +96,18 @@ export const createEcsServices = (
     enableExecuteCommand,
   })
 
+  const goldLiveService = new FargateService(scope, 'GoldLiveWorkerService', {
+    cluster: options.cluster,
+    taskDefinition: options.goldLiveTask,
+    desiredCount:
+      options.goldLiveMode === 'queue' ? queueWorkerDesired : 0,
+    assignPublicIp: false,
+    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    securityGroups: [options.planeBSecurityGroup],
+    capacityProviderStrategies: spotCapacityProviderStrategies,
+    enableExecuteCommand,
+  })
+
   const notificationsQueueService = new FargateService(
     scope,
     'NotificationsQueueWorkerService',
@@ -120,11 +135,11 @@ export const createEcsServices = (
     enableExecuteCommand,
   })
 
-  const scaleMax = options.queueWorkerMaxCount ?? (options.envName === 'prod' ? 5 : 10)
+  const scaleMax = options.queueWorkerMaxCount ?? 10
   const scaleDefaults = {
-    min: queueWorkerDesired,
+    min: Math.max(queueWorkerDesired, options.envName === 'prod' ? 3 : 1),
     max: Math.max(queueWorkerDesired, scaleMax),
-    targetValue: options.envName === 'prod' ? 50 : 10,
+    targetValue: options.envName === 'prod' ? 25 : 10,
   }
   const queueAgeTargetSeconds = options.envName === 'prod' ? 900 : 1800
 
@@ -141,6 +156,25 @@ export const createEcsServices = (
     })
     scaling.scaleToTrackCustomMetric('IngestFanoutQueueAge', {
       metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage(),
+      targetValue: queueAgeTargetSeconds,
+      scaleInCooldown: Duration.minutes(5),
+      scaleOutCooldown: Duration.minutes(2),
+    })
+  }
+
+  if (options.goldLiveMode === 'queue') {
+    const scaling = goldLiveService.autoScaleTaskCount({
+      minCapacity: scaleDefaults.min,
+      maxCapacity: scaleDefaults.max,
+    })
+    scaling.scaleToTrackCustomMetric('GoldLiveQueueDepth', {
+      metric: options.queues.goldLiveQueue.metricApproximateNumberOfMessagesVisible(),
+      targetValue: scaleDefaults.targetValue,
+      scaleInCooldown: Duration.minutes(2),
+      scaleOutCooldown: Duration.minutes(1),
+    })
+    scaling.scaleToTrackCustomMetric('GoldLiveQueueAge', {
+      metric: options.queues.goldLiveQueue.metricApproximateAgeOfOldestMessage(),
       targetValue: queueAgeTargetSeconds,
       scaleInCooldown: Duration.minutes(5),
       scaleOutCooldown: Duration.minutes(2),
@@ -177,6 +211,7 @@ export const createEcsServices = (
     planeBIngestService,
     b2cRefreshService,
     ingestFanoutService,
+    goldLiveService,
     notificationsQueueService,
     opsAlertsQueueService,
   }

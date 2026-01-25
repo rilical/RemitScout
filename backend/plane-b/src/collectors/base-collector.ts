@@ -173,13 +173,7 @@ export abstract class BaseCollector {
       // Main collection loop
       let blocked = false
       let blockReason: string | null = null
-      const bypassUnsupported =
-        config.planeB.b2bObservationMode
-        || this.collectorType === 'b2b_observation'
-        || this.collectorType === 'b2b_full_sweep_monthly'
-      const unsupportedCorridors = bypassUnsupported
-        ? new Set<string>()
-        : await loadUnsupportedCorridors(this.pool, this.providerId)
+      const unsupportedCorridors = await loadUnsupportedCorridors(this.pool, this.providerId)
       for (const corridorId of this.corridors) {
         if (checkpoint && checkpoint.completedCorridors.includes(corridorId)) {
           this.logger.debug('checkpoint_skip_corridor', { corridor_id: corridorId })
@@ -393,6 +387,9 @@ export abstract class BaseCollector {
       const bronzeId = await writeBronzePayload(this.pool, {
         provider_id: this.providerId,
         corridor_id: corridorId,
+        amount_bucket: request.amount_bucket,
+        payin_method: request.payin_method,
+        payout_method: request.payout_method,
         payload,
       })
 
@@ -429,7 +426,7 @@ export abstract class BaseCollector {
       }
 
       // Persist quote
-      await persistNormalizedQuote(this.pool, normalized)
+      await persistNormalizedQuote(this.pool, normalized, this.collectorType)
 
       // Anomaly detection
       if (this.isTier1Collector()) {
@@ -571,7 +568,7 @@ export abstract class BaseCollector {
    * Checks if this is a tier 1 collector.
    */
   protected isTier1Collector(): boolean {
-    return this.collectorType === 'b2b_tier_1_alpha'
+    return this.collectorType === 'b2b_tier_1' || this.collectorType === 'b2b_tier_1_alpha'
   }
 
   /**

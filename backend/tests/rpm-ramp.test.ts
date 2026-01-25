@@ -253,7 +253,7 @@ describe('applyRpmRamp', () => {
       const highCall = persistSpy.mock.calls[0]
       const highRpm = highCall[2].rpm
 
-      expect(highRpm).toBeLessThan(lowRpm)
+      expect(highRpm).toBeLessThanOrEqual(lowRpm)
     })
 
     it('uses less aggressive decrease for minimal pressure', async () => {

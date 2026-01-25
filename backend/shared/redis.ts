@@ -69,6 +69,7 @@ const closeInstance = async (instance: RedisClient): Promise<void> => {
       instance.disconnect()
     })
   } catch {
+    // Best-effort shutdown; ignore connection errors.
   }
 }
 
@@ -200,6 +201,7 @@ export const disconnectRedis = async (): Promise<void> => {
       try {
         client.disconnect()
       } catch {
+        // Ignore disconnect errors after quit failure.
       }
     }
     client = null

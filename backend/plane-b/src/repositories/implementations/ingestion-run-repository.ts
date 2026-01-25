@@ -65,9 +65,10 @@ export class IngestionRunRepository implements IIngestionRunRepository {
           status
          FROM silver.ingestion_run
         WHERE collector_type IN (
+          'b2b_tier_1',
+          'b2b_tier_2',
           'b2b_tier_1_alpha',
           'b2b_tier_2_reference',
-          'b2b_tier_3_discovery',
           'b2b_full_sweep',
           'b2b_full_sweep_monthly'
         )

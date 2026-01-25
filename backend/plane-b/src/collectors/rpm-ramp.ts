@@ -18,6 +18,7 @@ type RampOptions = {
   collectorType: string
   stats: SweepStats
   rates: ProviderRates
+  maxRpm?: number
   thresholds?: RampThresholds
 }
 
@@ -42,7 +43,7 @@ const DEFAULT_THRESHOLDS: RampThresholds = {
   highBlockRate: 0.01,
   moderateBlockRate: 0.005,
   lowBlockRate: 0.0,
-  http2xxStableThreshold: 0.95,
+  http2xxStableThreshold: 0.90,
   errorBudgetMinAttempts: 25,
   errorBudgetRateLimitRate: 0.02,
   errorBudgetBlockRate: 0.01,
@@ -50,7 +51,7 @@ const DEFAULT_THRESHOLDS: RampThresholds = {
   decreaseBasePercent: 0.05,
   decreaseMaxPercent: 0.3,
   increaseBasePercent: 0.05,
-  increaseMaxPercent: 0.15,
+  increaseMaxPercent: 0.25,
   moderateDecreasePercent: 0.075,
   successRateWeight: 0.1,
 }
@@ -128,7 +129,7 @@ const validateStats = (stats: SweepStats): void => {
  * @param options.thresholds - Optional custom thresholds (defaults to DEFAULT_THRESHOLDS)
  */
 export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
-  const { pool, providerId, collectorType, stats, rates, thresholds = DEFAULT_THRESHOLDS } = options
+  const { pool, providerId, collectorType, stats, rates, maxRpm, thresholds = DEFAULT_THRESHOLDS } = options
 
   if (!isSweepCollector(collectorType)) {
     return
@@ -228,7 +229,12 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
       successRate > 0.9 ? thresholds.successRateWeight * (successRate - 0.9) * 10 : 0
     changePercent = Math.min(thresholds.increaseMaxPercent, baseIncrease + successBonus)
     nextRpm = Math.max(1, Math.round(rates.rpm * (1 + changePercent)))
-    reason = 'stable_low_block'
+    if (maxRpm && nextRpm > maxRpm) {
+      nextRpm = maxRpm
+      reason = 'stable_low_block_capped'
+    } else {
+      reason = 'stable_low_block'
+    }
   }
 
   if (decision === 'hold' || nextRpm === rates.rpm) {

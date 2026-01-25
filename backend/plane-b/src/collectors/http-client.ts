@@ -7,6 +7,29 @@ import { retry } from '../../../shared/retry'
 import { formatError, isError } from '../../../shared/utils/error-handling'
 import type { ProxyTier } from '../lib/proxy-router'
 
+export const TERMINAL_ERROR_CODES = [
+  'CORRIDOR_NOT_SUPPORTED',
+  'CURRENCY_NOT_SUPPORTED',
+  'COUNTRY_NOT_SUPPORTED',
+  'AMOUNT_OUT_OF_RANGE',
+  'AMOUNT_TOO_LOW',
+  'AMOUNT_TOO_HIGH',
+  'INVALID_CORRIDOR',
+  'SERVICE_UNAVAILABLE_CORRIDOR',
+] as const
+
+export const isTerminalError = (error: unknown): boolean => {
+  if (error instanceof Error) {
+    return TERMINAL_ERROR_CODES.some(code =>
+      error.message.includes(code) || error.name.includes(code),
+    )
+  }
+  if (typeof error === 'string') {
+    return TERMINAL_ERROR_CODES.some(code => error.includes(code))
+  }
+  return false
+}
+
 export type HttpClientOptions = {
   url: string
   method?: string
@@ -209,6 +232,9 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       maxRetries: 3,
       initialDelayMs: 1000,
       retryable: (error) => {
+        if (isTerminalError(error)) {
+          return false
+        }
         if (isError(error)) {
           const errorMessage = error.message
           if (errorMessage.includes('network') ||

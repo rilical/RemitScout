@@ -12,6 +12,7 @@
  * - `GOLD_INDICES_AMOUNT_BUCKET`: Amount bucket for exports (default: 500)
  */
 
+import type { Pool } from 'pg'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
@@ -110,7 +111,10 @@ base_raw AS (
         AND qr.payin IN ('debit_card', 'credit_card', 'apple_pay', 'google_pay')
         THEN 'standard_card'
       ELSE NULL
-    END AS method_profile
+    END AS method_profile,
+    rm.allowed_in_rvi,
+    rm.allowed_in_rci,
+    rm.allowed_in_teer
   FROM silver.quote_record qr
   JOIN silver.ingestion_run ir
     ON ir.run_id = qr.ingestion_run_id
@@ -128,12 +132,16 @@ base_raw AS (
     AND qr.fee_amount >= 0
     AND qr.amount_bucket = $1
     AND qr.collected_at >= NOW() - ($2 * INTERVAL '1 day')
+    AND ($3::text[] IS NULL OR qr.corridor_id = ANY($3))
     AND ir.collector_type LIKE 'b2b_%'
     AND ir.status = 'success'
     AND pcc.is_supported = true
     AND rm.allowed_collect = true
     AND rm.allowed_b2b = true
+    AND rm.allowed_resell_b2b = true
+    AND rm.status = 'production'
     AND rm.stoplist_status = 'active'
+    AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
 ),
 base AS (
   SELECT
@@ -376,7 +384,7 @@ upserted AS (
     date,
     corridor_id,
     amount_bucket,
-    method_profile,
+    method_profile::method_profile,
     rci_median_bps,
     rci_p10_bps,
     rci_p90_bps,
@@ -413,6 +421,33 @@ upserted AS (
 SELECT COUNT(*)::int AS upserted
 FROM upserted
 `
+
+const normalizeCorridorFilter = (corridorIds?: string[]) => {
+  if (!corridorIds) return null
+  const unique = Array.from(
+    new Set(corridorIds.map((corridor) => corridor.trim()).filter(Boolean)),
+  )
+  return unique.length > 0 ? unique : null
+}
+
+export const upsertGoldIndices = async (
+  pool: Pool,
+  options: {
+    amountBucket?: number
+    lookbackDays?: number
+    corridorIds?: string[]
+  } = {},
+): Promise<number> => {
+  const corridorFilter = normalizeCorridorFilter(options.corridorIds)
+  const targetBucket = options.amountBucket ?? amountBucket
+  const targetLookbackDays = options.lookbackDays ?? lookbackDays
+  const result = await query<{ upserted: number }>(
+    indicesUpsertQuery,
+    [targetBucket, targetLookbackDays, corridorFilter],
+    pool,
+  )
+  return result.rows[0]?.upserted ?? 0
+}
 
 export const runGoldIndicesJob = async (
   options: { enableHealthServer?: boolean } = {},
@@ -465,8 +500,8 @@ export const runGoldIndicesJob = async (
 
   try {
     await recordBatchJobMetric('gold-indices-job', 'job_start')
-    const result = await retry(
-      () => query<{ upserted: number }>(indicesUpsertQuery, [amountBucket, lookbackDays], pool!),
+    const upserted = await retry(
+      () => upsertGoldIndices(pool!, { amountBucket, lookbackDays }),
       {
         maxRetries: 3,
         initialDelayMs: 500,
@@ -479,7 +514,6 @@ export const runGoldIndicesJob = async (
         },
       },
     )
-    const upserted = result.rows[0]?.upserted ?? 0
     const durationMs = Date.now() - startTime
     const durationSeconds = durationMs / 1000
 

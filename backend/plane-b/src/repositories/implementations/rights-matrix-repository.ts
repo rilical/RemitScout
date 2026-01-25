@@ -5,6 +5,9 @@ import type {
   IRightsMatrixRepository,
   RightsMatrixCountrySupportInput,
   RightsMatrixEntryRecord,
+  RightsMatrixGovernanceInput,
+  RightsMatrixIndexPermissionsInput,
+  RightsMatrixQualityMetricsInput,
   RightsMatrixStatusRecord,
   RightsMatrixStoplistRecord,
   RightsMatrixUpsertInput,
@@ -58,7 +61,24 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
               allowed_b2b,
               stoplist_status,
               source_countries,
-              destination_countries
+              destination_countries,
+              source_type,
+              auth_required,
+              terms_risk,
+              allowed_internal_use,
+              allowed_resell_b2b,
+              allowed_derived_only,
+              allowed_provider_attribution,
+              allowed_in_rvi,
+              allowed_in_rci,
+              allowed_in_teer,
+              expected_update_frequency::TEXT,
+              observed_update_frequency::TEXT,
+              uptime_last_30d,
+              avg_quote_latency_ms,
+              status,
+              last_reviewed_at,
+              reviewer
          FROM silver.rights_matrix`,
       [],
       this.pool,
@@ -103,6 +123,96 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
   async loadStoplistStatuses(): Promise<RightsMatrixStoplistRecord[]> {
     const result = await query<RightsMatrixStoplistRecord>(
       'SELECT provider_id, stoplist_status FROM silver.rights_matrix',
+      [],
+      this.pool,
+    )
+    return result.rows
+  }
+
+  async updateIndexPermissions(input: RightsMatrixIndexPermissionsInput): Promise<void> {
+    await query(
+      `UPDATE silver.rights_matrix
+          SET allowed_in_rvi = $2,
+              allowed_in_rci = $3,
+              allowed_in_teer = $4,
+              updated_at = NOW()
+        WHERE provider_id = $1`,
+      [input.providerId, input.allowedInRvi, input.allowedInRci, input.allowedInTeer],
+      this.pool,
+    )
+  }
+
+  async updateGovernance(input: RightsMatrixGovernanceInput): Promise<void> {
+    await query(
+      `UPDATE silver.rights_matrix
+          SET status = $2,
+              reviewer = $3,
+              last_reviewed_at = NOW(),
+              updated_at = NOW()
+        WHERE provider_id = $1`,
+      [input.providerId, input.status, input.reviewer],
+      this.pool,
+    )
+  }
+
+  async updateQualityMetrics(input: RightsMatrixQualityMetricsInput): Promise<void> {
+    await query(
+      `UPDATE silver.rights_matrix
+          SET expected_update_frequency = $2::INTERVAL,
+              observed_update_frequency = $3::INTERVAL,
+              uptime_last_30d = $4,
+              avg_quote_latency_ms = $5,
+              updated_at = NOW()
+        WHERE provider_id = $1`,
+      [
+        input.providerId,
+        input.expectedUpdateFrequency,
+        input.observedUpdateFrequency,
+        input.uptimeLast30d,
+        input.avgQuoteLatencyMs,
+      ],
+      this.pool,
+    )
+  }
+
+  async loadProvidersEligibleForIndex(
+    indexType: 'rvi' | 'rci' | 'teer',
+  ): Promise<RightsMatrixEntryRecord[]> {
+    const columnMap = {
+      rvi: 'allowed_in_rvi',
+      rci: 'allowed_in_rci',
+      teer: 'allowed_in_teer',
+    }
+    const column = columnMap[indexType]
+    const result = await query<RightsMatrixEntryRecord>(
+      `SELECT provider_id,
+              allowed_collect,
+              allowed_b2c,
+              allowed_b2b,
+              stoplist_status,
+              source_countries,
+              destination_countries,
+              source_type,
+              auth_required,
+              terms_risk,
+              allowed_internal_use,
+              allowed_resell_b2b,
+              allowed_derived_only,
+              allowed_provider_attribution,
+              allowed_in_rvi,
+              allowed_in_rci,
+              allowed_in_teer,
+              expected_update_frequency::TEXT,
+              observed_update_frequency::TEXT,
+              uptime_last_30d,
+              avg_quote_latency_ms,
+              status,
+              last_reviewed_at,
+              reviewer
+         FROM silver.rights_matrix
+        WHERE ${column} = true
+          AND allowed_collect = true
+          AND stoplist_status = 'active'`,
       [],
       this.pool,
     )

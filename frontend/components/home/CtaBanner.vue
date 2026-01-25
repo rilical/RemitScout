@@ -11,7 +11,7 @@
         Enter your transfer details above to see real-time rates and save money on fees and exchange rates.
       </p>
       <NuxtLink
-        to="/compare"
+        to="/send-money"
         class="inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-600 font-bold text-lg rounded-xl hover:bg-neutral-50 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
       >
         <span>Compare Rates Now</span>

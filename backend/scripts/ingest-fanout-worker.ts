@@ -38,6 +38,7 @@ type IngestFanoutMessage = {
   shardIndex?: number
   requestedAt?: string
   sweepRunId?: string
+  traceId?: string
 }
 
 type IngestFanoutProviderTask = {
@@ -60,6 +61,7 @@ type IngestFanoutCorridorMessage = {
   requestedAt?: string
   attempt?: number
   sweepRunId?: string
+  traceId?: string
 }
 
 type IngestFanoutPayload = IngestFanoutMessage | IngestFanoutCorridorMessage
@@ -82,6 +84,8 @@ const providerConcurrency = Math.max(
   toNumber(process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY, 3),
 )
 const maxAttempts = Math.max(1, toNumber(process.env.INGEST_FANOUT_MAX_ATTEMPTS, 3))
+const messageJitterMs = toNumber(process.env.INGEST_FANOUT_MESSAGE_JITTER_MS, 500)
+const providerJitterMs = toNumber(process.env.INGEST_FANOUT_PROVIDER_JITTER_MS, 200)
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -120,16 +124,6 @@ const PAYOUT_METHOD_PRIORITY = [
 ]
 
 const normalizeMethod = (value: string) => value.trim().toLowerCase()
-
-const isObservationCollector = (collectorType: string, priorityTier?: string) => {
-  if (collectorType === 'b2b_observation' || collectorType === 'b2b_full_sweep_monthly') {
-    return true
-  }
-  if (priorityTier && priorityTier.startsWith('observation')) {
-    return true
-  }
-  return false
-}
 
 const normalizeMethodList = (methods?: string[] | null): Set<string> => {
   const normalized = new Set<string>()
@@ -177,6 +171,16 @@ const resolveMethod = (
   return { value: preferred, supported: false, fallbackUsed: false }
 }
 
+const buildTraceContext = (payload: {
+  traceId?: string
+  sweepRunId?: string
+  requestedAt?: string
+}) => ({
+  trace_id: payload.traceId ?? null,
+  sweep_run_id: payload.sweepRunId ?? null,
+  requested_at: payload.requestedAt ?? null,
+})
+
 const runSweepUpdate = async (
   sweepRunId: string | undefined,
   context: Record<string, unknown>,
@@ -221,6 +225,7 @@ const resolveCorridorMethods = async (
   cache: Map<string, MethodSets | null>,
   task: IngestFanoutProviderTask,
   corridorId: string,
+  traceContext?: Record<string, unknown>,
 ) => {
   const cacheKey = `${task.providerId}:${corridorId}`
   let methods = cache.get(cacheKey)
@@ -251,6 +256,7 @@ const resolveCorridorMethods = async (
       corridor_id: corridorId,
       payin_method: task.payinMethod,
       payout_method: task.payoutMethod,
+      ...(traceContext ?? {}),
     })
   }
 
@@ -262,6 +268,7 @@ const resolveCorridorMethods = async (
       payout_before: task.payoutMethod,
       payin_after: payin.value,
       payout_after: payout.value,
+      ...(traceContext ?? {}),
     })
   }
 
@@ -307,9 +314,13 @@ const processProviderPayload = async (
   message: { messageId: string; receiptHandle: string; payload: IngestFanoutMessage },
 ): Promise<boolean> => {
   const { payload } = message
+  const traceContext = buildTraceContext(payload)
   const provider = providerById.get(payload.providerId)
   if (!provider) {
-    logger.warn('fanout_provider_missing', { provider_id: payload.providerId })
+    logger.warn('fanout_provider_missing', {
+      provider_id: payload.providerId,
+      ...traceContext,
+    })
     return true // Delete invalid messages
   }
 
@@ -385,11 +396,13 @@ const processProviderPayload = async (
         provider_id: payload.providerId,
         corridors: corridors.length,
         updated,
+        ...traceContext,
       })
     } catch (error) {
       logger.warn('fanout_volatility_refresh_failed', {
         provider_id: payload.providerId,
         error: error instanceof Error ? error.message : String(error),
+        ...traceContext,
       })
     }
   }
@@ -401,6 +414,7 @@ const processProviderPayload = async (
     priority_tier: payload.priorityTier,
     shard_index: payload.shardIndex ?? null,
     ok,
+    ...traceContext,
   })
   return true
 }
@@ -413,16 +427,24 @@ const processCorridorPayload = async (
   message: { messageId: string; receiptHandle: string; payload: IngestFanoutCorridorMessage },
 ): Promise<boolean> => {
   const { payload } = message
+  const traceContext = buildTraceContext(payload)
   const sweepRunId = payload.sweepRunId
   const failedProviders: IngestFanoutProviderTask[] = []
   let anySuccess = false
   let taskIndex = 0
 
   const runTask = async (task: IngestFanoutProviderTask) => {
+    if (providerJitterMs > 0) {
+      await sleep(Math.floor(Math.random() * providerJitterMs))
+    }
     try {
       const provider = providerById.get(task.providerId)
       if (!provider) {
-        logger.warn('fanout_provider_missing', { provider_id: task.providerId })
+        logger.warn('fanout_provider_missing', {
+          provider_id: task.providerId,
+          corridor_id: payload.corridorId,
+          ...traceContext,
+        })
         await runSweepUpdate(
           sweepRunId,
           {
@@ -450,6 +472,7 @@ const processCorridorPayload = async (
         capabilityCache,
         task,
         payload.corridorId,
+        traceContext,
       )
       const taskKey = {
         providerId: task.providerId,
@@ -467,8 +490,6 @@ const processCorridorPayload = async (
         },
         () => sweepRepo.markTaskProcessing(sweepRunId!, taskKey),
       )
-      const observationMode = config.planeB.b2bObservationMode
-        || isObservationCollector(task.collectorType, task.priorityTier)
       const supportDecision = await resolveProviderSupport(
         pool,
         {
@@ -481,11 +502,9 @@ const processCorridorPayload = async (
           locale: 'en-US',
         },
         {
-          allowProbe: observationMode,
-          skipCatalog: observationMode && config.planeB.b2bObservationBypassCatalog,
-          refreshUnsupportedAfterDays: observationMode
-            ? config.planeB.b2bObservationUnsupportedTtlDays
-            : 0,
+          allowProbe: false,
+          skipCatalog: false,
+          refreshUnsupportedAfterDays: 0,
         },
       )
       if (!supportDecision.supported) {
@@ -494,6 +513,7 @@ const processCorridorPayload = async (
           corridor_id: payload.corridorId,
           reason: supportDecision.reason,
           source: supportDecision.source,
+          ...traceContext,
         })
         await runSweepUpdate(
           sweepRunId,
@@ -555,6 +575,7 @@ const processCorridorPayload = async (
         provider_id: task.providerId,
         corridor_id: payload.corridorId,
         error: error instanceof Error ? error.message : String(error),
+        ...traceContext,
       })
       await runSweepUpdate(
         sweepRunId,
@@ -604,9 +625,9 @@ const processCorridorPayload = async (
       }
     } catch (error) {
       logger.warn('b2b_sweep_summary_failed', {
-        sweep_run_id: sweepRunId,
         corridor_id: payload.corridorId,
         error: error instanceof Error ? error.message : String(error),
+        ...traceContext,
       })
     }
   }
@@ -618,11 +639,13 @@ const processCorridorPayload = async (
       logger.info('fanout_volatility_refreshed', {
         corridor_id: payload.corridorId,
         updated,
+        ...traceContext,
       })
     } catch (error) {
       logger.warn('fanout_volatility_refresh_failed', {
         corridor_id: payload.corridorId,
         error: error instanceof Error ? error.message : String(error),
+        ...traceContext,
       })
     }
   }
@@ -640,11 +663,13 @@ const processCorridorPayload = async (
           corridor_id: payload.corridorId,
           failed_providers: failedProviders.length,
           attempt,
+          ...traceContext,
         })
       } catch (error) {
         logger.error('fanout_corridor_requeue_failed', {
           corridor_id: payload.corridorId,
           error: error instanceof Error ? error.message : String(error),
+          ...traceContext,
         })
         return false
       }
@@ -653,6 +678,7 @@ const processCorridorPayload = async (
         corridor_id: payload.corridorId,
         failed_providers: failedProviders.length,
         attempt,
+        ...traceContext,
       })
     }
   }
@@ -663,6 +689,7 @@ const processCorridorPayload = async (
     providers: payload.providers.length,
     failed_providers: failedProviders.length,
     attempt: payload.attempt ?? 0,
+    ...traceContext,
   })
   return true
 }
@@ -706,6 +733,7 @@ const processMessage = async (
       provider_id: providerId,
       corridor_id: isCorridorPayload(payload) ? payload.corridorId : undefined,
       error: err.message,
+      ...buildTraceContext(payload),
     })
     await recordWorkerMetric('ingest-fanout-worker', 'message_failed', 1)
     return false
@@ -733,6 +761,10 @@ const processMessagesWithConcurrency = async (
         logger.warn('fanout_item_invalid', { message_id: current.messageId })
         deleteHandles.push(current.receiptHandle)
         continue
+      }
+
+      if (messageJitterMs > 0) {
+        await sleep(Math.floor(Math.random() * messageJitterMs))
       }
 
       const processed = await processMessage(pool, capabilityRepo, capabilityCache, sweepRepo, {

@@ -278,9 +278,9 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
    */
   const isScheduledSweep = collectorType === 'collector'
     || collectorType === 'b2b_full_sweep'
-    || collectorType === 'b2b_tier_1_alpha'
-    || collectorType === 'b2b_tier_2_reference'
-    || collectorType === 'b2b_tier_3_discovery'
+    || collectorType === 'b2b_tier_1'
+    || collectorType === 'b2b_tier_2'
+    
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
   const defaultProxyTier = getDefaultProxyTierForCollector(collectorType)
   // Cache proxy tier lookups to avoid repeated database queries
@@ -757,7 +757,7 @@ export const runRemitlyCollector = async (options: RemitlyCollectorOptions = {})
 
         // Persist normalized quote to database
         const persistStartedAt = Date.now()
-        await persistNormalizedQuote(pool, normalized)
+        await persistNormalizedQuote(pool, normalized, collectorType)
         persistDurationMs = Date.now() - persistStartedAt
         // Run anomaly detection: check if exchange rate is suspicious
         const anomaly = await runAnomalyDetection({

@@ -26,6 +26,9 @@ const tracer = getTracer('plane-b.collectors')
 const opsAlertsQueueUrl = config.queues.opsAlerts.url
 const opsAlertsQueueMode = config.queues.opsAlerts.mode
 let notifiedOpsAlertsQueueMisconfig = false
+const goldLiveQueueUrl = config.queues.goldLive.url
+const goldLiveQueueMode = config.queues.goldLive.mode
+let notifiedGoldLiveQueueMisconfig = false
 
 type OpsAlertsQueueMessage = {
   alertId: string
@@ -38,6 +41,15 @@ type OpsAlertsQueueMessage = {
   requestId: string | null
   payload: Record<string, unknown>
   createdAt: string
+}
+
+type GoldLiveQueueMessage = {
+  corridorId: string
+  collectedAt: string
+  amountBucket: number
+  payin: string
+  payout: string
+  providerId: string
 }
 
 const enqueueOpsAlert = async (payload: OpsAlertsQueueMessage): Promise<boolean> => {
@@ -57,6 +69,37 @@ const enqueueOpsAlert = async (payload: OpsAlertsQueueMessage): Promise<boolean>
       alert_id: payload.alertId,
       provider_id: payload.providerId,
       corridor_id: payload.corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
+
+const enqueueGoldLiveUpdate = async (
+  payload: GoldLiveQueueMessage,
+  collectorType?: string,
+): Promise<boolean> => {
+  if (!collectorType || !collectorType.startsWith('b2b_')) {
+    return false
+  }
+  if (goldLiveQueueMode !== 'queue') {
+    return false
+  }
+  if (!goldLiveQueueUrl) {
+    if (!notifiedGoldLiveQueueMisconfig) {
+      notifiedGoldLiveQueueMisconfig = true
+      logger.warn('gold_live_queue_disabled', { reason: 'missing_queue_url' })
+    }
+    return false
+  }
+
+  try {
+    await sendJsonMessage(goldLiveQueueUrl, payload)
+    return true
+  } catch (error) {
+    logger.warn('gold_live_queue_enqueue_failed', {
+      corridor_id: payload.corridorId,
+      provider_id: payload.providerId,
       error: error instanceof Error ? error.message : String(error),
     })
     return false
@@ -102,7 +145,8 @@ type AnomalyDetectionInput = {
   collectorType: string
 }
 
-const isTier1Collector = (collectorType: string) => collectorType === 'b2b_tier_1_alpha'
+const isTier1Collector = (collectorType: string) =>
+  collectorType === 'b2b_tier_1' || collectorType === 'b2b_tier_1_alpha'
 
 export const ensureProvider = async (
   pool: Pool,
@@ -161,10 +205,6 @@ export const loadObservedCorridors = async (pool: Pool, providerId: string) => {
 export const loadUnsupportedCorridors = async (pool: Pool, providerId: string): Promise<Set<string>> => {
   if (!providerId || typeof providerId !== 'string' || providerId.trim().length === 0) {
     logger.warn('load_unsupported_corridors_invalid_provider_id', { provider_id: providerId })
-    return new Set()
-  }
-
-  if (config.planeB.b2bObservationMode || config.planeB.b2bObservationBypassCatalog) {
     return new Set()
   }
 
@@ -434,6 +474,7 @@ export const markCorridorUnsupported = async (
 export const persistNormalizedQuote = async (
   pool: Pool,
   normalized: NormalizedQuote,
+  collectorType?: string,
 ) => {
   if (!normalized.provider_id || typeof normalized.provider_id !== 'string' || normalized.provider_id.trim().length === 0) {
     logger.warn('persist_quote_invalid_provider_id', { provider_id: normalized.provider_id })
@@ -523,6 +564,19 @@ export const persistNormalizedQuote = async (
       corridor_id: normalized.corridor_id,
       amount_bucket: normalized.amount_bucket,
     })
+    if (normalized.amount_bucket === 500) {
+      await enqueueGoldLiveUpdate(
+        {
+          corridorId: normalized.corridor_id,
+          collectedAt: normalized.collected_at,
+          amountBucket: normalized.amount_bucket,
+          payin: normalized.payin,
+          payout: normalized.payout,
+          providerId: normalized.provider_id,
+        },
+        collectorType,
+      )
+    }
     span.end()
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)

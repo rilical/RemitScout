@@ -2,6 +2,9 @@ import type { Pool } from 'pg'
 import { query } from '../../../shared/db'
 import { evaluatePublisherGates } from './publisher-gates'
 import { createLogger } from '../../../shared/logger'
+import { parseCorridorId } from '../../../shared/corridor'
+import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
+import { B2B_FIXED_AMOUNT_USD } from '../../../shared/macro-corridors'
 
 const logger = createLogger('plane-c.gold-publisher')
 
@@ -35,35 +38,51 @@ type QuoteRecord = {
   collected_at: Date
 }
 
+const getB2bAmountBucket = (corridorId: string): number => {
+  const parsed = parseCorridorId(corridorId)
+  if (!parsed) return B2B_FIXED_AMOUNT_USD
+  const sourceCurrency = parsed.sourceCurrency.toUpperCase()
+  if (sourceCurrency === 'USD') return B2B_FIXED_AMOUNT_USD
+  const rate = FIXED_EXCHANGE_RATES[sourceCurrency]
+  if (!rate || rate <= 0) return B2B_FIXED_AMOUNT_USD
+  return Math.round(B2B_FIXED_AMOUNT_USD * rate)
+}
+
 export class GoldPublisher {
   constructor(private readonly pool: Pool) {}
 
   async aggregateCorridorData(corridorId: string): Promise<AggregatedData | null> {
     const timestampBucket = this.getCurrent4HourBucket()
     const bucketEnd = new Date(timestampBucket.getTime() + 4 * 60 * 60 * 1000)
-    const amountBucket = 500
+    const amountBucket = getB2bAmountBucket(corridorId)
     const payoutMethod = 'bank_deposit'
     const payinMethods = ['bank_transfer', 'debit_card']
 
     const result = await query<QuoteRecord>(
-      `SELECT l.provider_id, l.implied_fx_rate, l.collected_at
-         FROM silver.latest_quote_by_provider l
+      `SELECT qr.provider_id, qr.implied_fx_rate, qr.collected_at
+         FROM silver.quote_record qr
+         JOIN silver.ingestion_run ir
+           ON ir.run_id = qr.ingestion_run_id
          JOIN silver.rights_matrix rm
-           ON rm.provider_id = l.provider_id
+           ON rm.provider_id = qr.provider_id
          JOIN silver.provider_corridor_capability pcc
-           ON pcc.provider_id = l.provider_id
-          AND pcc.corridor_id = l.corridor_id
-        WHERE l.corridor_id = $1
-          AND l.status = 'ok'
-          AND l.amount_bucket = $2
-          AND l.payout_method = $3
-          AND l.payin_method = ANY($4)
+           ON pcc.provider_id = qr.provider_id
+          AND pcc.corridor_id = qr.corridor_id
+        WHERE qr.corridor_id = $1
+          AND qr.status = 'ok'
+          AND qr.amount_bucket = $2
+          AND qr.payout = $3
+          AND qr.payin = ANY($4)
+          AND ir.collector_type LIKE 'b2b_%'
+          AND ir.status = 'success'
           AND rm.allowed_collect = true
           AND rm.allowed_b2b = true
+          AND rm.allowed_resell_b2b = true
+          AND rm.status = 'production'
           AND rm.stoplist_status = 'active'
           AND pcc.is_supported = true
-          AND l.collected_at >= $5::timestamptz
-          AND l.collected_at < $6::timestamptz`,
+          AND qr.collected_at >= $5::timestamptz
+          AND qr.collected_at < $6::timestamptz`,
       [corridorId, amountBucket, payoutMethod, payinMethods, timestampBucket, bucketEnd],
       this.pool,
     )
@@ -187,6 +206,20 @@ export class GoldPublisher {
     )
 
     const corridors = corridorResult.rows.map((row) => row.corridor_id)
+    return this.processCorridorList(corridors)
+  }
+
+  async processCorridors(corridors: string[]): Promise<PublisherResult> {
+    const uniqueCorridors = Array.from(
+      new Set(corridors.map((corridor) => corridor.trim()).filter(Boolean)),
+    )
+    if (uniqueCorridors.length === 0) {
+      return { published: 0, withheld: 0, errors: 0 }
+    }
+    return this.processCorridorList(uniqueCorridors)
+  }
+
+  private async processCorridorList(corridors: string[]): Promise<PublisherResult> {
     const result: PublisherResult = {
       published: 0,
       withheld: 0,

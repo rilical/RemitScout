@@ -6,6 +6,14 @@ module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
   parserOptions: { ecmaVersion: 2022, sourceType: "module" },
+  env: {
+    node: true,
+    es2022: true
+  },
+  globals: {
+    fetch: "readonly",
+    AbortController: "readonly"
+  },
   plugins: ["boundaries", "@typescript-eslint"],
   extends: [
     "eslint:recommended",
@@ -44,6 +52,12 @@ module.exports = {
         }
         // Add rules to restrict other cross-plane imports as needed.
       ]
+    }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      argsIgnorePattern: "^_",
+      varsIgnorePattern: "^_",
+      caughtErrorsIgnorePattern: "^_"
     }]
   }
 };

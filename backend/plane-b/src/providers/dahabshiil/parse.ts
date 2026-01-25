@@ -70,8 +70,9 @@ export const getDahabshiilErrorMessages = (payload: DahabshiilPayload): string[]
   if (Array.isArray(payload.errors)) {
     messages.push(...payload.errors.filter(Boolean))
   }
-  if (Array.isArray(payload.form?.errors)) {
-    messages.push(...payload.form?.errors.filter(Boolean))
+  const formErrors = payload.form?.errors
+  if (Array.isArray(formErrors)) {
+    messages.push(...formErrors.filter(Boolean))
   }
   const children = payload.form?.children ?? null
   if (children && typeof children === 'object') {

@@ -30,6 +30,9 @@ backend/coverage/
 coverage/
 *.lcov
 
+# Provider fixtures
+backend/plane-b/src/providers/*/fixtures/
+
 # IDE and Editor files
 .vscode/
 .idea/

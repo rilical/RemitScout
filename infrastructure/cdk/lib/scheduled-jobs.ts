@@ -39,6 +39,7 @@ export type ScheduledJobsResources = {
   goldPulseCacheRule: Rule
   goldPublisherRule: Rule
   goldIndicesRule: Rule
+  goldReconciliationRule: Rule
   b2cRetryFailedRule: Rule
   b2cQueueCleanupRule: Rule
   stoplistAutoResumeRule: Rule
@@ -1013,6 +1014,101 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
+  const goldReconciliationEnvironment: Record<string, string> = {
+    JOB_NAME: 'gold-reconciliation',
+    ENVIRONMENT: options.envName,
+    NODE_ENV: 'production',
+    PGSSLMODE: 'require',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
+    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+    CLOUDWATCH_NAMESPACE: 'RemitScout',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (planeBDbHost) {
+    goldReconciliationEnvironment.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (planeBDbPort) {
+    goldReconciliationEnvironment.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (planeBDbName) {
+    goldReconciliationEnvironment.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (planeCDbHost) {
+    goldReconciliationEnvironment.PLANE_C_DB_HOST = planeCDbHost
+  }
+  if (planeCDbPort) {
+    goldReconciliationEnvironment.PLANE_C_DB_PORT = planeCDbPort
+  }
+  if (planeCDbName) {
+    goldReconciliationEnvironment.PLANE_C_DB_NAME = planeCDbName
+  }
+
+  const goldReconciliationFunction = new NodejsFunction(scope, 'GoldReconciliationJobFunction', {
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'gold-reconciliation-job-lambda.ts',
+    ),
+    handler: 'handler',
+    runtime: Runtime.NODEJS_18_X,
+    memorySize: 512,
+    timeout: Duration.minutes(10),
+    ...planeCLambdaNetworking,
+    role: options.roles.planeCLambdaRole,
+    tracing: tracingMode,
+    environment: goldReconciliationEnvironment,
+    logRetention,
+    layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+  })
+
+  if (planeBDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'GoldReconciliationPlaneBDbSecret',
+      planeBDbSecretArn,
+    )
+    secret.grantRead(goldReconciliationFunction)
+    goldReconciliationFunction.addEnvironment('PLANE_B_DB_SECRET_ARN', planeBDbSecretArn)
+  }
+  if (planeBDbSsmName) {
+    goldReconciliationFunction.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
+  }
+  if (planeCDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'GoldReconciliationPlaneCDbSecret',
+      planeCDbSecretArn,
+    )
+    secret.grantRead(goldReconciliationFunction)
+    goldReconciliationFunction.addEnvironment('PLANE_C_DB_SECRET_ARN', planeCDbSecretArn)
+  }
+  if (planeCDbSsmName) {
+    goldReconciliationFunction.addEnvironment('PLANE_C_DB_SSM_NAME', planeCDbSsmName)
+  }
+  applyRedisEnv(
+    scope,
+    goldReconciliationFunction,
+    'GoldReconciliationRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
+
+  const goldReconciliationRule = new Rule(scope, 'GoldReconciliationSchedule', {
+    schedule: Schedule.rate(Duration.minutes(15)),
+    description: 'Runs gold reconciliation job every 15 minutes to backfill missed Gold updates.',
+  })
+
+  goldReconciliationRule.addTarget(new LambdaFunction(goldReconciliationFunction, { retryAttempts: 1 }))
+
   const b2cRetryFailedRule = createPlaneBLambdaJob({
     scope,
     options,
@@ -1249,6 +1345,7 @@ export const createScheduledJobs = (
     goldPulseCacheRule,
     goldPublisherRule,
     goldIndicesRule,
+    goldReconciliationRule,
     b2cRetryFailedRule,
     b2cQueueCleanupRule,
     stoplistAutoResumeRule,

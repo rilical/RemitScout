@@ -185,6 +185,10 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBIngestFanoutMode') ??
       process.env.PLANE_B_INGEST_FANOUT_QUEUE_MODE ??
       (envName === 'prod' ? 'queue' : 'off')
+    const goldLiveQueueMode =
+      this.node.tryGetContext('goldLiveQueueMode') ??
+      process.env.GOLD_LIVE_QUEUE_MODE ??
+      (envName === 'dev' ? 'queue' : 'off')
     const notificationsMode =
       this.node.tryGetContext('planeBNotificationsMode') ??
       process.env.PLANE_B_NOTIFICATIONS_QUEUE_MODE ??
@@ -200,15 +204,15 @@ export class RemitScoutStack extends Stack {
     const b2cQueueInSweep =
       this.node.tryGetContext('planeBB2cQueueInSweep') ??
       process.env.PLANE_B_B2C_QUEUE_IN_SWEEP ??
-      (b2cRefreshServiceEnabled ? undefined : (envName === 'dev' ? '1' : undefined))
+      (b2cRefreshServiceEnabled ? undefined : (envName === 'dev' ? '0' : undefined))
     const planeBB2bTargetMinutes =
       this.node.tryGetContext('planeBB2bTargetMinutes') ??
       process.env.PLANE_B_B2B_TARGET_MINUTES ??
-      (envName === 'dev' ? '360' : undefined)
+      (envName === 'dev' ? '240' : undefined)
     const planeBB2bObservationMode =
       this.node.tryGetContext('planeBB2bObservationMode') ??
       process.env.PLANE_B_B2B_OBSERVATION_MODE ??
-      (envName === 'dev' ? '1' : undefined)
+      (envName === 'dev' ? '0' : undefined)
     const planeBB2bMaxQueueDepth =
       this.node.tryGetContext('planeBB2bMaxQueueDepth') ??
       process.env.PLANE_B_B2B_MAX_QUEUE_DEPTH ??
@@ -329,6 +333,12 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('publicSupabaseAnonKey') ??
       process.env.PUBLIC_SUPABASE_ANON_KEY ??
       process.env.SUPABASE_PUBLISHABLE_KEY
+    const publicSupabaseUrlSecretJsonKey =
+      this.node.tryGetContext('publicSupabaseUrlSecretJsonKey') ??
+      process.env.PUBLIC_SUPABASE_URL_SECRET_JSON_KEY
+    const publicSupabaseAnonKeySecretJsonKey =
+      this.node.tryGetContext('publicSupabaseAnonKeySecretJsonKey') ??
+      process.env.PUBLIC_SUPABASE_ANON_KEY_SECRET_JSON_KEY
     const enablePlaneCIamAuth = toOptionalBool(
       this.node.tryGetContext('enablePlaneCIamAuth') ??
         process.env.PLANE_C_ENABLE_IAM_AUTH,
@@ -437,9 +447,16 @@ export class RemitScoutStack extends Stack {
       planeBDbHost,
       planeBDbPort,
       planeBDbName,
+      planeCDbSecretArn,
+      planeCDbSsmName,
+      planeCDbHost,
+      planeCDbPort,
+      planeCDbName,
       quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
       quoteRefreshQueueMode,
       ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
+      goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
+      goldLiveQueueMode,
       notificationsQueueUrl: queues.notificationsQueue.queueUrl,
       opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
       proxyResidentialSecretArn,
@@ -557,10 +574,12 @@ export class RemitScoutStack extends Stack {
       planeBIngestTask: tasks.planeBIngestTask,
       b2cRefreshTask: tasks.b2cRefreshTask,
       ingestFanoutTask: tasks.ingestFanoutTask,
+      goldLiveTask: tasks.goldLiveTask,
       notificationsQueueTask: tasks.notificationsQueueTask,
       opsAlertsQueueTask: tasks.opsAlertsQueueTask,
       queues,
       ingestFanoutMode,
+      goldLiveMode: goldLiveQueueMode,
       notificationsMode,
       opsAlertsMode,
       b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? 1 : 0,
@@ -615,6 +634,9 @@ export class RemitScoutStack extends Stack {
       planeAApiEndpoint: api.planeAApi.apiEndpoint,
       publicSupabaseUrl,
       publicSupabaseAnonKey,
+      publicSupabaseSecretArn: supabaseSecretArn,
+      publicSupabaseUrlSecretJsonKey,
+      publicSupabaseAnonKeySecretJsonKey,
     })
 
     createScheduledJobs(this, {
@@ -673,6 +695,9 @@ export class RemitScoutStack extends Stack {
     queues.ingestFanoutQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutDlq.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.goldLiveQueue.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.goldLiveQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.goldLiveDlq.grantSendMessages(iam.planeBEcsTaskRole)
     queues.notificationsQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.notificationsQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.notificationsDlq.grantSendMessages(iam.planeBEcsTaskRole)

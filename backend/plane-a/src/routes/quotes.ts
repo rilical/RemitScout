@@ -62,9 +62,8 @@ const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeS
 const TIER2_FRESHNESS_SECONDS = 4 * 60 * 60
 const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
 const TIER_JITTER_MS: Record<string, number> = {
-  tier_1_alpha: 0,
-  tier_2_reference: 200,
-  tier_3_discovery: 500,
+  tier_1: 0,
+  tier_2: 200,
 }
 
 

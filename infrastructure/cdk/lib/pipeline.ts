@@ -9,6 +9,7 @@ import {
   BuildSpec,
   LinuxBuildImage,
   PipelineProject,
+  BuildEnvironmentVariableType,
   type BuildEnvironmentVariable,
 } from 'aws-cdk-lib/aws-codebuild'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
@@ -31,6 +32,9 @@ export type PipelineOptions = {
   planeAApiEndpoint?: string
   publicSupabaseUrl?: string
   publicSupabaseAnonKey?: string
+  publicSupabaseSecretArn?: string
+  publicSupabaseUrlSecretJsonKey?: string
+  publicSupabaseAnonKeySecretJsonKey?: string
 }
 
 export type PipelineResources = {
@@ -91,6 +95,20 @@ export const createPipeline = (
   }
   if (options.publicSupabaseAnonKey) {
     buildEnvVars.PUBLIC_SUPABASE_ANON_KEY = { value: options.publicSupabaseAnonKey }
+  }
+  if (!options.publicSupabaseUrl && options.publicSupabaseSecretArn) {
+    const jsonKey = options.publicSupabaseUrlSecretJsonKey || 'SUPABASE_URL'
+    buildEnvVars.PUBLIC_SUPABASE_URL = {
+      type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+      value: `${options.publicSupabaseSecretArn}:${jsonKey}`,
+    }
+  }
+  if (!options.publicSupabaseAnonKey && options.publicSupabaseSecretArn) {
+    const jsonKey = options.publicSupabaseAnonKeySecretJsonKey || 'SUPABASE_PUBLISHABLE_KEY'
+    buildEnvVars.PUBLIC_SUPABASE_ANON_KEY = {
+      type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+      value: `${options.publicSupabaseSecretArn}:${jsonKey}`,
+    }
   }
 
   const buildProject = new PipelineProject(scope, 'RemitScoutBuildProject', {
@@ -160,6 +178,14 @@ export const createPipeline = (
   })
 
   backendRepository.grantPullPush(buildProject)
+  if (options.publicSupabaseSecretArn) {
+    buildProject.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+        resources: [options.publicSupabaseSecretArn],
+      }),
+    )
+  }
 
   if (options.frontendBucket) {
     options.frontendBucket.grantReadWrite(buildProject)

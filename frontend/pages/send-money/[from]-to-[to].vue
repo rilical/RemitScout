@@ -138,15 +138,30 @@
                   
                   <!-- Y-axis labels -->
                   <g v-if="chartStats" font-family="Inter, system-ui, sans-serif">
-                    <text x="45" y="28" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ chartStats.maxRate.toFixed(2) }}
-                    </text>
-                    <text x="45" y="58" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ chartStats.avgRate.toFixed(2) }}
-                    </text>
-                    <text x="45" y="88" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
-                      {{ chartStats.minRate.toFixed(2) }}
-                    </text>
+                    <!-- When data has variance, show min/avg/max -->
+                    <template v-if="!chartStats?.isFlat">
+                      <text x="45" y="28" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
+                        {{ chartStats?.maxRate?.toFixed(2) ?? '' }}
+                      </text>
+                      <text x="45" y="58" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
+                        {{ chartStats?.avgRate?.toFixed(2) ?? '' }}
+                      </text>
+                      <text x="45" y="88" text-anchor="end" fill="#64748b" font-size="9" font-weight="600">
+                        {{ chartStats?.minRate?.toFixed(2) ?? '' }}
+                      </text>
+                    </template>
+                    <!-- When data is flat, show padded range with current rate in middle -->
+                    <template v-else>
+                      <text x="45" y="28" text-anchor="end" fill="#94a3b8" font-size="8" font-weight="500">
+                        {{ chartStats?.displayMaxRate?.toFixed(2) ?? '' }}
+                      </text>
+                      <text x="45" y="58" text-anchor="end" fill="#2563eb" font-size="9" font-weight="700">
+                        {{ chartStats?.avgRate?.toFixed(2) ?? '' }}
+                      </text>
+                      <text x="45" y="88" text-anchor="end" fill="#94a3b8" font-size="8" font-weight="500">
+                        {{ chartStats?.displayMinRate?.toFixed(2) ?? '' }}
+                      </text>
+                    </template>
                   </g>
                   
                   <!-- Area fill -->
@@ -209,6 +224,14 @@
                     <span :class="{ 'text-slate-600': index === chartLabels.length - 1 }">{{ label }}</span>
                   </template>
                 </div>
+              </div>
+              
+              <!-- Stable rate indicator -->
+              <div v-if="chartStats?.isFlat && !isSameCurrency" class="mt-3 flex items-center justify-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-lg py-2 px-3">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="font-medium">Rate has been stable over the past 7 days</span>
               </div>
               
               <!-- Chart Stats Row -->
@@ -2178,6 +2201,9 @@ const chartStats = computed(() => {
       maxRate: 1.0,
       avgRate: 1.0,
       volatilityPct: 0,
+      displayMinRate: 0.99,
+      displayMaxRate: 1.01,
+      isFlat: true,
     }
   }
   if (!rateHistory.value.length) return null
@@ -2200,11 +2226,28 @@ const chartStats = computed(() => {
   const variance = rates.reduce((sum, rate) => sum + Math.pow(rate - avgRate, 2), 0) / rates.length
   const stdev = Math.sqrt(variance)
   const volatilityPct = avgRate > 0 ? (stdev / avgRate) * 100 : null
+  
+  // When data is flat (no variance), add padding to Y-axis for better visualization
+  const range = maxRate - minRate
+  const isFlat = range < avgRate * 0.001 // Less than 0.1% variance = flat
+  let displayMinRate = minRate
+  let displayMaxRate = maxRate
+  
+  if (isFlat && avgRate > 0) {
+    // Add ~1% padding above and below the flat line
+    const padding = avgRate * 0.01
+    displayMinRate = avgRate - padding
+    displayMaxRate = avgRate + padding
+  }
+  
   return {
     minRate,
     maxRate,
     avgRate,
     volatilityPct,
+    displayMinRate,
+    displayMaxRate,
+    isFlat,
   }
 })
 

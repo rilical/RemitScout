@@ -35,6 +35,40 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
     return result.rows[0] ?? null
   }
 
+  async getCapabilitiesForCorridor(corridorId: string): Promise<ProviderCapabilityRecord[]> {
+    const result = await query<ProviderCapabilityRecord>(
+      `SELECT provider_id,
+              corridor_id,
+              payin_methods,
+              payout_methods,
+              is_supported,
+              last_verified_at,
+              source
+         FROM silver.provider_corridor_capability
+        WHERE corridor_id = $1`,
+      [corridorId],
+      this.pool,
+    )
+    return result.rows
+  }
+
+  async loadAllSupportedCapabilities(): Promise<ProviderCapabilityRecord[]> {
+    const result = await query<ProviderCapabilityRecord>(
+      `SELECT provider_id,
+              corridor_id,
+              payin_methods,
+              payout_methods,
+              is_supported,
+              last_verified_at,
+              source
+         FROM silver.provider_corridor_capability
+        WHERE is_supported = true`,
+      [],
+      this.pool,
+    )
+    return result.rows
+  }
+
   async loadObservedCorridors(providerId: string): Promise<ProviderCorridorRecord[]> {
     const result = await query<ProviderCorridorRecord>(
       `SELECT corridor_id
@@ -137,9 +171,8 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
         `WITH tier_snapshot AS (
            SELECT corridor_id,
                   CASE
-                    WHEN corridor_tier = 'tier_1' THEN 'tier_1_alpha'
-                    WHEN corridor_tier = 'tier_2' THEN 'tier_2_reference'
-                    ELSE 'tier_3_discovery'
+                    WHEN corridor_tier = 'tier_1' THEN 'tier_1'
+                    ELSE 'tier_2'
                   END AS priority_tier
              FROM silver.corridor_tier_snapshot
             WHERE tier_version = $2

@@ -1,4 +1,5 @@
 import type { Pool } from 'pg'
+import { randomUUID } from 'node:crypto'
 import { createPool, query } from '../../shared/db'
 import { assertRuntimeConfig, config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
@@ -8,7 +9,16 @@ import { getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../../sha
 import { partitionCorridors } from '../../shared/sharding'
 import { parseCorridorId } from '../../shared/corridor'
 import { getCountryByCode } from '../../shared/countries-currencies'
-import { startHealthServer } from './health-server'
+import { isMacroCorridor, getMacroLanes, B2B_FIXED_AMOUNT_USD, type PayoutMethod } from '../../shared/macro-corridors'
+import {
+  getCorridorTier,
+  TIER_1_CADENCE_SECONDS,
+  TIER_2_CADENCE_SECONDS,
+  TIER_1_SLO_MINUTES,
+  TIER_2_SLO_MINUTES,
+  type CorridorTier,
+} from '../../shared/corridor-tiers'
+import { startHealthServerOnce, stopHealthServerOnce } from './health-server'
 import { providerRegistry, type ProviderRegistryEntry } from './providers'
 import { processQuoteRefreshQueue } from './quote-refresh'
 import {
@@ -19,12 +29,7 @@ import {
   ProviderCapabilityRepository,
   RightsMatrixRepository,
 } from './repositories'
-import { loadTierSuggestions, summarizeTierSuggestions } from './services/corridor-tier-suggestions'
-import {
-  buildPriorityTierMapFromList,
-  getTierListForVersion,
-  getTierSettingsForVersion,
-} from './services/corridor-tier-lists'
+import { buildB2bAmountResolver } from './services/b2b-amount'
 import { filterQueuesByRightsMatrix } from './services/rights-matrix-filter'
 import { VolatilityService } from './services/volatility-service'
 
@@ -47,16 +52,16 @@ const shutdownTimeoutMs = 30000
 const ingestFanoutMode = config.queues.ingestFanout.mode
 const ingestFanoutQueueUrl = config.queues.ingestFanout.url
 const ingestFanoutEnabled = ingestFanoutMode !== 'off' && Boolean(ingestFanoutQueueUrl)
-const defaultFanoutMessageMode = config.planeB.b2bObservationMode ? 'corridor' : 'provider'
-const fanoutMessageMode = (process.env.PLANE_B_B2B_FANOUT_MODE || defaultFanoutMessageMode)
-  .toLowerCase()
+const fanoutMessageMode =
+  process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE === 'provider'
+    ? 'provider'
+    : 'corridor'
 const toPositiveInt = (value: string | undefined, fallback: number) => {
   const parsed = Number.parseInt(value ?? '', 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 const rawCorridorProviderBatchSize = Number.parseInt(
-  process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE
-  || (config.planeB.b2bObservationMode ? '1' : '0'),
+  process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE || '0',
   10,
 )
 const corridorProviderBatchSize = Number.isFinite(rawCorridorProviderBatchSize)
@@ -128,6 +133,7 @@ type IngestFanoutMessage = {
   shardIndex?: number
   requestedAt: string
   sweepRunId?: string
+  traceId?: string
 }
 
 type IngestFanoutProviderTask = {
@@ -149,6 +155,7 @@ type IngestFanoutCorridorMessage = {
   providers: IngestFanoutProviderTask[]
   requestedAt: string
   sweepRunId?: string
+  traceId?: string
 }
 
 type IngestFanoutPayload = IngestFanoutMessage | IngestFanoutCorridorMessage
@@ -178,6 +185,9 @@ const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolea
     logger.warn('ingest_fanout_enqueue_failed', {
       provider_id: providerId,
       collector_type: collectorType,
+      sweep_run_id: payload.sweepRunId ?? null,
+      requested_at: payload.requestedAt ?? null,
+      trace_id: payload.traceId ?? null,
       error: error instanceof Error ? error.message : String(error),
     })
     return false
@@ -191,6 +201,9 @@ const shutdown = (signal: string) => {
   if (shutdownRequested) return
   shutdownRequested = true
   logger.info('shutdown_requested', { signal })
+  stopHealthServerOnce().catch((error) => {
+    logger.warn('health_server_close_failed', { error })
+  })
 
   forceExitTimer = setTimeout(() => {
     logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
@@ -258,89 +271,6 @@ const shouldRunPrioritySweep = async (
   return { due: ageSeconds >= intervalSeconds, ageSeconds }
 }
 
-const loadPriorityTierSettings = async (pool: Pool, tierVersion?: string) => {
-  const listSettings = getTierSettingsForVersion(tierVersion)
-  if (listSettings) {
-    return listSettings
-  }
-  const version = tierVersion?.trim()
-  if (!version) {
-    return new Map<string, { intervalSeconds: number; sloMinutes: number }>()
-  }
-  const result = await query<{
-    priority_tier: string
-    scrape_interval_seconds: number | null
-    freshness_slo_minutes: number | null
-  }>(
-    `WITH tier_snapshot AS (
-       SELECT corridor_id,
-              CASE
-                WHEN corridor_tier = 'tier_1' THEN 'tier_1_alpha'
-                WHEN corridor_tier = 'tier_2' THEN 'tier_2_reference'
-                ELSE 'tier_3_discovery'
-              END AS priority_tier,
-              CASE
-                WHEN corridor_tier = 'tier_1' THEN 2
-                WHEN corridor_tier = 'tier_2' THEN 360
-                ELSE 1440
-              END AS freshness_slo_minutes,
-              CASE
-                WHEN corridor_tier = 'tier_1' THEN 120
-                WHEN corridor_tier = 'tier_2' THEN 21600
-                ELSE 86400
-              END AS scrape_interval_seconds
-         FROM silver.corridor_tier_snapshot
-        WHERE tier_version = $1
-     )
-     SELECT priority_tier,
-            MAX(scrape_interval_seconds) AS scrape_interval_seconds,
-            MAX(freshness_slo_minutes) AS freshness_slo_minutes
-       FROM tier_snapshot
-      GROUP BY priority_tier`,
-    [version],
-    pool,
-  )
-  const settings = new Map<string, { intervalSeconds: number; sloMinutes: number }>()
-  for (const row of result.rows) {
-    const intervalSeconds = Number(row.scrape_interval_seconds)
-    const sloMinutes = Number(row.freshness_slo_minutes)
-    settings.set(row.priority_tier, {
-      intervalSeconds: Number.isFinite(intervalSeconds) ? intervalSeconds : 0,
-      sloMinutes: Number.isFinite(sloMinutes) ? sloMinutes : 0,
-    })
-  }
-  return settings
-}
-
-const loadPriorityTierMap = async (pool: Pool, tierVersion?: string) => {
-  const list = getTierListForVersion(tierVersion)
-  if (list) {
-    return { priorityTierMap: buildPriorityTierMapFromList(list), restrictToTierMap: true }
-  }
-  const version = tierVersion?.trim()
-  if (!version) {
-    return { priorityTierMap: new Map<string, string>(), restrictToTierMap: false }
-  }
-  const result = await query<{ corridor_id: string; priority_tier: string | null }>(
-    `SELECT corridor_id,
-            CASE
-              WHEN corridor_tier = 'tier_1' THEN 'tier_1_alpha'
-              WHEN corridor_tier = 'tier_2' THEN 'tier_2_reference'
-              ELSE 'tier_3_discovery'
-            END AS priority_tier
-       FROM silver.corridor_tier_snapshot
-      WHERE tier_version = $1`,
-    [version],
-    pool,
-  )
-  const tierMap = new Map<string, string>()
-  const rows = Array.isArray(result.rows) ? result.rows : []
-  for (const row of rows) {
-    if (!row.corridor_id) continue
-    tierMap.set(row.corridor_id, row.priority_tier ?? 'tier_2_reference')
-  }
-  return { priorityTierMap: tierMap, restrictToTierMap: false }
-}
 
 const loadUnsupportedCorridorsForProvider = async (pool: Pool, providerId: string) => {
   const repo = new ProviderCapabilityRepository(pool)
@@ -351,7 +281,6 @@ const loadUnsupportedCorridorsForProvider = async (pool: Pool, providerId: strin
 type PriorityQueues = {
   tier1: string[]
   tier2: string[]
-  tier3: string[]
   all: string[]
 }
 
@@ -361,23 +290,36 @@ const loadPriorityQueues = async (
   tierVersion?: string,
 ): Promise<PriorityQueues> => {
   const repo = new ProviderCapabilityRepository(pool)
-  const rows = await repo.loadPriorityCorridors(providerId, tierVersion)
   const queues: PriorityQueues = {
     tier1: [],
     tier2: [],
-    tier3: [],
     all: [],
   }
-  for (const row of rows) {
-    if (!row.corridor_id) continue
-    queues.all.push(row.corridor_id)
-    const tier = row.priority_tier ?? 'tier_2_reference'
-    if (tier === 'tier_1_alpha') {
-      queues.tier1.push(row.corridor_id)
-    } else if (tier === 'tier_2_reference') {
-      queues.tier2.push(row.corridor_id)
-    } else {
-      queues.tier3.push(row.corridor_id)
+
+  if (tierVersion) {
+    const rows = await repo.loadPriorityCorridors(providerId, tierVersion)
+    for (const row of rows) {
+      if (!row.corridor_id) continue
+      if (!isMacroCorridor(row.corridor_id)) continue
+      queues.all.push(row.corridor_id)
+      if (row.priority_tier === 'tier_1') {
+        queues.tier1.push(row.corridor_id)
+      } else {
+        queues.tier2.push(row.corridor_id)
+      }
+    }
+  } else {
+    const rows = await repo.loadObservedCorridors(providerId)
+    for (const row of rows) {
+      if (!row.corridor_id) continue
+      if (!isMacroCorridor(row.corridor_id)) continue
+      queues.all.push(row.corridor_id)
+      const tier = getCorridorTier(row.corridor_id)
+      if (tier === 'tier_1') {
+        queues.tier1.push(row.corridor_id)
+      } else {
+        queues.tier2.push(row.corridor_id)
+      }
     }
   }
   return queues
@@ -387,15 +329,11 @@ const buildExpandedQueues = (options: {
   capabilityQueues: PriorityQueues
   supportedCorridors: string[]
   unsupportedCorridors: Set<string>
-  priorityTierMap: Map<string, string>
-  restrictToTierMap?: boolean
 }) => {
   const {
     capabilityQueues,
     supportedCorridors,
     unsupportedCorridors,
-    priorityTierMap,
-    restrictToTierMap,
   } = options
   const combined: string[] = []
   const seen = new Set<string>()
@@ -403,7 +341,7 @@ const buildExpandedQueues = (options: {
     if (!corridorId) return
     if (unsupportedCorridors.has(corridorId)) return
     if (seen.has(corridorId)) return
-    if (restrictToTierMap && !priorityTierMap.has(corridorId)) return
+    if (!isMacroCorridor(corridorId)) return
     seen.add(corridorId)
     combined.push(corridorId)
   }
@@ -411,16 +349,14 @@ const buildExpandedQueues = (options: {
   for (const corridorId of capabilityQueues.all) addCorridor(corridorId)
   for (const corridorId of supportedCorridors) addCorridor(corridorId)
 
-  const queues: PriorityQueues = { tier1: [], tier2: [], tier3: [], all: [] }
+  const queues: PriorityQueues = { tier1: [], tier2: [], all: [] }
   for (const corridorId of combined) {
-    const tier = priorityTierMap.get(corridorId) ?? 'tier_2_reference'
+    const tier = getCorridorTier(corridorId)
     queues.all.push(corridorId)
-    if (tier === 'tier_1_alpha') {
+    if (tier === 'tier_1') {
       queues.tier1.push(corridorId)
-    } else if (tier === 'tier_2_reference') {
-      queues.tier2.push(corridorId)
     } else {
-      queues.tier3.push(corridorId)
+      queues.tier2.push(corridorId)
     }
   }
 
@@ -442,7 +378,6 @@ const filterQueuesByNativeCurrency = (queues: PriorityQueues): PriorityQueues =>
   return {
     tier1: filter(queues.tier1),
     tier2: filter(queues.tier2),
-    tier3: filter(queues.tier3),
     all: filter(queues.all),
   }
 }
@@ -474,6 +409,7 @@ const loadProviderRights = async (pool: Pool) => {
 
 type FreshnessReportRow = {
   corridorId: string
+  amountBucket: number
   ageMinutes: number | null
   sloMinutes: number | null
   isStale: boolean
@@ -499,7 +435,8 @@ const loadFreshnessLagByCorridor = async (
   pool: Pool,
   providerId: string,
   corridors: string[],
-  amountBucket: number,
+  amountByCorridor: Map<string, number>,
+  fallbackAmount: number,
   payinMethod: string,
   payoutMethod: string,
 ) => {
@@ -514,21 +451,31 @@ const loadFreshnessLagByCorridor = async (
   const chunkSize = Number.isFinite(config.planeB.b2bFreshnessChunkSize)
     ? config.planeB.b2bFreshnessChunkSize
     : 0
-  const corridorChunks = chunkSize > 0 ? chunkArray(corridors, chunkSize) : [corridors]
-  for (const corridorChunk of corridorChunks) {
-    const rows = await repo.loadFreshnessLagByCorridor(
-      providerId,
-      corridorChunk,
-      amountBucket,
-      payinMethod,
-      payoutMethod,
-    )
-    for (const row of rows) {
-      if (!row.corridor_id) {
-        continue
+  const buckets = new Map<number, string[]>()
+  for (const corridorId of corridors) {
+    const amountBucket = amountByCorridor.get(corridorId) ?? fallbackAmount
+    const normalized = Number.isFinite(amountBucket) ? Math.max(1, Math.round(amountBucket)) : fallbackAmount
+    const list = buckets.get(normalized) ?? []
+    list.push(corridorId)
+    buckets.set(normalized, list)
+  }
+  for (const [amountBucket, corridorList] of buckets.entries()) {
+    const corridorChunks = chunkSize > 0 ? chunkArray(corridorList, chunkSize) : [corridorList]
+    for (const corridorChunk of corridorChunks) {
+      const rows = await repo.loadFreshnessLagByCorridor(
+        providerId,
+        corridorChunk,
+        amountBucket,
+        payinMethod,
+        payoutMethod,
+      )
+      for (const row of rows) {
+        if (!row.corridor_id) {
+          continue
+        }
+        const age = Number.isFinite(row.age_minutes) ? Number(row.age_minutes) : null
+        ageByCorridor.set(row.corridor_id, age)
       }
-      const age = Number.isFinite(row.age_minutes) ? Number(row.age_minutes) : null
-      ageByCorridor.set(row.corridor_id, age)
     }
   }
   return ageByCorridor
@@ -537,7 +484,6 @@ const loadFreshnessLagByCorridor = async (
 const persistFreshnessReport = async (
   pool: Pool,
   providerId: string,
-  amountBucket: number,
   payinMethod: string,
   payoutMethod: string,
   reports: FreshnessReportRow[],
@@ -553,7 +499,7 @@ const persistFreshnessReport = async (
     const observedAt = new Date().toISOString()
     const providerIds = chunk.map(() => providerId)
     const corridorIds = chunk.map(report => report.corridorId)
-    const amountBuckets = chunk.map(() => amountBucket)
+    const amountBuckets = chunk.map(report => report.amountBucket)
     const payinMethods = chunk.map(() => payinMethod)
     const payoutMethods = chunk.map(() => payoutMethod)
     const ageMinutes = chunk.map(report => report.ageMinutes)
@@ -579,7 +525,8 @@ const applyFreshnessSlo = async (options: {
   pool: Pool
   providerId: string
   corridors: string[]
-  amountBucket: number
+  amountByCorridor: Map<string, number>
+  fallbackAmount: number
   payinMethod: string
   payoutMethod: string
   sloMinutes: number
@@ -589,7 +536,8 @@ const applyFreshnessSlo = async (options: {
     pool,
     providerId,
     corridors,
-    amountBucket,
+    amountByCorridor,
+    fallbackAmount,
     payinMethod,
     payoutMethod,
     sloMinutes,
@@ -606,7 +554,8 @@ const applyFreshnessSlo = async (options: {
     pool,
     providerId,
     corridors,
-    amountBucket,
+    amountByCorridor,
+    fallbackAmount,
     payinMethod,
     payoutMethod,
   )
@@ -619,6 +568,7 @@ const applyFreshnessSlo = async (options: {
   for (const corridorId of corridors) {
     const ageMinutes = ageByCorridor.get(corridorId) ?? null
     const isStale = hasSlo ? ageMinutes === null || ageMinutes >= sloMinutes : false
+    const amountBucket = amountByCorridor.get(corridorId) ?? fallbackAmount
     if (isStale) {
       staleCorridors.push(corridorId)
     } else {
@@ -626,6 +576,7 @@ const applyFreshnessSlo = async (options: {
     }
     reports.push({
       corridorId,
+      amountBucket,
       ageMinutes,
       sloMinutes: hasSlo ? sloMinutes : null,
       isStale,
@@ -637,7 +588,6 @@ const applyFreshnessSlo = async (options: {
       await persistFreshnessReport(
         pool,
         providerId,
-        amountBucket,
         payinMethod,
         payoutMethod,
         reports,
@@ -686,7 +636,6 @@ const createProviderSweepRun = async (options: {
   priorityTier: string
   cadenceMinutes: number
   targetMinutes: number
-  observationMode: boolean
   corridors: string[]
   amountBuckets: number[]
   payinMethod: string
@@ -699,7 +648,6 @@ const createProviderSweepRun = async (options: {
     priorityTier,
     cadenceMinutes,
     targetMinutes,
-    observationMode,
     corridors,
     amountBuckets,
     payinMethod,
@@ -713,7 +661,7 @@ const createProviderSweepRun = async (options: {
       priorityTier,
       cadenceMinutes,
       targetMinutes,
-      observationMode,
+      observationMode: false,
       corridorsTotal: corridors.length,
       providersTotal: 1,
       status: 'running',
@@ -770,14 +718,10 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const sweepRepo = new B2bSweepRepository(pool)
 
     const healthEnabled = process.env.PLANE_B_HEALTH_ENABLED !== '0'
-    let healthServer: { close: () => Promise<void> } | null = null
 
     if (healthEnabled) {
       try {
-        healthServer = await startHealthServer({
-          pool: options.pool ? undefined : pool,
-          logger,
-        })
+        await startHealthServerOnce({ logger })
       } catch (error) {
         logger.warn('health_server_start_failed', { error })
       }
@@ -795,10 +739,11 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         })
       }
     }
+    let queueStats: Awaited<ReturnType<typeof getQueueStats>> | null = null
+    const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
     if (ingestFanoutMode === 'queue' && ingestFanoutEnabled && ingestFanoutQueueUrl) {
-      const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
       if (maxQueueDepth > 0) {
-        const queueStats = await getQueueStats(ingestFanoutQueueUrl)
+        queueStats = await getQueueStats(ingestFanoutQueueUrl)
         if (queueStats.total >= maxQueueDepth) {
           logger.warn('ingest_fanout_backpressure', {
             queue_depth: queueStats.total,
@@ -811,22 +756,34 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         }
       }
     }
-    const observationMode = config.planeB.b2bObservationMode
-    if (config.planeB.b2cQueueInSweep && !observationMode) {
+    if (config.planeB.b2cQueueInSweep) {
+      if (
+        ingestFanoutMode === 'queue'
+        && ingestFanoutEnabled
+        && ingestFanoutQueueUrl
+        && maxQueueDepth > 0
+      ) {
+        if (!queueStats) {
+          queueStats = await getQueueStats(ingestFanoutQueueUrl)
+        }
+        const b2cQueueThreshold = Math.max(1, Math.floor(maxQueueDepth * 0.25))
+        if (queueStats.total >= b2cQueueThreshold) {
+          logger.info('b2c_queue_in_sweep_skipped', {
+            queue_depth: queueStats.total,
+            threshold: b2cQueueThreshold,
+            max_queue_depth: maxQueueDepth,
+          })
+          return true
+        }
+      }
       await processQuoteRefreshQueue({ pool })
     }
-    const b2bFreshnessSloEnabled = observationMode ? false : config.planeB.b2bFreshnessSloEnabled
+    const b2bFreshnessSloEnabled = config.planeB.b2bFreshnessSloEnabled
     const b2bNativeCurrencyOnly = config.planeB.b2bNativeCurrencyOnly
     const b2bWiseCurrencyOverride = config.planeB.b2bWiseCurrencyOverride
-    const tierVersion = config.planeB.b2bTierVersion
+    const b2bTierVersion = config.planeB.b2bTierVersion
     const maxTargetMinutes = Math.max(config.planeB.b2bMaxTargetMinutes || 0, 1440)
-    const observationTargetMinutes = Math.min(
-      maxTargetMinutes,
-      Math.max(config.planeB.b2bTargetMinutes || 0, 360),
-    )
-    const rawTargetMinutes = observationMode
-      ? observationTargetMinutes
-      : (config.planeB.b2bTargetMinutes || 0)
+    const rawTargetMinutes = config.planeB.b2bTargetMinutes || 240
     const targetMinutes = Math.min(rawTargetMinutes, maxTargetMinutes)
     if (rawTargetMinutes > maxTargetMinutes && maxTargetMinutes > 0) {
       logger.info('b2b_target_minutes_capped', {
@@ -834,8 +791,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         capped_target_minutes: maxTargetMinutes,
       })
     }
-    const planMinutes = targetMinutes > 0 ? targetMinutes : 30
-    const tier1Enabled = !observationMode && config.planeB.b2bTier1Enabled
+    const planMinutes = targetMinutes > 0 ? targetMinutes : 240
     const shardPlanConfig = {
       minShards: config.planeB.b2bMinShards,
       maxCorridorsPerShard: config.planeB.b2bMaxCorridorsPerShard,
@@ -849,52 +805,29 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const perCorridorRpmMultiplier = Number.isFinite(config.planeB.b2bPerCorridorRpmMultiplier)
       ? Math.max(config.planeB.b2bPerCorridorRpmMultiplier, 0)
       : 1
-    const priorityTierSettings = await loadPriorityTierSettings(pool, tierVersion)
-    const tier1Settings = priorityTierSettings.get('tier_1_alpha')
-    const tier2Settings = priorityTierSettings.get('tier_2_reference')
-    const tier3Settings = priorityTierSettings.get('tier_3_discovery')
-    const observationIntervalSeconds = observationTargetMinutes * 60
-    const observationTier2Rpm = toPositiveInt(
-      process.env.PLANE_B_B2B_OBSERVATION_TIER2_RPM,
-      30,
-    )
-    const observationTier2PerCorridorRpm = toPositiveInt(
-      process.env.PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM,
-      30,
-    )
-    const tier2IntervalSeconds = observationMode
-      ? observationIntervalSeconds
-      : (tier2Settings?.intervalSeconds || 21600)
-    const tier2SloMinutes = observationMode
-      ? observationTargetMinutes
-      : (tier2Settings?.sloMinutes || 360)
     const priorityTierConfig = {
       tier1: {
-        label: 'tier_1_alpha',
-        collectorType: 'b2b_tier_1_alpha',
-        intervalSeconds: tier1Settings?.intervalSeconds || 120,
+        label: 'tier_1',
+        collectorType: 'b2b_tier_1',
+        intervalSeconds: TIER_1_CADENCE_SECONDS,
         rpm: 12,
         perCorridorRpm: 12,
-        sloMinutes: tier1Settings?.sloMinutes || 2,
+        sloMinutes: TIER_1_SLO_MINUTES,
       },
       tier2: {
-        label: 'tier_2_reference',
-        collectorType: 'b2b_tier_2_reference',
-        intervalSeconds: tier2IntervalSeconds,
-        rpm: observationMode ? observationTier2Rpm : 6,
-        perCorridorRpm: observationMode ? observationTier2PerCorridorRpm : 6,
-        sloMinutes: tier2SloMinutes,
-      },
-      tier3: {
-        label: 'tier_3_discovery',
-        collectorType: 'b2b_tier_3_discovery',
-        intervalSeconds: tier3Settings?.intervalSeconds || 86400,
-        rpm: 2,
-        perCorridorRpm: 2,
-        sloMinutes: tier3Settings?.sloMinutes || 1440,
+        label: 'tier_2',
+        collectorType: 'b2b_tier_2',
+        intervalSeconds: TIER_2_CADENCE_SECONDS,
+        rpm: 6,
+        perCorridorRpm: 6,
+        sloMinutes: TIER_2_SLO_MINUTES,
       },
     } as const
-    const priorityTierOrder = ['tier1', 'tier2', 'tier3'] as const
+    const priorityTierOrder = ['tier1', 'tier2'] as const
+    const targetMinutesByTierKey = {
+      tier1: Math.max(1, Math.round(priorityTierConfig.tier1.intervalSeconds / 60)),
+      tier2: planMinutes,
+    } as const
 
     const rightsByProvider = await loadProviderRights(pool)
     const providers = providerRegistry
@@ -932,26 +865,14 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       eligibleProviders.push(provider)
     }
     const providerIds = eligibleProviders.map(provider => provider.providerId)
-    const { priorityTierMap, restrictToTierMap } = await loadPriorityTierMap(pool, tierVersion)
-    if (observationMode) {
-      const minProviders = Math.max(config.planeB.b2bMinProviderCount || 0, 3)
-      const suggestions = await loadTierSuggestions(pool, minProviders)
-      const summary = summarizeTierSuggestions(suggestions, priorityTierMap)
-      logger.info('b2b_tier_suggestions', {
-        suggestion_version: config.planeB.b2bTierSuggestionVersion || null,
-        min_providers: minProviders,
-        corridors: summary.corridors,
-        suggested_tier2: summary.suggestedTier2,
-        suggested_tier3: summary.suggestedTier3,
-        mismatched: summary.mismatched,
-        suggested_promotions: summary.suggestedPromotions,
-        suggested_demotions: summary.suggestedDemotions,
-      })
-    }
+    logger.info('loading_priority_queues', {
+      tier_version: b2bTierVersion,
+      provider_count: providerIds.length,
+    })
     const queueEntries = await Promise.all(
       providerIds.map(async (providerId) => [
         providerId,
-        await loadPriorityQueues(pool, providerId, tierVersion),
+        await loadPriorityQueues(pool, providerId, b2bTierVersion),
       ] as const),
     )
     const queuesByProvider = new Map(queueEntries)
@@ -1011,7 +932,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         corridors: string[],
         tierKey: typeof priorityTierOrder[number],
         targetMinutes: number,
-        amountBucket: number,
+        amountByCorridor: Map<string, number>,
+        fallbackAmount: number,
       ): Promise<PriorityTierPlan> => {
         const tierConfig = priorityTierConfig[tierKey]
         const eligibleCorridors = corridors
@@ -1021,7 +943,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           pool,
           providerId,
           corridors: eligibleCorridors,
-          amountBucket,
+          amountByCorridor,
+          fallbackAmount,
           payinMethod,
           payoutMethod,
           sloMinutes: tierConfig.sloMinutes,
@@ -1078,50 +1001,32 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         }
       }
 
+      const amountResolver = buildB2bAmountResolver(pool)
+
       for (const provider of eligibleProviders) {
         const providerId = provider.providerId
-        const b2bAmount = resolveB2bAmount(providerId)
-        const payinMethod = observationMode
-          ? defaultB2bPayinMethod
-          : resolveB2bPayinMethod(providerId)
-        const payoutMethod = observationMode
-          ? defaultB2bPayoutMethod
-          : resolveB2bPayoutMethod(providerId)
+        const b2bAmountFallback = resolveB2bAmount(providerId)
+        const payinMethod = resolveB2bPayinMethod(providerId)
+        const payoutMethod = resolveB2bPayoutMethod(providerId)
         const sweptCorridors = new Set<string>()
 
         const queue = queuesByProvider.get(providerId) ?? {
           tier1: [],
           tier2: [],
-          tier3: [],
           all: [],
         }
-        const unsupportedCorridors = observationMode && config.planeB.b2bObservationBypassCatalog
-          ? new Set<string>()
-          : await loadUnsupportedCorridorsForProvider(pool, providerId)
+        const unsupportedCorridors = await loadUnsupportedCorridorsForProvider(pool, providerId)
         let queues = buildExpandedQueues({
-        capabilityQueues: queue,
-        supportedCorridors: provider.supportedCorridors,
-        unsupportedCorridors,
-        priorityTierMap,
-        restrictToTierMap,
-      })
-        if (observationMode) {
-          queues = {
-            tier1: [],
-            tier2: [...queues.all],
-            tier3: [],
-            all: queues.all,
-          }
-        }
-        if (!observationMode || !config.planeB.b2bObservationBypassRightsMatrix) {
-          queues = filterQueuesByRightsMatrix(queues, rightsByProvider.get(providerId), providerId)
-        }
+          capabilityQueues: queue,
+          supportedCorridors: provider.supportedCorridors,
+          unsupportedCorridors,
+        })
+        queues = filterQueuesByRightsMatrix(queues, rightsByProvider.get(providerId), providerId)
         if (b2bNativeCurrencyOnly && !(b2bWiseCurrencyOverride && providerId === 'wise')) {
           const beforeCounts = {
             all: queues.all.length,
             tier1: queues.tier1.length,
             tier2: queues.tier2.length,
-            tier3: queues.tier3.length,
           }
           queues = filterQueuesByNativeCurrency(queues)
           logger.info('b2b_native_currency_filter', {
@@ -1132,87 +1037,62 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             after_tier1: queues.tier1.length,
             before_tier2: beforeCounts.tier2,
             after_tier2: queues.tier2.length,
-            before_tier3: beforeCounts.tier3,
-            after_tier3: queues.tier3.length,
           })
         }
 
-        const emptyPlan: PriorityTierPlan = {
-          corridors: [],
-          eligibleCorridors: [],
-          freshness: { staleCorridors: [], freshCorridors: [], filteredCorridors: [] },
-          partitions: [],
-          targetShards: 0,
-          rpmOverride: 0,
-          perCorridorRpmOverride: 0,
-          requiredRpm: null,
-          maxRpm: null,
-        }
-        const tier1Plan = tier1Enabled
-          ? await buildTierPlan(providerId, queues.tier1, 'tier1', planMinutes, b2bAmount)
-          : emptyPlan
-        const tier2Plan = await buildTierPlan(providerId, queues.tier2, 'tier2', planMinutes, b2bAmount)
-        const tier3Plan = observationMode
-          ? emptyPlan
-          : await buildTierPlan(providerId, queues.tier3, 'tier3', planMinutes, b2bAmount)
+        const amountByCorridor = await amountResolver.resolveAmountMap(queues.all, b2bAmountFallback)
+
+        const tier1Plan = await buildTierPlan(
+          providerId,
+          queues.tier1,
+          'tier1',
+          targetMinutesByTierKey.tier1,
+          amountByCorridor,
+          b2bAmountFallback,
+        )
+        const tier2Plan = await buildTierPlan(
+          providerId,
+          queues.tier2,
+          'tier2',
+          targetMinutesByTierKey.tier2,
+          amountByCorridor,
+          b2bAmountFallback,
+        )
 
         logger.info('b2b_priority_plan', {
           provider_id: providerId,
           observed_corridors: queues.all.length,
           tier1_corridors: queues.tier1.length,
           tier2_corridors: queues.tier2.length,
-          tier3_corridors: queues.tier3.length,
           tier1_eligible_corridors: tier1Plan.eligibleCorridors.length,
           tier2_eligible_corridors: tier2Plan.eligibleCorridors.length,
-          tier3_eligible_corridors: tier3Plan.eligibleCorridors.length,
           tier1_stale_corridors: tier1Plan.freshness.staleCorridors.length,
           tier2_stale_corridors: tier2Plan.freshness.staleCorridors.length,
-          tier3_stale_corridors: tier3Plan.freshness.staleCorridors.length,
           tier1_shards: tier1Plan.targetShards,
           tier2_shards: tier2Plan.targetShards,
-          tier3_shards: tier3Plan.targetShards,
-          tier1_enabled: tier1Enabled,
           tier1_interval_seconds: priorityTierConfig.tier1.intervalSeconds,
           tier2_interval_seconds: priorityTierConfig.tier2.intervalSeconds,
-          tier3_interval_seconds: priorityTierConfig.tier3.intervalSeconds,
           tier1_rpm: priorityTierConfig.tier1.rpm,
           tier2_rpm: priorityTierConfig.tier2.rpm,
-          tier3_rpm: priorityTierConfig.tier3.rpm,
           tier1_rpm_override: tier1Plan.rpmOverride,
           tier2_rpm_override: tier2Plan.rpmOverride,
-          tier3_rpm_override: tier3Plan.rpmOverride,
           tier1_required_rpm: tier1Plan.requiredRpm,
           tier2_required_rpm: tier2Plan.requiredRpm,
-          tier3_required_rpm: tier3Plan.requiredRpm,
           tier1_max_rpm: tier1Plan.maxRpm,
           tier2_max_rpm: tier2Plan.maxRpm,
-          tier3_max_rpm: tier3Plan.maxRpm,
           rpm_safety_factor: rpmSafetyFactor,
           freshness_slo_enabled: b2bFreshnessSloEnabled,
           target_minutes: targetMinutes || null,
           plan_minutes: planMinutes,
-          observation_mode: observationMode,
         })
 
         const tierPlans = {
           tier1: tier1Plan,
           tier2: tier2Plan,
-          tier3: tier3Plan,
         }
 
         let providerOk: boolean | null = null
         for (const tierKey of priorityTierOrder) {
-          if (observationMode && tierKey !== 'tier2') {
-            continue
-          }
-          if (!tier1Enabled && tierKey === 'tier1') {
-            logger.info('b2b_sweep_skipped', {
-              provider_id: providerId,
-              priority_tier: priorityTierConfig.tier1.label,
-              reason: 'tier1_disabled',
-            })
-            continue
-          }
           const tierConfig = priorityTierConfig[tierKey]
           const plan = tierPlans[tierKey]
           const corridorsPerShard = plan.partitions.map(partition => partition.length)
@@ -1265,21 +1145,16 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             continue
           }
 
-          const amountBuckets = [b2bAmount]
+          const amountBuckets = [b2bAmountFallback]
           let sweepRunId: string | undefined
-          if (
-            ingestFanoutMode === 'queue'
-            && ingestFanoutEnabled
-            && fanoutMessageMode === 'provider'
-          ) {
+          if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
             sweepRunId = await createProviderSweepRun({
               sweepRepo,
               providerId,
               collectorType: tierConfig.collectorType,
               priorityTier: tierConfig.label,
               cadenceMinutes: Math.max(1, Math.round(tierConfig.intervalSeconds / 60)),
-              targetMinutes: planMinutes,
-              observationMode,
+              targetMinutes: targetMinutesByTierKey[tierKey],
               corridors: plan.freshness.filteredCorridors,
               amountBuckets,
               payinMethod,
@@ -1289,19 +1164,20 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
           try {
             if (corridorFanoutEnabled) {
-              const providerTask: IngestFanoutProviderTask = {
-                providerId,
-                collectorType: tierConfig.collectorType,
-                amountBuckets,
-                payinMethod,
-                payoutMethod,
-                freshnessSloMinutes: tierConfig.sloMinutes,
-                freshnessSloEnabled: b2bFreshnessSloEnabled,
-                rpmOverride: plan.rpmOverride,
-                perCorridorRpmOverride: plan.perCorridorRpmOverride,
-                priorityTier: tierConfig.label,
-              }
               for (const corridorId of plan.freshness.filteredCorridors) {
+                const amountBucket = amountByCorridor.get(corridorId) ?? b2bAmountFallback
+                const providerTask: IngestFanoutProviderTask = {
+                  providerId,
+                  collectorType: tierConfig.collectorType,
+                  amountBuckets: [amountBucket],
+                  payinMethod,
+                  payoutMethod,
+                  freshnessSloMinutes: tierConfig.sloMinutes,
+                  freshnessSloEnabled: b2bFreshnessSloEnabled,
+                  rpmOverride: plan.rpmOverride,
+                  perCorridorRpmOverride: plan.perCorridorRpmOverride,
+                  priorityTier: tierConfig.label,
+                }
                 addCorridorTask(corridorId, providerTask)
               }
               if (plan.freshness.filteredCorridors.length > 0) {
@@ -1323,6 +1199,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             for (let shardIndex = 0; shardIndex < plan.partitions.length; shardIndex += 1) {
               const corridors = plan.partitions[shardIndex]
               if (!corridors.length) continue
+              const traceId = randomUUID()
               const fanoutPayload: IngestFanoutMessage = {
                 providerId,
                 collectorType: tierConfig.collectorType,
@@ -1338,6 +1215,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 shardIndex,
                 requestedAt: new Date().toISOString(),
                 sweepRunId,
+                traceId,
               }
               const enqueued = ingestFanoutEnabled
                 ? await enqueueIngestFanout(fanoutPayload)
@@ -1350,6 +1228,9 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   corridors_count: corridors.length,
                   mode: ingestFanoutMode,
                   enqueued,
+                  sweep_run_id: sweepRunId ?? null,
+                  trace_id: traceId,
+                  requested_at: fanoutPayload.requestedAt,
                 })
               }
               if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
@@ -1366,7 +1247,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 pool,
                 collectorType: tierConfig.collectorType,
                 corridors,
-                amountBuckets: [b2bAmount],
+                amountBuckets: [b2bAmountFallback],
                 payinMethod,
                 payoutMethod,
                 freshnessSloMinutes: tierConfig.sloMinutes,
@@ -1389,15 +1270,13 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   shards_failed: enqueueFailures,
                 })
                 if (sweepRunId && failedCorridors.length > 0) {
-                  const failedKeys = failedCorridors.flatMap(corridorId =>
-                    amountBuckets.map(amountBucket => ({
-                      providerId,
-                      corridorId,
-                      amountBucket,
-                      payinMethod,
-                      payoutMethod,
-                    })),
-                  )
+                  const failedKeys = failedCorridors.map((corridorId) => ({
+                    providerId,
+                    corridorId,
+                    amountBucket: amountByCorridor.get(corridorId) ?? b2bAmountFallback,
+                    payinMethod,
+                    payoutMethod,
+                  }))
                   await sweepRepo.markTasksFinishedBatch(
                     sweepRunId,
                     failedKeys,
@@ -1469,6 +1348,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   corridorId: task.corridorId,
                   providers,
                   requestedAt: now,
+                  traceId: randomUUID(),
                 } as IngestFanoutCorridorMessage,
               }))
             }
@@ -1479,9 +1359,14 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 corridorId: task.corridorId,
                 providers: task.providers,
                 requestedAt: now,
+                traceId: randomUUID(),
               } as IngestFanoutCorridorMessage,
             }]
           })
+          const traceIdSample = messages
+            .map((message) => message.payload.traceId)
+            .filter((value): value is string => Boolean(value))
+            .slice(0, 3)
           const providerEnqueueFailures = new Map<string, number>()
           let failedMessages = 0
           for (let i = 0; i < messages.length; i += 10) {
@@ -1505,6 +1390,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             messages: messages.length,
             failed_messages: failedMessages,
             provider_batch_size: corridorProviderBatchSize > 0 ? corridorProviderBatchSize : null,
+            trace_id_sample: traceIdSample.length > 0 ? traceIdSample : null,
           })
           for (const sweep of queuedSweeps) {
             const failures = providerEnqueueFailures.get(sweep.providerId) ?? 0
@@ -1547,11 +1433,6 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       }
       return ok
     } finally {
-      if (healthServer) {
-        await healthServer.close().catch((error) => {
-          logger.warn('health_server_close_failed', { error })
-        })
-      }
       if (shouldClose) {
         await pool.end()
       }

@@ -5,6 +5,31 @@ import { registerDatabasePool } from './connection-manager'
 import { createLogger } from './logger'
 
 const logger = createLogger('shared.db')
+const activePools = new Set<Pool>()
+let cleanupHandlersRegistered = false
+
+const registerPoolForCleanup = (pool: Pool) => {
+  activePools.add(pool)
+  if (cleanupHandlersRegistered) {
+    return
+  }
+  cleanupHandlersRegistered = true
+
+  const cleanup = () => {
+    for (const activePool of activePools) {
+      activePool.end().catch(() => {
+        // Silently fail on cleanup
+      })
+    }
+    activePools.clear()
+  }
+
+  process.once('exit', cleanup)
+  if (process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP !== '1') {
+    process.once('SIGTERM', cleanup)
+    process.once('SIGINT', cleanup)
+  }
+}
 
 /**
  * Gets pool size limits based on runtime environment.
@@ -82,27 +107,27 @@ export const createPool = (connectionString?: string) => {
       return Promise.resolve()
     }
     poolClosed = true
+    activePools.delete(pool)
     return originalEnd(cb as never)
   }) as typeof pool.end
-
-  // Cleanup pool on process exit.
-  const cleanup = () => {
-    pool.end().catch(() => {
-      // Silently fail on cleanup
-    })
-  }
-  process.once('exit', cleanup)
-  if (process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP !== '1') {
-    process.once('SIGTERM', cleanup)
-    process.once('SIGINT', cleanup)
-  }
+  registerPoolForCleanup(pool)
 
   // Prevent unhandled pool errors from crashing long-running workers.
   pool.on('error', (error) => {
-    logger.error('db_pool_error', {
-      error: error instanceof Error ? error.message : String(error),
+    const message = error instanceof Error ? error.message : String(error)
+    const isTransient = message.includes('Connection terminated unexpectedly')
+      || message.includes('terminating connection due to administrator command')
+      || message.includes('Connection terminated by server')
+    const payload = {
+      error: message,
       stack: error instanceof Error ? error.stack : undefined,
-    })
+      transient: isTransient,
+    }
+    if (isTransient) {
+      logger.warn('db_pool_error', payload)
+    } else {
+      logger.error('db_pool_error', payload)
+    }
   })
 
   return pool

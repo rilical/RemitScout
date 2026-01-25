@@ -4,7 +4,7 @@ import { query } from '../../../../shared/db'
 import { writeBronzePayloadToS3 } from '../../../../shared/bronze-storage'
 import { createLogger } from '../../../../shared/logger'
 import { formatError } from '../../../../shared/utils/error-handling'
-import type { BronzeWriteInput, IBronzeRepository } from '../interfaces/bronze-repository.interface'
+import type { BronzeWriteInput, FailedAttemptInput, IBronzeRepository } from '../interfaces/bronze-repository.interface'
 
 const logger = createLogger('plane-b.bronze-repository')
 
@@ -54,6 +54,38 @@ export class BronzeRepository implements IBronzeRepository {
         stack,
       })
       throw error
+    }
+  }
+
+  async recordFailedAttempt(input: FailedAttemptInput): Promise<void> {
+    try {
+      await query(
+        `INSERT INTO silver.quote_attempt
+         (provider_id, corridor_id, amount_bucket, payin_method, payout_method, attempted_at, success, error_type, error_message)
+         VALUES ($1, $2, $3, $4, $5, $6, false, 'bronze_write_failed', $7)`,
+        [
+          input.providerId,
+          input.corridorId,
+          input.amountBucket,
+          input.payinMethod,
+          input.payoutMethod,
+          input.attemptedAt,
+          input.reason,
+        ],
+        this.pool,
+      )
+      logger.debug('bronze_failed_attempt_recorded', {
+        provider_id: input.providerId,
+        corridor_id: input.corridorId,
+        reason: input.reason,
+      })
+    } catch (error: unknown) {
+      const { message } = formatError(error)
+      logger.warn('bronze_failed_attempt_record_error', {
+        provider_id: input.providerId,
+        corridor_id: input.corridorId,
+        error: message,
+      })
     }
   }
 }

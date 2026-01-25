@@ -53,12 +53,11 @@ const normalizeScopes = (scopes?: string[]) => {
 
 const ensureDefaultScopes = (scopes: string[]) => {
   const set = new Set(scopes)
-  const hasTier = Array.from(set).some((scope) => scope.startsWith('tier:'))
-  if (!hasTier) {
-    set.add('tier:2')
-  }
   if (!set.has('indices:read')) {
     set.add('indices:read')
+  }
+  if (!set.has('corridors:read')) {
+    set.add('corridors:read')
   }
   return Array.from(set)
 }

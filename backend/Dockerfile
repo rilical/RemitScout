@@ -27,6 +27,7 @@ COPY --from=build /app/backend/dist/shared backend/shared
 COPY --from=build /app/backend/dist/plane-a backend/dist/plane-a/src
 COPY --from=build /app/backend/dist/plane-b backend/dist/plane-b/src
 COPY --from=build /app/backend/dist/plane-c backend/dist/plane-c/src
+COPY --from=build /app/backend/dist/scripts backend/dist/scripts
 COPY --from=build /app/backend/package.json backend/package.json
 COPY --from=deps /app/node_modules node_modules
 COPY --from=deps /app/backend/node_modules backend/node_modules

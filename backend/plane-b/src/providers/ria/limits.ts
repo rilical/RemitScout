@@ -5,6 +5,7 @@ const toNumber = (value: string | undefined, fallback: number) => {
 
 export const httpLimits = {
   rpm: toNumber(process.env.PLANE_B_RIA_RPM, 6),
+  maxRpm: toNumber(process.env.PLANE_B_RIA_MAX_RPM, 10),
   concurrency: toNumber(process.env.PLANE_B_RIA_CONCURRENCY, 1),
   perLocale: true,
   perCorridorRpm: toNumber(process.env.PLANE_B_RIA_CORRIDOR_RPM, 2),

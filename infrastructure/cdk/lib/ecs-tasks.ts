@@ -18,6 +18,7 @@ export type EcsTaskResources = {
   planeBIngestTask: FargateTaskDefinition
   b2cRefreshTask: FargateTaskDefinition
   ingestFanoutTask: FargateTaskDefinition
+  goldLiveTask: FargateTaskDefinition
   notificationsQueueTask: FargateTaskDefinition
   opsAlertsQueueTask: FargateTaskDefinition
 }
@@ -32,6 +33,11 @@ export type EcsTaskOptions = {
   planeBDbHost?: string
   planeBDbPort?: string
   planeBDbName?: string
+  planeCDbSecretArn?: string
+  planeCDbSsmName?: string
+  planeCDbHost?: string
+  planeCDbPort?: string
+  planeCDbName?: string
   redisSecretArn?: string
   redisSecretJsonKey?: string
   redisSsmName?: string
@@ -47,6 +53,8 @@ export type EcsTaskOptions = {
   quoteRefreshQueueUrl?: string
   quoteRefreshQueueMode?: string
   ingestFanoutQueueUrl?: string
+  goldLiveQueueUrl?: string
+  goldLiveQueueMode?: string
   notificationsQueueUrl?: string
   opsAlertsQueueUrl?: string
   bronzeBucketName?: string
@@ -108,6 +116,11 @@ export const createEcsTasks = (
   const planeBDbHost = options.planeBDbHost
   const planeBDbPort = options.planeBDbPort
   const planeBDbName = options.planeBDbName
+  const planeCDbSecretArn = options.planeCDbSecretArn ?? options.planeBDbSecretArn
+  const planeCDbSsmName = options.planeCDbSsmName ?? options.planeBDbSsmName
+  const planeCDbHost = options.planeCDbHost ?? options.planeBDbHost
+  const planeCDbPort = options.planeCDbPort ?? options.planeBDbPort
+  const planeCDbName = options.planeCDbName ?? options.planeBDbName
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
   const redisSsmName = options.redisSsmName
@@ -123,6 +136,8 @@ export const createEcsTasks = (
   const quoteRefreshQueueUrl = options.quoteRefreshQueueUrl
   const quoteRefreshQueueMode = options.quoteRefreshQueueMode
   const ingestFanoutQueueUrl = options.ingestFanoutQueueUrl
+  const goldLiveQueueUrl = options.goldLiveQueueUrl
+  const goldLiveQueueMode = options.goldLiveQueueMode
   const notificationsQueueUrl = options.notificationsQueueUrl
   const opsAlertsQueueUrl = options.opsAlertsQueueUrl
   const bronzeBucketName = options.bronzeBucketName
@@ -212,9 +227,52 @@ export const createEcsTasks = (
     return secrets
   }
 
+  const buildGoldLiveSecrets = (): Record<string, EcsSecret> => {
+    const secrets: Record<string, EcsSecret> = {}
+
+    if (planeBDbSecretArn) {
+      const planeBSecret = Secret.fromSecretCompleteArn(
+        scope,
+        'GoldLivePlaneBDatabaseSecret',
+        planeBDbSecretArn,
+      )
+      secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(planeBSecret, 'username')
+      secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(planeBSecret, 'password')
+    } else if (planeBDbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'GoldLivePlaneBDatabaseParameter',
+        planeBDbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
+    }
+
+    if (planeCDbSecretArn) {
+      const planeCSecret = Secret.fromSecretCompleteArn(
+        scope,
+        'GoldLivePlaneCDatabaseSecret',
+        planeCDbSecretArn,
+      )
+      secrets.PLANE_C_DB_USERNAME = EcsSecret.fromSecretsManager(planeCSecret, 'username')
+      secrets.PLANE_C_DB_PASSWORD = EcsSecret.fromSecretsManager(planeCSecret, 'password')
+    } else if (planeCDbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'GoldLivePlaneCDatabaseParameter',
+        planeCDbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_C = EcsSecret.fromSsmParameter(parameter)
+    }
+
+    return secrets
+  }
+
   const sharedSecrets = buildSecrets()
   const secretsConfig =
     Object.keys(sharedSecrets).length > 0 ? { secrets: sharedSecrets } : {}
+  const goldLiveSecrets = buildGoldLiveSecrets()
+  const goldLiveSecretsConfig =
+    Object.keys(goldLiveSecrets).length > 0 ? { secrets: goldLiveSecrets } : {}
   const sharedEnv: Record<string, string> = {
     NODE_ENV: 'production',
     NODE_OPTIONS: '--require /app/backend/shared/node-polyfills.js',
@@ -261,11 +319,29 @@ export const createEcsTasks = (
   if (planeBDbName) {
     sharedEnv.PLANE_B_DB_NAME = planeBDbName
   }
+  if (planeCDbHost) {
+    sharedEnv.PLANE_C_DB_HOST = planeCDbHost
+  }
+  if (planeCDbSecretArn) {
+    sharedEnv.PLANE_C_DB_SECRET_ARN = planeCDbSecretArn
+  }
+  if (planeCDbPort) {
+    sharedEnv.PLANE_C_DB_PORT = planeCDbPort
+  }
+  if (planeCDbName) {
+    sharedEnv.PLANE_C_DB_NAME = planeCDbName
+  }
   if (redisUrl && !sharedSecrets.REDIS_URL) {
     sharedEnv.REDIS_URL = redisUrl
   }
   if (ingestFanoutQueueUrl) {
     sharedEnv.PLANE_B_INGEST_FANOUT_QUEUE_URL = ingestFanoutQueueUrl
+  }
+  if (goldLiveQueueUrl) {
+    sharedEnv.GOLD_LIVE_QUEUE_URL = goldLiveQueueUrl
+  }
+  if (goldLiveQueueMode) {
+    sharedEnv.GOLD_LIVE_QUEUE_MODE = goldLiveQueueMode
   }
   if (notificationsQueueUrl) {
     sharedEnv.PLANE_B_NOTIFICATIONS_QUEUE_URL = notificationsQueueUrl
@@ -542,6 +618,69 @@ export const createEcsTasks = (
     })
   }
 
+  const goldLiveTask = new FargateTaskDefinition(scope, 'GoldLiveWorkerTask', {
+    cpu: 256,
+    memoryLimitMiB: 512,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+  })
+
+  const goldLiveLogGroup = new LogGroup(scope, 'GoldLiveLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/gold-live-worker`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+
+  const goldLiveEnv: Record<string, string> = { ...sharedEnv }
+  if (planeBDbHost) {
+    goldLiveEnv.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (planeBDbSecretArn) {
+    goldLiveEnv.PLANE_B_DB_SECRET_ARN = planeBDbSecretArn
+  }
+  if (planeBDbPort) {
+    goldLiveEnv.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (planeBDbName) {
+    goldLiveEnv.PLANE_B_DB_NAME = planeBDbName
+  }
+  goldLiveTask.addContainer('GoldLiveWorkerContainer', {
+    image,
+    command: resolveCommand(
+      'scripts/aws/gold-live-worker-ecs.js',
+      'scripts/aws/gold-live-worker-ecs.ts',
+    ),
+    environment: goldLiveEnv,
+    ...goldLiveSecretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'gold-live-worker',
+      logGroup: goldLiveLogGroup,
+    }),
+  })
+  if (enableTelemetry) {
+    const goldLiveOtelLogGroup = new LogGroup(scope, 'GoldLiveOtelLogGroup', {
+      logGroupName: `/remit-scout/${options.envName}/gold-live-worker-otel`,
+      retention: logRetention,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    })
+    goldLiveTask.addContainer('GoldLiveOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'gold-live-worker-otel',
+        logGroup: goldLiveOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
+
   const notificationsQueueTask = new FargateTaskDefinition(
     scope,
     'NotificationsQueueWorkerTask',
@@ -656,6 +795,7 @@ export const createEcsTasks = (
     planeBIngestTask,
     b2cRefreshTask,
     ingestFanoutTask,
+    goldLiveTask,
     notificationsQueueTask,
     opsAlertsQueueTask,
   }

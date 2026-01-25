@@ -48,6 +48,7 @@ export const createMonitoring = (
       options.queues.exportJobQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.alertEvaluationQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.ingestFanoutQueue.metricApproximateNumberOfMessagesVisible(),
+      options.queues.goldLiveQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.notificationsQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.opsAlertsQueue.metricApproximateNumberOfMessagesVisible(),
     ],
@@ -61,6 +62,7 @@ export const createMonitoring = (
       options.queues.exportJobDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.alertEvaluationDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.ingestFanoutDlq.metricApproximateNumberOfMessagesVisible(),
+      options.queues.goldLiveDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.notificationsDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.opsAlertsDlq.metricApproximateNumberOfMessagesVisible(),
     ],
@@ -106,6 +108,7 @@ export const createMonitoring = (
     left: [
       options.ecs.planeBIngestService.metricCpuUtilization(),
       options.ecs.ingestFanoutService.metricCpuUtilization(),
+      options.ecs.goldLiveService.metricCpuUtilization(),
       options.ecs.notificationsQueueService.metricCpuUtilization(),
       options.ecs.opsAlertsQueueService.metricCpuUtilization(),
     ],
@@ -117,6 +120,7 @@ export const createMonitoring = (
     left: [
       options.ecs.planeBIngestService.metricMemoryUtilization(),
       options.ecs.ingestFanoutService.metricMemoryUtilization(),
+      options.ecs.goldLiveService.metricMemoryUtilization(),
       options.ecs.notificationsQueueService.metricMemoryUtilization(),
       options.ecs.opsAlertsQueueService.metricMemoryUtilization(),
     ],
@@ -166,6 +170,7 @@ export const createMonitoring = (
     options.queues.notificationsDlq,
     options.queues.opsAlertsDlq,
     options.queues.alertEvaluationDlq,
+    options.queues.goldLiveDlq,
   ].map((queue, index) =>
     new Alarm(scope, `DlqAlarm${index}`, {
       alarmName: `remit-scout-${options.envName}-${queue.queueName}-dlq`,
@@ -398,6 +403,7 @@ export const createMonitoring = (
     { name: 'ExportJob', queue: options.queues.exportJobQueue },
     { name: 'AlertEvaluation', queue: options.queues.alertEvaluationQueue },
     { name: 'IngestFanout', queue: options.queues.ingestFanoutQueue },
+    { name: 'GoldLive', queue: options.queues.goldLiveQueue },
     { name: 'Notifications', queue: options.queues.notificationsQueue },
     { name: 'OpsAlerts', queue: options.queues.opsAlertsQueue },
   ].map(({ name, queue }) =>
@@ -446,6 +452,20 @@ export const createMonitoring = (
     alarmDescription: 'Ingest fanout queue age exceeds 24h hard max',
   })
   ingestFanoutHardMaxAlarm.addAlarmAction(alarmAction)
+
+  const goldLiveAgeThresholdSeconds = options.envName === 'prod' ? 120 : 300
+  const goldLiveAgeAlarm = new Alarm(scope, 'GoldLiveAgeAlarm', {
+    alarmName: `remit-scout-${options.envName}-gold-live-age`,
+    metric: options.queues.goldLiveQueue.metricApproximateAgeOfOldestMessage({
+      period: Duration.minutes(5),
+    }),
+    threshold: goldLiveAgeThresholdSeconds,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Gold live queue age exceeds freshness target',
+  })
+  goldLiveAgeAlarm.addAlarmAction(alarmAction)
 
   // Worker Lock Acquisition Failure Alarm
   const workerLockFailureAlarm = new Alarm(scope, 'WorkerLockFailureAlarm', {

@@ -1,3 +1,5 @@
+import { config } from '../../../shared/config'
+
 type PublisherGateInput = {
   contributor_count?: number
   top_provider_share?: number
@@ -11,10 +13,11 @@ type PublisherGateResult = {
 
 export const evaluatePublisherGates = (input: PublisherGateInput): PublisherGateResult => {
   const reasons: string[] = []
+  const minContributors = config.providerQualityGates.minProvidersForTeer
 
   if (typeof input.contributor_count !== 'number') {
     reasons.push('missing_contributor_count')
-  } else if (input.contributor_count < 3) {
+  } else if (input.contributor_count < minContributors) {
     reasons.push('insufficient_contributors')
   }
 

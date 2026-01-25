@@ -13,7 +13,7 @@
  * 6. Validates and normalizes all fields
  */
 
-import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { computeBucketSelection, normalizeAmountBucket } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { createLogger } from '../../../shared/logger'
 import {
@@ -286,6 +286,16 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
 
   if (approximate) {
     flags.add(qualityFlags.bucket_approx)
+  }
+
+  const normalizedBucket = normalizeAmountBucket(sendAmount, 500)
+  if (hasBucketHint && normalizedBucket !== Math.round(input.amount_bucket!)) {
+    flags.add(qualityFlags.amount_bucket_mismatch)
+    logger.warn('amount_bucket_mismatch', {
+      corridor_id: input.corridor_id,
+      input_bucket: input.amount_bucket,
+      computed_bucket: normalizedBucket,
+    })
   }
 
   const promotionalRate = parseNumeric(input.promotional_rate ?? null)

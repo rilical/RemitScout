@@ -7,10 +7,19 @@ export type Entitlements = {
   history_max_days: number | null
   watchlist_items: number | null
   api_access: boolean
-  api_tier: number | null
-  api_cadence_hours: number | null
+  api_tier: 1 | 2 | null
+  bulk_export: boolean
+  indices_api: boolean
 }
 
+/**
+ * API Tier System (aligned with corridor tiers):
+ * - Tier 1: USD-origin corridors, 10-minute freshness
+ * - Tier 2: All other corridors, 3-hour freshness
+ *
+ * Enterprise accounts get access to both tiers.
+ * Data freshness matches the underlying B2B sweep cadence.
+ */
 const entitlementsByPlan: Record<PlanCode, Entitlements> = {
   free: {
     pulse_access: 'none',
@@ -20,7 +29,8 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     watchlist_items: 3,
     api_access: false,
     api_tier: null,
-    api_cadence_hours: null,
+    bulk_export: false,
+    indices_api: false,
   },
   plus: {
     pulse_access: 'full',
@@ -30,7 +40,8 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     watchlist_items: null,
     api_access: false,
     api_tier: null,
-    api_cadence_hours: null,
+    bulk_export: false,
+    indices_api: false,
   },
   enterprise: {
     pulse_access: 'full',
@@ -40,7 +51,8 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     watchlist_items: null,
     api_access: true,
     api_tier: 2,
-    api_cadence_hours: 6,
+    bulk_export: true,
+    indices_api: true,
   },
 }
 

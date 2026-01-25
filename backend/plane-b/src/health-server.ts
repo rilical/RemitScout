@@ -25,6 +25,13 @@ type HealthServerOptions = {
   logger?: ReturnType<typeof createLogger>
 }
 
+let healthServerSingleton: HealthServer | null = null
+let healthServerSingletonPromise: Promise<HealthServer> | null = null
+let healthServerDisabled = false
+const noopHealthServer: HealthServer = {
+  close: async () => undefined,
+}
+
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
@@ -70,6 +77,7 @@ export const startHealthServer = async (
   const logger = options.logger ?? createLogger('plane-b.health-server')
   const port = options.port ?? toNumber(process.env.HEALTH_PORT, 8080)
   const pool = options.pool ?? createPool(config.db.planeBUrl)
+  const ownsPool = !options.pool
 
   const server = http.createServer(async (req, res) => {
     if (req.method !== 'GET') {
@@ -162,8 +170,58 @@ export const startHealthServer = async (
             reject(error)
             return
           }
+          if (ownsPool) {
+            pool.end().catch(() => {
+              // Ignore pool shutdown errors on health server close.
+            })
+          }
           resolve()
         })
       }),
   }
+}
+
+export const startHealthServerOnce = async (
+  options: HealthServerOptions = {},
+): Promise<HealthServer> => {
+  if (healthServerSingleton) {
+    return healthServerSingleton
+  }
+  if (healthServerDisabled) {
+    return noopHealthServer
+  }
+  if (!healthServerSingletonPromise) {
+    healthServerSingletonPromise = startHealthServer(options)
+      .then((server) => {
+        healthServerSingleton = server
+        healthServerSingletonPromise = null
+        return server
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error)
+        const code = error instanceof Error && 'code' in error
+          ? String((error as { code?: string }).code)
+          : ''
+        if (message.includes('EADDRINUSE') || code === 'EADDRINUSE') {
+          healthServerDisabled = true
+          healthServerSingleton = noopHealthServer
+          healthServerSingletonPromise = null
+          const logger = options.logger ?? createLogger('plane-b.health-server')
+          logger.warn('health_server_disabled', { reason: 'address_in_use' })
+          return healthServerSingleton
+        }
+        healthServerSingletonPromise = null
+        throw error
+      })
+  }
+  return healthServerSingletonPromise
+}
+
+export const stopHealthServerOnce = async (): Promise<void> => {
+  if (!healthServerSingleton) {
+    return
+  }
+  const server = healthServerSingleton
+  healthServerSingleton = null
+  await server.close()
 }

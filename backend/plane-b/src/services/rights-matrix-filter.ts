@@ -9,7 +9,6 @@ export type RightsMatrixCountryFilter = {
 export type PriorityQueues = {
   tier1: string[]
   tier2: string[]
-  tier3: string[]
   all: string[]
 }
 
@@ -54,7 +53,7 @@ export const filterQueuesByRightsMatrix = (
       provider_id: providerId,
       reason: 'missing_rights_entry',
     })
-    return { tier1: [], tier2: [], tier3: [], all: [] }
+    return { tier1: [], tier2: [], all: [] }
   }
 
   const sourceCountries = normalizeCountryList(rights.sourceCountries)
@@ -66,13 +65,12 @@ export const filterQueuesByRightsMatrix = (
       source_count: sourceCountries.length,
       destination_count: destinationCountries.length,
     })
-    return { tier1: [], tier2: [], tier3: [], all: [] }
+    return { tier1: [], tier2: [], all: [] }
   }
 
   const filtered: PriorityQueues = {
     tier1: filterCorridors(queues.tier1, rights),
     tier2: filterCorridors(queues.tier2, rights),
-    tier3: filterCorridors(queues.tier3, rights),
     all: filterCorridors(queues.all, rights),
   }
 
@@ -84,8 +82,6 @@ export const filterQueuesByRightsMatrix = (
     after_tier1: filtered.tier1.length,
     before_tier2: queues.tier2.length,
     after_tier2: filtered.tier2.length,
-    before_tier3: queues.tier3.length,
-    after_tier3: filtered.tier3.length,
   })
 
   return filtered

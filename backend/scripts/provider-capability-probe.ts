@@ -16,7 +16,7 @@ const amountBucket = Math.max(1, toNumber(process.env.CAPABILITY_PROBE_AMOUNT_BU
 const payinMethod = process.env.CAPABILITY_PROBE_PAYIN_METHOD || 'bank_transfer'
 const payoutMethod = process.env.CAPABILITY_PROBE_PAYOUT_METHOD || 'bank_deposit'
 
-const targetTiers = (process.env.CAPABILITY_PROBE_TIERS || 'tier_2_reference,tier_3_discovery')
+const targetTiers = (process.env.CAPABILITY_PROBE_TIERS || 'tier_1,tier_2')
   .split(',')
   .map(value => value.trim())
   .filter(Boolean)

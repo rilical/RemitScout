@@ -4,10 +4,11 @@ const toNumber = (value: string | undefined, fallback: number) => {
 }
 
 export const httpLimits = {
-  rpm: toNumber(process.env.PLANE_B_TRANSFERGO_RPM, 12),
+  rpm: toNumber(process.env.PLANE_B_TRANSFERGO_RPM, 8),
+  maxRpm: toNumber(process.env.PLANE_B_TRANSFERGO_MAX_RPM, 12),
   concurrency: toNumber(process.env.PLANE_B_TRANSFERGO_CONCURRENCY, 2),
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_TRANSFERGO_CORRIDOR_RPM, 4),
+  perCorridorRpm: toNumber(process.env.PLANE_B_TRANSFERGO_CORRIDOR_RPM, 3),
 }
 
 /**

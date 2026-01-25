@@ -102,7 +102,7 @@ const archiveAndDelete = async (
 
   const normalizedPrefix = normalizePrefix(prefix)
 
-  while (true) {
+  for (;;) {
     const { whereClause, params, limitParam, limit } = buildFilterClause(filter, batchSize)
 
     const result = await query<AuditLogRow>(

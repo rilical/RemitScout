@@ -12,6 +12,9 @@ const MAX_PAYLOAD_SIZE = 10 * 1024 * 1024 // 10MB
 export type BronzeWriteInput = {
   provider_id: string
   corridor_id: string
+  amount_bucket?: number
+  payin_method?: string
+  payout_method?: string
   payload: unknown
 }
 
@@ -135,7 +138,18 @@ export const writeBronzePayload = async (pool: Pool, input: BronzeWriteInput) =>
       error: message,
       stack,
     })
-    // Don't throw - allow collector to continue even if bronze write fails
+
+    const repo = new BronzeRepository(pool)
+    await repo.recordFailedAttempt({
+      providerId: input.provider_id,
+      corridorId: input.corridor_id,
+      amountBucket: input.amount_bucket ?? 0,
+      payinMethod: input.payin_method ?? 'unknown',
+      payoutMethod: input.payout_method ?? 'unknown',
+      reason: message,
+      attemptedAt: new Date(),
+    })
+
     return null
   }
 }

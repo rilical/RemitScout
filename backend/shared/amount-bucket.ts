@@ -6,6 +6,16 @@ export type BucketSelection = {
 
 export const DEFAULT_AMOUNT_BUCKETS = [50, 100, 500, 1000, 3000, 10000]
 
+export const normalizeAmountBucket = (
+  amount: number,
+  fallback: number = 500,
+): number => {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return Math.max(1, Math.round(fallback))
+  }
+  return Math.round(amount)
+}
+
 const getValidBuckets = (buckets: number[]) => buckets.filter((bucket) => Number.isFinite(bucket) && bucket > 0)
 
 export const getNearestBucket = (

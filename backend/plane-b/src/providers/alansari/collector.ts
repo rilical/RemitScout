@@ -210,9 +210,9 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
     reason === 'http_429' || reason === 'keyword_too_many_requests'
   const isScheduledSweep = collectorType === 'collector'
     || collectorType === 'b2b_full_sweep'
-    || collectorType === 'b2b_tier_1_alpha'
-    || collectorType === 'b2b_tier_2_reference'
-    || collectorType === 'b2b_tier_3_discovery'
+    || collectorType === 'b2b_tier_1'
+    || collectorType === 'b2b_tier_2'
+    
   const shouldApplyFreshnessSlo = freshnessSloEnabled && isScheduledSweep
   const defaultProxyTier = getDefaultProxyTierForCollector(collectorType)
   const proxyTierCache = new Map<string, ProxyTier>()
@@ -447,7 +447,7 @@ export const runAlansariCollector = async (options: AlansariCollectorOptions = {
           parser_version: parsed.parser_version,
           parse_flags: parsed.parse_flags,
         })
-        await persistNormalizedQuote(pool, normalizedQuote)
+        await persistNormalizedQuote(pool, normalizedQuote, collectorType)
         const anomaly = await runAnomalyDetection({
           pool,
           providerId,

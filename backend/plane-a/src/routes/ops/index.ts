@@ -23,7 +23,6 @@ import { placidHealthRoutes } from './placid-health'
 import { wirebarleyHealthRoutes } from './wirebarley-health'
 import { intermexHealthRoutes } from './intermex-health'
 import { alansariHealthRoutes } from './alansari-health'
-import { observationRoutes } from './observation'
 
 export const opsRoutes = async (app: FastifyInstance) => {
   remitlyHealthRoutes(app)
@@ -50,5 +49,4 @@ export const opsRoutes = async (app: FastifyInstance) => {
   wirebarleyHealthRoutes(app)
   alansariHealthRoutes(app)
   intermexHealthRoutes(app)
-  observationRoutes(app)
 }

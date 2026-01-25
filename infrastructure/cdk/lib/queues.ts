@@ -11,6 +11,8 @@ export type QueueResources = {
   alertEvaluationDlq: Queue
   ingestFanoutQueue: Queue
   ingestFanoutDlq: Queue
+  goldLiveQueue: Queue
+  goldLiveDlq: Queue
   notificationsQueue: Queue
   notificationsDlq: Queue
   opsAlertsQueue: Queue
@@ -92,6 +94,21 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     sourceQueueArns: [ingestFanoutQueueArn],
   }
 
+  const goldLiveDlq = new Queue(scope, 'GoldLiveDlq', {
+    queueName: `remit-scout-${options.envName}-gold-live-dlq`,
+    retentionPeriod: Duration.days(14),
+  })
+
+  const goldLiveQueue = new Queue(scope, 'GoldLiveQueue', {
+    queueName: `remit-scout-${options.envName}-gold-live`,
+    visibilityTimeout: Duration.minutes(2),
+    retentionPeriod: Duration.days(2),
+    deadLetterQueue: {
+      queue: goldLiveDlq,
+      maxReceiveCount: 5,
+    },
+  })
+
   const notificationsDlq = new Queue(scope, 'NotificationsDlq', {
     queueName: `remit-scout-${options.envName}-notifications-dlq`,
     retentionPeriod: Duration.days(14),
@@ -131,6 +148,8 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     alertEvaluationDlq,
     ingestFanoutQueue,
     ingestFanoutDlq,
+    goldLiveQueue,
+    goldLiveDlq,
     notificationsQueue,
     notificationsDlq,
     opsAlertsQueue,

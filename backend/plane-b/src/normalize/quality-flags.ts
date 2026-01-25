@@ -34,6 +34,9 @@ export const qualityFlags = {
   /** Amount bucket is approximate (not exact match) */
   bucket_approx: 'bucket_approx',
 
+  /** Input amount bucket doesn't match computed bucket */
+  amount_bucket_mismatch: 'amount_bucket_mismatch',
+
   /**
    * Business Rule Violations
    */

@@ -33,6 +33,8 @@ export type ProviderCapabilityRecord = {
 
 export interface IProviderCapabilityRepository {
   getCapability(providerId: string, corridorId: string): Promise<ProviderCapabilityRecord | null>
+  getCapabilitiesForCorridor(corridorId: string): Promise<ProviderCapabilityRecord[]>
+  loadAllSupportedCapabilities(): Promise<ProviderCapabilityRecord[]>
   loadObservedCorridors(providerId: string): Promise<ProviderCorridorRecord[]>
   loadUnsupportedCorridors(providerId: string): Promise<ProviderCorridorRecord[]>
   loadUnsupportedCorridorsWithAge(providerId: string): Promise<ProviderUnsupportedCorridorRecord[]>

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getPool } from '../../../shared/db'
@@ -31,6 +32,32 @@ const normalizeToken = (value: string): string => {
 }
 
 const normalizeProviderId = (value: string): string => value.trim().toLowerCase()
+
+const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '')
+
+const resolvePublicBaseUrl = () => {
+  const candidates = [
+    config.newsletter.baseUrl,
+    config.billing.stripe.frontendBaseUrl,
+  ]
+
+  for (const candidate of candidates) {
+    if (candidate && candidate.trim()) {
+      return normalizeBaseUrl(candidate)
+    }
+  }
+
+  return ''
+}
+
+const LOGO_BASE_URL = resolvePublicBaseUrl()
+
+const toAbsoluteUrl = (value: string, baseUrl: string) => {
+  if (!value) return value
+  if (/^https?:\/\//i.test(value)) return value
+  if (!baseUrl) return value
+  return `${baseUrl}${value.startsWith('/') ? '' : '/'}${value}`
+}
 
 const METHOD_ORDER: Array<'bank' | 'cash' | 'wallet' | 'airtime'> = [
   'bank',
@@ -181,7 +208,7 @@ type FrontendProviderQuote = {
   isAffiliate?: boolean
 }
 
-type ProvidersResponse = {
+type ProvidersResponseBase = {
   data: FrontendProviderQuote[]
   updatedAt: string
   corridor: string
@@ -194,6 +221,12 @@ type ProvidersResponse = {
   midMarketUpdatedAt?: string | null
   availableMethods?: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
   indices?: CorridorIndices
+  providerQuotes?: ProviderQuoteResponse[]
+}
+
+type ProvidersResponse = ProvidersResponseBase & {
+  comparisonId: string
+  start: string
 }
 
 type CorridorIndices = {
@@ -206,7 +239,7 @@ type CorridorIndices = {
   weights: ProviderWeightModel
 }
 
-const providersCache = createTtlCache<ProvidersResponse>({ namespace: 'plane_a:providers' })
+const providersCache = createTtlCache<ProvidersResponseBase>({ namespace: 'plane_a:providers' })
 
 const querySchema = z.object({
   from: z.string().min(2).max(2).optional(),
@@ -220,6 +253,7 @@ const querySchema = z.object({
   payin: z.string().optional(),
   payout: z.string().optional(),
   live: z.coerce.boolean().optional(),
+  include_provider_quotes: z.coerce.boolean().optional(),
 })
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
@@ -441,9 +475,7 @@ const formatTransferTime = (minMinutes: number | null, maxMinutes: number | null
   return { min: minHrs, max: maxHrs, label }
 }
 
-const transformQuote = (
-  quote: LatestQuoteByCorridorRecord,
-): TransformedQuote => {
+const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote => {
   const payin = mapPayinMethod(quote.payin)
   const payout = mapPayoutMethod(quote.payout)
   const transferTime = formatTransferTime(
@@ -495,6 +527,10 @@ const transformQuote = (
   return {
     payin,
     payout,
+    transferTime: {
+      min: transferTime.min,
+      max: transferTime.max,
+    },
     receivedAmount: receiveAmount,
     rate,
     fee,
@@ -507,7 +543,7 @@ const transformQuote = (
   } as TransformedQuote
 }
 
-type TransformedQuote = Omit<ProviderQuoteResponse['quotes'][0], 'transferTime'> & { 
+type TransformedQuote = ProviderQuoteResponse['quotes'][0] & { 
   deliveryLabel: string
   originalQuote: LatestQuoteByCorridorRecord 
 }
@@ -516,6 +552,7 @@ const groupQuotesByProvider = (
   quotes: LatestQuoteByCorridorRecord[],
 ): Array<{ psp: ProviderQuoteResponse['psp']; quotes: TransformedQuote[] }> => {
   const providerMap = new Map<string, { metadata: ProviderQuoteResponse['psp']; quotes: TransformedQuote[] }>()
+  const logoBaseUrl = LOGO_BASE_URL
 
   for (const quote of quotes) {
     const providerId = quote.provider_id.toLowerCase()
@@ -552,8 +589,8 @@ const groupQuotesByProvider = (
           outboundUrl: metadata.affiliateUrl ?? metadata.url,
           isQuoteRequestLink: false,
           logo: {
-            sm: metadata.logo.sm,
-            ico: metadata.logo.ico,
+            sm: toAbsoluteUrl(metadata.logo.sm, logoBaseUrl),
+            ico: toAbsoluteUrl(metadata.logo.ico, logoBaseUrl),
           },
           languages: [],
           score: {
@@ -591,8 +628,23 @@ export const providersRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const { from, to, fromCurrency, toCurrency, amount, method, corridor_id, amount_bucket, payout, live } = parsed.data
+    const {
+      from,
+      to,
+      fromCurrency,
+      toCurrency,
+      amount,
+      method,
+      corridor_id,
+      amount_bucket,
+      payout,
+      live,
+      include_provider_quotes,
+    } = parsed.data
     const bypassCache = live === true
+    const includeProviderQuotes = include_provider_quotes === true
+    const comparisonId = randomUUID()
+    const start = new Date().toISOString()
 
     let corridorId = corridor_id
     let amountBucket = amount_bucket
@@ -669,12 +721,12 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
     try {
       const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
-      const cacheKey = `providers:${corridorId}:${amountBucket}:${amountKey}:${requestedMethod}:${maxAgeSeconds}`
+      const cacheKey = `providers:${corridorId}:${amountBucket}:${amountKey}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
         if (cached !== null) {
           logger.debug('providers_cache_hit', { cache_key: cacheKey })
-          return cached
+          return { ...cached, comparisonId, start }
         }
       }
 
@@ -872,6 +924,12 @@ export const providersRoutes = async (app: FastifyInstance) => {
       }
 
       const providerQuotes = groupQuotesByProvider(filteredQuotes)
+      const providerQuotesPayload = includeProviderQuotes
+        ? providerQuotes.map((pq) => ({
+            psp: pq.psp,
+            quotes: pq.quotes.map(({ deliveryLabel, originalQuote, ...quotePayload }) => quotePayload),
+          }))
+        : undefined
 
       const allowProviderWeightedMidMarket = config.planeA.b2c.providerWeightedMidMarketEnabled
       if (!midMarketRate && allowProviderWeightedMidMarket && providerQuotes.length >= 2) {
@@ -1018,7 +1076,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
       const amountForIndices = requestedAmount || amountBucket
       const indices = computeCorridorIndices(flattenedQuotes, amountForIndices, midMarketRate ?? null)
 
-      const response = {
+      const responseBase: ProvidersResponseBase = {
         data: flattenedQuotes,
         updatedAt: latestCollectedAt ?? new Date().toISOString(),
         corridor: corridorId,
@@ -1033,10 +1091,20 @@ export const providersRoutes = async (app: FastifyInstance) => {
         indices,
       }
 
+      if (providerQuotesPayload) {
+        responseBase.providerQuotes = providerQuotesPayload
+      }
+
+      const response: ProvidersResponse = {
+        ...responseBase,
+        comparisonId,
+        start,
+      }
+
       if (!bypassCache) {
         // Tune cache TTL for production (longer) vs development (shorter)
         const ttlMs = config.env === 'production' ? 120 * 1000 : 30 * 1000
-        await providersCache.set(cacheKey, response, ttlMs)
+        await providersCache.set(cacheKey, responseBase, ttlMs)
       }
 
       try {
