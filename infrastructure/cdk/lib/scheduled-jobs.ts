@@ -115,6 +115,7 @@ type LambdaNetworking = {
   vpc: Vpc
   vpcSubnets: { subnetType: SubnetType }
   securityGroups: SecurityGroup[]
+  allowPublicSubnet?: boolean
 }
 
 const applyRedisEnv = (
@@ -184,6 +185,7 @@ export const createScheduledJobs = (
 ): ScheduledJobsResources => {
   const isDev = options.envName === 'dev'
   const rulesEnabled = !options.paused
+  const allowPublicSubnet = isDev
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
@@ -200,16 +202,19 @@ export const createScheduledJobs = (
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
     securityGroups: [options.planeASecurityGroup],
+    allowPublicSubnet,
   }
   const planeBLambdaNetworking = {
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
     securityGroups: [options.planeBSecurityGroup],
+    allowPublicSubnet,
   }
   const planeCLambdaNetworking = {
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
     securityGroups: [options.planeCSecurityGroup],
+    allowPublicSubnet,
   }
   const otelLambdaLayer = options.otelLambdaLayerArn
     ? LayerVersion.fromLayerVersionArn(scope, 'ScheduledJobsOtelLambdaLayer', options.otelLambdaLayerArn)
