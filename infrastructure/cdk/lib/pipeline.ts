@@ -207,13 +207,38 @@ export const createPipeline = (
   let deployProject: PipelineProject | undefined
   if (options.enableDeploy) {
     const requireApproval = options.requireApproval ?? options.envName !== 'dev'
+    const deployEnvVars: Record<string, BuildEnvironmentVariable> = {
+      ENV_NAME: { value: options.envName },
+    }
+    if (options.connectionArn) {
+      deployEnvVars.PIPELINE_CONNECTION_ARN = { value: options.connectionArn }
+    }
+    if (options.repoOwner) {
+      deployEnvVars.PIPELINE_REPO_OWNER = { value: options.repoOwner }
+    }
+    if (options.repoName) {
+      deployEnvVars.PIPELINE_REPO_NAME = { value: options.repoName }
+    }
+    if (options.repoBranch) {
+      deployEnvVars.PIPELINE_REPO_BRANCH = { value: options.repoBranch }
+    }
+    if (options.enableDeploy !== undefined) {
+      deployEnvVars.PIPELINE_ENABLE_DEPLOY = {
+        value: options.enableDeploy ? 'true' : 'false',
+      }
+    }
+    if (options.requireApproval !== undefined) {
+      deployEnvVars.PIPELINE_REQUIRE_APPROVAL = {
+        value: options.requireApproval ? 'true' : 'false',
+      }
+    }
     deployProject = new PipelineProject(scope, 'RemitScoutDeployProject', {
       environment: {
         buildImage: LinuxBuildImage.STANDARD_7_0,
         privileged: false,
       },
       environmentVariables: {
-        ENV_NAME: { value: options.envName },
+        ...deployEnvVars,
       },
       buildSpec: BuildSpec.fromObject({
         version: '0.2',

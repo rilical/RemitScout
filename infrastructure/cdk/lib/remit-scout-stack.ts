@@ -405,13 +405,16 @@ export class RemitScoutStack extends Stack {
       process.env.PIPELINE_CONNECTION_ARN
     const pipelineRepoOwner =
       this.node.tryGetContext('pipelineRepoOwner') ??
-      process.env.PIPELINE_REPO_OWNER
+      process.env.PIPELINE_REPO_OWNER ??
+      (envName === 'dev' ? 'rilical' : undefined)
     const pipelineRepoName =
       this.node.tryGetContext('pipelineRepoName') ??
-      process.env.PIPELINE_REPO_NAME
+      process.env.PIPELINE_REPO_NAME ??
+      (envName === 'dev' ? 'Remit-Scout-V2' : undefined)
     const pipelineRepoBranch =
       this.node.tryGetContext('pipelineRepoBranch') ??
-      process.env.PIPELINE_REPO_BRANCH
+      process.env.PIPELINE_REPO_BRANCH ??
+      (envName === 'dev' ? 'develop' : undefined)
     const pipelineEnableDeploy =
       toOptionalBool(
         this.node.tryGetContext('pipelineEnableDeploy') ??
