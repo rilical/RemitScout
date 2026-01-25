@@ -25,29 +25,21 @@ export const createNetworking = (
   scope: Construct,
   options: NetworkingOptions,
 ): NetworkingResources => {
-  const isDev = options.envName === 'dev'
   const isProd = options.envName === 'prod'
 
   const vpc = new Vpc(scope, 'RemitScoutVpc', {
     maxAzs: 2,
-    natGateways: isProd ? 2 : 0,
-    subnetConfiguration: isDev
-      ? [
-          {
-            name: 'public',
-            subnetType: SubnetType.PUBLIC,
-          },
-        ]
-      : [
-          {
-            name: 'public',
-            subnetType: SubnetType.PUBLIC,
-          },
-          {
-            name: 'private',
-            subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-          },
-        ],
+    natGateways: isProd ? 2 : 1,
+    subnetConfiguration: [
+      {
+        name: 'public',
+        subnetType: SubnetType.PUBLIC,
+      },
+      {
+        name: 'private',
+        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+      },
+    ],
   })
 
   vpc.addGatewayEndpoint('S3GatewayEndpoint', {
