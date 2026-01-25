@@ -735,10 +735,12 @@ export class RemitScoutStack extends Stack {
       value: networking.vpc.publicSubnets.map((subnet) => subnet.subnetId).join(','),
       description: 'Public subnet IDs',
     })
-    new CfnOutput(this, 'PrivateSubnetIds', {
-      value: networking.vpc.privateSubnets.map((subnet) => subnet.subnetId).join(','),
-      description: 'Private subnet IDs',
-    })
+    if (networking.vpc.privateSubnets.length > 0) {
+      new CfnOutput(this, 'PrivateSubnetIds', {
+        value: networking.vpc.privateSubnets.map((subnet) => subnet.subnetId).join(','),
+        description: 'Private subnet IDs',
+      })
+    }
     new CfnOutput(this, 'PlaneASecurityGroupId', {
       value: networking.planeASecurityGroup.securityGroupId,
       description: 'Plane A security group ID',

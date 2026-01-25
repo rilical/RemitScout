@@ -51,23 +51,26 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   }
 
+  const dbSubnetType = isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
+
   const cluster = isDev
     ? new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
         ...clusterBaseProps,
         vpc: options.vpc,
-        vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+        vpcSubnets: { subnetType: dbSubnetType },
         securityGroups: [options.dbSecurityGroup],
         writer: ClusterInstance.serverlessV2('Writer'),
         serverlessV2MinCapacity: 0,
         serverlessV2MaxCapacity: 1,
         serverlessV2AutoPauseDuration: Duration.minutes(30),
+        publiclyAccessible: isDev,
       })
     : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
         ...clusterBaseProps,
         instances: isProd ? 2 : 1,
         instanceProps: {
           vpc: options.vpc,
-          vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+          vpcSubnets: { subnetType: dbSubnetType },
           securityGroups: [options.dbSecurityGroup],
           instanceType: new InstanceType(isProd ? 'r6g.xlarge' : 'r6g.large'),
         },
@@ -83,7 +86,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     maxConnectionsPercent: 90,
     maxIdleConnectionsPercent: 50,
     securityGroups: [options.proxySecurityGroup ?? options.dbSecurityGroup],
-    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    vpcSubnets: { subnetType: dbSubnetType },
   })
 
   return {

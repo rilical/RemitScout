@@ -25,47 +25,35 @@ export const createNetworking = (
   scope: Construct,
   options: NetworkingOptions,
 ): NetworkingResources => {
+  const isDev = options.envName === 'dev'
+  const isProd = options.envName === 'prod'
+
   const vpc = new Vpc(scope, 'RemitScoutVpc', {
-    maxAzs: 2,
-    natGateways: options.envName === 'prod' ? 2 : 1,
-    subnetConfiguration: [
-      {
-        name: 'public',
-        subnetType: SubnetType.PUBLIC,
-      },
-      {
-        name: 'private',
-        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-      },
-    ],
+    maxAzs: isDev ? 1 : 2,
+    natGateways: isProd ? 2 : 0,
+    subnetConfiguration: isDev
+      ? [
+          {
+            name: 'public',
+            subnetType: SubnetType.PUBLIC,
+          },
+        ]
+      : [
+          {
+            name: 'public',
+            subnetType: SubnetType.PUBLIC,
+          },
+          {
+            name: 'private',
+            subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+          },
+        ],
   })
 
-  if (options.envName === 'dev') {
-    vpc.addGatewayEndpoint('S3GatewayEndpoint', {
-      service: GatewayVpcEndpointAwsService.S3,
-      subnets: [{ subnetType: SubnetType.PRIVATE_WITH_EGRESS }],
-    })
-    vpc.addInterfaceEndpoint('EcrApiEndpoint', {
-      service: InterfaceVpcEndpointAwsService.ECR,
-      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-    })
-    vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
-      service: InterfaceVpcEndpointAwsService.ECR_DOCKER,
-      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-    })
-    vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
-      service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-    })
-    vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
-      service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-    })
-    vpc.addInterfaceEndpoint('SsmEndpoint', {
-      service: InterfaceVpcEndpointAwsService.SSM,
-      subnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-    })
-  }
+  vpc.addGatewayEndpoint('S3GatewayEndpoint', {
+    service: GatewayVpcEndpointAwsService.S3,
+    subnets: [{ subnetType: SubnetType.PUBLIC }],
+  })
 
   const planeASecurityGroup = new SecurityGroup(scope, 'PlaneASecurityGroup', {
     vpc,

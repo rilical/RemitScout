@@ -1,5 +1,5 @@
 import { Duration } from 'aws-cdk-lib'
-import { FargateService } from 'aws-cdk-lib/aws-ecs'
+import { DeploymentCircuitBreaker, FargateService } from 'aws-cdk-lib/aws-ecs'
 import { SubnetType, type SecurityGroup } from 'aws-cdk-lib/aws-ec2'
 import type { Cluster, FargateTaskDefinition } from 'aws-cdk-lib/aws-ecs'
 import type { Construct } from 'constructs'
@@ -41,10 +41,14 @@ export const createEcsServices = (
   scope: Construct,
   options: EcsServiceOptions,
 ): EcsServiceResources => {
+  const isDev = options.envName === 'dev'
+  const isProd = options.envName === 'prod'
   const isPaused = options.paused === true
-  const baseIngestDesired = options.envName === 'prod' ? 1 : 0
-  const baseQueueDesired = options.envName === 'prod' ? 1 : 0
-  const baseB2cRefreshDesired = options.envName === 'prod' ? 1 : 0
+
+  const baseIngestDesired = isProd ? 1 : 0
+  const baseQueueDesired = isProd ? 1 : 0
+  const baseB2cRefreshDesired = isProd ? 1 : 0
+
   const planeBIngestDesired = isPaused
     ? 0
     : (options.planeBIngestDesiredCount ?? baseIngestDesired)
@@ -54,39 +58,47 @@ export const createEcsServices = (
   const b2cRefreshDesired = isPaused
     ? 0
     : (options.b2cRefreshDesiredCount ?? baseB2cRefreshDesired)
-  const spotOnly = options.queueWorkerSpotOnly ?? false
+
+  const spotOnly = options.queueWorkerSpotOnly ?? isDev
   const spotCapacityProviderStrategies = spotOnly
     ? [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
-    : options.envName === 'prod'
+    : isProd
       ? [
           { capacityProvider: 'FARGATE', base: 1, weight: 1 },
           { capacityProvider: 'FARGATE_SPOT', weight: 2 },
         ]
-      : [
-          { capacityProvider: 'FARGATE', base: 1, weight: 1 },
-          { capacityProvider: 'FARGATE_SPOT', weight: 1 },
-        ]
-  const enableExecuteCommand = options.envName !== 'prod'
+      : [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
+
+  const enableExecuteCommand = !isProd
+  const usePublicSubnets = isDev
+  const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
+
+  const circuitBreaker: DeploymentCircuitBreaker = {
+    enable: true,
+    rollback: true,
+  }
 
   const planeBIngestService = new FargateService(scope, 'PlaneBIngestService', {
     cluster: options.cluster,
     taskDefinition: options.planeBIngestTask,
     desiredCount: planeBIngestDesired,
-    assignPublicIp: false,
-    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
     securityGroups: [options.planeBSecurityGroup],
     enableExecuteCommand,
+    circuitBreaker,
   })
 
   const b2cRefreshService = new FargateService(scope, 'B2cRefreshWorkerService', {
     cluster: options.cluster,
     taskDefinition: options.b2cRefreshTask,
     desiredCount: b2cRefreshDesired,
-    assignPublicIp: false,
-    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
     securityGroups: [options.planeBSecurityGroup],
     capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
+    circuitBreaker,
   })
 
   const ingestFanoutService = new FargateService(scope, 'IngestFanoutWorkerService', {
@@ -94,11 +106,12 @@ export const createEcsServices = (
     taskDefinition: options.ingestFanoutTask,
     desiredCount:
       options.ingestFanoutMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
-    assignPublicIp: false,
-    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
     securityGroups: [options.planeBSecurityGroup],
     capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
+    circuitBreaker,
   })
 
   const goldLiveService = new FargateService(scope, 'GoldLiveWorkerService', {
@@ -106,11 +119,12 @@ export const createEcsServices = (
     taskDefinition: options.goldLiveTask,
     desiredCount:
       options.goldLiveMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
-    assignPublicIp: false,
-    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
     securityGroups: [options.planeBSecurityGroup],
     capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
+    circuitBreaker,
   })
 
   const notificationsQueueService = new FargateService(
@@ -121,11 +135,12 @@ export const createEcsServices = (
       taskDefinition: options.notificationsQueueTask,
       desiredCount:
         options.notificationsMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
-      assignPublicIp: false,
-      vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+      assignPublicIp: usePublicSubnets,
+      vpcSubnets: { subnetType },
       securityGroups: [options.planeBSecurityGroup],
       capacityProviderStrategies: spotCapacityProviderStrategies,
       enableExecuteCommand,
+      circuitBreaker,
     },
   )
 
@@ -134,21 +149,23 @@ export const createEcsServices = (
     taskDefinition: options.opsAlertsQueueTask,
     desiredCount:
       options.opsAlertsMode === 'queue' && !isPaused ? queueWorkerDesired : 0,
-    assignPublicIp: false,
-    vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
     securityGroups: [options.planeBSecurityGroup],
     enableExecuteCommand,
+    circuitBreaker,
   })
 
-  const scaleMax = options.queueWorkerMaxCount ?? 10
+  const scaleMax = options.queueWorkerMaxCount ?? (isDev ? 5 : 10)
   const scaleDefaults = isPaused
-    ? { min: 0, max: 0, targetValue: options.envName === 'prod' ? 25 : 10 }
+    ? { min: 0, max: 0, targetValue: isProd ? 25 : 20 }
     : {
-        min: Math.max(queueWorkerDesired, options.envName === 'prod' ? 3 : 1),
+        min: isDev ? 0 : (isProd ? 2 : 1),
         max: Math.max(queueWorkerDesired, scaleMax),
-        targetValue: options.envName === 'prod' ? 25 : 10,
+        targetValue: isProd ? 25 : 20,
       }
-  const queueAgeTargetSeconds = options.envName === 'prod' ? 900 : 1800
+  const scaleInCooldown = isDev ? Duration.minutes(5) : Duration.minutes(3)
+  const scaleOutCooldown = isDev ? Duration.minutes(2) : Duration.minutes(1)
 
   if (!isPaused && options.ingestFanoutMode === 'queue') {
     const scaling = ingestFanoutService.autoScaleTaskCount({
@@ -158,14 +175,8 @@ export const createEcsServices = (
     scaling.scaleToTrackCustomMetric('IngestFanoutQueueDepth', {
       metric: options.queues.ingestFanoutQueue.metricApproximateNumberOfMessagesVisible(),
       targetValue: scaleDefaults.targetValue,
-      scaleInCooldown: Duration.minutes(2),
-      scaleOutCooldown: Duration.minutes(1),
-    })
-    scaling.scaleToTrackCustomMetric('IngestFanoutQueueAge', {
-      metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage(),
-      targetValue: queueAgeTargetSeconds,
-      scaleInCooldown: Duration.minutes(5),
-      scaleOutCooldown: Duration.minutes(2),
+      scaleInCooldown,
+      scaleOutCooldown,
     })
   }
 
@@ -177,14 +188,8 @@ export const createEcsServices = (
     scaling.scaleToTrackCustomMetric('GoldLiveQueueDepth', {
       metric: options.queues.goldLiveQueue.metricApproximateNumberOfMessagesVisible(),
       targetValue: scaleDefaults.targetValue,
-      scaleInCooldown: Duration.minutes(2),
-      scaleOutCooldown: Duration.minutes(1),
-    })
-    scaling.scaleToTrackCustomMetric('GoldLiveQueueAge', {
-      metric: options.queues.goldLiveQueue.metricApproximateAgeOfOldestMessage(),
-      targetValue: queueAgeTargetSeconds,
-      scaleInCooldown: Duration.minutes(5),
-      scaleOutCooldown: Duration.minutes(2),
+      scaleInCooldown,
+      scaleOutCooldown,
     })
   }
 
@@ -196,8 +201,8 @@ export const createEcsServices = (
     scaling.scaleToTrackCustomMetric('NotificationsQueueDepth', {
       metric: options.queues.notificationsQueue.metricApproximateNumberOfMessagesVisible(),
       targetValue: scaleDefaults.targetValue,
-      scaleInCooldown: Duration.minutes(2),
-      scaleOutCooldown: Duration.minutes(1),
+      scaleInCooldown,
+      scaleOutCooldown,
     })
   }
 
@@ -209,8 +214,8 @@ export const createEcsServices = (
     scaling.scaleToTrackCustomMetric('OpsAlertsQueueDepth', {
       metric: options.queues.opsAlertsQueue.metricApproximateNumberOfMessagesVisible(),
       targetValue: scaleDefaults.targetValue,
-      scaleInCooldown: Duration.minutes(2),
-      scaleOutCooldown: Duration.minutes(1),
+      scaleInCooldown,
+      scaleOutCooldown,
     })
   }
 

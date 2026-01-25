@@ -1,8 +1,11 @@
-import { RemovalPolicy, Stack } from 'aws-cdk-lib'
+import { Duration, RemovalPolicy, Stack } from 'aws-cdk-lib'
 import {
   ContainerImage,
+  CpuArchitecture,
   FargateTaskDefinition,
+  HealthCheck,
   LogDrivers,
+  OperatingSystemFamily,
   Protocol,
   Secret as EcsSecret,
 } from 'aws-cdk-lib/aws-ecs'
@@ -104,11 +107,25 @@ export const createEcsTasks = (
     '      exporters: [awsxray]',
   ].join('\n')
 
+  const workerHealthCheck: HealthCheck = {
+    command: ['CMD-SHELL', 'pgrep -x node || exit 1'],
+    interval: Duration.seconds(30),
+    timeout: Duration.seconds(5),
+    retries: 3,
+    startPeriod: Duration.seconds(60),
+  }
+
+  const runtimePlatform = {
+    cpuArchitecture: CpuArchitecture.ARM64,
+    operatingSystemFamily: OperatingSystemFamily.LINUX,
+  }
+
   const planeBIngestTask = new FargateTaskDefinition(scope, 'PlaneBIngestTask', {
     cpu: 512,
     memoryLimitMiB: 1024,
     executionRole: options.roles.planeBEcsTaskExecutionRole,
     taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
   })
 
   const planeBDbSecretArn = options.planeBDbSecretArn
@@ -457,6 +474,7 @@ export const createEcsTasks = (
       streamPrefix: 'plane-b-ingest',
       logGroup: planeBIngestLogGroup,
     }),
+    healthCheck: workerHealthCheck,
   })
   if (enableTelemetry) {
     const planeBIngestOtelLogGroup = new LogGroup(scope, 'PlaneBIngestOtelLogGroup', {
@@ -487,6 +505,7 @@ export const createEcsTasks = (
     memoryLimitMiB: 512,
     executionRole: options.roles.planeBEcsTaskExecutionRole,
     taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
   })
 
   const b2cRefreshLogGroup = new LogGroup(scope, 'B2cRefreshLogGroup', {
@@ -513,6 +532,7 @@ export const createEcsTasks = (
       streamPrefix: 'b2c-refresh-worker',
       logGroup: b2cRefreshLogGroup,
     }),
+    healthCheck: workerHealthCheck,
   })
   if (enableTelemetry) {
     const b2cRefreshOtelLogGroup = new LogGroup(scope, 'B2cRefreshOtelLogGroup', {
@@ -543,6 +563,7 @@ export const createEcsTasks = (
     memoryLimitMiB: 1024,
     executionRole: options.roles.planeBEcsTaskExecutionRole,
     taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
   })
 
   const ingestFanoutLogGroup = new LogGroup(scope, 'IngestFanoutLogGroup', {
@@ -593,6 +614,7 @@ export const createEcsTasks = (
       streamPrefix: 'ingest-fanout-worker',
       logGroup: ingestFanoutLogGroup,
     }),
+    healthCheck: workerHealthCheck,
   })
   if (enableTelemetry) {
     const ingestFanoutOtelLogGroup = new LogGroup(scope, 'IngestFanoutOtelLogGroup', {
@@ -623,6 +645,7 @@ export const createEcsTasks = (
     memoryLimitMiB: 512,
     executionRole: options.roles.planeBEcsTaskExecutionRole,
     taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
   })
 
   const goldLiveLogGroup = new LogGroup(scope, 'GoldLiveLogGroup', {
@@ -656,6 +679,7 @@ export const createEcsTasks = (
       streamPrefix: 'gold-live-worker',
       logGroup: goldLiveLogGroup,
     }),
+    healthCheck: workerHealthCheck,
   })
   if (enableTelemetry) {
     const goldLiveOtelLogGroup = new LogGroup(scope, 'GoldLiveOtelLogGroup', {
@@ -689,6 +713,7 @@ export const createEcsTasks = (
       memoryLimitMiB: 512,
       executionRole: options.roles.planeBEcsTaskExecutionRole,
       taskRole: options.roles.planeBEcsTaskRole,
+      runtimePlatform,
     },
   )
 
@@ -709,6 +734,7 @@ export const createEcsTasks = (
       streamPrefix: 'notifications-queue-worker',
       logGroup: notificationsLogGroup,
     }),
+    healthCheck: workerHealthCheck,
   })
   if (enableTelemetry) {
     const notificationsOtelLogGroup = new LogGroup(
@@ -746,6 +772,7 @@ export const createEcsTasks = (
       memoryLimitMiB: 512,
       executionRole: options.roles.planeBEcsTaskExecutionRole,
       taskRole: options.roles.planeBEcsTaskRole,
+      runtimePlatform,
     },
   )
 
@@ -766,6 +793,7 @@ export const createEcsTasks = (
       streamPrefix: 'ops-alerts-queue-worker',
       logGroup: opsAlertsLogGroup,
     }),
+    healthCheck: workerHealthCheck,
   })
   if (enableTelemetry) {
     const opsAlertsOtelLogGroup = new LogGroup(scope, 'OpsAlertsQueueOtelLogGroup', {

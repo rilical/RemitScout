@@ -109,7 +109,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
   const tracingExporter = isDev ? 'none' : 'xray'
   const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
-  const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+  const lambdaSubnets = { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS }
 
   const planeAEnvironment: Record<string, string> = {
     NODE_ENV: 'production',

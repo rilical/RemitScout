@@ -190,7 +190,12 @@ export const createScheduledJobs = (
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
   const tracingExporter = isDev ? 'none' : 'xray'
   const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
-  const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+
+  const exportWorkerIntervalMinutes = isDev ? 5 : 1
+  const alertEvaluationIntervalMinutes = isDev ? 15 : 1
+  const probeIntervalMinutes = isDev ? 30 : 5
+
+  const lambdaSubnets = { subnetType: SubnetType.PUBLIC }
   const planeALambdaNetworking = {
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
@@ -386,8 +391,8 @@ export const createScheduledJobs = (
   )
 
   const exportWorkerRule = new Rule(scope, 'ExportWorkerSchedule', {
-    schedule: Schedule.rate(Duration.minutes(1)),
-    description: 'Runs export worker every minute to drain queued export jobs.',
+    schedule: Schedule.rate(Duration.minutes(exportWorkerIntervalMinutes)),
+    description: `Runs export worker every ${exportWorkerIntervalMinutes} minute(s) to drain queued export jobs.`,
     enabled: rulesEnabled,
   })
 
@@ -528,8 +533,8 @@ export const createScheduledJobs = (
   )
 
   const alertEvaluationWorkerRule = new Rule(scope, 'AlertEvaluationWorkerSchedule', {
-    schedule: Schedule.rate(Duration.minutes(1)),
-    description: 'Runs alert evaluation worker every minute to drain queued alert evaluations.',
+    schedule: Schedule.rate(Duration.minutes(alertEvaluationIntervalMinutes)),
+    description: `Runs alert evaluation worker every ${alertEvaluationIntervalMinutes} minute(s) to drain queued alert evaluations.`,
     enabled: rulesEnabled,
   })
   alertEvaluationWorkerRule.addTarget(
@@ -1247,11 +1252,11 @@ export const createScheduledJobs = (
     new EcsTask({
       cluster: options.cluster,
       taskDefinition: options.b2cRefreshTask,
-      subnetSelection: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+      subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [options.planeBSecurityGroup],
       taskCount: 1,
       platformVersion: FargatePlatformVersion.LATEST,
-      assignPublicIp: false,
+      assignPublicIp: isDev,
     }),
   )
 
@@ -1334,8 +1339,8 @@ export const createScheduledJobs = (
     )
 
     const rule = new Rule(scope, `${id}ProbeSchedule`, {
-      schedule: Schedule.rate(Duration.minutes(5)),
-      description: `Runs ${providerId} provider health probe every 5 minutes.`,
+      schedule: Schedule.rate(Duration.minutes(probeIntervalMinutes)),
+      description: `Runs ${providerId} provider health probe every ${probeIntervalMinutes} minutes.`,
       enabled: rulesEnabled,
     })
 
