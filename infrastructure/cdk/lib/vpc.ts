@@ -29,7 +29,7 @@ export const createNetworking = (
   const isProd = options.envName === 'prod'
 
   const vpc = new Vpc(scope, 'RemitScoutVpc', {
-    maxAzs: isDev ? 1 : 2,
+    maxAzs: 2,
     natGateways: isProd ? 2 : 0,
     subnetConfiguration: isDev
       ? [
