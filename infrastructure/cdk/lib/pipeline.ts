@@ -25,6 +25,7 @@ export type PipelineOptions = {
   repoName?: string
   repoBranch?: string
   enableDeploy?: boolean
+  requireApproval?: boolean
   backendRepository?: Repository
   frontendBucket?: Bucket
   frontendDistribution?: Distribution
@@ -205,6 +206,7 @@ export const createPipeline = (
 
   let deployProject: PipelineProject | undefined
   if (options.enableDeploy) {
+    const requireApproval = options.requireApproval ?? options.envName !== 'dev'
     deployProject = new PipelineProject(scope, 'RemitScoutDeployProject', {
       environment: {
         buildImage: LinuxBuildImage.STANDARD_7_0,
@@ -227,7 +229,9 @@ export const createPipeline = (
           build: {
             commands: [
               'if [ -f image.env ]; then source image.env; fi',
-              'pnpm -C infrastructure/cdk deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
+              "ESBUILD_PLATFORM=$(node -p \"process.platform + '-' + process.arch\")",
+              'export ESBUILD_BINARY_PATH="infrastructure/cdk/node_modules/@esbuild/$ESBUILD_PLATFORM/bin/esbuild"',
+              'pnpm -C infrastructure/cdk exec cdk -- deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
               'if [ -n "$FRONTEND_BUCKET_NAME" ] && [ -n "$FRONTEND_DISTRIBUTION_ID" ]; then',
               '  echo "Deploying frontend to S3..."',
               '  aws s3 sync frontend/.output/public s3://$FRONTEND_BUCKET_NAME --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"',
@@ -250,10 +254,12 @@ export const createPipeline = (
       }),
     )
 
-    pipeline.addStage({
-      stageName: 'Approve',
-      actions: [new ManualApprovalAction({ actionName: 'Manual_Approval' })],
-    })
+    if (requireApproval) {
+      pipeline.addStage({
+        stageName: 'Approve',
+        actions: [new ManualApprovalAction({ actionName: 'Manual_Approval' })],
+      })
+    }
 
     pipeline.addStage({
       stageName: 'Deploy',

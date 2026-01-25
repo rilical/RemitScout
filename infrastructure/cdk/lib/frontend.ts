@@ -74,7 +74,9 @@ export const createFrontend = (
   scope: Construct,
   options: FrontendOptions,
 ): FrontendResources | null => {
-  if (!options.frontendDomainName) {
+  const shouldCreateFrontend =
+    Boolean(options.frontendDomainName) || options.envName === 'dev'
+  if (!shouldCreateFrontend) {
     return null
   }
 
@@ -120,8 +122,8 @@ export const createFrontend = (
     defaultTtl: Duration.seconds(0),
     minTtl: Duration.seconds(0),
     maxTtl: Duration.seconds(0),
-    enableAcceptEncodingGzip: true,
-    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: false,
+    enableAcceptEncodingBrotli: false,
   })
 
   const isrCachePolicy = new CachePolicy(scope, 'FrontendISRCachePolicy', {
@@ -133,7 +135,7 @@ export const createFrontend = (
     enableAcceptEncodingBrotli: true,
   })
 
-  const certificate = options.frontendCertificateArn
+  const certificate = options.frontendDomainName && options.frontendCertificateArn
     ? Certificate.fromCertificateArn(
         scope,
         'FrontendCertificate',
@@ -224,7 +226,10 @@ export const createFrontend = (
         compress: true,
       },
     },
-    domainNames: certificate ? [options.frontendDomainName] : undefined,
+    domainNames:
+      certificate && options.frontendDomainName
+        ? [options.frontendDomainName]
+        : undefined,
     certificate,
     errorResponses: [
       {
@@ -252,6 +257,7 @@ export const createFrontend = (
   }
 
   if (
+    options.frontendDomainName &&
     options.frontendHostedZoneId &&
     options.frontendHostedZoneName &&
     certificate
@@ -291,9 +297,10 @@ export const createFrontend = (
   })
 
   new CfnOutput(scope, 'FrontendUrl', {
-    value: certificate
-      ? `https://${options.frontendDomainName}`
-      : `https://${distribution.distributionDomainName}`,
+    value:
+      certificate && options.frontendDomainName
+        ? `https://${options.frontendDomainName}`
+        : `https://${distribution.distributionDomainName}`,
     description: 'Frontend URL',
     exportName: `remit-scout-frontend-url-${options.envName}`,
   })
@@ -303,4 +310,3 @@ export const createFrontend = (
     distribution,
   }
 }
-

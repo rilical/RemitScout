@@ -54,7 +54,7 @@ const validatePayload = (payload: NotificationsQueueMessage | null): payload is 
   return true
 }
 
-const runWorker = async () => {
+export const runNotificationsQueueWorkerLoop = async () => {
   if (queueMode !== 'queue') {
     logger.warn('notifications_worker_disabled', { mode: queueMode })
     return
@@ -148,14 +148,16 @@ const runWorker = async () => {
   }
 }
 
-runWorker()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('notifications_worker_fatal', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module) {
+  runNotificationsQueueWorkerLoop()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('notifications_worker_fatal', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

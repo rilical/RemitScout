@@ -378,10 +378,16 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     minify: !isAwsEnvironment, // Disable minify in dev to avoid build issues
     preset: isAwsEnvironment ? 'static' : undefined, // Use static generation for AWS deployment
-    prerender: {
-      crawlLinks: true,
-      routes: ['/'],
-    },
+    prerender: isAwsEnvironment
+      ? {
+          crawlLinks: false,
+          routes: ['/'],
+          failOnError: false,
+        }
+      : {
+          crawlLinks: true,
+          routes: ['/'],
+        },
   },
 
   // Vite Configuration

@@ -65,7 +65,7 @@ const validatePayload = (payload: OpsAlertsQueueMessage | null): payload is OpsA
   return true
 }
 
-const runWorker = async () => {
+export const runOpsAlertsQueueWorkerLoop = async () => {
   if (queueMode !== 'queue') {
     logger.warn('ops_alerts_worker_disabled', { mode: queueMode })
     return
@@ -151,14 +151,16 @@ const runWorker = async () => {
   }
 }
 
-runWorker()
-  .then(() => {
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('ops_alerts_worker_fatal', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (require.main === module) {
+  runOpsAlertsQueueWorkerLoop()
+    .then(() => {
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('ops_alerts_worker_fatal', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

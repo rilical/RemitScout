@@ -184,7 +184,7 @@ export class RemitScoutStack extends Stack {
     const ingestFanoutMode =
       this.node.tryGetContext('planeBIngestFanoutMode') ??
       process.env.PLANE_B_INGEST_FANOUT_QUEUE_MODE ??
-      (envName === 'prod' ? 'queue' : 'off')
+      (envName === 'prod' || envName === 'dev' ? 'queue' : 'off')
     const goldLiveQueueMode =
       this.node.tryGetContext('goldLiveQueueMode') ??
       process.env.GOLD_LIVE_QUEUE_MODE ??
@@ -192,15 +192,15 @@ export class RemitScoutStack extends Stack {
     const notificationsMode =
       this.node.tryGetContext('planeBNotificationsMode') ??
       process.env.PLANE_B_NOTIFICATIONS_QUEUE_MODE ??
-      (envName === 'prod' ? 'queue' : 'off')
+      (envName === 'prod' || envName === 'dev' ? 'queue' : 'off')
     const opsAlertsMode =
       this.node.tryGetContext('planeBOpsAlertsMode') ??
       process.env.PLANE_B_OPS_ALERT_QUEUE_MODE ??
-      (envName === 'prod' ? 'queue' : 'off')
+      (envName === 'prod' || envName === 'dev' ? 'queue' : 'off')
     const b2cRefreshServiceEnabled = toOptionalBool(
       this.node.tryGetContext('planeBB2cRefreshServiceEnabled') ??
         process.env.PLANE_B_B2C_REFRESH_SERVICE_ENABLED,
-    ) ?? (envName === 'prod')
+    ) ?? (envName === 'prod' || envName === 'dev')
     const b2cQueueInSweep =
       this.node.tryGetContext('planeBB2cQueueInSweep') ??
       process.env.PLANE_B_B2C_QUEUE_IN_SWEEP ??
@@ -224,7 +224,7 @@ export class RemitScoutStack extends Stack {
     const exportJobQueueMode =
       this.node.tryGetContext('exportJobQueueMode') ??
       process.env.EXPORT_JOB_QUEUE_MODE ??
-      (envName === 'prod' ? 'queue' : 'off')
+      (envName === 'prod' || envName === 'dev' ? 'queue' : 'off')
     const planeBIngestDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBIngestDesiredCount') ??
         process.env.PLANE_B_INGEST_DESIRED_COUNT,
@@ -236,7 +236,7 @@ export class RemitScoutStack extends Stack {
     const planeBQueueWorkerMaxCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
         process.env.PLANE_B_QUEUE_WORKER_MAX,
-    ) ?? (envName === 'prod' ? 20 : 50)
+    ) ?? (envName === 'prod' ? 20 : envName === 'dev' ? 10 : 50)
     const planeBQueueWorkerSpotOnly = toOptionalBool(
       this.node.tryGetContext('planeBQueueWorkerSpotOnly') ??
         process.env.PLANE_B_QUEUE_WORKER_SPOT_ONLY,
@@ -412,10 +412,16 @@ export class RemitScoutStack extends Stack {
     const pipelineRepoBranch =
       this.node.tryGetContext('pipelineRepoBranch') ??
       process.env.PIPELINE_REPO_BRANCH
-    const pipelineEnableDeploy = toOptionalBool(
-      this.node.tryGetContext('pipelineEnableDeploy') ??
-        process.env.PIPELINE_ENABLE_DEPLOY,
-    )
+    const pipelineEnableDeploy =
+      toOptionalBool(
+        this.node.tryGetContext('pipelineEnableDeploy') ??
+          process.env.PIPELINE_ENABLE_DEPLOY,
+      ) ?? envName === 'dev'
+    const pipelineRequireApproval =
+      toOptionalBool(
+        this.node.tryGetContext('pipelineRequireApproval') ??
+          process.env.PIPELINE_REQUIRE_APPROVAL,
+      ) ?? envName !== 'dev'
 
     const compute = createCompute(this, {
       envName,
@@ -627,6 +633,7 @@ export class RemitScoutStack extends Stack {
       repoName: pipelineRepoName,
       repoBranch: pipelineRepoBranch,
       enableDeploy: pipelineEnableDeploy,
+      requireApproval: pipelineRequireApproval,
       backendRepository: registry.backendRepository,
       frontendBucket: frontend?.bucket,
       frontendDistribution: frontend?.distribution,

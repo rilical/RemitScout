@@ -793,10 +793,14 @@ const filterProvidersByRights = (
     if (!rights.allowedCollect || !rights.allowedB2b) return false
     if (rights.stoplistStatus !== 'active') return false
 
-    if (!rights.sourceCountries || rights.sourceCountries.length === 0) return false
-    if (!rights.sourceCountries.includes(parsed.sourceCountry.toUpperCase())) return false
-    if (!rights.destinationCountries || rights.destinationCountries.length === 0) return false
-    if (!rights.destinationCountries.includes(parsed.destCountry.toUpperCase())) return false
+    const sourceCountries =
+      rights.sourceCountries?.map(country => country.toUpperCase()) ?? []
+    const destinationCountries =
+      rights.destinationCountries?.map(country => country.toUpperCase()) ?? []
+
+    if (sourceCountries.length === 0 || destinationCountries.length === 0) return false
+    if (!sourceCountries.includes(parsed.sourceCountry.toUpperCase())) return false
+    if (!destinationCountries.includes(parsed.destCountry.toUpperCase())) return false
 
     return true
   })

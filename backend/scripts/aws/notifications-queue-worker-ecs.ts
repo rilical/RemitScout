@@ -26,7 +26,8 @@ export const handler = async (): Promise<void> => {
     },
   ])
 
-  await import('../notifications-queue-worker')
+  const { runNotificationsQueueWorkerLoop } = await import('../notifications-queue-worker')
+  await runNotificationsQueueWorkerLoop()
 }
 
 if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
