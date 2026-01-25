@@ -59,11 +59,12 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
         vpc: options.vpc,
         vpcSubnets: { subnetType: dbSubnetType },
         securityGroups: [options.dbSecurityGroup],
-        writer: ClusterInstance.serverlessV2('Writer'),
+        writer: ClusterInstance.serverlessV2('Writer', {
+          publiclyAccessible: isDev,
+        }),
         serverlessV2MinCapacity: 0,
         serverlessV2MaxCapacity: 1,
         serverlessV2AutoPauseDuration: Duration.minutes(30),
-        publiclyAccessible: isDev,
       })
     : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
         ...clusterBaseProps,
