@@ -132,7 +132,7 @@ export const createPipeline = (
         },
         pre_build: {
           commands: [
-            'IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}',
+            'IMAGE_TAG=$(printf \'%.7s\' "${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest}")',
             'echo "IMAGE_TAG=$IMAGE_TAG" > image.env',
             'aws --version',
             'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI',
