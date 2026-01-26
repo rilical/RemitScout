@@ -264,7 +264,7 @@ export const createPipeline = (
               'if [ -f "$BUILD_ARTIFACT_DIR/image.env" ]; then . "$BUILD_ARTIFACT_DIR/image.env"; fi',
               "ESBUILD_PLATFORM=$(node -p \"process.platform + '-' + process.arch\")",
               'export ESBUILD_BINARY_PATH="$SOURCE_DIR/infrastructure/cdk/node_modules/@esbuild/$ESBUILD_PLATFORM/bin/esbuild"',
-              'cd "$SOURCE_DIR/infrastructure/cdk" && pnpm exec cdk -- deploy -a "npx ts-node --project tsconfig.json bin/app.ts" -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
+              'cd "$SOURCE_DIR/infrastructure/cdk" && pnpm exec -- cdk deploy -a "npx ts-node --project tsconfig.json bin/app.ts" -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
               [
                 'if [ -n "$FRONTEND_BUCKET_NAME" ] && [ -n "$FRONTEND_DISTRIBUTION_ID" ]; then',
                 '  echo "Deploying frontend to S3..."',
