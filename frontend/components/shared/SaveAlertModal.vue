@@ -71,6 +71,38 @@
                 <span class="text-blue-600">Current rate:</span>
                 <span class="font-medium text-blue-700">1 {{ ratePairBase }} = {{ currentRateLabel }} {{ ratePairQuote }}</span>
               </div>
+              <!-- Corridor Coverage Indicator -->
+              <div v-if="corridorEligibility && !eligibilityLoading" class="mt-2">
+                <div
+                  v-if="corridorEligibility.isMacroCorridor"
+                  class="flex items-center gap-1.5 text-xs text-emerald-600"
+                >
+                  <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="font-medium">Popular corridor</span>
+                  <span class="text-emerald-500">— rates updated frequently</span>
+                </div>
+                <div
+                  v-else
+                  class="flex items-center gap-1.5 text-xs text-slate-500"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Less common corridor</span>
+                  <span class="text-slate-400">— rates refreshed on demand</span>
+                </div>
+              </div>
+              <div v-else-if="eligibilityLoading" class="mt-2">
+                <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                  <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Checking corridor data...</span>
+                </div>
+              </div>
             </div>
 
             <div v-else>
@@ -130,12 +162,22 @@
                       <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
-                      <span class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+                      <span :class="option.unavailable ? 'text-slate-400' : 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600'">
                         {{ option.label }}
                       </span>
                     </div>
                     <span
-                      v-if="option.locked"
+                      v-if="option.unavailable"
+                      class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+                      :title="option.unavailableReason"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      No data
+                    </span>
+                    <span
+                      v-else-if="option.locked"
                       class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600"
                     >
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,6 +198,24 @@
                   <span v-else>{{ option.label }}</span>
                 </template>
               </UniversalDropdown>
+              <!-- Smart Alert Unavailable Explanation -->
+              <div
+                v-if="smartAlertDisabledReason && smartAlertDisabledReason !== 'plus_required'"
+                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+              >
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <span class="font-medium">Smart alerts unavailable for this corridor.</span>
+                    <span class="block mt-0.5 text-amber-700">{{ smartAlertDisabledMessage }}</span>
+                    <span v-if="corridorEligibility" class="block mt-1 text-amber-600">
+                      Try popular corridors like US→Mexico, UK→India, or US→Philippines.
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
@@ -449,6 +509,93 @@ const currentRateLabel = computed(() => {
   return currentRateValue.value.toFixed(4)
 })
 
+type CorridorEligibility = {
+  corridorId: string
+  isMacroCorridor: boolean
+  smartAlerts: {
+    eligible: boolean
+    reason: string | null
+    confidence: number | null
+    sampleDays: number | null
+    requirements: {
+      minConfidence: number
+      minSampleDays: number
+    }
+  }
+  regularAlerts: {
+    eligible: boolean
+    refreshCadence: string
+    note: string
+  }
+}
+
+const corridorEligibility = ref<CorridorEligibility | null>(null)
+const eligibilityLoading = ref(false)
+
+const loadCorridorEligibility = async () => {
+  if (!isOpen.value || import.meta.server) {
+    corridorEligibility.value = null
+    return
+  }
+
+  if (target.value.type !== 'corridor') {
+    corridorEligibility.value = null
+    return
+  }
+
+  eligibilityLoading.value = true
+  try {
+    const data = await request<{ success: boolean } & CorridorEligibility>('/alerts/corridor-eligibility', {
+      query: {
+        from: corridorFrom.value,
+        to: corridorTo.value,
+        fromCurrency: corridorFromCurrency.value,
+        toCurrency: corridorToCurrency.value,
+      },
+      timeoutMs: 5000,
+      retries: 0,
+    })
+    if (data?.success) {
+      corridorEligibility.value = data
+    } else {
+      corridorEligibility.value = null
+    }
+  } catch {
+    corridorEligibility.value = null
+  } finally {
+    eligibilityLoading.value = false
+  }
+}
+
+const smartAlertDisabledReason = computed(() => {
+  if (!isPlus.value) return 'plus_required'
+  if (eligibilityLoading.value) return 'loading'
+  if (!corridorEligibility.value) return 'unknown'
+  if (!corridorEligibility.value.smartAlerts.eligible) {
+    return corridorEligibility.value.smartAlerts.reason || 'no_data'
+  }
+  return null
+})
+
+const smartAlertDisabledMessage = computed(() => {
+  switch (smartAlertDisabledReason.value) {
+    case 'plus_required':
+      return 'Upgrade to Plus to use Smart Alerts'
+    case 'loading':
+      return 'Checking corridor data...'
+    case 'unknown':
+      return 'Unable to verify corridor data availability'
+    case 'no_data':
+      return 'Not enough data for this corridor yet'
+    case 'insufficient_history':
+      return `Need ${corridorEligibility.value?.smartAlerts.requirements?.minSampleDays ?? 21}+ days of history`
+    case 'low_confidence':
+      return 'Not enough providers covering this corridor'
+    default:
+      return null
+  }
+})
+
 const loadCurrentRate = async () => {
   if (!ratePairAvailable.value || !isOpen.value || import.meta.server) {
     currentRateValue.value = null
@@ -470,6 +617,10 @@ watch([isOpen, ratePairBase, ratePairQuote], () => {
   void loadCurrentRate()
 })
 
+watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrency], () => {
+  void loadCorridorEligibility()
+})
+
 const metricOptions = computed(() => {
   const options = []
   switch (target.value.type) {
@@ -479,12 +630,21 @@ const metricOptions = computed(() => {
         { value: 'totalCost' as const, label: 'Total cost' },
         { value: 'fee' as const, label: 'Fee' },
       )
-      options.push({
-        value: 'sendScore' as const,
-        label: 'Intelligent Alert',
-        disabled: !isPlus.value,
-        locked: !isPlus.value,
-      })
+      {
+        const reason = smartAlertDisabledReason.value
+        const smartDisabled = reason !== null
+        const isDataIssue = reason && !['plus_required', 'loading'].includes(reason)
+        const isLoading = reason === 'loading'
+        options.push({
+          value: 'sendScore' as const,
+          label: 'Intelligent Alert',
+          disabled: smartDisabled,
+          locked: !isPlus.value,
+          unavailable: isDataIssue,
+          loading: isLoading,
+          unavailableReason: smartAlertDisabledMessage.value,
+        })
+      }
       break
     case 'fxPair':
       options.push({ value: 'rate' as const, label: 'FX rate' })
@@ -832,18 +992,24 @@ watch(currentRateValue, (rate) => {
 
 watch(metric, (nextMetric) => {
   if (initializing.value) return
-  if (nextMetric === 'sendScore' && !isPlus.value) {
-    error.value = 'Smart alerts are available on Plus plans.'
-    metric.value = firstEnabledMetric.value
-    return
-  }
-  value.value = defaultValueForMetric(nextMetric)
   if (nextMetric === 'sendScore') {
+    if (!isPlus.value) {
+      error.value = 'Smart alerts are available on Plus plans.'
+      metric.value = firstEnabledMetric.value
+      return
+    }
+    if (smartAlertDisabledReason.value && smartAlertDisabledReason.value !== 'plus_required') {
+      error.value = smartAlertDisabledMessage.value || 'Smart alerts not available for this corridor.'
+      metric.value = firstEnabledMetric.value
+      return
+    }
     currency.value = ''
     frequency.value = 'weekly'
-    return
   }
-  syncCurrency()
+  value.value = defaultValueForMetric(nextMetric)
+  if (nextMetric !== 'sendScore') {
+    syncCurrency()
+  }
 })
 
 watch([isPlus, metric, frequency], ([plus, nextMetric, nextFrequency]) => {

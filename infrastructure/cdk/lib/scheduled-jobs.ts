@@ -27,6 +27,8 @@ export type ScheduledJobsResources = {
   alertEvaluationDailyRule: Rule
   alertEvaluationWorkerFunction: IFunction
   alertEvaluationWorkerRule: Rule
+  alertCorridorRefreshFunction: IFunction
+  alertCorridorRefreshRule: Rule
   telemetryAnalyticsFunction: IFunction
   telemetryAnalyticsRule: Rule
   sessionCleanupFunction: IFunction
@@ -544,6 +546,88 @@ export const createScheduledJobs = (
   })
   alertEvaluationWorkerRule.addTarget(
     new LambdaFunction(alertEvaluationWorkerFunction, { retryAttempts: 1 }),
+  )
+
+  const alertCorridorRefreshEnvironment: Record<string, string> = {
+    ENVIRONMENT: options.envName,
+    NODE_ENV: 'production',
+    PGSSLMODE: 'require',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
+    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+    CLOUDWATCH_NAMESPACE: 'RemitScout',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (planeADbHost) {
+    alertCorridorRefreshEnvironment.PLANE_A_DB_HOST = planeADbHost
+  }
+  if (planeADbPort) {
+    alertCorridorRefreshEnvironment.PLANE_A_DB_PORT = planeADbPort
+  }
+  if (planeADbName) {
+    alertCorridorRefreshEnvironment.PLANE_A_DB_NAME = planeADbName
+  }
+  if (options.quoteRefreshQueueUrl) {
+    alertCorridorRefreshEnvironment.QUOTE_REFRESH_QUEUE_URL = options.quoteRefreshQueueUrl
+  }
+  if (options.quoteRefreshQueueMode) {
+    alertCorridorRefreshEnvironment.QUOTE_REFRESH_QUEUE_MODE = options.quoteRefreshQueueMode
+  }
+
+  const alertCorridorRefreshFunction = new NodejsFunction(scope, 'AlertCorridorRefreshFunction', {
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'alert-corridor-refresh-lambda.ts',
+    ),
+    handler: 'handler',
+    runtime: Runtime.NODEJS_18_X,
+    memorySize: 512,
+    timeout: Duration.minutes(10),
+    ...planeALambdaNetworking,
+    role: options.roles.planeALambdaRole,
+    tracing: tracingMode,
+    environment: alertCorridorRefreshEnvironment,
+    logRetention,
+    layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+  })
+
+  if (planeADbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'AlertCorridorRefreshDbSecret',
+      planeADbSecretArn,
+    )
+    secret.grantRead(alertCorridorRefreshFunction)
+    alertCorridorRefreshFunction.addEnvironment('PLANE_A_DB_SECRET_ARN', planeADbSecretArn)
+  }
+  if (planeADbSsmName) {
+    alertCorridorRefreshFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
+  }
+  applyRedisEnv(
+    scope,
+    alertCorridorRefreshFunction,
+    'AlertCorridorRefreshRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
+
+  const alertCorridorRefreshIntervalHours = isDev ? 6 : 4
+  const alertCorridorRefreshRule = new Rule(scope, 'AlertCorridorRefreshSchedule', {
+    schedule: Schedule.rate(Duration.hours(alertCorridorRefreshIntervalHours)),
+    description: `Refreshes non-macro corridors with active alerts every ${alertCorridorRefreshIntervalHours} hours.`,
+    enabled: rulesEnabled,
+  })
+  alertCorridorRefreshRule.addTarget(
+    new LambdaFunction(alertCorridorRefreshFunction, { retryAttempts: 1 }),
   )
 
   const telemetryAnalyticsEnvironment: Record<string, string> = {
@@ -1365,6 +1449,8 @@ export const createScheduledJobs = (
     alertEvaluationDailyRule,
     alertEvaluationWorkerFunction,
     alertEvaluationWorkerRule,
+    alertCorridorRefreshFunction,
+    alertCorridorRefreshRule,
     telemetryAnalyticsFunction,
     telemetryAnalyticsRule,
     sessionCleanupFunction,

@@ -74,6 +74,8 @@
     "gold:publisher": "tsx scripts/gold-publisher-job.ts",
     "gold:live": "tsx scripts/gold-live-worker.ts",
     "gold:reconciliation": "tsx scripts/gold-reconciliation-job.ts",
+    "alerts:corridor-refresh": "tsx scripts/alert-corridor-refresh-job.ts",
+    "alerts:smart-signals": "tsx scripts/smart-alerts-job.ts",
     "oanda:sync-rates": "tsx scripts/oanda-rates-sync.ts",
     "oanda:sync-rates:once": "tsx scripts/oanda-rates-sync.ts --once",
     "volatility:backfill": "tsx scripts/volatility-backfill.ts",

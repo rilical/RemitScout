@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
@@ -12,6 +12,9 @@ import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import { verifyAlertUnsubscribeToken } from '../services/alert-unsubscribe'
 import { AlertRepository, WatchlistRepository } from '../repositories'
+import { getCountryByCode } from '../../../shared/countries-currencies'
+import { isMacroCorridor, getMacroCorridors } from '../../../shared/macro-corridors'
+import { parseCorridorId } from '../../../shared/corridor'
 
 const logger = createLogger('plane-a.alerts')
 const pool = getPool(config.db.planeAUrl)
@@ -90,7 +93,225 @@ async function getAlertCount(userId: string): Promise<number> {
   return alertRepository.countByUserId(userId)
 }
 
+const SMART_ALERT_MIN_CONFIDENCE = 70
+const SMART_ALERT_MIN_SAMPLE_DAYS = 21
+
+type CorridorSignalData = {
+  confidence: number | null
+  sample_days: number | null
+  alert_eligible: boolean
+  best_window_start: Date | null
+  best_window_end: Date | null
+  send_score: number | null
+}
+
+const resolveCorridorIdFromWatchlist = (
+  targetType: string,
+  payload: Record<string, unknown>,
+): string | null => {
+  if (targetType !== 'corridor') return null
+
+  if (typeof payload.corridorId === 'string' && payload.corridorId.length > 0) {
+    return payload.corridorId.toUpperCase()
+  }
+
+  const from = typeof payload.from === 'string' ? payload.from.toUpperCase() : null
+  const to = typeof payload.to === 'string' ? payload.to.toUpperCase() : null
+  if (!from || !to) return null
+
+  const fromCurrency = typeof payload.fromCurrency === 'string'
+    ? payload.fromCurrency.toUpperCase()
+    : getCountryByCode(from)?.currency ?? null
+  const toCurrency = typeof payload.toCurrency === 'string'
+    ? payload.toCurrency.toUpperCase()
+    : getCountryByCode(to)?.currency ?? null
+
+  if (!fromCurrency || !toCurrency) return null
+
+  return `${from}-${to}-${fromCurrency}-${toCurrency}`
+}
+
+async function checkCorridorSignalData(corridorId: string): Promise<CorridorSignalData | null> {
+  const result = await query<{
+    confidence: number | null
+    sample_days: number | null
+    alert_eligible: boolean
+    best_window_start: Date | null
+    best_window_end: Date | null
+    send_score: number | null
+  }>(
+    `SELECT confidence, sample_days, alert_eligible, best_window_start, best_window_end, send_score::double precision AS send_score
+     FROM silver.corridor_signals
+     WHERE corridor_id = $1`,
+    [corridorId],
+    pool,
+  )
+
+  return result.rows[0] ?? null
+}
+
 export const alertsRoutes = async (app: FastifyInstance) => {
+  app.get('/alerts/corridor-eligibility', async (request, reply) => {
+    const startTime = Date.now()
+
+    const queryParams = request.query as {
+      from?: string
+      to?: string
+      fromCurrency?: string
+      toCurrency?: string
+      corridorId?: string
+    }
+
+    let corridorId: string | null = null
+
+    if (queryParams.corridorId) {
+      corridorId = queryParams.corridorId.toUpperCase()
+    } else if (queryParams.from && queryParams.to) {
+      const from = queryParams.from.toUpperCase()
+      const to = queryParams.to.toUpperCase()
+      const fromCurrency = queryParams.fromCurrency?.toUpperCase()
+        ?? getCountryByCode(from)?.currency?.toUpperCase()
+        ?? null
+      const toCurrency = queryParams.toCurrency?.toUpperCase()
+        ?? getCountryByCode(to)?.currency?.toUpperCase()
+        ?? null
+
+      if (fromCurrency && toCurrency) {
+        corridorId = `${from}-${to}-${fromCurrency}-${toCurrency}`
+      }
+    }
+
+    if (!corridorId) {
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/alerts/corridor-eligibility', 400, durationSeconds)
+      reply.code(400)
+      return {
+        success: false,
+        error: 'invalid_params',
+        message: 'Provide corridorId or from/to country codes',
+      }
+    }
+
+    const isMacro = isMacroCorridor(corridorId)
+    const signalData = await checkCorridorSignalData(corridorId)
+
+    const hasConfidence = signalData !== null
+      && signalData.confidence !== null
+      && signalData.confidence >= SMART_ALERT_MIN_CONFIDENCE
+    const hasSamples = signalData !== null
+      && signalData.sample_days !== null
+      && signalData.sample_days >= SMART_ALERT_MIN_SAMPLE_DAYS
+
+    const dataReady = hasConfidence && hasSamples
+
+    const now = new Date()
+    const inActiveWindow = signalData !== null
+      && signalData.best_window_start !== null
+      && signalData.best_window_end !== null
+      && now >= new Date(signalData.best_window_start)
+      && now <= new Date(signalData.best_window_end)
+
+    const signalActive = dataReady
+      && signalData !== null
+      && signalData.alert_eligible === true
+      && inActiveWindow
+
+    let reason: string | null = null
+    if (!dataReady) {
+      if (signalData === null) {
+        reason = 'no_data'
+      } else if (!hasSamples) {
+        reason = 'insufficient_history'
+      } else {
+        reason = 'low_confidence'
+      }
+    }
+
+    const durationSeconds = (Date.now() - startTime) / 1000
+    recordRequest('GET', '/alerts/corridor-eligibility', 200, durationSeconds)
+
+    return {
+      success: true,
+      corridorId,
+      isMacroCorridor: isMacro,
+      smartAlerts: {
+        eligible: dataReady,
+        reason,
+        dataReady,
+        signalActive,
+        confidence: signalData?.confidence ?? null,
+        sampleDays: signalData?.sample_days ?? null,
+        sendScore: signalData?.send_score ?? null,
+        alertEligible: signalData?.alert_eligible ?? false,
+        inActiveWindow,
+        activeWindow: signalData?.best_window_start && signalData?.best_window_end
+          ? {
+              start: new Date(signalData.best_window_start).toISOString(),
+              end: new Date(signalData.best_window_end).toISOString(),
+            }
+          : null,
+        requirements: {
+          minConfidence: SMART_ALERT_MIN_CONFIDENCE,
+          minSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+        },
+      },
+      regularAlerts: {
+        eligible: true,
+        refreshCadence: isMacro ? 'macro_coverage' : 'on_demand',
+        note: isMacro
+          ? 'This corridor is covered by our regular data collection.'
+          : 'Quotes for this corridor are refreshed when users view it or before alert evaluation.',
+      },
+    }
+  })
+
+  app.get('/alerts/macro-corridors', async (request, reply) => {
+    const startTime = Date.now()
+
+    const macroCorridors = getMacroCorridors()
+
+    const bySourceCountry = new Map<string, string[]>()
+    for (const corridor of macroCorridors) {
+      const list = bySourceCountry.get(corridor.sourceCountry) ?? []
+      list.push(corridor.corridorId)
+      bySourceCountry.set(corridor.sourceCountry, list)
+    }
+
+    const signalResult = await query<{
+      corridor_id: string
+      confidence: number | null
+      sample_days: number | null
+    }>(
+      `SELECT corridor_id, confidence, sample_days
+       FROM silver.corridor_signals
+       WHERE confidence >= $1 AND sample_days >= $2`,
+      [SMART_ALERT_MIN_CONFIDENCE, SMART_ALERT_MIN_SAMPLE_DAYS],
+      pool,
+    )
+
+    const smartAlertEligible = new Set(signalResult.rows.map(r => r.corridor_id))
+
+    const durationSeconds = (Date.now() - startTime) / 1000
+    recordRequest('GET', '/alerts/macro-corridors', 200, durationSeconds)
+
+    return {
+      success: true,
+      totalMacroCorridors: macroCorridors.length,
+      smartAlertEligibleCount: smartAlertEligible.size,
+      bySourceCountry: Object.fromEntries(bySourceCountry),
+      corridors: macroCorridors.map(c => ({
+        corridorId: c.corridorId,
+        sourceCountry: c.sourceCountry,
+        destCountry: c.destCountry,
+        sourceCurrency: c.sourceCurrency,
+        destCurrency: c.destCurrency,
+        tier: c.tier,
+        isHardCurrencyLane: c.isHardCurrencyLane,
+        smartAlertEligible: smartAlertEligible.has(c.corridorId),
+      })),
+    }
+  })
+
   app.get('/alerts/unsubscribe', async (request, reply) => {
     const startTime = Date.now()
     const token = typeof (request.query as { token?: string }).token === 'string'
@@ -332,6 +553,52 @@ export const alertsRoutes = async (app: FastifyInstance) => {
             message: 'Smart score alerts must be between 0 and 100.',
           }
         }
+
+        const corridorId = resolveCorridorIdFromWatchlist(
+          watchlistItem.target_type,
+          watchlistItem.target_payload as Record<string, unknown>,
+        )
+
+        if (!corridorId) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+
+          reply.code(400)
+          return {
+            success: false,
+            error: 'invalid_corridor',
+            message: 'Smart alerts require a valid corridor. Please select a different watchlist item.',
+          }
+        }
+
+        const signalData = await checkCorridorSignalData(corridorId)
+        const hasData = signalData
+          && signalData.confidence !== null
+          && signalData.confidence >= SMART_ALERT_MIN_CONFIDENCE
+          && signalData.sample_days !== null
+          && signalData.sample_days >= SMART_ALERT_MIN_SAMPLE_DAYS
+
+        if (!hasData) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+
+          reply.code(400)
+          return {
+            success: false,
+            error: 'insufficient_data',
+            message: 'Smart alerts need at least 3 weeks of historical data. This corridor doesn\'t have enough data yet.',
+            suggestion: 'Try a rate alert instead, or choose a popular corridor like US→Mexico or UK→India.',
+            corridorId,
+            currentData: signalData
+              ? {
+                  confidence: signalData.confidence,
+                  sampleDays: signalData.sample_days,
+                  requiredConfidence: SMART_ALERT_MIN_CONFIDENCE,
+                  requiredSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+                }
+              : null,
+          }
+        }
       }
 
       // Check quota
@@ -557,6 +824,47 @@ export const alertsRoutes = async (app: FastifyInstance) => {
             success: false,
             error: 'validation_error',
             message: 'Smart score alerts must be between 0 and 100.',
+          }
+        }
+
+        const watchlistItem = await watchlistRepository.findById(existing.watchlist_item_id, user.user_id)
+        if (watchlistItem) {
+          const corridorId = resolveCorridorIdFromWatchlist(
+            watchlistItem.target_type,
+            watchlistItem.target_payload as Record<string, unknown>,
+          )
+
+          if (!corridorId) {
+            const durationSeconds = (Date.now() - startTime) / 1000
+            recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+
+            reply.code(400)
+            return {
+              success: false,
+              error: 'invalid_corridor',
+              message: 'Smart alerts require a valid corridor.',
+            }
+          }
+
+          const signalData = await checkCorridorSignalData(corridorId)
+          const hasData = signalData
+            && signalData.confidence !== null
+            && signalData.confidence >= SMART_ALERT_MIN_CONFIDENCE
+            && signalData.sample_days !== null
+            && signalData.sample_days >= SMART_ALERT_MIN_SAMPLE_DAYS
+
+          if (!hasData) {
+            const durationSeconds = (Date.now() - startTime) / 1000
+            recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+
+            reply.code(400)
+            return {
+              success: false,
+              error: 'insufficient_data',
+              message: 'Smart alerts need at least 3 weeks of historical data. This corridor doesn\'t have enough data yet.',
+              suggestion: 'Try a rate alert instead, or choose a popular corridor.',
+              corridorId,
+            }
           }
         }
       }
