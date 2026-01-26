@@ -257,17 +257,18 @@ export const createPipeline = (
               'pnpm install --frozen-lockfile',
             ],
           },
-          build: {
-            commands: [
-              'if [ -f image.env ]; then source image.env; fi',
+        build: {
+          commands: [
+              'BUILD_ARTIFACT_DIR=${CODEBUILD_SRC_DIR_Build:-$CODEBUILD_SRC_DIR}',
+              'if [ -f "$BUILD_ARTIFACT_DIR/image.env" ]; then source "$BUILD_ARTIFACT_DIR/image.env"; fi',
               "ESBUILD_PLATFORM=$(node -p \"process.platform + '-' + process.arch\")",
               'export ESBUILD_BINARY_PATH="infrastructure/cdk/node_modules/@esbuild/$ESBUILD_PLATFORM/bin/esbuild"',
               'pnpm -C infrastructure/cdk exec cdk -- deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
               [
                 'if [ -n "$FRONTEND_BUCKET_NAME" ] && [ -n "$FRONTEND_DISTRIBUTION_ID" ]; then',
                 '  echo "Deploying frontend to S3..."',
-                '  aws s3 sync frontend/.output/public s3://$FRONTEND_BUCKET_NAME --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"',
-                '  aws s3 sync frontend/.output/public s3://$FRONTEND_BUCKET_NAME --delete --cache-control "no-cache, no-store, must-revalidate" --include "*.html" --include "*.json"',
+                '  aws s3 sync "$BUILD_ARTIFACT_DIR/frontend/.output/public" s3://$FRONTEND_BUCKET_NAME --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"',
+                '  aws s3 sync "$BUILD_ARTIFACT_DIR/frontend/.output/public" s3://$FRONTEND_BUCKET_NAME --delete --cache-control "no-cache, no-store, must-revalidate" --include "*.html" --include "*.json"',
                 '  echo "Invalidating CloudFront cache..."',
                 '  aws cloudfront create-invalidation --distribution-id $FRONTEND_DISTRIBUTION_ID --paths "/*"',
                 '  echo "Frontend deployment complete"',
@@ -300,7 +301,8 @@ export const createPipeline = (
         new CodeBuildAction({
           actionName: 'Deploy',
           project: deployProject,
-          input: buildOutput,
+          input: sourceOutput,
+          extraInputs: [buildOutput],
         }),
       ],
     })
