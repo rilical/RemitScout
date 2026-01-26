@@ -72,6 +72,8 @@ export const createEcsServices = (
   const enableExecuteCommand = !isProd
   const usePublicSubnets = isDev
   const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
+  const minHealthyPercent = isDev ? 0 : undefined
+  const maxHealthyPercent = isDev ? 100 : undefined
 
   const circuitBreaker: DeploymentCircuitBreaker = {
     enable: true,
@@ -87,6 +89,8 @@ export const createEcsServices = (
     securityGroups: [options.planeBSecurityGroup],
     enableExecuteCommand,
     circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
   })
 
   const b2cRefreshService = new FargateService(scope, 'B2cRefreshWorkerService', {
@@ -99,6 +103,8 @@ export const createEcsServices = (
     capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
     circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
   })
 
   const ingestFanoutService = new FargateService(scope, 'IngestFanoutWorkerService', {
@@ -112,6 +118,8 @@ export const createEcsServices = (
     capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
     circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
   })
 
   const goldLiveService = new FargateService(scope, 'GoldLiveWorkerService', {
@@ -125,6 +133,8 @@ export const createEcsServices = (
     capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
     circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
   })
 
   const notificationsQueueService = new FargateService(
@@ -141,6 +151,8 @@ export const createEcsServices = (
       capacityProviderStrategies: spotCapacityProviderStrategies,
       enableExecuteCommand,
       circuitBreaker,
+      minHealthyPercent,
+      maxHealthyPercent,
     },
   )
 
@@ -154,6 +166,8 @@ export const createEcsServices = (
     securityGroups: [options.planeBSecurityGroup],
     enableExecuteCommand,
     circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
   })
 
   const scaleMax = options.queueWorkerMaxCount ?? (isDev ? 5 : 10)
