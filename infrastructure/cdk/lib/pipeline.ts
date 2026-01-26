@@ -260,7 +260,7 @@ export const createPipeline = (
         build: {
           commands: [
               'BUILD_ARTIFACT_DIR=${CODEBUILD_SRC_DIR_Build:-$CODEBUILD_SRC_DIR}',
-              'if [ -f "$BUILD_ARTIFACT_DIR/image.env" ]; then source "$BUILD_ARTIFACT_DIR/image.env"; fi',
+              'if [ -f "$BUILD_ARTIFACT_DIR/image.env" ]; then . "$BUILD_ARTIFACT_DIR/image.env"; fi',
               "ESBUILD_PLATFORM=$(node -p \"process.platform + '-' + process.arch\")",
               'export ESBUILD_BINARY_PATH="infrastructure/cdk/node_modules/@esbuild/$ESBUILD_PLATFORM/bin/esbuild"',
               'pnpm -C infrastructure/cdk exec cdk -- deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
