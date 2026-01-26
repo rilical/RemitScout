@@ -2,7 +2,7 @@
 # Build from repo root:
 #   docker build -f backend/Dockerfile -t remit-scout-backend:latest .
 
-FROM node:18-alpine AS deps
+FROM public.ecr.aws/docker/library/node:18-alpine AS deps
 WORKDIR /app
 RUN corepack enable
 
@@ -15,7 +15,7 @@ ARG SKIP_BACKEND_BUILD=0
 COPY backend backend
 RUN if [ "$SKIP_BACKEND_BUILD" != "1" ]; then pnpm -C backend build; else echo "Skipping backend build"; fi
 
-FROM node:18-alpine AS runner
+FROM public.ecr.aws/docker/library/node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ARG BUILD_VERSION=dev
