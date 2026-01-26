@@ -73,7 +73,7 @@ export const createEcsServices = (
   const usePublicSubnets = isDev
   const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
   const minHealthyPercent = isDev ? 0 : undefined
-  const maxHealthyPercent = isDev ? 100 : undefined
+  const maxHealthyPercent = isDev ? 200 : undefined
 
   const circuitBreaker: DeploymentCircuitBreaker = {
     enable: true,
