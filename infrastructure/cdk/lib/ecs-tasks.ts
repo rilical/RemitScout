@@ -116,7 +116,8 @@ export const createEcsTasks = (
   }
 
   const runtimePlatform = {
-    cpuArchitecture: CpuArchitecture.ARM64,
+    // Dev builds are x86_64 by default in CodeBuild; keep dev tasks compatible.
+    cpuArchitecture: isDev ? CpuArchitecture.X86_64 : CpuArchitecture.ARM64,
     operatingSystemFamily: OperatingSystemFamily.LINUX,
   }
 
