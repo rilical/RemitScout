@@ -1,0 +1,21 @@
+# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+
+    Omar Ghabyen -- Founder & Developer -- @omarg
+    Remit-Scout Team -- Product Development
+
+# THANKS
+
+    Nuxt.js -- The Intuitive Vue Framework
+    Tailwind CSS -- A utility-first CSS framework
+    Vue.js -- The Progressive JavaScript Framework
+
+# SITE
+
+    Standards: HTML5, CSS3, JavaScript ES6+
+    Components: Vue 3, Nuxt 3
+    Software: Vite, TypeScript
+    Last update: 2025/01/01
+
