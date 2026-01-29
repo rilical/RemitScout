@@ -1218,7 +1218,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { FEATURE_FLAGS } from '~/utils/constants'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
@@ -1945,6 +1945,13 @@ const hasApiError = computed(() => {
 })
 const corridorId = computed(() => `${fromCountryCode.value}-${toCountryCode.value}-${fromCurrencyCode.value}-${toCurrencyCode.value}`)
 const quoteRefreshKey = computed(() => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`)
+
+onMounted(() => {
+  if (!import.meta.client) return
+  if (hasApiQuotes.value || quotesPending.value) return
+  if (hasApiError.value || corridorUnavailable.value || corridorUnsupported.value || quotesUnavailable.value) return
+  void refreshQuotes()
+})
 
 watch(availableMethods, (methods) => {
   if (quotesPending.value) return
