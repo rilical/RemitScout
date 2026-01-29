@@ -4,7 +4,7 @@ import { createPool, query } from '../../shared/db'
 import { assertRuntimeConfig, config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { initErrorTracking } from '../../shared/error-tracker'
-import { initTracing } from '../../shared/tracing'
+import { initTracing, startSpan, getCurrentSpan } from '../../shared/tracing'
 import { getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../../shared/sqs'
 import { partitionCorridors } from '../../shared/sharding'
 import { parseCorridorId } from '../../shared/corridor'
@@ -147,6 +147,7 @@ type IngestFanoutProviderTask = {
   rpmOverride?: number
   perCorridorRpmOverride?: number
   priorityTier?: string
+  sweepRunId?: string
 }
 
 type IngestFanoutCorridorMessage = {
@@ -711,123 +712,126 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     return false
   }
 
-  if (!config.planeB.useSeedData) {
-    const pool = options.pool ?? createPool(config.db.planeBUrl)
-    const shouldClose = !options.pool
-    const volatilityService = new VolatilityService(pool)
-    const sweepRepo = new B2bSweepRepository(pool)
+  return await startSpan(
+    'plane-b.ingest.run',
+    async () => {
+      if (!config.planeB.useSeedData) {
+        const pool = options.pool ?? createPool(config.db.planeBUrl)
+        const shouldClose = !options.pool
+        const volatilityService = new VolatilityService(pool)
+        const sweepRepo = new B2bSweepRepository(pool)
 
-    const healthEnabled = process.env.PLANE_B_HEALTH_ENABLED !== '0'
+        const healthEnabled = process.env.PLANE_B_HEALTH_ENABLED !== '0'
 
-    if (healthEnabled) {
-      try {
-        await startHealthServerOnce({ logger })
-      } catch (error) {
-        logger.warn('health_server_start_failed', { error })
-      }
-    }
+        if (healthEnabled) {
+          try {
+            await startHealthServerOnce({ logger })
+          } catch (error) {
+            logger.warn('health_server_start_failed', { error })
+          }
+        }
 
-    logger.info('ingestion_start', { mode: 'collector' })
-    if (ingestFanoutMode !== 'off') {
-      if (!ingestFanoutQueueUrl) {
-        logger.warn('ingest_fanout_disabled', { reason: 'missing_queue_url' })
-      } else {
-        logger.info('ingest_fanout_enabled', {
-          mode: ingestFanoutMode,
-          queue_url: ingestFanoutQueueUrl,
-          message_mode: fanoutMessageMode,
-        })
-      }
-    }
-    let queueStats: Awaited<ReturnType<typeof getQueueStats>> | null = null
-    const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
-    if (ingestFanoutMode === 'queue' && ingestFanoutEnabled && ingestFanoutQueueUrl) {
-      if (maxQueueDepth > 0) {
-        queueStats = await getQueueStats(ingestFanoutQueueUrl)
-        if (queueStats.total >= maxQueueDepth) {
-          logger.warn('ingest_fanout_backpressure', {
-            queue_depth: queueStats.total,
-            queue_visible: queueStats.visible,
-            queue_in_flight: queueStats.inFlight,
-            queue_delayed: queueStats.delayed,
-            max_queue_depth: maxQueueDepth,
+        logger.info('ingestion_start', { mode: 'collector' })
+        if (ingestFanoutMode !== 'off') {
+          if (!ingestFanoutQueueUrl) {
+            logger.warn('ingest_fanout_disabled', { reason: 'missing_queue_url' })
+          } else {
+            logger.info('ingest_fanout_enabled', {
+              mode: ingestFanoutMode,
+              queue_url: ingestFanoutQueueUrl,
+              message_mode: fanoutMessageMode,
+            })
+          }
+        }
+        let queueStats: Awaited<ReturnType<typeof getQueueStats>> | null = null
+        const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
+        if (ingestFanoutMode === 'queue' && ingestFanoutEnabled && ingestFanoutQueueUrl) {
+          if (maxQueueDepth > 0) {
+            queueStats = await getQueueStats(ingestFanoutQueueUrl)
+            if (queueStats.total >= maxQueueDepth) {
+              logger.warn('ingest_fanout_backpressure', {
+                queue_depth: queueStats.total,
+                queue_visible: queueStats.visible,
+                queue_in_flight: queueStats.inFlight,
+                queue_delayed: queueStats.delayed,
+                max_queue_depth: maxQueueDepth,
+              })
+              return false
+            }
+          }
+        }
+        if (config.planeB.b2cQueueInSweep) {
+          if (
+            ingestFanoutMode === 'queue'
+            && ingestFanoutEnabled
+            && ingestFanoutQueueUrl
+            && maxQueueDepth > 0
+          ) {
+            if (!queueStats) {
+              queueStats = await getQueueStats(ingestFanoutQueueUrl)
+            }
+            const b2cQueueThreshold = Math.max(1, Math.floor(maxQueueDepth * 0.25))
+            if (queueStats.total >= b2cQueueThreshold) {
+              logger.info('b2c_queue_in_sweep_skipped', {
+                queue_depth: queueStats.total,
+                threshold: b2cQueueThreshold,
+                max_queue_depth: maxQueueDepth,
+              })
+              return true
+            }
+          }
+          await processQuoteRefreshQueue({ pool })
+        }
+        const b2bFreshnessSloEnabled = config.planeB.b2bFreshnessSloEnabled
+        const b2bNativeCurrencyOnly = config.planeB.b2bNativeCurrencyOnly
+        const b2bWiseCurrencyOverride = config.planeB.b2bWiseCurrencyOverride
+        const b2bTierVersion = config.planeB.b2bTierVersion
+        const maxTargetMinutes = Math.max(config.planeB.b2bMaxTargetMinutes || 0, 1440)
+        const rawTargetMinutes = config.planeB.b2bTargetMinutes || 240
+        const targetMinutes = Math.min(rawTargetMinutes, maxTargetMinutes)
+        if (rawTargetMinutes > maxTargetMinutes && maxTargetMinutes > 0) {
+          logger.info('b2b_target_minutes_capped', {
+            raw_target_minutes: rawTargetMinutes,
+            capped_target_minutes: maxTargetMinutes,
           })
-          return false
         }
-      }
-    }
-    if (config.planeB.b2cQueueInSweep) {
-      if (
-        ingestFanoutMode === 'queue'
-        && ingestFanoutEnabled
-        && ingestFanoutQueueUrl
-        && maxQueueDepth > 0
-      ) {
-        if (!queueStats) {
-          queueStats = await getQueueStats(ingestFanoutQueueUrl)
+        const planMinutes = targetMinutes > 0 ? targetMinutes : 240
+        const shardPlanConfig = {
+          minShards: config.planeB.b2bMinShards,
+          maxCorridorsPerShard: config.planeB.b2bMaxCorridorsPerShard,
         }
-        const b2cQueueThreshold = Math.max(1, Math.floor(maxQueueDepth * 0.25))
-        if (queueStats.total >= b2cQueueThreshold) {
-          logger.info('b2c_queue_in_sweep_skipped', {
-            queue_depth: queueStats.total,
-            threshold: b2cQueueThreshold,
-            max_queue_depth: maxQueueDepth,
-          })
-          return true
-        }
-      }
-      await processQuoteRefreshQueue({ pool })
-    }
-    const b2bFreshnessSloEnabled = config.planeB.b2bFreshnessSloEnabled
-    const b2bNativeCurrencyOnly = config.planeB.b2bNativeCurrencyOnly
-    const b2bWiseCurrencyOverride = config.planeB.b2bWiseCurrencyOverride
-    const b2bTierVersion = config.planeB.b2bTierVersion
-    const maxTargetMinutes = Math.max(config.planeB.b2bMaxTargetMinutes || 0, 1440)
-    const rawTargetMinutes = config.planeB.b2bTargetMinutes || 240
-    const targetMinutes = Math.min(rawTargetMinutes, maxTargetMinutes)
-    if (rawTargetMinutes > maxTargetMinutes && maxTargetMinutes > 0) {
-      logger.info('b2b_target_minutes_capped', {
-        raw_target_minutes: rawTargetMinutes,
-        capped_target_minutes: maxTargetMinutes,
-      })
-    }
-    const planMinutes = targetMinutes > 0 ? targetMinutes : 240
-    const shardPlanConfig = {
-      minShards: config.planeB.b2bMinShards,
-      maxCorridorsPerShard: config.planeB.b2bMaxCorridorsPerShard,
-    }
-    const rpmSafetyFactor = Number.isFinite(config.planeB.b2bRpmSafetyFactor)
-      ? Math.min(Math.max(config.planeB.b2bRpmSafetyFactor, 0.1), 1)
-      : 0.7
-    const rpmMultiplier = Number.isFinite(config.planeB.b2bRpmMultiplier)
-      ? Math.max(config.planeB.b2bRpmMultiplier, 0)
-      : 1
-    const perCorridorRpmMultiplier = Number.isFinite(config.planeB.b2bPerCorridorRpmMultiplier)
-      ? Math.max(config.planeB.b2bPerCorridorRpmMultiplier, 0)
-      : 1
-    const priorityTierConfig = {
-      tier1: {
-        label: 'tier_1',
-        collectorType: 'b2b_tier_1',
-        intervalSeconds: TIER_1_CADENCE_SECONDS,
-        rpm: 12,
-        perCorridorRpm: 12,
-        sloMinutes: TIER_1_SLO_MINUTES,
-      },
-      tier2: {
-        label: 'tier_2',
-        collectorType: 'b2b_tier_2',
-        intervalSeconds: TIER_2_CADENCE_SECONDS,
-        rpm: 6,
-        perCorridorRpm: 6,
-        sloMinutes: TIER_2_SLO_MINUTES,
-      },
-    } as const
-    const priorityTierOrder = ['tier1', 'tier2'] as const
-    const targetMinutesByTierKey = {
-      tier1: Math.max(1, Math.round(priorityTierConfig.tier1.intervalSeconds / 60)),
-      tier2: planMinutes,
-    } as const
+        const rpmSafetyFactor = Number.isFinite(config.planeB.b2bRpmSafetyFactor)
+          ? Math.min(Math.max(config.planeB.b2bRpmSafetyFactor, 0.1), 1)
+          : 0.7
+        const rpmMultiplier = Number.isFinite(config.planeB.b2bRpmMultiplier)
+          ? Math.max(config.planeB.b2bRpmMultiplier, 0)
+          : 1
+        const perCorridorRpmMultiplier = Number.isFinite(config.planeB.b2bPerCorridorRpmMultiplier)
+          ? Math.max(config.planeB.b2bPerCorridorRpmMultiplier, 0)
+          : 1
+        const priorityTierConfig = {
+          tier1: {
+            label: 'tier_1',
+            collectorType: 'b2b_tier_1',
+            intervalSeconds: TIER_1_CADENCE_SECONDS,
+            rpm: 12,
+            perCorridorRpm: 12,
+            sloMinutes: TIER_1_SLO_MINUTES,
+          },
+          tier2: {
+            label: 'tier_2',
+            collectorType: 'b2b_tier_2',
+            intervalSeconds: TIER_2_CADENCE_SECONDS,
+            rpm: 6,
+            perCorridorRpm: 6,
+            sloMinutes: TIER_2_SLO_MINUTES,
+          },
+        } as const
+        const priorityTierOrder = ['tier1', 'tier2'] as const
+        const targetMinutesByTierKey = {
+          tier1: Math.max(1, Math.round(priorityTierConfig.tier1.intervalSeconds / 60)),
+          tier2: planMinutes,
+        } as const
 
     const rightsByProvider = await loadProviderRights(pool)
     const providers = providerRegistry
@@ -1177,6 +1181,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   rpmOverride: plan.rpmOverride,
                   perCorridorRpmOverride: plan.perCorridorRpmOverride,
                   priorityTier: tierConfig.label,
+                  sweepRunId,
                 }
                 addCorridorTask(corridorId, providerTask)
               }
@@ -1199,7 +1204,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             for (let shardIndex = 0; shardIndex < plan.partitions.length; shardIndex += 1) {
               const corridors = plan.partitions[shardIndex]
               if (!corridors.length) continue
-              const traceId = randomUUID()
+              const traceId = getCurrentSpan()?.spanContext().traceId ?? randomUUID()
               const fanoutPayload: IngestFanoutMessage = {
                 providerId,
                 collectorType: tierConfig.collectorType,
@@ -1348,7 +1353,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   corridorId: task.corridorId,
                   providers,
                   requestedAt: now,
-                  traceId: randomUUID(),
+                  traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
                 } as IngestFanoutCorridorMessage,
               }))
             }
@@ -1359,7 +1364,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 corridorId: task.corridorId,
                 providers: task.providers,
                 requestedAt: now,
-                traceId: randomUUID(),
+                traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
               } as IngestFanoutCorridorMessage,
             }]
           })
@@ -1436,12 +1441,20 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       if (shouldClose) {
         await pool.end()
       }
+      }
     }
-  }
 
-  throw new Error(
-    'Seed data functionality has been removed. The sample-data.ts file no longer exists. ' +
-    'Set config.planeB.useSeedData to false to use collector mode instead.',
+    throw new Error(
+      'Seed data functionality has been removed. The sample-data.ts file no longer exists. ' +
+      'Set config.planeB.useSeedData to false to use collector mode instead.',
+    )
+  },
+  {
+    attributes: {
+      ingest_fanout_mode: ingestFanoutMode,
+      ingest_fanout_message_mode: fanoutMessageMode,
+    },
+  },
   )
 }
 

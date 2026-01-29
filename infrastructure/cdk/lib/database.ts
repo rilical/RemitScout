@@ -14,7 +14,7 @@ import type { Construct } from 'constructs'
 
 export type DatabaseResources = {
   cluster: DatabaseCluster
-  proxy: DatabaseProxy
+  proxy?: DatabaseProxy
   credentialsSecret: Secret
 }
 
@@ -23,11 +23,13 @@ export type DatabaseOptions = {
   vpc: Vpc
   dbSecurityGroup: SecurityGroup
   proxySecurityGroup?: SecurityGroup
+  enableProxy?: boolean
 }
 
 export const createDatabase = (scope: Construct, options: DatabaseOptions): DatabaseResources => {
   const isProd = options.envName === 'prod'
   const isDev = options.envName === 'dev'
+  const enableProxy = options.enableProxy ?? true
 
   const credentialsSecret = new Secret(scope, 'AuroraMasterSecret', {
     secretName: `remit-scout/${options.envName}/database/master`,
@@ -45,7 +47,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
     defaultDatabaseName: 'remit_scout',
-    backup: { retention: Duration.days(isProd ? 30 : 7) },
+    backup: { retention: Duration.days(isProd ? 30 : (isDev ? 3 : 7)) },
     storageEncrypted: true,
     deletionProtection: isProd,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
@@ -64,7 +66,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
         }),
         serverlessV2MinCapacity: 0,
         serverlessV2MaxCapacity: 1,
-        serverlessV2AutoPauseDuration: Duration.minutes(30),
+        serverlessV2AutoPauseDuration: Duration.minutes(10),
       })
     : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
         ...clusterBaseProps,
@@ -77,18 +79,20 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
         },
       })
 
-  const proxy = new DatabaseProxy(scope, 'RemitScoutDbProxy', {
-    proxyTarget: ProxyTarget.fromCluster(cluster),
-    vpc: options.vpc,
-    secrets: [credentialsSecret],
-    requireTLS: true,
-    borrowTimeout: Duration.seconds(120),
-    idleClientTimeout: Duration.minutes(10),
-    maxConnectionsPercent: 90,
-    maxIdleConnectionsPercent: 50,
-    securityGroups: [options.proxySecurityGroup ?? options.dbSecurityGroup],
-    vpcSubnets: { subnetType: dbSubnetType },
-  })
+  const proxy = enableProxy
+    ? new DatabaseProxy(scope, 'RemitScoutDbProxy', {
+        proxyTarget: ProxyTarget.fromCluster(cluster),
+        vpc: options.vpc,
+        secrets: [credentialsSecret],
+        requireTLS: true,
+        borrowTimeout: Duration.seconds(120),
+        idleClientTimeout: Duration.minutes(10),
+        maxConnectionsPercent: 90,
+        maxIdleConnectionsPercent: 50,
+        securityGroups: [options.proxySecurityGroup ?? options.dbSecurityGroup],
+        vpcSubnets: { subnetType: dbSubnetType },
+      })
+    : undefined
 
   return {
     cluster,

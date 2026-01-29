@@ -199,7 +199,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
         SET plan_code = $2,
             status = 'active',
             enterprise_granted_at = CASE WHEN $3 THEN NOW() ELSE NULL END,
-            enterprise_granted_by = CASE WHEN $3 THEN $4 ELSE NULL END,
+            enterprise_granted_by = CASE WHEN $3 THEN $4::uuid ELSE NULL END,
             enterprise_notes = CASE WHEN $3 THEN $5 ELSE NULL END,
             updated_at = NOW()
         WHERE user_id = $1

@@ -382,7 +382,7 @@
     <section id="show-your-work" class="py-16 lg:py-20 bg-gray-900 scroll-mt-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="text-4xl sm:text-5xl font-bold text-brand-600 mb-6">
+          <h2 class="text-4xl sm:text-5xl font-bold text-white mb-6">
             Show Your Work
           </h2>
           <p class="text-xl leading-relaxed max-w-4xl mx-auto [text-wrap:pretty]" style="color: var(--tw-ring-offset-color)">

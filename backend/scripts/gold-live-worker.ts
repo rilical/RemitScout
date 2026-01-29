@@ -15,6 +15,7 @@
 
 import { setTimeout as sleep } from 'timers/promises'
 import type { Pool } from 'pg'
+import { context as otelContext, trace, type Context } from '@opentelemetry/api'
 
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
@@ -30,10 +31,13 @@ import { recordWorkerMetric } from '../shared/worker-metrics'
 import { recordSLOValue } from '../shared/slo-tracker'
 import { GoldPublisherLive } from '../plane-c/src/services/gold-publisher-live'
 import { upsertGoldIndicesLive } from './gold-indices-live'
+import { initTracing, startSpan } from '../shared/tracing'
 
 const logger = createLogger('script.gold-live-worker')
 const queueUrl = config.queues.goldLive.url
 const queueMode = config.queues.goldLive.mode
+
+initTracing('gold-live-worker')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -82,6 +86,8 @@ type CorridorBatch = {
   corridorIds: string[]
   receiptHandles: string[]
   lagSamples: number[]
+  traceContext?: Context
+  traceIdSample: string[]
 }
 
 const normalizeCorridorIds = (corridorIds: string[]): string[] =>
@@ -114,23 +120,40 @@ const computeLagPercentiles = (samples: number[]): { p50: number; p95: number; m
 }
 
 class CorridorDebouncer {
-  private pending = new Map<string, { receiptHandles: string[]; lagSamples: number[]; firstSeen: number }>()
+  private pending = new Map<
+    string,
+    { receiptHandles: string[]; lagSamples: number[]; firstSeen: number; traceContext?: Context; traceIds: string[] }
+  >()
   private readonly windowMs: number
 
   constructor(windowMs: number) {
     this.windowMs = windowMs
   }
 
-  add(corridorId: string, receiptHandle: string, lagSeconds: number): void {
+  add(
+    corridorId: string,
+    receiptHandle: string,
+    lagSeconds: number,
+    traceContext?: Context,
+    traceId?: string,
+  ): void {
     const existing = this.pending.get(corridorId)
     if (existing) {
       existing.receiptHandles.push(receiptHandle)
       existing.lagSamples.push(lagSeconds)
+      if (!existing.traceContext && traceContext) {
+        existing.traceContext = traceContext
+      }
+      if (traceId && existing.traceIds.length < 3 && !existing.traceIds.includes(traceId)) {
+        existing.traceIds.push(traceId)
+      }
     } else {
       this.pending.set(corridorId, {
         receiptHandles: [receiptHandle],
         lagSamples: [lagSeconds],
         firstSeen: Date.now(),
+        traceContext,
+        traceIds: traceId ? [traceId] : [],
       })
     }
   }
@@ -140,17 +163,28 @@ class CorridorDebouncer {
     const corridorIds: string[] = []
     const receiptHandles: string[] = []
     const lagSamples: number[] = []
+    let traceContext: Context | undefined
+    const traceIdSample: string[] = []
 
     for (const [corridorId, data] of this.pending.entries()) {
       if (force || now - data.firstSeen >= this.windowMs) {
         corridorIds.push(corridorId)
         receiptHandles.push(...data.receiptHandles)
         lagSamples.push(...data.lagSamples)
+        if (!traceContext && data.traceContext) {
+          traceContext = data.traceContext
+        }
+        for (const traceId of data.traceIds) {
+          if (traceIdSample.length >= 3) break
+          if (!traceIdSample.includes(traceId)) {
+            traceIdSample.push(traceId)
+          }
+        }
         this.pending.delete(corridorId)
       }
     }
 
-    return { corridorIds, receiptHandles, lagSamples }
+    return { corridorIds, receiptHandles, lagSamples, traceContext, traceIdSample }
   }
 
   get size(): number {
@@ -274,7 +308,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
         )
         stopExtenders.push(stopExtending)
 
-        debouncer.add(payload.corridorId, message.receiptHandle, lagSeconds)
+        const traceContext = message.traceContext
+        const spanContext = traceContext ? trace.getSpanContext(traceContext) : undefined
+        const traceId = spanContext?.traceId
+        debouncer.add(payload.corridorId, message.receiptHandle, lagSeconds, traceContext, traceId)
       }
 
       if (invalidHandles.length > 0) {
@@ -285,7 +322,18 @@ export const runGoldLiveWorker = async (): Promise<number> => {
       const batch = debouncer.flush(shouldFlush)
 
       if (batch.corridorIds.length > 0) {
-        const result = await processBatch(batch, silverPool, goldPool, publisher)
+        const batchContext = batch.traceContext ?? otelContext.active()
+        const result = await otelContext.with(batchContext, () =>
+          startSpan('gold-live.batch', async (span) => {
+            if (typeof span.setAttributes === 'function') {
+              span.setAttributes({
+                'corridor.count': batch.corridorIds.length,
+                'message.count': batch.receiptHandles.length,
+              })
+            }
+            return await processBatch(batch, silverPool, goldPool, publisher)
+          }),
+        )
 
         for (const stopExtending of stopExtenders) {
           await stopExtending()
@@ -294,7 +342,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
         if (result.success) {
           await deleteMessages(queueUrl, batch.receiptHandles)
           await recordWorkerMetric('gold-live-worker', 'message_processed', batch.receiptHandles.length)
-          logger.info('gold_live_corridors_updated', { corridor_count: batch.corridorIds.length })
+          logger.info('gold_live_corridors_updated', {
+            corridor_count: batch.corridorIds.length,
+            trace_id_sample: batch.traceIdSample.length > 0 ? batch.traceIdSample : null,
+          })
         } else {
           await recordWorkerMetric('gold-live-worker', 'message_failed', batch.receiptHandles.length)
 
@@ -317,6 +368,7 @@ export const runGoldLiveWorker = async (): Promise<number> => {
             indices_success: result.indicesSuccess,
             corridor_count: batch.corridorIds.length,
             dlq_count: batch.receiptHandles.length,
+            trace_id_sample: batch.traceIdSample.length > 0 ? batch.traceIdSample : null,
           })
         }
       } else {

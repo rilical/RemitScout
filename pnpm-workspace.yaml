@@ -3,3 +3,7 @@ packages:
   - "backend"
   - "infrastructure/cdk"
   - "."
+
+onlyBuiltDependencies:
+  - esbuild
+  - "@parcel/watcher"

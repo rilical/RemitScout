@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { withRetry } from '../../../../shared/repository-retry'
 import type {
   IRightsMatrixRepository,
   RightsMatrixCountrySupportInput,
@@ -54,7 +55,7 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
   }
 
   async loadProviderRights(): Promise<RightsMatrixEntryRecord[]> {
-    const result = await query<RightsMatrixEntryRecord>(
+    const result = await withRetry(() => query<RightsMatrixEntryRecord>(
       `SELECT provider_id,
               allowed_collect,
               allowed_b2c,
@@ -82,7 +83,7 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
          FROM silver.rights_matrix`,
       [],
       this.pool,
-    )
+    ))
     return result.rows
   }
 

@@ -165,7 +165,7 @@ export const runAlertEvaluationWorker = async (options?: { once?: boolean }) => 
   await runQueueWorker(options)
 }
 
-if (!process.env.VITEST) {
+if (!process.env.VITEST && require.main === module) {
   runAlertEvaluationWorker()
     .then(() => process.exit(0))
     .catch((error) => {

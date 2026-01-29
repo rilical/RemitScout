@@ -1,6 +1,7 @@
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 
 const logger = createLogger('script.smart-alerts-job')
 
@@ -17,6 +18,10 @@ const minSampleDays = Math.min(
 )
 const minConfidence = Math.max(1, toNumber(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70))
 const weeklySendHour = Math.min(23, Math.max(0, toNumber(process.env.SMART_ALERTS_WEEKLY_SEND_HOUR, 9)))
+const lockTtlSeconds = Math.max(60, toNumber(process.env.SMART_ALERTS_LOCK_TTL_SECONDS, 900))
+const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
+let lock: WorkerLock | null = null
+let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
 
 const insertSnapshots = async (pool: ReturnType<typeof createPool>) => {
   const result = await query(
@@ -364,6 +369,29 @@ const upsertSignals = async (pool: ReturnType<typeof createPool>) => {
 }
 
 export const runSmartAlertsJob = async () => {
+  lock = new WorkerLock('smart-alerts-job', lockTtlSeconds)
+  const acquired = await lock.acquire()
+  if (!acquired) {
+    logger.info('job_skipped', { reason: 'lock_already_held' })
+    return { skipped: true }
+  }
+
+  lockRefreshTimer = setInterval(() => {
+    if (!lock) return
+    lock.extend()
+      .then((extended) => {
+        if (!extended && config.redis.url) {
+          logger.warn('lock_extend_failed', { lock_key: 'smart-alerts-job' })
+        }
+      })
+      .catch((error) => {
+        logger.warn('lock_extend_failed', {
+          lock_key: 'smart-alerts-job',
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+  }, lockRefreshMs)
+
   const pool = createPool(config.db.planeBUrl)
   try {
     logger.info('job_start', {
@@ -386,6 +414,19 @@ export const runSmartAlertsJob = async () => {
 
     return { snapshotsInserted, ratesInserted, signalsUpserted }
   } finally {
+    if (lockRefreshTimer) {
+      clearInterval(lockRefreshTimer)
+      lockRefreshTimer = null
+    }
+    if (lock) {
+      await lock.release().catch((error) => {
+        logger.warn('lock_release_failed', {
+          lock_key: 'smart-alerts-job',
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+      lock = null
+    }
     await pool.end()
   }
 }

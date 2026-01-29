@@ -115,6 +115,14 @@ export const config = {
     b2bFreshnessSloMinutes: toNumber(process.env.PLANE_B_B2B_FRESHNESS_SLO_MINUTES, 30),
     b2bFreshnessSloEnabled: toBoolean(process.env.PLANE_B_B2B_FRESHNESS_SLO_ENABLED),
     b2bFreshnessChunkSize: toNumber(process.env.PLANE_B_B2B_FRESHNESS_CHUNK_SIZE, 250),
+    b2bSweepTaskInsertChunkSize: toNumber(
+      process.env.PLANE_B_B2B_SWEEP_TASK_INSERT_CHUNK_SIZE,
+      250,
+    ),
+    b2bSweepTaskInsertMaxRetries: toNumber(
+      process.env.PLANE_B_B2B_SWEEP_TASK_INSERT_MAX_RETRIES,
+      2,
+    ),
     b2bNativeCurrencyOnly: toBoolean(process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY ?? '1'),
     b2bWiseCurrencyOverride: toBoolean(process.env.PLANE_B_B2B_WISE_CURRENCY_OVERRIDE),
     b2bTierVersion: process.env.PLANE_B_B2B_TIER_VERSION?.trim() || '0',

@@ -29,6 +29,8 @@ export type ScheduledJobsResources = {
   alertEvaluationWorkerRule: Rule
   alertCorridorRefreshFunction: IFunction
   alertCorridorRefreshRule: Rule
+  smartAlertsFunction: IFunction
+  smartAlertsRule: Rule
   telemetryAnalyticsFunction: IFunction
   telemetryAnalyticsRule: Rule
   sessionCleanupFunction: IFunction
@@ -187,19 +189,20 @@ export const createScheduledJobs = (
 ): ScheduledJobsResources => {
   const isDev = options.envName === 'dev'
   const rulesEnabled = !options.paused
-  const allowPublicSubnet = isDev
+  const ruleName = (suffix: string) => `remit-scout-${options.envName}-${suffix}`
+  const allowPublicSubnet = false
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
-  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = isDev ? 'none' : 'xray'
-  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
+  const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
 
   const exportWorkerIntervalMinutes = isDev ? 5 : 1
   const alertEvaluationIntervalMinutes = isDev ? 15 : 1
   const probeIntervalMinutes = isDev ? 30 : 5
 
-  const lambdaSubnets = { subnetType: SubnetType.PUBLIC }
+  const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
   const planeALambdaNetworking = {
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
@@ -312,6 +315,7 @@ export const createScheduledJobs = (
   )
 
   const goldFxRatesRule = new Rule(scope, 'GoldFxRatesSchedule', {
+    ruleName: ruleName('gold-fx-rates'),
     schedule: Schedule.rate(Duration.minutes(15)),
     description: 'Runs gold-fx-rates job every 15 minutes.',
     enabled: rulesEnabled,
@@ -398,6 +402,7 @@ export const createScheduledJobs = (
   )
 
   const exportWorkerRule = new Rule(scope, 'ExportWorkerSchedule', {
+    ruleName: ruleName('export-worker'),
     schedule: Schedule.rate(Duration.minutes(exportWorkerIntervalMinutes)),
     description: `Runs export worker every ${exportWorkerIntervalMinutes} minute(s) to drain queued export jobs.`,
     enabled: rulesEnabled,
@@ -448,6 +453,7 @@ export const createScheduledJobs = (
   )
 
   const alertEvaluationWeeklyRule = new Rule(scope, 'AlertEvaluationWeeklySchedule', {
+    ruleName: ruleName('alert-evaluation-weekly'),
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Enqueues weekly alerts by timezone bucket every hour.',
     enabled: rulesEnabled,
@@ -460,6 +466,7 @@ export const createScheduledJobs = (
   )
 
   const alertEvaluationDailyRule = new Rule(scope, 'AlertEvaluationDailySchedule', {
+    ruleName: ruleName('alert-evaluation-daily'),
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Enqueues daily alerts by timezone bucket every hour.',
     enabled: rulesEnabled,
@@ -532,6 +539,14 @@ export const createScheduledJobs = (
   if (planeADbSsmName) {
     alertEvaluationWorkerFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
   }
+  applyRedisEnv(
+    scope,
+    alertEvaluationWorkerFunction,
+    'AlertEvaluationWorkerRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
   applyCommunicationsEnv(
     scope,
     alertEvaluationWorkerFunction,
@@ -540,6 +555,7 @@ export const createScheduledJobs = (
   )
 
   const alertEvaluationWorkerRule = new Rule(scope, 'AlertEvaluationWorkerSchedule', {
+    ruleName: ruleName('alert-evaluation-worker'),
     schedule: Schedule.rate(Duration.minutes(alertEvaluationIntervalMinutes)),
     description: `Runs alert evaluation worker every ${alertEvaluationIntervalMinutes} minute(s) to drain queued alert evaluations.`,
     enabled: rulesEnabled,
@@ -622,6 +638,7 @@ export const createScheduledJobs = (
 
   const alertCorridorRefreshIntervalHours = isDev ? 6 : 4
   const alertCorridorRefreshRule = new Rule(scope, 'AlertCorridorRefreshSchedule', {
+    ruleName: ruleName('alert-corridor-refresh'),
     schedule: Schedule.rate(Duration.hours(alertCorridorRefreshIntervalHours)),
     description: `Refreshes non-macro corridors with active alerts every ${alertCorridorRefreshIntervalHours} hours.`,
     enabled: rulesEnabled,
@@ -629,6 +646,88 @@ export const createScheduledJobs = (
   alertCorridorRefreshRule.addTarget(
     new LambdaFunction(alertCorridorRefreshFunction, { retryAttempts: 1 }),
   )
+
+  const smartAlertsEnvironment: Record<string, string> = {
+    ENVIRONMENT: options.envName,
+    NODE_ENV: 'production',
+    PGSSLMODE: 'require',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    DB_QUERY_TIMEOUT_MS: '300000',
+    SMART_ALERTS_LOOKBACK_DAYS: isDev ? '7' : '42',
+    SMART_ALERTS_MIN_SAMPLE_DAYS: isDev ? '3' : '21',
+    TRACING_EXPORTER: tracingExporter,
+    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+    CLOUDWATCH_NAMESPACE: 'RemitScout',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (planeBDbHost) {
+    smartAlertsEnvironment.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (planeBDbPort) {
+    smartAlertsEnvironment.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (planeBDbName) {
+    smartAlertsEnvironment.PLANE_B_DB_NAME = planeBDbName
+  }
+
+  const smartAlertsTimeout = isDev ? Duration.minutes(15) : Duration.minutes(10)
+  const smartAlertsMemory = isDev ? 1024 : 512
+
+  const smartAlertsFunction = new NodejsFunction(scope, 'SmartAlertsJobFunction', {
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'smart-alerts-job-lambda.ts',
+    ),
+    handler: 'handler',
+    runtime: Runtime.NODEJS_18_X,
+    memorySize: smartAlertsMemory,
+    timeout: smartAlertsTimeout,
+    ...planeBLambdaNetworking,
+    role: options.roles.planeBLambdaRole,
+    tracing: tracingMode,
+    environment: smartAlertsEnvironment,
+    logRetention,
+    layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+  })
+
+  if (planeBDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'SmartAlertsDbSecret',
+      planeBDbSecretArn,
+    )
+    secret.grantRead(smartAlertsFunction)
+    smartAlertsFunction.addEnvironment('PLANE_B_DB_SECRET_ARN', planeBDbSecretArn)
+  }
+  if (planeBDbSsmName) {
+    smartAlertsFunction.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
+  }
+  applyRedisEnv(
+    scope,
+    smartAlertsFunction,
+    'SmartAlertsRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
+
+  const smartAlertsIntervalHours = isDev ? 6 : 4
+  const smartAlertsRule = new Rule(scope, 'SmartAlertsSchedule', {
+    ruleName: ruleName('smart-alerts'),
+    schedule: Schedule.rate(Duration.hours(smartAlertsIntervalHours)),
+    description: `Updates smart alert signals every ${smartAlertsIntervalHours} hours.`,
+    enabled: rulesEnabled,
+  })
+
+  smartAlertsRule.addTarget(new LambdaFunction(smartAlertsFunction, { retryAttempts: 1 }))
 
   const telemetryAnalyticsEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
@@ -687,8 +786,17 @@ export const createScheduledJobs = (
   if (planeADbSsmName) {
     telemetryAnalyticsFunction.addEnvironment('PLANE_A_DB_SSM_NAME', planeADbSsmName)
   }
+  applyRedisEnv(
+    scope,
+    telemetryAnalyticsFunction,
+    'TelemetryAnalyticsRedisSecret',
+    redisSecretArn,
+    redisSsmName,
+    redisUrl,
+  )
 
   const telemetryAnalyticsRule = new Rule(scope, 'TelemetryAnalyticsSchedule', {
+    ruleName: ruleName('telemetry-analytics'),
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Aggregates telemetry analytics hourly.',
     enabled: rulesEnabled,
@@ -755,6 +863,7 @@ export const createScheduledJobs = (
   }
 
   const sessionCleanupRule = new Rule(scope, 'SessionCleanupSchedule', {
+    ruleName: ruleName('session-cleanup'),
     schedule: Schedule.cron({ minute: '0', hour: '2' }),
     description: 'Revokes expired and inactive sessions daily.',
     enabled: rulesEnabled,
@@ -839,6 +948,7 @@ export const createScheduledJobs = (
   )
 
   const bankVsSpecialistRefreshRule = new Rule(scope, 'BankVsSpecialistRefreshSchedule', {
+    ruleName: ruleName('bank-vs-specialist-refresh'),
     schedule: Schedule.rate(Duration.minutes(30)),
     description: 'Enqueues bank vs specialist refresh requests every 30 minutes.',
     enabled: rulesEnabled,
@@ -913,6 +1023,7 @@ export const createScheduledJobs = (
   }
 
   const auditLogCleanupRule = new Rule(scope, 'AuditLogCleanupSchedule', {
+    ruleName: ruleName('audit-log-cleanup'),
     schedule: Schedule.cron({ minute: '0', hour: '3', day: '1' }),
     description: 'Archives and deletes expired audit logs monthly.',
     enabled: rulesEnabled,
@@ -1001,6 +1112,7 @@ export const createScheduledJobs = (
   }
 
   const oandaSyncRule = new Rule(scope, 'OandaSyncSchedule', {
+    ruleName: ruleName('oanda-sync'),
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Runs OANDA FX rates sync every hour.',
     enabled: rulesEnabled,
@@ -1213,6 +1325,7 @@ export const createScheduledJobs = (
   )
 
   const goldReconciliationRule = new Rule(scope, 'GoldReconciliationSchedule', {
+    ruleName: ruleName('gold-reconciliation'),
     schedule: Schedule.rate(Duration.minutes(15)),
     description: 'Runs gold reconciliation job every 15 minutes to backfill missed Gold updates.',
     enabled: rulesEnabled,
@@ -1332,6 +1445,7 @@ export const createScheduledJobs = (
 
   const b2cRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
   const b2cRefreshRule = new Rule(scope, 'B2cRefreshWorkerSchedule', {
+    ruleName: ruleName('b2c-refresh-worker'),
     schedule: Schedule.rate(Duration.minutes(b2cRefreshIntervalMinutes)),
     description: `Runs the B2C refresh worker on a ${b2cRefreshIntervalMinutes}-minute cadence.`,
     enabled: rulesEnabled && !b2cRefreshServiceEnabled,
@@ -1451,6 +1565,8 @@ export const createScheduledJobs = (
     alertEvaluationWorkerRule,
     alertCorridorRefreshFunction,
     alertCorridorRefreshRule,
+    smartAlertsFunction,
+    smartAlertsRule,
     telemetryAnalyticsFunction,
     telemetryAnalyticsRule,
     sessionCleanupFunction,
@@ -1596,6 +1712,7 @@ const createPlaneBLambdaJob = ({
   )
 
   const rule = new Rule(scope, `${id}Schedule`, {
+    ruleName: `remit-scout-${options.envName}-${jobName}`,
     schedule,
     description: `Runs ${jobName} on a schedule.`,
     enabled,
@@ -1685,6 +1802,7 @@ const createPlaneCLambdaJob = ({
   )
 
   const rule = new Rule(scope, `${id}Schedule`, {
+    ruleName: `remit-scout-${options.envName}-${jobName}`,
     schedule,
     description: `Runs ${jobName} on a schedule.`,
     enabled,

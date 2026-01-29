@@ -106,12 +106,13 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     ? RetentionDays.ONE_MONTH
     : RetentionDays.TWO_WEEKS
   const isDev = options.envName === 'dev'
-  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = isDev ? 'none' : 'xray'
-  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
-  const lambdaSubnets = { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS }
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
+  const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
+  const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
 
   const planeAEnvironment: Record<string, string> = {
+    ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
@@ -121,6 +122,16 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (isDev) {
+    planeAEnvironment.DB_QUERY_TIMEOUT_MS =
+      process.env.DB_QUERY_TIMEOUT_MS || '60000'
+    planeAEnvironment.DB_CONNECTION_TIMEOUT_MS =
+      process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
+    planeAEnvironment.DB_POOL_MAX =
+      process.env.DB_POOL_MAX || '5'
+    planeAEnvironment.DB_POOL_MIN =
+      process.env.DB_POOL_MIN || '1'
   }
   if (options.planeADbHost) {
     planeAEnvironment.PLANE_A_DB_HOST = options.planeADbHost
@@ -177,6 +188,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
 
   const planeCEnvironment: Record<string, string> = {
+    ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
@@ -186,6 +198,16 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (isDev) {
+    planeCEnvironment.DB_QUERY_TIMEOUT_MS =
+      process.env.DB_QUERY_TIMEOUT_MS || '60000'
+    planeCEnvironment.DB_CONNECTION_TIMEOUT_MS =
+      process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
+    planeCEnvironment.DB_POOL_MAX =
+      process.env.DB_POOL_MAX || '5'
+    planeCEnvironment.DB_POOL_MIN =
+      process.env.DB_POOL_MIN || '1'
   }
 
   const otelLambdaLayer = options.otelLambdaLayerArn
@@ -215,7 +237,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     tracing: tracingMode,
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
-    allowPublicSubnet: isDev,
+    allowPublicSubnet: false,
     securityGroups: [options.planeCSecurityGroup],
     environment: planeCEnvironment,
     logRetention,
@@ -297,7 +319,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     tracing: tracingMode,
     vpc: options.vpc,
     vpcSubnets: lambdaSubnets,
-    allowPublicSubnet: isDev,
+    allowPublicSubnet: false,
     securityGroups: [options.planeASecurityGroup],
     environment: planeAEnvironment,
     logRetention,
@@ -405,8 +427,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     })
     : undefined
   if (enablePlaneAJwtAuth && !planeAJwtAuthorizer) {
-    Annotations.of(scope).addWarning(
-      'Plane A JWT auth enabled but issuer/audience missing; requests will be unauthenticated at API Gateway.',
+    Annotations.of(scope).addError(
+      'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.',
     )
   }
 
@@ -417,10 +439,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   })
   const planeAIntegration = new HttpLambdaIntegration('PlaneALambdaIntegration', planeAFunction)
 
+  const publicMetricsEnabled = options.envName === 'dev'
+    || process.env.PLANE_A_PUBLIC_METRICS === '1'
   const publicRoutes = [
     '/healthz',
     '/readyz',
-    '/metrics',
+    ...(publicMetricsEnabled ? ['/metrics'] : []),
     '/api/quotes/current',
     '/api/v1/quotes/current',
     '/api/popular-corridors',

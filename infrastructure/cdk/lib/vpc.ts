@@ -4,6 +4,7 @@ import {
   SubnetType,
   SecurityGroup,
   Port,
+  Peer,
   GatewayVpcEndpointAwsService,
   InterfaceVpcEndpointAwsService,
 } from 'aws-cdk-lib/aws-ec2'
@@ -44,7 +45,50 @@ export const createNetworking = (
 
   vpc.addGatewayEndpoint('S3GatewayEndpoint', {
     service: GatewayVpcEndpointAwsService.S3,
-    subnets: [{ subnetType: SubnetType.PUBLIC }],
+    subnets: [{ subnetType: SubnetType.PRIVATE_WITH_EGRESS }],
+  })
+
+  const endpointSecurityGroup = new SecurityGroup(scope, 'VpcEndpointSecurityGroup', {
+    vpc,
+    description: 'Security group for VPC interface endpoints.',
+    allowAllOutbound: true,
+  })
+  endpointSecurityGroup.addIngressRule(
+    Peer.ipv4(vpc.vpcCidrBlock),
+    Port.tcp(443),
+    'Allow VPC access to interface endpoints',
+  )
+  const endpointSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+
+  vpc.addInterfaceEndpoint('EcrApiEndpoint', {
+    service: InterfaceVpcEndpointAwsService.ECR,
+    subnets: endpointSubnets,
+    securityGroups: [endpointSecurityGroup],
+  })
+  vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
+    service: InterfaceVpcEndpointAwsService.ECR_DOCKER,
+    subnets: endpointSubnets,
+    securityGroups: [endpointSecurityGroup],
+  })
+  vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
+    service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+    subnets: endpointSubnets,
+    securityGroups: [endpointSecurityGroup],
+  })
+  vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+    service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+    subnets: endpointSubnets,
+    securityGroups: [endpointSecurityGroup],
+  })
+  vpc.addInterfaceEndpoint('SsmEndpoint', {
+    service: InterfaceVpcEndpointAwsService.SSM,
+    subnets: endpointSubnets,
+    securityGroups: [endpointSecurityGroup],
+  })
+  vpc.addInterfaceEndpoint('StsEndpoint', {
+    service: InterfaceVpcEndpointAwsService.STS,
+    subnets: endpointSubnets,
+    securityGroups: [endpointSecurityGroup],
   })
 
   const planeASecurityGroup = new SecurityGroup(scope, 'PlaneASecurityGroup', {

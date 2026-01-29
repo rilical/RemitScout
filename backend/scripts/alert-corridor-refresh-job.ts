@@ -114,9 +114,9 @@ const getActiveAlertCorridors = async (pool: Pool): Promise<UserCorridorInfo[]> 
            UPPER(wi.target_payload->>'from') || '-' ||
            UPPER(wi.target_payload->>'to') || '-' ||
            UPPER(COALESCE(wi.target_payload->>'fromCurrency', 
-             (SELECT currency FROM public.countries WHERE code = UPPER(wi.target_payload->>'from') LIMIT 1))) || '-' ||
+             (SELECT currency FROM silver.countries WHERE code = UPPER(wi.target_payload->>'from') LIMIT 1))) || '-' ||
            UPPER(COALESCE(wi.target_payload->>'toCurrency',
-             (SELECT currency FROM public.countries WHERE code = UPPER(wi.target_payload->>'to') LIMIT 1)))
+             (SELECT currency FROM silver.countries WHERE code = UPPER(wi.target_payload->>'to') LIMIT 1)))
          ) AS corridor_id
        FROM silver.alert_rule ar
        JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id
@@ -167,9 +167,9 @@ const getWatchlistOnlyCorridors = async (pool: Pool): Promise<UserCorridorInfo[]
            UPPER(wi.target_payload->>'from') || '-' ||
            UPPER(wi.target_payload->>'to') || '-' ||
            UPPER(COALESCE(wi.target_payload->>'fromCurrency', 
-             (SELECT currency FROM public.countries WHERE code = UPPER(wi.target_payload->>'from') LIMIT 1))) || '-' ||
+             (SELECT currency FROM silver.countries WHERE code = UPPER(wi.target_payload->>'from') LIMIT 1))) || '-' ||
            UPPER(COALESCE(wi.target_payload->>'toCurrency',
-             (SELECT currency FROM public.countries WHERE code = UPPER(wi.target_payload->>'to') LIMIT 1)))
+             (SELECT currency FROM silver.countries WHERE code = UPPER(wi.target_payload->>'to') LIMIT 1)))
          ) AS corridor_id
        FROM silver.watchlist_item wi
        LEFT JOIN silver.user_plan up ON up.user_id = wi.user_id

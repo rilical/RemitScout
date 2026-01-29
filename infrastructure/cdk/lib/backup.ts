@@ -28,10 +28,17 @@ export type BackupOptions = {
   envName: string
   cluster: DatabaseCluster
   dbSecurityGroup: SecurityGroup
+  enabled?: boolean
 }
 
-export const createBackup = (scope: Construct, options: BackupOptions): BackupResources => {
+export const createBackup = (
+  scope: Construct,
+  options: BackupOptions,
+): BackupResources | null => {
   const isProd = options.envName === 'prod'
+  if (options.enabled === false) {
+    return null
+  }
   const vaultRetentionDays = isProd ? 35 : 14
 
   const notificationTopic = new Topic(scope, 'DatabaseBackupAlerts', {

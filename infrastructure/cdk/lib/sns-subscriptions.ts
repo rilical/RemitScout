@@ -1,3 +1,6 @@
+import { Annotations } from 'aws-cdk-lib'
+import { SlackChannelConfiguration, LoggingLevel } from 'aws-cdk-lib/aws-chatbot'
+import { ManagedPolicy } from 'aws-cdk-lib/aws-iam'
 import { Topic, Subscription, SubscriptionProtocol } from 'aws-cdk-lib/aws-sns'
 import type { Construct } from 'constructs'
 
@@ -9,25 +12,30 @@ export type SnsSubscriptionResources = {
 
 export type SnsSubscriptionOptions = {
   envName: string
+  slackWorkspaceId?: string
+  slackCriticalChannelId?: string
+  slackWarningChannelId?: string
+  slackOpsChannelId?: string
   slackWebhookUrl?: string
   pagerDutyIntegrationKey?: string
 }
 
-const createSlackSubscription = (
+const createSlackChannelConfig = (
   scope: Construct,
   topic: Topic,
-  webhookUrl: string,
-  channel: string,
-): Subscription => {
-  // Note: SNS doesn't support filtering by channel in the subscription.
-  // If channel-specific routing is needed, use a Lambda function to route messages.
-  const subscription = new Subscription(scope, `${topic.node.id}SlackSubscription${channel.replace(/[^a-zA-Z0-9]/g, '')}`, {
-    topic,
-    protocol: SubscriptionProtocol.HTTPS,
-    endpoint: webhookUrl,
+  envName: string,
+  workspaceId: string,
+  channelId: string,
+  suffix: string,
+): SlackChannelConfiguration => {
+  return new SlackChannelConfiguration(scope, `Slack${suffix}Channel`, {
+    slackChannelConfigurationName: `remit-scout-${envName}-${suffix.toLowerCase()}`,
+    slackWorkspaceId: workspaceId,
+    slackChannelId: channelId,
+    notificationTopics: [topic],
+    loggingLevel: LoggingLevel.ERROR,
+    guardrailPolicies: [ManagedPolicy.fromAwsManagedPolicyName('ReadOnlyAccess')],
   })
-
-  return subscription
 }
 
 const createPagerDutySubscription = (
@@ -65,10 +73,42 @@ export const createSnsSubscriptions = (
     displayName: `Remit-Scout ${options.envName} Ops Alerts`,
   })
 
-  if (options.slackWebhookUrl) {
-    createSlackSubscription(scope, criticalTopic, options.slackWebhookUrl, '#alerts-critical')
-    createSlackSubscription(scope, warningTopic, options.slackWebhookUrl, '#alerts-warning')
-    createSlackSubscription(scope, opsTopic, options.slackWebhookUrl, '#ops-alerts')
+  const slackWorkspaceId = options.slackWorkspaceId
+  if (slackWorkspaceId) {
+    if (options.slackCriticalChannelId) {
+      createSlackChannelConfig(
+        scope,
+        criticalTopic,
+        options.envName,
+        slackWorkspaceId,
+        options.slackCriticalChannelId,
+        'Critical',
+      )
+    }
+    if (options.slackWarningChannelId) {
+      createSlackChannelConfig(
+        scope,
+        warningTopic,
+        options.envName,
+        slackWorkspaceId,
+        options.slackWarningChannelId,
+        'Warning',
+      )
+    }
+    if (options.slackOpsChannelId) {
+      createSlackChannelConfig(
+        scope,
+        opsTopic,
+        options.envName,
+        slackWorkspaceId,
+        options.slackOpsChannelId,
+        'Ops',
+      )
+    }
+  } else if (options.slackWebhookUrl) {
+    Annotations.of(scope).addWarning(
+      'slackWebhookUrl is configured, but SNS does not send Slack-compatible payloads. Use AWS Chatbot (slackWorkspaceId + channel IDs) or a webhook relay.',
+    )
   }
 
   if (options.pagerDutyIntegrationKey) {
@@ -81,4 +121,3 @@ export const createSnsSubscriptions = (
     opsTopic,
   }
 }
-

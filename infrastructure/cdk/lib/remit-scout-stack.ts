@@ -16,6 +16,7 @@ import { createApi } from './api'
 import { createFrontend } from './frontend'
 import { createPipeline } from './pipeline'
 import { createBackup } from './backup'
+import { createCostGuardrails } from './budgets'
 import { createMonitoring } from './monitoring'
 import { createSynthetics } from './synthetics'
 import { createSnsSubscriptions } from './sns-subscriptions'
@@ -65,7 +66,14 @@ export class RemitScoutStack extends Stack {
 
     const envName = props.envName ?? 'dev'
     Tags.of(this).add('project', 'remit-scout')
+    Tags.of(this).add('service', 'remit-scout')
     Tags.of(this).add('environment', envName)
+    const ownerTag =
+      this.node.tryGetContext('tagOwner') ??
+      process.env.TAG_OWNER
+    if (ownerTag) {
+      Tags.of(this).add('owner', ownerTag)
+    }
 
     const imageTag =
       this.node.tryGetContext('backendImageTag') ??
@@ -77,17 +85,60 @@ export class RemitScoutStack extends Stack {
       (envName === 'dev'
         ? 'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K'
         : undefined)
+    const sesIdentityArns = toList(
+      this.node.tryGetContext('sesIdentityArns') ??
+        process.env.SES_IDENTITY_ARNS,
+    )
+    const snsTopicArns = toList(
+      this.node.tryGetContext('snsTopicArns') ??
+        process.env.SNS_TOPIC_ARNS,
+    )
+    const enableDbProxy =
+      toOptionalBool(
+        this.node.tryGetContext('enableDbProxy') ??
+          process.env.ENABLE_DB_PROXY,
+      ) ?? envName !== 'dev'
+    const enableBackup =
+      toOptionalBool(
+        this.node.tryGetContext('enableBackup') ??
+          process.env.ENABLE_BACKUP,
+      ) ?? envName !== 'dev'
+    const enableFrontend =
+      toOptionalBool(
+        this.node.tryGetContext('enableFrontend') ??
+          process.env.ENABLE_FRONTEND,
+      ) ?? envName !== 'dev'
+    const enableCostGuardrails =
+      toOptionalBool(
+        this.node.tryGetContext('enableCostGuardrails') ??
+          process.env.ENABLE_COST_GUARDRAILS,
+      ) ?? envName !== 'dev'
+    const costAlertEmails = toList(
+      this.node.tryGetContext('costAlertEmails') ??
+        process.env.COST_ALERT_EMAILS,
+    )
+    const costBudgetAmountUsd = toOptionalNumber(
+      this.node.tryGetContext('costBudgetAmountUsd') ??
+        process.env.COST_BUDGET_AMOUNT_USD,
+    )
+    const costAnomalyThresholdUsd = toOptionalNumber(
+      this.node.tryGetContext('costAnomalyThresholdUsd') ??
+        process.env.COST_ANOMALY_THRESHOLD_USD,
+    )
 
     const networking = createNetworking(this, { envName })
     const iam = createIam(this, {
       envName,
       sharedSecretArns: devSharedSecretArn ? [devSharedSecretArn] : [],
+      sesIdentityArns,
+      snsTopicArns,
     })
     const registry = createRegistry(this, { envName })
     const database = createDatabase(this, {
       envName,
       vpc: networking.vpc,
       dbSecurityGroup: networking.dbSecurityGroup,
+      enableProxy: enableDbProxy,
     })
     const cache = createCache(this, {
       envName,
@@ -216,7 +267,11 @@ export class RemitScoutStack extends Stack {
     const planeBB2bMaxQueueDepth =
       this.node.tryGetContext('planeBB2bMaxQueueDepth') ??
       process.env.PLANE_B_B2B_MAX_QUEUE_DEPTH ??
-      (envName === 'dev' ? '5000' : undefined)
+      (envName === 'dev' ? '100000' : undefined)
+    const planeBIngestFanoutMessageMode =
+      this.node.tryGetContext('planeBIngestFanoutMessageMode') ??
+      process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE ??
+      (envName === 'dev' ? 'provider' : undefined)
     const quoteRefreshQueueMode =
       this.node.tryGetContext('quoteRefreshQueueMode') ??
       process.env.QUOTE_REFRESH_QUEUE_MODE ??
@@ -229,18 +284,22 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBIngestDesiredCount') ??
         process.env.PLANE_B_INGEST_DESIRED_COUNT,
     ) ?? (envName === 'dev' ? 1 : undefined)
-    const planeBQueueWorkerDesiredCount = toOptionalNumber(
+    const rawPlaneBQueueWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
     ) ?? (envName === 'dev' ? 1 : undefined)
+    const planeBQueueWorkerDesiredCount =
+      envName === 'dev' && rawPlaneBQueueWorkerDesiredCount !== undefined
+        ? Math.max(1, rawPlaneBQueueWorkerDesiredCount)
+        : rawPlaneBQueueWorkerDesiredCount
     const planeBQueueWorkerMaxCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
         process.env.PLANE_B_QUEUE_WORKER_MAX,
-    ) ?? (envName === 'prod' ? 20 : envName === 'dev' ? 10 : 50)
+    ) ?? (envName === 'prod' ? 20 : envName === 'dev' ? 5 : 50)
     const planeBQueueWorkerSpotOnly = toOptionalBool(
       this.node.tryGetContext('planeBQueueWorkerSpotOnly') ??
         process.env.PLANE_B_QUEUE_WORKER_SPOT_ONLY,
-    )
+    ) ?? (envName === 'dev' ? false : undefined)
     const bronzePrefix =
       this.node.tryGetContext('bronzePrefix') ??
       process.env.BRONZE_S3_PREFIX ??
@@ -263,11 +322,11 @@ export class RemitScoutStack extends Stack {
     const enableCloudFront = toOptionalBool(
       this.node.tryGetContext('enableCloudFront') ??
         process.env.ENABLE_CLOUDFRONT,
-    ) ?? (envName === 'prod')
+    ) ?? (envName !== 'dev')
     const enableWaf = toOptionalBool(
       this.node.tryGetContext('enableWaf') ??
         process.env.ENABLE_WAF,
-    ) ?? (envName === 'prod')
+    ) ?? (envName !== 'dev')
     const enablePlaneAJwtAuth = toOptionalBool(
       this.node.tryGetContext('enablePlaneAJwtAuth') ??
         process.env.PLANE_A_ENABLE_JWT_AUTH,
@@ -346,11 +405,11 @@ export class RemitScoutStack extends Stack {
     const disablePlaneAExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneAExecuteEndpoint') ??
         process.env.PLANE_A_DISABLE_EXECUTE_ENDPOINT,
-    )
+    ) ?? (envName !== 'dev')
     const disablePlaneCExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneCExecuteEndpoint') ??
         process.env.PLANE_C_DISABLE_EXECUTE_ENDPOINT,
-    )
+    ) ?? (envName !== 'dev')
     const wafAllowListIps = (() => {
       const raw =
         this.node.tryGetContext('wafAllowListIps') ??
@@ -397,6 +456,18 @@ export class RemitScoutStack extends Stack {
     const slackWebhookUrl =
       this.node.tryGetContext('slackWebhookUrl') ??
       process.env.SLACK_WEBHOOK_URL
+    const slackWorkspaceId =
+      this.node.tryGetContext('slackWorkspaceId') ??
+      process.env.SLACK_WORKSPACE_ID
+    const slackCriticalChannelId =
+      this.node.tryGetContext('slackCriticalChannelId') ??
+      process.env.SLACK_CRITICAL_CHANNEL_ID
+    const slackWarningChannelId =
+      this.node.tryGetContext('slackWarningChannelId') ??
+      process.env.SLACK_WARNING_CHANNEL_ID
+    const slackOpsChannelId =
+      this.node.tryGetContext('slackOpsChannelId') ??
+      process.env.SLACK_OPS_CHANNEL_ID
     const pagerDutyIntegrationKey =
       this.node.tryGetContext('pagerDutyIntegrationKey') ??
       process.env.PAGERDUTY_INTEGRATION_KEY
@@ -418,11 +489,16 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('pipelineRepoBranch') ??
       process.env.PIPELINE_REPO_BRANCH ??
       (envName === 'dev' ? 'develop' : undefined)
+    const pipelineEnabled =
+      toOptionalBool(
+        this.node.tryGetContext('pipelineEnabled') ??
+          process.env.PIPELINE_ENABLED,
+      ) ?? envName !== 'dev'
     const pipelineEnableDeploy =
       toOptionalBool(
         this.node.tryGetContext('pipelineEnableDeploy') ??
           process.env.PIPELINE_ENABLE_DEPLOY,
-      ) ?? envName === 'dev'
+      ) ?? envName !== 'dev'
     const pipelineRequireApproval =
       toOptionalBool(
         this.node.tryGetContext('pipelineRequireApproval') ??
@@ -441,13 +517,13 @@ export class RemitScoutStack extends Stack {
       roles: iam,
     })
 
-    const planeADbHost = database.proxy.endpoint
+    const planeADbHost = database.proxy?.endpoint ?? database.cluster.clusterEndpoint.hostname
     const planeADbPort = '5432'
     const planeADbName = 'remit_scout'
-    const planeBDbHost = database.proxy.endpoint
+    const planeBDbHost = database.proxy?.endpoint ?? database.cluster.clusterEndpoint.hostname
     const planeBDbPort = '5432'
     const planeBDbName = 'remit_scout'
-    const planeCDbHost = database.proxy.endpoint
+    const planeCDbHost = database.proxy?.endpoint ?? database.cluster.clusterEndpoint.hostname
     const planeCDbPort = '5432'
     const planeCDbName = 'remit_scout'
 
@@ -492,6 +568,7 @@ export class RemitScoutStack extends Stack {
       planeBB2bTargetMinutes,
       planeBB2bObservationMode,
       planeBB2bMaxQueueDepth,
+      planeBIngestFanoutMessageMode,
       ingestFanoutMode,
       notificationsMode,
       opsAlertsMode,
@@ -567,8 +644,7 @@ export class RemitScoutStack extends Stack {
 
     const frontend = createFrontend(this, {
       envName,
-      frontendDomainName:
-        frontendDomainName,
+      frontendDomainName,
       frontendCertificateArn:
         this.node.tryGetContext('frontendCertificateArn') ?? process.env.FRONTEND_CERT_ARN,
       frontendHostedZoneId:
@@ -577,12 +653,22 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('frontendHostedZoneName') ?? process.env.FRONTEND_HOSTED_ZONE_NAME,
       planeAWaf: api.planeAWaf,
       planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
+      enableFrontend,
     })
 
     const backup = createBackup(this, {
       envName,
       cluster: database.cluster,
       dbSecurityGroup: networking.dbSecurityGroup,
+      enabled: enableBackup,
+    })
+
+    const costGuardrails = createCostGuardrails(this, {
+      envName,
+      enabled: enableCostGuardrails,
+      costAlertEmails,
+      monthlyBudgetAmountUsd: costBudgetAmountUsd,
+      anomalyThresholdUsd: costAnomalyThresholdUsd,
     })
 
     const ecsServices = createEcsServices(this, {
@@ -611,6 +697,10 @@ export class RemitScoutStack extends Stack {
     // Create SNS subscriptions for alert routing (Slack, PagerDuty)
     const snsSubscriptions = createSnsSubscriptions(this, {
       envName,
+      slackWorkspaceId,
+      slackCriticalChannelId,
+      slackWarningChannelId,
+      slackOpsChannelId,
       slackWebhookUrl,
       pagerDutyIntegrationKey,
     })
@@ -636,29 +726,33 @@ export class RemitScoutStack extends Stack {
       ecs: ecsServices,
       database,
       cache,
-      alertsTopic: snsSubscriptions.criticalTopic,
+      criticalTopic: snsSubscriptions.criticalTopic,
+      warningTopic: snsSubscriptions.warningTopic,
+      opsTopic: snsSubscriptions.opsTopic,
     })
 
-    const pipeline = createPipeline(this, {
-      envName,
-      connectionArn: pipelineConnectionArn,
-      repoOwner: pipelineRepoOwner,
-      repoName: pipelineRepoName,
-      repoBranch: pipelineRepoBranch,
-      enableDeploy: pipelineEnableDeploy,
-      requireApproval: pipelineRequireApproval,
-      backendRepository: registry.backendRepository,
-      frontendBucket: frontend?.bucket,
-      frontendDistribution: frontend?.distribution,
-      planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
-      planeAApiEndpoint: api.planeAApi.apiEndpoint,
-      publicSupabaseUrl,
-      publicSupabaseAnonKey,
-      publicSupabaseSecretArn: supabaseSecretArn,
-      publicSupabaseUrlSecretJsonKey,
-      publicSupabaseAnonKeySecretJsonKey,
-      devPaused,
-    })
+    const pipeline = pipelineEnabled
+      ? createPipeline(this, {
+          envName,
+          connectionArn: pipelineConnectionArn,
+          repoOwner: pipelineRepoOwner,
+          repoName: pipelineRepoName,
+          repoBranch: pipelineRepoBranch,
+          enableDeploy: pipelineEnableDeploy,
+          requireApproval: pipelineRequireApproval,
+          backendRepository: registry.backendRepository,
+          frontendBucket: frontend?.bucket,
+          frontendDistribution: frontend?.distribution,
+          planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
+          planeAApiEndpoint: api.planeAApi.apiEndpoint,
+          publicSupabaseUrl,
+          publicSupabaseAnonKey,
+          publicSupabaseSecretArn: supabaseSecretArn,
+          publicSupabaseUrlSecretJsonKey,
+          publicSupabaseAnonKeySecretJsonKey,
+          devPaused,
+        })
+      : null
 
     createScheduledJobs(this, {
       envName,
@@ -765,10 +859,12 @@ export class RemitScoutStack extends Stack {
       value: database.cluster.clusterEndpoint.hostname,
       description: 'Aurora cluster writer endpoint',
     })
-    new CfnOutput(this, 'RdsProxyEndpoint', {
-      value: database.proxy.endpoint,
-      description: 'RDS Proxy endpoint',
-    })
+    if (database.proxy) {
+      new CfnOutput(this, 'RdsProxyEndpoint', {
+        value: database.proxy.endpoint,
+        description: 'RDS Proxy endpoint',
+      })
+    }
     new CfnOutput(this, 'AuroraCredentialsSecretArn', {
       value: database.credentialsSecret.secretArn,
       description: 'Secrets Manager ARN for Aurora credentials',
@@ -857,20 +953,32 @@ export class RemitScoutStack extends Stack {
         description: 'CodePipeline name for Remit-Scout',
       })
     }
-    new CfnOutput(this, 'BackupVaultName', {
-      value: backup.vault.backupVaultName,
-      description: 'AWS Backup vault name for database backups',
-    })
-    new CfnOutput(this, 'BackupAlertsTopicArn', {
-      value: backup.notificationTopic.topicArn,
-      description: 'SNS topic for backup/restore failure alerts',
-    })
+    if (backup) {
+      new CfnOutput(this, 'BackupVaultName', {
+        value: backup.vault.backupVaultName,
+        description: 'AWS Backup vault name for database backups',
+      })
+      new CfnOutput(this, 'BackupAlertsTopicArn', {
+        value: backup.notificationTopic.topicArn,
+        description: 'SNS topic for backup/restore failure alerts',
+      })
+    }
+    if (costGuardrails) {
+      new CfnOutput(this, 'CurBucketName', {
+        value: costGuardrails.curBucket.bucketName,
+        description: 'S3 bucket for Cost and Usage Reports',
+      })
+      new CfnOutput(this, 'CurReportName', {
+        value: costGuardrails.curReport.reportName,
+        description: 'Cost and Usage Report name',
+      })
+    }
     new CfnOutput(this, 'CloudWatchDashboardName', {
       value: monitoring.dashboard.dashboardName,
       description: 'CloudWatch dashboard name',
     })
     new CfnOutput(this, 'CloudWatchAlertsTopicArn', {
-      value: monitoring.alertsTopic.topicArn,
+      value: monitoring.criticalTopic.topicArn,
       description: 'SNS topic for CloudWatch alarms',
     })
     new CfnOutput(this, 'CriticalAlertsTopicArn', {

@@ -8,6 +8,7 @@ import {
   SQSClient,
   type Message,
 } from '@aws-sdk/client-sqs'
+import { context as otelContext, propagation, trace, type Context } from '@opentelemetry/api'
 
 import { createLogger } from './logger'
 import { isRetryableError, isThrottlingError } from './aws-errors'
@@ -50,6 +51,8 @@ export type SqsMessage<T> = {
   receiptHandle: string
   payload: T | null
   attributes: Record<string, string>
+  messageAttributes: Record<string, string>
+  traceContext?: Context
   raw: Message
 }
 
@@ -57,6 +60,34 @@ const DEFAULT_VISIBILITY_TIMEOUT = 30
 const VISIBILITY_EXTENSION_THRESHOLD = 0.5
 
 const visibilityTimeoutCache = new Map<string, number>()
+
+const buildTraceMessageAttributes = (): Record<string, { DataType: 'String'; StringValue: string }> | undefined => {
+  const activeSpan = trace.getSpan(otelContext.active())
+  if (!activeSpan) return undefined
+  const carrier: Record<string, string> = {}
+  propagation.inject(otelContext.active(), carrier)
+  const entries = Object.entries(carrier).filter(([, value]) => Boolean(value))
+  if (entries.length === 0) return undefined
+  const attributes: Record<string, { DataType: 'String'; StringValue: string }> = {}
+  for (const [key, value] of entries) {
+    attributes[key] = { DataType: 'String', StringValue: value }
+  }
+  return attributes
+}
+
+const isInvalidReceiptHandleError = (message: string): boolean => {
+  const normalized = message.toLowerCase()
+  if (normalized.includes('receipt') && normalized.includes('handle') && normalized.includes('invalid')) {
+    return true
+  }
+  if (normalized.includes('message does not exist')) {
+    return true
+  }
+  if (normalized.includes('not available for visibility timeout change')) {
+    return true
+  }
+  return false
+}
 
 const getVisibilityTimeout = async (queueUrl: string): Promise<number> => {
   if (visibilityTimeoutCache.has(queueUrl)) {
@@ -103,10 +134,19 @@ export const extendMessageVisibility = async (
       visibility_timeout: visibilityTimeoutSeconds,
     })
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (isInvalidReceiptHandleError(message)) {
+      logger.debug('extend_visibility_skipped', {
+        queue_url: queueUrl,
+        reason: 'invalid_receipt_handle',
+        error: message,
+      })
+      return
+    }
     trackMessageFailed(queueUrl, 'extend_visibility')
     logger.error('extend_visibility_failed', {
       queue_url: queueUrl,
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
     })
     throw error
   }
@@ -127,13 +167,16 @@ export const createVisibilityTimeoutExtender = (
 ): (() => Promise<void>) => {
   let intervalId: NodeJS.Timeout | null = null
   let lastExtension = Date.now()
+  let stopped = false
 
   const start = async () => {
     const visibilityTimeout = await getVisibilityTimeout(queueUrl)
+    if (stopped) return
     const extensionInterval = visibilityTimeout * 1000 * VISIBILITY_EXTENSION_THRESHOLD
 
     intervalId = setInterval(async () => {
       try {
+        if (stopped) return
         const elapsed = Date.now() - lastExtension
         if (elapsed >= extensionInterval) {
           await extendMessageVisibility(queueUrl, receiptHandle, visibilityTimeout)
@@ -159,6 +202,7 @@ export const createVisibilityTimeoutExtender = (
   })
 
   return async () => {
+    stopped = true
     if (intervalId) {
       clearInterval(intervalId)
       intervalId = null
@@ -266,10 +310,12 @@ export const sendJsonMessage = async <T>(
 
   const sendAttempt = async (): Promise<void> => {
     const sqs = getClient()
+    const traceAttributes = buildTraceMessageAttributes()
     await sqs.send(
       new SendMessageCommand({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(payload),
+        ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
       }),
     )
   }
@@ -316,12 +362,14 @@ export const sendBatchJsonMessages = async <T>(
 
   const sendBatchAttempt = async (): Promise<void> => {
     const sqs = getClient()
+    const traceAttributes = buildTraceMessageAttributes()
     await sqs.send(
       new SendMessageBatchCommand({
         QueueUrl: queueUrl,
         Entries: messages.map((msg) => ({
           Id: msg.id,
           MessageBody: JSON.stringify(msg.payload),
+          ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
         })),
       }),
     )
@@ -395,11 +443,24 @@ export const receiveJsonMessages = async <T>(
         }
       }
 
+      const rawMessageAttributes = message.MessageAttributes ?? {}
+      const messageAttributes: Record<string, string> = {}
+      for (const [key, value] of Object.entries(rawMessageAttributes)) {
+        if (value?.StringValue) {
+          messageAttributes[key] = value.StringValue
+        }
+      }
+      const traceContext = Object.keys(messageAttributes).length > 0
+        ? propagation.extract(otelContext.active(), messageAttributes)
+        : undefined
+
       return {
         messageId: message.MessageId ?? '',
         receiptHandle: message.ReceiptHandle ?? '',
         payload,
         attributes: message.Attributes ?? {},
+        messageAttributes,
+        traceContext,
         raw: message,
       }
     })
@@ -419,25 +480,30 @@ export const deleteMessages = async (
   if (receiptHandles.length === 0) return
 
   const sqs = getClient()
-  const entries = receiptHandles.map((handle, index) => ({
-    Id: `${index}`,
-    ReceiptHandle: handle,
-  }))
+  const batchSize = 10
+  for (let i = 0; i < receiptHandles.length; i += batchSize) {
+    const batch = receiptHandles.slice(i, i + batchSize)
+    const entries = batch.map((handle, index) => ({
+      Id: `${i + index}`,
+      ReceiptHandle: handle,
+    }))
 
-  try {
-    await sqs.send(
-      new DeleteMessageBatchCommand({
-        QueueUrl: queueUrl,
-        Entries: entries,
-      }),
-    )
-    trackMessageDeleted(queueUrl, receiptHandles.length)
-  } catch (error) {
-    trackMessageFailed(queueUrl, 'delete')
-    logger.error('delete_failed', {
-      queue_url: queueUrl,
-      error: error instanceof Error ? error.message : String(error),
-    })
+    try {
+      await sqs.send(
+        new DeleteMessageBatchCommand({
+          QueueUrl: queueUrl,
+          Entries: entries,
+        }),
+      )
+      trackMessageDeleted(queueUrl, batch.length)
+    } catch (error) {
+      trackMessageFailed(queueUrl, 'delete')
+      logger.error('delete_failed', {
+        queue_url: queueUrl,
+        batch_size: batch.length,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 }
 

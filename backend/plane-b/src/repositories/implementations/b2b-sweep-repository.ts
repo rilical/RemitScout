@@ -1,6 +1,8 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { config } from '../../../../shared/config'
+import { withRetry } from '../../../../shared/repository-retry'
 import type {
   B2bSweepRunInput,
   B2bSweepRunRecord,
@@ -118,7 +120,10 @@ export class B2bSweepRepository implements IB2bSweepRepository {
   ): Promise<void> {
     if (tasks.length === 0) return
 
-    const chunkSize = 500
+    const rawChunkSize = Number(config.planeB.b2bSweepTaskInsertChunkSize)
+    const chunkSize = Number.isFinite(rawChunkSize) && rawChunkSize > 0 ? rawChunkSize : 250
+    const rawMaxRetries = Number(config.planeB.b2bSweepTaskInsertMaxRetries)
+    const maxRetries = Number.isFinite(rawMaxRetries) && rawMaxRetries >= 0 ? rawMaxRetries : 2
     const enqueuedAt = options?.enqueuedAt === undefined ? new Date() : options.enqueuedAt
     for (let i = 0; i < tasks.length; i += chunkSize) {
       const chunk = tasks.slice(i, i + chunkSize)
@@ -130,61 +135,64 @@ export class B2bSweepRepository implements IB2bSweepRepository {
       const payinMethods = chunk.map(task => task.payinMethod)
       const payoutMethods = chunk.map(task => task.payoutMethod)
 
-      await query(
-        `INSERT INTO silver.b2b_sweep_task (
-           run_id,
-           corridor_id,
-           provider_id,
-           collector_type,
-           priority_tier,
-           amount_bucket,
-           payin_method,
-           payout_method,
-           status,
-           enqueued_at
-         )
-         SELECT
-           $1::uuid,
-           corridor_id,
-           provider_id,
-           collector_type,
-           priority_tier,
-           amount_bucket,
-           payin_method,
-           payout_method,
-           'pending'::sweep_task_status,
-           $9::timestamptz
-         FROM UNNEST(
-           $2::text[],
-           $3::text[],
-           $4::text[],
-           $5::text[],
-           $6::int[],
-           $7::text[],
-           $8::text[]
-         ) AS t(
-           corridor_id,
-           provider_id,
-           collector_type,
-           priority_tier,
-           amount_bucket,
-           payin_method,
-           payout_method
-         )
-         ON CONFLICT (run_id, provider_id, corridor_id, amount_bucket, payin_method, payout_method)
-         DO NOTHING`,
-        [
-          runId,
-          corridorIds,
-          providerIds,
-          collectorTypes,
-          priorityTiers,
-          amountBuckets,
-          payinMethods,
-          payoutMethods,
-          enqueuedAt,
-        ],
-        this.pool,
+      await withRetry(
+        () => query(
+          `INSERT INTO silver.b2b_sweep_task (
+             run_id,
+             corridor_id,
+             provider_id,
+             collector_type,
+             priority_tier,
+             amount_bucket,
+             payin_method,
+             payout_method,
+             status,
+             enqueued_at
+           )
+           SELECT
+             $1::uuid,
+             corridor_id,
+             provider_id,
+             collector_type,
+             priority_tier,
+             amount_bucket,
+             payin_method,
+             payout_method,
+             'pending'::sweep_task_status,
+             $9::timestamptz
+           FROM UNNEST(
+             $2::text[],
+             $3::text[],
+             $4::text[],
+             $5::text[],
+             $6::int[],
+             $7::text[],
+             $8::text[]
+           ) AS t(
+             corridor_id,
+             provider_id,
+             collector_type,
+             priority_tier,
+             amount_bucket,
+             payin_method,
+             payout_method
+           )
+           ON CONFLICT (run_id, provider_id, corridor_id, amount_bucket, payin_method, payout_method)
+           DO NOTHING`,
+          [
+            runId,
+            corridorIds,
+            providerIds,
+            collectorTypes,
+            priorityTiers,
+            amountBuckets,
+            payinMethods,
+            payoutMethods,
+            enqueuedAt,
+          ],
+          this.pool,
+        ),
+        { maxRetries },
       )
     }
   }

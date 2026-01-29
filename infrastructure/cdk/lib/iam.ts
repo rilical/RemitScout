@@ -1,4 +1,5 @@
 import { type Construct } from 'constructs'
+import { Annotations } from 'aws-cdk-lib'
 import { ManagedPolicy, Role, ServicePrincipal, PolicyStatement } from 'aws-cdk-lib/aws-iam'
 
 export type IamResources = {
@@ -12,6 +13,8 @@ export type IamResources = {
 export type IamOptions = {
   envName: string
   sharedSecretArns?: string[]
+  sesIdentityArns?: string[]
+  snsTopicArns?: string[]
 }
 
 export const createIam = (scope: Construct, options: IamOptions): IamResources => {
@@ -75,13 +78,33 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     actions: ['xray:PutTraceSegments', 'xray:PutTelemetryRecords'],
     resources: ['*'],
   })
+  const sesPolicyResources =
+    options.sesIdentityArns && options.sesIdentityArns.length > 0
+      ? options.sesIdentityArns
+      : ['*']
+  const snsPolicyResources =
+    options.snsTopicArns && options.snsTopicArns.length > 0
+      ? options.snsTopicArns
+      : ['*']
+  if (options.envName !== 'dev') {
+    if (!options.sesIdentityArns || options.sesIdentityArns.length === 0) {
+      Annotations.of(scope).addWarning(
+        'SES permissions are wildcarded. Provide sesIdentityArns to scope send permissions.',
+      )
+    }
+    if (!options.snsTopicArns || options.snsTopicArns.length === 0) {
+      Annotations.of(scope).addWarning(
+        'SNS permissions are wildcarded. Provide snsTopicArns to scope publish permissions.',
+      )
+    }
+  }
   const sesPolicy = new PolicyStatement({
     actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-    resources: ['*'],
+    resources: sesPolicyResources,
   })
   const snsPolicy = new PolicyStatement({
     actions: ['sns:Publish'],
-    resources: ['*'],
+    resources: snsPolicyResources,
   })
 
   for (const role of [
@@ -103,6 +126,8 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   planeBEcsTaskRole.addToPolicy(cloudWatchPolicy)
   planeBEcsTaskRole.addToPolicy(xrayPolicy)
   planeBEcsTaskRole.addToPolicy(secretsPolicy)
+  planeBEcsTaskRole.addToPolicy(sesPolicy)
+  planeBEcsTaskRole.addToPolicy(snsPolicy)
   planeBEcsTaskRole.addToPolicy(new PolicyStatement({
     actions: ['events:PutEvents'],
     resources: ['arn:aws:events:*:*:event-bus/default'],

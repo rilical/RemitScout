@@ -140,8 +140,10 @@ export const createPipeline = (
         },
         build: {
           commands: [
-            'docker build -f backend/Dockerfile --build-arg BUILD_VERSION=$IMAGE_TAG -t $ECR_REPO_URI:$IMAGE_TAG .',
-            'docker push $ECR_REPO_URI:$IMAGE_TAG',
+            'docker buildx version',
+            'docker buildx create --use',
+            'docker buildx inspect --bootstrap',
+            'docker buildx build --platform linux/amd64,linux/arm64 -f backend/Dockerfile --build-arg BUILD_VERSION=$IMAGE_TAG -t $ECR_REPO_URI:$IMAGE_TAG --push .',
             'pnpm -C backend build',
             [
               'if [ -n "$FRONTEND_BUCKET_NAME" ]; then',

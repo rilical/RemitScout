@@ -67,7 +67,7 @@ export const createEcsServices = (
           { capacityProvider: 'FARGATE', base: 1, weight: 1 },
           { capacityProvider: 'FARGATE_SPOT', weight: 2 },
         ]
-      : [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
+      : [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }]
 
   const enableExecuteCommand = !isProd
   const usePublicSubnets = isDev
@@ -174,7 +174,7 @@ export const createEcsServices = (
   const scaleDefaults = isPaused
     ? { min: 0, max: 0, targetValue: isProd ? 25 : 20 }
     : {
-        min: isDev ? 0 : (isProd ? 2 : 1),
+        min: isDev ? 1 : (isProd ? 2 : 1),
         max: Math.max(queueWorkerDesired, scaleMax),
         targetValue: isProd ? 25 : 20,
       }

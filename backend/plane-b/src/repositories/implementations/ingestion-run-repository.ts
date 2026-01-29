@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { withRetry } from '../../../../shared/repository-retry'
 import type {
   IIngestionRunRepository,
   IngestionRunDurationRecord,
@@ -42,7 +43,7 @@ export class IngestionRunRepository implements IIngestionRunRepository {
     providerId: string,
     collectorType: string,
   ): Promise<number | null> {
-    const result = await query<{ age_seconds: number | null }>(
+    const result = await withRetry(() => query<{ age_seconds: number | null }>(
       `SELECT EXTRACT(EPOCH FROM (NOW() - COALESCE(finished_at, started_at))) AS age_seconds
          FROM silver.ingestion_run
         WHERE provider_id = $1
@@ -51,7 +52,7 @@ export class IngestionRunRepository implements IIngestionRunRepository {
         LIMIT 1`,
       [providerId, collectorType],
       this.pool,
-    )
+    ))
     const age = result.rows[0]?.age_seconds
     return Number.isFinite(age) ? Number(age) : null
   }

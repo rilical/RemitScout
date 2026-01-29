@@ -266,35 +266,33 @@ export class AlertRepository implements IAlertRepository {
       return
     }
 
-    updateFields.push(`updated_at = NOW()`)
-    const updateValues = [...values, alertId]
-
     // Get current state to use as defaults for INSERT
     const currentState = await this.getAlertState(alertId)
-    
+
+    const baseValues = [
+      alertId,
+      updates.last_evaluated_at ?? currentState?.last_evaluated_at ?? null,
+      updates.last_value ?? currentState?.last_value ?? null,
+      updates.in_alarm ?? currentState?.in_alarm ?? false,
+      updates.last_triggered_at ?? currentState?.last_triggered_at ?? null,
+      updates.last_notified_at ?? currentState?.last_notified_at ?? null,
+      updates.snoozed_until ?? currentState?.snoozed_until ?? null,
+      updates.version ?? (currentState?.version ?? 1) + 1,
+    ]
+
+    const updateSet = updateFields
+      .map((field, idx) => field.replace(`$${idx + 1}`, `$${baseValues.length + idx + 1}`))
+      .join(', ')
+
     await query(
       `INSERT INTO silver.alert_state (
-         alert_id, last_evaluated_at, last_value, in_alarm, 
-         last_triggered_at, last_notified_at, snoozed_until, version, updated_at
+         alert_id, last_evaluated_at, last_value, in_alarm,
+         last_triggered_at, last_notified_at, snoozed_until, version
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (alert_id) DO UPDATE SET
-         ${updateFields.map((field, idx) => {
-           const newParamIndex = idx + 9
-           return field.replace(`$${idx + 1}`, `$${newParamIndex}`)
-         }).join(', ')},
-         updated_at = NOW()`,
-      [
-        alertId,
-        updates.last_evaluated_at ?? currentState?.last_evaluated_at ?? null,
-        updates.last_value ?? currentState?.last_value ?? null,
-        updates.in_alarm ?? currentState?.in_alarm ?? false,
-        updates.last_triggered_at ?? currentState?.last_triggered_at ?? null,
-        updates.last_notified_at ?? currentState?.last_notified_at ?? null,
-        updates.snoozed_until ?? currentState?.snoozed_until ?? null,
-        updates.version ?? (currentState?.version ?? 1) + 1,
-        ...updateValues,
-      ],
+         ${updateSet}`,
+      [...baseValues, ...values],
       this.pool,
     )
   }

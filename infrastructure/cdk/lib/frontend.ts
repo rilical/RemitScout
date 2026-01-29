@@ -2,7 +2,6 @@ import path from 'path'
 import { Duration, RemovalPolicy, CfnOutput } from 'aws-cdk-lib'
 import {
   Distribution,
-  OriginAccessIdentity,
   ViewerProtocolPolicy,
   AllowedMethods,
   CachePolicy,
@@ -12,7 +11,7 @@ import {
   FunctionCode,
   FunctionEventType,
 } from 'aws-cdk-lib/aws-cloudfront'
-import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
+import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
 import {
   Bucket,
   BucketAccessControl,
@@ -35,6 +34,7 @@ export type FrontendOptions = {
   frontendHostedZoneName?: string
   planeAWaf?: CfnWebACL
   planeACloudFrontDomain?: string
+  enableFrontend?: boolean
 }
 
 export type FrontendResources = {
@@ -75,7 +75,8 @@ export const createFrontend = (
   options: FrontendOptions,
 ): FrontendResources | null => {
   const shouldCreateFrontend =
-    Boolean(options.frontendDomainName) || options.envName === 'dev'
+    options.enableFrontend ??
+    (Boolean(options.frontendDomainName) || options.envName === 'prod')
   if (!shouldCreateFrontend) {
     return null
   }
@@ -101,10 +102,7 @@ export const createFrontend = (
     ],
   })
 
-  const originAccessIdentity = new OriginAccessIdentity(scope, 'FrontendOAI', {
-    comment: `OAI for ${options.envName} frontend`,
-  })
-  bucket.grantRead(originAccessIdentity)
+  const s3Origin = S3BucketOrigin.withOriginAccessControl(bucket)
 
   const isrFunction = createISRLambdaEdge(scope)
 
@@ -145,9 +143,7 @@ export const createFrontend = (
 
   const distribution = new Distribution(scope, 'FrontendDistribution', {
     defaultBehavior: {
-      origin: new S3Origin(bucket, {
-        originAccessIdentity,
-      }),
+      origin: s3Origin,
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachePolicy: htmlCachePolicy,
@@ -161,9 +157,7 @@ export const createFrontend = (
     },
     additionalBehaviors: {
       '/send-money/*': {
-        origin: new S3Origin(bucket, {
-          originAccessIdentity,
-        }),
+        origin: s3Origin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: isrCachePolicy,
@@ -176,9 +170,7 @@ export const createFrontend = (
         ],
       },
       '/providers/*': {
-        origin: new S3Origin(bucket, {
-          originAccessIdentity,
-        }),
+        origin: s3Origin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: new CachePolicy(scope, 'FrontendProvidersCachePolicy', {
@@ -192,9 +184,7 @@ export const createFrontend = (
         compress: true,
       },
       '/pulse': {
-        origin: new S3Origin(bucket, {
-          originAccessIdentity,
-        }),
+        origin: s3Origin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: new CachePolicy(scope, 'FrontendPulseCachePolicy', {
@@ -208,18 +198,14 @@ export const createFrontend = (
         compress: true,
       },
       '/_nuxt/*': {
-        origin: new S3Origin(bucket, {
-          originAccessIdentity,
-        }),
+        origin: s3Origin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: staticCachePolicy,
         compress: true,
       },
       '/images/*': {
-        origin: new S3Origin(bucket, {
-          originAccessIdentity,
-        }),
+        origin: s3Origin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: staticCachePolicy,

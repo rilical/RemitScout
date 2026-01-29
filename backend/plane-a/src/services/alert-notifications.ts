@@ -1,6 +1,6 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses'
 import { SNSClient } from '@aws-sdk/client-sns'
-import { createHash } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import type { Pool } from 'pg'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
@@ -87,6 +87,49 @@ const DEFAULT_NOTIFICATION_PREF: NotificationPref = {
   marketingOptIn: false,
   timezone: 'UTC',
   dailySendHour: 9,
+}
+
+const sanitizeHeaderValue = (value: string): string => value.replace(/[\r\n]+/g, ' ').trim()
+
+const buildRawEmail = (params: {
+  from: string
+  to: string
+  subject: string
+  replyTo?: string
+  listUnsubscribe?: string | null
+  text: string
+  html: string
+}): string => {
+  const boundary = `NextPart_${randomBytes(12).toString('hex')}`
+  const headers = [
+    `From: ${sanitizeHeaderValue(params.from)}`,
+    `To: ${sanitizeHeaderValue(params.to)}`,
+    `Subject: ${sanitizeHeaderValue(params.subject)}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    params.replyTo ? `Reply-To: ${sanitizeHeaderValue(params.replyTo)}` : null,
+    params.listUnsubscribe ? `List-Unsubscribe: <${sanitizeHeaderValue(params.listUnsubscribe)}>` : null,
+    params.listUnsubscribe ? 'List-Unsubscribe-Post: List-Unsubscribe=One-Click' : null,
+  ].filter(Boolean).join('\r\n')
+
+  return [
+    headers,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: 7bit',
+    '',
+    params.text,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: 7bit',
+    '',
+    params.html,
+    '',
+    `--${boundary}--`,
+    '',
+  ].join('\r\n')
 }
 
 function hashEmail(email: string): string {
@@ -260,66 +303,164 @@ export async function sendAlertEmail(
       ? `${siteUrl.replace(/\/$/, '')}/api/alerts/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
       : null
 
+    const metricLabel = (value?: string) => {
+      switch (value) {
+        case 'sendScore':
+          return 'Smart score'
+        case 'recipientGets':
+          return 'Recipient gets'
+        case 'totalCost':
+          return 'Total cost'
+        case 'fee':
+          return 'Fee'
+        case 'midMarketRate':
+          return 'Mid-market rate'
+        case 'rate':
+          return 'Rate'
+        case 'index':
+          return 'Index'
+        default:
+          return 'Value'
+      }
+    }
+
+    const formatComparator = (value?: string) => {
+      switch (value) {
+        case 'gt':
+          return 'greater than'
+        case 'gte':
+          return 'at least'
+        case 'lt':
+          return 'less than'
+        case 'lte':
+          return 'at most'
+        case 'crosses_above':
+          return 'crossed above'
+        case 'crosses_below':
+          return 'crossed below'
+        default:
+          return 'compared to'
+      }
+    }
+
+    const targetPayload = (context?.target_payload ?? {}) as Record<string, unknown>
+    const targetFrom = typeof targetPayload.from === 'string' ? targetPayload.from.toUpperCase() : null
+    const targetTo = typeof targetPayload.to === 'string' ? targetPayload.to.toUpperCase() : null
+    const targetMethod = typeof targetPayload.method === 'string' ? targetPayload.method : null
+    const metric = typeof context?.metric === 'string' ? context.metric : undefined
+    const comparator = typeof context?.comparator === 'string' ? context.comparator : undefined
+    const threshold = context?.threshold
+    const currentValue = context?.current_value
+    const summaryTarget = targetFrom && targetTo
+      ? `${targetFrom} → ${targetTo}${targetMethod ? ` (${targetMethod})` : ''}`
+      : 'Your tracked corridor'
+
+    const metaLines = [
+      metric ? `${metricLabel(metric)} ${formatComparator(comparator)} ${threshold ?? ''}`.trim() : null,
+      targetFrom && targetTo ? `Corridor: ${summaryTarget}` : null,
+    ].filter(Boolean)
+
+    const detailRows = [
+      metric ? { label: 'Metric', value: metricLabel(metric) } : null,
+      comparator ? { label: 'Condition', value: formatComparator(comparator) } : null,
+      threshold !== undefined ? { label: 'Threshold', value: String(threshold) } : null,
+      currentValue !== undefined ? { label: 'Current value', value: String(currentValue) } : null,
+      targetFrom && targetTo ? { label: 'Corridor', value: summaryTarget } : null,
+    ].filter(Boolean) as Array<{ label: string; value: string }>
+
+    const detailRowsHtml = detailRows.length > 0
+      ? detailRows.map((row) => (
+        `<tr>
+          <td style="padding:6px 0; color:#52616b; width:32%; font-weight:600; vertical-align:top;">${row.label}</td>
+          <td style="padding:6px 0; color:#1f2933; vertical-align:top;">${row.value}</td>
+        </tr>`
+      )).join('')
+      : ''
+
+    const preheader = message.replace(/\n/g, ' ').slice(0, 120)
+    const managePrefsUrl = `${siteUrl.replace(/\/$/, '')}/dashboard?tab=account&section=notifications`
+    const textBody = [
+      message,
+      '',
+      ...(detailRows.map((row) => `${row.label}: ${row.value}`)),
+      '',
+      metaLines.length > 0 ? metaLines.join(' · ') : 'Automated alert from Remit-Scout.',
+      `Manage notification preferences: ${managePrefsUrl}`,
+      unsubscribeLink ? `Unsubscribe: ${unsubscribeLink}` : null,
+    ].filter(Boolean).join('\n')
+
     const htmlBody = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #2563eb; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
-    .content { background-color: #f8f9fa; padding: 20px; border-radius: 0 0 5px 5px; }
-    .alert-message { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
-    .button { display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
-    .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
-    .unsubscribe { color: #666; font-size: 12px; margin-top: 20px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remit-Scout Rate Alert</title>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h2>Rate Alert</h2>
-    </div>
-    <div class="content">
-      <div class="alert-message">
-        ${message.replace(/\n/g, '<br>')}
-      </div>
-      <a href="${siteUrl}/dashboard?tab=alerts" class="button">View Alert</a>
-      <div class="footer">
-        <p>This is an automated alert from Remit-Scout.</p>
-        <p class="unsubscribe">
-          <a href="${siteUrl.replace(/\/$/, '')}/dashboard?tab=account&section=notifications">Manage notification preferences</a>
-          ${unsubscribeLink ? ` | <a href="${unsubscribeLink}">Unsubscribe</a>` : ''}
-        </p>
-      </div>
-    </div>
-  </div>
+<body style="margin:0; padding:0; background-color:#f4f6fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#1f2933;">
+  <span style="display:none; visibility:hidden; opacity:0; height:0; width:0;">${preheader}</span>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb; padding:24px 0;">
+    <tr>
+      <td align="center" style="padding:0 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #e6edf5; box-shadow:0 12px 32px rgba(15, 23, 42, 0.08);">
+          <tr>
+            <td style="background:#1d4ed8; color:#ffffff; padding:28px 32px;">
+              <div style="font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:0.85;">Remit-Scout</div>
+              <div style="font-size:24px; font-weight:700; margin-top:6px;">Rate Alert</div>
+              <div style="font-size:13px; margin-top:8px; opacity:0.85;">${summaryTarget}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 28px;">
+              <div style="background:#f7f9fc; border:1px solid #e6edf5; border-radius:12px; padding:16px 18px; font-size:15px; line-height:1.6;">
+                ${message.replace(/\n/g, '<br>')}
+              </div>
+              ${detailRowsHtml ? `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px; font-size:13px; border-collapse:collapse;">
+                ${detailRowsHtml}
+              </table>
+              ` : ''}
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+                <tr>
+                  <td bgcolor="#1d4ed8" style="border-radius:10px;">
+                    <a href="${siteUrl}/dashboard?tab=alerts" style="display:inline-block; padding:12px 20px; color:#ffffff; text-decoration:none; font-weight:600; font-size:14px;">View Alert</a>
+                  </td>
+                </tr>
+              </table>
+              <div style="margin-top:20px; padding-top:16px; border-top:1px solid #e6edf5; font-size:12px; color:#6b7785; line-height:1.6;">
+                <div>${metaLines.length > 0 ? metaLines.join(' · ') : 'Automated alert from Remit-Scout.'}</div>
+                <div style="margin-top:10px;">
+                  <a href="${managePrefsUrl}" style="color:#6b7785; text-decoration:underline;">Manage notification preferences</a>
+                  ${unsubscribeLink ? ` | <a href="${unsubscribeLink}" style="color:#6b7785; text-decoration:underline;">Unsubscribe</a>` : ''}
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
     `.trim()
 
+    const fromHeader = `${alertsEmailFromName} <${alertsEmailFrom}>`
+    const rawEmail = buildRawEmail({
+      from: fromHeader,
+      to: email,
+      subject,
+      replyTo: alertsEmailFrom,
+      listUnsubscribe: unsubscribeLink,
+      text: textBody,
+      html: htmlBody,
+    })
+
     await client.send(
-      new SendEmailCommand({
-        Source: `${alertsEmailFromName} <${alertsEmailFrom}>`,
-        Destination: {
-          ToAddresses: [email],
-        },
-        Message: {
-          Subject: {
-            Data: subject,
-            Charset: 'UTF-8',
-          },
-          Body: {
-            Text: {
-              Data: message,
-              Charset: 'UTF-8',
-            },
-            Html: {
-              Data: htmlBody,
-              Charset: 'UTF-8',
-            },
-          },
+      new SendRawEmailCommand({
+        Source: alertsEmailFrom,
+        Destinations: [email],
+        RawMessage: {
+          Data: Buffer.from(rawEmail),
         },
       }),
     )

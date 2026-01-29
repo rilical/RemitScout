@@ -67,6 +67,7 @@ export type EcsTaskOptions = {
   planeBB2bTargetMinutes?: string
   planeBB2bObservationMode?: string
   planeBB2bMaxQueueDepth?: string
+  planeBIngestFanoutMessageMode?: string
   ingestFanoutMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
@@ -81,9 +82,11 @@ export const createEcsTasks = (
   const logRetention = isProd
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
-  const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = isDev ? 'none' : 'xray'
-  const enableTelemetry = !isDev
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
+  const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const enableTelemetry = process.env.ENABLE_TELEMETRY
+    ? process.env.ENABLE_TELEMETRY !== '0'
+    : true
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
   const useTsxRuntime = options.envName === 'dev' && process.env.ECS_USE_TSX_RUNTIME === '1'
   const resolveCommand = (distEntry: string, tsEntry: string): string[] => {
@@ -167,7 +170,7 @@ export const createEcsTasks = (
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
   const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
   const b2cRefreshLimit = isDev ? '25' : '50'
-  const b2cRefreshConcurrency = isDev ? '2' : '5'
+  const b2cRefreshConcurrency = isDev ? '1' : '5'
   const ingestFanoutMode = options.ingestFanoutMode
   const notificationsMode = options.notificationsMode
   const opsAlertsMode = options.opsAlertsMode
@@ -292,6 +295,7 @@ export const createEcsTasks = (
   const goldLiveSecretsConfig =
     Object.keys(goldLiveSecrets).length > 0 ? { secrets: goldLiveSecrets } : {}
   const sharedEnv: Record<string, string> = {
+    ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     NODE_OPTIONS: '--require /app/backend/shared/node-polyfills.js',
     PGSSLMODE: 'require',
@@ -308,6 +312,15 @@ export const createEcsTasks = (
     sharedEnv.QUOTE_REFRESH_DB_FALLBACK = '1'
   }
   if (isDev) {
+    sharedEnv.DB_DISABLE_POOL_SIGNAL_CLEANUP = '1'
+    sharedEnv.DB_QUERY_TIMEOUT_MS =
+      process.env.DB_QUERY_TIMEOUT_MS || '120000'
+    sharedEnv.DB_CONNECTION_TIMEOUT_MS =
+      process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
+    sharedEnv.DB_POOL_MAX =
+      process.env.DB_POOL_MAX || '10'
+    sharedEnv.DB_POOL_MIN =
+      process.env.DB_POOL_MIN || '2'
     sharedEnv.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE =
       process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE || '1'
     sharedEnv.PLANE_B_B2B_RPM_SAFETY_FACTOR =
@@ -375,6 +388,9 @@ export const createEcsTasks = (
   }
   if (ingestFanoutMode) {
     sharedEnv.PLANE_B_INGEST_FANOUT_QUEUE_MODE = ingestFanoutMode
+  }
+  if (options.planeBIngestFanoutMessageMode) {
+    sharedEnv.PLANE_B_INGEST_FANOUT_MESSAGE_MODE = options.planeBIngestFanoutMessageMode
   }
   if (notificationsMode) {
     sharedEnv.PLANE_B_NOTIFICATIONS_QUEUE_MODE = notificationsMode

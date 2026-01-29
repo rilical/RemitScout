@@ -49,6 +49,7 @@ const resolveServerApiBase = () => {
   return ''
 }
 const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+const hmrPort = Number(process.env.NUXT_VITE_HMR_PORT || process.env.VITE_HMR_PORT) || 24678
 const isrRouteRules = isStagingOrProd ? {
   '/send-money/**': { isr: 600 }, // 10 minutes
   '/providers/**': { isr: 1800 }, // 30 minutes
@@ -405,6 +406,7 @@ export default defineNuxtConfig({
       },
       hmr: {
         overlay: false,
+        port: hmrPort,
       },
       watch: {
         ...watchOptions,

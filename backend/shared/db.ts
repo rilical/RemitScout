@@ -40,13 +40,40 @@ const getPoolSizeLimits = (): { max: number; min: number } => {
     process.env.ECS_CONTAINER_METADATA_URI || process.env.ECS_CONTAINER_METADATA_URI_V4,
   )
 
-  if (isLambda) {
-    return { max: 20, min: 1 }
+  const defaultLimits = (() => {
+    if (isLambda) {
+      return { max: 20, min: 1 }
+    }
+    if (isECS) {
+      return { max: 50, min: 2 }
+    }
+    return { max: 10, min: 1 }
+  })()
+
+  const resolveOverride = (value: string | undefined): number | null => {
+    if (!value) return null
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed)) return null
+    return Math.max(0, Math.floor(parsed))
   }
-  if (isECS) {
-    return { max: 50, min: 2 }
+
+  const envMax = resolveOverride(process.env.DB_POOL_MAX)
+  const envMin = resolveOverride(process.env.DB_POOL_MIN)
+
+  let max = envMax ?? defaultLimits.max
+  let min = envMin ?? defaultLimits.min
+
+  if (max <= 0) {
+    max = defaultLimits.max
   }
-  return { max: 10, min: 1 }
+  if (min < 0) {
+    min = defaultLimits.min
+  }
+  if (min > max) {
+    min = max
+  }
+
+  return { max, min }
 }
 
 export const createPool = (connectionString?: string) => {
@@ -160,7 +187,7 @@ export const getPool = (connectionString?: string) => {
 export const pool = getPool()
 
 const startPoolMetricsUpdater = () => {
-  setInterval(() => {
+  const interval = setInterval(() => {
     try {
       for (const [name, p] of poolCache.entries()) {
         const poolName =
@@ -178,6 +205,7 @@ const startPoolMetricsUpdater = () => {
       // Silently ignore metrics errors
     }
   }, 10000)
+  interval.unref?.()
 }
 
 startPoolMetricsUpdater()
@@ -202,6 +230,7 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
     const skipStatementTimeout =
       Boolean((poolInstance as { __skipStatementTimeout?: boolean }).__skipStatementTimeout)
       || process.env.DB_DISABLE_STATEMENT_TIMEOUT === '1'
+    const queryConfig = { text, values: params, query_timeout: queryTimeout }
     if (shouldUseConnect) {
       const pool = poolInstance as Pool
       const client = await pool.connect()
@@ -209,7 +238,7 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
         if (!skipStatementTimeout) {
           await client.query(`SET statement_timeout = ${queryTimeout}`)
         }
-        const result = await client.query<T>(text, params)
+        const result = await client.query<T>(queryConfig)
         try {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordQueryFromSql(text, durationSeconds, 'success')
@@ -221,7 +250,9 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
         client.release()
       }
     } else {
-      const result = await poolInstance.query<T>(text, params)
+      const result = isMockedQuery
+        ? await poolInstance.query<T>(text, params)
+        : await poolInstance.query<T>(queryConfig)
       try {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordQueryFromSql(text, durationSeconds, 'success')

@@ -184,10 +184,17 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
     const latestQuoteRepository = new LatestQuoteRepository(pool)
 
     if (alert.metric === 'midMarketRate' || alert.metric === 'rate') {
-      if (watchlist_item.target_type === 'corridor' && targetPayload.from && targetPayload.to) {
-        const from = targetPayload.from as string
-        const to = targetPayload.to as string
-        currentValue = await fxRateRepository.getRate(from, to)
+      if (watchlist_item.target_type === 'corridor') {
+        const currencies = resolveCorridorCurrencies(targetPayload)
+        if (!currencies) {
+          logger.warn('alert_corridor_currency_unresolved', {
+            alert_id: alertId,
+            metric: alert.metric,
+            target_payload: targetPayload,
+          })
+          return false
+        }
+        currentValue = await fxRateRepository.getRate(currencies.base, currencies.quote)
       } else if (watchlist_item.target_type === 'fxPair' && targetPayload.base && targetPayload.quote) {
         const base = targetPayload.base as string
         const quote = targetPayload.quote as string

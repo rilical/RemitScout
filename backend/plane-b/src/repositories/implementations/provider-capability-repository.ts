@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { withRetry } from '../../../../shared/repository-retry'
 import type {
   IProviderCapabilityRepository,
   ProviderCapabilityInput,
@@ -70,26 +71,26 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
   }
 
   async loadObservedCorridors(providerId: string): Promise<ProviderCorridorRecord[]> {
-    const result = await query<ProviderCorridorRecord>(
+    const result = await withRetry(() => query<ProviderCorridorRecord>(
       `SELECT corridor_id
          FROM silver.provider_corridor_capability
         WHERE provider_id = $1
           AND is_supported = true`,
       [providerId],
       this.pool,
-    )
+    ))
     return result.rows
   }
 
   async loadUnsupportedCorridors(providerId: string): Promise<ProviderCorridorRecord[]> {
-    const result = await query<ProviderCorridorRecord>(
+    const result = await withRetry(() => query<ProviderCorridorRecord>(
       `SELECT corridor_id
        FROM silver.provider_corridor_capability
        WHERE provider_id = $1
          AND is_supported = false`,
       [providerId],
       this.pool,
-    )
+    ))
     return result.rows
   }
 
@@ -167,7 +168,7 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
   ): Promise<ProviderCorridorPriorityRecord[]> {
     const version = tierVersion?.trim()
     if (version) {
-      const result = await query<ProviderCorridorPriorityRecord>(
+      const result = await withRetry(() => query<ProviderCorridorPriorityRecord>(
         `WITH tier_snapshot AS (
            SELECT corridor_id,
                   CASE
@@ -186,11 +187,11 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
           ORDER BY pcc.corridor_id`,
         [providerId, version],
         this.pool,
-      )
+      ))
       return result.rows
     }
 
-    const result = await query<ProviderCorridorPriorityRecord>(
+    const result = await withRetry(() => query<ProviderCorridorPriorityRecord>(
       `SELECT pcc.corridor_id, NULL::text AS priority_tier
          FROM silver.provider_corridor_capability pcc
         WHERE pcc.provider_id = $1
@@ -198,7 +199,7 @@ export class ProviderCapabilityRepository implements IProviderCapabilityReposito
         ORDER BY pcc.corridor_id`,
       [providerId],
       this.pool,
-    )
+    ))
     return result.rows
   }
 }

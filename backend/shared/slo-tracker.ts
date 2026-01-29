@@ -74,7 +74,7 @@ const SLO_TARGETS: Record<string, SLOTarget> = Object.fromEntries(
 )
 
 const getEnvironment = (): string => {
-  return process.env.NODE_ENV || 'development'
+  return process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 }
 
 const getServiceName = (): string => {

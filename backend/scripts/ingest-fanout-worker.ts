@@ -6,6 +6,7 @@
  */
 
 import { setTimeout as sleep } from 'timers/promises'
+import { context as otelContext } from '@opentelemetry/api'
 
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
@@ -15,6 +16,7 @@ import {
   receiveJsonMessages,
   createVisibilityTimeoutExtender,
   sendJsonMessage,
+  type SqsMessage,
 } from '../shared/sqs'
 import { providerRegistry } from '../plane-b/src/providers'
 import { B2bSweepRepository, ProviderCapabilityRepository } from '../plane-b/src/repositories'
@@ -22,6 +24,7 @@ import { resolveProviderSupport } from '../plane-b/src/services/provider-capabil
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initTracing, startSpan } from '../shared/tracing'
 
 type IngestFanoutMessage = {
   providerId: string
@@ -52,6 +55,7 @@ type IngestFanoutProviderTask = {
   rpmOverride?: number
   perCorridorRpmOverride?: number
   priorityTier?: string
+  sweepRunId?: string
 }
 
 type IngestFanoutCorridorMessage = {
@@ -69,6 +73,8 @@ type IngestFanoutPayload = IngestFanoutMessage | IngestFanoutCorridorMessage
 const logger = createLogger('script.ingest-fanout-worker')
 const queueUrl = config.queues.ingestFanout.url
 const queueMode = config.queues.ingestFanout.mode
+
+initTracing('ingest-fanout-worker')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -428,7 +434,8 @@ const processCorridorPayload = async (
 ): Promise<boolean> => {
   const { payload } = message
   const traceContext = buildTraceContext(payload)
-  const sweepRunId = payload.sweepRunId
+  const sweepRunIds = new Set<string>()
+  const resolveSweepRunId = (task: IngestFanoutProviderTask) => task.sweepRunId ?? payload.sweepRunId
   const failedProviders: IngestFanoutProviderTask[] = []
   let anySuccess = false
   let taskIndex = 0
@@ -436,6 +443,10 @@ const processCorridorPayload = async (
   const runTask = async (task: IngestFanoutProviderTask) => {
     if (providerJitterMs > 0) {
       await sleep(Math.floor(Math.random() * providerJitterMs))
+    }
+    const sweepRunId = resolveSweepRunId(task)
+    if (sweepRunId) {
+      sweepRunIds.add(sweepRunId)
     }
     try {
       const provider = providerById.get(task.providerId)
@@ -609,26 +620,32 @@ const processCorridorPayload = async (
 
   await Promise.all(workers)
 
-  if (sweepRunId) {
-    try {
-      const summary = await sweepRepo.getRunSummary(sweepRunId)
-      if (summary.remaining === 0) {
-        const status = summary.failed > 0 ? 'failed' : 'completed'
-        await runSweepUpdate(
-          sweepRunId,
-          {
-            corridor_id: payload.corridorId,
-            status,
-          },
-          () => sweepRepo.updateSweepRunStatus(sweepRunId, status, new Date()),
-        )
+  if (sweepRunIds.size > 0) {
+    for (const sweepRunId of sweepRunIds) {
+      try {
+        const summary = await sweepRepo.getRunSummary(sweepRunId)
+        if (summary.remaining === 0) {
+          const status = summary.failed > 0 ? 'failed' : 'completed'
+          await runSweepUpdate(
+            sweepRunId,
+            {
+              corridor_id: payload.corridorId,
+              status,
+            },
+            () => sweepRepo.updateSweepRunStatus(sweepRunId, status, new Date()),
+          )
+        }
+      } catch (error) {
+        const summaryContext = { ...traceContext }
+        if (sweepRunId) {
+          summaryContext.sweep_run_id = sweepRunId
+        }
+        logger.warn('b2b_sweep_summary_failed', {
+          corridor_id: payload.corridorId,
+          error: error instanceof Error ? error.message : String(error),
+          ...summaryContext,
+        })
       }
-    } catch (error) {
-      logger.warn('b2b_sweep_summary_failed', {
-        corridor_id: payload.corridorId,
-        error: error instanceof Error ? error.message : String(error),
-        ...traceContext,
-      })
     }
   }
 
@@ -663,6 +680,7 @@ const processCorridorPayload = async (
           corridor_id: payload.corridorId,
           failed_providers: failedProviders.length,
           attempt,
+          sweep_run_ids: sweepRunIds.size > 0 ? Array.from(sweepRunIds) : null,
           ...traceContext,
         })
       } catch (error) {
@@ -678,6 +696,7 @@ const processCorridorPayload = async (
         corridor_id: payload.corridorId,
         failed_providers: failedProviders.length,
         attempt,
+        sweep_run_ids: sweepRunIds.size > 0 ? Array.from(sweepRunIds) : null,
         ...traceContext,
       })
     }
@@ -689,6 +708,7 @@ const processCorridorPayload = async (
     providers: payload.providers.length,
     failed_providers: failedProviders.length,
     attempt: payload.attempt ?? 0,
+    sweep_run_ids: sweepRunIds.size > 0 ? Array.from(sweepRunIds) : null,
     ...traceContext,
   })
   return true
@@ -745,7 +765,7 @@ const processMessagesWithConcurrency = async (
   capabilityRepo: ProviderCapabilityRepository,
   capabilityCache: Map<string, MethodSets | null>,
   sweepRepo: B2bSweepRepository,
-  messages: Array<{ messageId: string; receiptHandle: string; payload: IngestFanoutPayload | null }>,
+  messages: Array<SqsMessage<IngestFanoutPayload>>,
 ): Promise<string[]> => {
   const deleteHandles: string[] = []
   let index = 0
@@ -767,10 +787,17 @@ const processMessagesWithConcurrency = async (
         await sleep(Math.floor(Math.random() * messageJitterMs))
       }
 
-      const processed = await processMessage(pool, capabilityRepo, capabilityCache, sweepRepo, {
-        ...current,
-        payload,
-      })
+      const runWithSpan = async () => startSpan(
+        'ingest-fanout.message',
+        async () => processMessage(pool, capabilityRepo, capabilityCache, sweepRepo, {
+          ...current,
+          payload,
+        }),
+        { attributes: { message_id: current.messageId } },
+      )
+      const processed = current.traceContext
+        ? await otelContext.with(current.traceContext, runWithSpan)
+        : await runWithSpan()
       if (processed) {
         deleteHandles.push(current.receiptHandle)
       }

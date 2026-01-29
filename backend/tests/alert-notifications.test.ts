@@ -10,6 +10,7 @@ const mockSnsSend = vi.fn()
 vi.mock('@aws-sdk/client-ses', () => ({
   SESClient: vi.fn().mockImplementation(() => ({ send: mockSesSend })),
   SendEmailCommand: vi.fn().mockImplementation((input) => ({ input })),
+  SendRawEmailCommand: vi.fn().mockImplementation((input) => ({ input })),
 }))
 
 vi.mock('@aws-sdk/client-sns', () => ({

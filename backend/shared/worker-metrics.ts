@@ -6,6 +6,7 @@ import { formatError } from './utils/error-handling'
 const logger = createLogger('shared.worker-metrics')
 
 let cloudWatchClient: CloudWatchClient | null = null
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 
 const getCloudWatchClient = (): CloudWatchClient => {
   if (!cloudWatchClient) {
@@ -36,10 +37,13 @@ export const recordWorkerMetric = async (
         Timestamp: new Date(),
         Dimensions: [
           { Name: 'WorkerName', Value: workerName },
-          ...Object.entries(additionalDimensions || {}).map(([key, value]) => ({
-            Name: key,
-            Value: value,
-          })),
+          { Name: 'environment', Value: environmentDimension },
+          ...Object.entries(additionalDimensions || {})
+            .filter(([key]) => key.toLowerCase() !== 'environment')
+            .map(([key, value]) => ({
+              Name: key,
+              Value: value,
+            })),
         ],
       },
     ]
@@ -81,10 +85,13 @@ export const recordBatchJobMetric = async (
         Timestamp: new Date(),
         Dimensions: [
           { Name: 'JobName', Value: jobName },
-          ...Object.entries(additionalDimensions || {}).map(([key, value]) => ({
-            Name: key,
-            Value: value,
-          })),
+          { Name: 'environment', Value: environmentDimension },
+          ...Object.entries(additionalDimensions || {})
+            .filter(([key]) => key.toLowerCase() !== 'environment')
+            .map(([key, value]) => ({
+              Name: key,
+              Value: value,
+            })),
         ],
       },
     ]
@@ -97,10 +104,13 @@ export const recordBatchJobMetric = async (
         Timestamp: new Date(),
         Dimensions: [
           { Name: 'JobName', Value: jobName },
-          ...Object.entries(additionalDimensions || {}).map(([key, value]) => ({
-            Name: key,
-            Value: value,
-          })),
+          { Name: 'environment', Value: environmentDimension },
+          ...Object.entries(additionalDimensions || {})
+            .filter(([key]) => key.toLowerCase() !== 'environment')
+            .map(([key, value]) => ({
+              Name: key,
+              Value: value,
+            })),
         ],
       })
     }
@@ -191,5 +201,4 @@ export const recordDLQMessageCount = async (
     })
   }
 }
-
 
