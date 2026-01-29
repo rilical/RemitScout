@@ -58,7 +58,7 @@
               </div>
 
               <div :class="['font-bold text-lg mb-2', props.dark ? 'text-white' : 'text-neutral-900']">
-                {{ corridor.from }} → {{ corridor.to }}
+                {{ formatCountryLabel(corridor.from) }} → {{ formatCountryLabel(corridor.to) }}
               </div>
 
               <div
@@ -182,7 +182,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
-import { getCorridorUrl } from '~/utils/country-slugs'
+import { getCorridorUrl, POPULAR_CORRIDOR_CODES } from '~/utils/country-slugs'
 import { getCountryByCode } from '~/utils/countries-currencies'
 
 const props = withDefaults(defineProps<{
@@ -229,8 +229,20 @@ type ApiResponse = {
   count?: number
 }
 
+const fallbackCorridors = computed(() => (
+  POPULAR_CORRIDOR_CODES.slice(0, 9).map(({ from, to }) => ({
+    from,
+    to,
+    count24h: 0,
+  }))
+))
+
 const corridors = computed(() => {
   const apiData = data.value as ApiResponse | null
+
+  if (pending.value) {
+    return []
+  }
   
   if (apiData?.data?.length) {
     return apiData.data.map((c) => {
@@ -256,6 +268,10 @@ const corridors = computed(() => {
     }).filter(c => c.from && c.to) // Filter out invalid corridors
   }
 
+  if (!error.value && fallbackCorridors.value.length) {
+    return fallbackCorridors.value
+  }
+
   return []
 })
 
@@ -278,6 +294,11 @@ const handleCorridorClick = (corridor: { from: string, to: string }) => {
   const fromCode = corridor.from.toUpperCase()
   const toCode = corridor.to.toUpperCase()
   router.push(getCorridorUrl(fromCode, toCode))
+}
+
+const formatCountryLabel = (value: string) => {
+  const country = getCountryByCode(value.toUpperCase())
+  return country?.name || value
 }
 
 const scrollLeft = () => {
