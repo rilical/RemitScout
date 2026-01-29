@@ -132,10 +132,10 @@ export const createMonitoring = (
   })
   const planeA5xxRate = new MathExpression({
     label: 'Plane A 5xx Rate',
-    expression: 'IF(mcount>0, m5xx/mcount, 0)',
+    expression: 'IF(mcountA>0, m5xxA/mcountA, 0)',
     usingMetrics: {
-      mcount: planeARequestCount,
-      m5xx: planeA5xxCount,
+      mcountA: planeARequestCount,
+      m5xxA: planeA5xxCount,
     },
     period: Duration.minutes(5),
   })
@@ -162,10 +162,10 @@ export const createMonitoring = (
   })
   const planeC5xxRate = new MathExpression({
     label: 'Plane C 5xx Rate',
-    expression: 'IF(mcount>0, m5xx/mcount, 0)',
+    expression: 'IF(mcountC>0, m5xxC/mcountC, 0)',
     usingMetrics: {
-      mcount: planeCRequestCount,
-      m5xx: planeC5xxCount,
+      mcountC: planeCRequestCount,
+      m5xxC: planeC5xxCount,
     },
     period: Duration.minutes(5),
   })

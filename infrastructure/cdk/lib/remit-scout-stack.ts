@@ -381,9 +381,19 @@ export class RemitScoutStack extends Stack {
       process.env.PUBLIC_SITE_URL ??
       (frontendDomainName ? `https://${frontendDomainName}` : undefined)
     const normalizedFrontendOrigin = normalizeOrigin(frontendBaseUrl)
-    const planeACorsOrigins = planeACorsOriginsRaw.length
-      ? planeACorsOriginsRaw
-      : (normalizedFrontendOrigin ? [normalizedFrontendOrigin] : [])
+    const defaultDevCorsOrigins = envName === 'dev'
+      ? ['http://localhost:3000', 'http://127.0.0.1:3000']
+      : []
+    const planeACorsOrigins = (() => {
+      if (planeACorsOriginsRaw.length > 0) {
+        return planeACorsOriginsRaw
+      }
+      const combined = [
+        ...(normalizedFrontendOrigin ? [normalizedFrontendOrigin] : []),
+        ...defaultDevCorsOrigins,
+      ]
+      return Array.from(new Set(combined.filter(Boolean)))
+    })()
     const publicSupabaseUrl =
       this.node.tryGetContext('publicSupabaseUrl') ??
       process.env.PUBLIC_SUPABASE_URL ??

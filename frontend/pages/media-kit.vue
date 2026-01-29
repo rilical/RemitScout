@@ -5,7 +5,7 @@
     <!-- Hero -->
     <section class="relative overflow-hidden bg-gradient-to-b from-blue-600 to-blue-700 py-16 lg:py-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" class="[&_a]:text-blue-100 [&_span]:text-white/60" />
+        <Breadcrumbs :items="breadcrumbItems" class="[&_a]:text-blue-100 [&_span]:text-white/60 [&_svg]:text-white" />
 
         <div class="mt-10 max-w-3xl">
           <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
@@ -46,11 +46,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div class="text-center">
-            <div class="text-3xl font-bold text-blue-600">50+</div>
+            <div class="text-3xl font-bold text-blue-600">30+</div>
             <div class="text-sm text-slate-600 mt-1">Providers Compared</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-blue-600">100+</div>
+            <div class="text-3xl font-bold text-blue-600">150+</div>
             <div class="text-sm text-slate-600 mt-1">Corridors Tracked</div>
           </div>
           <div class="text-center">
@@ -191,11 +191,11 @@
             <div class="space-y-4">
               <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
                 <p class="text-sm font-semibold text-slate-900 mb-2">Short (1 line)</p>
-                <p class="text-slate-700">RemitScout is an independent comparison platform that helps people find the best international money transfer rates.</p>
+                <p class="text-slate-700">Remit-Scout is an independent comparison platform that exposes the true cost of international transfers—fees, FX spreads, and what the recipient actually receives—so you find the best rate, not the loudest ad.</p>
               </div>
               <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
                 <p class="text-sm font-semibold text-slate-900 mb-2">Standard (2-3 lines)</p>
-                <p class="text-slate-700">RemitScout is an independent comparison platform for international money transfers. We help migrants, expats, and international families find the best rates by showing what the recipient actually receives after fees and FX markup. We maintain a strict no pay-to-rank policy.</p>
+                <p class="text-slate-700">Remit-Scout is a quantitative comparison engine for cross-border transfers. We aggregate real-time quotes from 30+ providers across 150+ corridors and rank by <strong>Net Delivered Value</strong>—what the recipient actually receives after fees and FX markup. We maintain a strict no pay-to-rank policy, publish our methodology openly, and were built at Carnegie Mellon's Swartz Center for Entrepreneurship.</p>
               </div>
             </div>
           </section>
@@ -212,18 +212,25 @@
             </h2>
             <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
               <div>
-                <p class="text-sm font-semibold text-slate-900 mb-2">Data Citation</p>
+                <p class="text-sm font-semibold text-slate-900 mb-2">Index / chart citation (TEER™, RVI™, RCI™)</p>
                 <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
-                  Source: RemitScout (remitscout.com), observed retail quotes, [CORRIDOR], $200 benchmark, retrieved [DATE].
+                  Source: Remit-Scout ([TEER|RVI|RCI]) · Weighted by provider volume · Retrieved [DATE].
+                </code>
+                <p class="mt-2 text-xs text-slate-500">Use the index name you are citing (TEER, RVI, or RCI). See <NuxtLink to="/methodology" class="text-blue-600 hover:underline">methodology</NuxtLink> for citation requirements.</p>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-900 mb-2">Chart / visual with link</p>
+                <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
+                  Source: Remit-Scout ([TEER|RVI|RCI]) · Weighted by provider volume · Retrieved [DATE]. Link: [URL]
                 </code>
               </div>
               <div>
-                <p class="text-sm font-semibold text-slate-900 mb-2">Chart/Visual Citation</p>
+                <p class="text-sm font-semibold text-slate-900 mb-2">Retail quote / corridor data</p>
                 <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
-                  Source: RemitScout. Data retrieved [DATE]. Link: [URL]
+                  Source: Remit-Scout (observed retail quotes, [CORRIDOR]) · Weighted by provider volume · Retrieved [DATE].
                 </code>
               </div>
-              <p class="text-sm text-slate-500">Please include retrieval date as our data updates daily.</p>
+              <p class="text-sm text-slate-500">Include retrieval date; our data updates daily. TEER™, RVI™, and RCI™ are trademarks of Remit-Scout.</p>
             </div>
           </section>
 
