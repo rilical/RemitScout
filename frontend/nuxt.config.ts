@@ -26,6 +26,13 @@ const readEnvValue = (key: string) => {
   }
   return undefined
 }
+const resolveEnvValue = (...keys: string[]) => {
+  for (const key of keys) {
+    const value = readEnvValue(key)
+    if (value) return value
+  }
+  return undefined
+}
 const isAbsoluteUrl = (value?: string) => Boolean(value && /^https?:\/\//.test(value))
 const resolvePublicApiBase = () => {
   const publicBase = readEnvValue('PUBLIC_API_BASE')
@@ -341,14 +348,16 @@ export default defineNuxtConfig({
         (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net/images`
           : 'https://images.Remit-Scout.com'),
-      supabaseUrl:
-        process.env.PUBLIC_SUPABASE_URL ||
-        process.env.SUPABASE_URL ||
-        '',
-      supabaseAnonKey:
-        process.env.PUBLIC_SUPABASE_ANON_KEY ||
-        process.env.SUPABASE_PUBLISHABLE_KEY ||
-        '',
+      supabaseUrl: resolveEnvValue(
+        'PUBLIC_SUPABASE_URL',
+        'NUXT_PUBLIC_SUPABASE_URL',
+        'SUPABASE_URL',
+      ) || '',
+      supabaseAnonKey: resolveEnvValue(
+        'PUBLIC_SUPABASE_ANON_KEY',
+        'NUXT_PUBLIC_SUPABASE_ANON_KEY',
+        'SUPABASE_PUBLISHABLE_KEY',
+      ) || '',
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
