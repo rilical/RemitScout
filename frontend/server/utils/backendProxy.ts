@@ -143,6 +143,11 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
         setResponseStatus(event, 204)
         return { ok: false, status: statusCode ?? 0 }
       }
+      // Propagate non-5xx responses from the backend instead of throwing 500s.
+      if (statusCode && statusCode < 500) {
+        setResponseStatus(event, statusCode)
+        return error?.data ?? { error: 'backend_error', message: error?.message || 'Request failed' }
+      }
       if (statusCode && statusCode >= 500) {
         throw error
       }
