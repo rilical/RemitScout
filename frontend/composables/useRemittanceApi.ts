@@ -9,6 +9,28 @@ import { getCountryByCode } from '~/utils/countries-currencies'
 export const useRemittanceApi = () => {
   const { request } = useApi()
   const fallbackUpdatedAt = () => new Date().toISOString()
+  const providersSuccessCache = new Map<string, {
+    data: ProviderQuote[]
+    updatedAt: string
+    corridor: string
+    amount: number
+    method: string
+    bucketUsed?: number
+    approximate?: boolean
+    midMarketRate?: number | null
+    midMarketSource?: string | null
+    midMarketUpdatedAt?: string | null
+    availableMethods?: string[]
+    indices?: {
+      teer: number | null
+      rvi: number | null
+      rci: number | null
+      providerCount: number
+      amount: number
+      midMarketRate: number | null
+      weights: 'equal' | 'provider_volume'
+    }
+  }>()
 
   const useRecentSearches = (limit = 12, options: Record<string, any> = {}) => {
     const key = options.key || `recent-searches-${limit}`
@@ -97,6 +119,7 @@ export const useRemittanceApi = () => {
     const key = options.key || computed(() => (
       `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}-${resolvedLive.value ? 'live' : 'cached'}`
     ))
+    const resolvedKey = computed(() => String(unref(key)))
     const watchSources = [from, to, amount, method, fromCurrency, toCurrency, live].filter(isRef)
     const watch = Array.isArray(optionWatch)
       ? [...optionWatch, ...watchSources]
@@ -127,7 +150,7 @@ export const useRemittanceApi = () => {
             }
           }
           const isLive = resolvedLive.value
-          return await request<{
+          const response = await request<{
             data: ProviderQuote[]
             updatedAt: string
             corridor: string
@@ -163,6 +186,8 @@ export const useRemittanceApi = () => {
               },
             },
           )
+          providersSuccessCache.set(resolvedKey.value, response)
+          return response
         } catch (error: any) {
           if (import.meta.dev) {
             console.warn('[remittance] providers unavailable', error)
@@ -170,6 +195,16 @@ export const useRemittanceApi = () => {
           const errorData = error?.data
           const errorCode = errorData?.error || 'unavailable'
           const errorMessage = errorData?.details?.[0]?.message || errorData?.message || 'Provider data unavailable.'
+          const cached = providersSuccessCache.get(resolvedKey.value)
+          if (cached) {
+            return {
+              ...cached,
+              error: {
+                code: errorCode,
+                message: errorMessage,
+              },
+            }
+          }
           return {
             data: [],
             updatedAt: fallbackUpdatedAt(),
