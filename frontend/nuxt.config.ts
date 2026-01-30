@@ -1,7 +1,9 @@
 import { promises as fs, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const isAwsEnvironment = Boolean(
+const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+const isDev = !isStagingOrProd
+const isAwsEnvironment = !isDev && Boolean(
   process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
 )
 const envFileCandidates = [
@@ -50,12 +52,17 @@ const resolvePublicApiBase = () => {
 const resolveServerApiBase = () => {
   const apiBase = readEnvValue('API_BASE')
   if (apiBase) return apiBase
+  const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
+  if (planeAEndpoint) return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`
+  const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+  if (planeACloudFront) {
+    return `https://${planeACloudFront.replace(/\/$/, '')}/api/v1`
+  }
   const publicBase = resolvePublicApiBase()
   if (isAbsoluteUrl(publicBase)) return publicBase as string
-  if (!isAwsEnvironment) return 'http://127.0.0.1:4000/api/v1'
+  if (isDev) return 'http://127.0.0.1:4000/api/v1'
   return ''
 }
-const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
 const hmrPort = Number(process.env.NUXT_VITE_HMR_PORT || process.env.VITE_HMR_PORT) || 24678
 const isrRouteRules = isStagingOrProd ? {
   '/send-money/**': { isr: 600 }, // 10 minutes
@@ -97,6 +104,35 @@ const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt']
 if (isStagingOrProd) {
   nuxtModules.push('@nuxtjs/robots')
 }
+const enableEzoic = (process.env.PUBLIC_ENABLE_EZOIC === 'true' || process.env.ENABLE_EZOIC === 'true') && isStagingOrProd
+const adsEnabled = enableEzoic
+const ezoicScripts = adsEnabled
+  ? [
+      {
+        key: 'ezoic-privacy-cmp',
+        'data-cfasync': 'false',
+        src: 'https://cmp.gatekeeperconsent.com/min.js',
+        tagPriority: -10,
+      },
+      {
+        key: 'ezoic-privacy-gatekeeper',
+        'data-cfasync': 'false',
+        src: 'https://the.gatekeeperconsent.com/cmp.min.js',
+        tagPriority: -10,
+      },
+      {
+        key: 'ezoic-header',
+        async: true,
+        src: 'https://www.ezojs.com/ezoic/sa.min.js',
+        tagPriority: -10,
+      },
+      {
+        key: 'ezoic-init',
+        innerHTML: 'window.ezstandalone=window.ezstandalone||{};ezstandalone.cmd=ezstandalone.cmd||[];',
+        tagPriority: -10,
+      },
+    ]
+  : []
 
 const ensureClientPrecomputed = async () => {
   const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
@@ -246,29 +282,7 @@ export default defineNuxtConfig({
         lang: 'en',
       },
       script: [
-        {
-          key: 'ezoic-privacy-cmp',
-          'data-cfasync': 'false',
-          src: 'https://cmp.gatekeeperconsent.com/min.js',
-          tagPriority: -10,
-        },
-        {
-          key: 'ezoic-privacy-gatekeeper',
-          'data-cfasync': 'false',
-          src: 'https://the.gatekeeperconsent.com/cmp.min.js',
-          tagPriority: -10,
-        },
-        {
-          key: 'ezoic-header',
-          async: true,
-          src: 'https://www.ezojs.com/ezoic/sa.min.js',
-          tagPriority: -10,
-        },
-        {
-          key: 'ezoic-init',
-          innerHTML: 'window.ezstandalone=window.ezstandalone||{};ezstandalone.cmd=ezstandalone.cmd||[];',
-          tagPriority: -10,
-        },
+        ...ezoicScripts,
       ],
       meta: [
         { charset: 'utf-8' },
@@ -361,6 +375,7 @@ export default defineNuxtConfig({
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
+      adsEnabled,
     },
   },
 

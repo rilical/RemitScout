@@ -70,7 +70,6 @@ export const COUNTRIES: Country[] = [
   { name: 'El Salvador', code: 'SV', currency: 'USD' },
   { name: 'Equatorial Guinea', code: 'GQ', currency: 'XAF' },
   { name: 'Eritrea', code: 'ER', currency: 'ERN' },
-  { name: 'Europe', code: 'EU', currency: 'EUR' },
   { name: 'Estonia', code: 'EE', currency: 'EUR' },
   { name: 'Eswatini', code: 'SZ', currency: 'SZL' },
   { name: 'Ethiopia', code: 'ET', currency: 'ETB' },

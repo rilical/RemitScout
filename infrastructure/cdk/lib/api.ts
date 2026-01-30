@@ -123,6 +123,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
+  const fxRateRefreshEnabled = process.env.FX_RATE_REFRESH_ENABLED
+  if (fxRateRefreshEnabled !== undefined) {
+    planeAEnvironment.FX_RATE_REFRESH_ENABLED = fxRateRefreshEnabled
+  } else if (isDev) {
+    planeAEnvironment.FX_RATE_REFRESH_ENABLED = '1'
+  }
   if (isDev) {
     planeAEnvironment.DB_QUERY_TIMEOUT_MS =
       process.env.DB_QUERY_TIMEOUT_MS || '60000'

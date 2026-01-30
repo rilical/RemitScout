@@ -13,9 +13,6 @@
           <option value="americas">
             Americas
           </option>
-          <option value="europe">
-            Europe
-          </option>
           <option value="asia">
             Asia
           </option>

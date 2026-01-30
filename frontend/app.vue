@@ -31,6 +31,7 @@ const ga4Id = runtimeConfig.public.ga4MeasurementId
 const metaPixelId = runtimeConfig.public.metaPixelId
 const route = useRoute()
 const allowAnalytics = computed(() => settings.value.analytics === true)
+const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
 
 useHead(() => {
   if (!allowAnalytics.value) {
@@ -94,6 +95,7 @@ watch(
     void trackPageView()
     if (!import.meta.client) return
     if (!hydrated.value || isPlus.value) return
+    if (!adsEnabled.value) return
     await nextTick()
     const win = window as typeof window & { ezstandalone?: any }
     if (!win.ezstandalone?.cmd) return

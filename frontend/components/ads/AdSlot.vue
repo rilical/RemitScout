@@ -38,9 +38,11 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { isPlus, hydrated } = useEntitlements()
+const runtimeConfig = useRuntimeConfig()
 const activeId = ref<number | null>(null)
 const placeholderId = computed(() => getEzoicPlaceholderId(props.placement, props.slotIndex, props.placeholderId))
 const placeholderDomId = computed(() => (activeId.value ? `ezoic-pub-ad-placeholder-${activeId.value}` : ''))
+const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
 
 const wrapperStyle = computed(() => {
   const style: Record<string, string> = {}
@@ -49,10 +51,11 @@ const wrapperStyle = computed(() => {
   return style
 })
 
-const shouldRender = computed(() => hydrated.value && !isPlus.value && activeId.value !== null)
+const shouldRender = computed(() => adsEnabled.value && hydrated.value && !isPlus.value && activeId.value !== null)
 
 const pushShowAds = (id: number) => {
   if (!import.meta.client) return
+  if (!adsEnabled.value) return
   const win = window as typeof window & { ezstandalone?: any }
   win.ezstandalone = win.ezstandalone || {}
   win.ezstandalone.cmd = win.ezstandalone.cmd || []
@@ -65,6 +68,7 @@ const pushShowAds = (id: number) => {
 
 const pushDestroy = (id: number) => {
   if (!import.meta.client) return
+  if (!adsEnabled.value) return
   const win = window as typeof window & { ezstandalone?: any }
   if (!win.ezstandalone?.cmd) return
   win.ezstandalone.cmd.push(() => {
@@ -75,7 +79,7 @@ const pushDestroy = (id: number) => {
 }
 
 const activateAd = async () => {
-  if (!import.meta.client || !hydrated.value || isPlus.value || activeId.value !== null) return
+  if (!import.meta.client || !adsEnabled.value || !hydrated.value || isPlus.value || activeId.value !== null) return
   const id = placeholderId.value
   if (!id) return
   if (!claimEzoicPlaceholderId(id)) return
@@ -97,10 +101,10 @@ onMounted(() => {
 })
 
 watch(
-  () => [hydrated.value, isPlus.value, placeholderId.value] as const,
-  ([isHydrated, plus, id]) => {
+  () => [adsEnabled.value, hydrated.value, isPlus.value, placeholderId.value] as const,
+  ([enabled, isHydrated, plus, id]) => {
     if (!import.meta.client) return
-    if (!isHydrated || plus || !id) {
+    if (!enabled || !isHydrated || plus || !id) {
       deactivateAd()
       return
     }

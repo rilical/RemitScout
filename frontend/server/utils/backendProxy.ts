@@ -16,7 +16,8 @@ const FORWARDED_HEADERS = [
 
 const getBackendBase = () => {
   const config = useRuntimeConfig()
-  const base = config.apiBase || config.public.apiBase
+  const envBase = process.env.API_BASE || process.env.NUXT_API_BASE
+  const base = envBase || config.apiBase || config.public.apiBase
 
   if (!base) {
     throw createError({
@@ -82,6 +83,13 @@ const NON_BLOCKING_PATHS = new Set([
   '/telemetry/search',
   '/telemetry/click',
 ])
+const RETRYABLE_ERROR_CODES = new Set([
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'ECONNREFUSED',
+  'EAI_AGAIN',
+  'ENOTFOUND',
+])
 
 const isNonBlockingPath = (path: string) => NON_BLOCKING_PATHS.has(path)
 
@@ -103,7 +111,9 @@ const retryWithBackoff = async <T>(
     } catch (error: any) {
       lastError = error
       const statusCode = error?.statusCode || error?.response?.status
-      if (statusCode && statusCode >= 500 && attempt < maxRetries) {
+      const errorCode = error?.code || error?.cause?.code
+      const shouldRetry = (statusCode && statusCode >= 500) || (errorCode && RETRYABLE_ERROR_CODES.has(errorCode))
+      if (shouldRetry && attempt < maxRetries) {
         const delay = baseDelayMs * Math.pow(2, attempt)
         await new Promise((resolve) => setTimeout(resolve, delay))
         continue
@@ -139,6 +149,7 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
       })
     } catch (error: any) {
       const statusCode = error?.statusCode || error?.response?.status
+      const errorCode = error?.code || error?.cause?.code
       if (nonBlocking) {
         setResponseStatus(event, 204)
         return { ok: false, status: statusCode ?? 0 }
@@ -151,8 +162,19 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
       if (statusCode && statusCode >= 500) {
         throw error
       }
-      if (error?.code === 'ECONNRESET' || error?.code === 'ETIMEDOUT') {
-        throw error
+      if (errorCode && RETRYABLE_ERROR_CODES.has(errorCode)) {
+        setResponseStatus(event, 503)
+        return {
+          error: 'backend_unreachable',
+          message: `Backend unreachable (${errorCode}).`,
+        }
+      }
+      if (!statusCode && typeof error?.message === 'string' && error.message.includes('fetch failed')) {
+        setResponseStatus(event, 503)
+        return {
+          error: 'backend_unreachable',
+          message: 'Backend unreachable (fetch failed).',
+        }
       }
       throw error
     }
