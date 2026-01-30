@@ -43,6 +43,7 @@ export const createMonitoring = (
   const isProd = options.envName === 'prod'
   const isStaging = options.envName === 'staging'
   const serviceDimension = 'remit-scout'
+  const useExplicitAlarmNames = options.envName !== 'dev'
 
   const dashboard = new Dashboard(scope, 'RemitScoutDashboard', {
     dashboardName: `remit-scout-${options.envName}`,
@@ -302,7 +303,9 @@ export const createMonitoring = (
 
   for (const config of sloAlarmConfigs) {
     const alarm = new Alarm(scope, `SloBreach-${config.sloName}-${config.timeWindow}`, {
-      alarmName: `remit-scout-${options.envName}-${config.alarmSuffix}`,
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-${config.alarmSuffix}`
+        : undefined,
       metric: new Metric({
         namespace: 'RemitScout',
         metricName: 'slo_breach_total',
@@ -354,7 +357,9 @@ export const createMonitoring = (
   ]
   batchJobNames.forEach((jobName) => {
     const alarm = new Alarm(scope, `BatchJobFailure-${jobName}`, {
-      alarmName: `remit-scout-${options.envName}-${jobName}-failure`,
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-${jobName}-failure`
+        : undefined,
       metric: new Metric({
         namespace: 'RemitScout/BatchJobs',
         metricName: 'job_failure',
