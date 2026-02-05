@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { parseCorridorId } from '../../../shared/corridor'
 import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
@@ -260,8 +260,44 @@ export const quotesRoutes = async (app: FastifyInstance) => {
           bucket_used: amountBucketInput ?? 0,
           fee_bucket_used: amountBucketInput ?? 0,
           approximate: false,
+          delta_pct: null,
         }
       amount_bucket = bucketSelection.bucket_used
+
+      if (amountBucketInput !== undefined && !DEFAULT_AMOUNT_BUCKETS.includes(amountBucketInput)) {
+        reply.code(400)
+        return {
+          error: 'bad_request',
+          details: [{ message: 'amount_bucket must be a supported bucket', allowed_buckets: DEFAULT_AMOUNT_BUCKETS }],
+        }
+      }
+
+      const maxBucketDeltaPct = Math.max(0, config.planeA.b2c.maxBucketDeltaPct ?? 0)
+      if (amountInput !== undefined && maxBucketDeltaPct === 0 && bucketSelection.approximate) {
+        reply.code(400)
+        return {
+          error: 'bad_request',
+          details: [{
+            message: 'amount must match a supported bucket',
+            allowed_buckets: DEFAULT_AMOUNT_BUCKETS,
+          }],
+        }
+      }
+      if (
+        amountInput !== undefined
+        && maxBucketDeltaPct > 0
+        && bucketSelection.delta_pct !== null
+        && bucketSelection.delta_pct > maxBucketDeltaPct
+      ) {
+        reply.code(400)
+        return {
+          error: 'bad_request',
+          details: [{
+            message: 'amount too far from supported buckets',
+            allowed_buckets: DEFAULT_AMOUNT_BUCKETS,
+          }],
+        }
+      }
 
       // Get dynamic TTL once before fetching
       const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
@@ -510,6 +546,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         bucket_used: bucketSelection.bucket_used,
         fee_bucket_used: bucketSelection.fee_bucket_used,
         approximate: bucketSelection.approximate,
+        bucket_delta_pct: bucketSelection.delta_pct,
         cache: {
           ttl_seconds: freshnessSeconds,
           age_seconds: cacheAgeSeconds,

@@ -1,0 +1,16 @@
+Remit-Scout alt text reference
+
+/png/SVG/LOGO.svg: "Remit-Scout logo"
+/world-map.svg: "World map outline"
+/world.svg: "World map outline"
+/world.webp: "World map outline"
+/images/dashboard-preview.png: "Remit-Scout dashboard preview"
+/og-image.png: "Remit-Scout dashboard preview"
+/logos/xoom.svg: "Xoom logo"
+/logos/wise.svg: "Wise logo"
+/logos/remitly.svg: "Remitly logo"
+
+Notes:
+- Use concise, descriptive alt text for meaningful images.
+- For decorative images, use empty alt (alt="").
+- Provider logos should use "<Provider> logo".

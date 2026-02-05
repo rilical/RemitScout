@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
@@ -15,11 +15,13 @@ import {
   CorridorPriorityRepository,
   CorridorCapabilityRepository,
   FxRateRepository,
+  GoldIndicesRepository,
   LatestQuoteRepository,
   RightsMatrixRepository,
 } from '../repositories'
 import { getProviderMetadata } from '../services/provider-metadata'
-import { getProviderVolumeWeight, PROVIDER_WEIGHTING_MODEL, type ProviderWeightModel } from '../../../shared/provider-weights'
+import { VolatilityService } from '../services/volatility-service'
+import { DEFAULT_WEIGHT_MODEL, GLOBAL_WEIGHT_CORRIDOR_ID } from '../../../shared/weighting-model'
 import type { LatestQuoteByCorridorRecord } from '../repositories/interfaces/latest-quote-repository.interface'
 const normalizeToken = (value: string): string => {
   if (!value || typeof value !== 'string') return ''
@@ -125,6 +127,114 @@ const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
 const corridorPriorityRepository = new CorridorPriorityRepository(planeAPool)
 const corridorCapabilityRepository = new CorridorCapabilityRepository(planeAPool)
+const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
+
+const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
+
+type ProviderWeightSnapshot = {
+  weights: Map<string, number>
+  globalWeights: Map<string, number>
+  modelVersion: string
+  weightConfidence: number | null
+  weightWindowDays: number | null
+}
+
+type IndexPermissionFlags = {
+  teer: boolean
+  rci: boolean
+  rvi: boolean
+}
+
+const providerWeightCache = createTtlCache<ProviderWeightSnapshot>({
+  namespace: 'plane_a:provider_weights',
+})
+
+const WEIGHT_SNAPSHOT_TTL_MS = 10 * 60 * 1000
+
+const normalizeProviderKey = (value?: string | null) => {
+  if (!value) return ''
+  return value.trim().toLowerCase()
+}
+
+const loadIndexPermissions = async (
+  providerIds: string[],
+): Promise<Map<string, IndexPermissionFlags>> => {
+  const normalized = Array.from(new Set(providerIds.map(normalizeProviderKey).filter(Boolean)))
+  if (!normalized.length) return new Map()
+
+  const rows = await rightsMatrixRepository.listIndexPermissionsByProviders(normalized)
+  const permissions = new Map<string, IndexPermissionFlags>()
+  for (const row of rows) {
+    const providerId = normalizeProviderKey(row.provider_id)
+    if (!providerId) continue
+    const active =
+      row.allowed_collect === true &&
+      row.allowed_b2c === true &&
+      row.stoplist_status === 'active'
+    permissions.set(providerId, {
+      teer: active && row.allowed_in_teer === true,
+      rci: active && row.allowed_in_rci === true,
+      rvi: active && row.allowed_in_rvi === true,
+    })
+  }
+  return permissions
+}
+
+const loadProviderWeights = async (
+  corridorId: string,
+  modelVersion: string,
+): Promise<ProviderWeightSnapshot> => {
+  const cacheKey = `${corridorId}:${modelVersion}`
+  const cached = await providerWeightCache.get(cacheKey)
+  if (cached) return cached
+
+  const corridorResult = await query<{
+    provider_id: string
+    weight: number
+    window_days: number | null
+    weight_confidence: number | null
+  }>(
+    `SELECT provider_id, weight, window_days, weight_confidence
+     FROM gold.provider_weight_snapshot
+     WHERE corridor_id = $1 AND model_version = $2`,
+    [corridorId, modelVersion],
+    planeAPool,
+  )
+
+  const globalResult = await query<{
+    provider_id: string
+    weight: number
+  }>(
+    `SELECT provider_id, weight
+     FROM gold.provider_weight_snapshot
+     WHERE corridor_id = $1 AND model_version = $2`,
+    [GLOBAL_WEIGHT_CORRIDOR_ID, modelVersion],
+    planeAPool,
+  )
+
+  const weights = new Map<string, number>()
+  const globalWeights = new Map<string, number>()
+  for (const row of corridorResult.rows) {
+    if (!row.provider_id || !Number.isFinite(row.weight)) continue
+    weights.set(row.provider_id, Number(row.weight))
+  }
+  for (const row of globalResult.rows) {
+    if (!row.provider_id || !Number.isFinite(row.weight)) continue
+    globalWeights.set(row.provider_id, Number(row.weight))
+  }
+
+  const meta = corridorResult.rows[0]
+  const snapshot: ProviderWeightSnapshot = {
+    weights,
+    globalWeights,
+    modelVersion,
+    weightConfidence: meta?.weight_confidence ?? null,
+    weightWindowDays: meta?.window_days ?? null,
+  }
+
+  await providerWeightCache.set(cacheKey, snapshot, WEIGHT_SNAPSHOT_TTL_MS)
+  return snapshot
+}
 
 type ProviderQuoteResponse = {
   psp: {
@@ -216,11 +326,13 @@ type ProvidersResponseBase = {
   method: string
   bucketUsed?: number
   approximate?: boolean
+  bucketDeltaPct?: number | null
   midMarketRate?: number | null
   midMarketSource?: string | null
   midMarketUpdatedAt?: string | null
   availableMethods?: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
   indices?: CorridorIndices
+  indicesReason?: string | null
   providerQuotes?: ProviderQuoteResponse[]
 }
 
@@ -231,15 +343,24 @@ type ProvidersResponse = ProvidersResponseBase & {
 
 type CorridorIndices = {
   teer: number | null
-  rvi: number | null
+  rvi_bps: number | null
   rci: number | null
   providerCount: number
   amount: number
   midMarketRate: number | null
-  weights: ProviderWeightModel
+  weights: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
+  source?: 'gold'
+  updatedAt?: string | null
+  indicesBucket?: number
+  methodProfile?: string
+  suppressionFlag?: boolean
+  suppressionReason?: string | null
 }
 
 const providersCache = createTtlCache<ProvidersResponseBase>({ namespace: 'plane_a:providers' })
+const PROVIDER_WEIGHT_MODEL = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
 
 const querySchema = z.object({
   from: z.string().min(2).max(2).optional(),
@@ -303,29 +424,46 @@ const computeCorridorIndices = (
     providerId?: string
     fxRate: number
     fee: number
-    hasPromo?: boolean
-    promoInfo?: { fee: number; rate: number } | null
   }>,
   amount: number,
   midMarketRate: number | null,
+  weights?: ProviderWeightSnapshot,
+  allowlist?: Map<string, IndexPermissionFlags>,
 ): CorridorIndices => {
-  let providerCount = 0
-  let sumWeight = 0
-  let sumWeightSq = 0
-  let weightedEffectiveSum = 0
-  let weightedEffectiveSqSum = 0
-  let weightedCostSum = 0
-  let sumWeightCost = 0
+  let providerCountTeer = 0
+  let providerCountRci = 0
+  let providerCountRvi = 0
+  let sumWeightRvi = 0
+  let sumWeightSqRvi = 0
+  let weightedEffectiveSumRvi = 0
+  let weightedEffectiveSqSumRvi = 0
+  let weightedCostSumTeer = 0
+  let sumWeightCostTeer = 0
+  let weightedCostSumRci = 0
+  let sumWeightCostRci = 0
+  const weightConfidence = weights?.weightConfidence
+  const blend = weightConfidence !== null && weightConfidence !== undefined
+    ? Math.min(1, Math.max(0, weightConfidence))
+    : null
+  const weightModel = weights?.modelVersion ?? DEFAULT_WEIGHT_MODEL
+  const defaultAllow = !allowlist
+
+  const resolveWeight = (providerKey?: string | null) => {
+    if (!providerKey) return 1
+    const key = providerKey.trim().toLowerCase()
+    const corridorWeight = weights?.weights.get(key)
+    const globalWeight = weights?.globalWeights.get(key)
+    if (blend !== null && corridorWeight !== undefined && globalWeight !== undefined) {
+      return blend * corridorWeight + (1 - blend) * globalWeight
+    }
+    if (corridorWeight !== undefined) return corridorWeight
+    if (globalWeight !== undefined) return globalWeight
+    return 1
+  }
 
   for (const quote of quotes) {
-    const promoRate = quote.hasPromo && quote.promoInfo && Number.isFinite(quote.promoInfo.rate)
-      ? Number(quote.promoInfo.rate)
-      : null
-    const promoFee = quote.hasPromo && quote.promoInfo && Number.isFinite(quote.promoInfo.fee)
-      ? Number(quote.promoInfo.fee)
-      : null
-    const rate = promoRate ?? Number(quote.fxRate)
-    const fee = promoFee ?? Number(quote.fee)
+    const rate = Number(quote.fxRate)
+    const fee = Number(quote.fee)
 
     if (!Number.isFinite(amount) || amount <= 0) continue
     if (!Number.isFinite(rate) || rate <= 0) continue
@@ -335,57 +473,116 @@ const computeCorridorIndices = (
     const effectiveRate = (amountAfterFee * rate) / amount
     if (!Number.isFinite(effectiveRate)) continue
 
-    const providerKey = quote.providerId || quote.id
-    const weight = getProviderVolumeWeight(providerKey)
-    providerCount += 1
-    sumWeight += weight
-    sumWeightSq += weight * weight
-    weightedEffectiveSum += weight * effectiveRate
-    weightedEffectiveSqSum += weight * effectiveRate * effectiveRate
+    const providerKey = normalizeProviderKey(quote.providerId || quote.id)
+    const weight = resolveWeight(providerKey)
+    const flags = providerKey ? allowlist?.get(providerKey) : undefined
+    const allowTeer = flags?.teer ?? defaultAllow
+    const allowRci = flags?.rci ?? defaultAllow
+    const allowRvi = flags?.rvi ?? defaultAllow
 
-    if (midMarketRate && midMarketRate > 0) {
-      const hiddenMarkup = (amountAfterFee * (midMarketRate - rate)) / midMarketRate
-      const totalCost = fee + (Number.isFinite(hiddenMarkup) ? hiddenMarkup : 0)
-      const ratio = totalCost / amount
-      if (Number.isFinite(ratio)) {
-        weightedCostSum += weight * ratio
-        sumWeightCost += weight
+    if (allowRvi) {
+      providerCountRvi += 1
+      sumWeightRvi += weight
+      sumWeightSqRvi += weight * weight
+      weightedEffectiveSumRvi += weight * effectiveRate
+      weightedEffectiveSqSumRvi += weight * effectiveRate * effectiveRate
+    }
+
+    if (allowTeer || allowRci) {
+      if (midMarketRate && midMarketRate > 0) {
+        const hiddenMarkup = (amountAfterFee * (midMarketRate - rate)) / midMarketRate
+        const totalCost = fee + (Number.isFinite(hiddenMarkup) ? hiddenMarkup : 0)
+        const ratio = totalCost / amount
+        if (Number.isFinite(ratio)) {
+          if (allowTeer) {
+            providerCountTeer += 1
+            weightedCostSumTeer += weight * ratio
+            sumWeightCostTeer += weight
+          }
+          if (allowRci) {
+            providerCountRci += 1
+            weightedCostSumRci += weight * ratio
+            sumWeightCostRci += weight
+          }
+        } else {
+          if (allowTeer) providerCountTeer += 1
+          if (allowRci) providerCountRci += 1
+        }
+      } else {
+        if (allowTeer) providerCountTeer += 1
+        if (allowRci) providerCountRci += 1
       }
     }
   }
 
-  let rvi: number | null = null
-  if (providerCount >= 2 && sumWeight > 0) {
-    const numerator = weightedEffectiveSqSum - (weightedEffectiveSum * weightedEffectiveSum) / sumWeight
-    const denominator = sumWeight - (sumWeightSq / sumWeight)
+  let rviValue: number | null = null
+  if (providerCountRvi >= 2 && sumWeightRvi > 0) {
+    const numerator = weightedEffectiveSqSumRvi - (weightedEffectiveSumRvi * weightedEffectiveSumRvi) / sumWeightRvi
+    const denominator = sumWeightRvi - (sumWeightSqRvi / sumWeightRvi)
     if (denominator > 0) {
       const variance = numerator / denominator
-      rvi = Number.isFinite(variance) ? Math.sqrt(Math.max(0, variance)) : null
+      rviValue = Number.isFinite(variance) ? Math.sqrt(Math.max(0, variance)) : null
     }
   }
 
   let rci: number | null = null
   let teer: number | null = null
-  if (midMarketRate && midMarketRate > 0 && sumWeightCost > 0) {
-    rci = weightedCostSum / sumWeightCost
+  if (midMarketRate && midMarketRate > 0) {
+    if (sumWeightCostRci > 0) {
+      rci = weightedCostSumRci / sumWeightCostRci
+    }
+    if (sumWeightCostTeer > 0) {
+      const teerCostRatio = weightedCostSumTeer / sumWeightCostTeer
+      const rawTeer = midMarketRate * (1 - teerCostRatio)
+      teer = Number.isFinite(rawTeer) ? Math.max(0, rawTeer) : null
+    }
+  }
+
+  const providerCount = Math.min(
+    providerCountTeer || 0,
+    providerCountRci || 0,
+    providerCountRvi || 0,
+  )
+
+  if (teer === null && midMarketRate && midMarketRate > 0 && rci !== null) {
     const rawTeer = midMarketRate * (1 - rci)
     teer = Number.isFinite(rawTeer) ? Math.max(0, rawTeer) : null
   }
 
+  const rvi_bps = (rviValue !== null && teer && teer > 0)
+    ? (rviValue / teer) * 10000
+    : null
+
   return {
     teer,
-    rvi,
+    rvi_bps,
     rci,
     providerCount,
     amount,
     midMarketRate: midMarketRate ?? null,
-    weights: PROVIDER_WEIGHTING_MODEL,
+    weights: weightModel,
+    weightConfidence: weights?.weightConfidence ?? null,
+    weightWindowDays: weights?.weightWindowDays ?? null,
   }
 }
 
 const getBucketCandidates = (amount: number) => {
   if (!Number.isFinite(amount) || amount <= 0) return []
   return DEFAULT_AMOUNT_BUCKETS.includes(amount) ? [amount] : []
+}
+
+const getDynamicCacheTtl = async (corridorId: string): Promise<number> => {
+  try {
+    const volatilityService = new VolatilityService(planeAPool)
+    const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
+    return ttlResult.ttlSeconds
+  } catch (error) {
+    logger.warn('providers_volatility_ttl_failed', {
+      corridor_id: corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return 3600
+  }
 }
 
 
@@ -443,6 +640,14 @@ const resolveRequestedMethod = (method?: string | null, payout?: string | null) 
   }
   const fallback = toAvailableMethod(payout)
   return fallback ?? 'bank'
+}
+
+const resolveIndicesMethodProfile = (
+  method: 'bank' | 'cash' | 'wallet' | 'airtime',
+): 'standard_bank' | 'cash_pickup' | 'standard_card' | null => {
+  if (method === 'bank') return 'standard_bank'
+  if (method === 'cash') return 'cash_pickup'
+  return null
 }
 
 const formatTransferTime = (minMinutes: number | null, maxMinutes: number | null) => {
@@ -650,6 +855,15 @@ export const providersRoutes = async (app: FastifyInstance) => {
     let amountBucket = amount_bucket
     let requestedAmount = amount
     let approximate = false
+    const maxBucketDeltaPct = Math.max(0, config.planeA.b2c.maxBucketDeltaPct ?? 0)
+
+    if (amountBucket !== undefined && !DEFAULT_AMOUNT_BUCKETS.includes(amountBucket)) {
+      reply.code(400)
+      return {
+        error: 'bad_request',
+        details: [{ message: 'amount_bucket must be a supported bucket', allowed_buckets: DEFAULT_AMOUNT_BUCKETS }],
+      }
+    }
 
     const normalizedFromCurrency = normalizeCurrencyCode(fromCurrency)
     const normalizedToCurrency = normalizeCurrencyCode(toCurrency)
@@ -707,6 +921,31 @@ export const providersRoutes = async (app: FastifyInstance) => {
       amountBucket = bucketSelection.bucket_used
       approximate = bucketSelection.approximate
       requestedAmount = amount
+
+      if (maxBucketDeltaPct === 0 && bucketSelection.approximate) {
+        reply.code(400)
+        return {
+          error: 'bad_request',
+          details: [{
+            message: 'amount must match a supported bucket',
+            allowed_buckets: DEFAULT_AMOUNT_BUCKETS,
+          }],
+        }
+      }
+      if (
+        maxBucketDeltaPct > 0
+        && bucketSelection.delta_pct !== null
+        && bucketSelection.delta_pct > maxBucketDeltaPct
+      ) {
+        reply.code(400)
+        return {
+          error: 'bad_request',
+          details: [{
+            message: 'amount too far from supported buckets',
+            allowed_buckets: DEFAULT_AMOUNT_BUCKETS,
+          }],
+        }
+      }
     }
 
     if (!corridorId || amountBucket === undefined) {
@@ -721,7 +960,8 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
     try {
       const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
-      const cacheKey = `providers:${corridorId}:${amountBucket}:${amountKey}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
+      const dynamicCacheTtlSeconds = await getDynamicCacheTtl(corridorId)
+      const cacheKey = `providers:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
         if (cached !== null) {
@@ -1073,8 +1313,55 @@ export const providersRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      const amountForIndices = requestedAmount || amountBucket
-      const indices = computeCorridorIndices(flattenedQuotes, amountForIndices, midMarketRate ?? null)
+      let indices: CorridorIndices | undefined
+      let indicesReason: string | null = null
+      const indicesMethodProfile = resolveIndicesMethodProfile(requestedMethod)
+
+      if (!indicesMethodProfile) {
+        indicesReason = 'unsupported_method'
+      } else if (bucketUsed !== INDICES_AMOUNT_BUCKET) {
+        indicesReason = 'bucket_mismatch'
+      } else {
+        try {
+          const latest = await goldIndicesRepository.getIndicesLatest({
+            corridorId,
+            amountBucket: INDICES_AMOUNT_BUCKET,
+            methodProfile: indicesMethodProfile,
+          })
+
+          if (!latest) {
+            indicesReason = 'gold_indices_unavailable'
+          } else {
+            const suppressed = latest.suppression_flag === true
+            if (suppressed) {
+              indicesReason = latest.suppression_reason || 'suppressed'
+            }
+            indices = {
+              teer: suppressed ? null : latest.teer_rate ?? null,
+              rvi_bps: suppressed ? null : latest.rvi_bps ?? null,
+              rci: suppressed ? null : latest.rci_ratio ?? null,
+              providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+              amount: INDICES_AMOUNT_BUCKET,
+              midMarketRate: suppressed ? null : latest.mid_market_rate ?? null,
+              weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
+              weightConfidence: latest.weight_confidence ?? null,
+              weightWindowDays: latest.weight_window_days ?? null,
+              source: 'gold',
+              updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
+              indicesBucket: INDICES_AMOUNT_BUCKET,
+              methodProfile: indicesMethodProfile,
+              suppressionFlag: latest.suppression_flag,
+              suppressionReason: latest.suppression_reason ?? null,
+            }
+          }
+        } catch (error) {
+          logger.warn('gold_indices_latest_failed', {
+            corridor_id: corridorId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+          indicesReason = 'gold_indices_unavailable'
+        }
+      }
 
       const responseBase: ProvidersResponseBase = {
         data: flattenedQuotes,
@@ -1084,11 +1371,15 @@ export const providersRoutes = async (app: FastifyInstance) => {
         method: requestedMethod,
         bucketUsed,
         approximate,
+        bucketDeltaPct: (requestedAmount && approximate && requestedAmount > 0)
+          ? Math.abs(bucketUsed - requestedAmount) / requestedAmount
+          : null,
         midMarketRate: midMarketRate ?? null,
         midMarketSource: midMarketSource ?? null,
         midMarketUpdatedAt,
         availableMethods: orderMethods(availableMethods),
         indices,
+        indicesReason,
       }
 
       if (providerQuotesPayload) {
@@ -1102,8 +1393,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
       }
 
       if (!bypassCache) {
-        // Tune cache TTL for production (longer) vs development (shorter)
-        const ttlMs = config.env === 'production' ? 120 * 1000 : 30 * 1000
+        const ttlMs = Math.max(0, dynamicCacheTtlSeconds * 1000)
         await providersCache.set(cacheKey, responseBase, ttlMs)
       }
 

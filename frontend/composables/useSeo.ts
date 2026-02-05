@@ -66,7 +66,7 @@ export const setSeo = ({
     normalizedSiteUrl,
   )
   const robots = noindex ? 'noindex,nofollow' : 'index,follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
-  const image = ogImage || `${normalizedSiteUrl}/og-image.jpg`
+  const image = ogImage || `${normalizedSiteUrl}/og-image.png`
 
   const metaTags: Array<Record<string, string>> = [
     { name: 'description', content: description },
