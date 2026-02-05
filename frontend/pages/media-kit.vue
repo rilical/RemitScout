@@ -214,20 +214,20 @@
               <div>
                 <p class="text-sm font-semibold text-slate-900 mb-2">Index / chart citation (TEER™, RVI™, RCI™)</p>
                 <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
-                  Source: Remit-Scout ([TEER|RVI|RCI]) · Weighted by provider volume · Retrieved [DATE].
+                  Source: Remit-Scout ([TEER|RVI|RCI]) · Synthetic volume weighted · Retrieved [DATE].
                 </code>
                 <p class="mt-2 text-xs text-slate-500">Use the index name you are citing (TEER, RVI, or RCI). See <NuxtLink to="/methodology" class="text-blue-600 hover:underline">methodology</NuxtLink> for citation requirements.</p>
               </div>
               <div>
                 <p class="text-sm font-semibold text-slate-900 mb-2">Chart / visual with link</p>
                 <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
-                  Source: Remit-Scout ([TEER|RVI|RCI]) · Weighted by provider volume · Retrieved [DATE]. Link: [URL]
+                  Source: Remit-Scout ([TEER|RVI|RCI]) · Synthetic volume weighted · Retrieved [DATE]. Link: [URL]
                 </code>
               </div>
               <div>
                 <p class="text-sm font-semibold text-slate-900 mb-2">Retail quote / corridor data</p>
                 <code class="block bg-slate-50 rounded-lg p-3 text-sm text-slate-700 font-mono">
-                  Source: Remit-Scout (observed retail quotes, [CORRIDOR]) · Weighted by provider volume · Retrieved [DATE].
+                  Source: Remit-Scout (observed retail quotes, [CORRIDOR]) · Synthetic volume weighted · Retrieved [DATE].
                 </code>
               </div>
               <p class="text-sm text-slate-500">Include retrieval date; our data updates daily. TEER™, RVI™, and RCI™ are trademarks of Remit-Scout.</p>

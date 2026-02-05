@@ -25,8 +25,10 @@ import { isMacroCorridor } from '../shared/macro-corridors'
 import { parseCorridorId } from '../shared/corridor'
 import { FIXED_EXCHANGE_RATES } from '../shared/currency-limits'
 import { computeBucketSelection } from '../shared/amount-bucket'
+import { initTracing } from '../shared/tracing'
 
 const logger = createLogger('script.alert-corridor-refresh')
+initTracing('alert-corridor-refresh-job')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)

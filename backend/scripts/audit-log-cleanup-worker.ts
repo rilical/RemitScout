@@ -11,8 +11,10 @@ import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { getErrorMessage } from '../shared/utils/error-handling'
+import { initTracing } from '../shared/tracing'
 
 const logger = createLogger('script.audit-log-cleanup')
+initTracing('audit-log-cleanup-worker')
 const s3Client = new S3Client({})
 
 type AuditLogRow = {

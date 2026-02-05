@@ -1,6 +1,7 @@
 import { config } from './config'
 import { createLogger } from './logger'
 import { getRedisClient } from './redis'
+import { trackCacheHit, trackCacheMiss } from './cache-metrics'
 
 type CacheEntry<T> = {
   value: T
@@ -85,7 +86,13 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
     pruneIfNeeded()
     const redis = await getRedisClient()
     if (!redis) {
-      return getFromMemory(key)
+      const memoryValue = getFromMemory(key)
+      if (memoryValue === null) {
+        trackCacheMiss(namespace, 'memory')
+      } else {
+        trackCacheHit(namespace, 'memory')
+      }
+      return memoryValue
     }
 
     let raw: string | null
@@ -93,18 +100,41 @@ export const createTtlCache = <T>(options: TtlCacheOptions = {}): TtlCache<T> =>
       raw = await redis.get(buildKey(namespace, key))
     } catch (error) {
       logger.warn('cache_get_failed', { error })
-      return getFromMemory(key)
+      trackCacheMiss(namespace, 'redis')
+      const fallbackValue = getFromMemory(key)
+      if (fallbackValue === null) {
+        trackCacheMiss(namespace, 'memory')
+      } else {
+        trackCacheHit(namespace, 'memory')
+      }
+      return fallbackValue
     }
 
     if (!raw) {
-      return getFromMemory(key)
+      trackCacheMiss(namespace, 'redis')
+      const fallbackValue = getFromMemory(key)
+      if (fallbackValue === null) {
+        trackCacheMiss(namespace, 'memory')
+      } else {
+        trackCacheHit(namespace, 'memory')
+      }
+      return fallbackValue
     }
 
     try {
-      return JSON.parse(raw) as T
+      const parsed = JSON.parse(raw) as T
+      trackCacheHit(namespace, 'redis')
+      return parsed
     } catch (error) {
       logger.warn('cache_parse_failed', { error })
-      throw error
+      trackCacheMiss(namespace, 'redis')
+      const fallbackValue = getFromMemory(key)
+      if (fallbackValue === null) {
+        trackCacheMiss(namespace, 'memory')
+      } else {
+        trackCacheHit(namespace, 'memory')
+      }
+      return fallbackValue
     }
   }
 

@@ -101,7 +101,8 @@
 </template>
 
 <script setup lang="ts">
-const { updatePassword, ensureHydrated, isAuthenticated } = useAuth()
+const { updatePassword, ensureHydrated, isAuthenticated, isConfigured } = useAuth()
+const route = useRoute()
 
 const password = ref('')
 const confirmPassword = ref('')
@@ -110,6 +111,26 @@ const success = ref(false)
 const errorMessage = ref<string | null>(null)
 
 onMounted(async () => {
+  if (!isConfigured.value) {
+    errorMessage.value = 'Supabase is not configured.'
+    return
+  }
+
+  const supabase = useSupabaseClient()
+  if (!supabase) {
+    errorMessage.value = 'Supabase client is not available.'
+    return
+  }
+
+  const code = typeof route.query.code === 'string' ? route.query.code : null
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      errorMessage.value = error.message
+      return
+    }
+  }
+
   await ensureHydrated()
   if (!isAuthenticated.value) {
     errorMessage.value = 'This reset link is invalid or expired.'

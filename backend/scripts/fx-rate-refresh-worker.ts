@@ -20,6 +20,8 @@ import { processFxRateRefreshQueue } from '../plane-b/src/fx-rate-refresh'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { initTracing } from '../shared/tracing'
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -55,6 +57,9 @@ const useLock = lockMode === 'single' || (lockMode === 'auto' && !useQueue)
 const loopEnabled = toBoolean(process.env.FX_RATE_REFRESH_LOOP)
 const loopDelayMs = Math.max(50, toNumber(process.env.FX_RATE_REFRESH_LOOP_DELAY_MS, 250))
 const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.FX_RATE_REFRESH_IDLE_DELAY_MS, 750))
+const loopJitterMs = resolveJitterMs(process.env.FX_RATE_REFRESH_LOOP_JITTER_MS, 0)
+
+initTracing('fx-rate-refresh-worker')
 
 let shutdownRequested = false
 let lock: WorkerLock | null = null
@@ -148,11 +153,12 @@ export const runFxRateRefreshWorker = async (): Promise<number> => {
   }
 }
 
-const main = async () => {
+export const runFxRateRefreshWorkerLoop = async (): Promise<number> => {
   let exitCode = 0
   try {
     if (loopEnabled) {
       while (!shutdownRequested) {
+        await applyJitter(logger, 'fx_rate_refresh_loop', loopJitterMs)
         const processed = await runFxRateRefreshWorker()
         if (shutdownRequested) {
           break
@@ -175,9 +181,17 @@ const main = async () => {
     }
   }
 
-  process.exit(exitCode)
+  return exitCode
 }
 
 if (require.main === module) {
-  void main()
+  runFxRateRefreshWorkerLoop()
+    .then((code) => process.exit(code))
+    .catch((error) => {
+      logger.error('worker_fatal_error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
 }

@@ -2,7 +2,7 @@
 # Build from repo root:
 #   docker build -f backend/Dockerfile -t remit-scout-backend:latest .
 
-FROM public.ecr.aws/docker/library/node:18-alpine AS deps
+FROM public.ecr.aws/docker/library/node:20-alpine AS deps
 WORKDIR /app
 RUN corepack enable
 
@@ -15,9 +15,10 @@ ARG SKIP_BACKEND_BUILD=0
 COPY backend backend
 RUN if [ "$SKIP_BACKEND_BUILD" != "1" ]; then pnpm -C backend build; else echo "Skipping backend build"; fi
 
-FROM public.ecr.aws/docker/library/node:18-alpine AS runner
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache ca-certificates
 ARG BUILD_VERSION=dev
 LABEL org.opencontainers.image.revision=$BUILD_VERSION
 

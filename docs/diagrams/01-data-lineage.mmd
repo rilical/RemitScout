@@ -1,0 +1,68 @@
+%%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 40, 'rankSpacing': 60}, 'theme': 'base', 'themeVariables': {'lineColor': '#333333', 'lineWidth': '2', 'primaryTextColor': '#111111', 'primaryBorderColor': '#333333', 'primaryColor': '#F5F5F5'}}}%%
+flowchart LR
+  subgraph SOURCES["Sources / Triggers"]
+    A_API["Plane A API\n(B2C refresh requests)"]
+    ALERTS["Alert Corridor Refresh (Lambda)"]
+    B2B_SWEEP["B2B Sweep Scheduler (ECS)"]
+    OANDA["OANDA Sync (Lambda)"]
+  end
+
+  subgraph QUEUES["Queues"]
+    Q_QUOTE["SQS quote-refresh"]
+    Q_FX["SQS fx-rate-refresh"]
+    Q_INGEST_T1["SQS ingest-fanout tier1"]
+    Q_INGEST_T2["SQS ingest-fanout tier2"]
+    Q_GOLD_LIVE["SQS gold-live"]
+  end
+
+  subgraph WORKERS["Workers / Jobs"]
+    B2C["B2C Refresh Worker (ECS)"]
+    FX["FX Refresh Worker (ECS)"]
+    FANOUT_T1["Ingest Fanout T1 (ECS)"]
+    FANOUT_T2["Ingest Fanout T2 (ECS)"]
+    INGEST["Plane B Ingest (ECS)"]
+    GOLD_JOBS["Gold Batch Jobs (Lambda)"]
+    GOLD_LIVE["Gold Live Worker (ECS)"]
+  end
+
+  subgraph BRONZE["Bronze (Raw)"]
+    S3_BRONZE["S3 Bronze\nremit-scout-bronze-${env}"]
+  end
+
+  subgraph SILVER["Silver (Normalized)"]
+    SILVER_DB["Aurora silver schema\nquote_record, latest_quote,\nquote_refresh_request, fx_rate_refresh_request,\nrights_matrix, corridor_tier_snapshot"]
+  end
+
+  subgraph GOLD["Gold (Curated)"]
+    GOLD_DB["Aurora gold schema\nfx_rates, indices, pulse,\npopular_corridors, publisher outputs"]
+    GOLD_CACHE["Redis hot cache\n(gold views)"]
+  end
+
+  %% Triggers -> queues
+  A_API --> Q_QUOTE
+  ALERTS --> Q_QUOTE
+  A_API --> Q_FX
+  B2B_SWEEP --> Q_INGEST_T1
+  B2B_SWEEP --> Q_INGEST_T2
+
+  %% Queues -> workers
+  Q_QUOTE --> B2C
+  Q_FX --> FX
+  Q_INGEST_T1 --> FANOUT_T1
+  Q_INGEST_T2 --> FANOUT_T2
+  Q_GOLD_LIVE --> GOLD_LIVE
+
+  %% Worker writes
+  FANOUT_T1 --> INGEST
+  FANOUT_T2 --> INGEST
+  INGEST --> S3_BRONZE
+  INGEST --> SILVER_DB
+  INGEST --> Q_GOLD_LIVE
+  B2C --> SILVER_DB
+  FX --> GOLD_DB
+  OANDA --> GOLD_DB
+
+  %% Silver -> Gold
+  SILVER_DB --> GOLD_JOBS --> GOLD_DB
+  GOLD_LIVE --> GOLD_DB
+  GOLD_DB --> GOLD_CACHE

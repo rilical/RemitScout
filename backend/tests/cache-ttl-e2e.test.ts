@@ -135,7 +135,7 @@ describe('Cache TTL End-to-End', () => {
     expect(ttlResult.hasData).toBe(true)
     expect(ttlResult.volatilityScore).not.toBeNull()
     expect(['tier1', 'tier2', 'tier3']).toContain(ttlResult.tier)
-    expect([30 * 60, 4 * 60 * 60]).toContain(ttlResult.ttlSeconds)
+    expect([30 * 60, 2 * 60 * 60, 6 * 60 * 60]).toContain(ttlResult.ttlSeconds)
   })
 
   it('uses cached volatility score when available', async () => {
@@ -152,7 +152,7 @@ describe('Cache TTL End-to-End', () => {
     expect(ttlResult.hasData).toBe(true)
     expect(ttlResult.volatilityScore).toBe(0.12)
     expect(ttlResult.tier).toBe('tier2')
-    expect(ttlResult.ttlSeconds).toBe(4 * 60 * 60)
+    expect(ttlResult.ttlSeconds).toBe(2 * 60 * 60)
   })
 
   it('handles quote freshness check with dynamic TTL', async () => {
@@ -178,7 +178,7 @@ describe('Cache TTL End-to-End', () => {
 
     const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
     expect(ttlResult.tier).toBe('tier3')
-    expect(ttlResult.ttlSeconds).toBe(4 * 60 * 60)
+    expect(ttlResult.ttlSeconds).toBe(6 * 60 * 60)
 
     const result = await query<{ collected_at: Date }>(
       `SELECT collected_at
@@ -198,6 +198,6 @@ describe('Cache TTL End-to-End', () => {
     const isFresh = ageSeconds <= ttlResult.ttlSeconds
 
     expect(isFresh).toBe(true)
-    expect(ageSeconds).toBeLessThan(4 * 60 * 60)
+    expect(ageSeconds).toBeLessThan(6 * 60 * 60)
   })
 })

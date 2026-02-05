@@ -99,6 +99,8 @@ export const validateAwsConfig = async (
       { name: 'alert_evaluation', url: config.alerts.evaluation.queueUrl },
       { name: 'ops_alerts', url: config.queues.opsAlerts.url },
       { name: 'ingest_fanout', url: config.queues.ingestFanout.url },
+      { name: 'ingest_fanout_tier1', url: config.queues.ingestFanout.tier1Url },
+      { name: 'ingest_fanout_tier2', url: config.queues.ingestFanout.tier2Url },
       { name: 'notifications', url: config.queues.notifications.url },
     ]
 
@@ -186,4 +188,3 @@ export const assertAwsConfig = async (
     throw new Error(`AWS configuration validation failed: ${errors}`)
   }
 }
-

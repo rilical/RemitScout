@@ -32,6 +32,7 @@ import { recordSLOValue } from '../shared/slo-tracker'
 import { GoldPublisherLive } from '../plane-c/src/services/gold-publisher-live'
 import { upsertGoldIndicesLive } from './gold-indices-live'
 import { initTracing, startSpan } from '../shared/tracing'
+import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 
 const logger = createLogger('script.gold-live-worker')
 const queueUrl = config.queues.goldLive.url
@@ -48,6 +49,8 @@ const batchSize = toNumber(process.env.GOLD_LIVE_QUEUE_BATCH_SIZE, 10)
 const idleSleepMs = toNumber(process.env.GOLD_LIVE_QUEUE_IDLE_SLEEP_MS, 500)
 const shutdownTimeoutMs = toNumber(process.env.GOLD_LIVE_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
 const debounceWindowMs = toNumber(process.env.GOLD_LIVE_DEBOUNCE_WINDOW_MS, 2000)
+const loopJitterMs = resolveJitterMs(process.env.GOLD_LIVE_QUEUE_LOOP_JITTER_MS, 0)
+const messageJitterMs = resolveJitterMs(process.env.GOLD_LIVE_QUEUE_MESSAGE_JITTER_MS, 0)
 
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
@@ -278,12 +281,14 @@ export const runGoldLiveWorker = async (): Promise<number> => {
 
   try {
     while (!shutdownRequested) {
+      await applyJitter(logger, 'gold_live_loop', loopJitterMs)
       const messages = await receiveJsonMessages<GoldLiveMessage>(queueUrl, batchSize)
 
       const invalidHandles: string[] = []
       const stopExtenders: Array<() => Promise<void>> = []
 
       for (const message of messages) {
+        await applyJitter(logger, 'gold_live_message', messageJitterMs)
         const payload = message.payload
         if (!validatePayload(payload)) {
           logger.warn('gold_live_message_invalid', { message_id: message.messageId })

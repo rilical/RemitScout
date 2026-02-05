@@ -15,15 +15,17 @@
  * - `B2B_SWEEP_SCHEDULER_LOCK_TTL_SECONDS`: Lock TTL (default: 60)
  */
 
+import { setTimeout as sleep } from 'timers/promises'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
-import { sendBatchJsonMessages, sendJsonMessage } from '../shared/sqs'
+import { getQueueAgeSeconds, getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../shared/sqs'
 import { partitionCorridors } from '../shared/sharding'
 import { parseCorridorId } from '../shared/corridor'
 import { getCountryByCode } from '../shared/countries-currencies'
 import { createShutdownHandler } from '../shared/shutdown'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { providerRegistry, type ProviderRegistryEntry } from '../plane-b/src/providers'
 import {
@@ -121,8 +123,15 @@ type IngestFanoutCorridorMessage = {
 }
 
 const logger = createLogger('script.b2b-sweep-scheduler')
+initTracing('b2b-sweep-scheduler')
 const ingestFanoutMode = config.queues.ingestFanout.mode
 const ingestFanoutQueueUrl = config.queues.ingestFanout.url
+const ingestFanoutQueueTier1Url = config.queues.ingestFanout.tier1Url
+const ingestFanoutQueueTier2Url = config.queues.ingestFanout.tier2Url
+const ingestFanoutTiered = Boolean(ingestFanoutQueueTier1Url && ingestFanoutQueueTier2Url)
+const ingestFanoutTierMisconfigured =
+  (Boolean(ingestFanoutQueueTier1Url) || Boolean(ingestFanoutQueueTier2Url))
+  && !ingestFanoutTiered
 const ingestFanoutEnabled = ingestFanoutMode === 'queue' && Boolean(ingestFanoutQueueUrl)
 
 const b2bAmountByProvider: Record<string, number> = {
@@ -166,6 +175,10 @@ const toBoolean = (value: string | undefined, fallback = false) => {
 
 const loopEnabled = toBoolean(process.env.B2B_SWEEP_SCHEDULER_LOOP)
 const loopDelayMs = Math.max(1000, toNumber(process.env.B2B_SWEEP_SCHEDULER_LOOP_DELAY_MS, 60000))
+const schedulerJitterMs = Math.max(
+  0,
+  toNumber(process.env.B2B_SWEEP_SCHEDULER_JITTER_MS, 0),
+)
 const lockTtlSeconds = toNumber(process.env.B2B_SWEEP_SCHEDULER_LOCK_TTL_SECONDS, 60)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 
@@ -223,6 +236,18 @@ const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
   return chunks
 }
 
+const resolveIngestFanoutQueueUrl = (priorityTier?: string): string | null => {
+  if (ingestFanoutTierMisconfigured) {
+    return null
+  }
+  if (ingestFanoutTiered) {
+    if (!ingestFanoutQueueTier1Url || !ingestFanoutQueueTier2Url) {
+      return null
+    }
+    return priorityTier === 'tier_2' ? ingestFanoutQueueTier2Url : ingestFanoutQueueTier1Url
+  }
+  return ingestFanoutQueueUrl || null
+}
 
 const isNativeCurrencyCorridor = (corridorId: string): boolean => {
   const parts = parseCorridorId(corridorId)
@@ -550,16 +575,18 @@ const buildTierPlan = async (options: {
 }
 
 const enqueueIngestFanout = async (payload: IngestFanoutMessage): Promise<boolean> => {
-  if (!ingestFanoutQueueUrl) {
+  const queueUrl = resolveIngestFanoutQueueUrl(payload.priorityTier)
+  if (!queueUrl) {
     return false
   }
   try {
-    await sendJsonMessage(ingestFanoutQueueUrl, payload)
+    await sendJsonMessage(queueUrl, payload)
     return true
   } catch (error) {
     logger.warn('ingest_fanout_enqueue_failed', {
       provider_id: payload.providerId,
       collector_type: payload.collectorType,
+      queue_url: queueUrl,
       error: error instanceof Error ? error.message : String(error),
     })
     return false
@@ -829,6 +856,107 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     return 0
   }
 
+  if (ingestFanoutTierMisconfigured) {
+    logger.warn('scheduler_disabled', { reason: 'missing_tier_queues' })
+    return 0
+  }
+
+  if (schedulerJitterMs > 0) {
+    const delayMs = Math.floor(Math.random() * schedulerJitterMs)
+    if (delayMs > 0) {
+      logger.info('scheduler_jitter', { delay_ms: delayMs })
+      await sleep(delayMs)
+    }
+  }
+
+  if (config.planeB.b2bDrainMode) {
+    logger.warn('scheduler_disabled', { reason: 'drain_mode' })
+    return 0
+  }
+
+  const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
+  const maxQueueAgeSeconds = Math.max(config.planeB.b2bMaxQueueAgeSeconds || 0, 0)
+  let allowTier1 = !config.planeB.disableTier1
+  let allowTier2 = true
+  if (maxQueueDepth > 0 || maxQueueAgeSeconds > 0) {
+    if (ingestFanoutTiered) {
+      if (!ingestFanoutQueueTier1Url || !ingestFanoutQueueTier2Url) {
+        logger.warn('scheduler_disabled', { reason: 'missing_tier_queues' })
+        return 0
+      }
+      const [tier1Stats, tier2Stats] = await Promise.all([
+        getQueueStats(ingestFanoutQueueTier1Url),
+        getQueueStats(ingestFanoutQueueTier2Url),
+      ])
+      if (maxQueueDepth > 0 && tier1Stats.total >= maxQueueDepth) {
+        allowTier1 = false
+        logger.warn('scheduler_backpressure', {
+          reason: 'queue_depth',
+          tier: 'tier_1',
+          queue_depth: tier1Stats.total,
+          max_queue_depth: maxQueueDepth,
+        })
+      }
+      if (maxQueueDepth > 0 && tier2Stats.total >= maxQueueDepth) {
+        allowTier2 = false
+        logger.warn('scheduler_backpressure', {
+          reason: 'queue_depth',
+          tier: 'tier_2',
+          queue_depth: tier2Stats.total,
+          max_queue_depth: maxQueueDepth,
+        })
+      }
+      if (maxQueueAgeSeconds > 0) {
+        const [tier1Age, tier2Age] = await Promise.all([
+          getQueueAgeSeconds(ingestFanoutQueueTier1Url),
+          getQueueAgeSeconds(ingestFanoutQueueTier2Url),
+        ])
+        if (tier1Age >= maxQueueAgeSeconds) {
+          allowTier1 = false
+          logger.warn('scheduler_backpressure', {
+            reason: 'queue_age',
+            tier: 'tier_1',
+            queue_age_seconds: tier1Age,
+            max_queue_age_seconds: maxQueueAgeSeconds,
+          })
+        }
+        if (tier2Age >= maxQueueAgeSeconds) {
+          allowTier2 = false
+          logger.warn('scheduler_backpressure', {
+            reason: 'queue_age',
+            tier: 'tier_2',
+            queue_age_seconds: tier2Age,
+            max_queue_age_seconds: maxQueueAgeSeconds,
+          })
+        }
+      }
+      if (!allowTier1 && !allowTier2) {
+        return 0
+      }
+    } else if (ingestFanoutQueueUrl) {
+      const queueStats = await getQueueStats(ingestFanoutQueueUrl)
+      if (maxQueueDepth > 0 && queueStats.total >= maxQueueDepth) {
+        logger.warn('scheduler_backpressure', {
+          reason: 'queue_depth',
+          queue_depth: queueStats.total,
+          max_queue_depth: maxQueueDepth,
+        })
+        return 0
+      }
+      if (maxQueueAgeSeconds > 0) {
+        const queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueUrl)
+        if (queueAgeSeconds >= maxQueueAgeSeconds) {
+          logger.warn('scheduler_backpressure', {
+            reason: 'queue_age',
+            queue_age_seconds: queueAgeSeconds,
+            max_queue_age_seconds: maxQueueAgeSeconds,
+          })
+          return 0
+        }
+      }
+    }
+  }
+
   const pool = createPool(config.db.planeBUrl)
   const amountResolver = buildB2bAmountResolver(pool)
   const lock = new WorkerLock('b2b-sweep-scheduler', lockTtlSeconds)
@@ -912,8 +1040,8 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     }
 
     const [tier1Due, tier2Due] = await Promise.all([
-      checkTierDue('tier_1'),
-      checkTierDue('tier_2'),
+      allowTier1 ? checkTierDue('tier_1') : Promise.resolve(false),
+      allowTier2 ? checkTierDue('tier_2') : Promise.resolve(false),
     ])
 
     const dueLanes = [
@@ -1008,38 +1136,71 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     ])
 
     const nowIso = new Date().toISOString()
-    const messages = tasks.map((task, idx) => {
-      const cfg = tierConfig[task.tier]
-      const sweepRunId = task.tier === 'tier_1' ? tier1RunId : tier2RunId
-      return {
-        id: String(idx),
-        payload: {
-          version: 'corridor_v1' as const,
-          corridorId: task.corridorId,
-          providers: task.providers.map(providerId => ({
-            providerId,
-            collectorType: cfg.collectorType,
-            amountBuckets: [task.amountBucket],
-            payinMethod: resolveB2bPayinMethod(providerId),
-            payoutMethod: task.payoutMethod,
-            priorityTier: cfg.label,
-            freshnessSloMinutes: cfg.sloMinutes,
-          })),
-          requestedAt: nowIso,
-          sweepRunId,
-        },
+    const messagePayloadsByQueue = new Map<string, Array<{
+      id: string
+      payload: {
+        version: 'corridor_v1'
+        corridorId: string
+        providers: Array<{
+          providerId: string
+          collectorType: string
+          amountBuckets: number[]
+          payinMethod: string
+          payoutMethod: string
+          priorityTier: string
+          freshnessSloMinutes: number
+        }>
+        requestedAt: string
+        sweepRunId?: string
       }
-    })
+    }>>()
+
+    for (let idx = 0; idx < tasks.length; idx += 1) {
+      const task = tasks[idx]
+      const cfg = tierConfig[task.tier]
+      const queueUrl = resolveIngestFanoutQueueUrl(cfg.label)
+      if (!queueUrl) {
+        logger.warn('scheduler_enqueue_skipped', {
+          reason: 'missing_queue_url',
+          priority_tier: cfg.label,
+        })
+        continue
+      }
+      const sweepRunId = task.tier === 'tier_1' ? tier1RunId : tier2RunId
+      const payload = {
+        version: 'corridor_v1' as const,
+        corridorId: task.corridorId,
+        providers: task.providers.map(providerId => ({
+          providerId,
+          collectorType: cfg.collectorType,
+          amountBuckets: [task.amountBucket],
+          payinMethod: resolveB2bPayinMethod(providerId),
+          payoutMethod: task.payoutMethod,
+          priorityTier: cfg.label,
+          freshnessSloMinutes: cfg.sloMinutes,
+        })),
+        requestedAt: nowIso,
+        sweepRunId,
+      }
+      const bucket = messagePayloadsByQueue.get(queueUrl)
+      if (bucket) {
+        bucket.push({ id: `${idx}-${task.tier}`, payload })
+      } else {
+        messagePayloadsByQueue.set(queueUrl, [{ id: `${idx}-${task.tier}`, payload }])
+      }
+    }
 
     let enqueued = 0
     let failed = 0
     const batchSize = 10
 
-    for (let i = 0; i < messages.length; i += batchSize) {
-      const batch = messages.slice(i, i + batchSize)
-      const results = await sendBatchJsonMessages(ingestFanoutQueueUrl!, batch)
-      for (const r of results) {
-        r.success ? enqueued++ : failed++
+    for (const [queueUrl, messages] of messagePayloadsByQueue.entries()) {
+      for (let i = 0; i < messages.length; i += batchSize) {
+        const batch = messages.slice(i, i + batchSize)
+        const results = await sendBatchJsonMessages(queueUrl, batch)
+        for (const r of results) {
+          r.success ? enqueued++ : failed++
+        }
       }
     }
 
@@ -1085,8 +1246,6 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     await pool.end()
   }
 }
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const { isShutdownRequested } = createShutdownHandler({
   timeoutMs: 30000,

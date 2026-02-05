@@ -116,17 +116,17 @@ const methodProfile = computed(() => (route.query.method_profile as string) || '
 const days = computed(() => parseInt(route.query.days as string) || 30)
 const apiKey = computed(() => (route.query.api_key as string) || '')
 
-const indexMeta: Record<IndexKey, { title: string; color: string; unit: 'rate' | 'percent'; unitLabel: string }> = {
+const indexMeta: Record<IndexKey, { title: string; color: string; unit: 'rate' | 'percent' | 'bps'; unitLabel: string }> = {
   teer: { title: 'Total Effective Exchange Rate (TEER)', color: '#16a34a', unit: 'rate', unitLabel: 'rate' },
   rci: { title: 'Remittance Cost Index (RCI)', color: '#f97316', unit: 'percent', unitLabel: 'percent' },
-  rvi: { title: 'Remittance Volatility Index (RVI)', color: '#0ea5e9', unit: 'rate', unitLabel: 'rate' },
+  rvi_bps: { title: 'Remittance Volatility Index (RVI) · bps', color: '#0ea5e9', unit: 'bps', unitLabel: 'bps' },
 }
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 const chartSeries = ref<ChartSeries[]>([])
 const lastUpdated = ref('')
-const weightingLabel = ref('provider volume')
+const weightingLabel = ref('synthetic volume weighted')
 
 const meta = computed(() => indexMeta[indexKey.value])
 const chartTitle = computed(() => meta.value?.title || 'Index')
@@ -139,12 +139,17 @@ const methodLabel = computed(() => {
 })
 const corridorLabel = computed(() => corridorId.value.toUpperCase())
 const citationText = computed(() => {
-  return `Source: Remit-Scout (${indexKey.value.toUpperCase()}) · Weighted by provider volume · Retrieved ${new Date().toLocaleDateString()}`
+  return `Source: Remit-Scout (${indexKey.value.toUpperCase()}) · ${weightingLabel.value} · Retrieved ${new Date().toLocaleDateString()}`
 })
 
 const fullIndexUrl = computed(() => {
   const baseUrl = config.public.siteUrl || ''
-  return `${baseUrl}/methodology`
+  const anchor = indexKey.value === 'teer'
+    ? 'teer'
+    : indexKey.value === 'rci'
+    ? 'rci'
+    : 'rvi'
+  return `${baseUrl}/indices-methodology#${anchor}`
 })
 
 function formatLastUpdated(timestamp: string): string {
@@ -179,7 +184,7 @@ onMounted(async () => {
       api_key: apiKey.value,
     })
     lastUpdated.value = data.lastUpdated || ''
-    weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'provider volume'
+    weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'synthetic volume weighted'
 
     const points = data.series
       .filter((point) => !point.suppressionFlag)

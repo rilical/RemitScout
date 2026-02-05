@@ -63,75 +63,11 @@
               </svg>
               Continue with Google
             </button>
-
-            <button
-              type="button"
-              class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-900 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
-              :disabled="loading"
-              @click="handleSocialSignIn('apple')"
-            >
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-              </svg>
-              Continue with Apple
-            </button>
           </div>
 
-          <!-- Divider -->
-          <div class="relative my-6">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-slate-300" />
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-4 bg-white text-slate-500 font-medium">Or continue with email</span>
-            </div>
-          </div>
-
-          <!-- Email/Password Form -->
-          <form class="space-y-4" @submit.prevent="handleSignIn">
-            <div>
-              <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
-                Email address
-              </label>
-              <input
-                id="email"
-                v-model.trim="email"
-                type="email"
-                autocomplete="email"
-                class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
-                placeholder="you@example.com"
-                required
-              >
-            </div>
-
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <label for="password" class="block text-sm font-semibold text-slate-700">
-                  Password
-                </label>
-                <NuxtLink to="/forgot-password" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
-                  Forgot password?
-                </NuxtLink>
-              </div>
-              <input
-                id="password"
-                v-model="password"
-                type="password"
-                autocomplete="current-password"
-                class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
-                placeholder="••••••••"
-                required
-              >
-            </div>
-
-            <button
-              type="submit"
-              :disabled="loading"
-              class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
-            >
-              {{ loading ? 'Signing in…' : 'Sign in' }}
-            </button>
-          </form>
+          <p class="mt-4 text-xs text-slate-500">
+            Google sign-in is the only supported login method for now.
+          </p>
         </div>
       </div>
 
@@ -164,35 +100,17 @@
 </template>
 
 <script setup lang="ts">
-const { user, isLoggedIn, signIn, signOut, signInWithOAuth } = useAuth()
+const { user, isLoggedIn, signOut, signInWithOAuth } = useAuth()
 const route = useRoute()
 
-const email = ref('')
-const password = ref('')
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
-
-async function handleSignIn() {
-  errorMessage.value = null
-  loading.value = true
-
-  const result = await signIn(email.value, password.value)
-  loading.value = false
-
-  if (!result.ok) {
-    errorMessage.value = result.error || 'Sign in failed.'
-    return
-  }
-
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
-  await navigateTo(redirect)
-}
 
 async function handleSignOut() {
   await signOut()
 }
 
-async function handleSocialSignIn(provider: 'google' | 'apple') {
+async function handleSocialSignIn(provider: 'google') {
   errorMessage.value = null
   loading.value = true
   const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'

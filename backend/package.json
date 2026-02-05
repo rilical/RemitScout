@@ -71,6 +71,7 @@
     "gold:fx-rates": "tsx scripts/gold-fx-rates-job.ts",
     "gold:pulse-cache": "tsx scripts/gold-pulse-cache-job.ts",
     "gold:indices": "tsx scripts/gold-indices-job.ts",
+    "weights:providers": "tsx scripts/provider-weighting-job.ts",
     "gold:publisher": "tsx scripts/gold-publisher-job.ts",
     "gold:live": "tsx scripts/gold-live-worker.ts",
     "gold:reconciliation": "tsx scripts/gold-reconciliation-job.ts",
@@ -89,7 +90,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.620.0",
+    "@aws-sdk/client-ecs": "^3.620.0",
+    "@aws-sdk/client-elasticache": "^3.620.0",
     "@aws-sdk/client-eventbridge": "^3.962.0",
+    "@aws-sdk/client-rds": "^3.620.0",
     "@aws-sdk/client-s3": "^3.620.0",
     "@aws-sdk/client-secrets-manager": "^3.620.0",
     "@aws-sdk/client-ses": "^3.620.0",

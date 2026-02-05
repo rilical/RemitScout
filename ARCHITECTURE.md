@@ -23,6 +23,7 @@ This file is the primary reference for Remit-Scout architecture. It defines key 
 - A NULL/empty rights-matrix country set must **not** match all corridors.
 - Amount buckets must be exact; if not, enqueue a new request—never reuse an imprecise bucket.
 - Method filters must only allow methods supported by providers.
+- Indices must respect rights-matrix allowlists (`allowed_in_teer`, `allowed_in_rci`, `allowed_in_rvi`) in both Gold and live API computations.
 
 ## Environment model
 - **dev**: optimized for speed of iteration, short TTLs, lower capacity.
@@ -64,6 +65,60 @@ See below for canonical definitions; treat this as a high-level summary.
   - Reported SLA for Tier 2 is 3 hours (even though USD data is fresher)
   - **No duplicate scraping** - USD data is reused from Tier 1 collection
 - Enterprise customers on Tier 2 plan get USD corridors "for free" without additional scraping load.
+
+**Tier-1 override (dev/staging):**
+- When `PLANE_B_DISABLE_TIER1=1`, Tier 1 is effectively disabled and **all corridors collect at Tier 2 cadence (3 hours)**.
+- Tier 1 infrastructure remains provisioned but unused; Tier 1 API still exposes USD corridors, but cadence reflects Tier 2.
+
+## Synthetic weighting for indices (TEER/RCI/RVI)
+- Indices use **synthetic volume weights** derived from quote frequency, spread stability, and recency.
+- Weights are computed by the scheduled **provider-weighting** job (Plane C Lambda) and stored in `gold.provider_weight_snapshot`.
+- Live (Plane A) and Gold indices consume the same snapshot weights for consistency.
+- Sparse corridors blend corridor weights with **global weights** (`corridor_id='__global__'`) using `weight_confidence`.
+
+### Weighting model (current implementation)
+- **Inputs** (B2B-only, production-eligible quotes):
+  - `silver.quote_record` joined to `silver.ingestion_run`, `silver.rights_matrix`,
+    and `silver.provider_corridor_capability`.
+  - Filters: `collector_type LIKE 'b2b_%'`, `rm.allowed_collect/allowed_b2b/allowed_resell_b2b`,
+    `rm.status='production'`, `rm.stoplist_status='active'`,
+    and `allowed_in_teer/rci/rvi` true for at least one index.
+- **Scores**:
+  - Frequency score: `log1p(provider_quotes / available_hours)`.
+  - Spread score: `exp(-0.5 * z^2)` where `z = (avg_rate - median_rate) / std_rate`.
+  - Recency score: `exp(-lambda * age_minutes)` with `lambda = ln(2) / half_life_minutes`
+    (default half-life: 180 minutes).
+  - Tier multiplier (persistence): `1.5` if persistence >= 0.9, `1.0` if >= 0.6, else `0.5`.
+  - Raw weight: `frequency^alpha * spread^beta * recency^gamma * tier_multiplier`
+    (defaults: `alpha=0.4`, `beta=0.4`, `gamma=0.2`).
+- **Confidence**:
+  - `weight_confidence = min(1, window_days / lookback_days) * min(1, quote_count / min_quotes)`,
+    and forced to `0` if `window_days < min_days` or `provider_count < min_providers`
+    (defaults: lookback=30d, min_days=3, min_providers=3, min_quotes=500).
+- **Blending**:
+  - If both corridor and global weights exist:  
+    `final_weight = conf * corridor_weight + (1 - conf) * global_weight`.
+  - If missing, fall back to the available weight; if none, use equal weights.
+- **Method profile**:
+  - Weights are stored with `method_profile` but are currently corridor+provider only
+    (`method_profile` is `NULL` in the weighting job).
+
+### Indices methodology (current implementation)
+- **RCI (cost ratio)**: weighted average of total cost ratio  
+  `cost_ratio = (fee_amount + FX_markup) / send_amount`.
+- **TEER (effective rate)**:  
+  `TEER = mid_market_rate * (1 - RCI)` (weighted by `allowed_in_teer`).
+- **RVI (dispersion)**: weighted standard deviation of **effective_rate** where  
+  `effective_rate = ((send_amount - fee_amount) * implied_fx_rate) / send_amount`.
+- **RVI (bps)**: `rvi_bps = (RVI / TEER) * 10,000`.
+- **Mid-market**: `gold.fx_rate_history` (date-matched) with fallback to `gold.fx_rates`
+  (OANDA sync).
+- **Method profiles used for indices**:
+  - `cash_pickup` (cash payout + bank/card/cash pay-in)
+  - `standard_bank` (bank payout + bank transfer pay-in)
+  - `standard_card` (bank payout + card wallet pay-in)
+- **Metadata exposed**: `weighting_model` (`synthetic_volume_v1`), `methodology_version`
+  (`indices_v2`), `weight_confidence`, and `weight_window_days`.
 
 ### Implementation Details
 - Tier-3 and observation mode have been removed; the system uses a simplified 2-tier model.

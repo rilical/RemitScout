@@ -68,15 +68,13 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
     name: 'b2c_refresh_requests_total',
     value: 1,
     unit: 'Count',
-    dimensions: { provider_id: providerId, status: event.status },
-    highCardinality: true,
+    dimensions: { status: event.status },
   })
   recordCloudWatchMetric({
     name: 'b2c_refresh_duration_seconds',
     value: event.durationSeconds,
     unit: 'Seconds',
-    dimensions: { provider_id: providerId, status: event.status },
-    highCardinality: true,
+    dimensions: { status: event.status },
   })
 
   switch (event.status) {
@@ -86,8 +84,7 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
         name: 'b2c_refresh_requests_completed',
         value: 1,
         unit: 'Count',
-        dimensions: { provider_id: providerId },
-        highCardinality: true,
+        dimensions: { status: 'completed' },
       })
       break
     case 'failed':
@@ -96,8 +93,7 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
         name: 'b2c_refresh_requests_failed',
         value: 1,
         unit: 'Count',
-        dimensions: { provider_id: providerId },
-        highCardinality: true,
+        dimensions: { status: 'failed' },
       })
       break
     case 'blocked':
@@ -106,8 +102,7 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
         name: 'b2c_refresh_requests_blocked',
         value: 1,
         unit: 'Count',
-        dimensions: { provider_id: providerId },
-        highCardinality: true,
+        dimensions: { status: 'blocked' },
       })
       break
     case 'skipped':
@@ -119,8 +114,7 @@ export const recordRequest = (event: B2cRefreshRequestMetric) => {
         name: 'b2c_refresh_requests_skipped',
         value: 1,
         unit: 'Count',
-        dimensions: { provider_id: providerId, reason: event.skipReason ?? 'unknown' },
-        highCardinality: true,
+        dimensions: { status: 'skipped' },
       })
       break
     default:

@@ -24,6 +24,7 @@ import {
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initTracing } from '../shared/tracing'
 import { ExportJobRepository, type ExportJobRow } from '../plane-a/src/repositories'
 
 type ExportQueueMessage = {
@@ -39,6 +40,7 @@ type CsvSection = {
 }
 
 const logger = createLogger('script.export-worker')
+initTracing('export-worker')
 const queueUrl = config.queues.exports?.url ?? ''
 const queueMode = config.queues.exports?.mode ?? 'off'
 const bucket = config.storage.exports?.bucket || ''

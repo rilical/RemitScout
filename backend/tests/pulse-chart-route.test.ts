@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 const mockGetEntries = vi.fn()
+const mockGetIndicesSeries = vi.fn()
+const mockResolveCorridorId = vi.fn()
 
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
@@ -15,6 +17,11 @@ vi.mock('../plane-a/src/repositories', () => ({
   PulseCacheRepository: vi.fn().mockImplementation(() => ({
     getEntries: mockGetEntries,
   })),
+  GoldIndicesRepository: vi.fn().mockImplementation(() => ({
+    getIndicesSeries: mockGetIndicesSeries,
+    getIndicesLatest: vi.fn(),
+    resolveCorridorId: mockResolveCorridorId,
+  })),
 }))
 
 describe('pulse chart route', () => {
@@ -25,13 +32,15 @@ describe('pulse chart route', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     mockGetEntries.mockClear()
+    mockGetIndicesSeries.mockReset()
+    mockResolveCorridorId.mockReset()
 
     app = {
       get: vi.fn(),
     } as any
 
     mockRequest = {
-      params: { chartId: 'all-in-cost' },
+      params: { chartId: 'leader-edge' },
       query: {},
     }
 
@@ -47,7 +56,7 @@ describe('pulse chart route', () => {
     const updatedAt = new Date('2025-01-01T00:00:00.000Z')
     mockGetEntries.mockResolvedValue([
       {
-        key: 'pulse:chart:all-in-cost',
+        key: 'pulse:chart:leader-edge',
         payload: JSON.stringify({ series: [], insight: 'ok' }),
         updated_at: updatedAt,
       },
@@ -62,5 +71,45 @@ describe('pulse chart route', () => {
     expect(result.metadata.lastUpdated).toBe(updatedAt.toISOString())
     expect(result.series).toEqual([])
     expect(result.insight).toBe('ok')
+  })
+
+  it('maps all-in-cost to RCI percent and filters suppressed points', async () => {
+    const updatedAt = new Date('2025-01-02T00:00:00.000Z')
+    mockGetIndicesSeries.mockResolvedValue([
+      {
+        date: new Date('2025-01-01T00:00:00.000Z'),
+        teer_rate: 1.1,
+        rci_ratio: 0.025,
+        rvi_bps: 12,
+        mid_market_rate: 1.2,
+        suppression_flag: false,
+        created_at: updatedAt,
+      },
+      {
+        date: new Date('2025-01-02T00:00:00.000Z'),
+        teer_rate: 1.1,
+        rci_ratio: 0.03,
+        rvi_bps: 15,
+        mid_market_rate: 1.2,
+        suppression_flag: true,
+        created_at: updatedAt,
+      },
+    ])
+
+    const handler = vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/pulse/charts/:chartId')?.[2] as any
+
+    const result = await handler(
+      {
+        params: { chartId: 'all-in-cost' },
+        query: { corridor_id: 'US-PH-USD-PHP', range: '30d' },
+      } as Partial<FastifyRequest>,
+      mockReply,
+    )
+
+    expect(result.series).toHaveLength(1)
+    expect(result.series[0].points).toHaveLength(1)
+    expect(result.series[0].points[0].v).toBeCloseTo(2.5)
   })
 })

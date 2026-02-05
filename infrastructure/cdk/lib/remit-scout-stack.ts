@@ -1,4 +1,6 @@
 import { Stack, type StackProps, Tags, CfnOutput } from 'aws-cdk-lib'
+import { Architecture } from 'aws-cdk-lib/aws-lambda'
+import { CpuArchitecture } from 'aws-cdk-lib/aws-ecs'
 import type { Construct } from 'constructs'
 
 import { createNetworking } from './vpc'
@@ -20,6 +22,7 @@ import { createCostGuardrails } from './budgets'
 import { createMonitoring } from './monitoring'
 import { createSynthetics } from './synthetics'
 import { createSnsSubscriptions } from './sns-subscriptions'
+import { createOpsPause } from './ops-pause'
 
 const toOptionalBool = (value: string | boolean | undefined): boolean | undefined => {
   if (typeof value === 'boolean') return value
@@ -56,6 +59,15 @@ const normalizeOrigin = (value?: string): string => {
   }
 }
 
+const resolveArchitecture = (value?: string): { cpu: CpuArchitecture; lambda: Architecture } => {
+  const raw = (value ?? '').toLowerCase()
+  const useX86 = raw === 'x86_64' || raw === 'x86' || raw === 'amd64'
+  return {
+    cpu: useX86 ? CpuArchitecture.X86_64 : CpuArchitecture.ARM64,
+    lambda: useX86 ? Architecture.X86_64 : Architecture.ARM_64,
+  }
+}
+
 export type RemitScoutStackProps = StackProps & {
   envName?: string
 }
@@ -68,6 +80,10 @@ export class RemitScoutStack extends Stack {
     Tags.of(this).add('project', 'remit-scout')
     Tags.of(this).add('service', 'remit-scout')
     Tags.of(this).add('environment', envName)
+    const architectureValue =
+      this.node.tryGetContext('cpuArchitecture') ?? process.env.CPU_ARCHITECTURE
+    const { cpu: cpuArchitecture, lambda: lambdaArchitecture } =
+      resolveArchitecture(architectureValue)
     const ownerTag =
       this.node.tryGetContext('tagOwner') ??
       process.env.TAG_OWNER
@@ -112,11 +128,13 @@ export class RemitScoutStack extends Stack {
       toOptionalBool(
         this.node.tryGetContext('enableCostGuardrails') ??
           process.env.ENABLE_COST_GUARDRAILS,
-      ) ?? envName !== 'dev'
+      ) ?? true
     const costAlertEmails = toList(
       this.node.tryGetContext('costAlertEmails') ??
         process.env.COST_ALERT_EMAILS,
     )
+    const resolvedCostAlertEmails =
+      costAlertEmails.length > 0 ? costAlertEmails : ['alerts@remit-scout.com']
     const costBudgetAmountUsd = toOptionalNumber(
       this.node.tryGetContext('costBudgetAmountUsd') ??
         process.env.COST_BUDGET_AMOUNT_USD,
@@ -125,6 +143,11 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('costAnomalyThresholdUsd') ??
         process.env.COST_ANOMALY_THRESHOLD_USD,
     )
+    const costGuardrailsCreateCur =
+      toOptionalBool(
+        this.node.tryGetContext('costGuardrailsCreateCur') ??
+          process.env.COST_GUARDRAILS_CREATE_CUR,
+      ) ?? envName === 'prod'
 
     const networking = createNetworking(this, { envName })
     const iam = createIam(this, {
@@ -202,6 +225,12 @@ export class RemitScoutStack extends Stack {
     const communicationsSecretArn =
       this.node.tryGetContext('communicationsSecretArn') ??
       process.env.COMMUNICATIONS_SECRET_ARN
+    const sentrySecretArn =
+      this.node.tryGetContext('sentrySecretArn') ??
+      process.env.SENTRY_SECRET_ARN
+    const sentrySecretJsonKey =
+      this.node.tryGetContext('sentrySecretJsonKey') ??
+      process.env.SENTRY_SECRET_JSON_KEY
     const oandaSecretArn =
       this.node.tryGetContext('oandaSecretArn') ??
       process.env.OANDA_SECRET_ARN
@@ -252,6 +281,10 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBB2cRefreshServiceEnabled') ??
         process.env.PLANE_B_B2C_REFRESH_SERVICE_ENABLED,
     ) ?? (envName === 'prod' || envName === 'dev')
+    const fxRateRefreshServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('planeBFxRateRefreshServiceEnabled') ??
+        process.env.PLANE_B_FX_RATE_REFRESH_SERVICE_ENABLED,
+    ) ?? (envName === 'prod' || envName === 'dev')
     const b2cQueueInSweep =
       this.node.tryGetContext('planeBB2cQueueInSweep') ??
       process.env.PLANE_B_B2C_QUEUE_IN_SWEEP ??
@@ -276,6 +309,10 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('quoteRefreshQueueMode') ??
       process.env.QUOTE_REFRESH_QUEUE_MODE ??
       (envName === 'dev' ? 'queue' : (envName === 'prod' ? 'queue' : 'off'))
+    const fxRateRefreshQueueMode =
+      this.node.tryGetContext('fxRateRefreshQueueMode') ??
+      process.env.FX_RATE_REFRESH_QUEUE_MODE ??
+      (envName === 'dev' ? 'queue' : (envName === 'prod' ? 'queue' : 'off'))
     const exportJobQueueMode =
       this.node.tryGetContext('exportJobQueueMode') ??
       process.env.EXPORT_JOB_QUEUE_MODE ??
@@ -283,15 +320,48 @@ export class RemitScoutStack extends Stack {
     const planeBIngestDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBIngestDesiredCount') ??
         process.env.PLANE_B_INGEST_DESIRED_COUNT,
-    ) ?? (envName === 'dev' ? 1 : undefined)
+    ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
+    const b2cRefreshDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBB2cRefreshDesiredCount') ??
+        process.env.PLANE_B_B2C_REFRESH_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
+    const fxRateRefreshDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBFxRateRefreshDesiredCount') ??
+        process.env.PLANE_B_FX_RATE_REFRESH_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
+    const goldIndicesLookbackDays =
+      this.node.tryGetContext('goldIndicesLookbackDays') ??
+      process.env.GOLD_INDICES_LOOKBACK_DAYS ??
+      (envName === 'dev' ? '30' : undefined)
+    const planeBDisableTier1 = toOptionalBool(
+      this.node.tryGetContext('planeBDisableTier1') ??
+        process.env.PLANE_B_DISABLE_TIER1,
+    ) ?? (envName === 'dev' || envName === 'staging')
+    const ingestFanoutTier1DesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBIngestFanoutTier1DesiredCount') ??
+        process.env.PLANE_B_INGEST_FANOUT_TIER1_DESIRED_COUNT,
+    ) ?? (planeBDisableTier1 ? 0 : (envName === 'prod' ? 2 : envName === 'dev' ? 1 : undefined))
+    const ingestFanoutTier2DesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBIngestFanoutTier2DesiredCount') ??
+        process.env.PLANE_B_INGEST_FANOUT_TIER2_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
+    const goldLiveDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('goldLiveDesiredCount') ??
+        process.env.GOLD_LIVE_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 2 : envName === 'dev' ? 1 : undefined)
+    const notificationsDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBNotificationsDesiredCount') ??
+        process.env.PLANE_B_NOTIFICATIONS_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
+    const opsAlertsDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeBOpsAlertsDesiredCount') ??
+        process.env.PLANE_B_OPS_ALERTS_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
     const rawPlaneBQueueWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
     ) ?? (envName === 'dev' ? 1 : undefined)
-    const planeBQueueWorkerDesiredCount =
-      envName === 'dev' && rawPlaneBQueueWorkerDesiredCount !== undefined
-        ? Math.max(1, rawPlaneBQueueWorkerDesiredCount)
-        : rawPlaneBQueueWorkerDesiredCount
+    const planeBQueueWorkerDesiredCount = rawPlaneBQueueWorkerDesiredCount
     const planeBQueueWorkerMaxCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
         process.env.PLANE_B_QUEUE_WORKER_MAX,
@@ -352,10 +422,21 @@ export class RemitScoutStack extends Stack {
       }
       return []
     })()
-    const planeAAdminEmails = toList(
+    const planeAAdminEmailsRaw = toList(
       this.node.tryGetContext('planeAAdminEmails') ??
       process.env.PLANE_A_ADMIN_EMAILS,
     )
+    const planeAAdminEmails =
+      planeAAdminEmailsRaw.length > 0
+        ? planeAAdminEmailsRaw
+        : envName === 'dev'
+          ? ['omar@remit-scout.com']
+          : []
+    const planeAB2cMaxBucketDeltaPct =
+      toOptionalNumber(
+        this.node.tryGetContext('planeAB2cMaxBucketDeltaPct') ??
+        process.env.PLANE_A_B2C_MAX_BUCKET_DELTA_PCT,
+      ) ?? (envName === 'prod' ? 0.2 : 0.25)
     const planeACorsOriginsRaw = toList(
       this.node.tryGetContext('planeACorsOrigins') ??
       process.env.PLANE_A_CORS_ORIGINS,
@@ -402,6 +483,17 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('publicSupabaseAnonKey') ??
       process.env.PUBLIC_SUPABASE_ANON_KEY ??
       process.env.SUPABASE_PUBLISHABLE_KEY
+    const publicGa4MeasurementId =
+      this.node.tryGetContext('publicGa4MeasurementId') ??
+      process.env.PUBLIC_GA4_MEASUREMENT_ID ??
+      process.env.GA4_MEASUREMENT_ID
+    const publicMetaPixelId =
+      this.node.tryGetContext('publicMetaPixelId') ??
+      process.env.PUBLIC_META_PIXEL_ID ??
+      process.env.META_PIXEL_ID
+    const publicAdsEnabled =
+      this.node.tryGetContext('publicAdsEnabled') ??
+      process.env.PUBLIC_ADS_ENABLED
     const publicSupabaseUrlSecretJsonKey =
       this.node.tryGetContext('publicSupabaseUrlSecretJsonKey') ??
       process.env.PUBLIC_SUPABASE_URL_SECRET_JSON_KEY
@@ -520,6 +612,16 @@ export class RemitScoutStack extends Stack {
             process.env.DEV_PAUSED,
         ) ?? false)
       : false
+    const opsPauseAllowlist = toList(
+      this.node.tryGetContext('opsPauseRuleAllowlist') ??
+        process.env.OPS_PAUSE_RULE_ALLOWLIST,
+    )
+    const resolvedOpsPauseAllowlist = opsPauseAllowlist.length > 0
+      ? opsPauseAllowlist
+      : (envName === 'prod'
+        ? ['telemetry-analytics', 'session-cleanup', 'audit-log-cleanup']
+        : [])
+    const hardStopEnabled = envName !== 'prod'
 
     const compute = createCompute(this, {
       envName,
@@ -539,6 +641,7 @@ export class RemitScoutStack extends Stack {
 
     const tasks = createEcsTasks(this, {
       envName,
+      cpuArchitecture,
       backendRepository: registry.backendRepository,
       imageTag,
       roles: iam,
@@ -556,9 +659,14 @@ export class RemitScoutStack extends Stack {
       planeCDbHost,
       planeCDbPort,
       planeCDbName,
+      sentrySecretArn,
+      sentrySecretJsonKey,
       quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
       quoteRefreshQueueMode,
-      ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
+      fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
+      fxRateRefreshQueueMode,
+      ingestFanoutQueueTier1Url: queues.ingestFanoutQueue.queueUrl,
+      ingestFanoutQueueTier2Url: queues.ingestFanoutTier2Queue.queueUrl,
       goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
       goldLiveQueueMode,
       notificationsQueueUrl: queues.notificationsQueue.queueUrl,
@@ -574,11 +682,14 @@ export class RemitScoutStack extends Stack {
       bronzeBucketName: storage.bronzeBucket.bucketName,
       bronzePrefix,
       b2cQueueInSweep,
-      b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
+      b2cRefreshLoopEnabled: b2cRefreshServiceEnabled && (b2cRefreshDesiredCount ?? 0) > 0,
+      fxRateRefreshLoopEnabled:
+        fxRateRefreshServiceEnabled && (fxRateRefreshDesiredCount ?? 0) > 0,
       planeBB2bTargetMinutes,
       planeBB2bObservationMode,
       planeBB2bMaxQueueDepth,
       planeBIngestFanoutMessageMode,
+      planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
       ingestFanoutMode,
       notificationsMode,
       opsAlertsMode,
@@ -586,12 +697,15 @@ export class RemitScoutStack extends Stack {
 
     const api = createApi(this, {
       envName,
+      lambdaArchitecture,
       vpc: networking.vpc,
       roles: iam,
       planeASecurityGroup: networking.planeASecurityGroup,
       planeCSecurityGroup: networking.planeCSecurityGroup,
       quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
       quoteRefreshQueueMode,
+      fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
+      fxRateRefreshQueueMode,
       exportJobQueueUrl: queues.exportJobQueue.queueUrl,
       exportJobQueueMode,
       exportsBucketName: storage.exportsBucket.bucketName,
@@ -609,7 +723,10 @@ export class RemitScoutStack extends Stack {
       stripeSecretArn,
       stripeSsmName,
       communicationsSecretArn,
+      sentrySecretArn,
+      sentrySecretJsonKey,
       planeAAdminEmails,
+      planeAB2cMaxBucketDeltaPct,
       planeACorsOrigins,
       planeACorsAllowedHeaders,
       planeACorsAllowedMethods,
@@ -666,6 +783,16 @@ export class RemitScoutStack extends Stack {
       enableFrontend,
     })
 
+    const frontendUrlFromStack = frontend
+      ? (frontendDomainName
+          ? `https://${frontendDomainName}`
+          : `https://${frontend.distribution.distributionDomainName}`)
+      : undefined
+
+    if (!frontendBaseUrl && frontendUrlFromStack) {
+      api.planeAFunction.addEnvironment('FRONTEND_BASE_URL', frontendUrlFromStack)
+    }
+
     const backup = createBackup(this, {
       envName,
       cluster: database.cluster,
@@ -676,9 +803,10 @@ export class RemitScoutStack extends Stack {
     const costGuardrails = createCostGuardrails(this, {
       envName,
       enabled: enableCostGuardrails,
-      costAlertEmails,
+      costAlertEmails: resolvedCostAlertEmails,
       monthlyBudgetAmountUsd: costBudgetAmountUsd,
       anomalyThresholdUsd: costAnomalyThresholdUsd,
+      createCur: costGuardrailsCreateCur,
     })
 
     const ecsServices = createEcsServices(this, {
@@ -687,19 +815,33 @@ export class RemitScoutStack extends Stack {
       planeBSecurityGroup: networking.planeBSecurityGroup,
       planeBIngestTask: tasks.planeBIngestTask,
       b2cRefreshTask: tasks.b2cRefreshTask,
-      ingestFanoutTask: tasks.ingestFanoutTask,
+      fxRateRefreshTask: tasks.fxRateRefreshTask,
+      ingestFanoutTier1Task: tasks.ingestFanoutTier1Task,
+      ingestFanoutTier2Task: tasks.ingestFanoutTier2Task,
       goldLiveTask: tasks.goldLiveTask,
       notificationsQueueTask: tasks.notificationsQueueTask,
       opsAlertsQueueTask: tasks.opsAlertsQueueTask,
       queues,
       ingestFanoutMode,
+      quoteRefreshMode: quoteRefreshQueueMode,
+      fxRateRefreshMode: fxRateRefreshQueueMode,
       goldLiveMode: goldLiveQueueMode,
       notificationsMode,
       opsAlertsMode,
-      b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? 1 : 0,
+      b2cRefreshDesiredCount: b2cRefreshServiceEnabled
+        ? (b2cRefreshDesiredCount ?? 0)
+        : 0,
+      fxRateRefreshDesiredCount: fxRateRefreshServiceEnabled
+        ? (fxRateRefreshDesiredCount ?? 0)
+        : 0,
       planeBIngestDesiredCount,
       queueWorkerDesiredCount: planeBQueueWorkerDesiredCount,
       queueWorkerMaxCount: planeBQueueWorkerMaxCount,
+      ingestFanoutTier1DesiredCount,
+      ingestFanoutTier2DesiredCount,
+      goldLiveDesiredCount,
+      notificationsDesiredCount,
+      opsAlertsDesiredCount,
       queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
       paused: devPaused,
     })
@@ -760,22 +902,34 @@ export class RemitScoutStack extends Stack {
           publicSupabaseSecretArn: supabaseSecretArn,
           publicSupabaseUrlSecretJsonKey,
           publicSupabaseAnonKeySecretJsonKey,
+          publicGa4MeasurementId,
+          publicMetaPixelId,
+          publicAdsEnabled,
           devPaused,
         })
       : null
 
     createScheduledJobs(this, {
       envName,
+      lambdaArchitecture,
       roles: iam,
       cluster: compute.cluster,
       b2cRefreshTask: tasks.b2cRefreshTask,
+      fxRateRefreshTask: tasks.fxRateRefreshTask,
+      b2bSweepSchedulerTask: tasks.b2bSweepSchedulerTask,
       b2cRefreshServiceEnabled,
+      b2cRefreshDesiredCount,
+      fxRateRefreshServiceEnabled,
+      fxRateRefreshDesiredCount,
+      goldIndicesLookbackDays,
       paused: devPaused,
       vpc: networking.vpc,
       planeASecurityGroup: networking.planeASecurityGroup,
       planeBSecurityGroup: networking.planeBSecurityGroup,
       planeCSecurityGroup: networking.planeCSecurityGroup,
       otelLambdaLayerArn,
+      sentrySecretArn,
+      sentrySecretJsonKey,
       planeBDbSecretArn,
       planeBDbSsmName,
       planeCDbSecretArn,
@@ -808,12 +962,70 @@ export class RemitScoutStack extends Stack {
       planeCDbName,
     })
 
+    const queueWorkerBaseline = planeBQueueWorkerDesiredCount ?? 0
+    const ingestFanoutTier1Baseline =
+      ingestFanoutMode === 'queue' ? (ingestFanoutTier1DesiredCount ?? queueWorkerBaseline) : 0
+    const ingestFanoutTier2Baseline =
+      ingestFanoutMode === 'queue'
+        ? (ingestFanoutTier2DesiredCount ?? Math.max(0, ingestFanoutTier1Baseline - 1))
+        : 0
+    const goldLiveBaseline =
+      goldLiveQueueMode === 'queue' ? (goldLiveDesiredCount ?? queueWorkerBaseline) : 0
+    const notificationsBaseline =
+      notificationsMode === 'queue' ? (notificationsDesiredCount ?? queueWorkerBaseline) : 0
+    const opsAlertsBaseline =
+      opsAlertsMode === 'queue' ? (opsAlertsDesiredCount ?? queueWorkerBaseline) : 0
+    const b2cRefreshBaseline = b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0
+    const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
+
+    createOpsPause(this, {
+      envName,
+      clusterName: compute.cluster.clusterName,
+      ecsServiceNames: [
+        ecsServices.planeBIngestService.serviceName,
+        ecsServices.b2cRefreshService.serviceName,
+        ecsServices.ingestFanoutTier1Service.serviceName,
+        ecsServices.ingestFanoutTier2Service.serviceName,
+        ecsServices.goldLiveService.serviceName,
+        ecsServices.notificationsQueueService.serviceName,
+        ecsServices.opsAlertsQueueService.serviceName,
+      ],
+      ecsBaselineDesired: {
+        [ecsServices.planeBIngestService.serviceName]: planeBIngestBaseline,
+        [ecsServices.b2cRefreshService.serviceName]: b2cRefreshBaseline,
+        [ecsServices.ingestFanoutTier1Service.serviceName]: ingestFanoutTier1Baseline,
+        [ecsServices.ingestFanoutTier2Service.serviceName]: ingestFanoutTier2Baseline,
+        [ecsServices.goldLiveService.serviceName]: goldLiveBaseline,
+        [ecsServices.notificationsQueueService.serviceName]: notificationsBaseline,
+        [ecsServices.opsAlertsQueueService.serviceName]: opsAlertsBaseline,
+      },
+      eventRulePrefix: `remit-scout-${envName}-`,
+      eventRuleAllowlist: resolvedOpsPauseAllowlist,
+      hardStopEnabled,
+      dbClusterIdentifier: database.cluster.clusterIdentifier,
+      redisReplicationGroupId: cache.replicationGroup.ref,
+      redisSubnetGroupName: cache.subnetGroup.cacheSubnetGroupName ?? cache.subnetGroup.ref,
+      redisSecurityGroupIds: [networking.redisSecurityGroup.securityGroupId],
+      redisNodeType: envName === 'prod' ? 'cache.r6g.large' : 'cache.t4g.micro',
+      redisEngineVersion: '7.1',
+      redisNumNodeGroups: 1,
+      redisReplicasPerNodeGroup: envName === 'prod' ? 1 : 0,
+      redisAutomaticFailover: envName === 'prod',
+      redisMultiAz: envName === 'prod',
+      redisTransitEncryption: true,
+      redisAtRestEncryption: true,
+      redisAutoMinorVersionUpgrade: true,
+      role: iam.opsPauseLambdaRole,
+    })
+
     storage.bronzeBucket.grantReadWrite(iam.planeBEcsTaskRole)
     storage.exportsBucket.grantReadWrite(iam.planeALambdaRole)
     storage.userAssetsBucket.grantReadWrite(iam.planeALambdaRole)
     storage.auditLogsBucket.grantReadWrite(iam.planeALambdaRole)
     queues.quoteRefreshQueue.grantSendMessages(iam.planeALambdaRole)
     queues.quoteRefreshQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.fxRateRefreshQueue.grantSendMessages(iam.planeALambdaRole)
+    queues.fxRateRefreshQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.exportJobQueue.grantSendMessages(iam.planeALambdaRole)
     queues.exportJobQueue.grantConsumeMessages(iam.planeALambdaRole)
     queues.alertEvaluationQueue.grantSendMessages(iam.planeALambdaRole)
@@ -821,6 +1033,9 @@ export class RemitScoutStack extends Stack {
     queues.ingestFanoutQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutDlq.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.ingestFanoutTier2Queue.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.ingestFanoutTier2Queue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.ingestFanoutTier2Dlq.grantSendMessages(iam.planeBEcsTaskRole)
     queues.goldLiveQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.goldLiveQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.goldLiveDlq.grantSendMessages(iam.planeBEcsTaskRole)
@@ -911,6 +1126,14 @@ export class RemitScoutStack extends Stack {
       value: queues.quoteRefreshDlq.queueUrl,
       description: 'Quote refresh DLQ URL',
     })
+    new CfnOutput(this, 'FxRateRefreshQueueUrl', {
+      value: queues.fxRateRefreshQueue.queueUrl,
+      description: 'FX rate refresh SQS queue URL',
+    })
+    new CfnOutput(this, 'FxRateRefreshDlqUrl', {
+      value: queues.fxRateRefreshDlq.queueUrl,
+      description: 'FX rate refresh DLQ URL',
+    })
     new CfnOutput(this, 'ExportJobQueueUrl', {
       value: queues.exportJobQueue.queueUrl,
       description: 'Export job queue URL',
@@ -926,6 +1149,14 @@ export class RemitScoutStack extends Stack {
     new CfnOutput(this, 'IngestFanoutDlqUrl', {
       value: queues.ingestFanoutDlq.queueUrl,
       description: 'Ingestion fanout DLQ URL',
+    })
+    new CfnOutput(this, 'IngestFanoutTier2QueueUrl', {
+      value: queues.ingestFanoutTier2Queue.queueUrl,
+      description: 'Tier 2 ingestion fanout queue URL',
+    })
+    new CfnOutput(this, 'IngestFanoutTier2DlqUrl', {
+      value: queues.ingestFanoutTier2Dlq.queueUrl,
+      description: 'Tier 2 ingestion fanout DLQ URL',
     })
     new CfnOutput(this, 'NotificationsQueueUrl', {
       value: queues.notificationsQueue.queueUrl,
@@ -974,14 +1205,18 @@ export class RemitScoutStack extends Stack {
       })
     }
     if (costGuardrails) {
-      new CfnOutput(this, 'CurBucketName', {
-        value: costGuardrails.curBucket.bucketName,
-        description: 'S3 bucket for Cost and Usage Reports',
-      })
-      new CfnOutput(this, 'CurReportName', {
-        value: costGuardrails.curReport.reportName,
-        description: 'Cost and Usage Report name',
-      })
+      if (costGuardrails.curBucket) {
+        new CfnOutput(this, 'CurBucketName', {
+          value: costGuardrails.curBucket.bucketName,
+          description: 'S3 bucket for Cost and Usage Reports',
+        })
+      }
+      if (costGuardrails.curReport) {
+        new CfnOutput(this, 'CurReportName', {
+          value: costGuardrails.curReport.reportName,
+          description: 'Cost and Usage Report name',
+        })
+      }
     }
     new CfnOutput(this, 'CloudWatchDashboardName', {
       value: monitoring.dashboard.dashboardName,

@@ -37,7 +37,7 @@ vi.mock('../plane-a/src/services/user-plan', () => ({
 }))
 
 import { buildApp } from '../plane-a/src/app'
-import { config } from '../shared/config'
+import { getExportTierInfo, TIER_1_CADENCE_SECONDS, TIER_2_CADENCE_SECONDS } from '../shared/corridor-tiers'
 
 describe('GET /api/indices/series', () => {
   beforeEach(() => {
@@ -62,11 +62,14 @@ describe('GET /api/indices/series', () => {
           method_profile: 'standard_bank',
           teer_rate: 1.23,
           rci_ratio: 0.02,
-          rvi_value: 0.11,
+          rvi_bps: 12.34,
           provider_count_binned: 5,
           suppression_flag: false,
           suppression_reason: null,
-          weighting_model: 'provider_volume',
+          weighting_model: 'synthetic_volume_v1',
+          methodology_version: 'indices_v2',
+          weight_confidence: 0.8,
+          weight_window_days: 30,
           created_at: new Date('2024-01-01T06:00:00Z'),
         },
       ],
@@ -82,15 +85,20 @@ describe('GET /api/indices/series', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.headers['x-data-tier']).toBe('tier2')
-    expect(response.headers['x-data-cadence-hours']).toBe(
-      String(config.planeA.enterpriseApiTier2CadenceHours),
+    const tierInfo = getExportTierInfo('US-PH-USD-PHP', 2)
+    const collectionCadenceMinutes = Math.round(
+      (tierInfo.collectionTier === 'tier_1' ? TIER_1_CADENCE_SECONDS : TIER_2_CADENCE_SECONDS) / 60,
     )
+
+    expect(response.headers['x-data-tier']).toBe(String(tierInfo.exportTier))
+    expect(response.headers['x-data-cadence-minutes']).toBe(String(collectionCadenceMinutes))
+    expect(response.headers['x-export-cadence-minutes']).toBe(String(tierInfo.cadenceMinutes))
 
     const payload = response.json()
     expect(payload.corridorId).toBe('US-PH-USD-PHP')
     expect(payload.series).toHaveLength(1)
     expect(payload.series[0].teer).toBe(1.23)
+    expect(payload.series[0].rvi_bps).toBe(12.34)
     expect(mockQuery).toHaveBeenCalled()
     const sql = mockQuery.mock.calls[0][0] as string
     expect(sql).toContain('FROM gold_export.cdp_daily')

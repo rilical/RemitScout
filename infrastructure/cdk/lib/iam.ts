@@ -6,6 +6,7 @@ export type IamResources = {
   planeALambdaRole: Role
   planeBLambdaRole: Role
   planeCLambdaRole: Role
+  opsPauseLambdaRole: Role
   planeBEcsTaskExecutionRole: Role
   planeBEcsTaskRole: Role
 }
@@ -40,6 +41,11 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     managedPolicies: [lambdaBasicPolicy, lambdaVpcPolicy],
   })
 
+  const opsPauseLambdaRole = new Role(scope, 'OpsPauseLambdaRole', {
+    assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+    managedPolicies: [lambdaBasicPolicy],
+  })
+
   const planeBEcsTaskExecutionRole = new Role(scope, 'PlaneBEcsTaskExecutionRole', {
     assumedBy: new ServicePrincipal('ecs-tasks.amazonaws.com'),
     managedPolicies: [
@@ -72,6 +78,10 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   })
   const cloudWatchPolicy = new PolicyStatement({
     actions: ['cloudwatch:PutMetricData'],
+    resources: ['*'],
+  })
+  const cloudWatchReadPolicy = new PolicyStatement({
+    actions: ['cloudwatch:GetMetricStatistics', 'cloudwatch:GetMetricData'],
     resources: ['*'],
   })
   const xrayPolicy = new PolicyStatement({
@@ -111,6 +121,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     planeALambdaRole,
     planeBLambdaRole,
     planeCLambdaRole,
+    opsPauseLambdaRole,
     planeBEcsTaskExecutionRole,
   ]) {
     role.addToPolicy(secretsPolicy)
@@ -124,6 +135,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   planeALambdaRole.addToPolicy(snsPolicy)
 
   planeBEcsTaskRole.addToPolicy(cloudWatchPolicy)
+  planeBEcsTaskRole.addToPolicy(cloudWatchReadPolicy)
   planeBEcsTaskRole.addToPolicy(xrayPolicy)
   planeBEcsTaskRole.addToPolicy(secretsPolicy)
   planeBEcsTaskRole.addToPolicy(sesPolicy)
@@ -149,6 +161,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     planeALambdaRole,
     planeBLambdaRole,
     planeCLambdaRole,
+    opsPauseLambdaRole,
     planeBEcsTaskExecutionRole,
     planeBEcsTaskRole,
   }

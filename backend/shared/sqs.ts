@@ -8,6 +8,7 @@ import {
   SQSClient,
   type Message,
 } from '@aws-sdk/client-sqs'
+import { CloudWatchClient, GetMetricStatisticsCommand } from '@aws-sdk/client-cloudwatch'
 import { context as otelContext, propagation, trace, type Context } from '@opentelemetry/api'
 
 import { createLogger } from './logger'
@@ -26,6 +27,7 @@ import {
 const logger = createLogger('shared.sqs')
 
 let client: SQSClient | null = null
+let cloudWatchClient: CloudWatchClient | null = null
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -44,6 +46,13 @@ const getClient = (): SQSClient => {
     registerSQSClient(client, 'default')
   }
   return client
+}
+
+const getCloudWatchClient = (): CloudWatchClient => {
+  if (!cloudWatchClient) {
+    cloudWatchClient = new CloudWatchClient({})
+  }
+  return cloudWatchClient
 }
 
 export type SqsMessage<T> = {
@@ -563,6 +572,42 @@ export const getQueueStats = async (queueUrl: string): Promise<QueueStats> => {
       error: error instanceof Error ? error.message : String(error),
     })
     return { visible: 0, inFlight: 0, delayed: 0, total: 0 }
+  }
+}
+
+export const getQueueAgeSeconds = async (queueUrl: string): Promise<number> => {
+  try {
+    const queueName = queueUrl.split('/').pop()
+    if (!queueName) return 0
+    const client = getCloudWatchClient()
+    const endTime = new Date()
+    const startTime = new Date(endTime.getTime() - 5 * 60 * 1000)
+    const response = await client.send(
+      new GetMetricStatisticsCommand({
+        Namespace: 'AWS/SQS',
+        MetricName: 'ApproximateAgeOfOldestMessage',
+        Dimensions: [{ Name: 'QueueName', Value: queueName }],
+        StartTime: startTime,
+        EndTime: endTime,
+        Period: 60,
+        Statistics: ['Maximum'],
+      }),
+    )
+    const points = response.Datapoints ?? []
+    const maxPoint = points.reduce((best, point) => {
+      if (!point || typeof point.Maximum !== 'number') return best
+      if (!best || (best.Maximum ?? 0) < point.Maximum) return point
+      return best
+    }, undefined as typeof points[number] | undefined)
+    const ageSeconds = Number(maxPoint?.Maximum ?? 0)
+    return Number.isFinite(ageSeconds) ? ageSeconds : 0
+  } catch (error) {
+    trackMessageFailed(queueUrl, 'get_age')
+    logger.error('age_failed', {
+      queue_url: queueUrl,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return 0
   }
 }
 

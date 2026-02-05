@@ -10,7 +10,11 @@
 import type { Pool } from 'pg'
 import { query } from '../shared/db'
 import { createLogger } from '../shared/logger'
-import { getProviderWeightEntries, PROVIDER_WEIGHTING_MODEL } from '../shared/provider-weights'
+import {
+  DEFAULT_WEIGHT_MODEL,
+  GLOBAL_WEIGHT_CORRIDOR_ID,
+  INDICES_METHODOLOGY_VERSION,
+} from '../shared/weighting-model'
 
 const logger = createLogger('script.gold-indices-live')
 
@@ -19,22 +23,52 @@ const toNumber = (value: string | number | null | undefined, fallback: number) =
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-const lookbackDays = Math.max(2, toNumber(process.env.GOLD_INDICES_LOOKBACK_DAYS, 8))
+const lookbackDays = Math.max(0, toNumber(process.env.GOLD_INDICES_LOOKBACK_DAYS, 8))
 const amountBucket = toNumber(process.env.GOLD_INDICES_AMOUNT_BUCKET, 500)
+const minProviders = Math.max(1, toNumber(process.env.GOLD_INDICES_MIN_PROVIDERS, 3))
+const maxDailyChangeRatio = Math.max(0, toNumber(process.env.GOLD_INDICES_MAX_DAILY_CHANGE_RATIO, 0.5))
+const rateRatioMin = Math.max(0, toNumber(process.env.GOLD_INDICES_RATE_RATIO_MIN, 0.5))
+const rateRatioMax = Math.max(rateRatioMin, toNumber(process.env.GOLD_INDICES_RATE_RATIO_MAX, 2.0))
 
-const providerWeightValues = getProviderWeightEntries()
-  .map(([providerId, weight]) => `('${providerId}', ${Number(weight)})`)
-  .join(',\n    ')
-const providerWeightValuesSql = providerWeightValues.length
-  ? providerWeightValues
-  : "('__default__', 1)"
+const weightModel = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
+const methodologyVersion = process.env.INDICES_METHODOLOGY_VERSION || INDICES_METHODOLOGY_VERSION
 
-const buildIndicesQuery = (corridorFilter: string[] | null) => `
-WITH provider_weights AS (
-  SELECT *
-  FROM (VALUES
-    ${providerWeightValuesSql}
-  ) AS v(provider_id, weight)
+const buildIndicesQuery = () => `
+WITH weight_snapshot AS (
+  SELECT
+    corridor_id,
+    provider_id,
+    weight,
+    model_version,
+    window_days,
+    weight_confidence
+  FROM gold.provider_weight_snapshot
+  WHERE model_version = '${weightModel}'
+),
+corridor_weights AS (
+  SELECT
+    corridor_id,
+    provider_id,
+    weight,
+    window_days,
+    weight_confidence
+  FROM weight_snapshot
+  WHERE corridor_id <> '${GLOBAL_WEIGHT_CORRIDOR_ID}'
+),
+global_weights AS (
+  SELECT
+    provider_id,
+    weight
+  FROM weight_snapshot
+  WHERE corridor_id = '${GLOBAL_WEIGHT_CORRIDOR_ID}'
+),
+weight_meta AS (
+  SELECT
+    corridor_id,
+    MAX(window_days)::int AS window_days,
+    MAX(weight_confidence)::double precision AS weight_confidence
+  FROM corridor_weights
+  GROUP BY corridor_id
 ),
 base_raw AS (
   SELECT
@@ -78,8 +112,8 @@ base_raw AS (
     AND qr.fee_amount IS NOT NULL
     AND qr.fee_amount >= 0
     AND qr.amount_bucket = $1
-    AND qr.collected_at >= NOW() - ($2 * INTERVAL '1 day')
-    ${corridorFilter ? 'AND qr.corridor_id = ANY($3)' : ''}
+    AND ($2::int = 0 OR qr.collected_at >= NOW() - ($2 * INTERVAL '1 day'))
+    AND ($3::text[] IS NULL OR qr.corridor_id = ANY($3))
     AND ir.collector_type LIKE 'b2b_%'
     AND ir.status = 'success'
     AND pcc.is_supported = true
@@ -118,6 +152,7 @@ daily_best AS (
     COUNT(*) AS provider_count,
     MAX(implied_fx_rate)::double precision AS best_rate
   FROM latest
+  WHERE allowed_in_rci = true
   GROUP BY corridor_id, bucket_day, amount_bucket, method_profile
 ),
 rci_rows AS (
@@ -128,6 +163,9 @@ rci_rows AS (
     l.method_profile,
     l.provider_id,
     l.implied_fx_rate,
+    l.allowed_in_teer,
+    l.allowed_in_rci,
+    l.allowed_in_rvi,
     b.best_rate,
     b.provider_count,
     CASE
@@ -140,6 +178,7 @@ rci_rows AS (
    AND b.bucket_day = l.bucket_day
    AND b.amount_bucket = l.amount_bucket
    AND b.method_profile = l.method_profile
+  WHERE l.allowed_in_rci = true
 ),
 daily_stats AS (
   SELECT
@@ -187,7 +226,18 @@ weighted_inputs AS (
     l.fee_amount,
     l.implied_fx_rate,
     COALESCE(fxh.rate, fx.rate)::double precision AS mid_market_rate,
-    COALESCE(pw.weight, 1)::double precision AS provider_weight,
+    COALESCE(
+      CASE
+        WHEN cw.weight IS NOT NULL
+          AND gw.weight IS NOT NULL
+          AND cw.weight_confidence IS NOT NULL
+          THEN (cw.weight_confidence * cw.weight) + ((1 - cw.weight_confidence) * gw.weight)
+        WHEN cw.weight IS NOT NULL THEN cw.weight
+        WHEN gw.weight IS NOT NULL THEN gw.weight
+        ELSE NULL
+      END,
+      1
+    )::double precision AS provider_weight,
     CASE
       WHEN l.send_amount > 0 AND l.implied_fx_rate > 0 AND l.fee_amount >= 0
         THEN ((l.send_amount - l.fee_amount) * l.implied_fx_rate) / l.send_amount
@@ -216,8 +266,11 @@ weighted_inputs AS (
   LEFT JOIN gold.fx_rates fx
     ON fx.base_currency = c.source_currency
    AND fx.quote_currency = c.dest_currency
-  LEFT JOIN provider_weights pw
-    ON pw.provider_id = l.provider_id
+  LEFT JOIN corridor_weights cw
+    ON cw.corridor_id = l.corridor_id
+   AND cw.provider_id = l.provider_id
+  LEFT JOIN global_weights gw
+    ON gw.provider_id = l.provider_id
 ),
 weighted_agg AS (
   SELECT
@@ -225,13 +278,20 @@ weighted_agg AS (
     date,
     amount_bucket,
     method_profile,
-    COUNT(*) AS provider_count,
-    SUM(provider_weight) AS sum_weight,
-    SUM(provider_weight * provider_weight) AS sum_weight_sq,
-    SUM(provider_weight * effective_rate) AS weighted_effective_sum,
-    SUM(provider_weight * effective_rate * effective_rate) AS weighted_effective_sq_sum,
-    SUM(CASE WHEN cost_ratio IS NOT NULL THEN provider_weight ELSE 0 END) AS sum_weight_cost,
-    SUM(provider_weight * cost_ratio) AS weighted_cost_sum,
+    COUNT(*) FILTER (WHERE allowed_in_teer) AS provider_count_teer,
+    COUNT(*) FILTER (WHERE allowed_in_rci) AS provider_count_rci,
+    COUNT(*) FILTER (WHERE allowed_in_rvi) AS provider_count_rvi,
+    SUM(CASE WHEN allowed_in_teer THEN provider_weight ELSE 0 END) AS sum_weight_teer,
+    SUM(CASE WHEN allowed_in_rci THEN provider_weight ELSE 0 END) AS sum_weight_rci,
+    SUM(CASE WHEN allowed_in_rvi THEN provider_weight ELSE 0 END) AS sum_weight_rvi,
+    SUM(CASE WHEN allowed_in_rvi THEN provider_weight * provider_weight ELSE 0 END) AS sum_weight_sq_rvi,
+    SUM(CASE WHEN allowed_in_rvi THEN provider_weight * effective_rate ELSE 0 END) AS weighted_effective_sum_rvi,
+    SUM(CASE WHEN allowed_in_rvi THEN provider_weight * effective_rate * effective_rate ELSE 0 END)
+      AS weighted_effective_sq_sum_rvi,
+    SUM(CASE WHEN allowed_in_teer AND cost_ratio IS NOT NULL THEN provider_weight ELSE 0 END) AS sum_weight_cost_teer,
+    SUM(CASE WHEN allowed_in_teer THEN provider_weight * cost_ratio ELSE 0 END) AS weighted_cost_sum_teer,
+    SUM(CASE WHEN allowed_in_rci AND cost_ratio IS NOT NULL THEN provider_weight ELSE 0 END) AS sum_weight_cost_rci,
+    SUM(CASE WHEN allowed_in_rci THEN provider_weight * cost_ratio ELSE 0 END) AS weighted_cost_sum_rci,
     MAX(mid_market_rate)::double precision AS mid_market_rate
   FROM weighted_inputs
   WHERE effective_rate IS NOT NULL
@@ -243,68 +303,131 @@ weighted_metrics AS (
     date,
     amount_bucket,
     method_profile,
-    provider_count,
     mid_market_rate,
     CASE
-      WHEN sum_weight_cost > 0 THEN weighted_cost_sum / sum_weight_cost
+      WHEN sum_weight_cost_rci > 0 THEN weighted_cost_sum_rci / sum_weight_cost_rci
       ELSE NULL
     END AS rci_ratio,
     CASE
-      WHEN sum_weight > 0 AND (sum_weight - (sum_weight_sq / sum_weight)) > 0
+      WHEN sum_weight_rvi > 0 AND (sum_weight_rvi - (sum_weight_sq_rvi / sum_weight_rvi)) > 0
         THEN sqrt(
           GREATEST(
-            (weighted_effective_sq_sum - (weighted_effective_sum * weighted_effective_sum) / sum_weight) /
-            (sum_weight - (sum_weight_sq / sum_weight)),
+            (weighted_effective_sq_sum_rvi - (weighted_effective_sum_rvi * weighted_effective_sum_rvi) / sum_weight_rvi) /
+            (sum_weight_rvi - (sum_weight_sq_rvi / sum_weight_rvi)),
             0
           )
         )
       ELSE NULL
     END AS rvi_value,
     CASE
-      WHEN mid_market_rate IS NOT NULL AND mid_market_rate > 0 AND sum_weight_cost > 0
-        THEN mid_market_rate * (1 - (weighted_cost_sum / sum_weight_cost))
+      WHEN mid_market_rate IS NOT NULL AND mid_market_rate > 0 AND sum_weight_cost_teer > 0
+        THEN mid_market_rate * (1 - (weighted_cost_sum_teer / sum_weight_cost_teer))
       ELSE NULL
     END AS teer_rate,
-    '${PROVIDER_WEIGHTING_MODEL}'::text AS weighting_model
+    LEAST(
+      COALESCE(provider_count_teer, 0),
+      COALESCE(provider_count_rci, 0),
+      COALESCE(provider_count_rvi, 0)
+    )::int AS provider_count,
+    '${weightModel}'::text AS weighting_model
   FROM weighted_agg
 ),
-prepared AS (
+prepared_base AS (
   SELECT
     wv.corridor_id,
     wv.date,
     wv.amount_bucket,
     wv.method_profile,
-    wv.provider_count,
+    COALESCE(wm.provider_count, wv.provider_count) AS provider_count,
     wv.rci_median_bps,
     wv.rci_p10_bps,
     wv.rci_p90_bps,
     wv.dispersion_bps,
     wv.volatility_7d,
     CASE
-      WHEN wv.provider_count >= 10 THEN 10
-      WHEN wv.provider_count >= 5 THEN 5
-      WHEN wv.provider_count >= 3 THEN 3
-      ELSE wv.provider_count
+      WHEN COALESCE(wm.provider_count, wv.provider_count) >= 10 THEN 10
+      WHEN COALESCE(wm.provider_count, wv.provider_count) >= 5 THEN 5
+      WHEN COALESCE(wm.provider_count, wv.provider_count) >= 3 THEN 3
+      ELSE COALESCE(wm.provider_count, wv.provider_count)
     END AS provider_count_binned,
-    CASE
-      WHEN wv.provider_count < 3 THEN true
-      ELSE false
-    END AS suppression_flag,
-    CASE
-      WHEN wv.provider_count < 3 THEN 'insufficient_providers'
-      ELSE NULL
-    END AS suppression_reason,
     wm.teer_rate,
     wm.rci_ratio,
     wm.rvi_value,
     wm.mid_market_rate,
-    wm.weighting_model
+    wm.weighting_model,
+    wmeta.weight_confidence,
+    wmeta.window_days,
+    '${methodologyVersion}'::text AS methodology_version
   FROM with_volatility wv
   LEFT JOIN weighted_metrics wm
     ON wm.corridor_id = wv.corridor_id
    AND wm.date = wv.date
    AND wm.amount_bucket = wv.amount_bucket
    AND wm.method_profile = wv.method_profile
+  LEFT JOIN weight_meta wmeta
+    ON wmeta.corridor_id = wv.corridor_id
+)
+,
+prepared AS (
+  SELECT
+    *,
+    LAG(teer_rate) OVER (
+      PARTITION BY corridor_id, amount_bucket, method_profile
+      ORDER BY date
+    ) AS prev_teer_rate,
+    CASE
+      WHEN teer_rate IS NOT NULL
+        AND prev_teer_rate IS NOT NULL
+        AND prev_teer_rate > 0
+        AND abs(teer_rate - prev_teer_rate) / prev_teer_rate > $5
+        THEN true
+      WHEN teer_rate IS NOT NULL
+        AND mid_market_rate IS NOT NULL
+        AND mid_market_rate > 0
+        AND (teer_rate / mid_market_rate < $6 OR teer_rate / mid_market_rate > $7)
+        THEN true
+      ELSE false
+    END AS is_outlier
+  FROM prepared_base
+),
+final AS (
+  SELECT
+    corridor_id,
+    date,
+    amount_bucket,
+    method_profile,
+    provider_count,
+    rci_median_bps,
+    rci_p10_bps,
+    rci_p90_bps,
+    dispersion_bps,
+    volatility_7d,
+    provider_count_binned,
+    CASE
+      WHEN provider_count < $4 THEN true
+      WHEN is_outlier THEN true
+      ELSE false
+    END AS suppression_flag,
+    CASE
+      WHEN provider_count < $4 THEN 'insufficient_providers'
+      WHEN is_outlier THEN 'rate_inversion_or_outlier'
+      ELSE NULL
+    END AS suppression_reason,
+    teer_rate,
+    rci_ratio,
+    CASE
+      WHEN provider_count < $4 THEN NULL
+      WHEN is_outlier THEN NULL
+      WHEN teer_rate IS NULL OR teer_rate <= 0 THEN NULL
+      WHEN rvi_value IS NULL THEN NULL
+      ELSE (rvi_value / teer_rate) * 10000
+    END AS rvi_bps,
+    mid_market_rate,
+    weighting_model,
+    weight_confidence,
+    window_days AS weight_window_days,
+    methodology_version
+  FROM prepared
 )
 SELECT
   corridor_id,
@@ -322,10 +445,13 @@ SELECT
   suppression_reason,
   teer_rate,
   rci_ratio,
-  rvi_value,
+  rvi_bps,
   mid_market_rate,
-  weighting_model
-FROM prepared
+  weighting_model,
+  weight_confidence,
+  weight_window_days,
+  methodology_version
+FROM final
 `
 
 const upsertQuery = `
@@ -345,9 +471,12 @@ INSERT INTO gold_export.cdp_daily (
   suppression_reason,
   teer_rate,
   rci_ratio,
-  rvi_value,
+  rvi_bps,
   mid_market_rate,
-  weighting_model
+  weighting_model,
+  weight_confidence,
+  weight_window_days,
+  methodology_version
 )
 SELECT
   date,
@@ -365,9 +494,12 @@ SELECT
   suppression_reason,
   teer_rate,
   rci_ratio,
-  rvi_value,
+  rvi_bps,
   mid_market_rate,
-  weighting_model
+  weighting_model,
+  weight_confidence,
+  weight_window_days,
+  methodology_version
 FROM unnest(
   $1::date[],
   $2::text[],
@@ -386,7 +518,10 @@ FROM unnest(
   $15::double precision[],
   $16::double precision[],
   $17::double precision[],
-  $18::text[]
+  $18::text[],
+  $19::double precision[],
+  $20::int[],
+  $21::text[]
 ) AS t(
   date,
   corridor_id,
@@ -403,9 +538,12 @@ FROM unnest(
   suppression_reason,
   teer_rate,
   rci_ratio,
-  rvi_value,
+  rvi_bps,
   mid_market_rate,
-  weighting_model
+  weighting_model,
+  weight_confidence,
+  weight_window_days,
+  methodology_version
 )
 ON CONFLICT (date, corridor_id, amount_bucket, method_profile)
 DO UPDATE SET
@@ -420,9 +558,12 @@ DO UPDATE SET
   suppression_reason = EXCLUDED.suppression_reason,
   teer_rate = EXCLUDED.teer_rate,
   rci_ratio = EXCLUDED.rci_ratio,
-  rvi_value = EXCLUDED.rvi_value,
+  rvi_bps = EXCLUDED.rvi_bps,
   mid_market_rate = EXCLUDED.mid_market_rate,
-  weighting_model = EXCLUDED.weighting_model
+  weighting_model = EXCLUDED.weighting_model,
+  weight_confidence = EXCLUDED.weight_confidence,
+  weight_window_days = EXCLUDED.weight_window_days,
+  methodology_version = EXCLUDED.methodology_version
 RETURNING 1
 `
 
@@ -442,9 +583,12 @@ type IndicesRow = {
   suppression_reason: string | null
   teer_rate: number | null
   rci_ratio: number | null
-  rvi_value: number | null
+  rvi_bps: number | null
   mid_market_rate: number | null
   weighting_model: string
+  weight_confidence: number | null
+  weight_window_days: number | null
+  methodology_version: string | null
 }
 
 const normalizeCorridorFilter = (corridorIds?: string[]) => {
@@ -468,10 +612,16 @@ export const upsertGoldIndicesLive = async (
   const targetBucket = options.amountBucket ?? amountBucket
   const targetLookbackDays = options.lookbackDays ?? lookbackDays
 
-  const selectQuery = buildIndicesQuery(corridorFilter)
-  const params = corridorFilter
-    ? [targetBucket, targetLookbackDays, corridorFilter]
-    : [targetBucket, targetLookbackDays]
+  const selectQuery = buildIndicesQuery()
+  const params = [
+    targetBucket,
+    targetLookbackDays,
+    corridorFilter,
+    minProviders,
+    maxDailyChangeRatio,
+    rateRatioMin,
+    rateRatioMax,
+  ]
 
   const selectResult = await query<IndicesRow>(selectQuery, params, silverPool)
 
@@ -497,9 +647,12 @@ export const upsertGoldIndicesLive = async (
   const suppressionReasons: (string | null)[] = []
   const teerRates: (number | null)[] = []
   const rciRatios: (number | null)[] = []
-  const rviValues: (number | null)[] = []
+  const rviBpsValues: (number | null)[] = []
   const midMarketRates: (number | null)[] = []
   const weightingModels: string[] = []
+  const weightConfidences: (number | null)[] = []
+  const weightWindowDays: (number | null)[] = []
+  const methodologyVersions: (string | null)[] = []
 
   for (const row of selectResult.rows) {
     dates.push(row.date)
@@ -517,9 +670,12 @@ export const upsertGoldIndicesLive = async (
     suppressionReasons.push(row.suppression_reason)
     teerRates.push(row.teer_rate)
     rciRatios.push(row.rci_ratio)
-    rviValues.push(row.rvi_value)
+    rviBpsValues.push(row.rvi_bps)
     midMarketRates.push(row.mid_market_rate)
     weightingModels.push(row.weighting_model)
+    weightConfidences.push(row.weight_confidence ?? null)
+    weightWindowDays.push(row.weight_window_days ?? null)
+    methodologyVersions.push(row.methodology_version ?? null)
   }
 
   const upsertResult = await query<{ count: number }>(
@@ -540,9 +696,12 @@ export const upsertGoldIndicesLive = async (
       suppressionReasons,
       teerRates,
       rciRatios,
-      rviValues,
+      rviBpsValues,
       midMarketRates,
       weightingModels,
+      weightConfidences,
+      weightWindowDays,
+      methodologyVersions,
     ],
     goldPool,
   )

@@ -29,13 +29,16 @@ const providerCoverageCount = new Gauge({
   registers: [metricsRegistry],
 })
 
+const TIER_1_FILTER = "('tier_1','tier_1_alpha')"
+const TIER_2_FILTER = "('tier_2')"
+
 export const refreshDataHealthMetrics = async (pool: Pool): Promise<void> => {
   try {
     dataFreshnessAgeMinutes.reset()
     quoteSuccessRate.reset()
     providerCoverageCount.reset()
 
-    const freshnessRows = await query<{
+    const freshnessRowsTier1 = await query<{
       corridor_id: string
       provider_id: string
       amount_bucket: number
@@ -50,12 +53,32 @@ export const refreshDataHealthMetrics = async (pool: Pool): Promise<void> => {
        JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
        WHERE lqp.status = 'ok'
          AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-         AND cp.priority_tier = 'tier_1_alpha'`,
+         AND cp.priority_tier IN ${TIER_1_FILTER}`,
       [],
       pool,
     )
 
-    const successRateRows = await query<{
+    const freshnessRowsTier2 = await query<{
+      corridor_id: string
+      provider_id: string
+      amount_bucket: number
+      age_minutes: number
+    }>(
+      `SELECT 
+        lqp.corridor_id,
+        lqp.provider_id,
+        lqp.amount_bucket,
+        EXTRACT(EPOCH FROM (NOW() - lqp.collected_at)) / 60.0 AS age_minutes
+       FROM silver.latest_quote_by_provider lqp
+       JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
+       WHERE lqp.status = 'ok'
+         AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
+         AND cp.priority_tier IN ${TIER_2_FILTER}`,
+      [],
+      pool,
+    )
+
+    const successRateRowsTier1 = await query<{
       corridor_id: string
       provider_id: string
       success_rate: number
@@ -67,13 +90,31 @@ export const refreshDataHealthMetrics = async (pool: Pool): Promise<void> => {
        FROM silver.quote_attempt qa
        JOIN silver.corridor_priority cp ON cp.corridor_id = qa.corridor_id
        WHERE qa.attempted_at >= NOW() - INTERVAL '1 hour'
-         AND cp.priority_tier = 'tier_1_alpha'
+         AND cp.priority_tier IN ${TIER_1_FILTER}
        GROUP BY qa.corridor_id, qa.provider_id`,
       [],
       pool,
     )
 
-    const coverageRows = await query<{
+    const successRateRowsTier2 = await query<{
+      corridor_id: string
+      provider_id: string
+      success_rate: number
+    }>(
+      `SELECT 
+        qa.corridor_id,
+        qa.provider_id,
+        COUNT(*) FILTER (WHERE qa.success = true)::float / NULLIF(COUNT(*), 0) AS success_rate
+       FROM silver.quote_attempt qa
+       JOIN silver.corridor_priority cp ON cp.corridor_id = qa.corridor_id
+       WHERE qa.attempted_at >= NOW() - INTERVAL '1 hour'
+         AND cp.priority_tier IN ${TIER_2_FILTER}
+       GROUP BY qa.corridor_id, qa.provider_id`,
+      [],
+      pool,
+    )
+
+    const coverageRowsTier1 = await query<{
       corridor_id: string
       amount_bucket: number
       provider_count: number
@@ -86,52 +127,90 @@ export const refreshDataHealthMetrics = async (pool: Pool): Promise<void> => {
        JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
        WHERE lqp.status = 'ok'
          AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-         AND cp.priority_tier = 'tier_1_alpha'
+         AND cp.priority_tier IN ${TIER_1_FILTER}
        GROUP BY lqp.corridor_id, lqp.amount_bucket`,
       [],
       pool,
     )
 
-    for (const row of freshnessRows.rows) {
-      dataFreshnessAgeMinutes.set(
-        {
-          corridor_id: row.corridor_id,
-          provider_id: row.provider_id,
-          amount_bucket: String(row.amount_bucket),
-        },
-        row.age_minutes,
-      )
+    const coverageRowsTier2 = await query<{
+      corridor_id: string
+      amount_bucket: number
+      provider_count: number
+    }>(
+      `SELECT 
+        lqp.corridor_id,
+        lqp.amount_bucket,
+        COUNT(DISTINCT lqp.provider_id) AS provider_count
+       FROM silver.latest_quote_by_provider lqp
+       JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
+       WHERE lqp.status = 'ok'
+         AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
+         AND cp.priority_tier IN ${TIER_2_FILTER}
+       GROUP BY lqp.corridor_id, lqp.amount_bucket`,
+      [],
+      pool,
+    )
+
+    const applyFreshnessRows = (
+      rows: Array<{ corridor_id: string; provider_id: string; amount_bucket: number; age_minutes: number }>,
+    ) => {
+      for (const row of rows) {
+        dataFreshnessAgeMinutes.set(
+          {
+            corridor_id: row.corridor_id,
+            provider_id: row.provider_id,
+            amount_bucket: String(row.amount_bucket),
+          },
+          row.age_minutes,
+        )
+      }
     }
 
-    for (const row of successRateRows.rows) {
-      quoteSuccessRate.set(
-        {
-          corridor_id: row.corridor_id,
-          provider_id: row.provider_id,
-        },
-        row.success_rate,
-      )
+    const applySuccessRateRows = (
+      rows: Array<{ corridor_id: string; provider_id: string; success_rate: number }>,
+    ) => {
+      for (const row of rows) {
+        quoteSuccessRate.set(
+          {
+            corridor_id: row.corridor_id,
+            provider_id: row.provider_id,
+          },
+          row.success_rate,
+        )
+      }
     }
 
-    for (const row of coverageRows.rows) {
-      providerCoverageCount.set(
-        {
-          corridor_id: row.corridor_id,
-          amount_bucket: String(row.amount_bucket),
-        },
-        row.provider_count,
-      )
+    const applyCoverageRows = (
+      rows: Array<{ corridor_id: string; amount_bucket: number; provider_count: number }>,
+    ) => {
+      for (const row of rows) {
+        providerCoverageCount.set(
+          {
+            corridor_id: row.corridor_id,
+            amount_bucket: String(row.amount_bucket),
+          },
+          row.provider_count,
+        )
+      }
     }
+
+    applyFreshnessRows(freshnessRowsTier1.rows)
+    applyFreshnessRows(freshnessRowsTier2.rows)
+    applySuccessRateRows(successRateRowsTier1.rows)
+    applySuccessRateRows(successRateRowsTier2.rows)
+    applyCoverageRows(coverageRowsTier1.rows)
+    applyCoverageRows(coverageRowsTier2.rows)
 
     logger.debug('data_health_metrics_refreshed', {
-      freshness_count: freshnessRows.rows.length,
-      success_rate_count: successRateRows.rows.length,
-      coverage_count: coverageRows.rows.length,
+      freshness_count: freshnessRowsTier1.rows.length + freshnessRowsTier2.rows.length,
+      success_rate_count: successRateRowsTier1.rows.length + successRateRowsTier2.rows.length,
+      coverage_count: coverageRowsTier1.rows.length + coverageRowsTier2.rows.length,
     })
 
     try {
-      if (freshnessRows.rows.length > 0) {
-        const freshnessSorted = freshnessRows.rows
+      if (freshnessRowsTier1.rows.length > 0) {
+        const freshnessSorted = freshnessRowsTier1.rows
           .map((r) => r.age_minutes * 60)
           .sort((a, b) => a - b)
         const p95Index = Math.floor(freshnessSorted.length * 0.95)
@@ -139,22 +218,44 @@ export const refreshDataHealthMetrics = async (pool: Pool): Promise<void> => {
         recordSLOValue('freshness_p95', '1h', p95Seconds)
       }
 
-      if (successRateRows.rows.length > 0) {
+      if (freshnessRowsTier2.rows.length > 0) {
+        const freshnessSorted = freshnessRowsTier2.rows
+          .map((r) => r.age_minutes * 60)
+          .sort((a, b) => a - b)
+        const p95Index = Math.floor(freshnessSorted.length * 0.95)
+        const p95Seconds = freshnessSorted[Math.min(p95Index, freshnessSorted.length - 1)]
+        recordSLOValue('freshness_p95_tier2', '1h', p95Seconds)
+      }
+
+      if (successRateRowsTier1.rows.length > 0) {
         const avgSuccessRate =
-          successRateRows.rows.reduce((sum, r) => sum + (r.success_rate || 0), 0) /
-          successRateRows.rows.length
+          successRateRowsTier1.rows.reduce((sum, r) => sum + (r.success_rate || 0), 0) /
+          successRateRowsTier1.rows.length
         recordSLOValue('quote_success_rate', '1h', avgSuccessRate)
       }
 
-      if (coverageRows.rows.length > 0) {
-        const minCoverage = Math.min(...coverageRows.rows.map((r) => r.provider_count))
+      if (successRateRowsTier2.rows.length > 0) {
+        const avgSuccessRate =
+          successRateRowsTier2.rows.reduce((sum, r) => sum + (r.success_rate || 0), 0) /
+          successRateRowsTier2.rows.length
+        recordSLOValue('quote_success_rate_tier2', '1h', avgSuccessRate)
+      }
+
+      if (coverageRowsTier1.rows.length > 0) {
+        const minCoverage = Math.min(...coverageRowsTier1.rows.map((r) => r.provider_count))
         recordSLOValue('provider_coverage', '1h', minCoverage)
+      }
+
+      if (coverageRowsTier2.rows.length > 0) {
+        const minCoverage = Math.min(...coverageRowsTier2.rows.map((r) => r.provider_count))
+        recordSLOValue('provider_coverage_tier2', '1h', minCoverage)
       }
     } catch (sloError) {
       logger.warn('slo_tracking_failed', {
         error: sloError instanceof Error ? sloError.message : String(sloError),
       })
     }
+
   } catch (error) {
     logger.error('data_health_metrics_refresh_failed', {
       error: error instanceof Error ? error.message : String(error),

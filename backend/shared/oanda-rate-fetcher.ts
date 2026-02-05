@@ -4,10 +4,12 @@ import { query } from './db'
 import { config } from './config'
 import { fxRateHistoryCache } from './repository-cache'
 import { mapOandaCurrencyPair } from './oanda-code-map'
+import { RedisTokenBucket } from './redis-token-bucket'
 
 const logger = createLogger('shared.oanda-rate-fetcher')
 
 const OANDA_API_URL = 'https://fxds-public-exchange-rates-api.oanda.com/cc-api/currencies'
+const RATE_LIMIT_STATUSES = new Set([429, 502, 503, 504])
 const DEFAULT_HEADERS = {
   'Pragma': 'no-cache',
   'Accept': 'application/json, text/plain, */*',
@@ -20,6 +22,56 @@ const DEFAULT_HEADERS = {
   'Referer': 'https://www.oanda.com/',
   'Sec-Fetch-Dest': 'empty',
   'Priority': 'u=3, i',
+}
+
+type OandaFetchOptions = {
+  maxWaitMs?: number
+  source?: string
+}
+
+let oandaTokenBucket: RedisTokenBucket | null = null
+let oandaTokenBucketConfig: { rpm: number; burstMultiplier: number } | null = null
+
+const getOandaTokenBucket = () => {
+  const rpm = config.fxRates?.oandaRpm ?? 60
+  const burstMultiplier = config.fxRates?.oandaBurstMultiplier ?? 2
+  if (
+    !oandaTokenBucket ||
+    !oandaTokenBucketConfig ||
+    oandaTokenBucketConfig.rpm !== rpm ||
+    oandaTokenBucketConfig.burstMultiplier !== burstMultiplier
+  ) {
+    oandaTokenBucket = new RedisTokenBucket('token_bucket:oanda', rpm, burstMultiplier, true)
+    oandaTokenBucketConfig = { rpm, burstMultiplier }
+  } else {
+    oandaTokenBucket.updateRpm(rpm)
+  }
+  return oandaTokenBucket
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const parseRetryAfterMs = (value: string | null): number | null => {
+  if (!value) return null
+  const asNumber = Number(value)
+  if (Number.isFinite(asNumber) && asNumber >= 0) {
+    return Math.round(asNumber * 1000)
+  }
+  const parsedDate = Date.parse(value)
+  if (!Number.isNaN(parsedDate)) {
+    return Math.max(0, parsedDate - Date.now())
+  }
+  return null
+}
+
+const computeBackoffMs = (attempt: number, retryAfterMs?: number | null): number => {
+  const baseMs = Math.max(0, config.fxRates?.oandaRateLimitBackoffMs ?? 1000)
+  const maxMs = Math.max(baseMs, config.fxRates?.oandaRateLimitBackoffMaxMs ?? 10000)
+  const jitterMs = Math.max(0, config.fxRates?.oandaRateLimitJitterMs ?? 250)
+  const exponential = Math.min(maxMs, baseMs * Math.pow(2, Math.max(0, attempt)))
+  const jitter = jitterMs > 0 ? Math.floor(Math.random() * jitterMs) : 0
+  const computed = exponential + jitter
+  return Math.max(retryAfterMs ?? 0, computed)
 }
 
 export type OandaRateData = {
@@ -64,6 +116,7 @@ export class OandaRateFetcher {
     baseCurrency: string,
     quoteCurrency: string,
     useCache: boolean = true,
+    options: OandaFetchOptions = {},
   ): Promise<OandaFetchResult> {
     const mapped = mapOandaCurrencyPair(baseCurrency, quoteCurrency)
     const base = mapped.base
@@ -113,10 +166,10 @@ export class OandaRateFetcher {
     }
 
     if (this.useAuthenticatedApi && this.apiKey) {
-      return this.fetchFromAuthenticatedApi(base, quote)
+      return this.fetchFromAuthenticatedApi(base, quote, options)
     }
 
-    return this.fetchFromPublicApi(base, quote)
+    return this.fetchFromPublicApi(base, quote, options)
   }
 
   private async getCachedRate(
@@ -175,6 +228,7 @@ export class OandaRateFetcher {
   private async fetchFromPublicApi(
     baseCurrency: string,
     quoteCurrency: string,
+    options: OandaFetchOptions = {},
   ): Promise<OandaFetchResult> {
     const today = new Date().toISOString().split('T')[0]
     const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -183,129 +237,189 @@ export class OandaRateFetcher {
 
     const url = `${OANDA_API_URL}?base=${baseCurrency}&quote=${quoteCurrency}&data_type=chart&start_date=${oneMonthAgo}&end_date=${today}`
 
+    const startedAt = Date.now()
+    const maxRetries = Math.max(0, config.fxRates?.oandaRateLimitMaxRetries ?? 3)
+
     try {
-      logger.info('fetching_from_oanda', {
-        base_currency: baseCurrency,
-        quote_currency: quoteCurrency,
-        url,
-      })
-
-      const response = await fetch(url, {
-        headers: DEFAULT_HEADERS,
-        signal: AbortSignal.timeout(10000),
-      })
-
-      if (response.status !== 200) {
-        logger.warn('oanda_api_error', {
-          status: response.status,
+      for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+        logger.info('fetching_from_oanda', {
           base_currency: baseCurrency,
           quote_currency: quoteCurrency,
+          url,
+          attempt,
+          source: options.source ?? 'unknown',
         })
-        return this.getFallbackRate(baseCurrency, quoteCurrency)
-      }
 
-      const text = await response.text()
-      if (!text.trim()) {
-        logger.warn('oanda_empty_response', {
-          base_currency: baseCurrency,
-          quote_currency: quoteCurrency,
-        })
-        return this.getFallbackRate(baseCurrency, quoteCurrency)
-      }
-
-      let data: { response?: Array<{ average_bid?: string | number; average_ask?: string | number; close_time?: string }> }
-      try {
-        data = JSON.parse(text)
-      } catch (parseError) {
-        logger.warn('oanda_json_parse_failed', {
-          base_currency: baseCurrency,
-          quote_currency: quoteCurrency,
-          error: parseError instanceof Error ? parseError.message : String(parseError),
-          response_preview: text.substring(0, 100),
-        })
-        return this.getFallbackRate(baseCurrency, quoteCurrency)
-      }
-
-      if (!data?.response || !Array.isArray(data.response) || data.response.length === 0) {
-        logger.warn('oanda_empty_response_data', {
-          base_currency: baseCurrency,
-          quote_currency: quoteCurrency,
-          data_keys: Object.keys(data || {}),
-        })
-        return this.getFallbackRate(baseCurrency, quoteCurrency)
-      }
-
-      const rateEntry = data.response[0]
-      const bid = parseFloat(String(rateEntry?.average_bid || '0'))
-      const ask = parseFloat(String(rateEntry?.average_ask || '0'))
-
-      if (bid === 0 && ask === 0) {
-        logger.warn('oanda_zero_rates', {
-          base_currency: baseCurrency,
-          quote_currency: quoteCurrency,
-          rate_entry: rateEntry,
-        })
-        return this.getFallbackRate(baseCurrency, quoteCurrency)
-      }
-
-      let midRate: number
-      if (bid > 0 && ask > 0) {
-        midRate = (bid + ask) / 2
-      } else {
-        midRate = bid > 0 ? bid : ask
-      }
-
-      const historicalRates: OandaHistoricalRate[] = []
-      for (const entry of data.response) {
         try {
-          const entryBid = parseFloat(String(entry?.average_bid || '0'))
-          const entryAsk = parseFloat(String(entry?.average_ask || '0'))
-          const closeTime = entry?.close_time
-          if (!closeTime || Number.isNaN(entryBid) || Number.isNaN(entryAsk)) {
-            continue
-          }
-          const rateDate = new Date(closeTime).toISOString().split('T')[0]
-          const entryRate = entryBid > 0 && entryAsk > 0 ? (entryBid + entryAsk) / 2 : entryBid || entryAsk
-          historicalRates.push({
-            date: rateDate,
-            rate: entryRate,
-            bid: entryBid,
-            ask: entryAsk,
-          })
-        } catch (entryError) {
-          logger.warn('oanda_historical_entry_error', {
+          await getOandaTokenBucket().acquireToken(1, options.maxWaitMs)
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          logger.warn('oanda_rate_limit_wait_failed', {
             base_currency: baseCurrency,
             quote_currency: quoteCurrency,
-            error: entryError instanceof Error ? entryError.message : String(entryError),
+            error: message,
+            source: options.source ?? 'unknown',
           })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
         }
-      }
 
-      const rateData: OandaRateData = {
-        base_currency: baseCurrency,
-        quote_currency: quoteCurrency,
-        rate: midRate,
-        bid: bid || null,
-        ask: ask || null,
-        source: 'OANDA',
-        last_updated: new Date(),
-      }
+        const response = await fetch(url, {
+          headers: DEFAULT_HEADERS,
+          signal: AbortSignal.timeout(10000),
+        })
 
-      await this.saveRate(rateData)
-      await this.storeHistory(baseCurrency, quoteCurrency, historicalRates, rateData.source)
+        if (RATE_LIMIT_STATUSES.has(response.status)) {
+          if (attempt >= maxRetries) {
+            logger.warn('oanda_rate_limit_exhausted', {
+              status: response.status,
+              base_currency: baseCurrency,
+              quote_currency: quoteCurrency,
+              source: options.source ?? 'unknown',
+            })
+            return this.getFallbackRate(baseCurrency, quoteCurrency)
+          }
 
-      logger.info('oanda_rate_fetched', {
-        base_currency: baseCurrency,
-        quote_currency: quoteCurrency,
-        rate: midRate,
-        historical_count: historicalRates.length,
-      })
+          const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'))
+          const backoffMs = computeBackoffMs(attempt, retryAfterMs)
+          if (Number.isFinite(options.maxWaitMs) && options.maxWaitMs !== undefined) {
+            const elapsedMs = Date.now() - startedAt
+            if (elapsedMs + backoffMs > options.maxWaitMs) {
+              logger.warn('oanda_rate_limit_budget_exhausted', {
+                status: response.status,
+                base_currency: baseCurrency,
+                quote_currency: quoteCurrency,
+                backoff_ms: backoffMs,
+                max_wait_ms: options.maxWaitMs,
+                source: options.source ?? 'unknown',
+              })
+              return this.getFallbackRate(baseCurrency, quoteCurrency)
+            }
+          }
 
-      return {
-        success: true,
-        data: rateData,
-        historical_rates: historicalRates,
-        cached: false,
+          logger.info('oanda_rate_limit_backoff', {
+            status: response.status,
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+            backoff_ms: backoffMs,
+            attempt,
+            source: options.source ?? 'unknown',
+          })
+          await sleep(backoffMs)
+          continue
+        }
+
+        if (response.status !== 200) {
+          logger.warn('oanda_api_error', {
+            status: response.status,
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+          })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
+        }
+
+        const text = await response.text()
+        if (!text.trim()) {
+          logger.warn('oanda_empty_response', {
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+          })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
+        }
+
+        let data: { response?: Array<{ average_bid?: string | number; average_ask?: string | number; close_time?: string }> }
+        try {
+          data = JSON.parse(text)
+        } catch (parseError) {
+          logger.warn('oanda_json_parse_failed', {
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+            error: parseError instanceof Error ? parseError.message : String(parseError),
+            response_preview: text.substring(0, 100),
+          })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
+        }
+
+        if (!data?.response || !Array.isArray(data.response) || data.response.length === 0) {
+          logger.warn('oanda_empty_response_data', {
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+            data_keys: Object.keys(data || {}),
+          })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
+        }
+
+        const rateEntry = data.response[0]
+        const bid = parseFloat(String(rateEntry?.average_bid || '0'))
+        const ask = parseFloat(String(rateEntry?.average_ask || '0'))
+
+        if (bid === 0 && ask === 0) {
+          logger.warn('oanda_zero_rates', {
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+            rate_entry: rateEntry,
+          })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
+        }
+
+        let midRate: number
+        if (bid > 0 && ask > 0) {
+          midRate = (bid + ask) / 2
+        } else {
+          midRate = bid > 0 ? bid : ask
+        }
+
+        const historicalRates: OandaHistoricalRate[] = []
+        for (const entry of data.response) {
+          try {
+            const entryBid = parseFloat(String(entry?.average_bid || '0'))
+            const entryAsk = parseFloat(String(entry?.average_ask || '0'))
+            const closeTime = entry?.close_time
+            if (!closeTime || Number.isNaN(entryBid) || Number.isNaN(entryAsk)) {
+              continue
+            }
+            const rateDate = new Date(closeTime).toISOString().split('T')[0]
+            const entryRate = entryBid > 0 && entryAsk > 0 ? (entryBid + entryAsk) / 2 : entryBid || entryAsk
+            historicalRates.push({
+              date: rateDate,
+              rate: entryRate,
+              bid: entryBid,
+              ask: entryAsk,
+            })
+          } catch (entryError) {
+            logger.warn('oanda_historical_entry_error', {
+              base_currency: baseCurrency,
+              quote_currency: quoteCurrency,
+              error: entryError instanceof Error ? entryError.message : String(entryError),
+            })
+          }
+        }
+
+        const rateData: OandaRateData = {
+          base_currency: baseCurrency,
+          quote_currency: quoteCurrency,
+          rate: midRate,
+          bid: bid || null,
+          ask: ask || null,
+          source: 'OANDA',
+          last_updated: new Date(),
+        }
+
+        await this.saveRate(rateData)
+        await this.storeHistory(baseCurrency, quoteCurrency, historicalRates, rateData.source)
+
+        logger.info('oanda_rate_fetched', {
+          base_currency: baseCurrency,
+          quote_currency: quoteCurrency,
+          rate: midRate,
+          historical_count: historicalRates.length,
+        })
+
+        return {
+          success: true,
+          data: rateData,
+          historical_rates: historicalRates,
+          cached: false,
+        }
       }
     } catch (error) {
       logger.error('oanda_fetch_failed', {
@@ -321,6 +435,7 @@ export class OandaRateFetcher {
   private async fetchFromAuthenticatedApi(
     baseCurrency: string,
     quoteCurrency: string,
+    options: OandaFetchOptions = {},
   ): Promise<OandaFetchResult> {
     logger.info('fetching_from_authenticated_api', {
       base_currency: baseCurrency,
@@ -334,65 +449,124 @@ export class OandaRateFetcher {
       return this.fetchFromPublicApi(baseCurrency, quoteCurrency)
     }
 
+    const startedAt = Date.now()
+    const maxRetries = Math.max(0, config.fxRates?.oandaRateLimitMaxRetries ?? 3)
+
     try {
-      const url = `https://api-fxtrade.oanda.com/v3/accounts/${this.apiKey}/instruments/${baseCurrency}_${quoteCurrency}/candles`
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(10000),
-      })
+      for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+        const url = `https://api-fxtrade.oanda.com/v3/accounts/${this.apiKey}/instruments/${baseCurrency}_${quoteCurrency}/candles`
 
-      if (response.status !== 200) {
-        logger.warn('oanda_authenticated_api_error', {
-          status: response.status,
+        try {
+          await getOandaTokenBucket().acquireToken(1, options.maxWaitMs)
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          logger.warn('oanda_rate_limit_wait_failed', {
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+            error: message,
+            source: options.source ?? 'unknown',
+          })
+          return this.getFallbackRate(baseCurrency, quoteCurrency)
+        }
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(10000),
+        })
+
+        if (RATE_LIMIT_STATUSES.has(response.status)) {
+          if (attempt >= maxRetries) {
+            logger.warn('oanda_rate_limit_exhausted', {
+              status: response.status,
+              base_currency: baseCurrency,
+              quote_currency: quoteCurrency,
+              source: options.source ?? 'unknown',
+            })
+            return this.fetchFromPublicApi(baseCurrency, quoteCurrency, options)
+          }
+
+          const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'))
+          const backoffMs = computeBackoffMs(attempt, retryAfterMs)
+          if (Number.isFinite(options.maxWaitMs) && options.maxWaitMs !== undefined) {
+            const elapsedMs = Date.now() - startedAt
+            if (elapsedMs + backoffMs > options.maxWaitMs) {
+              logger.warn('oanda_rate_limit_budget_exhausted', {
+                status: response.status,
+                base_currency: baseCurrency,
+                quote_currency: quoteCurrency,
+                backoff_ms: backoffMs,
+                max_wait_ms: options.maxWaitMs,
+                source: options.source ?? 'unknown',
+              })
+              return this.getFallbackRate(baseCurrency, quoteCurrency)
+            }
+          }
+
+          logger.info('oanda_rate_limit_backoff', {
+            status: response.status,
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+            backoff_ms: backoffMs,
+            attempt,
+            source: options.source ?? 'unknown',
+          })
+          await sleep(backoffMs)
+          continue
+        }
+
+        if (response.status !== 200) {
+          logger.warn('oanda_authenticated_api_error', {
+            status: response.status,
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+          })
+          return this.fetchFromPublicApi(baseCurrency, quoteCurrency, options)
+        }
+
+        const data = await response.json()
+
+        if (!data?.candles || data.candles.length === 0) {
+          logger.warn('oanda_authenticated_empty_data', {
+            base_currency: baseCurrency,
+            quote_currency: quoteCurrency,
+          })
+          return this.fetchFromPublicApi(baseCurrency, quoteCurrency, options)
+        }
+
+        const latestCandle = data.candles[data.candles.length - 1]
+        const midRate = (parseFloat(latestCandle.mid.c) + parseFloat(latestCandle.mid.c)) / 2
+        const bid = parseFloat(latestCandle.bid.c)
+        const ask = parseFloat(latestCandle.ask.c)
+
+        const rateData: OandaRateData = {
           base_currency: baseCurrency,
           quote_currency: quoteCurrency,
-        })
-        return this.fetchFromPublicApi(baseCurrency, quoteCurrency)
-      }
-
-      const data = await response.json()
-
-      if (!data?.candles || data.candles.length === 0) {
-        logger.warn('oanda_authenticated_empty_data', {
-          base_currency: baseCurrency,
-          quote_currency: quoteCurrency,
-        })
-        return this.fetchFromPublicApi(baseCurrency, quoteCurrency)
-      }
-
-      const latestCandle = data.candles[data.candles.length - 1]
-      const midRate = (parseFloat(latestCandle.mid.c) + parseFloat(latestCandle.mid.c)) / 2
-      const bid = parseFloat(latestCandle.bid.c)
-      const ask = parseFloat(latestCandle.ask.c)
-
-      const rateData: OandaRateData = {
-        base_currency: baseCurrency,
-        quote_currency: quoteCurrency,
-        rate: midRate,
-        bid,
-        ask,
-        source: 'OANDA_AUTH',
-        last_updated: new Date(),
-      }
-
-      await this.saveRate(rateData)
-      await this.storeHistory(baseCurrency, quoteCurrency, [
-        {
-          date: new Date().toISOString().split('T')[0],
           rate: midRate,
-          bid: bid || midRate,
-          ask: ask || midRate,
-        },
-      ], rateData.source)
+          bid,
+          ask,
+          source: 'OANDA_AUTH',
+          last_updated: new Date(),
+        }
 
-      return {
-        success: true,
-        data: rateData,
-        historical_rates: [],
-        cached: false,
+        await this.saveRate(rateData)
+        await this.storeHistory(baseCurrency, quoteCurrency, [
+          {
+            date: new Date().toISOString().split('T')[0],
+            rate: midRate,
+            bid: bid || midRate,
+            ask: ask || midRate,
+          },
+        ], rateData.source)
+
+        return {
+          success: true,
+          data: rateData,
+          historical_rates: [],
+          cached: false,
+        }
       }
     } catch (error) {
       logger.error('oanda_authenticated_fetch_failed', {
@@ -400,8 +574,10 @@ export class OandaRateFetcher {
         quote_currency: quoteCurrency,
         error: error instanceof Error ? error.message : String(error),
       })
-      return this.fetchFromPublicApi(baseCurrency, quoteCurrency)
+      return this.fetchFromPublicApi(baseCurrency, quoteCurrency, options)
     }
+
+    return this.fetchFromPublicApi(baseCurrency, quoteCurrency, options)
   }
 
   private async getFallbackRate(

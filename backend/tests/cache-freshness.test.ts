@@ -174,7 +174,7 @@ describe('Cache Freshness Integration', () => {
     expect(freshness.ttlSeconds).toBe(30 * 60)
   })
 
-  it('detects fresh quote for tier3 corridor (4 hour TTL)', async () => {
+  it('detects fresh quote for tier3 corridor (6 hour TTL)', async () => {
     const corridorId = 'GB-NG-GBP-NGN'
     const providerId = 'wise'
 
@@ -205,8 +205,8 @@ describe('Cache Freshness Integration', () => {
 
     expect(freshness.exists).toBe(true)
     expect(freshness.isFresh).toBe(true)
-    expect(freshness.ageSeconds).toBeLessThan(4 * 60 * 60)
-    expect(freshness.ttlSeconds).toBe(4 * 60 * 60)
+    expect(freshness.ageSeconds).toBeLessThan(6 * 60 * 60)
+    expect(freshness.ttlSeconds).toBe(6 * 60 * 60)
   })
 
   it('returns not fresh when quote does not exist', async () => {
@@ -222,6 +222,6 @@ describe('Cache Freshness Integration', () => {
 
     expect(freshness.exists).toBe(false)
     expect(freshness.isFresh).toBe(false)
-    expect(freshness.ttlSeconds).toBe(4 * 60 * 60)
+    expect(freshness.ttlSeconds).toBe(6 * 60 * 60)
   })
 })

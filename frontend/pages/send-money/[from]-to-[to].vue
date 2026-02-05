@@ -641,11 +641,11 @@
             <!-- RVI Card -->
             <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
               <div class="mb-4">
-                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">RVI</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">RVI (bps)</p>
                 <p class="text-sm font-medium text-gray-300">Rate Volatility Index</p>
               </div>
               <p class="text-3xl font-bold text-white mb-2">{{ rviDisplay }}</p>
-              <p class="text-xs text-gray-400 mb-4">{{ indexRateUnit }}</p>
+              <p class="text-xs text-gray-400 mb-4">basis points</p>
               <p class="text-sm text-gray-300 mb-4 flex-grow">
                 How much provider rates vary. Lower means similar deals. Higher means comparing saves money.
               </p>
@@ -657,7 +657,7 @@
                   </svg>
                 </summary>
                 <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
-                  <p>RVI measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
+                  <p>RVI (bps) measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
                 </div>
               </details>
             </div>
@@ -687,11 +687,15 @@
             </div>
           </div>
           <div class="mt-6 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+            <span>Gold indices · $500 bank bucket · updated daily.</span>
             <span>These indices power enterprise reports and data partnerships.</span>
             <NuxtLink to="/partnerships" class="font-semibold text-brand-600 hover:text-brand-500 underline">
               See partnerships →
             </NuxtLink>
           </div>
+        </div>
+        <div v-else class="mb-10 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+          {{ indicesUnavailableMessage }}
         </div>
 
         <!-- Live Insights Grid -->
@@ -1321,12 +1325,20 @@ type Insight = {
 
 type CorridorIndices = {
   teer: number | null
-  rvi: number | null
+  rvi_bps: number | null
   rci: number | null
   providerCount: number
   amount: number
   midMarketRate: number | null
-  weights: 'equal' | 'provider_volume'
+  weights: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
+  source?: 'gold'
+  updatedAt?: string | null
+  indicesBucket?: number
+  methodProfile?: string
+  suppressionFlag?: boolean
+  suppressionReason?: string | null
 }
 
 type Guide = {
@@ -2515,7 +2527,33 @@ const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.val
 const currentRows = computed(() => hasApiQuotes.value ? apiRows.value : content.value.table.rows)
 
 const corridorIndices = computed(() => {
-  return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
+  const indices = (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
+  if (!indices) return null
+  if (indices.suppressionFlag) return null
+  return indices
+})
+
+const indicesReason = computed(() => {
+  return (quotesData.value as { indicesReason?: string | null } | null)?.indicesReason ?? null
+})
+
+const indicesUnavailableMessage = computed(() => {
+  if (corridorIndices.value) return ''
+  switch (indicesReason.value) {
+    case 'unsupported_method':
+      return 'Indices are available for bank transfers only.'
+    case 'bucket_mismatch':
+      return 'Indices are available for $500 bank transfers only.'
+    case 'gold_indices_unavailable':
+      return 'Indices are not yet available for this corridor.'
+    case 'suppressed':
+      return 'Indices are temporarily unavailable due to insufficient coverage.'
+    default:
+      if (indicesReason.value) {
+        return `Indices are unavailable: ${indicesReason.value}.`
+      }
+      return 'Indices are available for $500 bank transfers only.'
+  }
 })
 
 const formatIndexRate = (value: number | null) => {
@@ -2534,7 +2572,12 @@ const indexRateUnit = computed(() => {
 })
 
 const teerDisplay = computed(() => formatIndexRate(corridorIndices.value?.teer ?? null))
-const rviDisplay = computed(() => formatIndexRate(corridorIndices.value?.rvi ?? null))
+const formatIndexBps = (value: number | null) => {
+  if (!Number.isFinite(value ?? Number.NaN)) return '—'
+  return `${Math.round(Number(value))}`
+}
+
+const rviDisplay = computed(() => formatIndexBps(corridorIndices.value?.rvi_bps ?? null))
 const rciDisplay = computed(() => formatIndexPercent(corridorIndices.value?.rci ?? null))
 
 const content = computed(() => {
@@ -2956,10 +2999,10 @@ const bestProviderName = computed(() => {
 })
 
 const providerConsistency = computed(() => {
-  const rvi = corridorIndices.value?.rvi
-  if (!rvi || !Number.isFinite(rvi)) return 'unknown'
-  const rviValue = Number(rvi)
-  if (rviValue < 0.01) return 'high'
+  const rviBps = corridorIndices.value?.rvi_bps
+  if (!rviBps || !Number.isFinite(rviBps)) return 'unknown'
+  const rviValue = Number(rviBps)
+  if (rviValue < 50) return 'high'
   return 'low'
 })
 

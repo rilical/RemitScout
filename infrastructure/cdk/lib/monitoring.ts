@@ -53,9 +53,11 @@ export const createMonitoring = (
     title: 'SQS Queue Depth',
     left: [
       options.queues.quoteRefreshQueue.metricApproximateNumberOfMessagesVisible(),
+      options.queues.fxRateRefreshQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.exportJobQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.alertEvaluationQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.ingestFanoutQueue.metricApproximateNumberOfMessagesVisible(),
+      options.queues.ingestFanoutTier2Queue.metricApproximateNumberOfMessagesVisible(),
       options.queues.goldLiveQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.notificationsQueue.metricApproximateNumberOfMessagesVisible(),
       options.queues.opsAlertsQueue.metricApproximateNumberOfMessagesVisible(),
@@ -67,9 +69,11 @@ export const createMonitoring = (
     title: 'SQS DLQ Depth',
     left: [
       options.queues.quoteRefreshDlq.metricApproximateNumberOfMessagesVisible(),
+      options.queues.fxRateRefreshDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.exportJobDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.alertEvaluationDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.ingestFanoutDlq.metricApproximateNumberOfMessagesVisible(),
+      options.queues.ingestFanoutTier2Dlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.goldLiveDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.notificationsDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.opsAlertsDlq.metricApproximateNumberOfMessagesVisible(),
@@ -175,7 +179,10 @@ export const createMonitoring = (
     title: 'ECS CPU Utilization',
     left: [
       options.ecs.planeBIngestService.metricCpuUtilization(),
-      options.ecs.ingestFanoutService.metricCpuUtilization(),
+      options.ecs.b2cRefreshService.metricCpuUtilization(),
+      options.ecs.fxRateRefreshService.metricCpuUtilization(),
+      options.ecs.ingestFanoutTier1Service.metricCpuUtilization(),
+      options.ecs.ingestFanoutTier2Service.metricCpuUtilization(),
       options.ecs.goldLiveService.metricCpuUtilization(),
       options.ecs.notificationsQueueService.metricCpuUtilization(),
       options.ecs.opsAlertsQueueService.metricCpuUtilization(),
@@ -187,7 +194,10 @@ export const createMonitoring = (
     title: 'ECS Memory Utilization',
     left: [
       options.ecs.planeBIngestService.metricMemoryUtilization(),
-      options.ecs.ingestFanoutService.metricMemoryUtilization(),
+      options.ecs.b2cRefreshService.metricMemoryUtilization(),
+      options.ecs.fxRateRefreshService.metricMemoryUtilization(),
+      options.ecs.ingestFanoutTier1Service.metricMemoryUtilization(),
+      options.ecs.ingestFanoutTier2Service.metricMemoryUtilization(),
       options.ecs.goldLiveService.metricMemoryUtilization(),
       options.ecs.notificationsQueueService.metricMemoryUtilization(),
       options.ecs.opsAlertsQueueService.metricMemoryUtilization(),
@@ -241,14 +251,16 @@ export const createMonitoring = (
 
   const dlqAlarms = [
     options.queues.quoteRefreshDlq,
+    options.queues.exportJobDlq,
     options.queues.ingestFanoutDlq,
+    options.queues.ingestFanoutTier2Dlq,
     options.queues.notificationsDlq,
     options.queues.opsAlertsDlq,
     options.queues.alertEvaluationDlq,
     options.queues.goldLiveDlq,
   ].map((queue, index) =>
     new Alarm(scope, `DlqAlarm${index}`, {
-      alarmName: `remit-scout-${options.envName}-${queue.queueName}-dlq`,
+      alarmName: `remit-scout-${options.envName}-${queue.queueName}-dlq-managed`,
       metric: queue.metricApproximateNumberOfMessagesVisible({
         period: Duration.minutes(5),
       }),
@@ -296,8 +308,11 @@ export const createMonitoring = (
   const sloMissingDataBehavior = isProd ? TreatMissingData.BREACHING : TreatMissingData.NOT_BREACHING
   const sloAlarmConfigs = [
     { sloName: 'freshness_p95', timeWindow: '1h', alarmSuffix: 'freshness-slo-breach' },
+    { sloName: 'freshness_p95_tier2', timeWindow: '1h', alarmSuffix: 'freshness-tier2-slo-breach' },
     { sloName: 'quote_success_rate', timeWindow: '1h', alarmSuffix: 'quote-success-slo-breach' },
+    { sloName: 'quote_success_rate_tier2', timeWindow: '1h', alarmSuffix: 'quote-success-tier2-slo-breach' },
     { sloName: 'provider_coverage', timeWindow: '1h', alarmSuffix: 'provider-coverage-slo-breach' },
+    { sloName: 'provider_coverage_tier2', timeWindow: '1h', alarmSuffix: 'provider-coverage-tier2-slo-breach' },
     { sloName: 'gold_export_lag', timeWindow: 'live_p95', alarmSuffix: 'gold-export-lag-slo-breach' },
   ]
 
@@ -334,6 +349,7 @@ export const createMonitoring = (
       metricName: 'oanda_sync_failures_total',
       dimensionsMap: {
         JobName: 'oanda-sync',
+        environment: options.envName,
       },
       statistic: 'Sum',
       period: Duration.hours(1),
@@ -382,9 +398,11 @@ export const createMonitoring = (
   // SQS Queue Depth Alarms (threshold: 1000 messages)
   const queueDepthThreshold = isProd ? 1000 : (isStaging ? 500 : 200)
   const queueDepthAlarms = [
+    { name: 'QuoteRefresh', queue: options.queues.quoteRefreshQueue },
     { name: 'ExportJob', queue: options.queues.exportJobQueue },
     { name: 'AlertEvaluation', queue: options.queues.alertEvaluationQueue },
     { name: 'IngestFanout', queue: options.queues.ingestFanoutQueue },
+    { name: 'IngestFanoutTier2', queue: options.queues.ingestFanoutTier2Queue },
     { name: 'GoldLive', queue: options.queues.goldLiveQueue },
     { name: 'Notifications', queue: options.queues.notificationsQueue },
     { name: 'OpsAlerts', queue: options.queues.opsAlertsQueue },
@@ -406,34 +424,88 @@ export const createMonitoring = (
     alarm.addAlarmAction(opsAction)
   }
 
+  const shortQueueAgeThresholdSeconds = isProd ? 300 : (isStaging ? 600 : 1200)
+  const standardQueueAgeThresholdSeconds = isProd ? 600 : (isStaging ? 900 : 1800)
+  const longQueueAgeThresholdSeconds = isProd ? 1800 : (isStaging ? 3600 : 7200)
+
+  const queueAgeAlarms = [
+    {
+      name: 'QuoteRefresh',
+      queue: options.queues.quoteRefreshQueue,
+      thresholdSeconds: standardQueueAgeThresholdSeconds,
+    },
+    {
+      name: 'AlertEvaluation',
+      queue: options.queues.alertEvaluationQueue,
+      thresholdSeconds: standardQueueAgeThresholdSeconds,
+    },
+    {
+      name: 'ExportJob',
+      queue: options.queues.exportJobQueue,
+      thresholdSeconds: longQueueAgeThresholdSeconds,
+    },
+    {
+      name: 'Notifications',
+      queue: options.queues.notificationsQueue,
+      thresholdSeconds: shortQueueAgeThresholdSeconds,
+    },
+    {
+      name: 'OpsAlerts',
+      queue: options.queues.opsAlertsQueue,
+      thresholdSeconds: shortQueueAgeThresholdSeconds,
+    },
+  ].map(({ name, queue, thresholdSeconds }) =>
+    new Alarm(scope, `${name}QueueAgeAlarm`, {
+      alarmName: `remit-scout-${options.envName}-${name.toLowerCase()}-queue-age`,
+      metric: queue.metricApproximateAgeOfOldestMessage({
+        period: Duration.minutes(5),
+      }),
+      threshold: thresholdSeconds,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `${name} queue age exceeds ${thresholdSeconds}s`,
+    }),
+  )
+
+  for (const alarm of queueAgeAlarms) {
+    alarm.addAlarmAction(opsAction)
+  }
+
   const ingestFanoutAgeThresholdSeconds =
     options.envName === 'prod' ? 4 * 60 * 60 : 6 * 60 * 60
-  const ingestFanoutAgeAlarm = new Alarm(scope, 'IngestFanoutAgeAlarm', {
-    alarmName: `remit-scout-${options.envName}-ingest-fanout-age`,
-    metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage({
-      period: Duration.minutes(5),
-    }),
-    threshold: ingestFanoutAgeThresholdSeconds,
-    evaluationPeriods: 1,
-    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-    treatMissingData: TreatMissingData.NOT_BREACHING,
-    alarmDescription: 'Ingest fanout queue age exceeds sweep deadline',
-  })
-  ingestFanoutAgeAlarm.addAlarmAction(opsAction)
-
   const ingestFanoutHardMaxSeconds = 24 * 60 * 60
-  const ingestFanoutHardMaxAlarm = new Alarm(scope, 'IngestFanoutAgeHardMaxAlarm', {
-    alarmName: `remit-scout-${options.envName}-ingest-fanout-age-hard-max`,
-    metric: options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage({
-      period: Duration.minutes(5),
-    }),
-    threshold: ingestFanoutHardMaxSeconds,
-    evaluationPeriods: 1,
-    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-    treatMissingData: TreatMissingData.NOT_BREACHING,
-    alarmDescription: 'Ingest fanout queue age exceeds 24h hard max',
-  })
-  ingestFanoutHardMaxAlarm.addAlarmAction(criticalAction)
+  const ingestFanoutQueues = [
+    { name: 'IngestFanout', queue: options.queues.ingestFanoutQueue },
+    { name: 'IngestFanoutTier2', queue: options.queues.ingestFanoutTier2Queue },
+  ]
+  for (const { name, queue } of ingestFanoutQueues) {
+    const ageAlarm = new Alarm(scope, `${name}AgeAlarm`, {
+      alarmName: `remit-scout-${options.envName}-${name.toLowerCase()}-age`,
+      metric: queue.metricApproximateAgeOfOldestMessage({
+        period: Duration.minutes(5),
+      }),
+      threshold: ingestFanoutAgeThresholdSeconds,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `${name} queue age exceeds sweep deadline`,
+    })
+    ageAlarm.addAlarmAction(opsAction)
+
+    const hardMaxAlarm = new Alarm(scope, `${name}AgeHardMaxAlarm`, {
+      alarmName: `remit-scout-${options.envName}-${name.toLowerCase()}-age-hard-max`,
+      metric: queue.metricApproximateAgeOfOldestMessage({
+        period: Duration.minutes(5),
+      }),
+      threshold: ingestFanoutHardMaxSeconds,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `${name} queue age exceeds 24h hard max`,
+    })
+    hardMaxAlarm.addAlarmAction(criticalAction)
+  }
 
   const goldLiveAgeThresholdSeconds = options.envName === 'prod' ? 120 : 300
   const goldLiveAgeAlarm = new Alarm(scope, 'GoldLiveAgeAlarm', {
@@ -486,6 +558,7 @@ export const createMonitoring = (
         dimensionsMap: {
           ProviderId: providerId,
           Status: 'failure',
+          environment: options.envName,
         },
       }),
       threshold: 1,
@@ -567,6 +640,18 @@ export const createMonitoring = (
         statistic: 'Average',
         period: Duration.minutes(5),
       }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_actual_value',
+        dimensionsMap: {
+          slo_name: 'freshness_p95_tier2',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
     ],
     period: Duration.minutes(5),
   })
@@ -586,6 +671,18 @@ export const createMonitoring = (
         statistic: 'Average',
         period: Duration.minutes(5),
       }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_actual_value',
+        dimensionsMap: {
+          slo_name: 'quote_success_rate_tier2',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
     ],
     period: Duration.minutes(5),
   })
@@ -598,6 +695,18 @@ export const createMonitoring = (
         metricName: 'slo_actual_value',
         dimensionsMap: {
           slo_name: 'provider_coverage',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Minimum',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_actual_value',
+        dimensionsMap: {
+          slo_name: 'provider_coverage_tier2',
           time_window: '1h',
           environment: options.envName,
           service: serviceDimension,
@@ -628,6 +737,18 @@ export const createMonitoring = (
         namespace: 'RemitScout',
         metricName: 'slo_compliance_ratio',
         dimensionsMap: {
+          slo_name: 'freshness_p95_tier2',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_compliance_ratio',
+        dimensionsMap: {
           slo_name: 'quote_success_rate',
           time_window: '1h',
           environment: options.envName,
@@ -640,7 +761,31 @@ export const createMonitoring = (
         namespace: 'RemitScout',
         metricName: 'slo_compliance_ratio',
         dimensionsMap: {
+          slo_name: 'quote_success_rate_tier2',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_compliance_ratio',
+        dimensionsMap: {
           slo_name: 'provider_coverage',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_compliance_ratio',
+        dimensionsMap: {
+          slo_name: 'provider_coverage_tier2',
           time_window: '1h',
           environment: options.envName,
           service: serviceDimension,

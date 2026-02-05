@@ -82,6 +82,7 @@ let corridorCache: CorridorOption[] | null = null
 
 const buildPulseQuery = (filters: PulseFilters, extra: Record<string, unknown> = {}) => ({
   corridor: filters.corridor,
+  corridor_id: filters.corridorId,
   amount: filters.amount,
   fundingMethod: filters.fundingMethod,
   payoutMethod: filters.payoutMethod,

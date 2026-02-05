@@ -37,6 +37,9 @@ export type PipelineOptions = {
   publicSupabaseSecretArn?: string
   publicSupabaseUrlSecretJsonKey?: string
   publicSupabaseAnonKeySecretJsonKey?: string
+  publicGa4MeasurementId?: string
+  publicMetaPixelId?: string
+  publicAdsEnabled?: string
 }
 
 export type PipelineResources = {
@@ -111,6 +114,15 @@ export const createPipeline = (
       type: BuildEnvironmentVariableType.SECRETS_MANAGER,
       value: `${options.publicSupabaseSecretArn}:${jsonKey}`,
     }
+  }
+  if (options.publicGa4MeasurementId) {
+    buildEnvVars.PUBLIC_GA4_MEASUREMENT_ID = { value: options.publicGa4MeasurementId }
+  }
+  if (options.publicMetaPixelId) {
+    buildEnvVars.PUBLIC_META_PIXEL_ID = { value: options.publicMetaPixelId }
+  }
+  if (options.publicAdsEnabled) {
+    buildEnvVars.PUBLIC_ADS_ENABLED = { value: options.publicAdsEnabled }
   }
 
   const buildProject = new PipelineProject(scope, 'RemitScoutBuildProject', {
@@ -215,6 +227,7 @@ export const createPipeline = (
     const deployEnvVars: Record<string, BuildEnvironmentVariable> = {
       ENV_NAME: { value: options.envName },
     }
+    deployEnvVars.ECR_REPO_NAME = { value: backendRepository.repositoryName }
     if (options.connectionArn) {
       deployEnvVars.PIPELINE_CONNECTION_ARN = { value: options.connectionArn }
     }
@@ -264,6 +277,8 @@ export const createPipeline = (
               'BUILD_ARTIFACT_DIR=${CODEBUILD_SRC_DIR_Build:-$CODEBUILD_SRC_DIR}',
               'SOURCE_DIR=${CODEBUILD_SRC_DIR:-$BUILD_ARTIFACT_DIR}',
               'if [ -f "$BUILD_ARTIFACT_DIR/image.env" ]; then . "$BUILD_ARTIFACT_DIR/image.env"; fi',
+              'if [ -z "$IMAGE_TAG" ]; then echo "Missing IMAGE_TAG" && exit 1; fi',
+              'aws ecr describe-images --repository-name $ECR_REPO_NAME --image-ids imageTag=$IMAGE_TAG >/dev/null',
               "ESBUILD_PLATFORM=$(node -p \"process.platform + '-' + process.arch\")",
               'export ESBUILD_BINARY_PATH="$SOURCE_DIR/infrastructure/cdk/node_modules/@esbuild/$ESBUILD_PLATFORM/bin/esbuild"',
               'cd "$SOURCE_DIR/infrastructure/cdk" && pnpm exec -- cdk deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',

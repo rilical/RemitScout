@@ -201,6 +201,7 @@ const baseUrl = computed(() => {
 const queryParams = computed(() => {
   const params = new URLSearchParams()
   if (props.filters.corridor !== 'global') params.set('corridor', props.filters.corridor)
+  if (props.filters.corridorId) params.set('corridor_id', props.filters.corridorId)
   if (props.filters.amount !== 200) params.set('amount', String(props.filters.amount))
   if (props.filters.fundingMethod !== 'bank') params.set('fund', props.filters.fundingMethod)
   if (props.filters.payoutMethod !== 'bank') params.set('pay', props.filters.payoutMethod)
@@ -273,7 +274,6 @@ async function copyEmbedCode() {
   }
 }
 </script>
-
 
 
 

@@ -3,8 +3,30 @@
   "context": {
     "@aws-cdk/core:newStyleStackSynthesis": true,
     "planeAAdminEmails": [
-      "omar@remit-scout.com"
-    ]
+      "omar@remit-scout.com",
+      "admin@remit-scout.com"
+    ],
+    "sesIdentityArns": [
+      "arn:aws:ses:us-east-1:716156543157:identity/remit-scout.com",
+      "arn:aws:ses:us-east-1:716156543157:identity/alerts@remit-scout.com"
+    ],
+    "snsTopicArns": [
+      "arn:aws:sns:us-east-1:716156543157:remit-scout-dev-alerts-critical",
+      "arn:aws:sns:us-east-1:716156543157:remit-scout-dev-alerts-warning",
+      "arn:aws:sns:us-east-1:716156543157:remit-scout-dev-alerts-ops"
+    ],
+    "devPaused": true,
+    "planeBIngestDesiredCount": 0,
+    "planeBB2cRefreshDesiredCount": 0,
+    "planeBIngestFanoutTier1DesiredCount": 0,
+    "planeBIngestFanoutTier2DesiredCount": 0,
+    "goldLiveDesiredCount": 0,
+    "planeBNotificationsDesiredCount": 0,
+    "planeBOpsAlertsDesiredCount": 0,
+    "planeBQueueWorkerDesiredCount": 0,
+    "planeBQueueWorkerMaxCount": 0,
+    "enableFrontend": false,
+    "cpuArchitecture": "arm64"
   },
   "watch": {
     "include": [

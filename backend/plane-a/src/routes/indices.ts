@@ -12,12 +12,18 @@ import {
   TIER_1_CADENCE_SECONDS,
   TIER_2_CADENCE_SECONDS,
 } from '../../../shared/corridor-tiers'
-import { PROVIDER_WEIGHTING_MODEL } from '../../../shared/provider-weights'
+import { DEFAULT_WEIGHT_MODEL, INDICES_METHODOLOGY_VERSION } from '../../../shared/weighting-model'
 import { requireEntitlement } from '../plugins/auth-plugin'
+import { GoldIndicesRepository } from '../repositories'
 
 const logger = createLogger('plane-a.indices')
 const planeAPool = getPool(config.db.planeAUrl)
 const indicesCache = createTtlCache<IndicesSeriesResponse>({ namespace: 'plane_a:indices' })
+const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
+const envName = (process.env.ENVIRONMENT || '').toLowerCase()
+const allowUnauthedIndices =
+  envName === 'dev' || config.env === 'development' || config.env === 'test'
+const apiAccessGuard = allowUnauthedIndices ? undefined : requireEntitlement('api_access')
 
 const querySchema = z.object({
   corridor_id: z.string().min(3),
@@ -30,10 +36,14 @@ type IndicesSeriesPoint = {
   date: string
   teer: number | null
   rci: number | null
-  rvi: number | null
+  rvi_bps: number | null
   providerCountBinned: number | null
+  providerCount: number | null
   suppressionFlag: boolean
   suppressionReason: string | null
+  midMarketRate: number | null
+  weightConfidence: number | null
+  weightWindowDays: number | null
 }
 
 type IndicesSeriesResponse = {
@@ -41,12 +51,50 @@ type IndicesSeriesResponse = {
   amountBucket: number
   methodProfile: string
   weightingModel: string
+  methodologyVersion: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
   lastUpdated: string | null
   dataTier: 1 | 2
   cadenceMinutes: number
+  exportCadenceMinutes: number
+  collectionCadenceMinutes: number
   collectionTier: 'tier_1' | 'tier_2'
   isUsdOrigin: boolean
   series: IndicesSeriesPoint[]
+  dataWindow: DataWindowInfo
+}
+
+type IndicesLatestPoint = {
+  date: string
+  teer: number | null
+  rci: number | null
+  rvi_bps: number | null
+  providerCountBinned: number | null
+  providerCount: number | null
+  suppressionFlag: boolean
+  suppressionReason: string | null
+  midMarketRate: number | null
+  weightConfidence: number | null
+  weightWindowDays: number | null
+}
+
+type IndicesLatestResponse = {
+  corridorId: string
+  amountBucket: number
+  methodProfile: string
+  weightingModel: string
+  methodologyVersion: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
+  lastUpdated: string | null
+  dataTier: 1 | 2
+  cadenceMinutes: number
+  exportCadenceMinutes: number
+  collectionCadenceMinutes: number
+  collectionTier: 'tier_1' | 'tier_2'
+  isUsdOrigin: boolean
+  point: IndicesLatestPoint
 }
 
 type DataAvailabilityResponse = {
@@ -58,6 +106,22 @@ type DataAvailabilityResponse = {
   message: string
   dataTier: 1 | 2
   cadenceMinutes: number
+  exportCadenceMinutes: number
+  collectionCadenceMinutes: number
+  collectionTier: 'tier_1' | 'tier_2'
+  isUsdOrigin: boolean
+  dataWindow: DataWindowInfo
+}
+
+type DataWindowInfo = {
+  requestedDays: number
+  availableDays: number | null
+  returnedDays: number
+  availableStartDate: string | null
+  availableEndDate: string | null
+  startDate: string
+  endDate: string
+  capped: boolean
 }
 
 const toDateOnly = (value: Date) => value.toISOString().split('T')[0]
@@ -69,8 +133,9 @@ const toDateOnly = (value: Date) => value.toISOString().split('T')[0]
  * - USD corridors: collected every 10 min (Tier 1), available in both Tier 1 and Tier 2 exports
  * - Non-USD corridors: collected every 3 hours (Tier 2), available only in Tier 2 exports
  * 
- * When serving in Tier 2 context, all corridors report Tier 2 cadence (3 hours)
- * as the SLA guarantee, even though USD data is fresher.
+ * For API clarity, we return both:
+ * - collectionCadenceMinutes: actual collection cadence (tier 1 = 10 min, tier 2 = 180 min)
+ * - exportCadenceMinutes: export SLA cadence for the API tier
  */
 const getDataTierForCorridor = (
   corridorId: string,
@@ -90,8 +155,13 @@ const getDataTierForCorridor = (
   }
 }
 
+const getCollectionCadenceMinutes = (collectionTier: 'tier_1' | 'tier_2') =>
+  Math.round(
+    (collectionTier === 'tier_1' ? TIER_1_CADENCE_SECONDS : TIER_2_CADENCE_SECONDS) / 60,
+  )
+
 export const indicesRoutes = async (app: FastifyInstance) => {
-  app.get('/indices/series', { preHandler: requireEntitlement('api_access') }, async (request, reply) => {
+  app.get('/indices/series', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
       reply.code(400)
@@ -112,64 +182,79 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     })
     const amountBucket = parsed.data.amount_bucket ?? 500
     const methodProfile = parsed.data.method_profile ?? 'standard_bank'
-    const windowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 365)
+    const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 365)
 
     const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2) // Tier 2 API context - includes all corridors
-    const { tier: dataTier, cadenceMinutes, collectionTier, isUsdOrigin } = tierInfo
-
-    const endDate = new Date()
-    const startDate = new Date(endDate)
-    startDate.setUTCDate(startDate.getUTCDate() - (windowDays - 1))
-
-    const cacheKey = `${normalizedCorridorId}:${amountBucket}:${methodProfile}:${windowDays}`
-    const cached = await indicesCache.get(cacheKey)
-    if (cached) {
-      reply.header('X-Data-Tier', String(dataTier))
-      reply.header('X-Data-Cadence-Minutes', String(cadenceMinutes))
-      reply.header('X-Collection-Tier', collectionTier)
-      reply.header('X-Corridor-Origin', corridorParts.sourceCountry.toUpperCase())
-      reply.header('X-USD-Origin', isUsdOrigin ? '1' : '0')
-      return cached
-    }
+    const { tier: dataTier, cadenceMinutes: exportCadenceMinutes, collectionTier, isUsdOrigin } =
+      tierInfo
+    const collectionCadenceMinutes = getCollectionCadenceMinutes(collectionTier)
 
     try {
-      const result = await query<{
-        date: Date
-        corridor_id: string
-        amount_bucket: number
-        method_profile: string
-        teer_rate: number | null
-        rci_ratio: number | null
-        rvi_value: number | null
-        provider_count_binned: number | null
-        suppression_flag: boolean
-        suppression_reason: string | null
-        weighting_model: string | null
-        created_at: Date
-      }>(
-        `SELECT date,
-                corridor_id,
-                amount_bucket,
-                method_profile,
-                teer_rate::double precision AS teer_rate,
-                rci_ratio::double precision AS rci_ratio,
-                rvi_value::double precision AS rvi_value,
-                provider_count_binned,
-                suppression_flag,
-                suppression_reason,
-                weighting_model,
-                created_at
-         FROM gold_export.cdp_daily
-         WHERE corridor_id = $1
-           AND amount_bucket = $2
-           AND method_profile = $3
-           AND date >= $4
-         ORDER BY date ASC`,
-        [normalizedCorridorId, amountBucket, methodProfile, startDate],
-        planeAPool,
-      )
+      const availabilityRow = await goldIndicesRepository.getAvailability({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+      })
+      const minDate = availabilityRow?.min_date ? new Date(availabilityRow.min_date) : null
+      const maxDate = availabilityRow?.max_date ? new Date(availabilityRow.max_date) : null
+      const totalCount = availabilityRow?.total_count ?? 0
+      const availableDays = (minDate && maxDate)
+        ? Math.max(1, Math.floor((maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000)) + 1)
+        : null
 
-      const rows = result.rows
+      const now = new Date()
+      const effectiveEndDate = (maxDate && maxDate < now) ? maxDate : now
+      const effectiveWindowDays = availableDays && availableDays > 0
+        ? Math.min(requestedWindowDays, availableDays)
+        : requestedWindowDays
+
+      const startDate = new Date(effectiveEndDate)
+      startDate.setUTCDate(startDate.getUTCDate() - (effectiveWindowDays - 1))
+      if (minDate && startDate < minDate) {
+        startDate.setTime(minDate.getTime())
+      }
+
+      const dataWindowBase = {
+        requestedDays: requestedWindowDays,
+        availableDays,
+        availableStartDate: minDate ? toDateOnly(minDate) : null,
+        availableEndDate: maxDate ? toDateOnly(maxDate) : null,
+        startDate: toDateOnly(startDate),
+        endDate: toDateOnly(effectiveEndDate),
+        capped: Boolean(availableDays && availableDays < requestedWindowDays),
+      }
+
+      const cacheKey = `${normalizedCorridorId}:${amountBucket}:${methodProfile}:${effectiveWindowDays}:${dataWindowBase.endDate}`
+      const cached = await indicesCache.get(cacheKey)
+      if (cached) {
+        const cachedResponse = cached as IndicesSeriesResponse & { dataWindow?: DataWindowInfo }
+        if (!cachedResponse.dataWindow) {
+          cachedResponse.dataWindow = {
+            ...dataWindowBase,
+            returnedDays: Array.isArray(cachedResponse.series)
+              ? cachedResponse.series.length
+              : 0,
+          }
+        }
+        reply.header('X-Data-Tier', String(dataTier))
+        reply.header('X-Data-Cadence-Minutes', String(collectionCadenceMinutes))
+        reply.header('X-Collection-Cadence-Minutes', String(collectionCadenceMinutes))
+        reply.header('X-Export-Cadence-Minutes', String(exportCadenceMinutes))
+        reply.header('X-Collection-Tier', collectionTier)
+        reply.header('X-Corridor-Origin', corridorParts.sourceCountry.toUpperCase())
+        reply.header('X-USD-Origin', isUsdOrigin ? '1' : '0')
+        cachedResponse.exportCadenceMinutes = exportCadenceMinutes
+        cachedResponse.collectionCadenceMinutes = collectionCadenceMinutes
+        cachedResponse.cadenceMinutes = collectionCadenceMinutes
+        return cachedResponse
+      }
+      const rows = await goldIndicesRepository.getIndicesSeries({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        startDate,
+        endDate: effectiveEndDate,
+      })
 
       if (rows.length === 0) {
         const existsResult = await query<{ count: number }>(
@@ -184,16 +269,26 @@ export const indicesRoutes = async (app: FastifyInstance) => {
           amountBucket,
           methodProfile,
           dataAvailable: false,
-          reason: corridorExists ? 'no_data' : 'corridor_not_tracked',
+          reason: corridorExists || totalCount > 0 ? 'no_data' : 'corridor_not_tracked',
           message: corridorExists
             ? `No data available for ${normalizedCorridorId} with amount_bucket=${amountBucket} and method_profile=${methodProfile} in the requested time range.`
             : `Corridor ${normalizedCorridorId} is not currently tracked. Contact support to request coverage.`,
           dataTier,
-          cadenceMinutes,
+          cadenceMinutes: collectionCadenceMinutes,
+          exportCadenceMinutes,
+          collectionCadenceMinutes,
+          collectionTier,
+          isUsdOrigin,
+          dataWindow: {
+            ...dataWindowBase,
+            returnedDays: 0,
+          },
         }
 
         reply.header('X-Data-Tier', String(dataTier))
-        reply.header('X-Data-Cadence-Minutes', String(cadenceMinutes))
+        reply.header('X-Data-Cadence-Minutes', String(collectionCadenceMinutes))
+        reply.header('X-Collection-Cadence-Minutes', String(collectionCadenceMinutes))
+        reply.header('X-Export-Cadence-Minutes', String(exportCadenceMinutes))
         reply.header('X-Collection-Tier', collectionTier)
         reply.header('X-Corridor-Origin', corridorParts.sourceCountry.toUpperCase())
         reply.header('X-USD-Origin', isUsdOrigin ? '1' : '0')
@@ -208,33 +303,52 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       }, null)
 
       const weightingModel =
-        rows.find((row) => row.weighting_model)?.weighting_model || PROVIDER_WEIGHTING_MODEL
+        rows.find((row) => row.weighting_model)?.weighting_model || DEFAULT_WEIGHT_MODEL
+      const methodologyVersion =
+        rows.find((row) => row.methodology_version)?.methodology_version || INDICES_METHODOLOGY_VERSION
+      const weightConfidence = rows.find((row) => row.weight_confidence !== null)?.weight_confidence ?? null
+      const weightWindowDays = rows.find((row) => row.weight_window_days !== null)?.weight_window_days ?? null
 
       const response: IndicesSeriesResponse = {
         corridorId: normalizedCorridorId,
         amountBucket,
         methodProfile,
         weightingModel,
+        methodologyVersion,
+        weightConfidence,
+        weightWindowDays,
         lastUpdated: lastUpdated ? lastUpdated.toISOString() : null,
         dataTier,
-        cadenceMinutes,
+        cadenceMinutes: collectionCadenceMinutes,
+        exportCadenceMinutes,
+        collectionCadenceMinutes,
         collectionTier,
         isUsdOrigin,
         series: rows.map((row) => ({
           date: row.date instanceof Date ? toDateOnly(row.date) : String(row.date),
           teer: row.teer_rate ?? null,
           rci: row.rci_ratio ?? null,
-          rvi: row.rvi_value ?? null,
+          rvi_bps: row.rvi_bps ?? null,
           providerCountBinned: row.provider_count_binned ?? null,
+          providerCount: row.provider_count ?? null,
           suppressionFlag: row.suppression_flag,
           suppressionReason: row.suppression_reason ?? null,
+          midMarketRate: row.mid_market_rate ?? null,
+          weightConfidence: row.weight_confidence ?? null,
+          weightWindowDays: row.weight_window_days ?? null,
         })),
+        dataWindow: {
+          ...dataWindowBase,
+          returnedDays: rows.length,
+        },
       }
 
-      const ttlMs = cadenceMinutes * 60 * 1000
+      const ttlMs = collectionCadenceMinutes * 60 * 1000
       await indicesCache.set(cacheKey, response, ttlMs)
       reply.header('X-Data-Tier', String(dataTier))
-      reply.header('X-Data-Cadence-Minutes', String(cadenceMinutes))
+      reply.header('X-Data-Cadence-Minutes', String(collectionCadenceMinutes))
+      reply.header('X-Collection-Cadence-Minutes', String(collectionCadenceMinutes))
+      reply.header('X-Export-Cadence-Minutes', String(exportCadenceMinutes))
       reply.header('X-Collection-Tier', collectionTier)
       reply.header('X-Corridor-Origin', corridorParts.sourceCountry.toUpperCase())
       reply.header('X-USD-Origin', isUsdOrigin ? '1' : '0')
@@ -267,7 +381,137 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/indices/corridors', { preHandler: requireEntitlement('api_access') }, async (request, reply) => {
+  app.get('/indices/latest', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
+    const parsed = querySchema.safeParse(request.query)
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    const corridorId = parsed.data.corridor_id
+    const corridorParts = parseCorridorId(corridorId)
+    if (!corridorParts) {
+      reply.code(400)
+      return { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' }
+    }
+    const normalizedCorridorId = formatCorridorId({
+      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
+      destCountry: corridorParts.destCountry.toUpperCase(),
+      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
+      destCurrency: corridorParts.destCurrency.toUpperCase(),
+    })
+    const amountBucket = parsed.data.amount_bucket ?? 500
+    const methodProfile = parsed.data.method_profile ?? 'standard_bank'
+
+    const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2)
+    const { tier: dataTier, cadenceMinutes: exportCadenceMinutes, collectionTier, isUsdOrigin } =
+      tierInfo
+    const collectionCadenceMinutes = getCollectionCadenceMinutes(collectionTier)
+
+    try {
+      const latest = await goldIndicesRepository.getIndicesLatest({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+      })
+
+      if (!latest) {
+        const existsResult = await query<{ count: number }>(
+          `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
+          [normalizedCorridorId],
+          planeAPool,
+        )
+        const corridorExists = (existsResult.rows[0]?.count ?? 0) > 0
+
+        const response: DataAvailabilityResponse = {
+          corridorId: normalizedCorridorId,
+          amountBucket,
+          methodProfile,
+          dataAvailable: false,
+          reason: corridorExists ? 'no_data' : 'corridor_not_tracked',
+          message: corridorExists
+            ? `No data available for ${normalizedCorridorId} with amount_bucket=${amountBucket} and method_profile=${methodProfile}.`
+            : `Corridor ${normalizedCorridorId} is not currently tracked. Contact support to request coverage.`,
+          dataTier,
+          cadenceMinutes: collectionCadenceMinutes,
+          exportCadenceMinutes,
+          collectionCadenceMinutes,
+          collectionTier,
+          isUsdOrigin,
+          dataWindow: {
+            requestedDays: 1,
+            availableDays: null,
+            returnedDays: 0,
+            availableStartDate: null,
+            availableEndDate: null,
+            startDate: toDateOnly(new Date()),
+            endDate: toDateOnly(new Date()),
+            capped: false,
+          },
+        }
+
+        reply.header('X-Data-Tier', String(dataTier))
+        reply.header('X-Data-Cadence-Minutes', String(collectionCadenceMinutes))
+        reply.header('X-Collection-Cadence-Minutes', String(collectionCadenceMinutes))
+        reply.header('X-Export-Cadence-Minutes', String(exportCadenceMinutes))
+        reply.header('X-Collection-Tier', collectionTier)
+        reply.header('X-Corridor-Origin', corridorParts.sourceCountry.toUpperCase())
+        reply.header('X-USD-Origin', isUsdOrigin ? '1' : '0')
+        reply.code(corridorExists ? 200 : 404)
+        return response
+      }
+
+      const weightingModel = latest.weighting_model || DEFAULT_WEIGHT_MODEL
+      const methodologyVersion = latest.methodology_version || INDICES_METHODOLOGY_VERSION
+      const response: IndicesLatestResponse = {
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        weightingModel,
+        methodologyVersion,
+        weightConfidence: latest.weight_confidence ?? null,
+        weightWindowDays: latest.weight_window_days ?? null,
+        lastUpdated: latest.created_at ? latest.created_at.toISOString() : null,
+        dataTier,
+        cadenceMinutes: collectionCadenceMinutes,
+        exportCadenceMinutes,
+        collectionCadenceMinutes,
+        collectionTier,
+        isUsdOrigin,
+        point: {
+          date: latest.date instanceof Date ? toDateOnly(latest.date) : String(latest.date),
+          teer: latest.teer_rate ?? null,
+          rci: latest.rci_ratio ?? null,
+          rvi_bps: latest.rvi_bps ?? null,
+          providerCountBinned: latest.provider_count_binned ?? null,
+          providerCount: latest.provider_count ?? null,
+          suppressionFlag: latest.suppression_flag,
+          suppressionReason: latest.suppression_reason ?? null,
+          midMarketRate: latest.mid_market_rate ?? null,
+          weightConfidence: latest.weight_confidence ?? null,
+          weightWindowDays: latest.weight_window_days ?? null,
+        },
+      }
+
+      reply.header('X-Data-Tier', String(dataTier))
+      reply.header('X-Data-Cadence-Minutes', String(collectionCadenceMinutes))
+      reply.header('X-Collection-Cadence-Minutes', String(collectionCadenceMinutes))
+      reply.header('X-Export-Cadence-Minutes', String(exportCadenceMinutes))
+      reply.header('X-Collection-Tier', collectionTier)
+      reply.header('X-Corridor-Origin', corridorParts.sourceCountry.toUpperCase())
+      reply.header('X-USD-Origin', isUsdOrigin ? '1' : '0')
+      return response
+    } catch (error) {
+      logger.error('indices_latest_failed', {
+        corridor_id: corridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error', message: 'Failed to retrieve latest index data.' }
+    }
+  })
+
+  app.get('/indices/corridors', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     try {
       const result = await query<{
         corridor_id: string
@@ -296,6 +540,8 @@ export const indicesRoutes = async (app: FastifyInstance) => {
 
       const corridors = result.rows.map((row) => {
         const tierInfo = getDataTierForCorridor(row.corridor_id, 2)
+        const collectionCadenceMinutes = getCollectionCadenceMinutes(tierInfo.collectionTier)
+        const exportCadenceMinutes = tierInfo.cadenceMinutes
         return {
           corridorId: row.corridor_id,
           sourceCountry: row.source_country,
@@ -303,7 +549,9 @@ export const indicesRoutes = async (app: FastifyInstance) => {
           sourceCurrency: row.source_currency,
           destCurrency: row.dest_currency,
           dataTier: tierInfo.tier,
-          cadenceMinutes: tierInfo.cadenceMinutes,
+          cadenceMinutes: collectionCadenceMinutes,
+          exportCadenceMinutes,
+          collectionCadenceMinutes,
           collectionTier: tierInfo.collectionTier,
           isUsdOrigin: tierInfo.isUsdOrigin,
           dataPoints: row.data_points,
@@ -320,7 +568,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
         nonUsdCount,
         collectionTier1Count: usdOriginCount,
         collectionTier2Count: nonUsdCount,
-        note: 'Tier 2 export includes ALL corridors. USD-origin corridors are collected every 10 min but served at Tier 2 cadence (3 hours) as the SLA guarantee.',
+        note: 'Tier 2 export includes ALL corridors (Tier 1 is a subset of Tier 2; Tier 2 is not a subset of Tier 1). collectionCadenceMinutes reflects actual scrape cadence (10/180). exportCadenceMinutes reflects Tier 2 SLA (3 hours) for the API.',
         corridors,
       }
     } catch (error) {

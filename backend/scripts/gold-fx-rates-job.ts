@@ -20,6 +20,7 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { FxRateRepository } from '../plane-b/src/repositories'
 import type { FxRateAggregationRow } from '../plane-b/src/repositories/interfaces/fx-rate-repository.interface'
@@ -41,6 +42,7 @@ const isValidCurrency = (value: string) => /^[A-Z]{3}$/.test(value)
 const lockTtlSeconds = toNumber(process.env.GOLD_FX_RATES_LOCK_TTL_SECONDS, 300) ?? 300
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-fx-rates')
+initTracing('gold-fx-rates-job')
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null

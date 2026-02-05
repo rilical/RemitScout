@@ -155,7 +155,10 @@ export class FxRateRepository implements IFxRateRepository {
         })
         try {
           const fetcher = this.getOandaFetcher()
-          const fetchResult = await fetcher.fetchRate(baseCurrency, quoteCurrency, false)
+          const fetchResult = await fetcher.fetchRate(baseCurrency, quoteCurrency, false, {
+            maxWaitMs: config.fxRates?.oandaFallbackMaxWaitMs,
+            source: 'plane-a',
+          })
           if (fetchResult.success && fetchResult.data) {
             await this.upsertRate({
               baseCurrency,

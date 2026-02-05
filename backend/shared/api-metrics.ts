@@ -3,6 +3,8 @@ import { Counter, Histogram } from 'prom-client'
 import { recordCloudWatchMetric } from './cloudwatch-metrics'
 import { getMetrics, metricsContentType, metricsRegistry } from './metrics-registry'
 
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
+
 const httpRequestsTotal = new Counter({
   name: 'http_requests_total',
   help: 'Total HTTP requests.',
@@ -31,17 +33,16 @@ export const recordRequest = (
     name: 'http_requests_total',
     value: 1,
     unit: 'Count',
-    dimensions: { method, route, status_code: status },
+    dimensions: { method, route, status_code: status, environment: environmentDimension },
   })
   recordCloudWatchMetric({
     name: 'http_request_duration_seconds',
     value: durationSeconds,
     unit: 'Seconds',
-    dimensions: { method, route, status_code: status },
+    dimensions: { method, route, status_code: status, environment: environmentDimension },
   })
 }
 
 export { getMetrics, metricsContentType }
-
 
 

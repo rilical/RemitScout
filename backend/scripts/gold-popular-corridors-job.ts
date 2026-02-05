@@ -22,6 +22,7 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { PopularCorridorRepository } from '../plane-b/src/repositories'
 import type { PopularCorridorAggregationRow } from '../plane-b/src/repositories/interfaces/popular-corridor-repository.interface'
@@ -46,6 +47,7 @@ const isValidRoute = (value: string) => {
 const lockTtlSeconds = toNumber(process.env.GOLD_POPULAR_CORRIDORS_LOCK_TTL_SECONDS, 600)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-popular-corridors')
+initTracing('gold-popular-corridors-job')
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null

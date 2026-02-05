@@ -4,6 +4,7 @@ import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
 
 const logger = createLogger('script.probe-utils')
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 
 let cloudWatchClient: CloudWatchClient | null = null
 
@@ -38,6 +39,7 @@ const publishProbeMetrics = async (
             Dimensions: [
               { Name: 'ProviderId', Value: providerId },
               { Name: 'Status', Value: result.success ? 'success' : 'failure' },
+              { Name: 'environment', Value: environmentDimension },
             ],
           },
           {
@@ -45,28 +47,40 @@ const publishProbeMetrics = async (
             Value: result.durationMs / 1000, // Convert to seconds
             Unit: 'Seconds',
             Timestamp: new Date(),
-            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+            Dimensions: [
+              { Name: 'ProviderId', Value: providerId },
+              { Name: 'environment', Value: environmentDimension },
+            ],
           },
           {
             MetricName: 'probe_corridors_tested',
             Value: result.corridorsTested,
             Unit: 'Count',
             Timestamp: new Date(),
-            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+            Dimensions: [
+              { Name: 'ProviderId', Value: providerId },
+              { Name: 'environment', Value: environmentDimension },
+            ],
           },
           {
             MetricName: 'probe_corridors_succeeded',
             Value: result.corridorsSucceeded,
             Unit: 'Count',
             Timestamp: new Date(),
-            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+            Dimensions: [
+              { Name: 'ProviderId', Value: providerId },
+              { Name: 'environment', Value: environmentDimension },
+            ],
           },
           {
             MetricName: 'probe_corridors_failed',
             Value: result.corridorsFailed,
             Unit: 'Count',
             Timestamp: new Date(),
-            Dimensions: [{ Name: 'ProviderId', Value: providerId }],
+            Dimensions: [
+              { Name: 'ProviderId', Value: providerId },
+              { Name: 'environment', Value: environmentDimension },
+            ],
           },
         ],
       }),

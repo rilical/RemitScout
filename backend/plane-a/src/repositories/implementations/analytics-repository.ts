@@ -309,7 +309,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
           AND user_id IS NOT NULL
         GROUP BY 1, 2
       ),
-      returning AS (
+      returning_users AS (
         SELECT time_bucket,
                COUNT(*) FILTER (WHERE session_count > 1)::int AS returning_users
         FROM user_bucket
@@ -324,7 +324,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       FROM sessions s
       LEFT JOIN searches se ON se.time_bucket = s.time_bucket AND se.anon_session_id = s.anon_id
       LEFT JOIN clicks cl ON cl.time_bucket = s.time_bucket AND cl.anon_session_id = s.anon_id
-      LEFT JOIN returning r ON r.time_bucket = s.time_bucket
+      LEFT JOIN returning_users r ON r.time_bucket = s.time_bucket
       GROUP BY s.time_bucket, r.returning_users
       ORDER BY s.time_bucket ASC`,
       [params.startDate, params.endDate, params.bucket],

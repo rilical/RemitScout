@@ -31,6 +31,8 @@ import type { QuoteRefreshQueueEvent } from '../plane-b/src/quote-refresh'
 import type { WorkerLock as WorkerLockType } from '../plane-b/src/lib/worker-lock'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { initTracing } from '../shared/tracing'
 import { startHealthServer } from './b2c-refresh-worker-health'
 import { recordRequest, updateQueueDepth } from './b2c-refresh-worker-metrics'
 
@@ -95,6 +97,9 @@ const useLock = lockMode === 'single' || (lockMode === 'auto' && !useQueue)
 const loopEnabled = toBoolean(process.env.B2C_REFRESH_LOOP)
 const loopDelayMs = Math.max(50, toNumber(process.env.B2C_REFRESH_LOOP_DELAY_MS, 250))
 const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.B2C_REFRESH_IDLE_DELAY_MS, 750))
+const loopJitterMs = resolveJitterMs(process.env.B2C_REFRESH_LOOP_JITTER_MS, 0)
+
+initTracing('b2c-refresh-worker')
 
 let shutdownRequested = false
 let lock: WorkerLockType | null = null
@@ -242,6 +247,7 @@ export const runB2cRefreshWorkerLoop = async (
   try {
     if (loopEnabled) {
       while (!shutdownRequested) {
+        await applyJitter(logger, 'b2c_refresh_loop', loopJitterMs)
         const processed = await runB2cRefreshWorker()
         if (shutdownRequested) {
           break

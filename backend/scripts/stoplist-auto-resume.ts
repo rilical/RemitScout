@@ -22,6 +22,7 @@
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { StoplistService } from '../plane-b/src/services'
 import { RightsMatrixRepository } from '../plane-b/src/repositories'
@@ -35,6 +36,7 @@ const toNumber = (value: string | undefined, fallback: number) => {
 
 const lockTtlSeconds = toNumber(process.env.STOPLIST_AUTO_RESUME_LOCK_TTL_SECONDS, 300)
 const logger = createLogger('script.stoplist-auto-resume')
+initTracing('stoplist-auto-resume')
 
 let shutdownRequested = false
 let lock: WorkerLock | null = null

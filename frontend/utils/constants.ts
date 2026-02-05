@@ -253,7 +253,29 @@ export const BANK_VS_SPECIALIST_DATA = {
   },
 }
 
+const resolveRuntimeFlag = (key: string, envKeys: string[]) => {
+  const runtimeConfig = (globalThis as any).__NUXT__?.config?.public
+  if (runtimeConfig && key in runtimeConfig) {
+    return runtimeConfig[key]
+  }
+  for (const envKey of envKeys) {
+    if (typeof process !== 'undefined' && process.env && process.env[envKey]) {
+      return process.env[envKey]
+    }
+  }
+  return undefined
+}
+
+const parseFlag = (value: unknown) => {
+  if (value === true) return true
+  if (value === false) return false
+  if (typeof value === 'string') {
+    return value === 'true' || value === '1'
+  }
+  return false
+}
+
 export const FEATURE_FLAGS = {
-  PULSE_ENABLED: false,
-  ENTERPRISE_ENABLED: false,
+  PULSE_ENABLED: parseFlag(resolveRuntimeFlag('pulseEnabled', ['NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED'])),
+  ENTERPRISE_ENABLED: parseFlag(resolveRuntimeFlag('enterpriseEnabled', ['NUXT_PUBLIC_ENTERPRISE_ENABLED', 'PUBLIC_ENTERPRISE_ENABLED'])),
 } as const

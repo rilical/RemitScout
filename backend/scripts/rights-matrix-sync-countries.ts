@@ -1,6 +1,7 @@
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { parseCorridorId } from '../shared/corridor'
+import { initTracing } from '../shared/tracing'
 import { RightsMatrixRepository } from '../plane-b/src/repositories/implementations/rights-matrix-repository'
 import {
   REMITLY_DESTINATION_COUNTRIES,
@@ -46,6 +47,8 @@ import {
 } from '../plane-b/src/providers/orbitremit/supported-corridors'
 import { SINGX_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/singx/supported-corridors'
 import { PLACID_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/placid/supported-corridors'
+
+initTracing('rights-matrix-sync-countries')
 
 type CountrySupport = {
   providerId: string

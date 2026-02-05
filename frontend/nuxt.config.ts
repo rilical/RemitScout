@@ -35,10 +35,27 @@ const resolveEnvValue = (...keys: string[]) => {
   }
   return undefined
 }
+const parseEnvFlag = (value?: string) => value === 'true' || value === '1'
 const isAbsoluteUrl = (value?: string) => Boolean(value && /^https?:\/\//.test(value))
+const normalizeApiBase = (base?: string) => {
+  if (!base || !isAbsoluteUrl(base)) return base
+  const url = new URL(base)
+  let pathname = url.pathname.replace(/\/$/, '')
+  if (!pathname || pathname === '') {
+    pathname = '/api/v1'
+  } else if (!pathname.endsWith('/api/v1')) {
+    if (pathname.endsWith('/api')) {
+      pathname = `${pathname}/v1`
+    } else {
+      pathname = `${pathname}/api/v1`
+    }
+  }
+  url.pathname = pathname
+  return url.toString().replace(/\/$/, '')
+}
 const resolvePublicApiBase = () => {
   const publicBase = readEnvValue('PUBLIC_API_BASE')
-  if (publicBase) return publicBase
+  if (publicBase) return normalizeApiBase(publicBase) || publicBase
   const cloudFrontDomain = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
   if (cloudFrontDomain) {
     return `https://${cloudFrontDomain.replace(/\/$/, '')}/api/v1`
@@ -51,7 +68,7 @@ const resolvePublicApiBase = () => {
 }
 const resolveServerApiBase = () => {
   const apiBase = readEnvValue('API_BASE')
-  if (apiBase) return apiBase
+  if (apiBase) return normalizeApiBase(apiBase) || apiBase
   const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
   if (planeAEndpoint) return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`
   const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
@@ -376,6 +393,14 @@ export default defineNuxtConfig({
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
       adsEnabled,
+      pulseEnabled: (() => {
+        const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED')
+        return flag !== undefined ? parseEnvFlag(flag) : isDev
+      })(),
+      enterpriseEnabled: (() => {
+        const flag = resolveEnvValue('NUXT_PUBLIC_ENTERPRISE_ENABLED', 'PUBLIC_ENTERPRISE_ENABLED')
+        return flag !== undefined ? parseEnvFlag(flag) : false
+      })(),
     },
   },
 

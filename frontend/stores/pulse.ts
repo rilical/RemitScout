@@ -13,6 +13,7 @@ export interface PulseCorridor {
   toFlag: string
   label: string
   slug: string
+  corridorId?: string
 }
 
 export interface PulseState {
@@ -33,6 +34,7 @@ const DEFAULT_CORRIDOR: PulseCorridor = {
   toFlag: '🇵🇭',
   label: 'USD → PHP',
   slug: 'usd-php',
+  corridorId: 'US-PH-USD-PHP',
 }
 
 export const POPULAR_CORRIDORS: PulseCorridor[] = [
@@ -46,6 +48,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇲🇽',
     label: 'USD → MXN',
     slug: 'usd-mxn',
+    corridorId: 'US-MX-USD-MXN',
   },
   {
     from: 'United States',
@@ -56,6 +59,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇮🇳',
     label: 'USD → INR',
     slug: 'usd-inr',
+    corridorId: 'US-IN-USD-INR',
   },
   {
     from: 'United Kingdom',
@@ -66,6 +70,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇮🇳',
     label: 'GBP → INR',
     slug: 'gbp-inr',
+    corridorId: 'GB-IN-GBP-INR',
   },
   {
     from: 'United States',
@@ -76,6 +81,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇳🇬',
     label: 'USD → NGN',
     slug: 'usd-ngn',
+    corridorId: 'US-NG-USD-NGN',
   },
   {
     from: 'Canada',
@@ -86,6 +92,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇵🇭',
     label: 'CAD → PHP',
     slug: 'cad-php',
+    corridorId: 'CA-PH-CAD-PHP',
   },
   {
     from: 'Australia',
@@ -96,6 +103,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇵🇭',
     label: 'AUD → PHP',
     slug: 'aud-php',
+    corridorId: 'AU-PH-AUD-PHP',
   },
   {
     from: 'United Kingdom',
@@ -106,6 +114,7 @@ export const POPULAR_CORRIDORS: PulseCorridor[] = [
     toFlag: '🇳🇬',
     label: 'GBP → NGN',
     slug: 'gbp-ngn',
+    corridorId: 'GB-NG-GBP-NGN',
   },
 ]
 
@@ -161,6 +170,7 @@ export const usePulseStore = defineStore('pulse', {
 
     filtersForApi: (state): PulseFilters => ({
       corridor: state.corridor.slug,
+      corridorId: state.corridor.corridorId,
       amount: state.amount as 100 | 200 | 500 | 1000,
       fundingMethod: 'bank',
       payoutMethod: 'bank',
@@ -243,6 +253,5 @@ export const usePulseStore = defineStore('pulse', {
     },
   },
 })
-
 
 

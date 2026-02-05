@@ -3,6 +3,7 @@ import { query } from '../../../../shared/db'
 import type {
   IRightsMatrixRepository,
   RightsMatrixProviderRecord,
+  RightsMatrixIndexPermissionRecord,
 } from '../interfaces/rights-matrix-repository.interface'
 
 export class RightsMatrixRepository implements IRightsMatrixRepository {
@@ -45,6 +46,28 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
             OR provider_id = 'wise'
           )`,
       [sourceCountry, destCountry],
+      this.pool,
+    )
+    return result.rows
+  }
+
+  async listIndexPermissionsByProviders(
+    providerIds: string[],
+  ): Promise<RightsMatrixIndexPermissionRecord[]> {
+    if (!providerIds.length) {
+      return []
+    }
+    const result = await query<RightsMatrixIndexPermissionRecord>(
+      `SELECT provider_id,
+              allowed_in_teer,
+              allowed_in_rci,
+              allowed_in_rvi,
+              allowed_collect,
+              allowed_b2c,
+              stoplist_status
+         FROM silver.rights_matrix
+        WHERE provider_id = ANY($1::text[])`,
+      [providerIds],
       this.pool,
     )
     return result.rows

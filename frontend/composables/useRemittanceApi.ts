@@ -23,12 +23,12 @@ export const useRemittanceApi = () => {
     availableMethods?: string[]
     indices?: {
       teer: number | null
-      rvi: number | null
+      rvi_bps: number | null
       rci: number | null
       providerCount: number
       amount: number
       midMarketRate: number | null
-      weights: 'equal' | 'provider_volume'
+      weights: 'equal' | 'provider_volume' | 'synthetic_volume_v1'
     }
   }>()
 
@@ -164,12 +164,12 @@ export const useRemittanceApi = () => {
             availableMethods?: string[]
             indices?: {
               teer: number | null
-              rvi: number | null
+              rvi_bps: number | null
               rci: number | null
               providerCount: number
               amount: number
               midMarketRate: number | null
-              weights: 'equal' | 'provider_volume'
+              weights: 'equal' | 'provider_volume' | 'synthetic_volume_v1'
             }
             error?: { code: string; message: string }
           }>(

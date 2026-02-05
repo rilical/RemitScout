@@ -15,6 +15,7 @@ import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 
 const toNumber = (value: string | number | null | undefined, fallback: number) => {
@@ -27,6 +28,7 @@ const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const lookbackHours = toNumber(process.env.TELEMETRY_ANALYTICS_LOOKBACK_HOURS, 24)
 
 const logger = createLogger('script.telemetry-analytics')
+initTracing('telemetry-analytics-job')
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null

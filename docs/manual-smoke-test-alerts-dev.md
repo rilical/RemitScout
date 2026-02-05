@@ -8,6 +8,9 @@ Goal: create a user, save a watchlist item, create a weekly alert, and verify it
   - `SUPABASE_URL`
   - `SUPABASE_PUBLISHABLE_KEY` (anon key)
   - Optional: `SUPABASE_SERVICE_ROLE_KEY` if you need to confirm users via admin API.
+- Dev must be **resumed** (schedules enabled + ECS desired counts > 0). Run:
+  - `make resume-dev`
+  - `make status-dev` (confirm rules enabled)
 
 ## 1) Start Plane A
 ```sh

@@ -246,6 +246,11 @@ export const useAuth = () => {
       return { ok: false, error: lastError.value }
     }
 
+    if (provider !== 'google') {
+      lastError.value = 'Only Google sign-in is supported.'
+      return { ok: false, error: lastError.value }
+    }
+
     const supabase = getSupabase()
     if (!supabase) {
       lastError.value = 'Supabase client is not available.'

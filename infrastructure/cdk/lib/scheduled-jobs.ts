@@ -1,9 +1,9 @@
 import path from 'path'
 
-import { Duration } from 'aws-cdk-lib'
+import { Duration, Tags } from 'aws-cdk-lib'
 import { Rule, RuleTargetInput, Schedule } from 'aws-cdk-lib/aws-events'
 import { EcsTask, LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
-import { Runtime, Tracing, LayerVersion, type IFunction, type ILayerVersion } from 'aws-cdk-lib/aws-lambda'
+import { Architecture, Runtime, Tracing, LayerVersion, type IFunction, type ILayerVersion } from 'aws-cdk-lib/aws-lambda'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
@@ -16,6 +16,7 @@ import {
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
+import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
 
 export type ScheduledJobsResources = {
   goldFxRatesFunction: IFunction
@@ -49,6 +50,8 @@ export type ScheduledJobsResources = {
   stoplistAutoResumeRule: Rule
   rightsMatrixSyncCountriesRule: Rule
   b2cRefreshRule: Rule
+  fxRateRefreshRule: Rule
+  b2bSweepSchedulerRule: Rule
   oandaSyncFunction: IFunction
   oandaSyncRule: Rule
   remitlyProbeFunction: IFunction
@@ -69,6 +72,24 @@ export type ScheduledJobsResources = {
   sendwaveProbeRule: Rule
   xeProbeFunction: IFunction
   xeProbeRule: Rule
+  alansariProbeFunction: IFunction
+  alansariProbeRule: Rule
+  instaremProbeFunction: IFunction
+  instaremProbeRule: Rule
+  xoomProbeFunction: IFunction
+  xoomProbeRule: Rule
+  remitbeeProbeFunction: IFunction
+  remitbeeProbeRule: Rule
+  singxProbeFunction: IFunction
+  singxProbeRule: Rule
+  placidProbeFunction: IFunction
+  placidProbeRule: Rule
+  koronapayProbeFunction: IFunction
+  koronapayProbeRule: Rule
+  wirebarleyProbeFunction: IFunction
+  wirebarleyProbeRule: Rule
+  intermexProbeFunction: IFunction
+  intermexProbeRule: Rule
 }
 
 export type ScheduledJobsOptions = {
@@ -76,13 +97,22 @@ export type ScheduledJobsOptions = {
   roles: IamResources
   vpc: Vpc
   cluster: Cluster
+  lambdaArchitecture?: Architecture
   b2cRefreshTask: FargateTaskDefinition
+  fxRateRefreshTask: FargateTaskDefinition
+  b2bSweepSchedulerTask: FargateTaskDefinition
   b2cRefreshServiceEnabled?: boolean
+  b2cRefreshDesiredCount?: number
+  fxRateRefreshServiceEnabled?: boolean
+  fxRateRefreshDesiredCount?: number
   paused?: boolean
+  goldIndicesLookbackDays?: string
   planeASecurityGroup: SecurityGroup
   planeBSecurityGroup: SecurityGroup
   planeCSecurityGroup: SecurityGroup
   otelLambdaLayerArn?: string
+  sentrySecretArn?: string
+  sentrySecretJsonKey?: string
   planeADbSecretArn?: string
   planeADbSsmName?: string
   planeADbHost?: string
@@ -113,6 +143,11 @@ export type ScheduledJobsOptions = {
   planeCDbHost?: string
   planeCDbPort?: string
   planeCDbName?: string
+}
+
+const tagManagedRule = (rule: Rule, envName: string): void => {
+  Tags.of(rule).add('managed-by', 'ops-pause')
+  Tags.of(rule).add('environment', envName)
 }
 
 type LambdaNetworking = {
@@ -183,11 +218,28 @@ const applyCommunicationsEnv = (
   }
 }
 
+const applySentryEnv = (
+  scope: Construct,
+  fn: NodejsFunction,
+  id: string,
+  sentrySecretArn?: string,
+  sentrySecretJsonKey?: string,
+): void => {
+  if (!sentrySecretArn) return
+  const secret = Secret.fromSecretCompleteArn(scope, id, sentrySecretArn)
+  secret.grantRead(fn)
+  const value = sentrySecretJsonKey
+    ? secret.secretValueFromJson(sentrySecretJsonKey)
+    : secret.secretValue
+  fn.addEnvironment('SENTRY_DSN', value.toString())
+}
+
 export const createScheduledJobs = (
   scope: Construct,
   options: ScheduledJobsOptions,
 ): ScheduledJobsResources => {
   const isDev = options.envName === 'dev'
+  const isProd = options.envName === 'prod'
   const rulesEnabled = !options.paused
   const ruleName = (suffix: string) => `remit-scout-${options.envName}-${suffix}`
   const allowPublicSubnet = false
@@ -196,7 +248,12 @@ export const createScheduledJobs = (
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const oandaThrottleEnv = collectOandaThrottleEnv()
+  const providerThrottleEnv = collectPlaneBProviderThrottleEnv()
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
+  const otelEndpoint = options.otelLambdaLayerArn
+    ? 'http://127.0.0.1:4318/v1/traces'
+    : undefined
 
   const exportWorkerIntervalMinutes = isDev ? 5 : 1
   const alertEvaluationIntervalMinutes = isDev ? 15 : 1
@@ -247,6 +304,7 @@ export const createScheduledJobs = (
   const auditLogsPrefix = options.auditLogsPrefix
   const redisUrl = options.redisUrl
   const b2cRefreshServiceEnabled = options.b2cRefreshServiceEnabled ?? false
+  const fxRateRefreshServiceEnabled = options.fxRateRefreshServiceEnabled ?? false
 
   const goldFxRatesEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
@@ -254,7 +312,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -283,6 +341,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
     ...planeBLambdaNetworking,
@@ -292,6 +351,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    goldFxRatesFunction,
+    'GoldFxRatesSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeBDbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -318,8 +385,9 @@ export const createScheduledJobs = (
     ruleName: ruleName('gold-fx-rates'),
     schedule: Schedule.rate(Duration.minutes(15)),
     description: 'Runs gold-fx-rates job every 15 minutes.',
-    enabled: rulesEnabled,
+    enabled: rulesEnabled || options.envName === 'dev',
   })
+  tagManagedRule(goldFxRatesRule, options.envName)
 
   goldFxRatesRule.addTarget(new LambdaFunction(goldFxRatesFunction, { retryAttempts: 1 }))
 
@@ -329,7 +397,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -370,6 +438,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.minutes(15),
     ...planeALambdaNetworking,
@@ -379,6 +448,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    exportWorkerFunction,
+    'ExportWorkerSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -407,6 +484,7 @@ export const createScheduledJobs = (
     description: `Runs export worker every ${exportWorkerIntervalMinutes} minute(s) to drain queued export jobs.`,
     enabled: rulesEnabled,
   })
+  tagManagedRule(exportWorkerRule, options.envName)
 
   exportWorkerRule.addTarget(new LambdaFunction(exportWorkerFunction, { retryAttempts: 1 }))
 
@@ -414,7 +492,7 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -441,6 +519,7 @@ export const createScheduledJobs = (
       ),
       handler: 'handler',
       runtime: Runtime.NODEJS_18_X,
+      architecture: options.lambdaArchitecture,
       memorySize: 256,
       timeout: Duration.minutes(1),
       ...planeALambdaNetworking,
@@ -452,12 +531,21 @@ export const createScheduledJobs = (
     },
   )
 
+  applySentryEnv(
+    scope,
+    alertEvaluationSchedulerFunction,
+    'AlertEvaluationSchedulerSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
+
   const alertEvaluationWeeklyRule = new Rule(scope, 'AlertEvaluationWeeklySchedule', {
     ruleName: ruleName('alert-evaluation-weekly'),
     schedule: Schedule.rate(Duration.hours(1)),
     description: 'Enqueues weekly alerts by timezone bucket every hour.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(alertEvaluationWeeklyRule, options.envName)
   alertEvaluationWeeklyRule.addTarget(
     new LambdaFunction(alertEvaluationSchedulerFunction, {
       retryAttempts: 1,
@@ -471,6 +559,7 @@ export const createScheduledJobs = (
     description: 'Enqueues daily alerts by timezone bucket every hour.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(alertEvaluationDailyRule, options.envName)
   alertEvaluationDailyRule.addTarget(
     new LambdaFunction(alertEvaluationSchedulerFunction, {
       retryAttempts: 1,
@@ -484,12 +573,16 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
     ALERT_EVALUATION_ENABLED: '1',
+    ALERT_EVALUATION_LOOP_JITTER_MS:
+      process.env.ALERT_EVALUATION_LOOP_JITTER_MS || (isDev ? '250' : '0'),
+    ALERT_EVALUATION_MESSAGE_JITTER_MS:
+      process.env.ALERT_EVALUATION_MESSAGE_JITTER_MS || (isDev ? '250' : '0'),
   }
   if (planeADbHost) {
     alertEvaluationWorkerEnvironment.PLANE_A_DB_HOST = planeADbHost
@@ -517,6 +610,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.minutes(15),
     ...planeALambdaNetworking,
@@ -526,6 +620,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    alertEvaluationWorkerFunction,
+    'AlertEvaluationWorkerSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -560,6 +662,7 @@ export const createScheduledJobs = (
     description: `Runs alert evaluation worker every ${alertEvaluationIntervalMinutes} minute(s) to drain queued alert evaluations.`,
     enabled: rulesEnabled,
   })
+  tagManagedRule(alertEvaluationWorkerRule, options.envName)
   alertEvaluationWorkerRule.addTarget(
     new LambdaFunction(alertEvaluationWorkerFunction, { retryAttempts: 1 }),
   )
@@ -570,7 +673,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -605,6 +708,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(10),
     ...planeALambdaNetworking,
@@ -614,6 +718,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    alertCorridorRefreshFunction,
+    'AlertCorridorRefreshSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -643,6 +755,7 @@ export const createScheduledJobs = (
     description: `Refreshes non-macro corridors with active alerts every ${alertCorridorRefreshIntervalHours} hours.`,
     enabled: rulesEnabled,
   })
+  tagManagedRule(alertCorridorRefreshRule, options.envName)
   alertCorridorRefreshRule.addTarget(
     new LambdaFunction(alertCorridorRefreshFunction, { retryAttempts: 1 }),
   )
@@ -656,7 +769,7 @@ export const createScheduledJobs = (
     SMART_ALERTS_LOOKBACK_DAYS: isDev ? '7' : '42',
     SMART_ALERTS_MIN_SAMPLE_DAYS: isDev ? '3' : '21',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -688,8 +801,10 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: smartAlertsMemory,
     timeout: smartAlertsTimeout,
+    reservedConcurrentExecutions: isProd ? 1 : undefined,
     ...planeBLambdaNetworking,
     role: options.roles.planeBLambdaRole,
     tracing: tracingMode,
@@ -697,6 +812,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    smartAlertsFunction,
+    'SmartAlertsSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeBDbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -726,6 +849,7 @@ export const createScheduledJobs = (
     description: `Updates smart alert signals every ${smartAlertsIntervalHours} hours.`,
     enabled: rulesEnabled,
   })
+  tagManagedRule(smartAlertsRule, options.envName)
 
   smartAlertsRule.addTarget(new LambdaFunction(smartAlertsFunction, { retryAttempts: 1 }))
 
@@ -735,7 +859,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -764,6 +888,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
     ...planeALambdaNetworking,
@@ -773,6 +898,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    telemetryAnalyticsFunction,
+    'TelemetryAnalyticsSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -801,6 +934,7 @@ export const createScheduledJobs = (
     description: 'Aggregates telemetry analytics hourly.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(telemetryAnalyticsRule, options.envName)
 
   telemetryAnalyticsRule.addTarget(new LambdaFunction(telemetryAnalyticsFunction, { retryAttempts: 1 }))
 
@@ -810,7 +944,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -839,6 +973,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
     ...planeALambdaNetworking,
@@ -848,6 +983,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    sessionCleanupFunction,
+    'SessionCleanupSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -868,6 +1011,7 @@ export const createScheduledJobs = (
     description: 'Revokes expired and inactive sessions daily.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(sessionCleanupRule, options.envName)
 
   sessionCleanupRule.addTarget(new LambdaFunction(sessionCleanupFunction, { retryAttempts: 1 }))
 
@@ -877,7 +1021,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -915,6 +1059,7 @@ export const createScheduledJobs = (
       ),
       handler: 'handler',
       runtime: Runtime.NODEJS_18_X,
+      architecture: options.lambdaArchitecture,
       memorySize: 512,
       timeout: Duration.minutes(5),
       ...planeALambdaNetworking,
@@ -924,6 +1069,14 @@ export const createScheduledJobs = (
       logRetention,
       layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
     },
+  )
+
+  applySentryEnv(
+    scope,
+    bankVsSpecialistRefreshFunction,
+    'BankVsSpecialistRefreshSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
   )
 
   if (planeADbSecretArn) {
@@ -953,6 +1106,7 @@ export const createScheduledJobs = (
     description: 'Enqueues bank vs specialist refresh requests every 30 minutes.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(bankVsSpecialistRefreshRule, options.envName)
 
   bankVsSpecialistRefreshRule.addTarget(
     new LambdaFunction(bankVsSpecialistRefreshFunction, { retryAttempts: 1 }),
@@ -964,7 +1118,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -999,6 +1153,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(10),
     ...planeALambdaNetworking,
@@ -1008,6 +1163,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    auditLogCleanupFunction,
+    'AuditLogCleanupSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -1028,6 +1191,7 @@ export const createScheduledJobs = (
     description: 'Archives and deletes expired audit logs monthly.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(auditLogCleanupRule, options.envName)
 
   auditLogCleanupRule.addTarget(new LambdaFunction(auditLogCleanupFunction, { retryAttempts: 1 }))
 
@@ -1037,11 +1201,12 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+    ...oandaThrottleEnv,
   }
   if (options.envName !== 'prod') {
     oandaSyncEnvironment.OANDA_SYNC_INCLUDE_CAPABILITY = '1'
@@ -1072,6 +1237,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
     ...planeALambdaNetworking,
@@ -1081,6 +1247,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    oandaSyncFunction,
+    'OandaSyncSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -1117,6 +1291,7 @@ export const createScheduledJobs = (
     description: 'Runs OANDA FX rates sync every hour.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(oandaSyncRule, options.envName)
 
   oandaSyncRule.addTarget(new LambdaFunction(oandaSyncFunction, { retryAttempts: 1 }))
 
@@ -1207,6 +1382,7 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
+  const goldIndicesIntervalHours = options.envName === 'dev' ? 1 : 4
   const goldIndicesRule = createPlaneCLambdaJob({
     scope,
     options,
@@ -1222,8 +1398,8 @@ export const createScheduledJobs = (
       'aws',
       'gold-indices-job-lambda.ts',
     ),
-    schedule: Schedule.rate(Duration.hours(4)),
-    enabled: rulesEnabled,
+    schedule: Schedule.rate(Duration.hours(goldIndicesIntervalHours)),
+    enabled: rulesEnabled || options.envName === 'dev',
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeCLambdaNetworking,
@@ -1236,6 +1412,34 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
+  const providerWeightsIntervalHours = options.envName === 'dev' ? 1 : 6
+  const providerWeightsRule = createPlaneCLambdaJob({
+    scope,
+    options,
+    id: 'ProviderWeightingJob',
+    jobName: 'provider-weighting',
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'provider-weighting-job-lambda.ts',
+    ),
+    schedule: Schedule.rate(Duration.hours(providerWeightsIntervalHours)),
+    enabled: rulesEnabled || options.envName === 'dev',
+    logRetention,
+    otelLambdaLayer,
+    lambdaNetworking: planeCLambdaNetworking,
+    planeCDbSecretArn,
+    planeCDbSsmName,
+    planeCDbHost,
+    planeCDbPort,
+    planeCDbName,
+  })
+
   const goldReconciliationEnvironment: Record<string, string> = {
     JOB_NAME: 'gold-reconciliation',
     ENVIRONMENT: options.envName,
@@ -1243,7 +1447,7 @@ export const createScheduledJobs = (
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1281,6 +1485,7 @@ export const createScheduledJobs = (
     ),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(10),
     ...planeCLambdaNetworking,
@@ -1290,6 +1495,14 @@ export const createScheduledJobs = (
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    goldReconciliationFunction,
+    'GoldReconciliationSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeBDbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -1330,6 +1543,7 @@ export const createScheduledJobs = (
     description: 'Runs gold reconciliation job every 15 minutes to backfill missed Gold updates.',
     enabled: rulesEnabled,
   })
+  tagManagedRule(goldReconciliationRule, options.envName)
 
   goldReconciliationRule.addTarget(new LambdaFunction(goldReconciliationFunction, { retryAttempts: 1 }))
 
@@ -1444,17 +1658,61 @@ export const createScheduledJobs = (
   })
 
   const b2cRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
+  const b2cRefreshDesiredCount = options.b2cRefreshDesiredCount ?? 0
   const b2cRefreshRule = new Rule(scope, 'B2cRefreshWorkerSchedule', {
     ruleName: ruleName('b2c-refresh-worker'),
     schedule: Schedule.rate(Duration.minutes(b2cRefreshIntervalMinutes)),
     description: `Runs the B2C refresh worker on a ${b2cRefreshIntervalMinutes}-minute cadence.`,
-    enabled: rulesEnabled && !b2cRefreshServiceEnabled,
+    enabled: rulesEnabled && (!b2cRefreshServiceEnabled || b2cRefreshDesiredCount === 0),
   })
+  tagManagedRule(b2cRefreshRule, options.envName)
 
   b2cRefreshRule.addTarget(
     new EcsTask({
       cluster: options.cluster,
       taskDefinition: options.b2cRefreshTask,
+      subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
+      securityGroups: [options.planeBSecurityGroup],
+      taskCount: 1,
+      platformVersion: FargatePlatformVersion.LATEST,
+      assignPublicIp: isDev,
+    }),
+  )
+
+  const fxRateRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
+  const fxRateRefreshDesiredCount = options.fxRateRefreshDesiredCount ?? 0
+  const fxRateRefreshRule = new Rule(scope, 'FxRateRefreshWorkerSchedule', {
+    ruleName: ruleName('fx-rate-refresh-worker'),
+    schedule: Schedule.rate(Duration.minutes(fxRateRefreshIntervalMinutes)),
+    description: `Runs the FX rate refresh worker on a ${fxRateRefreshIntervalMinutes}-minute cadence.`,
+    enabled: rulesEnabled && (!fxRateRefreshServiceEnabled || fxRateRefreshDesiredCount === 0),
+  })
+  tagManagedRule(fxRateRefreshRule, options.envName)
+
+  fxRateRefreshRule.addTarget(
+    new EcsTask({
+      cluster: options.cluster,
+      taskDefinition: options.fxRateRefreshTask,
+      subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
+      securityGroups: [options.planeBSecurityGroup],
+      taskCount: 1,
+      platformVersion: FargatePlatformVersion.LATEST,
+      assignPublicIp: isDev,
+    }),
+  )
+
+  const b2bSweepSchedulerRule = new Rule(scope, 'B2bSweepSchedulerSchedule', {
+    ruleName: ruleName('b2b-sweep-scheduler'),
+    schedule: Schedule.rate(Duration.minutes(1)),
+    description: 'Runs the B2B sweep scheduler every minute to enqueue due tier runs.',
+    enabled: rulesEnabled,
+  })
+  tagManagedRule(b2bSweepSchedulerRule, options.envName)
+
+  b2bSweepSchedulerRule.addTarget(
+    new EcsTask({
+      cluster: options.cluster,
+      taskDefinition: options.b2bSweepSchedulerTask,
       subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [options.planeBSecurityGroup],
       taskCount: 1,
@@ -1474,6 +1732,13 @@ export const createScheduledJobs = (
     { id: 'Sendwave', providerId: 'sendwave' },
     { id: 'Mukuru', providerId: 'mukuru' },
     { id: 'Xe', providerId: 'xe' },
+    { id: 'AlAnsari', providerId: 'alansari' },
+    { id: 'Instarem', providerId: 'instarem' },
+    { id: 'Xoom', providerId: 'xoom' },
+    { id: 'Remitbee', providerId: 'remitbee' },
+    { id: 'Singx', providerId: 'singx' },
+    { id: 'Placid', providerId: 'placid' },
+    { id: 'Koronapay', providerId: 'koronapay' },
     { id: 'WireBarley', providerId: 'wirebarley' },
     { id: 'Intermex', providerId: 'intermex' },
   ]
@@ -1495,6 +1760,7 @@ export const createScheduledJobs = (
       ),
       handler: 'handler',
       runtime: Runtime.NODEJS_18_X,
+      architecture: options.lambdaArchitecture,
       memorySize: 512,
       timeout: Duration.minutes(5),
       ...planeBLambdaNetworking,
@@ -1507,11 +1773,12 @@ export const createScheduledJobs = (
         PGSSLMODE: 'require',
         DB_DISABLE_STATEMENT_TIMEOUT: '1',
         TRACING_EXPORTER: tracingExporter,
-        OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+        ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
         CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
         CLOUDWATCH_NAMESPACE: 'RemitScout',
         CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
         CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+        ...providerThrottleEnv,
         ...(planeBDbHost && { PLANE_B_DB_HOST: planeBDbHost }),
         ...(planeBDbPort && { PLANE_B_DB_PORT: planeBDbPort }),
         ...(planeBDbName && { PLANE_B_DB_NAME: planeBDbName }),
@@ -1519,6 +1786,14 @@ export const createScheduledJobs = (
       logRetention: logRetention,
       layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
     })
+
+    applySentryEnv(
+      scope,
+      fn,
+      `${id}ProbeSentrySecret`,
+      options.sentrySecretArn,
+      options.sentrySecretJsonKey,
+    )
 
     if (planeBDbSecretArn) {
       const secret = Secret.fromSecretCompleteArn(
@@ -1546,6 +1821,7 @@ export const createScheduledJobs = (
       description: `Runs ${providerId} provider health probe every ${probeIntervalMinutes} minutes.`,
       enabled: rulesEnabled,
     })
+    tagManagedRule(rule, options.envName)
 
     rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
 
@@ -1585,6 +1861,8 @@ export const createScheduledJobs = (
     stoplistAutoResumeRule,
     rightsMatrixSyncCountriesRule,
     b2cRefreshRule,
+    fxRateRefreshRule,
+    b2bSweepSchedulerRule,
     oandaSyncFunction,
     oandaSyncRule,
     remitlyProbeFunction: probeFunctions.remitlyProbeFunction,
@@ -1605,6 +1883,24 @@ export const createScheduledJobs = (
     mukuruProbeRule: probeRules.mukuruProbeRule,
     xeProbeFunction: probeFunctions.xeProbeFunction,
     xeProbeRule: probeRules.xeProbeRule,
+    alansariProbeFunction: probeFunctions.alansariProbeFunction,
+    alansariProbeRule: probeRules.alansariProbeRule,
+    instaremProbeFunction: probeFunctions.instaremProbeFunction,
+    instaremProbeRule: probeRules.instaremProbeRule,
+    xoomProbeFunction: probeFunctions.xoomProbeFunction,
+    xoomProbeRule: probeRules.xoomProbeRule,
+    remitbeeProbeFunction: probeFunctions.remitbeeProbeFunction,
+    remitbeeProbeRule: probeRules.remitbeeProbeRule,
+    singxProbeFunction: probeFunctions.singxProbeFunction,
+    singxProbeRule: probeRules.singxProbeRule,
+    placidProbeFunction: probeFunctions.placidProbeFunction,
+    placidProbeRule: probeRules.placidProbeRule,
+    koronapayProbeFunction: probeFunctions.koronapayProbeFunction,
+    koronapayProbeRule: probeRules.koronapayProbeRule,
+    wirebarleyProbeFunction: probeFunctions.wirebarleyProbeFunction,
+    wirebarleyProbeRule: probeRules.wirebarleyProbeRule,
+    intermexProbeFunction: probeFunctions.intermexProbeFunction,
+    intermexProbeRule: probeRules.intermexProbeRule,
   }
 }
 
@@ -1656,6 +1952,7 @@ const createPlaneBLambdaJob = ({
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
   const tracingExporter = isDev ? 'none' : 'xray'
   const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
+  const otelEndpoint = otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
@@ -1663,7 +1960,7 @@ const createPlaneBLambdaJob = ({
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1683,6 +1980,7 @@ const createPlaneBLambdaJob = ({
     entry,
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
     ...lambdaNetworking,
@@ -1692,6 +1990,14 @@ const createPlaneBLambdaJob = ({
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    fn,
+    `${id}SentrySecret`,
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeBDbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(scope, `${id}DbSecret`, planeBDbSecretArn)
@@ -1717,6 +2023,7 @@ const createPlaneBLambdaJob = ({
     description: `Runs ${jobName} on a schedule.`,
     enabled,
   })
+  tagManagedRule(rule, options.envName)
 
   rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
 
@@ -1746,6 +2053,7 @@ const createPlaneCLambdaJob = ({
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
   const tracingExporter = isDev ? 'none' : 'xray'
   const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
+  const otelEndpoint = otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
@@ -1753,11 +2061,18 @@ const createPlaneCLambdaJob = ({
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (jobName === 'gold-indices') {
+    const lookbackOverride =
+      options.goldIndicesLookbackDays ?? (options.envName === 'dev' ? '30' : undefined)
+    if (lookbackOverride) {
+      environment.GOLD_INDICES_LOOKBACK_DAYS = lookbackOverride
+    }
   }
   if (planeCDbHost) {
     environment.PLANE_C_DB_HOST = planeCDbHost
@@ -1773,6 +2088,7 @@ const createPlaneCLambdaJob = ({
     entry,
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
     ...lambdaNetworking,
@@ -1782,6 +2098,14 @@ const createPlaneCLambdaJob = ({
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  applySentryEnv(
+    scope,
+    fn,
+    `${id}SentrySecret`,
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
 
   if (planeCDbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(scope, `${id}DbSecret`, planeCDbSecretArn)
@@ -1807,6 +2131,7 @@ const createPlaneCLambdaJob = ({
     description: `Runs ${jobName} on a schedule.`,
     enabled,
   })
+  tagManagedRule(rule, options.envName)
 
   rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
 

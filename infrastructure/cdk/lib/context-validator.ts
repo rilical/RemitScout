@@ -94,6 +94,9 @@ export const validateContext = (
     if (key.startsWith('@')) {
       continue
     }
+    if (key.startsWith('aws:') || key.startsWith('availability-zones:')) {
+      continue
+    }
 
     const schemaProperty = properties[key]
     if (!schemaProperty) {

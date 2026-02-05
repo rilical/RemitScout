@@ -7,8 +7,8 @@ import { PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import type { Construct } from 'constructs'
 
 export type CostGuardrailsResources = {
-  curBucket: Bucket
-  curReport: CfnReportDefinition
+  curBucket?: Bucket
+  curReport?: CfnReportDefinition
   budget?: CfnBudget
   anomalyMonitor?: CfnAnomalyMonitor
   anomalySubscription?: CfnAnomalySubscription
@@ -20,6 +20,7 @@ export type CostGuardrailsOptions = {
   costAlertEmails?: string[]
   monthlyBudgetAmountUsd?: number
   anomalyThresholdUsd?: number
+  createCur?: boolean
 }
 
 const toNumber = (value: number | undefined, fallback: number): number => {
@@ -38,57 +39,63 @@ export const createCostGuardrails = (
   const isProd = options.envName === 'prod'
   const stack = Stack.of(scope)
   const region = stack.region
+  const createCur = options.createCur ?? isProd
 
-  const curBucket = new Bucket(scope, 'CostAndUsageReportBucket', {
-    bucketName: `remit-scout-${options.envName}-cur`,
-    encryption: BucketEncryption.S3_MANAGED,
-    blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    versioned: false,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-    autoDeleteObjects: !isProd,
-    lifecycleRules: [
-      {
-        expiration: Duration.days(isProd ? 365 : 90),
-        abortIncompleteMultipartUploadAfter: Duration.days(7),
-      },
-    ],
-  })
+  let curBucket: Bucket | undefined
+  let curReport: CfnReportDefinition | undefined
 
-  curBucket.addToResourcePolicy(
-    new PolicyStatement({
-      principals: [new ServicePrincipal('billingreports.amazonaws.com')],
-      actions: ['s3:GetBucketAcl', 's3:GetBucketPolicy', 's3:PutObject'],
-      resources: [curBucket.bucketArn, `${curBucket.bucketArn}/*`],
-      conditions: {
-        StringEquals: {
-          'aws:SourceAccount': stack.account,
+  if (createCur) {
+    curBucket = new Bucket(scope, 'CostAndUsageReportBucket', {
+      bucketName: `remit-scout-${options.envName}-cur`,
+      encryption: BucketEncryption.S3_MANAGED,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      versioned: false,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      autoDeleteObjects: !isProd,
+      lifecycleRules: [
+        {
+          expiration: Duration.days(isProd ? 365 : 90),
+          abortIncompleteMultipartUploadAfter: Duration.days(7),
         },
-      },
-    }),
-  )
+      ],
+    })
 
-  const curReport = new CfnReportDefinition(scope, 'CostAndUsageReport', {
-    reportName: `remit-scout-${options.envName}-cur`,
-    timeUnit: 'DAILY',
-    format: 'Parquet',
-    compression: 'Parquet',
-    reportVersioning: 'OVERWRITE_REPORT',
-    refreshClosedReports: true,
-    s3Bucket: curBucket.bucketName,
-    s3Prefix: 'cur',
-    s3Region: region,
-    additionalArtifacts: ['ATHENA'],
-    additionalSchemaElements: ['RESOURCES'],
-  })
+    curBucket.addToResourcePolicy(
+      new PolicyStatement({
+        principals: [new ServicePrincipal('billingreports.amazonaws.com')],
+        actions: ['s3:GetBucketAcl', 's3:GetBucketPolicy', 's3:PutObject'],
+        resources: [curBucket.bucketArn, `${curBucket.bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            'aws:SourceAccount': stack.account,
+          },
+        },
+      }),
+    )
+
+    curReport = new CfnReportDefinition(scope, 'CostAndUsageReport', {
+      reportName: `remit-scout-${options.envName}-cur`,
+      timeUnit: 'DAILY',
+      format: 'Parquet',
+      compression: 'Parquet',
+      reportVersioning: 'OVERWRITE_REPORT',
+      refreshClosedReports: true,
+      s3Bucket: curBucket.bucketName,
+      s3Prefix: 'cur',
+      s3Region: region,
+      additionalArtifacts: ['ATHENA'],
+      additionalSchemaElements: ['RESOURCES'],
+    })
+  }
 
   const costAlertEmails = (options.costAlertEmails ?? []).filter(Boolean)
   const budgetAmount = toNumber(
     options.monthlyBudgetAmountUsd,
-    options.envName === 'prod' ? 1000 : 200,
+    options.envName === 'prod' ? 500 : (options.envName === 'staging' ? 300 : 100),
   )
   const anomalyThreshold = toNumber(
     options.anomalyThresholdUsd,
-    options.envName === 'prod' ? 200 : 50,
+    options.envName === 'prod' ? 100 : (options.envName === 'staging' ? 60 : 20),
   )
 
   let budget: CfnBudget | undefined

@@ -5,12 +5,16 @@ import type { Construct } from 'constructs'
 export type QueueResources = {
   quoteRefreshQueue: Queue
   quoteRefreshDlq: Queue
+  fxRateRefreshQueue: Queue
+  fxRateRefreshDlq: Queue
   exportJobQueue: Queue
   exportJobDlq: Queue
   alertEvaluationQueue: Queue
   alertEvaluationDlq: Queue
   ingestFanoutQueue: Queue
   ingestFanoutDlq: Queue
+  ingestFanoutTier2Queue: Queue
+  ingestFanoutTier2Dlq: Queue
   goldLiveQueue: Queue
   goldLiveDlq: Queue
   notificationsQueue: Queue
@@ -35,6 +39,21 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     retentionPeriod: Duration.days(4),
     deadLetterQueue: {
       queue: quoteRefreshDlq,
+      maxReceiveCount: 5,
+    },
+  })
+
+  const fxRateRefreshDlq = new Queue(scope, 'FxRateRefreshDlq', {
+    queueName: `remit-scout-${options.envName}-fx-rate-refresh-dlq`,
+    retentionPeriod: Duration.days(14),
+  })
+
+  const fxRateRefreshQueue = new Queue(scope, 'FxRateRefreshQueue', {
+    queueName: `remit-scout-${options.envName}-fx-rate-refresh`,
+    visibilityTimeout: Duration.minutes(5),
+    retentionPeriod: Duration.days(4),
+    deadLetterQueue: {
+      queue: fxRateRefreshDlq,
       maxReceiveCount: 5,
     },
   })
@@ -94,6 +113,31 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     sourceQueueArns: [ingestFanoutQueueArn],
   }
 
+  const ingestFanoutTier2Dlq = new Queue(scope, 'IngestFanoutTier2Dlq', {
+    queueName: `remit-scout-${options.envName}-ingest-fanout-tier2-dlq`,
+    retentionPeriod: Duration.days(14),
+  })
+
+  const ingestFanoutTier2QueueName = `remit-scout-${options.envName}-ingest-fanout-tier2`
+  const ingestFanoutTier2Queue = new Queue(scope, 'IngestFanoutTier2Queue', {
+    queueName: ingestFanoutTier2QueueName,
+    visibilityTimeout: Duration.minutes(5),
+    retentionPeriod: Duration.days(4),
+    deadLetterQueue: {
+      queue: ingestFanoutTier2Dlq,
+      maxReceiveCount: 5,
+    },
+  })
+  const ingestFanoutTier2DlqResource = ingestFanoutTier2Dlq.node.defaultChild as CfnQueue
+  const ingestFanoutTier2QueueArn = Stack.of(scope).formatArn({
+    service: 'sqs',
+    resource: ingestFanoutTier2QueueName,
+  })
+  ingestFanoutTier2DlqResource.redriveAllowPolicy = {
+    redrivePermission: 'byQueue',
+    sourceQueueArns: [ingestFanoutTier2QueueArn],
+  }
+
   const goldLiveDlq = new Queue(scope, 'GoldLiveDlq', {
     queueName: `remit-scout-${options.envName}-gold-live-dlq`,
     retentionPeriod: Duration.days(14),
@@ -142,12 +186,16 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   return {
     quoteRefreshQueue,
     quoteRefreshDlq,
+    fxRateRefreshQueue,
+    fxRateRefreshDlq,
     exportJobQueue,
     exportJobDlq,
     alertEvaluationQueue,
     alertEvaluationDlq,
     ingestFanoutQueue,
     ingestFanoutDlq,
+    ingestFanoutTier2Queue,
+    ingestFanoutTier2Dlq,
     goldLiveQueue,
     goldLiveDlq,
     notificationsQueue,

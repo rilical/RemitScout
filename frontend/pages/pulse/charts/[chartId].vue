@@ -306,6 +306,7 @@ const chartMeta = computed(() => getChartById(chartId.value))
 
 const filters = ref<PulseFilters>({
   corridor: (route.query.corridor as string) || 'global',
+  corridorId: (route.query.corridor_id as string) || store.corridor.corridorId,
   amount: parseInt(route.query.amount as string) || 200,
   fundingMethod: (route.query.fund as 'bank' | 'card' | 'cash') || 'bank',
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
@@ -328,6 +329,7 @@ const corridorSlug = computed(() => {
 const queryString = computed(() => {
   const params = new URLSearchParams()
   if (filters.value.corridor !== 'global') params.set('corridor', filters.value.corridor)
+  if (filters.value.corridorId) params.set('corridor_id', filters.value.corridorId)
   if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount))
   if (filters.value.fundingMethod !== 'bank') params.set('fund', filters.value.fundingMethod)
   if (filters.value.payoutMethod !== 'bank') params.set('pay', filters.value.payoutMethod)

@@ -1,4 +1,5 @@
 import type { Pool } from 'pg'
+import { context as otelContext, type Context } from '@opentelemetry/api'
 
 import { createPool, query } from '../../shared/db'
 import { config } from '../../shared/config'
@@ -9,6 +10,8 @@ import {
   receiveJsonMessages,
   sendJsonMessage,
 } from '../../shared/sqs'
+import { applyJitter, resolveJitterMs } from '../../shared/worker-jitter'
+import { startSpan } from '../../shared/tracing'
 import { fxRateCache, fxRateHistoryCache } from '../../shared/repository-cache'
 import { OandaRateFetcher } from '../../shared/oanda-rate-fetcher'
 import { FxRateRefreshRepository } from './repositories'
@@ -16,6 +19,7 @@ import type { FxRateRefreshRequestRecord } from './repositories/interfaces/fx-ra
 import { FxRateRefreshStatus, type FxRateRefreshStatusValue } from './repositories/types/fx-rate-refresh-status'
 
 const logger = createLogger('plane-b.fx-rate-refresh')
+const messageJitterMs = resolveJitterMs(process.env.FX_RATE_REFRESH_MESSAGE_JITTER_MS, 0)
 
 export type FxRateRefreshQueueEvent = {
   requestId: string
@@ -184,6 +188,7 @@ const processRequest = async (
         request.base_currency,
         request.quote_currency,
         false,
+        { source: 'plane-b' },
       )
       if (!result.success || !result.data) {
         status = FxRateRefreshStatus.FAILED
@@ -273,6 +278,8 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
     await runWithConcurrency(requests, async (request) => {
       const requestStart = Date.now()
 
+      await applyJitter(logger, 'fx_rate_refresh_message', messageJitterMs)
+
       logger.debug('queue_item_start', {
         request_id: request.request_id,
         base_currency: request.base_currency,
@@ -334,6 +341,8 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
         payload: FxRateRefreshMessage
         receiptHandle: string
         retryCount: number
+        messageId: string
+        traceContext?: Context
       }> = []
       const preTasks: Array<Promise<void>> = []
       let sqsClaimed = 0
@@ -398,6 +407,8 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
           payload: message.payload,
           receiptHandle: message.receiptHandle,
           retryCount,
+          messageId: message.messageId,
+          traceContext: message.traceContext,
         })
       }
 
@@ -406,66 +417,88 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
       }
 
       await runWithConcurrency(workItems, async (item) => {
-        const requestStart = Date.now()
-        const retryCount = item.retryCount
-        const request = await repo.claimRequestById(
-          item.requestId,
-          maxRetries,
-          retryCount,
+        const activeContext = item.traceContext ?? otelContext.active()
+        await otelContext.with(activeContext, () =>
+          startSpan('fx-rate-refresh.queue-item', async (span) => {
+            if (typeof span.setAttributes === 'function') {
+              span.setAttributes({
+                'message.id': item.messageId,
+                'queue.mode': 'sqs',
+              })
+            }
+
+            await applyJitter(logger, 'fx_rate_refresh_message', messageJitterMs)
+
+            const requestStart = Date.now()
+            const retryCount = item.retryCount
+            const request = await repo.claimRequestById(
+              item.requestId,
+              maxRetries,
+              retryCount,
+            )
+
+            if (!request) {
+              logger.info('queue_item_unclaimed', {
+                request_id: item.requestId,
+                retry_count: retryCount,
+                source: 'sqs',
+              })
+              deleteHandles.push(item.receiptHandle)
+              return
+            }
+
+            if (typeof span.setAttributes === 'function') {
+              span.setAttributes({
+                'request.id': request.request_id,
+                'fx.base': request.base_currency,
+                'fx.quote': request.quote_currency,
+              })
+            }
+
+            sqsClaimed += 1
+            logger.debug('queue_item_start', {
+              request_id: request.request_id,
+              base_currency: request.base_currency,
+              quote_currency: request.quote_currency,
+              retry_count: request.retry_count,
+              source: 'sqs',
+            })
+
+            const { status, skipReason } = await processRequest(
+              pool,
+              repo,
+              fetcher,
+              request,
+              maxRetries,
+              writeDb,
+            )
+
+            processed += 1
+            const durationSeconds = (Date.now() - requestStart) / 1000
+            if (options.onRequestFinished) {
+              await Promise.resolve(options.onRequestFinished({
+                requestId: request.request_id,
+                baseCurrency: request.base_currency,
+                quoteCurrency: request.quote_currency,
+                status,
+                durationSeconds,
+                retryCount: request.retry_count,
+                skipReason,
+              }))
+            }
+
+            if (shouldDeleteMessage(status, retryCount, maxRetries)) {
+              deleteHandles.push(item.receiptHandle)
+            } else {
+              logger.info('queue_item_retry_scheduled', {
+                request_id: request.request_id,
+                retry_count: retryCount,
+              })
+            }
+
+            await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
+          }),
         )
-
-        if (!request) {
-          logger.info('queue_item_unclaimed', {
-            request_id: item.requestId,
-            retry_count: retryCount,
-            source: 'sqs',
-          })
-          deleteHandles.push(item.receiptHandle)
-          return
-        }
-
-        sqsClaimed += 1
-        logger.debug('queue_item_start', {
-          request_id: request.request_id,
-          base_currency: request.base_currency,
-          quote_currency: request.quote_currency,
-          retry_count: request.retry_count,
-          source: 'sqs',
-        })
-
-        const { status, skipReason } = await processRequest(
-          pool,
-          repo,
-          fetcher,
-          request,
-          maxRetries,
-          writeDb,
-        )
-
-        processed += 1
-        const durationSeconds = (Date.now() - requestStart) / 1000
-        if (options.onRequestFinished) {
-          await Promise.resolve(options.onRequestFinished({
-            requestId: request.request_id,
-            baseCurrency: request.base_currency,
-            quoteCurrency: request.quote_currency,
-            status,
-            durationSeconds,
-            retryCount: request.retry_count,
-            skipReason,
-          }))
-        }
-
-        if (shouldDeleteMessage(status, retryCount, maxRetries)) {
-          deleteHandles.push(item.receiptHandle)
-        } else {
-          logger.info('queue_item_retry_scheduled', {
-            request_id: request.request_id,
-            retry_count: retryCount,
-          })
-        }
-
-        await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
       })
 
       logger.info('queue_sqs_processed', {

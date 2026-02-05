@@ -158,13 +158,90 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IndicesSeriesResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/IndicesSeriesResponse'
+                  - $ref: '#/components/schemas/IndicesDataAvailabilityResponse'
         '400':
           description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Corridor not tracked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndicesDataAvailabilityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/indices/latest:
+    get:
+      summary: Get latest index point for a corridor
+      description: |
+        Returns the most recent TEER, RCI, and RVI point for a corridor.
+      tags:
+        - Indices
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - name: X-API-Key
+          in: header
+          description: Enterprise API key (optional when using bearer auth)
+          required: false
+          schema:
+            type: string
+        - name: corridor_id
+          in: query
+          description: Full corridor ID (e.g., "US-PH-USD-PHP")
+          required: true
+          schema:
+            type: string
+        - name: amount_bucket
+          in: query
+          description: Amount bucket
+          required: false
+          schema:
+            type: integer
+            example: 500
+        - name: method_profile
+          in: query
+          description: Method profile
+          required: false
+          schema:
+            type: string
+            enum: [standard_bank, standard_card, cash_pickup]
+      responses:
+        '200':
+          description: Latest index point response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/IndicesLatestResponse'
+                  - $ref: '#/components/schemas/IndicesDataAvailabilityResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Corridor not tracked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndicesDataAvailabilityResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1983,6 +2060,10 @@ components:
           example: bank
         indices:
           $ref: '#/components/schemas/CorridorIndices'
+        indicesReason:
+          type: string
+          nullable: true
+          description: Reason indices are unavailable (if indices is null or suppressed)
 
     CorridorIndices:
       type: object
@@ -1990,7 +2071,7 @@ components:
         teer:
           type: number
           nullable: true
-        rvi:
+        rvi_bps:
           type: number
           nullable: true
         rci:
@@ -2005,7 +2086,29 @@ components:
           nullable: true
         weights:
           type: string
-          enum: [provider_volume, equal]
+        source:
+          type: string
+          enum: [gold]
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        indicesBucket:
+          type: integer
+        methodProfile:
+          type: string
+          enum: [standard_bank, standard_card, cash_pickup]
+        suppressionFlag:
+          type: boolean
+        suppressionReason:
+          type: string
+          nullable: true
+        weightConfidence:
+          type: number
+          nullable: true
+        weightWindowDays:
+          type: integer
+          nullable: true
 
     IndicesSeriesPoint:
       type: object
@@ -2019,16 +2122,28 @@ components:
         rci:
           type: number
           nullable: true
-        rvi:
+        rvi_bps:
           type: number
           nullable: true
         providerCountBinned:
+          type: integer
+          nullable: true
+        providerCount:
           type: integer
           nullable: true
         suppressionFlag:
           type: boolean
         suppressionReason:
           type: string
+          nullable: true
+        midMarketRate:
+          type: number
+          nullable: true
+        weightConfidence:
+          type: number
+          nullable: true
+        weightWindowDays:
+          type: integer
           nullable: true
 
     IndicesSeriesResponse:
@@ -2046,14 +2161,142 @@ components:
         weightingModel:
           type: string
           example: provider_volume
+        methodologyVersion:
+          type: string
+        weightConfidence:
+          type: number
+          nullable: true
+        weightWindowDays:
+          type: integer
+          nullable: true
         lastUpdated:
           type: string
           format: date-time
           nullable: true
+        dataTier:
+          type: integer
+          enum: [1, 2]
+        cadenceMinutes:
+          type: integer
+        exportCadenceMinutes:
+          type: integer
+        collectionCadenceMinutes:
+          type: integer
+        collectionTier:
+          type: string
+          enum: [tier_1, tier_2]
+        isUsdOrigin:
+          type: boolean
         series:
           type: array
           items:
             $ref: '#/components/schemas/IndicesSeriesPoint'
+        dataWindow:
+          $ref: '#/components/schemas/IndicesDataWindow'
+
+    IndicesLatestResponse:
+      type: object
+      properties:
+        corridorId:
+          type: string
+          example: US-PH-USD-PHP
+        amountBucket:
+          type: integer
+          example: 500
+        methodProfile:
+          type: string
+          enum: [standard_bank, standard_card, cash_pickup]
+        weightingModel:
+          type: string
+          example: provider_volume
+        methodologyVersion:
+          type: string
+        weightConfidence:
+          type: number
+          nullable: true
+        weightWindowDays:
+          type: integer
+          nullable: true
+        lastUpdated:
+          type: string
+          format: date-time
+          nullable: true
+        dataTier:
+          type: integer
+          enum: [1, 2]
+        cadenceMinutes:
+          type: integer
+        exportCadenceMinutes:
+          type: integer
+        collectionCadenceMinutes:
+          type: integer
+        collectionTier:
+          type: string
+          enum: [tier_1, tier_2]
+        isUsdOrigin:
+          type: boolean
+        point:
+          $ref: '#/components/schemas/IndicesSeriesPoint'
+
+    IndicesDataAvailabilityResponse:
+      type: object
+      properties:
+        corridorId:
+          type: string
+          example: US-PH-USD-PHP
+        amountBucket:
+          type: integer
+          example: 500
+        methodProfile:
+          type: string
+          enum: [standard_bank, standard_card, cash_pickup]
+        dataAvailable:
+          type: boolean
+          enum: [false]
+        reason:
+          type: string
+          enum: [no_data, corridor_not_tracked, gold_table_empty]
+        message:
+          type: string
+        dataTier:
+          type: integer
+          enum: [1, 2]
+        cadenceMinutes:
+          type: integer
+        exportCadenceMinutes:
+          type: integer
+        collectionCadenceMinutes:
+          type: integer
+        collectionTier:
+          type: string
+          enum: [tier_1, tier_2]
+        isUsdOrigin:
+          type: boolean
+        dataWindow:
+          $ref: '#/components/schemas/IndicesDataWindow'
+
+    IndicesDataWindow:
+      type: object
+      properties:
+        requestedDays:
+          type: integer
+        availableDays:
+          type: integer
+          nullable: true
+        returnedDays:
+          type: integer
+        availableStartDate:
+          type: string
+          nullable: true
+        availableEndDate:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+        endDate:
+          type: string
+        capped:
+          type: boolean
 
     QuotesResponse:
       type: object

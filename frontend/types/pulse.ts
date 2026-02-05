@@ -14,6 +14,7 @@ export type ProvenanceTag = 'verified' | 'observed' | 'estimated'
 
 export interface PulseFilters {
   corridor: string | 'global'
+  corridorId?: string
   amount: AmountBucket
   fundingMethod: FundingMethod
   payoutMethod: PayoutMethod
@@ -181,6 +182,5 @@ export interface PulseEventItem {
   description: string
   chartId?: string
 }
-
 
 

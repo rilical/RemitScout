@@ -3784,7 +3784,7 @@ const embedCopyStatus = ref<string | null>(null)
 const embedIndices = [
   { key: 'teer', label: 'TEER' },
   { key: 'rci', label: 'RCI' },
-  { key: 'rvi', label: 'RVI' },
+  { key: 'rvi_bps', label: 'RVI (bps)' },
 ] as const
 
 type EmbedIndexKey = typeof embedIndices[number]['key']
@@ -3817,7 +3817,7 @@ const buildEmbedUrl = (indexKey: EmbedIndexKey) => {
 const embedUrls = computed(() => ({
   teer: buildEmbedUrl('teer'),
   rci: buildEmbedUrl('rci'),
-  rvi: buildEmbedUrl('rvi'),
+  rvi_bps: buildEmbedUrl('rvi_bps'),
 }))
 
 const embedCodes = computed(() => {
@@ -3825,7 +3825,7 @@ const embedCodes = computed(() => {
   const buildCode = (indexKey: EmbedIndexKey, label: string) => {
     const url = buildEmbedUrl(indexKey)
     if (!url) return ''
-    const citation = `Source: Remit-Scout (${label}) · Weighted by provider volume · Retrieved ${retrieved}`
+    const citation = `Source: Remit-Scout (${label}) · Synthetic volume weighted · Retrieved ${retrieved}`
     return [
       '<figure class="remit-scout-embed">',
       `  <iframe src="${url}" width="100%" height="320" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`,
@@ -3836,7 +3836,7 @@ const embedCodes = computed(() => {
   return {
     teer: buildCode('teer', 'TEER'),
     rci: buildCode('rci', 'RCI'),
-    rvi: buildCode('rvi', 'RVI'),
+    rvi_bps: buildCode('rvi_bps', 'RVI (bps)'),
   }
 })
 

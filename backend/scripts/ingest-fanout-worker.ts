@@ -25,6 +25,7 @@ import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
 import { initTracing, startSpan } from '../shared/tracing'
+import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 
 type IngestFanoutMessage = {
   providerId: string
@@ -90,8 +91,9 @@ const providerConcurrency = Math.max(
   toNumber(process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY, 3),
 )
 const maxAttempts = Math.max(1, toNumber(process.env.INGEST_FANOUT_MAX_ATTEMPTS, 3))
-const messageJitterMs = toNumber(process.env.INGEST_FANOUT_MESSAGE_JITTER_MS, 500)
-const providerJitterMs = toNumber(process.env.INGEST_FANOUT_PROVIDER_JITTER_MS, 200)
+const loopJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_LOOP_JITTER_MS)
+const messageJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_MESSAGE_JITTER_MS, 500)
+const providerJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_PROVIDER_JITTER_MS, 200)
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -783,9 +785,7 @@ const processMessagesWithConcurrency = async (
         continue
       }
 
-      if (messageJitterMs > 0) {
-        await sleep(Math.floor(Math.random() * messageJitterMs))
-      }
+      await applyJitter(logger, 'ingest_fanout_message', messageJitterMs)
 
       const runWithSpan = async () => startSpan(
         'ingest-fanout.message',
@@ -839,6 +839,7 @@ const runWorker = async () => {
       provider_concurrency: providerConcurrency,
     })
     while (!shutdownRequested) {
+      await applyJitter(logger, 'ingest_fanout_loop', loopJitterMs)
       const messages = await receiveJsonMessages<IngestFanoutPayload>(queueUrl, batchSize)
       if (messages.length === 0) {
         await sleep(idleSleepMs)

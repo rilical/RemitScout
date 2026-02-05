@@ -90,6 +90,7 @@ export const config = {
       fxRateCacheTtlSeconds: toNumber(process.env.PLANE_A_FX_RATE_CACHE_TTL_SECONDS, 300),
       latestQuoteCacheTtlSeconds: toNumber(process.env.PLANE_A_LATEST_QUOTE_CACHE_TTL_SECONDS, 15),
       maxQuoteAgeSeconds: toNumber(process.env.PLANE_A_B2C_MAX_QUOTE_AGE_SECONDS, 1800),
+      maxBucketDeltaPct: toNumber(process.env.PLANE_A_B2C_MAX_BUCKET_DELTA_PCT, 0),
       providerWeightedMidMarketEnabled: toBoolean(
         process.env.PLANE_A_B2C_PROVIDER_WEIGHTED_MID_MARKET,
       ),
@@ -110,6 +111,8 @@ export const config = {
     b2bTargetMinutes: toNumber(process.env.PLANE_B_B2B_TARGET_MINUTES, 180),
     b2bMaxTargetMinutes: toNumber(process.env.PLANE_B_B2B_MAX_TARGET_MINUTES, 1440),
     b2bMaxQueueDepth: toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_DEPTH, 5000),
+    b2bMaxQueueAgeSeconds: toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS, 0),
+    b2bDrainMode: toBoolean(process.env.PLANE_B_B2B_DRAIN_MODE),
     b2bMinShards: toNumber(process.env.PLANE_B_B2B_MIN_SHARDS, 0),
     b2bMaxCorridorsPerShard: toNumber(process.env.PLANE_B_B2B_MAX_CORRIDORS_PER_SHARD, 250),
     b2bFreshnessSloMinutes: toNumber(process.env.PLANE_B_B2B_FRESHNESS_SLO_MINUTES, 30),
@@ -497,6 +500,7 @@ export const config = {
     b2cQueueInSweep: toBoolean(process.env.PLANE_B_B2C_QUEUE_IN_SWEEP, !isAwsRuntime),
     b2cLiveRpm: toNumber(process.env.PLANE_B_B2C_LIVE_RPM, 0),
     b2cLivePerCorridorRpm: toNumber(process.env.PLANE_B_B2C_LIVE_CORRIDOR_RPM, 0),
+    disableTier1: toBoolean(process.env.PLANE_B_DISABLE_TIER1),
   },
   fxRates: {
     oandaFallbackEnabled: toBoolean(process.env.FX_RATE_OANDA_FALLBACK),
@@ -506,6 +510,13 @@ export const config = {
     dbFreshnessHours: toNumber(process.env.FX_RATE_DB_FRESHNESS_HOURS, 1),
     historyDays: toNumber(process.env.FX_RATE_HISTORY_DAYS, 30),
     syncIntervalMinutes: toNumber(process.env.OANDA_SYNC_INTERVAL_MINUTES, 60),
+    oandaRpm: toNumber(process.env.OANDA_RPM, 60),
+    oandaBurstMultiplier: toNumber(process.env.OANDA_BURST_MULTIPLIER, 2),
+    oandaRateLimitMaxRetries: toNumber(process.env.OANDA_RATE_LIMIT_MAX_RETRIES, 3),
+    oandaRateLimitBackoffMs: toNumber(process.env.OANDA_RATE_LIMIT_BACKOFF_MS, 1000),
+    oandaRateLimitBackoffMaxMs: toNumber(process.env.OANDA_RATE_LIMIT_BACKOFF_MAX_MS, 10000),
+    oandaRateLimitJitterMs: toNumber(process.env.OANDA_RATE_LIMIT_JITTER_MS, 250),
+    oandaFallbackMaxWaitMs: toNumber(process.env.OANDA_FALLBACK_MAX_WAIT_MS, 1500),
   },
   redis: {
     url: process.env.REDIS_URL || '',
@@ -526,6 +537,8 @@ export const config = {
     ingestFanout: {
       url: process.env.PLANE_B_INGEST_FANOUT_QUEUE_URL || '',
       mode: toQueueMode(process.env.PLANE_B_INGEST_FANOUT_QUEUE_MODE),
+      tier1Url: process.env.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL || '',
+      tier2Url: process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL || '',
     },
     notifications: {
       url: process.env.PLANE_B_NOTIFICATIONS_QUEUE_URL || '',

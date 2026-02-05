@@ -5,6 +5,7 @@
  * `PLANE_B_OPS_ALERT_QUEUE_MODE=queue` is enabled.
  */
 
+import { context as otelContext } from '@opentelemetry/api'
 import { setTimeout as sleep } from 'timers/promises'
 
 import { createPool } from '../shared/db'
@@ -15,6 +16,8 @@ import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { notifyBlockAlert } from '../plane-b/src/collectors/alert-routing'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initTracing, startSpan } from '../shared/tracing'
+import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 
 type OpsAlertsQueueMessage = {
   alertId: string
@@ -32,6 +35,7 @@ type OpsAlertsQueueMessage = {
 const logger = createLogger('script.ops-alerts-queue-worker')
 const queueUrl = config.queues.opsAlerts.url
 const queueMode = config.queues.opsAlerts.mode
+initTracing('ops-alerts-queue-worker')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -43,6 +47,8 @@ const idleSleepMs = toNumber(process.env.OPS_ALERTS_QUEUE_IDLE_SLEEP_MS, 1000)
 const lockTtlSeconds = toNumber(process.env.OPS_ALERTS_QUEUE_LOCK_TTL_SECONDS, 60)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = toNumber(process.env.OPS_ALERTS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
+const loopJitterMs = resolveJitterMs(process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS)
+const messageJitterMs = resolveJitterMs(process.env.OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS)
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -97,6 +103,7 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
   try {
     logger.info('ops_alerts_worker_start', { batch_size: batchSize })
     while (!shutdownRequested) {
+      await applyJitter(logger, 'ops_alerts_queue_loop', loopJitterMs)
       const messages = await receiveJsonMessages<OpsAlertsQueueMessage>(queueUrl, batchSize)
       if (messages.length === 0) {
         await sleep(idleSleepMs)
@@ -113,29 +120,43 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
           continue
         }
 
-        try {
-          await withWorkerRetry(
-            () => notifyBlockAlert(pool, payload.alertId, { force: true }),
-            {
-              maxRetries: 3,
-              initialDelayMs: 1000,
-              maxDelayMs: 30000,
-            },
-          )
-          await recordWorkerMetric('ops-alerts-queue-worker', 'message_processed', 1)
-          deleteHandles.push(message.receiptHandle)
-        } catch (error) {
-          const err = error instanceof Error ? error : new Error(String(error))
-          logger.error('ops_alerts_item_failed', {
-            message_id: message.messageId,
-            alert_id: payload.alertId,
-            error: err.message,
-          })
-          await recordWorkerMetric('ops-alerts-queue-worker', 'message_failed', 1)
-          
-          // Send to DLQ
-          await sendToDLQ(queueUrl!, message, err)
-          await recordWorkerMetric('ops-alerts-queue-worker', 'dlq_sent', 1)
+        await applyJitter(logger, 'ops_alerts_queue_message', messageJitterMs)
+
+        const runWithSpan = async () => startSpan(
+          'ops-alerts.queue.message',
+          async () => {
+            try {
+              await withWorkerRetry(
+                () => notifyBlockAlert(pool, payload.alertId, { force: true }),
+                {
+                  maxRetries: 3,
+                  initialDelayMs: 1000,
+                  maxDelayMs: 30000,
+                },
+              )
+              await recordWorkerMetric('ops-alerts-queue-worker', 'message_processed', 1)
+              deleteHandles.push(message.receiptHandle)
+            } catch (error) {
+              const err = error instanceof Error ? error : new Error(String(error))
+              logger.error('ops_alerts_item_failed', {
+                message_id: message.messageId,
+                alert_id: payload.alertId,
+                error: err.message,
+              })
+              await recordWorkerMetric('ops-alerts-queue-worker', 'message_failed', 1)
+
+              // Send to DLQ
+              await sendToDLQ(queueUrl!, message, err)
+              await recordWorkerMetric('ops-alerts-queue-worker', 'dlq_sent', 1)
+            }
+          },
+          { attributes: { message_id: message.messageId } },
+        )
+
+        if (message.traceContext) {
+          await otelContext.with(message.traceContext, runWithSpan)
+        } else {
+          await runWithSpan()
         }
       }
 

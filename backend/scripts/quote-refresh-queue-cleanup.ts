@@ -12,12 +12,14 @@
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { QuoteRefreshRepository } from '../plane-b/src/repositories/implementations/quote-refresh-repository'
 import { QuoteRefreshStatus } from '../plane-b/src/repositories/types/quote-refresh-status'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { formatError } from '../shared/utils/error-handling'
 
 const logger = createLogger('script.quote-refresh-queue-cleanup')
+initTracing('quote-refresh-queue-cleanup')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)

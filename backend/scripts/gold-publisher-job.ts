@@ -22,6 +22,7 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { GoldPublisher } from '../plane-c/src/services/gold-publisher'
 import {
@@ -42,6 +43,7 @@ const toNumber = (value: string | undefined, fallback: number) => {
 const lockTtlSeconds = toNumber(process.env.GOLD_PUBLISHER_LOCK_TTL_SECONDS, 600)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-publisher-job')
+initTracing('gold-publisher-job')
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null

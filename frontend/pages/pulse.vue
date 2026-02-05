@@ -819,6 +819,7 @@ function buildCorridorFromCountries(): PulseCorridor | null {
     toFlag: toCountryData.flag,
     label: `${fromCurrency.value} → ${toCurrency.value}`,
     slug: `${fromCurrency.value.toLowerCase()}-${toCurrency.value.toLowerCase()}`,
+    corridorId: `${fromCountry.value}-${toCountry.value}-${fromCurrency.value}-${toCurrency.value}`,
   }
 }
 
@@ -882,6 +883,7 @@ watch(toCountry, (newCountry) => {
 
 const legacyFilters = computed<PulseFilters>(() => ({
   corridor: store.corridor.slug,
+  corridorId: store.corridor.corridorId,
   amount: store.amount as 100 | 200 | 500 | 1000,
   fundingMethod: 'bank',
   payoutMethod: 'bank',

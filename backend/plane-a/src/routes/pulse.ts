@@ -3,14 +3,24 @@ import type { FastifyInstance } from 'fastify'
 import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { createTtlCache } from '../../../shared/cache'
 import { buildChartData, pulseDefaults } from '../../../shared/pulse-defaults'
-import { buildPulseCacheKeyCandidates, type PulseCacheFilters } from '../../../shared/pulse-cache-keys'
+import {
+  buildPulseCacheKeyCandidates,
+  normalizePulseRange,
+  type PulseCacheFilters,
+} from '../../../shared/pulse-cache-keys'
+import { getExportTierInfo, TIER_1_CADENCE_SECONDS, TIER_2_CADENCE_SECONDS } from '../../../shared/corridor-tiers'
 import { requireEntitlement } from '../plugins/auth-plugin'
-import { PulseCacheRepository } from '../repositories'
+import { GoldIndicesRepository, PulseCacheRepository } from '../repositories'
 
 const logger = createLogger('plane-a.pulse')
 const planeAPool = getPool(config.db.planeAUrl)
 const pulseCacheRepository = new PulseCacheRepository(planeAPool)
+const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
+const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
+const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
+const INDEX_CHART_IDS = new Set(['all-in-cost', 'fx-markup', 'volatility-pulse'])
 
 const arrow = '\u2192'
 
@@ -69,6 +79,44 @@ const normalizeChartPayload = (chartId: string, payload: unknown, updatedAt: str
   }
 }
 
+const resolveRangeDays = (range?: string | null): number => {
+  const normalized = normalizePulseRange(range) ?? '30d'
+  switch (normalized) {
+    case '7d':
+      return 7
+    case '90d':
+      return 90
+    case '365d':
+      return 365
+    default:
+      return 30
+  }
+}
+
+const resolveIndicesMethodProfile = (
+  filters: PulseCacheFilters,
+): 'standard_bank' | 'standard_card' | 'cash_pickup' | null => {
+  const payin = typeof filters.payin === 'string' ? filters.payin.toLowerCase() : null
+  const payout = typeof filters.payout === 'string' ? filters.payout.toLowerCase() : null
+
+  if (payout === 'cash') return 'cash_pickup'
+  if (payout === 'bank' || payout === null) {
+    if (payin === 'card') return 'standard_card'
+    if (payin === 'bank' || payin === null) return 'standard_bank'
+  }
+
+  return null
+}
+
+const getIndicesCacheTtlMs = (corridorId?: string | null) => {
+  if (!corridorId) return 60 * 60 * 1000
+  const info = getExportTierInfo(corridorId, 2)
+  const cadenceMinutes = Math.round(
+    (info.collectionTier === 'tier_1' ? TIER_1_CADENCE_SECONDS : TIER_2_CADENCE_SECONDS) / 60,
+  )
+  return Math.max(1, cadenceMinutes) * 60 * 1000
+}
+
 const toFlagEmoji = (code?: string | null): string => {
   if (!code || typeof code !== 'string') return String.fromCodePoint(0x1f30d)
   const normalized = code.trim().toUpperCase()
@@ -106,6 +154,76 @@ const parseCorridorFromId = (corridorId?: string | null) => {
   }
 }
 
+const resolveIndicesCorridorId = async (
+  filters: PulseCacheFilters,
+  explicitCorridorId?: string | null,
+): Promise<string | null> => {
+  if (explicitCorridorId) return explicitCorridorId
+  if (filters.corridorId) return filters.corridorId
+
+  const corridorFromId = parseCorridorFromId(filters.corridor ?? null)
+  if (corridorFromId) {
+    return corridorFromId
+      ? `${corridorFromId.fromCountry}-${corridorFromId.toCountry}-${corridorFromId.sendCurrency}-${corridorFromId.recvCurrency}`
+      : null
+  }
+
+  const pair = parseCurrencyPairFromSlug(filters.corridor ?? null)
+  if (!pair) return null
+
+  return await goldIndicesRepository.resolveCorridorId({
+    sourceCurrency: pair.base,
+    destCurrency: pair.quote,
+  })
+}
+
+const buildIndicesChartSeries = (
+  chartId: string,
+  rows: Array<{
+    date: Date | string
+    teer_rate: number | null
+    rci_ratio: number | null
+    rvi_bps: number | null
+    mid_market_rate: number | null
+    suppression_flag: boolean
+  }>,
+): Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number }> }> => {
+  const points = rows
+    .filter((row) => !row.suppression_flag)
+    .map((row) => {
+      const date = row.date instanceof Date ? row.date : new Date(row.date)
+      const timestamp = Number.isNaN(date.getTime()) ? Date.now() : date.getTime()
+
+      if (chartId === 'all-in-cost') {
+        const value = row.rci_ratio !== null ? row.rci_ratio * 100 : null
+        return value !== null ? { t: timestamp, v: value } : null
+      }
+      if (chartId === 'fx-markup') {
+        if (!row.mid_market_rate || !row.teer_rate || row.mid_market_rate <= 0) return null
+        const value = ((row.mid_market_rate - row.teer_rate) / row.mid_market_rate) * 10000
+        return Number.isFinite(value) ? { t: timestamp, v: value } : null
+      }
+      if (chartId === 'volatility-pulse') {
+        const value = row.rvi_bps
+        return value !== null ? { t: timestamp, v: value } : null
+      }
+
+      return null
+    })
+    .filter((point): point is { t: number; v: number } => Boolean(point))
+
+  if (!points.length) return []
+
+  return [
+    {
+      id: chartId,
+      label: chartId,
+      color: '#2563eb',
+      points,
+    },
+  ]
+}
+
 const loadPulseEntry = async (
   baseKey: string,
   filters: PulseCacheFilters,
@@ -134,8 +252,72 @@ const loadPulseEntry = async (
   }
 }
 
+const loadIndicesChartData = async (
+  chartId: string,
+  filters: PulseCacheFilters,
+  query: Record<string, unknown>,
+): Promise<ReturnType<typeof buildChartData>> => {
+  const fallback = buildChartData(chartId)
+  const explicitCorridorId = typeof query.corridor_id === 'string' ? query.corridor_id : null
+  const corridorId = await resolveIndicesCorridorId(filters, explicitCorridorId)
+  const methodProfile = resolveIndicesMethodProfile(filters)
+
+  if (!corridorId || !methodProfile) {
+    return fallback
+  }
+
+  const rangeDays = resolveRangeDays(filters.range)
+  const endDate = new Date()
+  const startDate = new Date(endDate)
+  startDate.setUTCDate(endDate.getUTCDate() - (rangeDays - 1))
+
+  const cacheKey = [
+    'indices',
+    chartId,
+    corridorId,
+    methodProfile,
+    INDICES_AMOUNT_BUCKET,
+    rangeDays,
+    endDate.toISOString().slice(0, 10),
+  ].join(':')
+
+  const cached = await pulseIndicesCache.get(cacheKey)
+  if (cached) {
+    return cached as ReturnType<typeof buildChartData>
+  }
+
+  const rows = await goldIndicesRepository.getIndicesSeries({
+    corridorId,
+    amountBucket: INDICES_AMOUNT_BUCKET,
+    methodProfile,
+    startDate,
+    endDate,
+  })
+
+  const series = buildIndicesChartSeries(chartId, rows)
+  const lastUpdated = rows.reduce<Date | null>((latest, row) => {
+    if (!row.created_at) return latest
+    if (!latest || row.created_at > latest) return row.created_at
+    return latest
+  }, null)
+
+  const response = {
+    ...fallback,
+    series,
+    metadata: {
+      ...fallback.metadata,
+      lastUpdated: lastUpdated ? lastUpdated.toISOString() : fallback.metadata.lastUpdated,
+    },
+  }
+
+  const ttlMs = getIndicesCacheTtlMs(corridorId)
+  await pulseIndicesCache.set(cacheKey, response, ttlMs)
+  return response
+}
+
 const buildPulseFilters = (query: Record<string, unknown>): PulseCacheFilters => {
   const corridor = typeof query.corridor === 'string' ? query.corridor : null
+  const corridorId = typeof query.corridor_id === 'string' ? query.corridor_id : null
   const timeframe = typeof query.timeframe === 'string' && query.timeframe.trim()
     ? query.timeframe
     : '30d'
@@ -156,6 +338,7 @@ const buildPulseFilters = (query: Record<string, unknown>): PulseCacheFilters =>
 
   return {
     corridor,
+    corridorId,
     timeframe,
     range,
     amount: Number.isFinite(amountRaw) ? amountRaw : null,
@@ -562,6 +745,9 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       return { error: 'missing_chart_id' }
     }
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    if (INDEX_CHART_IDS.has(chartId)) {
+      return await loadIndicesChartData(chartId, filters, (request.query ?? {}) as Record<string, unknown>)
+    }
     const { payload, updatedAt } = await loadPulseEntry(`chart:${chartId}`, filters, null)
     return normalizeChartPayload(chartId, payload, updatedAt)
   })

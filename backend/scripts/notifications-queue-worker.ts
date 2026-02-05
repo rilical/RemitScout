@@ -5,6 +5,7 @@
  * `PLANE_B_NOTIFICATIONS_QUEUE_MODE=queue` is enabled.
  */
 
+import { context as otelContext } from '@opentelemetry/api'
 import { setTimeout as sleep } from 'timers/promises'
 
 import { createPool } from '../shared/db'
@@ -15,10 +16,13 @@ import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { dispatchQueuedSignal, type NotificationsQueueMessage } from '../plane-b/src/notifications/dispatcher'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initTracing, startSpan } from '../shared/tracing'
+import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 
 const logger = createLogger('script.notifications-queue-worker')
 const queueUrl = config.queues.notifications.url
 const queueMode = config.queues.notifications.mode
+initTracing('notifications-queue-worker')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -30,6 +34,8 @@ const idleSleepMs = toNumber(process.env.NOTIFICATIONS_QUEUE_IDLE_SLEEP_MS, 1000
 const lockTtlSeconds = toNumber(process.env.NOTIFICATIONS_QUEUE_LOCK_TTL_SECONDS, 60)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = toNumber(process.env.NOTIFICATIONS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
+const loopJitterMs = resolveJitterMs(process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS)
+const messageJitterMs = resolveJitterMs(process.env.NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS)
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -86,6 +92,7 @@ export const runNotificationsQueueWorkerLoop = async () => {
   try {
     logger.info('notifications_worker_start', { batch_size: batchSize })
     while (!shutdownRequested) {
+      await applyJitter(logger, 'notifications_queue_loop', loopJitterMs)
       const messages = await receiveJsonMessages<NotificationsQueueMessage>(queueUrl, batchSize)
       if (messages.length === 0) {
         await sleep(idleSleepMs)
@@ -102,37 +109,51 @@ export const runNotificationsQueueWorkerLoop = async () => {
           continue
         }
 
-        // Extend visibility timeout for slow webhook deliveries
-        const stopExtending = createVisibilityTimeoutExtender(
-          queueUrl!,
-          message.receiptHandle,
-          () => logger.debug('visibility_extended', { message_id: message.messageId }),
+        await applyJitter(logger, 'notifications_queue_message', messageJitterMs)
+
+        const runWithSpan = async () => startSpan(
+          'notifications.queue.message',
+          async () => {
+            // Extend visibility timeout for slow webhook deliveries
+            const stopExtending = createVisibilityTimeoutExtender(
+              queueUrl!,
+              message.receiptHandle,
+              () => logger.debug('visibility_extended', { message_id: message.messageId }),
+            )
+
+            try {
+              await withWorkerRetry(
+                () => dispatchQueuedSignal(pool, payload),
+                {
+                  maxRetries: 3,
+                  initialDelayMs: 1000,
+                  maxDelayMs: 30000,
+                },
+              )
+              stopExtending()
+              await recordWorkerMetric('notifications-queue-worker', 'message_processed', 1)
+              deleteHandles.push(message.receiptHandle)
+            } catch (error) {
+              stopExtending()
+              const err = error instanceof Error ? error : new Error(String(error))
+              logger.error('notifications_item_failed', {
+                message_id: message.messageId,
+                error: err.message,
+              })
+              await recordWorkerMetric('notifications-queue-worker', 'message_failed', 1)
+
+              // Send to DLQ
+              await sendToDLQ(queueUrl!, message, err)
+              await recordWorkerMetric('notifications-queue-worker', 'dlq_sent', 1)
+            }
+          },
+          { attributes: { message_id: message.messageId } },
         )
 
-        try {
-          await withWorkerRetry(
-            () => dispatchQueuedSignal(pool, payload),
-            {
-              maxRetries: 3,
-              initialDelayMs: 1000,
-              maxDelayMs: 30000,
-            },
-          )
-          stopExtending()
-          await recordWorkerMetric('notifications-queue-worker', 'message_processed', 1)
-          deleteHandles.push(message.receiptHandle)
-        } catch (error) {
-          stopExtending()
-          const err = error instanceof Error ? error : new Error(String(error))
-          logger.error('notifications_item_failed', {
-            message_id: message.messageId,
-            error: err.message,
-          })
-          await recordWorkerMetric('notifications-queue-worker', 'message_failed', 1)
-          
-          // Send to DLQ
-          await sendToDLQ(queueUrl!, message, err)
-          await recordWorkerMetric('notifications-queue-worker', 'dlq_sent', 1)
+        if (message.traceContext) {
+          await otelContext.with(message.traceContext, runWithSpan)
+        } else {
+          await runWithSpan()
         }
       }
 

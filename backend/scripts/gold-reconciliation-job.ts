@@ -22,6 +22,7 @@ import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { retry } from '../shared/retry'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
@@ -30,6 +31,7 @@ import { GoldPublisherLive } from '../plane-c/src/services/gold-publisher-live'
 import { upsertGoldIndicesLive } from './gold-indices-live'
 
 const logger = createLogger('script.gold-reconciliation-job')
+initTracing('gold-reconciliation-job')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)

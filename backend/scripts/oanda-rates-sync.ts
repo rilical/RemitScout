@@ -25,6 +25,7 @@ import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { OandaRateFetcher } from '../plane-a/src/services/oanda-rate-fetcher'
 import { FxRateHistoryRepository } from '../plane-a/src/repositories/implementations/fx-rate-history-repository'
 import { FxRateRepository } from '../plane-a/src/repositories/implementations/fx-rate-repository'
@@ -32,6 +33,8 @@ import { fxRateCache, fxRateHistoryCache } from '../shared/repository-cache'
 import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
 
 const logger = createLogger('script.oanda-rates-sync')
+initTracing('oanda-rates-sync')
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 
 const MAJOR_CURRENCIES = [
   'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'NZD',
@@ -263,7 +266,7 @@ const syncRates = async (): Promise<void> => {
         const { base, quote } = pairs[currentIndex]
 
         try {
-          const result = await fetcher.fetchRate(base, quote, false)
+          const result = await fetcher.fetchRate(base, quote, false, { source: 'oanda-sync' })
           if (result.success && result.data) {
             await fxRateRepository.upsertRate({
               baseCurrency: base,
@@ -329,19 +332,19 @@ const syncRates = async (): Promise<void> => {
       name: 'oanda_sync_duration_seconds',
       value: durationSeconds,
       unit: 'Seconds',
-      dimensions: { JobName: 'oanda-sync' },
+      dimensions: { JobName: 'oanda-sync', environment: environmentDimension },
     })
     recordCloudWatchMetric({
       name: 'oanda_sync_rates_fetched_total',
       value: successCount,
       unit: 'Count',
-      dimensions: { JobName: 'oanda-sync' },
+      dimensions: { JobName: 'oanda-sync', environment: environmentDimension },
     })
     recordCloudWatchMetric({
       name: 'oanda_sync_failures_total',
       value: failureCount,
       unit: 'Count',
-      dimensions: { JobName: 'oanda-sync' },
+      dimensions: { JobName: 'oanda-sync', environment: environmentDimension },
     })
 
     logger.info('sync_complete', {
@@ -356,7 +359,7 @@ const syncRates = async (): Promise<void> => {
       name: 'oanda_sync_failures_total',
       value: 1,
       unit: 'Count',
-      dimensions: { JobName: 'oanda-sync' },
+      dimensions: { JobName: 'oanda-sync', environment: environmentDimension },
     })
 
     logger.error('sync_failed', {

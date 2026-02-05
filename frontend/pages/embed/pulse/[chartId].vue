@@ -120,6 +120,7 @@ const range = computed(() => (route.query.range as TimeRange) || '30d')
 
 const filters = ref<PulseFilters>({
   corridor: (route.query.corridor as string) || 'global',
+  corridorId: (route.query.corridor_id as string) || undefined,
   amount: parseInt(route.query.amount as string) || 200,
   fundingMethod: (route.query.fund as 'bank' | 'card' | 'cash') || 'bank',
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
@@ -144,6 +145,7 @@ const corridorLabel = computed(() => {
 const fullChartUrl = computed(() => {
   const params = new URLSearchParams()
   if (filters.value.corridor !== 'global') params.set('corridor', filters.value.corridor)
+  if (filters.value.corridorId) params.set('corridor_id', filters.value.corridorId)
   if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount))
   const queryStr = params.toString()
   return `/pulse/charts/${chartId.value}${queryStr ? '?' + queryStr : ''}`
@@ -203,5 +205,4 @@ useHead({
   },
 })
 </script>
-
 

@@ -1,4 +1,5 @@
 import { parseCorridorId } from './corridor'
+import { config } from './config'
 
 export type CorridorTier = 'tier_1' | 'tier_2'
 
@@ -25,6 +26,7 @@ export const TIER_1_EXCLUSIONS: string[] = [
  * - Tier 2: Non-USD corridors, collected every 3 hours
  */
 export function getCorridorTier(corridorId: string): CorridorTier {
+  if (config.planeB?.disableTier1) return 'tier_2'
   if (TIER_1_ADDITIONS.includes(corridorId)) return 'tier_1'
   if (TIER_1_EXCLUSIONS.includes(corridorId)) return 'tier_2'
 
@@ -42,7 +44,9 @@ export function getCorridorTier(corridorId: string): CorridorTier {
  * Check if a corridor is USD-origin (Tier 1 collection).
  */
 export function isUsdOriginCorridor(corridorId: string): boolean {
-  return getCorridorTier(corridorId) === 'tier_1'
+  const parsed = parseCorridorId(corridorId)
+  if (!parsed) return false
+  return parsed.sourceCurrency.toUpperCase() === 'USD'
 }
 
 /**
@@ -67,13 +71,16 @@ export function getExportTierInfo(
   availableInTier: number[]
 } {
   const collectionTier = getCorridorTier(corridorId)
-  const isUsd = collectionTier === 'tier_1'
+  const isUsd = isUsdOriginCorridor(corridorId)
+  const tier1CadenceMinutes = config.planeB?.disableTier1
+    ? Math.round(TIER_2_CADENCE_SECONDS / 60)
+    : Math.round(TIER_1_CADENCE_SECONDS / 60)
 
   if (apiTier === 1) {
     return {
       collectionTier,
       exportTier: 1,
-      cadenceMinutes: isUsd ? Math.round(TIER_1_CADENCE_SECONDS / 60) : Math.round(TIER_2_CADENCE_SECONDS / 60),
+      cadenceMinutes: isUsd ? tier1CadenceMinutes : Math.round(TIER_2_CADENCE_SECONDS / 60),
       availableInTier: isUsd ? [1, 2] : [2],
     }
   }
@@ -94,13 +101,15 @@ export function getExportTierInfo(
  */
 export function isCorridorAvailableInTier(corridorId: string, apiTier: 1 | 2): boolean {
   if (apiTier === 2) return true // Tier 2 includes all corridors
-  return getCorridorTier(corridorId) === 'tier_1' // Tier 1 only USD-origin
+  return isUsdOriginCorridor(corridorId) // Tier 1 only USD-origin
 }
 
 export function getTierCadenceSeconds(tier: CorridorTier): number {
+  if (tier === 'tier_1' && config.planeB?.disableTier1) return TIER_2_CADENCE_SECONDS
   return tier === 'tier_1' ? TIER_1_CADENCE_SECONDS : TIER_2_CADENCE_SECONDS
 }
 
 export function getTierSloMinutes(tier: CorridorTier): number {
+  if (tier === 'tier_1' && config.planeB?.disableTier1) return TIER_2_SLO_MINUTES
   return tier === 'tier_1' ? TIER_1_SLO_MINUTES : TIER_2_SLO_MINUTES
 }

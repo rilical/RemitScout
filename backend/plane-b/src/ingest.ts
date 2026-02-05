@@ -5,7 +5,7 @@ import { assertRuntimeConfig, config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { initErrorTracking } from '../../shared/error-tracker'
 import { initTracing, startSpan, getCurrentSpan } from '../../shared/tracing'
-import { getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../../shared/sqs'
+import { getQueueAgeSeconds, getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../../shared/sqs'
 import { partitionCorridors } from '../../shared/sharding'
 import { parseCorridorId } from '../../shared/corridor'
 import { getCountryByCode } from '../../shared/countries-currencies'
@@ -51,6 +51,13 @@ const logger = createLogger('plane-b.ingest')
 const shutdownTimeoutMs = 30000
 const ingestFanoutMode = config.queues.ingestFanout.mode
 const ingestFanoutQueueUrl = config.queues.ingestFanout.url
+const ingestFanoutQueueTier1Url = config.queues.ingestFanout.tier1Url
+const ingestFanoutQueueTier2Url = config.queues.ingestFanout.tier2Url
+const disableTier1 = config.planeB.disableTier1
+const ingestFanoutTiered = Boolean(ingestFanoutQueueTier1Url && ingestFanoutQueueTier2Url)
+const ingestFanoutTierMisconfigured =
+  (Boolean(ingestFanoutQueueTier1Url) || Boolean(ingestFanoutQueueTier2Url))
+  && !ingestFanoutTiered
 const ingestFanoutEnabled = ingestFanoutMode !== 'off' && Boolean(ingestFanoutQueueUrl)
 const fanoutMessageMode =
   process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE === 'provider'
@@ -167,8 +174,27 @@ const isCorridorPayload = (
   return 'version' in payload && payload.version === 'corridor_v1'
 }
 
+const resolveIngestFanoutQueueUrl = (priorityTier?: string): string | null => {
+  if (ingestFanoutTierMisconfigured) {
+    return null
+  }
+  if (ingestFanoutTiered) {
+    if (!ingestFanoutQueueTier1Url || !ingestFanoutQueueTier2Url) {
+      return null
+    }
+    if (disableTier1) return ingestFanoutQueueTier2Url
+    return priorityTier === 'tier_2' ? ingestFanoutQueueTier2Url : ingestFanoutQueueTier1Url
+  }
+  return ingestFanoutQueueUrl || null
+}
+
 const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolean> => {
-  if (!ingestFanoutQueueUrl) {
+  const queueUrl = resolveIngestFanoutQueueUrl(
+    isCorridorPayload(payload)
+      ? payload.providers[0]?.priorityTier
+      : payload.priorityTier,
+  )
+  if (!queueUrl) {
     return false
   }
 
@@ -180,12 +206,13 @@ const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolea
     : payload.collectorType
 
   try {
-    await sendJsonMessage(ingestFanoutQueueUrl, payload)
+    await sendJsonMessage(queueUrl, payload)
     return true
   } catch (error) {
     logger.warn('ingest_fanout_enqueue_failed', {
       provider_id: providerId,
       collector_type: collectorType,
+      queue_url: queueUrl,
       sweep_run_id: payload.sweepRunId ?? null,
       requested_at: payload.requestedAt ?? null,
       trace_id: payload.traceId ?? null,
@@ -303,7 +330,7 @@ const loadPriorityQueues = async (
       if (!row.corridor_id) continue
       if (!isMacroCorridor(row.corridor_id)) continue
       queues.all.push(row.corridor_id)
-      if (row.priority_tier === 'tier_1') {
+      if (row.priority_tier === 'tier_1' && !disableTier1) {
         queues.tier1.push(row.corridor_id)
       } else {
         queues.tier2.push(row.corridor_id)
@@ -739,41 +766,107 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             logger.info('ingest_fanout_enabled', {
               mode: ingestFanoutMode,
               queue_url: ingestFanoutQueueUrl,
+              tiered: ingestFanoutTiered,
+              tier1_queue_url: ingestFanoutQueueTier1Url || null,
+              tier2_queue_url: ingestFanoutQueueTier2Url || null,
               message_mode: fanoutMessageMode,
             })
           }
         }
         let queueStats: Awaited<ReturnType<typeof getQueueStats>> | null = null
+        let queueStatsTier2: Awaited<ReturnType<typeof getQueueStats>> | null = null
+        let queueAgeSeconds = 0
+        let queueAgeTier2Seconds = 0
+        let totalQueueDepth = 0
         const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
-        if (ingestFanoutMode === 'queue' && ingestFanoutEnabled && ingestFanoutQueueUrl) {
-          if (maxQueueDepth > 0) {
-            queueStats = await getQueueStats(ingestFanoutQueueUrl)
-            if (queueStats.total >= maxQueueDepth) {
-              logger.warn('ingest_fanout_backpressure', {
-                queue_depth: queueStats.total,
-                queue_visible: queueStats.visible,
-                queue_in_flight: queueStats.inFlight,
-                queue_delayed: queueStats.delayed,
-                max_queue_depth: maxQueueDepth,
-              })
-              return false
+        const maxQueueAgeSeconds = Math.max(config.planeB.b2bMaxQueueAgeSeconds || 0, 0)
+        if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
+          if (config.planeB.b2bDrainMode) {
+            logger.warn('ingest_fanout_backpressure', {
+              reason: 'drain_mode',
+            })
+            return false
+          }
+          if (ingestFanoutTierMisconfigured) {
+            logger.error('ingest_fanout_disabled', { reason: 'missing_tier_queues' })
+            return false
+          }
+          if (ingestFanoutTiered) {
+            if (maxQueueDepth > 0 || maxQueueAgeSeconds > 0) {
+              queueStats = await getQueueStats(ingestFanoutQueueTier1Url)
+              queueStatsTier2 = await getQueueStats(ingestFanoutQueueTier2Url)
+              totalQueueDepth = queueStats.total + queueStatsTier2.total
+              if (maxQueueDepth > 0 && totalQueueDepth >= maxQueueDepth) {
+                logger.warn('ingest_fanout_backpressure', {
+                  queue_depth: totalQueueDepth,
+                  tier1_depth: queueStats.total,
+                  tier2_depth: queueStatsTier2.total,
+                  max_queue_depth: maxQueueDepth,
+                })
+                return false
+              }
+              if (maxQueueAgeSeconds > 0) {
+                queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueTier1Url)
+                queueAgeTier2Seconds = await getQueueAgeSeconds(ingestFanoutQueueTier2Url)
+                const maxObservedAge = Math.max(queueAgeSeconds, queueAgeTier2Seconds)
+                if (maxObservedAge >= maxQueueAgeSeconds) {
+                  logger.warn('ingest_fanout_backpressure', {
+                    reason: 'queue_age',
+                    queue_age_seconds: maxObservedAge,
+                    tier1_age_seconds: queueAgeSeconds,
+                    tier2_age_seconds: queueAgeTier2Seconds,
+                    max_queue_age_seconds: maxQueueAgeSeconds,
+                  })
+                  return false
+                }
+              }
+            }
+          } else if (ingestFanoutQueueUrl) {
+            if (maxQueueDepth > 0 || maxQueueAgeSeconds > 0) {
+              queueStats = await getQueueStats(ingestFanoutQueueUrl)
+              totalQueueDepth = queueStats.total
+              if (maxQueueDepth > 0 && queueStats.total >= maxQueueDepth) {
+                logger.warn('ingest_fanout_backpressure', {
+                  queue_depth: queueStats.total,
+                  queue_visible: queueStats.visible,
+                  queue_in_flight: queueStats.inFlight,
+                  queue_delayed: queueStats.delayed,
+                  max_queue_depth: maxQueueDepth,
+                })
+                return false
+              }
+              if (maxQueueAgeSeconds > 0) {
+                queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueUrl)
+                if (queueAgeSeconds >= maxQueueAgeSeconds) {
+                  logger.warn('ingest_fanout_backpressure', {
+                    reason: 'queue_age',
+                    queue_age_seconds: queueAgeSeconds,
+                    max_queue_age_seconds: maxQueueAgeSeconds,
+                  })
+                  return false
+                }
+              }
             }
           }
         }
         if (config.planeB.b2cQueueInSweep) {
-          if (
-            ingestFanoutMode === 'queue'
-            && ingestFanoutEnabled
-            && ingestFanoutQueueUrl
-            && maxQueueDepth > 0
-          ) {
-            if (!queueStats) {
+          if (ingestFanoutMode === 'queue' && ingestFanoutEnabled && maxQueueDepth > 0) {
+            if (ingestFanoutTiered && ingestFanoutQueueTier1Url && ingestFanoutQueueTier2Url) {
+              if (!queueStats) {
+                queueStats = await getQueueStats(ingestFanoutQueueTier1Url)
+              }
+              if (!queueStatsTier2) {
+                queueStatsTier2 = await getQueueStats(ingestFanoutQueueTier2Url)
+              }
+              totalQueueDepth = queueStats.total + queueStatsTier2.total
+            } else if (!queueStats && ingestFanoutQueueUrl) {
               queueStats = await getQueueStats(ingestFanoutQueueUrl)
+              totalQueueDepth = queueStats.total
             }
             const b2cQueueThreshold = Math.max(1, Math.floor(maxQueueDepth * 0.25))
-            if (queueStats.total >= b2cQueueThreshold) {
+            if (totalQueueDepth >= b2cQueueThreshold) {
               logger.info('b2c_queue_in_sweep_skipped', {
-                queue_depth: queueStats.total,
+                queue_depth: totalQueueDepth,
                 threshold: b2cQueueThreshold,
                 max_queue_depth: maxQueueDepth,
               })
@@ -827,7 +920,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             sloMinutes: TIER_2_SLO_MINUTES,
           },
         } as const
-        const priorityTierOrder = ['tier1', 'tier2'] as const
+        const priorityTierOrder = (disableTier1 ? ['tier2'] : ['tier1', 'tier2']) as const
         const targetMinutesByTierKey = {
           tier1: Math.max(1, Math.round(priorityTierConfig.tier1.intervalSeconds / 60)),
           tier2: planMinutes,
@@ -1340,59 +1433,90 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         const tasks = Array.from(corridorFanoutTasks.values())
         if (tasks.length > 0) {
           const now = new Date().toISOString()
-          const messages = tasks.flatMap((task, index) => {
-            if (corridorProviderBatchSize > 0 && task.providers.length > corridorProviderBatchSize) {
-              const batches: typeof task.providers[] = []
-              for (let i = 0; i < task.providers.length; i += corridorProviderBatchSize) {
-                batches.push(task.providers.slice(i, i + corridorProviderBatchSize))
-              }
-              return batches.map((providers, batchIndex) => ({
-                id: `${index}-${batchIndex}`,
-                payload: {
-                  version: 'corridor_v1',
-                  corridorId: task.corridorId,
-                  providers,
-                  requestedAt: now,
-                  traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
-                } as IngestFanoutCorridorMessage,
-              }))
+          const messagesByQueue = new Map<string, Array<{ id: string; payload: IngestFanoutCorridorMessage }>>()
+          const pushMessage = (queueUrl: string, message: { id: string; payload: IngestFanoutCorridorMessage }) => {
+            const bucket = messagesByQueue.get(queueUrl)
+            if (bucket) {
+              bucket.push(message)
+            } else {
+              messagesByQueue.set(queueUrl, [message])
             }
-            return [{
-              id: `${index}`,
-              payload: {
-                version: 'corridor_v1',
-                corridorId: task.corridorId,
-                providers: task.providers,
-                requestedAt: now,
-                traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
-              } as IngestFanoutCorridorMessage,
-            }]
-          })
-          const traceIdSample = messages
+          }
+          for (let index = 0; index < tasks.length; index += 1) {
+            const task = tasks[index]
+            const providersByTier = new Map<string, IngestFanoutProviderTask[]>()
+            for (const provider of task.providers) {
+              const tier = provider.priorityTier ?? 'tier_1'
+              const bucket = providersByTier.get(tier)
+              if (bucket) {
+                bucket.push(provider)
+              } else {
+                providersByTier.set(tier, [provider])
+              }
+            }
+            for (const [tier, providers] of providersByTier.entries()) {
+              const queueUrl = resolveIngestFanoutQueueUrl(tier)
+              if (!queueUrl) {
+                logger.warn('ingest_fanout_queue_missing', {
+                  corridor_id: task.corridorId,
+                  priority_tier: tier,
+                })
+                continue
+              }
+              const batches: typeof providers[] = []
+              if (corridorProviderBatchSize > 0 && providers.length > corridorProviderBatchSize) {
+                for (let i = 0; i < providers.length; i += corridorProviderBatchSize) {
+                  batches.push(providers.slice(i, i + corridorProviderBatchSize))
+                }
+              } else {
+                batches.push(providers)
+              }
+              for (let batchIndex = 0; batchIndex < batches.length; batchIndex += 1) {
+                const batchProviders = batches[batchIndex]
+                pushMessage(queueUrl, {
+                  id: `${index}-${tier}-${batchIndex}`,
+                  payload: {
+                    version: 'corridor_v1',
+                    corridorId: task.corridorId,
+                    providers: batchProviders,
+                    requestedAt: now,
+                    traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
+                  },
+                })
+              }
+            }
+          }
+          const traceIdSample = Array.from(messagesByQueue.values())
+            .flat()
             .map((message) => message.payload.traceId)
             .filter((value): value is string => Boolean(value))
             .slice(0, 3)
           const providerEnqueueFailures = new Map<string, number>()
           let failedMessages = 0
-          for (let i = 0; i < messages.length; i += 10) {
-            const batch = messages.slice(i, i + 10)
-            const results = await sendBatchJsonMessages(ingestFanoutQueueUrl!, batch)
-            for (const result of results) {
-              if (result.success) continue
-              failedMessages += 1
-              const failedPayload = batch.find((entry) => entry.id === result.id)?.payload
-              if (!failedPayload) continue
-              for (const provider of failedPayload.providers) {
-                providerEnqueueFailures.set(
-                  provider.providerId,
-                  (providerEnqueueFailures.get(provider.providerId) ?? 0) + 1,
-                )
+          let totalMessages = 0
+          for (const [queueUrl, messages] of messagesByQueue.entries()) {
+            totalMessages += messages.length
+            for (let i = 0; i < messages.length; i += 10) {
+              const batch = messages.slice(i, i + 10)
+              const results = await sendBatchJsonMessages(queueUrl, batch)
+              for (const result of results) {
+                if (result.success) continue
+                failedMessages += 1
+                const failedPayload = batch.find((entry) => entry.id === result.id)?.payload
+                if (!failedPayload) continue
+                for (const provider of failedPayload.providers) {
+                  providerEnqueueFailures.set(
+                    provider.providerId,
+                    (providerEnqueueFailures.get(provider.providerId) ?? 0) + 1,
+                  )
+                }
               }
             }
           }
           logger.info('ingest_fanout_corridor_enqueued', {
             corridors: tasks.length,
-            messages: messages.length,
+            messages: totalMessages,
+            queues: messagesByQueue.size,
             failed_messages: failedMessages,
             provider_batch_size: corridorProviderBatchSize > 0 ? corridorProviderBatchSize : null,
             trace_id_sample: traceIdSample.length > 0 ? traceIdSample : null,

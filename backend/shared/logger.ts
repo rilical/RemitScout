@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto'
+import { context as otelContext, trace } from '@opentelemetry/api'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -89,7 +90,9 @@ const getAwsLogContext = (): Record<string, unknown> => {
 
 export const createLogger = (component: string, traceId?: string) => {
   const currentLevel = resolveLogLevel()
-  const resolvedTraceId = traceId || randomUUID()
+  const activeSpan = trace.getSpan(otelContext.active())
+  const activeTraceId = activeSpan?.spanContext().traceId
+  const resolvedTraceId = traceId || activeTraceId || randomUUID()
   const awsContext = getAwsLogContext()
 
   const emit = (level: LogLevel, event: string, context?: Record<string, unknown>) => {

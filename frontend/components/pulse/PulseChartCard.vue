@@ -29,6 +29,9 @@
       <p class="mb-4 text-sm text-neutral-400">
         {{ insight }}
       </p>
+      <p v-if="isGoldIndexChart" class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
+        Gold indices · $500 bank bucket · updated daily
+      </p>
 
       <!-- Sparkline -->
       <div class="mb-4 h-16 w-full">
@@ -121,6 +124,10 @@ const sparklineColor = computed(() => {
 
 const sparklinePoints = computed(() => props.sparklineData)
 
+const isGoldIndexChart = computed(() => {
+  return ['all-in-cost', 'fx-markup', 'volatility-pulse'].includes(props.metadata.id)
+})
+
 const normalizedPoints = computed(() => {
   if (sparklinePoints.value.length === 0) return []
   const values = sparklinePoints.value.map(p => p.v)
@@ -148,5 +155,4 @@ const areaPath = computed(() => {
   return `${start} ${line} ${end}`
 })
 </script>
-
 

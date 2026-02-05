@@ -53,7 +53,7 @@ describe('VolatilityService', () => {
     expect(result.hasData).toBe(true)
   })
 
-  it('assigns tier2 (4 hours) for moderate volatility (>= 0.08, < 0.15)', async () => {
+  it('assigns tier2 (2 hours) for moderate volatility (>= 0.08, < 0.15)', async () => {
     const corridorId = 'US-TH-USD-THB'
 
     await pool.query(
@@ -65,12 +65,12 @@ describe('VolatilityService', () => {
 
     const result = await service.getCacheTtlForCorridor(corridorId)
     expect(result.tier).toBe('tier2')
-    expect(result.ttlSeconds).toBe(4 * 60 * 60)
+    expect(result.ttlSeconds).toBe(2 * 60 * 60)
     expect(result.volatilityScore).toBe(0.10)
     expect(result.hasData).toBe(true)
   })
 
-  it('assigns tier3 (4 hours) for low volatility (< 0.08)', async () => {
+  it('assigns tier3 (6 hours) for low volatility (< 0.08)', async () => {
     const corridorId = 'GB-ZA-GBP-ZAR'
 
     await pool.query(
@@ -82,7 +82,7 @@ describe('VolatilityService', () => {
 
     const result = await service.getCacheTtlForCorridor(corridorId)
     expect(result.tier).toBe('tier3')
-    expect(result.ttlSeconds).toBe(4 * 60 * 60)
+    expect(result.ttlSeconds).toBe(6 * 60 * 60)
     expect(result.volatilityScore).toBe(0.05)
     expect(result.hasData).toBe(true)
   })

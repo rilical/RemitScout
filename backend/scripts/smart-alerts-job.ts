@@ -1,9 +1,12 @@
+import { setTimeout as sleep } from 'timers/promises'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 
 const logger = createLogger('script.smart-alerts-job')
+initTracing('smart-alerts-job')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -18,6 +21,7 @@ const minSampleDays = Math.min(
 )
 const minConfidence = Math.max(1, toNumber(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70))
 const weeklySendHour = Math.min(23, Math.max(0, toNumber(process.env.SMART_ALERTS_WEEKLY_SEND_HOUR, 9)))
+const jitterMs = Math.max(0, toNumber(process.env.SMART_ALERTS_JITTER_MS, 0))
 const lockTtlSeconds = Math.max(60, toNumber(process.env.SMART_ALERTS_LOCK_TTL_SECONDS, 900))
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 let lock: WorkerLock | null = null
@@ -369,6 +373,14 @@ const upsertSignals = async (pool: ReturnType<typeof createPool>) => {
 }
 
 export const runSmartAlertsJob = async () => {
+  if (jitterMs > 0) {
+    const delayMs = Math.floor(Math.random() * jitterMs)
+    if (delayMs > 0) {
+      logger.info('job_jitter', { delay_ms: delayMs })
+      await sleep(delayMs)
+    }
+  }
+
   lock = new WorkerLock('smart-alerts-job', lockTtlSeconds)
   const acquired = await lock.acquire()
   if (!acquired) {

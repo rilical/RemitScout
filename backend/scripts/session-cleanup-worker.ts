@@ -8,9 +8,11 @@
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { SessionRepository } from '../plane-a/src/repositories'
 
 const logger = createLogger('script.session-cleanup')
+initTracing('session-cleanup-worker')
 
 export const runSessionCleanup = async (): Promise<void> => {
   const pool = createPool(config.db.planeAUrl)

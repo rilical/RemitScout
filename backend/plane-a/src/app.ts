@@ -161,6 +161,14 @@ export const buildApp = async () => {
     '/api/v1/sessions',
   ]
   const authBypassPaths = new Set(['/api/billing/webhook', '/api/v1/billing/webhook'])
+  const allowUnauthedAlerts =
+    config.env === 'development' || config.env === 'test' || process.env.ENVIRONMENT === 'dev'
+  if (allowUnauthedAlerts) {
+    authBypassPaths.add('/api/alerts/corridor-eligibility')
+    authBypassPaths.add('/api/v1/alerts/corridor-eligibility')
+    authBypassPaths.add('/api/alerts/macro-corridors')
+    authBypassPaths.add('/api/v1/alerts/macro-corridors')
+  }
   const accountAuth = requireAuth()
 
   app.addHook('preHandler', async (request, reply) => {

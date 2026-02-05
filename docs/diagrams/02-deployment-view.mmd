@@ -1,0 +1,31 @@
+%%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 40, 'rankSpacing': 60}, 'theme': 'base', 'themeVariables': {'lineColor': '#333333', 'lineWidth': '2', 'primaryTextColor': '#111111', 'primaryBorderColor': '#333333', 'primaryColor': '#F5F5F5'}}}%%
+flowchart LR
+  subgraph DEV["dev"]
+    DEV_VPC["VPC: natGateways=1\npublic + private subnets"]
+    DEV_ECS["ECS: public subnets + public IPs\nspot-only default"]
+    DEV_LAMBDA["Lambda: private subnets"]
+    DEV_DB["Aurora Serverless v2\nmin=0 max=1\nautoPause=10m\nbackup=3d"]
+    DEV_REDIS["Redis: cache.t4g.micro\nsingle-AZ"]
+    DEV_S3["S3 buckets: remit-scout-*-dev\nRemovalPolicy=DESTROY"]
+    DEV_SQS["SQS queues: remit-scout-dev-*"]
+  end
+
+  subgraph STAGING["staging"]
+    STG_VPC["VPC: natGateways=1\npublic + private subnets"]
+    STG_ECS["ECS: private subnets\non-demand default"]
+    STG_LAMBDA["Lambda: private subnets"]
+    STG_DB["Aurora provisioned\nr6g.large, instances=1\nbackup=7d"]
+    STG_REDIS["Redis: cache.t4g.micro\nsingle-AZ"]
+    STG_S3["S3 buckets: remit-scout-*-staging\nRemovalPolicy=DESTROY"]
+    STG_SQS["SQS queues: remit-scout-staging-*"]
+  end
+
+  subgraph PROD["prod"]
+    PROD_VPC["VPC: natGateways=2\npublic + private subnets"]
+    PROD_ECS["ECS: private subnets\nFARGATE + FARGATE_SPOT mix"]
+    PROD_LAMBDA["Lambda: private subnets"]
+    PROD_DB["Aurora provisioned\nr6g.xlarge, instances=2\nbackup=30d, deletionProtection"]
+    PROD_REDIS["Redis: cache.r6g.large\nMulti-AZ + replica"]
+    PROD_S3["S3 buckets: remit-scout-*-prod\nRemovalPolicy=RETAIN"]
+    PROD_SQS["SQS queues: remit-scout-prod-*"]
+  end

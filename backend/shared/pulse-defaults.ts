@@ -69,6 +69,30 @@ const titleFromId = (id: string) => id
   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
   .join(' ')
 
+const chartOverrides: Record<string, Partial<ChartMetadata>> = {
+  'all-in-cost': {
+    title: 'All-in Cost Index (RCI)',
+    unit: 'percent',
+    unitLabel: '%',
+    description: 'Remittance Cost Index derived from Gold indices (lower is better).',
+    sourceNotes: 'Gold indices · $500 bank bucket · updated daily.',
+  },
+  'fx-markup': {
+    title: 'FX Markup vs Mid-Market (TEER-derived)',
+    unit: 'bps',
+    unitLabel: 'bps',
+    description: 'Implied markup vs mid-market derived from TEER.',
+    sourceNotes: 'Gold indices · $500 bank bucket · updated daily.',
+  },
+  'volatility-pulse': {
+    title: 'Volatility Pulse (RVI, bps)',
+    unit: 'bps',
+    unitLabel: 'bps',
+    description: 'Remittance Volatility Index in basis points.',
+    sourceNotes: 'Gold indices · $500 bank bucket · updated daily.',
+  },
+}
+
 export const buildChartData = (chartId: string): ChartData => {
   const category = chartCategoryMap[chartId] || 'cost-markup'
   const metadata: ChartMetadata = {
@@ -89,8 +113,11 @@ export const buildChartData = (chartId: string): ChartData => {
     plusRanges: ['90d', '365d'],
   }
 
+  const overrides = chartOverrides[chartId]
+  const resolvedMetadata = overrides ? { ...metadata, ...overrides } : metadata
+
   return {
-    metadata,
+    metadata: resolvedMetadata,
     series: [],
     insight: 'No data yet.',
   }

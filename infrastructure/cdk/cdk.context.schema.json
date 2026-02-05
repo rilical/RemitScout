@@ -83,6 +83,14 @@
       "type": "string",
       "description": "ARN of Secrets Manager secret for alerts/newsletter/push configuration"
     },
+    "sentrySecretArn": {
+      "type": "string",
+      "description": "ARN of Secrets Manager secret for Sentry DSN"
+    },
+    "sentrySecretJsonKey": {
+      "type": "string",
+      "description": "JSON key in Sentry secret (e.g., SENTRY_DSN)"
+    },
     "oandaSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for OANDA API key"
@@ -138,22 +146,75 @@
       "enum": ["off", "queue", "shadow"],
       "description": "Ops alerts queue mode"
     },
+    "opsPauseRuleAllowlist": {
+      "type": "array",
+      "description": "List of EventBridge rule suffixes to pause when ops pause is enabled (prod only)"
+    },
+    "devPaused": {
+      "type": "boolean",
+      "description": "Pause dev ECS services and EventBridge schedules when true"
+    },
+    "costGuardrailsCreateCur": {
+      "type": "boolean",
+      "description": "Create CUR bucket/report (default: true in prod only)"
+    },
     "quoteRefreshQueueMode": {
       "type": "string",
       "enum": ["off", "queue", "shadow"],
       "description": "Quote refresh queue mode"
     },
+    "fxRateRefreshQueueMode": {
+      "type": "string",
+      "enum": ["off", "queue", "shadow"],
+      "description": "FX rate refresh queue mode"
+    },
     "planeBB2cQueueInSweep": {
       "type": "boolean",
       "description": "Enable B2C queue in sweep"
+    },
+    "planeBFxRateRefreshServiceEnabled": {
+      "type": "boolean",
+      "description": "Enable FX rate refresh ECS service"
+    },
+    "planeBFxRateRefreshDesiredCount": {
+      "type": "number",
+      "description": "Desired count for FX rate refresh worker service"
     },
     "planeBIngestDesiredCount": {
       "type": "number",
       "description": "Desired count for Plane B ingest service"
     },
+    "planeBB2cRefreshDesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B B2C refresh service"
+    },
     "planeBQueueWorkerDesiredCount": {
       "type": "number",
       "description": "Desired count for Plane B queue worker services"
+    },
+    "planeBQueueWorkerMaxCount": {
+      "type": "number",
+      "description": "Max count for Plane B queue worker services"
+    },
+    "planeBIngestFanoutTier1DesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B ingest fanout tier 1 service"
+    },
+    "planeBIngestFanoutTier2DesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B ingest fanout tier 2 service"
+    },
+    "goldLiveDesiredCount": {
+      "type": "number",
+      "description": "Desired count for Gold live worker service"
+    },
+    "planeBNotificationsDesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B notifications worker service"
+    },
+    "planeBOpsAlertsDesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane B ops alerts worker service"
     },
     "bronzePrefix": {
       "type": "string",
@@ -194,6 +255,20 @@
       },
       "description": "Admin email allowlist for Plane A"
     },
+    "sesIdentityArns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "SES identity ARNs for email sending"
+    },
+    "snsTopicArns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "SNS topic ARNs for alert routing"
+    },
     "planeACorsOrigins": {
       "type": "array",
       "items": {
@@ -222,6 +297,10 @@
     "frontendBaseUrl": {
       "type": "string",
       "description": "Frontend base URL for billing/newsletter links"
+    },
+    "enableFrontend": {
+      "type": "boolean",
+      "description": "Enable frontend deployment"
     },
     "publicSupabaseUrl": {
       "type": "string",

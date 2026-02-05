@@ -16,6 +16,7 @@
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { QuoteRefreshRepository } from '../plane-b/src/repositories'
 
@@ -26,6 +27,7 @@ const toNumber = (value: string | undefined, fallback: number) => {
 
 const minAgeSeconds = toNumber(process.env.B2C_RETRY_MIN_AGE_SECONDS, 300)
 const logger = createLogger('script.b2c-retry-failed')
+initTracing('b2c-retry-failed')
 const lockTtlSeconds = 300
 
 export const runB2cRetryFailed = async (): Promise<number> => {
@@ -65,7 +67,6 @@ if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
       process.exit(1)
     })
 }
-
 
 
 

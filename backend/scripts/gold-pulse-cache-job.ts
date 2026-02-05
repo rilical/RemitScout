@@ -19,6 +19,7 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import {
   buildPulseCacheKey,
   PULSE_AMOUNTS,
@@ -52,6 +53,7 @@ const serializeJson = (value: unknown) => {
 const lockTtlSeconds = toNumber(process.env.GOLD_PULSE_CACHE_LOCK_TTL_SECONDS, 900) ?? 900
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const logger = createLogger('script.gold-pulse-cache')
+initTracing('gold-pulse-cache-job')
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null

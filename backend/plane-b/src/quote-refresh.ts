@@ -1,4 +1,5 @@
 import type { Pool } from 'pg'
+import { context as otelContext, type Context } from '@opentelemetry/api'
 
 import { createPool } from '../../shared/db'
 import { config } from '../../shared/config'
@@ -9,6 +10,8 @@ import {
   receiveJsonMessages,
   sendJsonMessage,
 } from '../../shared/sqs'
+import { applyJitter, resolveJitterMs } from '../../shared/worker-jitter'
+import { startSpan } from '../../shared/tracing'
 import { getProvider } from './providers'
 import { LatestQuoteRepository, QuoteRefreshRepository } from './repositories'
 import type { QuoteRefreshRequestRecord } from './repositories/interfaces/quote-refresh-repository.interface'
@@ -16,6 +19,7 @@ import { QuoteRefreshStatus, type QuoteRefreshStatusValue } from './repositories
 import { VolatilityService } from './services/volatility-service'
 
 const logger = createLogger('plane-b.quote-refresh')
+const messageJitterMs = resolveJitterMs(process.env.B2C_REFRESH_MESSAGE_JITTER_MS, 0)
 
 export type QuoteRefreshQueueEvent = {
   requestId: string
@@ -285,6 +289,8 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
     await runWithConcurrency(requests, async (request) => {
       const requestStart = Date.now()
 
+      await applyJitter(logger, 'b2c_refresh_message', messageJitterMs)
+
       logger.debug('queue_item_start', {
         request_id: request.request_id,
         provider_id: request.provider_id,
@@ -347,6 +353,8 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         payload: QuoteRefreshMessage
         receiptHandle: string
         retryCount: number
+        messageId: string
+        traceContext?: Context
       }> = []
       const preTasks: Array<Promise<void>> = []
       let sqsClaimed = 0
@@ -411,6 +419,8 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
           payload: message.payload,
           receiptHandle: message.receiptHandle,
           retryCount,
+          messageId: message.messageId,
+          traceContext: message.traceContext,
         })
       }
 
@@ -419,76 +429,98 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
       }
 
       await runWithConcurrency(workItems, async (item) => {
-        const requestStart = Date.now()
-        const retryCount = item.retryCount
-        const request = await repo.claimRequestById(
-          item.requestId,
-          maxRetries,
-          retryCount,
+        const activeContext = item.traceContext ?? otelContext.active()
+        await otelContext.with(activeContext, () =>
+          startSpan('b2c-refresh.queue-item', async (span) => {
+            if (typeof span.setAttributes === 'function') {
+              span.setAttributes({
+                'message.id': item.messageId,
+                'queue.mode': 'sqs',
+              })
+            }
+
+            await applyJitter(logger, 'b2c_refresh_message', messageJitterMs)
+
+            const requestStart = Date.now()
+            const retryCount = item.retryCount
+            const request = await repo.claimRequestById(
+              item.requestId,
+              maxRetries,
+              retryCount,
+            )
+
+            if (!request) {
+              logger.info('queue_item_unclaimed', {
+                request_id: item.requestId,
+                retry_count: retryCount,
+                source: 'sqs',
+              })
+              deleteHandles.push(item.receiptHandle)
+              return
+            }
+
+            if (typeof span.setAttributes === 'function') {
+              span.setAttributes({
+                'request.id': request.request_id,
+                'provider.id': request.provider_id,
+                'corridor.id': request.corridor_id,
+              })
+            }
+
+            sqsClaimed += 1
+            if (item.payload.providerId && item.payload.providerId !== request.provider_id) {
+              logger.warn('queue_item_mismatch', {
+                request_id: request.request_id,
+                payload_provider: item.payload.providerId,
+                db_provider: request.provider_id,
+                source: 'sqs',
+              })
+            }
+
+            logger.debug('queue_item_start', {
+              request_id: request.request_id,
+              provider_id: request.provider_id,
+              corridor_id: request.corridor_id,
+              amount_bucket: request.amount_bucket,
+              payin_method: request.payin_method,
+              payout_method: request.payout_method,
+              retry_count: request.retry_count,
+              source: 'sqs',
+            })
+
+            const { status, skipReason } = await processRequest(
+              pool,
+              repo,
+              request,
+              maxRetries,
+              writeDb,
+            )
+
+            processed += 1
+            const durationSeconds = (Date.now() - requestStart) / 1000
+            if (options.onRequestFinished) {
+              await Promise.resolve(options.onRequestFinished({
+                requestId: request.request_id,
+                providerId: request.provider_id,
+                status,
+                durationSeconds,
+                retryCount: request.retry_count,
+                skipReason,
+              }))
+            }
+
+            if (shouldDeleteMessage(status, retryCount, maxRetries)) {
+              deleteHandles.push(item.receiptHandle)
+            } else {
+              logger.info('queue_item_retry_scheduled', {
+                request_id: request.request_id,
+                retry_count: retryCount,
+              })
+            }
+
+            await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
+          }),
         )
-
-        if (!request) {
-          logger.info('queue_item_unclaimed', {
-            request_id: item.requestId,
-            retry_count: retryCount,
-            source: 'sqs',
-          })
-          deleteHandles.push(item.receiptHandle)
-          return
-        }
-
-        sqsClaimed += 1
-        if (item.payload.providerId && item.payload.providerId !== request.provider_id) {
-          logger.warn('queue_item_mismatch', {
-            request_id: request.request_id,
-            payload_provider: item.payload.providerId,
-            db_provider: request.provider_id,
-            source: 'sqs',
-          })
-        }
-
-        logger.debug('queue_item_start', {
-          request_id: request.request_id,
-          provider_id: request.provider_id,
-          corridor_id: request.corridor_id,
-          amount_bucket: request.amount_bucket,
-          payin_method: request.payin_method,
-          payout_method: request.payout_method,
-          retry_count: request.retry_count,
-          source: 'sqs',
-        })
-
-        const { status, skipReason } = await processRequest(
-          pool,
-          repo,
-          request,
-          maxRetries,
-          writeDb,
-        )
-
-        processed += 1
-        const durationSeconds = (Date.now() - requestStart) / 1000
-        if (options.onRequestFinished) {
-          await Promise.resolve(options.onRequestFinished({
-            requestId: request.request_id,
-            providerId: request.provider_id,
-            status,
-            durationSeconds,
-            retryCount: request.retry_count,
-            skipReason,
-          }))
-        }
-
-        if (shouldDeleteMessage(status, retryCount, maxRetries)) {
-          deleteHandles.push(item.receiptHandle)
-        } else {
-          logger.info('queue_item_retry_scheduled', {
-            request_id: request.request_id,
-            retry_count: retryCount,
-          })
-        }
-
-        await reportQueueDepth(repo, activeQueueUrl, options.onQueueDepth)
       })
 
       logger.info('queue_sqs_processed', {

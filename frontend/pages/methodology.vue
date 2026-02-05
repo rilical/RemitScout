@@ -843,13 +843,15 @@
             Proprietary Indices
           </h2>
           <p class="text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Remit-Scout has developed three trademarked indices to quantify cross-border payment efficiency. Full formulations and citation rules live here, while enterprise accounts generate embeds and API access from the dashboard.
+            Remit-Scout has developed three trademarked indices to quantify cross-border payment efficiency. Full formulations and citation rules live in our
+            <NuxtLink to="/indices-methodology" class="text-brand-400 hover:text-brand-300 underline decoration-brand-400/40 hover:decoration-brand-300/60 font-semibold">indices methodology</NuxtLink>,
+            while enterprise accounts generate embeds and API access from the dashboard.
           </p>
         </div>
 
         <div class="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
           <NuxtLink
-            to="/dashboard?tab=enterprise"
+            to="/indices-methodology#teer"
             class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
             <h3 class="text-lg font-bold text-white mb-3 transition-colors">
@@ -859,7 +861,7 @@
               The actual exchange rate recipients receive after all costs. Quantifies the "cost of liquidity" in any corridor.
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
-              Open enterprise tools
+              Read methodology
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -867,7 +869,7 @@
           </NuxtLink>
 
           <NuxtLink
-            to="/dashboard?tab=enterprise"
+            to="/indices-methodology#rvi"
             class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
             <h3 class="text-lg font-bold text-white mb-3 transition-colors">
@@ -877,7 +879,7 @@
               Measures pricing dispersion across providers. A market efficiency signal for cross-border corridors.
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
-              Open enterprise tools
+              Read methodology
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -885,7 +887,7 @@
           </NuxtLink>
 
           <NuxtLink
-            to="/dashboard?tab=enterprise"
+            to="/indices-methodology#rci"
             class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15 hover:-translate-y-1"
           >
             <h3 class="text-lg font-bold text-white mb-3 transition-colors">
@@ -895,7 +897,7 @@
               Total corridor cost as a percentage. Captures both explicit fees and hidden FX markup.
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
-              Open enterprise tools
+              Read methodology
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -905,7 +907,9 @@
 
         <div class="mt-10 text-center">
           <p class="text-sm text-gray-400">
-            TEER™, RVI™, and RCI™ are trademarks of Remit-Scout. See individual index pages for citation requirements.
+            TEER™, RVI™, and RCI™ are trademarks of Remit-Scout. See the
+            <NuxtLink to="/indices-methodology" class="text-brand-400 hover:text-brand-300 underline decoration-brand-400/40 hover:decoration-brand-300/60 font-semibold">indices methodology</NuxtLink>
+            for formulas and citation requirements.
           </p>
         </div>
       </div>

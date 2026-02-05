@@ -2,6 +2,8 @@ import { Counter, Gauge } from 'prom-client'
 import { recordCloudWatchMetric } from './cloudwatch-metrics'
 import { metricsRegistry } from './metrics-registry'
 
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
+
 const sqsMessagesSent = new Counter({
   name: 'sqs_messages_sent_total',
   help: 'Total SQS messages sent.',
@@ -50,7 +52,7 @@ export const trackMessageSent = (queueUrl: string, count: number = 1): void => {
     name: 'sqs_messages_sent',
     value: count,
     unit: 'Count',
-    dimensions: { queue_url: queueUrl },
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
   })
 }
 
@@ -60,7 +62,7 @@ export const trackMessageReceived = (queueUrl: string, count: number = 1): void 
     name: 'sqs_messages_received',
     value: count,
     unit: 'Count',
-    dimensions: { queue_url: queueUrl },
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
   })
 }
 
@@ -70,7 +72,7 @@ export const trackMessageDeleted = (queueUrl: string, count: number = 1): void =
     name: 'sqs_messages_deleted',
     value: count,
     unit: 'Count',
-    dimensions: { queue_url: queueUrl },
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
   })
 }
 
@@ -80,7 +82,7 @@ export const trackMessageFailed = (queueUrl: string, operation: string): void =>
     name: 'sqs_messages_failed',
     value: 1,
     unit: 'Count',
-    dimensions: { queue_url: queueUrl, operation },
+    dimensions: { queue_url: queueUrl, operation, environment: environmentDimension },
   })
 }
 
@@ -90,7 +92,7 @@ export const trackVisibilityExtended = (queueUrl: string): void => {
     name: 'sqs_visibility_extended',
     value: 1,
     unit: 'Count',
-    dimensions: { queue_url: queueUrl },
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
   })
 }
 
@@ -100,7 +102,6 @@ export const trackQueueDepth = (queueUrl: string, depth: number): void => {
     name: 'sqs_queue_depth',
     value: depth,
     unit: 'Count',
-    dimensions: { queue_url: queueUrl },
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
   })
 }
-

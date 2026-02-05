@@ -20,11 +20,13 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 import { QuoteRefreshRepository } from '../plane-a/src/repositories'
 import { getProviderIds, hasProvider } from '../plane-b/src/providers'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 
 const logger = createLogger('script.bank-vs-specialist-refresh')
+initTracing('bank-vs-specialist-refresh')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)

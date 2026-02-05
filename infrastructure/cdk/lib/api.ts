@@ -16,22 +16,25 @@ import {
 } from 'aws-cdk-lib/aws-cloudfront'
 import { HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
-import { Runtime, Tracing, LayerVersion } from 'aws-cdk-lib/aws-lambda'
+import { Architecture, Runtime, Tracing, LayerVersion } from 'aws-cdk-lib/aws-lambda'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { SubnetType, type SecurityGroup, type Vpc } from 'aws-cdk-lib/aws-ec2'
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53'
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
+import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import { CfnIPSet, CfnWebACL } from 'aws-cdk-lib/aws-wafv2'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
+import { collectOandaThrottleEnv } from './env-utils'
 
 export type ApiOptions = {
   envName: string
   vpc: Vpc
   roles: IamResources
+  lambdaArchitecture?: Architecture
   planeASecurityGroup: SecurityGroup
   planeCSecurityGroup: SecurityGroup
   planeADbSecretArn?: string
@@ -45,12 +48,15 @@ export type ApiOptions = {
   stripeSecretArn?: string
   stripeSsmName?: string
   communicationsSecretArn?: string
+  sentrySecretArn?: string
+  sentrySecretJsonKey?: string
   planeAAdminEmails?: string[]
   planeACorsOrigins?: string[]
   planeACorsAllowedHeaders?: string[]
   planeACorsAllowedMethods?: string[]
   planeACorsAllowCredentials?: boolean
   frontendBaseUrl?: string
+  planeAB2cMaxBucketDeltaPct?: number
   planeCDbSecretArn?: string
   planeCDbSecretJsonKey?: string
   planeCDbSsmName?: string
@@ -64,6 +70,8 @@ export type ApiOptions = {
   planeCBaseUrl?: string
   quoteRefreshQueueUrl?: string
   quoteRefreshQueueMode?: string
+  fxRateRefreshQueueUrl?: string
+  fxRateRefreshQueueMode?: string
   exportJobQueueUrl?: string
   exportJobQueueMode?: string
   exportsBucketName?: string
@@ -109,7 +117,11 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
+  const otelEndpoint = options.otelLambdaLayerArn
+    ? 'http://127.0.0.1:4318/v1/traces'
+    : undefined
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+  const lambdaArchitecture = options.lambdaArchitecture
 
   const planeAEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
@@ -117,12 +129,13 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
+  Object.assign(planeAEnvironment, collectOandaThrottleEnv())
   const fxRateRefreshEnabled = process.env.FX_RATE_REFRESH_ENABLED
   if (fxRateRefreshEnabled !== undefined) {
     planeAEnvironment.FX_RATE_REFRESH_ENABLED = fxRateRefreshEnabled
@@ -153,6 +166,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.quoteRefreshQueueMode) {
     planeAEnvironment.QUOTE_REFRESH_QUEUE_MODE = options.quoteRefreshQueueMode
+  }
+  if (options.fxRateRefreshQueueUrl) {
+    planeAEnvironment.FX_RATE_REFRESH_QUEUE_URL = options.fxRateRefreshQueueUrl
+  }
+  if (options.fxRateRefreshQueueMode) {
+    planeAEnvironment.FX_RATE_REFRESH_QUEUE_MODE = options.fxRateRefreshQueueMode
   }
   if (options.exportJobQueueUrl) {
     planeAEnvironment.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
@@ -192,6 +211,11 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   if (options.frontendBaseUrl) {
     planeAEnvironment.FRONTEND_BASE_URL = options.frontendBaseUrl
   }
+  if (options.planeAB2cMaxBucketDeltaPct !== undefined) {
+    planeAEnvironment.PLANE_A_B2C_MAX_BUCKET_DELTA_PCT = String(
+      options.planeAB2cMaxBucketDeltaPct,
+    )
+  }
 
   const planeCEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
@@ -199,7 +223,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -219,6 +243,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const otelLambdaLayer = options.otelLambdaLayerArn
     ? LayerVersion.fromLayerVersionArn(scope, 'ApiOtelLambdaLayer', options.otelLambdaLayerArn)
     : undefined
+  const sentrySecret = options.sentrySecretArn
+    ? Secret.fromSecretCompleteArn(scope, 'ApiSentrySecret', options.sentrySecretArn)
+    : undefined
+  const sentrySecretJsonKey = options.sentrySecretJsonKey
   if (options.planeCDbHost) {
     planeCEnvironment.PLANE_C_DB_HOST = options.planeCDbHost
   }
@@ -228,15 +256,39 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   if (options.planeCDbName) {
     planeCEnvironment.PLANE_C_DB_NAME = options.planeCDbName
   }
-  if (options.redisUrl && !options.redisSecretArn && !options.redisSsmName) {
-    planeAEnvironment.REDIS_URL = options.redisUrl
-    planeCEnvironment.REDIS_URL = options.redisUrl
+
+  let resolvedRedisUrl: string | undefined
+  if (options.redisSecretArn) {
+    const redisSecret = Secret.fromSecretCompleteArn(
+      scope,
+      'ApiRedisSecret',
+      options.redisSecretArn,
+    )
+    const redisValue = options.redisSecretJsonKey
+      ? redisSecret.secretValueFromJson(options.redisSecretJsonKey)
+      : redisSecret.secretValue
+    resolvedRedisUrl = redisValue.toString()
+  } else if (options.redisSsmName) {
+    const redisParam = StringParameter.fromStringParameterName(
+      scope,
+      'ApiRedisParameter',
+      options.redisSsmName,
+    )
+    resolvedRedisUrl = redisParam.stringValue
+  } else if (options.redisUrl) {
+    resolvedRedisUrl = options.redisUrl
+  }
+
+  if (resolvedRedisUrl) {
+    planeAEnvironment.REDIS_URL = resolvedRedisUrl
+    planeCEnvironment.REDIS_URL = resolvedRedisUrl
   }
 
   const planeCFunction = new NodejsFunction(scope, 'PlaneCApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-c', 'src', 'lambda.ts'),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.seconds(30),
     role: options.roles.planeCLambdaRole,
@@ -249,6 +301,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  if (sentrySecret) {
+    sentrySecret.grantRead(planeCFunction)
+    const sentryValue = sentrySecretJsonKey
+      ? sentrySecret.secretValueFromJson(sentrySecretJsonKey)
+      : sentrySecret.secretValue
+    planeCFunction.addEnvironment('SENTRY_DSN', sentryValue.toString())
+  }
 
   if (options.planeCDbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -319,6 +379,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-a', 'src', 'lambda.ts'),
     handler: 'handler',
     runtime: Runtime.NODEJS_18_X,
+    architecture: lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.seconds(30),
     role: options.roles.planeALambdaRole,
@@ -331,6 +392,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
   })
+
+  if (sentrySecret) {
+    sentrySecret.grantRead(planeAFunction)
+    const sentryValue = sentrySecretJsonKey
+      ? sentrySecret.secretValueFromJson(sentrySecretJsonKey)
+      : sentrySecret.secretValue
+    planeAFunction.addEnvironment('SENTRY_DSN', sentryValue.toString())
+  }
 
   if (options.planeADbSecretArn) {
     const secret = Secret.fromSecretCompleteArn(
@@ -451,8 +520,27 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/healthz',
     '/readyz',
     ...(publicMetricsEnabled ? ['/metrics'] : []),
+    // Public web experience (no auth)
     '/api/quotes/current',
     '/api/v1/quotes/current',
+    '/api/providers',
+    '/api/v1/providers',
+    '/api/providers/metadata',
+    '/api/v1/providers/metadata',
+    '/api/providers/metadata/{id}',
+    '/api/v1/providers/metadata/{id}',
+    '/api/corridor-currencies',
+    '/api/v1/corridor-currencies',
+    '/api/corridor-limits',
+    '/api/v1/corridor-limits',
+    '/api/rates/spot',
+    '/api/v1/rates/spot',
+    '/api/rates/providers',
+    '/api/v1/rates/providers',
+    '/api/rates/history',
+    '/api/v1/rates/history',
+    '/api/geo',
+    '/api/v1/geo',
     '/api/popular-corridors',
     '/api/v1/popular-corridors',
     '/api/billing/webhook',
