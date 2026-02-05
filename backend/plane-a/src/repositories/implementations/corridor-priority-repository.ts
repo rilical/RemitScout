@@ -5,6 +5,29 @@ import type { ICorridorPriorityRepository } from '../interfaces/corridor-priorit
 export class CorridorPriorityRepository implements ICorridorPriorityRepository {
   constructor(private readonly pool: Pool) {}
 
+  async getPriorityInfo(
+    corridorId: string,
+  ): Promise<{ priorityTier: string | null; freshnessSloMinutes: number | null }> {
+    const result = await query<{
+      priority_tier: string | null
+      freshness_slo_minutes: number | null
+    }>(
+      `SELECT priority_tier,
+              freshness_slo_minutes
+         FROM silver.corridor_priority
+        WHERE corridor_id = $1
+        LIMIT 1`,
+      [corridorId],
+      this.pool,
+    )
+    const row = result.rows[0]
+    const freshness = row?.freshness_slo_minutes
+    return {
+      priorityTier: row?.priority_tier ?? null,
+      freshnessSloMinutes: Number.isFinite(freshness) ? Number(freshness) : null,
+    }
+  }
+
   async getPriorityTier(corridorId: string): Promise<string | null> {
     const result = await query<{ priority_tier: string | null }>(
       `SELECT priority_tier

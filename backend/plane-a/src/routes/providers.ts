@@ -592,10 +592,22 @@ const getDynamicCacheTtl = async (corridorId: string): Promise<number> => {
 
 const getCorridorMaxAgeSeconds = async (corridorId: string) => {
   try {
-    const minutes = await corridorPriorityRepository.getFreshnessSloMinutes(corridorId)
-    if (Number.isFinite(minutes) && Number(minutes) > 0) {
-      const seconds = Math.round(Number(minutes) * 60)
+    const { priorityTier, freshnessSloMinutes } =
+      await corridorPriorityRepository.getPriorityInfo(corridorId)
+    const tierDefaultMinutes = priorityTier === 'tier_1'
+      ? 10
+      : priorityTier === 'tier_2'
+        ? 180
+        : null
+    if (Number.isFinite(freshnessSloMinutes) && Number(freshnessSloMinutes) > 0) {
+      const effectiveMinutes = tierDefaultMinutes
+        ? Math.min(Number(freshnessSloMinutes), tierDefaultMinutes)
+        : Number(freshnessSloMinutes)
+      const seconds = Math.round(effectiveMinutes * 60)
       return Math.min(seconds, MAX_B2C_QUOTE_AGE_SECONDS)
+    }
+    if (tierDefaultMinutes) {
+      return Math.min(tierDefaultMinutes * 60, MAX_B2C_QUOTE_AGE_SECONDS)
     }
   } catch (error) {
     logger.warn('corridor_priority_lookup_failed', {
