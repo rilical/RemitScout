@@ -8,6 +8,7 @@ import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { parseCorridorId } from '../../../shared/corridor'
+import { getCorridorTier, getTierSloMinutes } from '../../../shared/corridor-tiers'
 import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { createTtlCache } from '../../../shared/cache'
@@ -69,21 +70,20 @@ const getCorridorMaxAgeSeconds = async (corridorId: string) => {
   try {
     const { priorityTier, freshnessSloMinutes } =
       await corridorPriorityRepository.getPriorityInfo(corridorId)
-    const tierDefaultMinutes = priorityTier === 'tier_1'
-      ? 10
-      : priorityTier === 'tier_2'
-        ? 180
-        : null
+    const normalizedTier =
+      priorityTier === 'tier_1' || priorityTier === 'tier_1_alpha'
+        ? 'tier_1'
+        : priorityTier === 'tier_2'
+          ? 'tier_2'
+          : null
+    const tier = normalizedTier ?? getCorridorTier(corridorId)
+    const tierDefaultMinutes = getTierSloMinutes(tier)
     if (Number.isFinite(freshnessSloMinutes) && Number(freshnessSloMinutes) > 0) {
-      const effectiveMinutes = tierDefaultMinutes
-        ? Math.min(Number(freshnessSloMinutes), tierDefaultMinutes)
-        : Number(freshnessSloMinutes)
+      const effectiveMinutes = Math.min(Number(freshnessSloMinutes), tierDefaultMinutes)
       const seconds = Math.round(effectiveMinutes * 60)
       return Math.min(seconds, MAX_B2C_QUOTE_AGE_SECONDS)
     }
-    if (tierDefaultMinutes) {
-      return Math.min(tierDefaultMinutes * 60, MAX_B2C_QUOTE_AGE_SECONDS)
-    }
+    return Math.min(tierDefaultMinutes * 60, MAX_B2C_QUOTE_AGE_SECONDS)
   } catch (error) {
     logger.warn('corridor_priority_lookup_failed', {
       corridor_id: corridorId,
