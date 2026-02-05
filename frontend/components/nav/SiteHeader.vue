@@ -84,14 +84,14 @@ watch(() => route.path, () => {
           <img
             v-if="isPlus && !logoError"
             :src="logoPlusSrc"
-            alt=""
+            alt="Remit-Scout Plus logo"
             class="h-10 w-10 object-contain flex-shrink-0"
             @error="handleLogoError"
           >
           <img
             v-else
             :src="logoRegularSrc"
-            alt=""
+            alt="Remit-Scout logo"
             class="h-10 w-10 object-contain flex-shrink-0"
           >
             <span class="text-lg font-bold text-neutral-900 whitespace-nowrap">
@@ -266,19 +266,19 @@ watch(() => route.path, () => {
               class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
               @click="closeMobileMenu"
             >
-              <img
-                v-if="isPlus && !logoError"
-                :src="logoPlusSrc"
-                alt=""
-                class="h-10 w-10 object-contain flex-shrink-0"
-                @error="handleLogoError"
-              >
-              <img
-                v-else
-                :src="logoRegularSrc"
-                alt=""
-                class="h-10 w-10 object-contain flex-shrink-0"
-              >
+            <img
+              v-if="isPlus && !logoError"
+              :src="logoPlusSrc"
+              alt="Remit-Scout Plus logo"
+              class="h-10 w-10 object-contain flex-shrink-0"
+              @error="handleLogoError"
+            >
+            <img
+              v-else
+              :src="logoRegularSrc"
+              alt="Remit-Scout logo"
+              class="h-10 w-10 object-contain flex-shrink-0"
+            >
               <span class="text-base font-bold text-neutral-900 whitespace-nowrap">
                 Remit-Scout
                 <span v-if="isPlus && !logoError" class="text-brand-600"> Plus</span>

@@ -21,7 +21,9 @@ This file is the primary reference for Remit-Scout architecture. It defines key 
 - All exports should normalize to a $500 USD equivalent in the sending currency and include the relevant destination value.
 - The rights matrix is always authoritative: provider eligibility for corridors and methods must be explicit.
 - A NULL/empty rights-matrix country set must **not** match all corridors.
-- Amount buckets must be exact; if not, enqueue a new request—never reuse an imprecise bucket.
+- Amount buckets are exact by default. B2C may allow an approximate bucket **only** when
+  `PLANE_A_B2C_MAX_BUCKET_DELTA_PCT > 0`; responses must include `approximate` +
+  `bucket_delta_pct`. If outside tolerance, reject or enqueue a new request. B2B remains exact.
 - Method filters must only allow methods supported by providers.
 - Indices must respect rights-matrix allowlists (`allowed_in_teer`, `allowed_in_rci`, `allowed_in_rvi`) in both Gold and live API computations.
 

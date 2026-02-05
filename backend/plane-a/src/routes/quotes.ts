@@ -59,11 +59,27 @@ const sleepWithJitter = async (jitterMs: number) => {
 }
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
-const TIER2_FRESHNESS_SECONDS = 4 * 60 * 60
 const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
 const TIER_JITTER_MS: Record<string, number> = {
   tier_1: 0,
   tier_2: 200,
+}
+
+const getCorridorMaxAgeSeconds = async (corridorId: string) => {
+  try {
+    const minutes = await corridorPriorityRepository.getFreshnessSloMinutes(corridorId)
+    if (Number.isFinite(minutes) && Number(minutes) > 0) {
+      const seconds = Math.round(Number(minutes) * 60)
+      return Math.min(seconds, MAX_B2C_QUOTE_AGE_SECONDS)
+    }
+  } catch (error) {
+    logger.warn('corridor_priority_lookup_failed', {
+      corridor_id: corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+
+  return Math.min(DEFAULT_MAX_QUOTE_AGE_SECONDS, MAX_B2C_QUOTE_AGE_SECONDS)
 }
 
 
@@ -301,11 +317,10 @@ export const quotesRoutes = async (app: FastifyInstance) => {
 
       // Get dynamic TTL once before fetching
       const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
-      const freshnessSeconds = Math.min(dynamicCacheTtlSeconds, MAX_B2C_QUOTE_AGE_SECONDS)
-      const maxAgeSeconds = Math.min(
-        Math.max(dynamicCacheTtlSeconds, TIER2_FRESHNESS_SECONDS, DEFAULT_MAX_QUOTE_AGE_SECONDS),
-        MAX_B2C_QUOTE_AGE_SECONDS,
-      )
+      const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridor_id)
+      const freshnessSeconds = maxAgeSeconds > 0
+        ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
+        : Math.min(dynamicCacheTtlSeconds, MAX_B2C_QUOTE_AGE_SECONDS)
 
       const fetchLatest = async (ttlSeconds: number) => {
         if (bypassCache) {

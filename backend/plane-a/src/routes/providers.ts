@@ -330,6 +330,11 @@ type ProvidersResponseBase = {
   midMarketRate?: number | null
   midMarketSource?: string | null
   midMarketUpdatedAt?: string | null
+  cache?: {
+    ttl_seconds: number
+    age_seconds: number | null
+    fresh: boolean
+  }
   availableMethods?: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
   indices?: CorridorIndices
   indicesReason?: string | null
@@ -378,7 +383,6 @@ const querySchema = z.object({
 })
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
-const TIER2_FRESHNESS_SECONDS = 4 * 60 * 60
 const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
 const loadActiveB2cProviderIdsByCountry = async (
   sourceCountry: string,
@@ -589,12 +593,9 @@ const getDynamicCacheTtl = async (corridorId: string): Promise<number> => {
 const getCorridorMaxAgeSeconds = async (corridorId: string) => {
   try {
     const minutes = await corridorPriorityRepository.getFreshnessSloMinutes(corridorId)
-    if (Number.isFinite(minutes)) {
+    if (Number.isFinite(minutes) && Number(minutes) > 0) {
       const seconds = Math.round(Number(minutes) * 60)
-      return Math.min(
-        Math.max(seconds, TIER2_FRESHNESS_SECONDS),
-        MAX_B2C_QUOTE_AGE_SECONDS,
-      )
+      return Math.min(seconds, MAX_B2C_QUOTE_AGE_SECONDS)
     }
   } catch (error) {
     logger.warn('corridor_priority_lookup_failed', {
@@ -603,10 +604,7 @@ const getCorridorMaxAgeSeconds = async (corridorId: string) => {
     })
   }
 
-  return Math.min(
-    Math.max(DEFAULT_MAX_QUOTE_AGE_SECONDS, TIER2_FRESHNESS_SECONDS),
-    MAX_B2C_QUOTE_AGE_SECONDS,
-  )
+  return Math.min(DEFAULT_MAX_QUOTE_AGE_SECONDS, MAX_B2C_QUOTE_AGE_SECONDS)
 }
 
 
@@ -961,6 +959,9 @@ export const providersRoutes = async (app: FastifyInstance) => {
     try {
       const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
       const dynamicCacheTtlSeconds = await getDynamicCacheTtl(corridorId)
+      const cacheTtlSeconds = maxAgeSeconds > 0
+        ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
+        : dynamicCacheTtlSeconds
       const cacheKey = `providers:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
@@ -1313,6 +1314,13 @@ export const providersRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      const cacheAgeSeconds = latestCollectedAt
+        ? Math.max(0, Math.round((Date.now() - new Date(latestCollectedAt).getTime()) / 1000))
+        : null
+      const cacheFresh = cacheAgeSeconds !== null
+        ? (maxAgeSeconds > 0 ? cacheAgeSeconds <= maxAgeSeconds : true)
+        : false
+
       let indices: CorridorIndices | undefined
       let indicesReason: string | null = null
       const indicesMethodProfile = resolveIndicesMethodProfile(requestedMethod)
@@ -1377,6 +1385,11 @@ export const providersRoutes = async (app: FastifyInstance) => {
         midMarketRate: midMarketRate ?? null,
         midMarketSource: midMarketSource ?? null,
         midMarketUpdatedAt,
+        cache: {
+          ttl_seconds: cacheTtlSeconds,
+          age_seconds: cacheAgeSeconds,
+          fresh: cacheFresh,
+        },
         availableMethods: orderMethods(availableMethods),
         indices,
         indicesReason,
@@ -1393,7 +1406,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
       }
 
       if (!bypassCache) {
-        const ttlMs = Math.max(0, dynamicCacheTtlSeconds * 1000)
+        const ttlMs = Math.max(0, cacheTtlSeconds * 1000)
         await providersCache.set(cacheKey, responseBase, ttlMs)
       }
 
