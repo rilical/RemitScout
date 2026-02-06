@@ -1,5 +1,9 @@
 # Backend Documentation
 
+## Toolchain
+- Node `20.18.x` (run `nvm use` from repo root; pins are in `.nvmrc` and `backend/.nvmrc`)
+- pnpm (see repo root `package.json#packageManager`)
+
 ## Layout
 - `plane-a/` - Public API (Plane A)
 - `plane-b/` - Ingestion and collection (Plane B)

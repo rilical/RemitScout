@@ -12,6 +12,10 @@ Repository for Remit-Scout V2 across Plane A (product backbone), Plane B (ingest
 This repo uses lint rules, CI checks, and contribution guidelines to enforce the Golden Rule: raw data never leaves Plane B.
 
 ## Local Development (Docker)
+Prereqs:
+- Node `20.18.x` (repo pin: `.nvmrc`; optional: Volta via `package.json`)
+- pnpm (repo pin: `package.json#packageManager`)
+
 1) Start Postgres + Redis:
 ```
 docker-compose up -d
