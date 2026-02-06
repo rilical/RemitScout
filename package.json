@@ -14,7 +14,8 @@
     "lint": "eslint backend",
     "lint:compliance": "eslint backend",
     "dev:all": "bash scripts/dev/start-local.sh",
-    "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh"
+    "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh",
+    "verifier:contract": "node scripts/verifier/check-quality-contract.mjs"
   },
   "devDependencies": {
     "eslint": "^8.50.0",

@@ -60,6 +60,31 @@ hats:
       - Use `--dry-run | jq .quality` to sanity-check the normalized output.
 
       ### Suggested commands (repo default)
-      - Tests: `pnpm -C backend test` (include coverage if enabled in Vitest)
-      - Build: `pnpm -C backend build`
-      - Lint: `pnpm -C backend lint`
+      
+      This repo is a Node/TS monorepo, and backend lint currently has known debt.
+      To avoid blocking *frontend* audit/proof iterations on unrelated backend
+      ESLint errors, default to a **frontend-scoped** verification gate:
+
+      - Lint: `pnpm -C frontend exec eslint . -f json`
+      - Typecheck: `pnpm -C frontend type-check`
+      - Tests: `pnpm -C frontend test`
+
+      For convenience (and to standardize payloads), you can run all three and
+      get a JSON payload with lint counts via:
+
+      ```bash
+      node scripts/verifier/run-frontend-quality.mjs
+      ```
+
+      Default behavior is **diff-scoped** (only lints/typechecks changed
+      `frontend/` files in the last commit). To force a full frontend pass:
+
+      ```bash
+      node scripts/verifier/run-frontend-quality.mjs --full
+      ```
+
+      To include unit tests (slower), add:
+
+      ```bash
+      node scripts/verifier/run-frontend-quality.mjs --run-unit-tests
+      ```

@@ -5,6 +5,10 @@
   "engines": {
     "node": "20.18.x"
   },
+  "volta": {
+    "node": "20.18.1",
+    "pnpm": "10.19.0"
+  },
   "scripts": {
     "dev:plane-a": "tsx watch plane-a/src/server.ts",
     "dev:plane-c": "tsx watch plane-c/src/server.ts",

@@ -24,20 +24,45 @@ these keys always exist:
 - `quality.mutation`
 - `quality.complexity`
 
-Missing signals are filled with `"n/a"`.
+Missing signals are filled with `status:"n/a"`.
+
+Implementation detail: each `quality.*` field is normalized to an object (at
+minimum `{status:"n/a"}`) so downstream consumers can reliably read
+`quality.<signal>.status`.
 
 ### Minimal repro (safe; no event emitted)
 
 ```bash
 node scripts/verifier/emit-verify.mjs verify.passed \
-  --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}' \
-  --dry-run | jq .quality
+  --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C frontend test"}}}' \
+  --dry-run | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{console.log(JSON.stringify(JSON.parse(s).quality,null,2))})'
 ```
 
 ### Real emit (writes to `.ralph/events-*.jsonl`)
 
 ```bash
 node scripts/verifier/emit-verify.mjs verify.passed \
-  --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
+  --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C frontend test"}}}'
 ```
 
+## Frontend-scoped verifier (recommended during frontend polish loops)
+
+To avoid backend lint debt blocking frontend audit iterations, generate a
+frontend-only quality payload (lint + typecheck; unit tests optional):
+
+Notes:
+- Default behavior is **diff-scoped**: if the last commit didn’t change any
+  `frontend/` files, lint/typecheck/tests are marked `n/a`.
+- Use `--full` to force lint/typecheck even if the commit didn’t touch frontend.
+
+```bash
+QUALITY_JSON="$(node scripts/verifier/run-frontend-quality.mjs)"
+node scripts/verifier/emit-verify.mjs verify.passed --json "$QUALITY_JSON"
+```
+
+To include unit tests:
+
+```bash
+QUALITY_JSON="$(node scripts/verifier/run-frontend-quality.mjs --run-unit-tests)"
+node scripts/verifier/emit-verify.mjs verify.passed --json "$QUALITY_JSON"
+```

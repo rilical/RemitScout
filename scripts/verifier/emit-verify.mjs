@@ -13,7 +13,7 @@ function usageAndExit(code) {
       "",
       "Behavior:",
       "  Normalizes payload to always include quality.{tests,coverage,lint,audit,mutation,complexity}.",
-      "  Missing signals are filled with 'n/a' to keep the schema stable.",
+      "  Missing signals are filled with {status:'n/a', ...} to keep the schema stable.",
     ].join("\n"),
   );
   process.exit(code);
@@ -31,65 +31,76 @@ function hasFlag(args, flag) {
 }
 
 function normalizeVerifyPayload(input) {
+  const safeInput =
+    input && typeof input === "object" && !Array.isArray(input) ? input : {};
+
   const nodeVersion =
-    input?.node ??
+    safeInput.node ??
     process.version.replace(/^v/, "");
 
-  const inputQuality = input?.quality ?? {};
+  const inputQuality =
+    safeInput.quality &&
+    typeof safeInput.quality === "object" &&
+    !Array.isArray(safeInput.quality)
+      ? safeInput.quality
+      : {};
 
-  const normalizeNAOrObject = (value, defaults) => {
-    if (value === undefined || value === null) return "n/a";
-    if (typeof value === "string") return value;
-    if (typeof value === "object") return { ...defaults, ...value };
-    return "n/a";
+  const normalizeObject = (value, defaults) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return defaults;
+    return { ...defaults, ...value };
   };
 
-  const tests =
-    typeof inputQuality.tests === "object" && inputQuality.tests !== null
-      ? {
-          status: inputQuality.tests.status ?? "n/a",
-          command: inputQuality.tests.command ?? "n/a",
-        }
-      : { status: "n/a", command: "n/a" };
+  const normalizeCount = (value) => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed !== "") {
+        const n = Number(trimmed);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+    return 0;
+  };
 
-  const lint =
-    typeof inputQuality.lint === "object" && inputQuality.lint !== null
-      ? {
-          status: inputQuality.lint.status ?? "n/a",
-          command: inputQuality.lint.command ?? "n/a",
-          errors:
-            typeof inputQuality.lint.errors === "number"
-              ? inputQuality.lint.errors
-              : 0,
-          warnings:
-            typeof inputQuality.lint.warnings === "number"
-              ? inputQuality.lint.warnings
-              : 0,
-        }
-      : { status: "n/a", command: "n/a", errors: 0, warnings: 0 };
-
-  const coverage = normalizeNAOrObject(inputQuality.coverage, {
-    status: "reported",
-    tool: "n/a",
-  });
-
-  const audit = normalizeNAOrObject(inputQuality.audit, {
+  const tests = normalizeObject(inputQuality.tests, {
     status: "n/a",
     command: "n/a",
   });
 
-  const mutation = normalizeNAOrObject(inputQuality.mutation, {
+  const lintBase = normalizeObject(inputQuality.lint, {
+    status: "n/a",
+    command: "n/a",
+    errors: 0,
+    warnings: 0,
+  });
+  const lint = {
+    ...lintBase,
+    errors: normalizeCount(lintBase.errors),
+    warnings: normalizeCount(lintBase.warnings),
+  };
+
+  const coverage = normalizeObject(inputQuality.coverage, {
     status: "n/a",
     tool: "n/a",
   });
 
-  const complexity = normalizeNAOrObject(inputQuality.complexity, {
-    status: "reported",
+  const audit = normalizeObject(inputQuality.audit, {
+    status: "n/a",
+    command: "n/a",
+  });
+
+  const mutation = normalizeObject(inputQuality.mutation, {
+    status: "n/a",
+    tool: "n/a",
+  });
+
+  const complexity = normalizeObject(inputQuality.complexity, {
+    status: "n/a",
     tool: "n/a",
   });
 
   const normalized = {
-    ...input,
+    ...safeInput,
     node: nodeVersion,
     quality: {
       ...inputQuality,
