@@ -7,6 +7,7 @@ const vuePlugin = vue() as any
 export default defineConfig({
   plugins: [vuePlugin],
   test: {
+    pool: 'threads',
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
