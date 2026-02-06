@@ -40,10 +40,33 @@ function summarizeLintJson(rawJson) {
 }
 
 function parseArgs(args) {
+  const emitIdx = args.indexOf("--emit");
+  const emitTopic =
+    emitIdx === -1
+      ? null
+      : emitIdx + 1 < args.length
+        ? args[emitIdx + 1]
+        : null;
+
   return {
     runUnitTests: args.includes("--run-unit-tests"),
     full: args.includes("--full"),
+    dryRun: args.includes("--dry-run"),
+    emitTopic,
   };
+}
+
+function emitVerify({ topic, json, dryRun }) {
+  const args = ["scripts/verifier/emit-verify.mjs", topic, "--json", json];
+  if (dryRun) args.push("--dry-run");
+
+  const result = run(process.execPath, args);
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `emit-verify failed (exit ${result.exitCode}): ${result.stderr || result.stdout}`,
+    );
+  }
+  return result.stdout.trim();
 }
 
 function getChangedFiles() {
@@ -78,7 +101,15 @@ function getFrontendLintTargets({ full }) {
 }
 
 function main() {
-  const { runUnitTests, full } = parseArgs(process.argv.slice(2));
+  const { runUnitTests, full, emitTopic, dryRun } = parseArgs(process.argv.slice(2));
+
+  if (emitTopic && emitTopic !== "verify.passed" && emitTopic !== "verify.failed") {
+    // eslint-disable-next-line no-console
+    console.error(
+      `Invalid --emit topic: ${emitTopic}. Expected verify.passed or verify.failed.`,
+    );
+    process.exit(2);
+  }
 
   const lintTargets = getFrontendLintTargets({ full });
 
@@ -197,8 +228,26 @@ function main() {
     },
   };
 
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify(payload));
+  const payloadJson = JSON.stringify(payload);
+
+  if (emitTopic) {
+    // Always normalize through the single choke-point, so quality.* keys are stable.
+    const normalizedJson = emitVerify({
+      topic: emitTopic,
+      json: payloadJson,
+      dryRun: true,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(normalizedJson);
+
+    if (!dryRun) {
+      emitVerify({ topic: emitTopic, json: normalizedJson, dryRun: false });
+    }
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(payloadJson);
+  }
 
   try {
     fs.rmSync(tmpDir, { recursive: true, force: true });

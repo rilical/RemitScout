@@ -57,7 +57,7 @@ hats:
 
       Notes:
       - You may pass a *partial* `quality` object; the helper will add missing keys.
-      - Use `--dry-run | jq .quality` to sanity-check the normalized output.
+      - Use `--dry-run` to print the normalized JSON payload.
 
       ### Suggested commands (repo default)
       
@@ -87,4 +87,12 @@ hats:
 
       ```bash
       node scripts/verifier/run-frontend-quality.mjs --run-unit-tests
+      ```
+
+      To emit the `verify.*` event through the normalizer (recommended):
+
+      ```bash
+      node scripts/verifier/run-frontend-quality.mjs --full --run-unit-tests --emit verify.passed
+      # or, if checks did not pass
+      node scripts/verifier/run-frontend-quality.mjs --full --run-unit-tests --emit verify.failed
       ```
