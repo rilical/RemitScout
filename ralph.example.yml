@@ -32,7 +32,6 @@ hats:
     description: "Verifies refactoring preserved behavior via tests and checks."
     triggers: ["refactor.done"]
     publishes: ["verify.passed", "verify.failed"]
-    default_publishes: verify.passed
     instructions: |
       ## VERIFIER MODE (Node/TypeScript)
 
@@ -45,6 +44,10 @@ hats:
       ### Emitting `verify.*` events (REQUIRED)
       Do NOT call `ralph emit verify.passed` / `ralph emit verify.failed` directly.
       That is the #1 source of drift (missing `quality.*` keys).
+
+      Also do NOT rely on Ralph's default publish behavior (plain-text payloads).
+      This hat must explicitly emit via `scripts/verifier/emit-verify.mjs` so the
+      payload is always a JSON object with stable `quality.*` shape.
 
       Always emit via the repo helper, which normalizes the payload and fills
       missing signals with `"n/a"`:
