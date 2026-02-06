@@ -35,13 +35,32 @@ function normalizeVerifyPayload(input) {
     input?.node ??
     process.version.replace(/^v/, "");
 
-  const inputQuality = input?.quality ?? {};
+  const inputQuality =
+    typeof input?.quality === "object" && input.quality !== null
+      ? input.quality
+      : {};
 
-  const normalizeNAOrObject = (value, defaults) => {
-    if (value === undefined || value === null) return "n/a";
-    if (typeof value === "string") return value;
-    if (typeof value === "object") return { ...defaults, ...value };
-    return "n/a";
+  const normalizeSignalObject = (value, defaults) => {
+    if (value === undefined || value === null) {
+      return { ...defaults, status: defaults.status ?? "n/a" };
+    }
+
+    if (typeof value === "string") {
+      return { ...defaults, status: value };
+    }
+
+    if (typeof value === "object") {
+      return {
+        ...defaults,
+        ...value,
+        status:
+          typeof value.status === "string"
+            ? value.status
+            : (defaults.status ?? "n/a"),
+      };
+    }
+
+    return { ...defaults, status: defaults.status ?? "n/a" };
   };
 
   const tests =
@@ -68,24 +87,27 @@ function normalizeVerifyPayload(input) {
         }
       : { status: "n/a", command: "n/a", errors: 0, warnings: 0 };
 
-  const coverage = normalizeNAOrObject(inputQuality.coverage, {
-    status: "reported",
+  const coverage = normalizeSignalObject(inputQuality.coverage, {
+    status: "n/a",
     tool: "n/a",
+    command: "n/a",
   });
 
-  const audit = normalizeNAOrObject(inputQuality.audit, {
+  const audit = normalizeSignalObject(inputQuality.audit, {
     status: "n/a",
     command: "n/a",
   });
 
-  const mutation = normalizeNAOrObject(inputQuality.mutation, {
+  const mutation = normalizeSignalObject(inputQuality.mutation, {
     status: "n/a",
     tool: "n/a",
+    command: "n/a",
   });
 
-  const complexity = normalizeNAOrObject(inputQuality.complexity, {
-    status: "reported",
+  const complexity = normalizeSignalObject(inputQuality.complexity, {
+    status: "n/a",
     tool: "n/a",
+    command: "n/a",
   });
 
   const normalized = {
@@ -120,17 +142,25 @@ function main() {
   const fileArg = getArgValue(args, "--file");
   const dryRun = hasFlag(args, "--dry-run");
 
-  if (!jsonArg && !fileArg) usageAndExit(2);
   if (jsonArg && fileArg) usageAndExit(2);
 
   let input;
-  try {
-    const raw = fileArg ? fs.readFileSync(fileArg, "utf8") : jsonArg;
-    input = JSON.parse(raw);
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(`Failed to parse JSON: ${err?.message ?? String(err)}`);
-    process.exit(2);
+  if (!jsonArg && !fileArg) {
+    input = {};
+  } else {
+    try {
+      const raw = fileArg ? fs.readFileSync(fileArg, "utf8") : jsonArg;
+      input = JSON.parse(raw);
+    } catch (err) {
+      // Pragmatic drift guard: if the verifier passes a non-JSON string by
+      // mistake, still emit a schema-stable payload rather than failing and
+      // tempting a fallback to `ralph emit verify.*` directly.
+      input = {
+        message: "non-json input passed to emit-verify.mjs",
+        raw: jsonArg ?? "",
+        parse_error: err?.message ?? String(err),
+      };
+    }
   }
 
   const payload = normalizeVerifyPayload(input);

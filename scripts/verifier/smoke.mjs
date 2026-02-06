@@ -22,6 +22,15 @@ function assertQualityShape(payload) {
     "complexity",
   ]) {
     assert.ok(quality && key in quality, `smoke: missing quality.${key}`);
+    assert.equal(
+      typeof quality[key],
+      "object",
+      `smoke: quality.${key} must be an object`,
+    );
+    assert.ok(
+      "status" in quality[key],
+      `smoke: missing quality.${key}.status`,
+    );
   }
 
   assert.equal(typeof quality.tests, "object");
@@ -48,6 +57,26 @@ function run() {
 
   const payloadEmpty = JSON.parse(resultEmpty.stdout);
   assertQualityShape(payloadEmpty);
+
+  const resultWeird = runEmitter('{"quality":"n/a"}');
+  assert.equal(
+    resultWeird.status,
+    0,
+    resultWeird.stderr || "smoke: emitter failed (quality as string)",
+  );
+
+  const payloadWeird = JSON.parse(resultWeird.stdout);
+  assertQualityShape(payloadWeird);
+
+  const resultBadJson = runEmitter("not-json");
+  assert.equal(
+    resultBadJson.status,
+    0,
+    resultBadJson.stderr || "smoke: emitter failed (non-json input)",
+  );
+
+  const payloadBadJson = JSON.parse(resultBadJson.stdout);
+  assertQualityShape(payloadBadJson);
 }
 
 try {
