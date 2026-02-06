@@ -10,6 +10,7 @@
 ## Public exports
 
 - Import from `frontend/domains/market-data/index.ts`.
+- Exports: `useFxPairExchangeRates`, `FxPairExchangeRatesPage`, `FxProviderPricingTable`.
 
 ## How to add a feature
 

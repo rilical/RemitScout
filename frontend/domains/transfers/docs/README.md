@@ -11,6 +11,7 @@
 
 - Import from `frontend/domains/transfers/index.ts`.
 - Avoid deep imports into subfolders from outside this domain.
+- Exports: `usePopularCorridorsModel`, `PopularCorridorsPage`.
 
 ## How to add a feature
 
