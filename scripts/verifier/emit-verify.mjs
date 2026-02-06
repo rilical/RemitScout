@@ -37,6 +37,13 @@ function normalizeVerifyPayload(input) {
 
   const inputQuality = input?.quality ?? {};
 
+  const normalizeNAOrObject = (value, defaults) => {
+    if (value === undefined || value === null) return "n/a";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") return { ...defaults, ...value };
+    return "n/a";
+  };
+
   const tests =
     typeof inputQuality.tests === "object" && inputQuality.tests !== null
       ? {
@@ -61,15 +68,37 @@ function normalizeVerifyPayload(input) {
         }
       : { status: "n/a", command: "n/a", errors: 0, warnings: 0 };
 
+  const coverage = normalizeNAOrObject(inputQuality.coverage, {
+    status: "reported",
+    tool: "n/a",
+  });
+
+  const audit = normalizeNAOrObject(inputQuality.audit, {
+    status: "n/a",
+    command: "n/a",
+  });
+
+  const mutation = normalizeNAOrObject(inputQuality.mutation, {
+    status: "n/a",
+    tool: "n/a",
+  });
+
+  const complexity = normalizeNAOrObject(inputQuality.complexity, {
+    status: "reported",
+    tool: "n/a",
+  });
+
   const normalized = {
+    ...input,
     node: nodeVersion,
     quality: {
+      ...inputQuality,
       tests,
-      coverage: inputQuality.coverage ?? "n/a",
+      coverage,
       lint,
-      audit: inputQuality.audit ?? "n/a",
-      mutation: inputQuality.mutation ?? "n/a",
-      complexity: inputQuality.complexity ?? "n/a",
+      audit,
+      mutation,
+      complexity,
     },
   };
 
@@ -126,4 +155,3 @@ function main() {
 }
 
 main();
-
