@@ -53,3 +53,51 @@ Usage:
 </CenteredPage>
 ```
 
+## `DataTable`
+
+`DataTable` is the golden table primitive for dense, consistent data presentation.
+
+Path: `frontend/shared/ui/DataTable.vue`
+
+Variants:
+- `terminal`: compact “market terminal” density (tight padding, smaller type).
+- `dashboard`: roomier “consumer dashboard” default (card container, larger type).
+
+Contract:
+- Table semantics first: renders a real `<table>` with `<thead>` + `<th scope="col">`.
+- A11y: `aria-busy` is set when `loading=true`; optionally provide `caption`.
+- No page-specific logic: consumers provide `columns` + `rows` and optionally override rendering via slots.
+
+Props (core):
+- `variant?: 'terminal' | 'dashboard'` (default: `dashboard`)
+- `caption?: string` (rendered as screen-reader-only)
+- `columns: { key, header, align?, formatter?, ... }[]`
+- `rows?: Record<string, unknown>[]`
+- `loading?: boolean`
+- `emptyText?: string`
+
+Slots:
+- `header-<columnKey>`: override a specific column header.
+- `cell-<columnKey>`: override a specific column cell.
+- `loading`: override the loading row.
+- `empty`: override the empty row.
+
+Usage:
+
+```vue
+<DataTable
+  variant="terminal"
+  caption="Corridor search results"
+  :columns="[
+    { key: 'corridor', header: 'Corridor' },
+    { key: 'rate', header: 'Rate', align: 'right' },
+  ]"
+  :rows="rows"
+  :loading="pending"
+  emptyText="No matches"
+>
+  <template #cell-rate="{ value }">
+    <span class="font-mono">{{ value }}</span>
+  </template>
+</DataTable>
+```
