@@ -70,7 +70,10 @@ function emitVerify({ topic, json, dryRun }) {
 }
 
 function sanitizeVerifyEvents() {
-  const result = run(process.execPath, ["scripts/verifier/sanitize-verify-events.mjs"]);
+  const result = run(process.execPath, [
+    "scripts/verifier/sanitize-verify-events.mjs",
+    "--all",
+  ]);
   if (result.exitCode !== 0) {
     throw new Error(
       `sanitize-verify-events failed (exit ${result.exitCode}): ${result.stderr || result.stdout}`,

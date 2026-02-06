@@ -11,11 +11,12 @@ function usageAndExit(code) {
   console.error(
     [
       "Usage:",
-      "  node scripts/verifier/sanitize-verify-events.mjs [--file <events.jsonl>]",
+      "  node scripts/verifier/sanitize-verify-events.mjs [--file <events.jsonl>] [--all]",
       "",
       "Behavior:",
       "  Rewrites verify.passed/verify.failed events in-place so payload always",
       "  contains quality.{tests,coverage,lint,audit,mutation,complexity}.",
+      "  Drops malformed JSONL lines (best-effort; preserved to a temp file).",
       "",
       "Default events file:",
       "  - Uses .ralph/current-events if present",
@@ -45,6 +46,31 @@ function getDefaultEventsFile() {
   return ".ralph/events.jsonl";
 }
 
+function listAllEventsFiles() {
+  const dir = ".ralph";
+  const out = new Set();
+
+  // 1) The active file (if configured)
+  const current = getDefaultEventsFile();
+  if (current) out.add(current);
+
+  // 2) Conventional single-file log (if present)
+  const fallback = path.join(dir, "events.jsonl");
+  if (fs.existsSync(fallback)) out.add(fallback);
+
+  // 3) Rotated logs
+  try {
+    for (const name of fs.readdirSync(dir)) {
+      if (!/^events-.*\.jsonl$/.test(name)) continue;
+      out.add(path.join(dir, name));
+    }
+  } catch {
+    // best-effort
+  }
+
+  return Array.from(out);
+}
+
 function normalizeEventPayload(payload) {
   if (payload && typeof payload === "object" && !Array.isArray(payload)) {
     return normalizeVerifyPayload(payload);
@@ -59,23 +85,13 @@ function normalizeEventPayload(payload) {
   return normalizeVerifyPayload({ message });
 }
 
-function main() {
-  const args = process.argv.slice(2);
-  if (args.includes("-h") || args.includes("--help")) usageAndExit(0);
-
-  const filePath = getArgValue(args, "--file") ?? getDefaultEventsFile();
-
-  if (!fs.existsSync(filePath)) {
-    // eslint-disable-next-line no-console
-    console.error(`Events file not found: ${filePath}`);
-    process.exit(1);
-  }
-
+function sanitizeFile(filePath, dropped) {
   const raw = fs.readFileSync(filePath, "utf8");
   const lines = raw.split(/\r?\n/);
   const outLines = [];
 
-  for (const line of lines) {
+  for (let idx = 0; idx < lines.length; idx += 1) {
+    const line = lines[idx];
     const trimmed = line.trim();
     if (!trimmed) continue;
 
@@ -83,7 +99,7 @@ function main() {
     try {
       evt = JSON.parse(trimmed);
     } catch {
-      outLines.push(trimmed);
+      dropped.push({ file: filePath, line: idx + 1, raw: trimmed });
       continue;
     }
 
@@ -109,5 +125,41 @@ function main() {
   fs.renameSync(tmpPath, filePath);
 }
 
-main();
+function main() {
+  const args = process.argv.slice(2);
+  if (args.includes("-h") || args.includes("--help")) usageAndExit(0);
 
+  const fileArg = getArgValue(args, "--file");
+  const all = args.includes("--all");
+
+  if (fileArg && all) {
+    // eslint-disable-next-line no-console
+    console.error("Use either --file or --all (not both). ");
+    process.exit(2);
+  }
+
+  const files = fileArg ? [fileArg] : all ? listAllEventsFiles() : [getDefaultEventsFile()];
+
+  const dropped = [];
+  for (const filePath of files) {
+    if (!fs.existsSync(filePath)) continue;
+    sanitizeFile(filePath, dropped);
+  }
+
+  if (dropped.length > 0) {
+    const outDir = ".ralph/temp";
+    try {
+      fs.mkdirSync(outDir, { recursive: true });
+      const droppedPath = path.join(
+        outDir,
+        `sanitize-dropped-events-${Date.now()}-${Math.random().toString(16).slice(2)}.jsonl`,
+      );
+      const droppedLines = dropped.map((d) => JSON.stringify(d)).join("\n");
+      fs.writeFileSync(droppedPath, `${droppedLines}\n`, "utf8");
+    } catch {
+      // best-effort
+    }
+  }
+}
+
+main();
