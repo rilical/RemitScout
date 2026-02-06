@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { normalizeVerifyPayload } from "./normalize-verify-payload.mjs";
@@ -29,6 +30,25 @@ function getArgValue(args, flag) {
 
 function hasFlag(args, flag) {
   return args.includes(flag);
+}
+
+function findRepoRoot(startDir = process.cwd()) {
+  // Ralph defaults to looking for `ralph.yml` in the current working directory.
+  // That is fragile when this script is invoked from nested folders (e.g.
+  // `frontend/`). To keep verify emissions deterministic, locate the repo root.
+  let dir = path.resolve(startDir);
+
+  for (let i = 0; i < 50; i += 1) {
+    if (fs.existsSync(path.join(dir, "ralph.yml")) || fs.existsSync(path.join(dir, ".git"))) {
+      return dir;
+    }
+
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  return path.resolve(startDir);
 }
 
 function main() {
@@ -68,8 +88,15 @@ function main() {
     return;
   }
 
-  const result = spawnSync("ralph", ["emit", topic, "--json", payloadStr], {
+  const repoRoot = findRepoRoot();
+  const configPath = path.join(repoRoot, "ralph.yml");
+  const ralphArgs = fs.existsSync(configPath)
+    ? ["-c", configPath, "emit", topic, "--json", payloadStr]
+    : ["emit", topic, "--json", payloadStr];
+
+  const result = spawnSync("ralph", ralphArgs, {
     stdio: "inherit",
+    cwd: repoRoot,
   });
 
   if (result.error) {

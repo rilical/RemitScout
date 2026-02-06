@@ -23,7 +23,7 @@ function usageAndExit(code) {
       "  - Else falls back to .ralph/events.jsonl",
       "",
       "--repo:",
-      "  Sanitizes every discovered .ralph directory under this repo (root + .worktrees/*).",
+      "  Sanitizes every discovered .ralph directory under this repo (including worktrees and nested folders).",
     ].join("\n"),
   );
   process.exit(code);
@@ -73,70 +73,114 @@ function listAllEventsFilesInDir(ralphDir) {
   return Array.from(out);
 }
 
-function listRepoRalphDirs() {
+function findRepoRoot(startDir = process.cwd()) {
+  // Ralph does not search upward for `ralph.yml` or `.git`.
+  // The verifier scripts must be robust to being run from nested folders
+  // (e.g. `frontend/`), so we locate the repo root explicitly.
+  let dir = path.resolve(startDir);
+
+  for (let i = 0; i < 50; i += 1) {
+    if (
+      fs.existsSync(path.join(dir, "ralph.yml")) ||
+      fs.existsSync(path.join(dir, ".git"))
+    ) {
+      return dir;
+    }
+
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  return path.resolve(startDir);
+}
+
+function listRepoRalphDirs(repoRoot) {
   const out = new Set();
 
-  if (fs.existsSync(".ralph")) out.add(".ralph");
+  const ignore = new Set([
+    ".git",
+    "node_modules",
+    "cdk.out",
+    ".pnpm-store",
+    ".nuxt",
+    ".output",
+    ".cursor",
+    ".vscode",
+    "dist",
+    "coverage",
+  ]);
 
-  const worktreesDir = ".worktrees";
-  try {
-    if (!fs.existsSync(worktreesDir)) return Array.from(out);
+  const stack = [repoRoot];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    if (!dir) break;
 
-    for (const name of fs.readdirSync(worktreesDir)) {
-      const candidate = path.join(worktreesDir, name, ".ralph");
-      if (fs.existsSync(candidate)) out.add(candidate);
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
     }
-  } catch {
-    // best-effort
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (ignore.has(entry.name)) continue;
+
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.name === ".ralph") {
+        out.add(fullPath);
+        continue;
+      }
+
+      stack.push(fullPath);
+    }
   }
 
   return Array.from(out);
 }
 
-function bootstrapRalphConfigForRepoWorktrees() {
-  // Pragmatic self-heal: older/local worktrees can exist on branches that
-  // predate the committed `ralph.yml`. If Ralph is run from such a worktree,
-  // it falls back to built-in defaults and may auto-emit legacy `verify.*`
-  // events with empty/string payloads (missing `quality.*`).
+function bootstrapRalphConfigForRepoDirs({ repoRoot, ralphDirs }) {
+  // Pragmatic self-heal for worktrees:
+  // - Older/local worktrees can exist on branches that predate the committed
+  //   `ralph.yml`.
+  // - If Ralph is run from such a worktree, it falls back to built-in defaults
+  //   and may auto-emit legacy `verify.*` events missing `quality.*`.
   //
-  // When running `--repo`, we opportunistically copy the repo-root config into
-  // any discovered worktree that has a `.ralph/` dir but is missing `ralph.yml`.
-  // This is intentionally best-effort and only fills missing files (never
-  // overwrites).
-  const sourceRalphYml = "ralph.yml";
-  const sourceRalphExampleYml = "ralph.example.yml";
+  // We intentionally DO NOT copy config into normal repo subfolders (e.g.
+  // `frontend/`) because that would dirty the working tree with untracked files.
+  // The verifier scripts themselves should remain CWD-robust (see emit-verify).
+  const sourceRalphYml = path.join(repoRoot, "ralph.yml");
+  const sourceRalphExampleYml = path.join(repoRoot, "ralph.example.yml");
 
   if (!fs.existsSync(sourceRalphYml)) return;
 
-  const worktreesDir = ".worktrees";
-  if (!fs.existsSync(worktreesDir)) return;
+  for (const ralphDir of ralphDirs) {
+    const workspaceRoot = path.dirname(ralphDir);
 
-  try {
-    for (const name of fs.readdirSync(worktreesDir)) {
-      const worktreeRoot = path.join(worktreesDir, name);
-      const ralphDir = path.join(worktreeRoot, ".ralph");
-      if (!fs.existsSync(ralphDir)) continue;
+    const rel = path.relative(repoRoot, workspaceRoot);
+    if (!(rel === ".worktrees" || rel.startsWith(`.worktrees${path.sep}`))) {
+      continue;
+    }
 
-      const targetRalphYml = path.join(worktreeRoot, "ralph.yml");
-      if (!fs.existsSync(targetRalphYml)) {
-        try {
-          fs.copyFileSync(sourceRalphYml, targetRalphYml);
-        } catch {
-          // best-effort
-        }
-      }
-
-      const targetRalphExampleYml = path.join(worktreeRoot, "ralph.example.yml");
-      if (fs.existsSync(sourceRalphExampleYml) && !fs.existsSync(targetRalphExampleYml)) {
-        try {
-          fs.copyFileSync(sourceRalphExampleYml, targetRalphExampleYml);
-        } catch {
-          // best-effort
-        }
+    const targetRalphYml = path.join(workspaceRoot, "ralph.yml");
+    if (!fs.existsSync(targetRalphYml)) {
+      try {
+        fs.copyFileSync(sourceRalphYml, targetRalphYml);
+      } catch {
+        // best-effort
       }
     }
-  } catch {
-    // best-effort
+
+    const targetRalphExampleYml = path.join(workspaceRoot, "ralph.example.yml");
+    if (fs.existsSync(sourceRalphExampleYml) && !fs.existsSync(targetRalphExampleYml)) {
+      try {
+        fs.copyFileSync(sourceRalphExampleYml, targetRalphExampleYml);
+      } catch {
+        // best-effort
+      }
+    }
   }
 }
 
@@ -220,12 +264,15 @@ function main() {
     process.exit(2);
   }
 
+  const repoRoot = repo ? findRepoRoot() : process.cwd();
+
   let files;
   if (repo) {
-    bootstrapRalphConfigForRepoWorktrees();
+    const ralphDirs = listRepoRalphDirs(repoRoot);
+    bootstrapRalphConfigForRepoDirs({ repoRoot, ralphDirs });
 
     const allFiles = [];
-    for (const dir of listRepoRalphDirs()) {
+    for (const dir of ralphDirs) {
       allFiles.push(...listAllEventsFilesInDir(dir));
     }
     files = Array.from(new Set(allFiles));
@@ -245,7 +292,7 @@ function main() {
   }
 
   if (dropped.length > 0) {
-    const outDir = ".ralph/temp";
+    const outDir = repo ? path.join(repoRoot, ".ralph", "temp") : ".ralph/temp";
     try {
       fs.mkdirSync(outDir, { recursive: true });
       const droppedPath = path.join(
