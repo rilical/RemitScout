@@ -173,20 +173,24 @@ function assertVerifierDoesNotDefaultPublish(filePath) {
 
   // Ralph merges config with built-in defaults. The built-in verifier hat sets
   // `default_publishes: verify.passed`, which can auto-emit an empty payload.
-  // We require explicitly overriding it with an empty string.
-  // (Ralph's config schema expects a string here; an empty list like `[]` is a
-  // YAML type error and won't parse.)
+  //
+  // Practical constraint: YAML `null` and "" can be treated as "unset" during
+  // Ralph's internal merge/normalization, allowing the built-in default to
+  // sneak back in. To make this robust, we force the default publish topic to a
+  // NON-verify topic (`verifier.noop`). This guarantees no auto-emitted
+  // `verify.*` event can ever lack `quality.*`.
   if (defaultPublishesValue === null) {
     fail(
-      `${filePath}: hats.verifier.default_publishes is missing; set it to "" to disable builtin defaults`,
+      `${filePath}: hats.verifier.default_publishes is missing; set it to verifier.noop to override builtin defaults`,
     );
   }
 
   const trimmed = defaultPublishesValue.trim();
-  const disabled = trimmed === '""' || trimmed === "''";
-  if (!disabled) {
+  const expected = "verifier.noop";
+  const normalized = trimmed.replace(/^['"]|['"]$/g, "");
+  if (normalized !== expected) {
     fail(
-      `${filePath}: hats.verifier.default_publishes must be "" (got ${JSON.stringify(trimmed)}; Ralph requires a string here)`,
+      `${filePath}: hats.verifier.default_publishes must be ${expected} (got ${JSON.stringify(trimmed)})`,
     );
   }
 }
