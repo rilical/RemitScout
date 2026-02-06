@@ -73,6 +73,7 @@ function sanitizeVerifyEvents() {
   const result = run(process.execPath, [
     "scripts/verifier/sanitize-verify-events.mjs",
     "--all",
+    "--repo",
   ]);
   if (result.exitCode !== 0) {
     throw new Error(

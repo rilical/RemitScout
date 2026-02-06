@@ -11,7 +11,7 @@ function usageAndExit(code) {
   console.error(
     [
       "Usage:",
-      "  node scripts/verifier/sanitize-verify-events.mjs [--file <events.jsonl>] [--all]",
+      "  node scripts/verifier/sanitize-verify-events.mjs [--file <events.jsonl>] [--all] [--repo]",
       "",
       "Behavior:",
       "  Rewrites verify.passed/verify.failed events in-place so payload always",
@@ -21,6 +21,9 @@ function usageAndExit(code) {
       "Default events file:",
       "  - Uses .ralph/current-events if present",
       "  - Else falls back to .ralph/events.jsonl",
+      "",
+      "--repo:",
+      "  Sanitizes every discovered .ralph directory under this repo (root + .worktrees/*).",
     ].join("\n"),
   );
   process.exit(code);
@@ -33,9 +36,9 @@ function getArgValue(args, flag) {
   return args[idx + 1];
 }
 
-function getDefaultEventsFile() {
+function getDefaultEventsFile(ralphDir) {
   try {
-    const currentEventsPath = ".ralph/current-events";
+    const currentEventsPath = path.join(ralphDir, "current-events");
     if (fs.existsSync(currentEventsPath)) {
       const p = fs.readFileSync(currentEventsPath, "utf8").trim();
       if (p) return p;
@@ -43,26 +46,45 @@ function getDefaultEventsFile() {
   } catch {
     // ignore
   }
-  return ".ralph/events.jsonl";
+  return path.join(ralphDir, "events.jsonl");
 }
 
-function listAllEventsFiles() {
-  const dir = ".ralph";
+function listAllEventsFilesInDir(ralphDir) {
   const out = new Set();
 
   // 1) The active file (if configured)
-  const current = getDefaultEventsFile();
+  const current = getDefaultEventsFile(ralphDir);
   if (current) out.add(current);
 
   // 2) Conventional single-file log (if present)
-  const fallback = path.join(dir, "events.jsonl");
+  const fallback = path.join(ralphDir, "events.jsonl");
   if (fs.existsSync(fallback)) out.add(fallback);
 
   // 3) Rotated logs
   try {
-    for (const name of fs.readdirSync(dir)) {
+    for (const name of fs.readdirSync(ralphDir)) {
       if (!/^events-.*\.jsonl$/.test(name)) continue;
-      out.add(path.join(dir, name));
+      out.add(path.join(ralphDir, name));
+    }
+  } catch {
+    // best-effort
+  }
+
+  return Array.from(out);
+}
+
+function listRepoRalphDirs() {
+  const out = new Set();
+
+  if (fs.existsSync(".ralph")) out.add(".ralph");
+
+  const worktreesDir = ".worktrees";
+  try {
+    if (!fs.existsSync(worktreesDir)) return Array.from(out);
+
+    for (const name of fs.readdirSync(worktreesDir)) {
+      const candidate = path.join(worktreesDir, name, ".ralph");
+      if (fs.existsSync(candidate)) out.add(candidate);
     }
   } catch {
     // best-effort
@@ -131,6 +153,7 @@ function main() {
 
   const fileArg = getArgValue(args, "--file");
   const all = args.includes("--all");
+  const repo = args.includes("--repo");
 
   if (fileArg && all) {
     // eslint-disable-next-line no-console
@@ -138,7 +161,33 @@ function main() {
     process.exit(2);
   }
 
-  const files = fileArg ? [fileArg] : all ? listAllEventsFiles() : [getDefaultEventsFile()];
+  if (repo && fileArg) {
+    // eslint-disable-next-line no-console
+    console.error("Use either --repo or --file (not both). ");
+    process.exit(2);
+  }
+
+  if (repo && !all) {
+    // eslint-disable-next-line no-console
+    console.error("--repo requires --all (to avoid surprising partial sanitization).");
+    process.exit(2);
+  }
+
+  let files;
+  if (repo) {
+    const allFiles = [];
+    for (const dir of listRepoRalphDirs()) {
+      allFiles.push(...listAllEventsFilesInDir(dir));
+    }
+    files = Array.from(new Set(allFiles));
+  } else {
+    const ralphDir = ".ralph";
+    files = fileArg
+      ? [fileArg]
+      : all
+        ? listAllEventsFilesInDir(ralphDir)
+        : [getDefaultEventsFile(ralphDir)];
+  }
 
   const dropped = [];
   for (const filePath of files) {
