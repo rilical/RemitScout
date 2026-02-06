@@ -34,7 +34,6 @@ hats:
     description: "Verifies refactoring preserved behavior via tests and checks."
     triggers: ["refactor.done"]
     publishes: ["verify.passed", "verify.failed"]
-    default_publishes: verify.passed
     instructions: |
       ## VERIFIER MODE (Node/TypeScript)
 
@@ -48,16 +47,20 @@ hats:
       Do NOT call `ralph emit verify.passed` / `ralph emit verify.failed` directly.
       That is the #1 source of drift (missing `quality.*` keys).
 
-      Always emit via the repo helper, which normalizes the payload and fills
-      missing signals with `"n/a"`:
+      Blessed path: run the repo helper, which *collects* signals and *emits*
+      a normalized payload with all required `quality.*` keys:
 
       ```bash
-      node scripts/verifier/emit-verify.mjs verify.passed --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
+      node scripts/verifier/run-frontend-quality.mjs --emit verify.passed
+      # or, if checks did not pass
+      node scripts/verifier/run-frontend-quality.mjs --emit verify.failed
       ```
 
       Notes:
-      - You may pass a *partial* `quality` object; the helper will add missing keys.
-      - Use `--dry-run` to print the normalized JSON payload.
+      - Default mode is diff-scoped (only checks changed `frontend/` files).
+      - Use `--full` to force full frontend lint/typecheck.
+      - Use `--run-unit-tests` to attempt Vitest.
+      - Use `--dry-run` to print the normalized JSON payload without emitting.
 
       ### Suggested commands (repo default)
       
@@ -89,10 +92,10 @@ hats:
       node scripts/verifier/run-frontend-quality.mjs --run-unit-tests
       ```
 
-      To emit the `verify.*` event through the normalizer (recommended):
+      To emit the `verify.*` event (recommended):
 
       ```bash
-      node scripts/verifier/run-frontend-quality.mjs --full --run-unit-tests --emit verify.passed
+      node scripts/verifier/run-frontend-quality.mjs --emit verify.passed
       # or, if checks did not pass
-      node scripts/verifier/run-frontend-quality.mjs --full --run-unit-tests --emit verify.failed
+      node scripts/verifier/run-frontend-quality.mjs --emit verify.failed
       ```
