@@ -36,8 +36,12 @@ hats:
     publishes: ["verify.passed", "verify.failed"]
     # Important: Ralph merges hat configs with built-in defaults.
     # The default verifier hat sets `default_publishes: verify.passed`, which can
-    # auto-emit an empty payload (missing `quality.*`). Explicitly null this out.
-    default_publishes: null
+    # auto-emit an empty payload (missing `quality.*`).
+    #
+    # NOTE: YAML `null` does NOT reliably override built-in defaults during merge
+    # (it may be treated as "unset"). Use an explicit empty string to override.
+    # (Ralph tolerates empty topics; we treat this as "disabled".)
+    default_publishes: ""
     instructions: |
       ## VERIFIER MODE (Node/TypeScript)
 
