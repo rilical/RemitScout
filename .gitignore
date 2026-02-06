@@ -80,4 +80,5 @@ codex-aarch64-apple-darwin.dmg
 
 # Ralph orchestrator config is local-only; copy from ralph.example.yml
 ralph.yml
+.ralph/
 .worktrees/
