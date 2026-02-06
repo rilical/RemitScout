@@ -146,6 +146,7 @@ function assertVerifierDoesNotDefaultPublish(filePath) {
   let inVerifier = false;
   let verifierIndent = "";
   let defaultPublishesValue = null;
+  let publishesValue = null;
 
   for (let i = hatsIdx + 1; i < lines.length; i += 1) {
     const line = lines[i];
@@ -166,6 +167,28 @@ function assertVerifierDoesNotDefaultPublish(filePath) {
     const dpMatch = line.match(/^\s*default_publishes:\s*(.*)\s*$/);
     if (dpMatch) {
       defaultPublishesValue = (dpMatch[1] ?? "").trim();
+    }
+
+    const publishesMatch = line.match(/^\s*publishes:\s*(.*)\s*$/);
+    if (publishesMatch) {
+      publishesValue = (publishesMatch[1] ?? "").trim();
+
+      // Multiline YAML list support:
+      // publishes:
+      //   - verify.passed
+      //   - verifier.noop
+      if (publishesValue === "") {
+        const items = [];
+        for (let j = i + 1; j < lines.length; j += 1) {
+          const nextLine = lines[j];
+          if (!nextLine.startsWith(`${verifierIndent}  `)) break;
+          const itemMatch = nextLine.match(/^\s*-\s*(.*?)\s*$/);
+          if (!itemMatch) break;
+          items.push((itemMatch[1] ?? "").trim());
+          i = j;
+        }
+        publishesValue = `[${items.join(", ")}]`;
+      }
     }
   }
 
@@ -193,6 +216,45 @@ function assertVerifierDoesNotDefaultPublish(filePath) {
       `${filePath}: hats.verifier.default_publishes must be ${expected} (got ${JSON.stringify(trimmed)})`,
     );
   }
+
+  if (publishesValue === null) {
+    fail(
+      `${filePath}: hats.verifier.publishes is missing; it must include verifier.noop so the default publish topic is valid`,
+    );
+  }
+
+  const publishesNormalized = publishesValue
+    .replace(/#.*/, "")
+    .replace(/[\[\]]/g, " ")
+    .split(",")
+    .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+    .filter(Boolean);
+
+  if (!publishesNormalized.includes(expected)) {
+    fail(
+      `${filePath}: hats.verifier.publishes must include ${expected} (got ${JSON.stringify(publishesValue)})`,
+    );
+  }
+}
+
+function assertNoVerifyDefaultPublishes(filePath) {
+  if (!fs.existsSync(filePath)) return;
+
+  let text;
+  try {
+    text = fs.readFileSync(filePath, "utf8");
+  } catch {
+    return;
+  }
+
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.replace(/#.*/, "").trimEnd();
+    if (/^default_publishes:\s*['"]?verify\.(passed|failed)['"]?\s*$/.test(line)) {
+      fail(
+        `${filePath}: default_publishes must never be verify.* (it can auto-emit an empty payload missing quality.*)`,
+      );
+    }
+  }
 }
 
 function main() {
@@ -209,6 +271,9 @@ function main() {
   assertQualityShape(weird, "verify.passed:lint coercion");
 
   assertNoDirectVerifyEmits();
+
+  assertNoVerifyDefaultPublishes("ralph.yml");
+  assertNoVerifyDefaultPublishes("ralph.example.yml");
 
   assertVerifierDoesNotDefaultPublish("ralph.yml");
   assertVerifierDoesNotDefaultPublish("ralph.example.yml");
