@@ -1,7 +1,8 @@
-# Ralph Orchestrator Configuration (example)
+# Ralph Orchestrator Configuration (project config)
 #
-# Source-of-truth config lives in `ralph.yml` (tracked).
-# This file is kept as a readable example/reference.
+# This file is tracked to keep the orchestration loop stable across machines
+# and CI. In particular, the Verifier must emit `verify.*` via
+# `scripts/verifier/emit-verify.mjs` so payloads always include `quality.*` keys.
 #
 # Docs: https://github.com/mikeyobrien/ralph-orchestrator
 

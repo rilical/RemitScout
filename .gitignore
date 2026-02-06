@@ -78,5 +78,8 @@ tools/aws-cli/
 # Codex/agent artifacts (local-only)
 codex-aarch64-apple-darwin.dmg
 
-# Ralph orchestrator config is local-only; copy from ralph.example.yml
-ralph.yml
+# Ralph orchestrator artifacts are local-only
+.ralph/
+
+# Ralph orchestrator config is tracked (project source-of-truth).
+# If you need local overrides, use a separate local file.

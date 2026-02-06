@@ -5,12 +5,8 @@ Business goal: keep the orchestration loop unblocked by ensuring every
 
 ## Setup
 
-- The repo ignores `ralph.yml` (local-only).
-- Use the tracked template:
-
-```bash
-cp ralph.example.yml ralph.yml
-```
+- `ralph.yml` is tracked (project source-of-truth).
+- The Verifier must always emit via `scripts/verifier/emit-verify.mjs`.
 
 ## Emitting verify events (required)
 
@@ -26,6 +22,18 @@ these keys always exist:
 
 Missing signals are filled with `"n/a"`.
 
+## Smoke check (recommended)
+
+```bash
+node scripts/verifier/smoke.mjs
+```
+
+If your local toolchain is aligned to `engines.node` (Node 20), this also works:
+
+```bash
+pnpm verifier:smoke
+```
+
 ### Minimal repro (safe; no event emitted)
 
 ```bash
@@ -40,4 +48,3 @@ node scripts/verifier/emit-verify.mjs verify.passed \
 node scripts/verifier/emit-verify.mjs verify.passed \
   --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
 ```
-

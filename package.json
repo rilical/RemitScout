@@ -13,6 +13,7 @@
   "scripts": {
     "lint": "eslint backend",
     "lint:compliance": "eslint backend",
+    "verifier:smoke": "node scripts/verifier/smoke.mjs",
     "dev:all": "bash scripts/dev/start-local.sh",
     "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh"
   },
