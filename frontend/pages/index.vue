@@ -40,7 +40,7 @@
     <WhyPricesVary />
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
-    <PulseMiniTiles v-if="pulseEnabled" />
+    <PulseTeaserSection v-if="pulseEnabled" />
 
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
     <InstitutionalTeaser v-if="enterpriseEnabled" />
@@ -96,7 +96,7 @@ import WhyPricesVary from '~/components/home/WhyPricesVary.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
-import PulseMiniTiles from '~/components/home/PulseMiniTiles.vue'
+import PulseTeaserSection from '~/components/home/PulseTeaserSection.vue'
 import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
 import PlusTeaser from '~/components/home/PlusTeaser.vue'
 import { setSeo, jsonLdSiteNavigation } from '~/composables/useSeo'

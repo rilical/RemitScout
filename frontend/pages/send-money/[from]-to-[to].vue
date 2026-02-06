@@ -1585,51 +1585,13 @@
     </section>
 
     <!-- FAQs -->
-    <section
+    <FaqSection
       id="faqs"
-      class="bg-brand-600 scroll-mt-20"
-    >
-      <div class="mx-auto max-w-4xl px-4 py-10">
-        <h2 class="text-3xl font-bold text-white text-center mb-6">
-          Frequently Asked Questions
-        </h2>
-        <div class="divide-y divide-white/20 border border-white/30 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm">
-          <details
-            v-for="faq in corridorFaqs"
-            :key="faq.q"
-            class="group"
-          >
-            <summary class="flex items-center justify-between cursor-pointer px-5 py-4 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
-              {{ faq.q }}
-              <svg
-                class="h-5 w-5 text-white/80 group-open:rotate-180 transition-transform flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </summary>
-            <div class="px-5 pb-4 text-sm text-white/90 leading-relaxed">
-              {{ faq.a }}
-            </div>
-          </details>
-        </div>
-        <div class="text-center mt-4">
-          <NuxtLink
-            to="/faq"
-            class="text-sm font-semibold text-white hover:text-white/80 underline transition-colors"
-          >
-            View all FAQs →
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
+      title="Frequently Asked Questions"
+      :subtitle="`Common questions about sending money from ${content.from} to ${content.to}.`"
+      :faqs="corridorFaqsAccordion"
+      section-class="bg-neutral-50"
+    />
 
     <!-- Provider Reviews -->
     <section
@@ -1794,6 +1756,7 @@ import CorridorStickyBar from '~/components/corridor/CorridorStickyBar.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
 import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
+import FaqSection from '~/components/shared/FaqSection.vue'
 import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
 import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
@@ -3162,6 +3125,50 @@ const content = computed(() => {
   }
 })
 
+const escapeHtml = (value: string) => {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+const defaultCorridorFaqs = computed<Array<{ q: string, a: string }>>(() => ([
+  {
+    q: `What is the best way to send money from ${content.value.from} to ${content.value.to}?`,
+    a: `Online money transfer services like Wise, Remitly, and WorldRemit usually cost less than banks when sending money from ${content.value.from} to ${content.value.to}. They often have better exchange rates, lower fees, and faster delivery. Use our comparison tool above to find the best option for your transfer amount.`,
+  },
+  {
+    q: `How long does a transfer from ${content.value.from} to ${content.value.to} take?`,
+    a: 'Delivery time depends on the provider and how your recipient gets the money. Cash pickup can be available within minutes or hours. Bank deposits often take 1 to 3 business days. Traditional bank transfers through SWIFT can take 3 to 5 business days. Check the comparison table above for provider-specific delivery times.',
+  },
+  {
+    q: `What fees will I pay to send money to ${content.value.to}?`,
+    a: 'The total cost has two parts: the upfront transfer fee, plus the exchange rate markup hidden in the rate. We calculate total cost by comparing each provider\'s rate to the mid-market rate, so you can see what you actually pay.',
+  },
+  {
+    q: 'Is it safe to use online money transfer services?',
+    a: 'Generally yes, as long as you use a licensed provider. We list providers that hold licenses from financial regulators in the markets they operate in, and we exclude unlicensed services. Always verify the provider details before sending.',
+  },
+  {
+    q: 'How do you rank the providers?',
+    a: 'We rank providers based on total cost (fees plus exchange-rate markup), then show transfer speed and other details to help you decide. Providers cannot pay to rank higher. Rankings are based on the data we collect and our methodology.',
+  },
+]))
+
+const corridorFaqsRaw = computed<Array<{ q: string, a: string }>>(() => {
+  const contentFaqs = content.value.faqs || []
+  return contentFaqs.length ? contentFaqs : defaultCorridorFaqs.value
+})
+
+const corridorFaqsAccordion = computed(() => (
+  corridorFaqsRaw.value.map(item => ({
+    question: item.q,
+    answer: `<p>${escapeHtml(item.a)}</p>`,
+  }))
+))
+
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
   { name: 'Money Transfer Comparison', path: '/send-money' },
@@ -3386,8 +3393,8 @@ setSeo({
 
 jsonLdBreadcrumb(breadcrumbItems.value.map(item => ({ name: item.name, url: `${normalizedSiteUrl}${item.path}` })))
 
-if (content.value.faqs.length) {
-  jsonLdFaq(content.value.faqs)
+if (corridorFaqsRaw.value.length) {
+  jsonLdFaq(corridorFaqsRaw.value)
 }
 
 // Add FinancialProduct schema for the best quote
@@ -4202,29 +4209,6 @@ function openScoreModal(row: TableRow) {
   }
   scoreModalOpen.value = true
 }
-
-const corridorFaqs = computed(() => [
-  {
-    q: `What is the best way to send money from ${content.value.from} to ${content.value.to}?`,
-    a: `Online money transfer services like Wise, Remitly, and WorldRemit usually cost less than banks when sending money from ${content.value.from} to ${content.value.to}. They have better exchange rates, lower fees, and faster delivery. Use our comparison tool above to find the best option for your transfer amount.`,
-  },
-  {
-    q: `How long does a transfer from ${content.value.from} to ${content.value.to} take?`,
-    a: `Delivery time depends on the provider and how your recipient gets the money. Cash pickup is fastest, often available within minutes or hours. Bank deposits usually take 1 to 3 business days. Traditional bank transfers through SWIFT can take 3 to 5 business days. Check the comparison table above for exact times from each provider.`,
-  },
-  {
-    q: `What fees will I pay to send money to ${content.value.to}?`,
-    a: `The total cost has two parts: the upfront transfer fee you see advertised, plus the exchange rate markup hidden in the rate itself. We calculate the real total cost by comparing each provider's rate to the mid market rate. This shows you what you actually pay, not just the headline fee.`,
-  },
-  {
-    q: `Is it safe to use online money transfer services?`,
-    a: `Yes. Every provider we list holds licenses from financial regulators, including FinCEN in the US, FCA in the UK, and ASIC in Australia. We do not include unlicensed services. You can verify licensing on each provider's card in the comparison above.`,
-  },
-  {
-    q: `How do you rank the providers?`,
-    a: `We sort providers by total cost, which includes both fees and exchange rate markup. The cheapest option shows up first. Providers cannot pay to rank higher. Our rankings are completely independent. We also display transfer speed, reliability scores, and user ratings to help you make the best choice.`,
-  },
-])
 </script>
 
 <style scoped>

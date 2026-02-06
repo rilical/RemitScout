@@ -84,7 +84,7 @@
               3. Select &amp; Execute
             </h3>
             <p class="text-sm text-neutral-600">
-              Choose the optimal counterparty and complete execution on their secure checkout.
+              Choose the optimal provider and complete execution on their secure checkout.
             </p>
           </div>
         </div>
@@ -112,7 +112,7 @@
               Independence and disclosure
             </h4>
             <p class="text-white/95 text-sm leading-relaxed">
-              Counterparties cannot pay to rank higher. We may earn a commission when you use our links, but affiliate relationships do not affect rankings or Remit-Score calculations.
+              Providers cannot pay to rank higher. We may earn a commission when you use our links, but affiliate relationships do not affect rankings or Remit-Score calculations.
               <NuxtLink
                 to="/methodology"
                 class="text-white hover:text-white/80 font-semibold underline ml-1"

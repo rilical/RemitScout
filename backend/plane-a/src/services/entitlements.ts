@@ -24,7 +24,7 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
   free: {
     pulse_access: 'none',
     exports_enabled: false,
-    alerts_max: 3,
+    alerts_max: 1,
     history_max_days: 30,
     watchlist_items: 3,
     api_access: false,

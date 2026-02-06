@@ -59,62 +59,11 @@
     <!-- How We Review Banner -->
     <section class="py-6 bg-neutral-50 border-b border-neutral-200">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-700">
-          <div class="flex items-center gap-2">
-            <svg
-              class="h-5 w-5 text-brand-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span class="font-semibold">No pay-to-rank</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <svg
-              class="h-5 w-5 text-brand-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-            <span class="font-semibold">Data-driven</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <svg
-              class="h-5 w-5 text-brand-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span class="font-semibold">Disclosures visible</span>
-          </div>
-          <NuxtLink
-            to="/methodology"
-            class="text-brand-600 hover:text-brand-700 font-semibold underline"
-          >
-            Review policy →
-          </NuxtLink>
-        </div>
+        <TrustBadgesRow
+          :dark="false"
+          :badges="reviewBadges"
+          :cta="reviewCta"
+        />
       </div>
     </section>
 
@@ -1109,9 +1058,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { ChartBarIcon, DocumentTextIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 import { setSeo } from '~/composables/useSeo'
 import { useArticles } from '~/composables/useArticles'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import TrustBadgesRow from '~/components/shared/TrustBadgesRow.vue'
 import { PROVIDER_SCORES } from '~/lib/providerScores'
 import { LEARN_STATIC_ARTICLES } from '~/lib/learnStaticArticles'
 
@@ -1139,6 +1090,17 @@ const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
 ]
+
+const reviewBadges = [
+  { label: 'No pay-to-rank', icon: ShieldCheckIcon, strong: true },
+  { label: 'Data-driven', icon: ChartBarIcon, strong: true },
+  { label: 'Disclosures shown', icon: DocumentTextIcon, strong: true },
+]
+
+const reviewCta = {
+  label: 'Review policy →',
+  to: '/methodology',
+}
 
 const activeFilter = ref('all')
 

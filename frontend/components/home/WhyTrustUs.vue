@@ -31,7 +31,7 @@
                   100% independent rankings
                 </p>
                 <p class="text-white/90 leading-relaxed">
-                  Providers can't pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.
+                  Providers cannot pay for better placement. We rank purely on total cost, speed, and reliability, so you see what's genuinely best for your transfer.
                 </p>
               </div>
             </div>

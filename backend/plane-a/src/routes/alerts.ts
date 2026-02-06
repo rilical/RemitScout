@@ -63,11 +63,14 @@ const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) =>
     && ['active', 'trialing'].includes(plan.status)
 }
 
+const isPlanActiveStatus = (status?: string | null) => status === 'active' || status === 'trialing'
+
 const resolveAlertLimit = (plan: Awaited<ReturnType<typeof getUserPlan>> | null): number | 'unlimited' => {
   if (!plan) {
-    return 3 // Default free plan limit
+    return 1 // Default free plan limit
   }
-  const entitlements = getEntitlementsForPlan(plan.plan_code)
+  const effectivePlanCode = isPlanActiveStatus(plan.status) ? plan.plan_code : 'free'
+  const entitlements = getEntitlementsForPlan(effectivePlanCode)
   return entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max
 }
 
@@ -601,10 +604,11 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       if (limit !== 'unlimited') {
         const count = await getAlertCount(user.user_id)
         if (count >= limit) {
+          const effectivePlanCode = plan && isPlanActiveStatus(plan.status) ? plan.plan_code : 'free'
           const planLabel =
-            plan?.plan_code === 'plus'
+            effectivePlanCode === 'plus'
               ? 'Plus'
-              : plan?.plan_code === 'enterprise'
+              : effectivePlanCode === 'enterprise'
                 ? 'Enterprise'
                 : 'Free'
           const durationSeconds = (Date.now() - startTime) / 1000

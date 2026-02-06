@@ -134,6 +134,12 @@
                 <span class="text-slate-400">Billing cycle</span>
                 <span class="text-slate-300">{{ billingIntervalLabel }}</span>
               </div>
+              <div
+                v-if="billedAnnuallyMonthlyDisplay"
+                class="text-xs text-slate-500 text-right -mt-2"
+              >
+                {{ billedAnnuallyMonthlyDisplay }}
+              </div>
               <div class="border-t border-slate-700 pt-4">
                 <div class="flex items-center justify-between">
                   <span class="text-white font-semibold">Total due today</span>
@@ -292,6 +298,17 @@ const plusPriceCurrency = computed(() => selectedPrice.value?.currency ?? null)
 const priceDisplay = computed(() => (
   pricingLoading.value ? '—' : (formatMoney(plusPriceValue.value, plusPriceCurrency.value) || 'Pricing at checkout')
 ))
+const billedAnnuallyMonthlyDisplay = computed(() => {
+  if (billingInterval.value !== 'year') return null
+  const annualAmount = pricing.value?.plus.year.amount
+  const currency = pricing.value?.plus.year.currency
+  if (typeof annualAmount !== 'number' || !Number.isFinite(annualAmount) || annualAmount <= 0) return null
+  if (!currency) return null
+  const monthly = annualAmount / 12
+  const formatted = formatMoney(monthly, currency)
+  if (!formatted) return null
+  return `${formatted} / month billed annually`
+})
 const billingIntervalLabel = computed(() => (billingInterval.value === 'year' ? 'Annual' : 'Monthly'))
 const totalDueToday = computed(() => {
   if (trialDays.value > 0) {

@@ -60,7 +60,9 @@ export const historyRoutes = async (app: FastifyInstance) => {
     const userId = resolveUserId(request, reply)
     if (!userId) return
     const plan = await getUserPlan(planeAPool, userId)
-    const entitlements = getEntitlementsForPlan(plan?.plan_code)
+    const isPlanActive = plan?.status === 'active' || plan?.status === 'trialing'
+    const effectivePlanCode = plan && isPlanActive ? plan.plan_code : 'free'
+    const entitlements = getEntitlementsForPlan(effectivePlanCode)
     const maxDays = entitlements.history_max_days
 
     const corridorId = parsed.data.corridor_id

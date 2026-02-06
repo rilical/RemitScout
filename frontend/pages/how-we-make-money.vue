@@ -28,7 +28,7 @@
             <div class="flex flex-wrap gap-3">
               <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
                 <ShieldCheckIcon class="h-4 w-4 text-white" />
-                No pay to rank
+                No pay-to-rank
               </div>
               <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
                 <LockClosedIcon class="h-4 w-4 text-white" />
@@ -909,7 +909,7 @@
                 <span class="text-emerald-400 text-2xl">✓</span>
                 <div>
                   <h3 class="text-lg font-semibold text-white mb-2">
-                    No pay to rank
+                    No pay-to-rank
                   </h3>
                   <p class="text-sm text-white/80 leading-relaxed">
                     Providers cannot pay to appear higher, improve a score, or change how we sort results.
@@ -978,36 +978,13 @@
     </section>
 
     <!-- FAQ -->
-    <section
+    <FaqSection
       id="faq"
-      class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20"
-    >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-4xl">
-          <div class="text-center mb-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Quick answers about how we make money and maintain independence
-            </p>
-          </div>
-
-          <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <FaqAccordion :faqs="faqs" />
-          </div>
-
-          <div class="mt-8 text-center">
-            <NuxtLink
-              to="/faq"
-              class="text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
-            >
-              View all FAQs →
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </section>
+      title="Frequently Asked Questions"
+      subtitle="Quick answers about how we make money and maintain independence"
+      :faqs="faqs"
+      section-class="bg-neutral-50"
+    />
 
     <!-- Final CTA -->
     <section class="py-16 lg:py-20 bg-brand-600">
@@ -1043,7 +1020,7 @@
               to="/contact"
               class="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 bg-transparent text-white font-bold text-lg rounded-xl hover:bg-white/10 transition-all duration-200"
             >
-              <span>Report an issue</span>
+              <span>Report a problem</span>
             </NuxtLink>
             <NuxtLink
               to="/partnerships"
@@ -1075,7 +1052,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
-import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import FaqSection from '~/components/shared/FaqSection.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
 const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
@@ -1112,7 +1089,7 @@ const faqs = [
   },
   {
     question: 'How do I report an issue?',
-    answer: '<p>If something looks off (fees, availability, or delivered amount), report it here: <a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report an issue</a>. We investigate and correct confirmed issues.</p>',
+    answer: '<p>If something looks off (fees, availability, or delivered amount), report it here: <a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report a problem</a>. We investigate and correct confirmed issues.</p>',
   },
   {
     question: 'What if a provider with an affiliate link ranks higher than one without?',

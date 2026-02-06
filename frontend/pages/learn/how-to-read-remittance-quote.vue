@@ -363,11 +363,27 @@
             <ul class="space-y-3 text-base text-neutral-700">
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 font-bold">•</span>
-                <span><strong class="font-semibold text-neutral-900">Provider A:</strong> $0 fee, rate = 1.20. Recipient gets = 500 times 1.20 = 600</span>
+                <span>
+                  <strong class="font-semibold text-neutral-900">Provider A:</strong> $0 fee, rate = 1.20.
+                  <span class="ml-1 inline-block align-baseline">
+                    <LaTeXFormula
+                      size="small"
+                      formula="\text{recipient gets} = 500 \times 1.20 = 600"
+                    />
+                  </span>
+                </span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="text-brand-600 font-bold">•</span>
-                <span><strong class="font-semibold text-neutral-900">Provider B:</strong> $3.99 fee, rate = 1.22. Recipient gets = (500 minus 3.99) times 1.22 = 605 (rounded)</span>
+                <span>
+                  <strong class="font-semibold text-neutral-900">Provider B:</strong> $3.99 fee, rate = 1.22.
+                  <span class="ml-1 inline-block align-baseline">
+                    <LaTeXFormula
+                      size="small"
+                      formula="\text{recipient gets} = (500 - 3.99) \times 1.22 \approx 605"
+                    />
+                  </span>
+                </span>
               </li>
             </ul>
             <p class="text-base text-neutral-700 leading-relaxed mt-4">
@@ -642,6 +658,7 @@
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
+import LaTeXFormula from '~/components/shared/LaTeXFormula.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },

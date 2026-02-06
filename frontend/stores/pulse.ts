@@ -124,7 +124,7 @@ export const usePulseStore = defineStore('pulse', {
     timeframe: '7D',
     viewMode: 'sender',
     amount: 1000,
-    lastUpdated: new Date().toISOString(),
+    lastUpdated: '',
     isLoading: false,
   }),
 
@@ -158,7 +158,10 @@ export const usePulseStore = defineStore('pulse', {
     isAnalystMode: state => state.viewMode === 'analyst',
 
     lastUpdatedRelative: (state) => {
-      const diff = Date.now() - new Date(state.lastUpdated).getTime()
+      if (!state.lastUpdated) return '—'
+      const last = new Date(state.lastUpdated).getTime()
+      if (Number.isNaN(last)) return '—'
+      const diff = Date.now() - last
       const minutes = Math.floor(diff / 60000)
       if (minutes < 1) return 'just now'
       if (minutes === 1) return '1 min ago'
@@ -180,20 +183,17 @@ export const usePulseStore = defineStore('pulse', {
   actions: {
     setCorridor(corridor: PulseCorridor) {
       this.corridor = corridor
-      this.refreshData()
     },
 
     setCorridorBySlug(slug: string) {
       const corridor = POPULAR_CORRIDORS.find(c => c.slug === slug)
       if (corridor) {
         this.corridor = corridor
-        this.refreshData()
       }
     },
 
     setTimeframe(timeframe: PulseTimeframe) {
       this.timeframe = timeframe
-      this.refreshData()
     },
 
     setViewMode(mode: PulseViewMode) {
@@ -206,15 +206,14 @@ export const usePulseStore = defineStore('pulse', {
 
     setAmount(amount: number) {
       this.amount = amount
-      this.refreshData()
     },
 
     setLoading(loading: boolean) {
       this.isLoading = loading
     },
 
-    refreshData() {
-      this.lastUpdated = new Date().toISOString()
+    setLastUpdated(iso: string) {
+      this.lastUpdated = iso
     },
 
     async initFromRoute(query: Record<string, string | undefined>) {

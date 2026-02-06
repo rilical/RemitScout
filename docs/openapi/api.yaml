@@ -727,6 +727,93 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/pulse/teaser:
+    get:
+      summary: Pulse teaser movers
+      description: |
+        Public teaser endpoint backed by Gold Export. Returns top corridor movers from real data only.
+        If Gold Export data is unavailable, returns an empty list (no demo/placeholder data).
+      tags:
+        - Pulse
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 6
+          description: Max number of movers to return (sorted by absolute % change)
+      responses:
+        '200':
+          description: Teaser movers payload
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, updatedAt, windowHours, movers]
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  updatedAt:
+                    type: string
+                    nullable: true
+                    description: ISO timestamp of the newest bucket used (UTC)
+                    example: '2026-01-01T08:00:00.000Z'
+                  windowHours:
+                    type: integer
+                    example: 24
+                  movers:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - corridorId
+                        - fromCountry
+                        - toCountry
+                        - sendCurrency
+                        - recvCurrency
+                        - currentAvgRate
+                        - prevAvgRate
+                        - deltaPct
+                        - providerCount
+                        - timestampBucket
+                      properties:
+                        corridorId:
+                          type: string
+                          example: US-PH-USD-PHP
+                        fromCountry:
+                          type: string
+                          example: US
+                        toCountry:
+                          type: string
+                          example: PH
+                        sendCurrency:
+                          type: string
+                          example: USD
+                        recvCurrency:
+                          type: string
+                          example: PHP
+                        currentAvgRate:
+                          type: number
+                          example: 56.1234
+                        prevAvgRate:
+                          type: number
+                          example: 55.4321
+                        deltaPct:
+                          type: number
+                          description: (current-prev)/prev
+                          example: 0.0125
+                        providerCount:
+                          type: integer
+                          example: 12
+                        timestampBucket:
+                          type: string
+                          description: Bucket timestamp (UTC)
+                          example: '2026-01-01T08:00:00.000Z'
+
   /api/pulse/corridors:
     get:
       summary: Pulse corridor list

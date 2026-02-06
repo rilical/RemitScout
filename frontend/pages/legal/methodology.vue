@@ -140,7 +140,7 @@
                     </svg>
                   </div>
                   <p class="text-sm text-slate-700 leading-relaxed">
-                    We only list <strong class="font-semibold text-slate-900">regulated and licensed counterparties</strong>
+                    We only list <strong class="font-semibold text-slate-900">regulated and licensed providers</strong>
                   </p>
                 </div>
 
@@ -186,7 +186,7 @@
             Banks and some providers monetize the FX Spread. A "zero fee" claim often implies a wider spread, typically 3–5% above the mid-market benchmark. Net Delivered Value exposes the delta.
           </p>
           <p>
-            Remit-Scout aggregates live quotes, normalizes total cost, and publishes Net Delivered Value across {{ SITE_STATS.providers.display }} licensed counterparties. We test, verify, and document methodology for auditability.
+            Remit-Scout aggregates live quotes, normalizes total cost, and publishes Net Delivered Value across {{ SITE_STATS.providers.display }} licensed providers. We test, verify, and document methodology for auditability.
           </p>
         </div>
       </section>
@@ -210,7 +210,7 @@
                 Define Requirements
               </h3>
               <p class="mb-4 text-lg leading-relaxed text-slate-700">
-                Input origin, destination, and capital amount. This defines the corridor for quote normalization across {{ SITE_STATS.providers.display }} licensed counterparties.
+                Input origin, destination, and capital amount. This defines the corridor for quote normalization across {{ SITE_STATS.providers.display }} licensed providers.
               </p>
               <p class="text-base text-slate-600">
                 Our aggregation core fetches current quotes in near real-time with corridor-specific Data Latency. Results render in 10–30 seconds. No sign-up required to view quotes.
@@ -271,10 +271,10 @@
                 Select &amp; Execute
               </h3>
               <p class="mb-4 text-lg leading-relaxed text-slate-700">
-                Choose the optimal counterparty and bridge directly to their secure checkout. Identity verification may be required for first-time execution.
+                Choose the optimal provider and bridge directly to their secure checkout. Identity verification may be required for first-time execution.
               </p>
               <p class="text-base text-slate-600">
-                We are independent. Counterparties cannot pay to rank higher. We may earn a commission when you use our links, but this never affects rankings. We publish outcomes based on Net Delivered Value, settlement speed, and quote integrity.
+                We are independent. Providers cannot pay to rank higher. We may earn a commission when you use our links, but this never affects rankings. We publish outcomes based on Net Delivered Value, settlement speed, and quote integrity.
               </p>
             </div>
           </div>
@@ -693,7 +693,7 @@
           Ready to audit your next transfer?
         </h2>
         <p class="mx-auto mb-8 max-w-2xl text-lg text-blue-100 [text-wrap:pretty]">
-          Compare live quotes from {{ SITE_STATS.providers.display }} licensed counterparties in seconds. See Net Delivered Value with FX Spread transparency.
+          Compare live quotes from {{ SITE_STATS.providers.display }} licensed providers in seconds. See Net Delivered Value with FX Spread transparency.
         </p>
         <NuxtLink
           to="/send-money/us-to-in"

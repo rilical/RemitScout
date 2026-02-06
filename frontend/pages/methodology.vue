@@ -26,74 +26,13 @@
               </p>
             </div>
 
-            <!-- Stats -->
-            <div class="flex flex-wrap gap-4 pt-4">
-              <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
-                  <svg
-                    class="w-7 h-7"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                  <span>{{ SITE_STATS.providers.display }}</span>
-                </div>
-                <div class="text-sm text-neutral-600">
-                  Licensed Counterparties
-                </div>
-              </div>
-
-              <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
-                  <svg
-                    class="w-7 h-7"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>{{ SITE_STATS.corridors.display }}</span>
-                </div>
-                <div class="text-sm text-neutral-600">
-                  Payment Corridors
-                </div>
-              </div>
-
-              <div class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-2 text-2xl font-bold text-brand-600">
-                  <svg
-                    class="w-7 h-7"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                  <span>{{ SITE_STATS.totalSaved.display }}</span>
-                </div>
-                <div class="text-sm text-neutral-600">
-                  Capital Efficiency Realized
-                </div>
-              </div>
-            </div>
+            <ImpactStatsSection
+              variant="compact"
+              :wrap="false"
+              :with-container="false"
+              :show-heading="false"
+              :show-cta="false"
+            />
           </div>
         </div>
       </div>
@@ -123,7 +62,7 @@
 
         <div class="mx-auto max-w-5xl mt-10">
           <p class="mt-4 mb-10 leading-relaxed text-neutral-700">
-            Remit-Scout is an independent comparison platform. We don’t move or hold your money. Transfers happen directly with the licensed provider you choose.
+            Remit-Scout is an independent comparison platform. We do not move or hold your money. Transfers happen directly with the licensed provider you choose.
             We earn trust by publishing how we source quotes, how we rank results, and how we handle corrections.
           </p>
         </div>
@@ -277,7 +216,7 @@
               Comparing money transfer providers is confusing. Everyone says they're the cheapest, fastest, or most reliable. Remit-Score cuts through that: it's a 0–10 rating based on real transfer data, not what providers claim in their ads.
             </p>
             <p class="text-lg text-neutral-700 leading-relaxed">
-              The question we're really answering: how much money does your recipient actually get? Fees, exchange rates, delivery times, and reliability all factor in, but they're measured against that outcome. Providers can't pay for a higher score, and our affiliate relationships don't influence the numbers.
+              The question we're really answering: how much money does your recipient actually get? Fees, exchange rates, delivery times, and reliability all factor in, but they're measured against that outcome. Providers cannot pay for a higher score, and our affiliate relationships do not influence the numbers.
             </p>
             <p class="text-lg text-neutral-700 leading-relaxed">
               Scores come from our quote dataset and transfer observations. If a provider delivers good value consistently, their score shows it. If they don't, same thing.
@@ -606,7 +545,7 @@
                   Editorial &amp; Independence
                 </h3>
                 <p class="text-lg leading-relaxed text-neutral-700 mb-6">
-                  Rankings are driven by data, not payments. Providers can’t buy placement, and affiliate commissions never change ranking logic.
+                  Rankings are driven by data, not payments. Providers cannot buy placement, and affiliate commissions never change ranking logic.
                 </p>
                 <div class="grid gap-4 sm:grid-cols-3 mb-8">
                   <div class="rounded-xl border border-brand-200 bg-brand-50 p-5">
@@ -734,98 +673,7 @@
           </div>
         </div>
 
-        <!-- Quick Links -->
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
-          <NuxtLink
-            v-if="pulseEnabled"
-            to="/pulse"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-          >
-            <div class="mb-3">
-              <svg
-                class="w-8 h-8 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-            <h4 class="font-semibold text-neutral-900 mb-2">Explore Pulse</h4>
-            <p class="text-sm text-neutral-600">Market trends and insights</p>
-          </NuxtLink>
-          <NuxtLink
-            to="/providers"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-          >
-            <div class="mb-3">
-              <svg
-                class="w-8 h-8 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-            <h4 class="font-semibold text-neutral-900 mb-2">Verified Providers</h4>
-            <p class="text-sm text-neutral-600">See all licensed providers</p>
-          </NuxtLink>
-          <NuxtLink
-            to="/about"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-          >
-            <div class="mb-3">
-              <svg
-                class="w-8 h-8 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
-            <h4 class="font-semibold text-neutral-900 mb-2">About the Founder</h4>
-            <p class="text-sm text-neutral-600">Our story and mission</p>
-          </NuxtLink>
-          <NuxtLink
-            to="/contact"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
-          >
-            <div class="mb-3">
-              <svg
-                class="w-8 h-8 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h4 class="font-semibold text-neutral-900 mb-2">Report a problem</h4>
-            <p class="text-sm text-neutral-600">Help us improve accuracy</p>
-          </NuxtLink>
-        </div>
+        <QuickLinksGrid :pulse-enabled="pulseEnabled" />
       </div>
     </section>
 
@@ -890,7 +738,7 @@
                 Input origin, destination, and capital amount. This defines the corridor and funding route for quote normalization across <NuxtLink
                   to="/learn/providers"
                   class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                >{{ SITE_STATS.providers.display }} licensed counterparties</NuxtLink>.
+                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
               </p>
               <p class="text-sm text-neutral-600">
                 Quote availability and Data Latency vary by corridor, provider, and payment method.
@@ -945,7 +793,7 @@
                 3. Select &amp; Execute
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                Choose the optimal counterparty and bridge directly to their secure checkout. Confirm Net Delivered Value at execution.
+                Choose the optimal provider and bridge directly to their secure checkout. Confirm Net Delivered Value at execution.
               </p>
               <div class="rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div class="flex items-start gap-2">
@@ -1913,6 +1761,8 @@ import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import BankVsSpecialistDynamic from '~/components/home/BankVsSpecialistDynamic.vue'
+import ImpactStatsSection from '~/components/home/ImpactStatsSection.vue'
+import QuickLinksGrid from '~/components/shared/QuickLinksGrid.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { SITE_STATS } from '~/config/stats'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
@@ -1966,7 +1816,12 @@ const showYourWorkFaqs = [
     answer: `
       <p>Net Delivered Value represents the funds delivered to the destination account after all fees and FX Spread adjustments are applied.</p>
       <p><strong>Calculation formula:</strong></p>
-      <p><code class="bg-slate-100 px-2 py-1 rounded">(send amount - fees) × provider exchange rate</code></p>
+      <div class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 overflow-x-auto">
+        <span>\\[\\text{NDV} = (S - F) \\times r_{\\text{provider}}\\]</span>
+      </div>
+      <p class="mt-2 text-sm text-slate-600">
+        <strong>Where:</strong> \\(S\\) is the send amount, \\(F\\) is total fees, and \\(r_{\\text{provider}}\\) is the provider exchange rate.
+      </p>
       <p><strong>Example calculation:</strong></p>
       <ul>
         <li>Send amount: $500 USD</li>
@@ -1984,7 +1839,12 @@ const showYourWorkFaqs = [
       <p>Many providers generate revenue by offering exchange rates below the mid-market rate. This difference, known as <strong>FX Spread</strong>, represents an embedded cost to the sender.</p>
       <p>We calculate FX Spread by comparing the provider's quoted rate to the mid-market reference rate at the <strong>exact same timestamp</strong>. Exchange rates fluctuate throughout the day, so accurate timing is essential for fair comparison.</p>
       <p><strong>Calculation formula:</strong></p>
-      <p><code class="bg-slate-100 px-2 py-1 rounded">FX Spread = (mid-market rate - provider rate) ÷ mid-market rate</code></p>
+      <div class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 overflow-x-auto">
+        <span>\\[\\text{FX Spread} = \\frac{r_{\\text{mid}} - r_{\\text{provider}}}{r_{\\text{mid}}}\\]</span>
+      </div>
+      <p class="mt-2 text-sm text-slate-600">
+        <strong>Where:</strong> \\(r_{\\text{mid}}\\) is the mid-market reference rate at capture time, and \\(r_{\\text{provider}}\\) is the provider quoted rate at the same time.
+      </p>
       <p>When reliable timestamp alignment or data quality cannot be confirmed, we prioritize transparency and clearly indicate reduced confidence levels rather than making assumptions.</p>
     `,
   },
@@ -2019,7 +1879,7 @@ const showYourWorkFaqs = [
         <li><strong>Payment method differences:</strong> Card-based transfers typically incur higher fees than bank transfers</li>
       </ul>
       <p>If you notice a discrepancy between our quote and the provider's checkout amount, please report it with the following details: transfer corridor, amount, quote timestamp, provider name, and a screenshot if available. We address confirmed issues within 48 hours.</p>
-      <p><a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report an issue</a> | <a href="/corrections" class="text-brand-600 hover:text-brand-700 underline font-semibold">View corrections policy</a></p>
+      <p><a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">Report a problem</a> | <a href="/corrections" class="text-brand-600 hover:text-brand-700 underline font-semibold">View corrections policy</a></p>
     `,
   },
 ]

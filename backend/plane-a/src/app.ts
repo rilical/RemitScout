@@ -32,6 +32,7 @@ import { corridorCurrenciesRoutes } from './routes/corridor-currencies'
 import { corridorLimitsRoutes } from './routes/corridor-limits'
 import { ratesRoutes } from './routes/rates'
 import { pulseStatusRoutes } from './routes/pulse-status'
+import { pulseTeaserRoutes } from './routes/pulse-teaser'
 import { pulseRoutes } from './routes/pulse'
 import { popularCorridorsRoutes } from './routes/popular-corridors'
 import { opsRoutes } from './routes/ops'
@@ -351,6 +352,7 @@ export const buildApp = async () => {
   app.register(meRoutes, { prefix: '/api/v1' })
   app.register(billingRoutes, { prefix: '/api/v1' })
   app.register(pulseStatusRoutes, { prefix: '/api/v1' })
+  app.register(pulseTeaserRoutes, { prefix: '/api/v1' })
   app.register(pulseRoutes, { prefix: '/api/v1' })
   app.register(ratesRoutes, { prefix: '/api/v1' })
   app.register(opsRoutes, { prefix: '/api/v1' })
@@ -385,6 +387,7 @@ export const buildApp = async () => {
   app.register(meRoutes, { prefix: '/api' })
   app.register(billingRoutes, { prefix: '/api' })
   app.register(pulseStatusRoutes, { prefix: '/api' })
+  app.register(pulseTeaserRoutes, { prefix: '/api' })
   app.register(pulseRoutes, { prefix: '/api' })
   app.register(ratesRoutes, { prefix: '/api' })
   app.register(opsRoutes, { prefix: '/api' })

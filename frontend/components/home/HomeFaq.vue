@@ -95,11 +95,11 @@ const faqs = [
   },
   {
     question: 'How can you offer this service for free?',
-    answer: 'We may earn a commission if you click a <span class="text-brand-600 font-semibold">disclosed</span> provider link and complete a transfer. You don’t pay extra because of that commission, and providers cannot pay for better placement. Comparisons stay <span class="text-brand-600 font-semibold">free to use</span>.',
+    answer: 'We may earn a commission if you click a <span class="text-brand-600 font-semibold">disclosed</span> provider link and complete a transfer. You do not pay extra because of that commission, and providers cannot pay for better placement. Comparisons stay <span class="text-brand-600 font-semibold">free to use</span>.',
   },
   {
     question: 'Do you share my information with providers?',
-    answer: 'We don’t sell your personal information. If you click through to a provider, you complete your transfer on their site and they collect whatever details they need directly from you. For the full breakdown of how we handle data, see our <span class="text-brand-600 font-semibold">privacy policy</span>.',
+    answer: 'We do not sell your personal information. If you click through to a provider, you complete your transfer on their site and they collect whatever details they need directly from you. For the full breakdown of how we handle data, see our <span class="text-brand-600 font-semibold">privacy policy</span>.',
   },
 ]
 

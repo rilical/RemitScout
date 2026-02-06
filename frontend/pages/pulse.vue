@@ -152,32 +152,8 @@
           </div>
         </div>
 
-        <!-- Preview (demo only; no backend calls) -->
-        <div class="rounded-2xl border border-neutral-700 bg-neutral-900/40 p-6 mb-8 text-left">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <div class="text-sm font-semibold text-neutral-200">
-                Preview
-              </div>
-              <div class="text-xs text-neutral-400">
-                Example corridor. Live signals and quotes unlock with Plus.
-              </div>
-            </div>
-            <span class="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1 text-[11px] font-semibold text-neutral-300">
-              Plus-gated
-            </span>
-          </div>
-
-          <div class="mt-4">
-            <PulsePlusGate
-              :is-gated="true"
-              title="Pulse Preview"
-              description="Unlock live send timing signals and provider quotes for your corridor."
-              :show-learn-more="false"
-            >
-              <PulseSenderPreview />
-            </PulsePlusGate>
-          </div>
+        <div class="mb-8">
+          <PulseTeaserCard />
         </div>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <NuxtLink
@@ -451,7 +427,7 @@
                     <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
                     <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
                   </span>
-                  <span>Updated {{ store.lastUpdatedRelative }}</span>
+                  <span>{{ summary?.lastUpdated ? `Updated ${formatTimestamp(summary.lastUpdated)} UTC` : 'Updated —' }}</span>
                 </div>
               </div>
             </div>
@@ -1179,138 +1155,7 @@
           </section>
 
           <!-- 11. Our Impact So Far -->
-          <section class="py-12 sm:py-16 bg-brand-600 w-full">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div class="text-center mb-12">
-                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
-                  Our Impact So Far
-                </h2>
-                <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
-                  Built by an expat who got tired of watching money disappear to bank fees. We track <span class="font-semibold whitespace-nowrap">30+ providers</span> across <span class="font-semibold whitespace-nowrap">150+ countries</span> in real time. <span class="font-semibold whitespace-nowrap">Providers cannot pay to rank higher</span>, we just show you which option gets the most money to your recipient.
-                </p>
-              </div>
-
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                <div class="text-center">
-                  <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
-                    <svg
-                      class="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div class="text-5xl font-bold text-white mb-2">
-                    50,000+
-                  </div>
-                  <div class="text-sm text-white/90">
-                    Users helped
-                  </div>
-                </div>
-
-                <div class="text-center">
-                  <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
-                    <svg
-                      class="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div class="text-5xl font-bold text-white mb-2">
-                    $2M+
-                  </div>
-                  <div class="text-sm text-white/90">
-                    Saved by users
-                  </div>
-                </div>
-
-                <div class="text-center">
-                  <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
-                    <svg
-                      class="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
-                  </div>
-                  <div class="text-5xl font-bold text-white mb-2">
-                    30+
-                  </div>
-                  <div class="text-sm text-white/90">
-                    Providers tracked
-                  </div>
-                </div>
-
-                <div class="text-center">
-                  <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
-                    <svg
-                      class="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div class="text-5xl font-bold text-white mb-2">
-                    150+
-                  </div>
-                  <div class="text-sm text-white/90">
-                    Countries covered
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-12 text-center">
-                <NuxtLink
-                  to="/methodology"
-                  class="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
-                >
-                  <span class="text-sm font-semibold">Learn about our methodology</span>
-                  <svg
-                    class="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </NuxtLink>
-              </div>
-            </div>
-          </section>
+          <TrustMetricsStrip bg-class="bg-brand-600" />
         </div>
       </div>
 
@@ -1347,6 +1192,7 @@ import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 import { useExports } from '~/composables/useExports'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
+import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { getCorridorUrl } from '~/utils/country-slugs'
 
@@ -1716,6 +1562,9 @@ async function loadSnapshotSummary() {
   if (store.viewMode !== 'analyst') return
   try {
     snapshotSummary.value = await getPulseSnapshotSummary(store.corridor, store.timeframe, store.amount)
+    if (snapshotSummary.value?.lastUpdated) {
+      store.setLastUpdated(snapshotSummary.value.lastUpdated)
+    }
   }
   catch (e) {
     console.error('Failed to load snapshot summary:', e)
@@ -1797,6 +1646,9 @@ async function loadCoverageSummary() {
   if (!isPlus.value) return
   try {
     summary.value = await getPulseCoverageSummary(store.corridor, store.timeframe)
+    if (summary.value?.lastUpdated) {
+      store.setLastUpdated(summary.value.lastUpdated)
+    }
   }
   catch (e) {
     console.error('Failed to load coverage summary:', e)

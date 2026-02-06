@@ -1276,7 +1276,7 @@
                         clip-rule="evenodd"
                       />
                     </svg>
-                    <span>100% independent - providers can't pay to rank higher</span>
+                    <span>100% independent. Providers cannot pay to rank higher.</span>
                   </li>
                   <li class="flex items-start gap-2">
                     <svg

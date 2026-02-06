@@ -61,7 +61,7 @@
         How to Request a Correction
       </h2>
       <p class="mb-4 leading-relaxed">
-        Report an issue via our <NuxtLink
+        Report a problem via our <NuxtLink
           to="/contact"
           class="text-blue-600 hover:text-blue-700 underline font-semibold"
         >contact page</NuxtLink>. The fastest path to a fix is providing enough detail for us to reproduce the quote and verify

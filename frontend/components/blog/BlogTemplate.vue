@@ -144,7 +144,7 @@
                   </li>
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-0.5">✓</span>
-                    <span>Providers can't pay to rank higher</span>
+                    <span>Providers cannot pay to rank higher</span>
                   </li>
                 </ul>
                 <NuxtLink

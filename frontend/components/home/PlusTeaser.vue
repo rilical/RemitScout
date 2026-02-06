@@ -82,7 +82,7 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">3 alerts</strong></span>
+                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">1 alert</strong></span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -289,7 +289,7 @@
               Smart score alerts analyze rate patterns and volatility, scoring 0–100. Only triggers when score hits your threshold. Weekly smart alerts plus daily alerts for Plus.
             </p>
             <div class="text-xs text-slate-500 mt-auto">
-              Free: 3 alerts | Plus: 16 alerts
+              Free: 1 alert | Plus: 16 alerts
             </div>
           </div>
 

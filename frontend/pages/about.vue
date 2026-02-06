@@ -781,142 +781,10 @@
       </div>
     </section>
 
-    <!-- Coverage / stats -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
-            <svg
-              class="w-8 h-8 text-brand-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-              />
-            </svg>
-            Platform Reach
-          </h2>
-
-          <div class="space-y-6 mb-10">
-            <p class="text-lg leading-relaxed text-neutral-700">
-              We index the global remittance economy in real-time. Data is normalized across 150+ corridors to ensure an apples-to-apples comparison of landed capital.
-            </p>
-          </div>
-
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  class="w-6 h-6 text-brand-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
-                <div class="text-3xl font-bold text-brand-600">
-                  {{ SITE_STATS.providers.display }}
-                </div>
-              </div>
-              <div class="mt-1 text-sm font-semibold text-neutral-900">
-                {{ SITE_STATS.providers.label }}
-              </div>
-              <div class="mt-2 text-xs text-neutral-600">
-                Licensed services where available; availability varies by corridor.
-              </div>
-            </div>
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  class="w-6 h-6 text-brand-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div class="text-3xl font-bold text-brand-600">
-                  {{ SITE_STATS.corridors.display }}
-                </div>
-              </div>
-              <div class="mt-1 text-sm font-semibold text-neutral-900">
-                {{ SITE_STATS.corridors.label }}
-              </div>
-              <div class="mt-2 text-xs text-neutral-600">
-                Country/currency pairs with recent comparison data.
-              </div>
-            </div>
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  class="w-6 h-6 text-brand-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div class="text-3xl font-bold text-brand-600">
-                  {{ SITE_STATS.totalSaved.display }}
-                </div>
-              </div>
-              <div class="mt-1 text-sm font-semibold text-neutral-900">
-                {{ SITE_STATS.totalSaved.label }}
-              </div>
-              <div class="mt-2 text-xs text-neutral-600">
-                Typical savings depend on corridor, payment method, and amount.
-              </div>
-            </div>
-            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  class="w-6 h-6 text-brand-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-                <div class="text-3xl font-bold text-brand-600">
-                  {{ SITE_STATS.users.display }}
-                </div>
-              </div>
-              <div class="mt-1 text-sm font-semibold text-neutral-900">
-                {{ SITE_STATS.users.label }}
-              </div>
-              <div class="mt-2 text-xs text-neutral-600">
-                Built for expats and international families.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <ImpactStatsSection
+      variant="cards"
+      :show-header-icon="true"
+    />
 
     <!-- Partnership Section -->
     <section class="py-16 lg:py-20 bg-slate-900">
@@ -1001,6 +869,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import { h } from 'vue'
+import ImpactStatsSection from '~/components/home/ImpactStatsSection.vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
@@ -1097,7 +966,7 @@ const deepDiveLinks = [
   {
     emoji: '🤝',
     title: 'Partnerships',
-    body: 'What partnerships mean and what they don’t.',
+    body: 'What partnerships mean and what they do not.',
     to: '/partnerships',
   },
   {

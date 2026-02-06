@@ -382,13 +382,6 @@ export default defineNuxtConfig({
 
   // Vite Configuration
   vite: {
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '@use "./assets/css/tailwind.css" as *;',
-        },
-      },
-    },
     server: {
       fs: {
         allow: [workspaceRoot],

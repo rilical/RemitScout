@@ -70,34 +70,34 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div class="text-center">
             <div class="text-3xl font-bold text-blue-600">
-              30+
+              {{ SITE_STATS.providers.display }}
             </div>
             <div class="text-sm text-slate-600 mt-1">
-              Providers Compared
+              {{ SITE_STATS.providers.label }}
             </div>
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-blue-600">
-              150+
+              {{ SITE_STATS.corridors.display }}
             </div>
             <div class="text-sm text-slate-600 mt-1">
-              Corridors Tracked
+              {{ SITE_STATS.corridors.label }}
             </div>
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-blue-600">
-              Daily
+              {{ SITE_STATS.totalSaved.display }}
             </div>
             <div class="text-sm text-slate-600 mt-1">
-              Quote Updates
+              {{ SITE_STATS.totalSaved.label }}
             </div>
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-blue-600">
-              100%
+              {{ SITE_STATS.users.display }}
             </div>
             <div class="text-sm text-slate-600 mt-1">
-              Independent
+              {{ SITE_STATS.users.label }}
             </div>
           </div>
         </div>
@@ -629,6 +629,7 @@
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { SITE_STATS } from '~/config/stats'
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remitscout.com'

@@ -156,7 +156,9 @@ async function getWatchlistLimit(
   if (!plan) {
     return { limit: 3, plan: null } // Default free plan limit
   }
-  const entitlements = getEntitlementsForPlan(plan.plan_code)
+  const isPlanActive = plan.status === 'active' || plan.status === 'trialing'
+  const effectivePlanCode = isPlanActive ? plan.plan_code : 'free'
+  const entitlements = getEntitlementsForPlan(effectivePlanCode)
   const limit = entitlements.watchlist_items === null ? 'unlimited' : entitlements.watchlist_items
   return { limit, plan }
 }
@@ -307,10 +309,12 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       if (limit !== 'unlimited') {
         const count = await getWatchlistCount(user.user_id)
         if (count >= limit) {
+          const isPlanActive = plan?.status === 'active' || plan?.status === 'trialing'
+          const effectivePlanCode = plan && isPlanActive ? plan.plan_code : 'free'
           const planLabel =
-            plan?.plan_code === 'plus'
+            effectivePlanCode === 'plus'
               ? 'Plus'
-              : plan?.plan_code === 'enterprise'
+              : effectivePlanCode === 'enterprise'
                 ? 'Enterprise'
                 : 'Free'
           const durationSeconds = (Date.now() - startTime) / 1000

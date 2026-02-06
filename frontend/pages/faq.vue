@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-900">
+  <div class="min-h-screen bg-white">
     <CompareWidget />
 
     <!-- Hero Section -->
@@ -25,76 +25,11 @@
             </p>
           </div>
 
-          <!-- Trust Badges -->
-          <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
-            <div class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700">
-              <svg
-                class="w-4 h-4 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              No pay-to-rank
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700">
-              <svg
-                class="w-4 h-4 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Quotes timestamped
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700">
-              <svg
-                class="w-4 h-4 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              We don't move money
-            </div>
-            <NuxtLink
-              to="/contact"
-              class="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700 hover:bg-neutral-700"
-            >
-              <svg
-                class="w-4 h-4 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              Report an issue
-            </NuxtLink>
-          </div>
+          <TrustBadgesRow
+            class="mb-8"
+            :badges="trustBadges"
+            :cta="trustCta"
+          />
 
           <!-- Search Bar -->
           <div class="mx-auto max-w-2xl mb-12">
@@ -130,7 +65,7 @@
         <!-- Sticky Navigation (Desktop) -->
         <aside class="hidden lg:block lg:col-span-3">
           <div class="sticky top-24 space-y-2">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-4">
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-4">
               Quick Navigation
             </h3>
             <nav class="space-y-1">
@@ -141,8 +76,8 @@
                 :class="[
                   'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   activeCategory === category.id
-                    ? 'bg-brand-600/20 text-brand-400'
-                    : 'text-neutral-300 hover:bg-neutral-800',
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900',
                 ]"
                 @click="activeCategory = category.id"
               >
@@ -159,7 +94,7 @@
             id="getting-started"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Getting started
             </h2>
             <div class="space-y-4">
@@ -172,7 +107,7 @@
             id="pricing-quotes"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Pricing, quotes, and accuracy
             </h2>
             <div class="space-y-4">
@@ -185,7 +120,7 @@
             id="rankings"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Rankings and Remit‑Score
             </h2>
             <div class="space-y-4">
@@ -198,7 +133,7 @@
             id="providers-safety"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Providers, safety, and availability
             </h2>
             <div class="space-y-4">
@@ -211,7 +146,7 @@
             id="remit-scout-plus"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Remit‑Scout Plus
             </h2>
             <div class="space-y-4">
@@ -224,7 +159,7 @@
             id="partnerships"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Partnerships and how we make money
             </h2>
             <div class="space-y-4">
@@ -237,7 +172,7 @@
             id="privacy"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Privacy and data
             </h2>
             <div class="space-y-4">
@@ -250,7 +185,7 @@
             id="reporting"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-white mb-8">
+            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
               Reporting issues and support
             </h2>
             <div class="space-y-4">
@@ -274,45 +209,21 @@
               <div class="space-y-6">
                 <div class="flex items-start gap-4">
                   <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                    <svg
-                      class="w-7 h-7 text-brand-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
+                    <ShieldCheckIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
                       Independent rankings
                     </p>
                     <p class="text-white/90 leading-relaxed">
-                      Providers can’t buy placement. Rankings reflect delivered outcome, total cost, and other signals shown on the page.
+                      Providers cannot buy placement. Rankings reflect delivered outcome, total cost, and other signals shown on the page.
                     </p>
                   </div>
                 </div>
 
                 <div class="flex items-start gap-4">
                   <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                    <svg
-                      class="w-7 h-7 text-brand-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                    <ClockIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
@@ -326,19 +237,7 @@
 
                 <div class="flex items-start gap-4">
                   <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                    <svg
-                      class="w-7 h-7 text-brand-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
+                    <LockClosedIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
@@ -352,19 +251,7 @@
 
                 <div class="flex items-start gap-4">
                   <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                    <svg
-                      class="w-7 h-7 text-brand-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <UserGroupIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
                     <p class="font-semibold text-white mb-1">
@@ -554,12 +441,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ClockIcon, LockClosedIcon, ShieldCheckIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import TrustBadgesRow from '~/components/shared/TrustBadgesRow.vue'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { setSeo } from '~/composables/useSeo'
+import { TRUST_BADGES } from '~/lib/marketing/trust'
 
 type Faq = {
   question: string
@@ -573,6 +463,18 @@ const breadcrumbItems = [
 
 const searchQuery = ref('')
 const activeCategory = ref('getting-started')
+
+const trustBadges = [
+  { label: TRUST_BADGES.noPayToRank.label, icon: TRUST_BADGES.noPayToRank.icon },
+  { label: TRUST_BADGES.quotesTimestamped.label, icon: TRUST_BADGES.quotesTimestamped.icon },
+  { label: TRUST_BADGES.weDontMoveMoney.label, icon: TRUST_BADGES.weDontMoveMoney.icon },
+]
+
+const trustCta = {
+  label: TRUST_BADGES.reportAProblem.label,
+  to: '/contact',
+  icon: TRUST_BADGES.reportAProblem.icon,
+}
 
 const categories = [
   { id: 'getting-started', name: 'Getting started' },
@@ -618,7 +520,7 @@ const gettingStartedFaqs = [
 const pricingFaqs = [
   {
     question: 'What does "Recipient gets" mean?',
-    answer: '<p><strong>"Recipient gets"</strong> is our best estimate of what the recipient should receive after fees and FX markup for the specific scenario you entered.</p><p class="mt-2">It’s practical because it answers the question most senders actually care about: <em>what should arrive?</em></p><p class="mt-3"><strong>Example:</strong></p><div class="bg-neutral-50 rounded-lg p-4 my-3 border border-neutral-200"><p class="text-sm"><strong>Send:</strong> $500 USD</p><p class="text-sm"><strong>Provider A:</strong> $5 fee, 18.00 rate → <strong>8,910 MXN</strong></p><p class="text-sm"><strong>Provider B:</strong> $1.99 fee, 18.45 rate → <strong>9,188 MXN</strong></p><p class="text-sm mt-2 text-emerald-700 font-semibold">That’s 278 MXN more delivered on the same transfer, even if both advertise “low fees”.</p></div><p class="mt-2">We calculate this as: <code class="bg-neutral-100 px-2 py-1 rounded text-sm">recipient gets = (send amount − fees) × provider FX rate</code></p>',
+    answer: '<p><strong>"Recipient gets"</strong> is our best estimate of what the recipient should receive after fees and FX markup for the specific scenario you entered.</p><p class="mt-2">It’s practical because it answers the question most senders actually care about: <em>what should arrive?</em></p><p class="mt-3"><strong>Example:</strong></p><div class="bg-neutral-50 rounded-lg p-4 my-3 border border-neutral-200"><p class="text-sm"><strong>Send:</strong> $500 USD</p><p class="text-sm"><strong>Provider A:</strong> $5 fee, 18.00 rate → <strong>8,910 MXN</strong></p><p class="text-sm"><strong>Provider B:</strong> $1.99 fee, 18.45 rate → <strong>9,188 MXN</strong></p><p class="text-sm mt-2 text-emerald-700 font-semibold">That’s 278 MXN more delivered on the same transfer, even if both advertise “low fees”.</p></div><p class="mt-2">We calculate this as:</p><div class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 overflow-x-auto"><span>\\[\\text{recipient gets} = (\\text{send amount} - \\text{fees}) \\times \\text{provider FX rate}\\]</span></div>',
   },
   {
     question: 'What does "Total cost" include?',

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { BoltIcon } from '@heroicons/vue/24/outline'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { useAuth } from '~/composables/useAuth'
+import { useApi } from '~/composables/useApi'
 
 const { isAuthenticated } = useAuth()
 const { isPlus } = useEntitlements()
@@ -12,6 +14,46 @@ const pulseCtaLabel = computed(() => (isPlus.value ? 'Open Pulse' : 'Preview Pul
 const plusCtaLabel = computed(() => {
   if (!isAuthenticated.value) return 'Get Plus'
   return isPlus.value ? 'You are Plus' : 'Upgrade to Plus'
+})
+
+type BillingPricingResponse = {
+  success: true
+  configured: boolean
+  trialDays: number
+  plus: {
+    month: { amount: number | null, currency: string | null, priceId: string | null }
+    year: { amount: number | null, currency: string | null, priceId: string | null }
+  }
+}
+
+const { request } = useApi()
+const { data: pricing } = await useAsyncData(
+  'home:billing:pricing',
+  () => request<BillingPricingResponse>('/billing/pricing', { retries: 0 }),
+  { server: true },
+)
+
+const formatMoney = (amount: number | null | undefined, currency: string | null | undefined) => {
+  if (amount === null || amount === undefined || !currency) return null
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
+  }
+  catch {
+    return `${currency.toUpperCase()} ${amount.toFixed(2)}`
+  }
+}
+
+const plusMonthly = computed(() => pricing.value?.plus.month ?? null)
+const plusAnnual = computed(() => pricing.value?.plus.year ?? null)
+const plusMonthlyDisplay = computed(() => formatMoney(plusMonthly.value?.amount ?? null, plusMonthly.value?.currency ?? null))
+const plusAnnualMonthlyEquivalentDisplay = computed(() => {
+  const annualAmount = plusAnnual.value?.amount
+  const currency = plusAnnual.value?.currency
+  if (typeof annualAmount !== 'number' || !Number.isFinite(annualAmount) || annualAmount <= 0) return null
+  if (!currency) return null
+  const monthly = annualAmount / 12
+  const formatted = formatMoney(monthly, currency)
+  return formatted ? `${formatted} / mo billed annually` : null
 })
 </script>
 
@@ -27,19 +69,7 @@ const plusCtaLabel = computed(() => {
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="h-10 w-10 rounded-xl bg-brand-600/10 border border-brand-600/20 flex items-center justify-center">
-                <svg
-                  class="h-5 w-5 text-brand-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
+                <BoltIcon class="h-5 w-5 text-brand-700" />
               </div>
               <div>
                 <div class="text-sm font-semibold text-slate-600">
@@ -115,6 +145,11 @@ const plusCtaLabel = computed(() => {
                 <div class="text-2xl font-extrabold text-white leading-tight">
                   Alerts and history that actually save money
                 </div>
+                <div class="mt-2 text-xs font-semibold text-white/90">
+                  <span v-if="plusMonthlyDisplay">{{ plusMonthlyDisplay }}/mo</span>
+                  <span v-else>Pricing at checkout</span>
+                  <span v-if="plusAnnualMonthlyEquivalentDisplay"> • {{ plusAnnualMonthlyEquivalentDisplay }}</span>
+                </div>
               </div>
             </div>
             <NuxtLink
@@ -136,7 +171,7 @@ const plusCtaLabel = computed(() => {
                 16 smart alerts
               </div>
               <div class="mt-1 text-sm font-semibold text-white">
-                Set targets, get pinged
+                Eligible corridors only
               </div>
             </div>
             <div class="rounded-xl bg-white/10 border border-white/20 p-4">

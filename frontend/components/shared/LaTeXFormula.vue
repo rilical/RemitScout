@@ -1,17 +1,13 @@
 <template>
-  <ClientOnly>
-    <span
-      :class="formulaClass"
-      v-html="renderedFormula"
-    />
-    <template #fallback>
-      <span class="text-neutral-600 italic">Loading formula...</span>
-    </template>
-  </ClientOnly>
+  <span
+    :class="formulaClass"
+    v-html="renderedFormula"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed } from 'vue'
+import * as katexImport from 'katex'
 
 const props = defineProps<{
   formula: string
@@ -19,7 +15,7 @@ const props = defineProps<{
   size?: 'small' | 'normal' | 'large'
 }>()
 
-const renderedFormula = ref('')
+const katex = (katexImport as any).default ?? katexImport
 
 const formulaClass = computed(() => {
   const classes: string[] = []
@@ -32,19 +28,16 @@ const formulaClass = computed(() => {
   return classes.join(' ')
 })
 
-onMounted(async () => {
-  if (import.meta.client) {
-    try {
-      const katex = await import('katex')
-      renderedFormula.value = katex.default.renderToString(props.formula, {
-        displayMode: props.display ?? false,
-        throwOnError: false,
-        errorColor: '#cc0000',
-      })
-    }
-    catch (error) {
-      renderedFormula.value = props.formula
-    }
+const renderedFormula = computed(() => {
+  try {
+    return (katex as any).renderToString(props.formula, {
+      displayMode: props.display ?? false,
+      throwOnError: false,
+      errorColor: '#cc0000',
+    })
+  }
+  catch {
+    return props.formula
   }
 })
 </script>

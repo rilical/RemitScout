@@ -111,34 +111,37 @@
               We do not see provider transaction volume directly. Instead, we infer relative dominance
               from observable microstructure signals: quote frequency, spread stability, and recency.
             </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <pre class="text-sm text-slate-700 whitespace-pre-wrap"><code>
-w_raw = ln(1 + F)^α · S^β · R^γ · TierMultiplier
-F = quotes_per_hour
-S = exp(-0.5 · z^2), z = (avg_rate - median_rate) / std_rate
-R = exp(-λ · age_minutes)
-              </code></pre>
+            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
+              <LaTeXFormula
+                :formula="formulaWeightingRaw"
+                display
+              />
             </div>
-            <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <pre class="text-sm text-slate-700 whitespace-pre-wrap"><code>
-w_corridor = w_raw / Σ w_raw
-conf = min(1, window_days/30) · min(1, quote_count/min_quotes)
-w_final = conf · w_corridor + (1 - conf) · w_global
-              </code></pre>
+            <p class="mt-3 text-xs text-slate-500">
+              Where <code>F</code> is quote frequency, <code>S</code> is spread stability, <code>R</code> is recency, and <code>m_tier</code> is the persistence multiplier.
+            </p>
+            <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
+              <LaTeXFormula
+                :formula="formulaWeightingBlend"
+                display
+              />
             </div>
+            <p class="mt-3 text-xs text-slate-500">
+              Where <code>d</code> is window days, <code>n</code> is quote count, and <code>n_min</code> is minimum quotes required for full confidence.
+            </p>
             <p class="mt-4 text-sm text-slate-500">
               Default parameters: α=0.4, β=0.4, γ=0.2, half-life=180 minutes, min_days=3, min_providers=3, min_quotes=500.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
             <h3 class="text-lg font-semibold text-slate-900">
-              Tier multipliers (persistence)
+              Persistence bands (multiplier)
             </h3>
             <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li><strong class="text-slate-900">Tier 1:</strong> persistence ≥ 0.9 → 1.5×</li>
-              <li><strong class="text-slate-900">Tier 2:</strong> persistence ≥ 0.6 → 1.0×</li>
-              <li><strong class="text-slate-900">Tier 3:</strong> persistence &lt; 0.6 → 0.5×</li>
+              <li><strong class="text-slate-900">High persistence:</strong> ≥ 0.9 → 1.5×</li>
+              <li><strong class="text-slate-900">Medium persistence:</strong> ≥ 0.6 → 1.0×</li>
+              <li><strong class="text-slate-900">Low persistence:</strong> &lt; 0.6 → 0.5×</li>
             </ul>
             <div class="mt-6 rounded-xl bg-slate-50 p-4 text-xs text-slate-500">
               Weight confidence (0–1) is returned to clients as <code>weightConfidence</code> along with
@@ -164,19 +167,21 @@ w_final = conf · w_corridor + (1 - conf) · w_global
               TEER represents the net rate recipients effectively receive after fees and FX markup.
               It is calculated from the weighted cost ratio and the mid‑market reference rate.
             </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
-              <pre class="text-sm text-slate-700 whitespace-pre-wrap"><code>
-RCI_cost = (fee + hidden_markup) / send_amount
-hidden_markup = ((send_amount - fee) · (mid_market - provider_rate)) / mid_market
-TEER = mid_market · (1 - weighted_RCI_cost)
-              </code></pre>
+            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
+              <LaTeXFormula
+                :formula="formulaTeer"
+                display
+              />
             </div>
+            <p class="mt-3 text-xs text-slate-500">
+              Where <code>S</code> is send amount, <code>f</code> is fee, <code>m</code> is hidden markup, and <code>r_mid</code> is the mid-market reference rate.
+            </p>
             <p class="mt-4 text-sm text-slate-500">
               TEER uses providers that are <code>allowed_in_teer</code> and active in the rights matrix.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
             <h3 class="text-lg font-semibold text-slate-900">
               Interpretation
             </h3>
@@ -205,18 +210,21 @@ TEER = mid_market · (1 - weighted_RCI_cost)
               RCI is the weighted total cost of sending money as a percent of the send amount.
               It captures both explicit fees and hidden FX markup.
             </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <pre class="text-sm text-slate-700 whitespace-pre-wrap"><code>
-RCI = Σ(weight · cost_ratio) / Σ(weight)
-cost_ratio = (fee + hidden_markup) / send_amount
-              </code></pre>
+            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
+              <LaTeXFormula
+                :formula="formulaRci"
+                display
+              />
             </div>
+            <p class="mt-3 text-xs text-slate-500">
+              Where <code>w_i</code> are the synthetic volume weights (normalized across providers) and <code>S, f, m</code> are as defined above.
+            </p>
             <p class="mt-4 text-sm text-slate-500">
               RCI uses providers that are <code>allowed_in_rci</code> and active in the rights matrix.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
             <h3 class="text-lg font-semibold text-slate-900">
               Interpretation
             </h3>
@@ -245,19 +253,21 @@ cost_ratio = (fee + hidden_markup) / send_amount
               RVI measures the weighted dispersion of effective rates across providers.
               We also publish RVI_bps for standardized comparison.
             </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
-              <pre class="text-sm text-slate-700 whitespace-pre-wrap"><code>
-effective_rate = ((send_amount - fee) · provider_rate) / send_amount
-RVI = sqrt( weighted_variance(effective_rate) )
-RVI_bps = (RVI / TEER) · 10,000
-              </code></pre>
+            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
+              <LaTeXFormula
+                :formula="formulaRvi"
+                display
+              />
             </div>
+            <p class="mt-3 text-xs text-slate-500">
+              Where <code>Var_w</code> is the weighted variance across providers (using the same weights used for the index point).
+            </p>
             <p class="mt-4 text-sm text-slate-500">
               RVI uses providers that are <code>allowed_in_rvi</code> and active in the rights matrix.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
             <h3 class="text-lg font-semibold text-slate-900">
               Interpretation
             </h3>
@@ -347,6 +357,7 @@ RVI_bps = (RVI / TEER) · 10,000
 import { computed } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
+import LaTeXFormula from '~/components/shared/LaTeXFormula.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const lastUpdatedIso = '2026-02-04'
@@ -363,6 +374,36 @@ const breadcrumbItems = [
   { name: 'Methodology', path: '/methodology' },
   { name: 'Indices Methodology', path: '/indices-methodology' },
 ]
+
+const formulaWeightingRaw = String.raw`\begin{aligned}
+w_{\text{raw}} &= \ln(1 + F)^{\alpha}\, S^{\beta}\, R^{\gamma}\, m_{\text{tier}} \\
+F &= \text{quotes/hour} \\
+S &= \exp\!\left(-\tfrac{1}{2} z^2\right),\quad z = \frac{\bar{r} - \tilde{r}}{\sigma_r} \\
+R &= \exp(-\lambda \, t_{\text{age}}),\quad t_{\text{age}}=\text{age (minutes)}
+\end{aligned}`
+
+const formulaWeightingBlend = String.raw`\begin{aligned}
+w_{\text{corr}} &= \frac{w_{\text{raw}}}{\sum_j w_{\text{raw},j}} \\
+\text{conf} &= \min\!\left(1, \frac{d}{30}\right)\cdot \min\!\left(1, \frac{n}{n_{\min}}\right) \\
+w_{\text{final}} &= \text{conf}\cdot w_{\text{corr}} + (1 - \text{conf})\cdot w_{\text{global}}
+\end{aligned}`
+
+const formulaTeer = String.raw`\begin{aligned}
+\text{RCI}_{\text{cost}} &= \frac{f + m}{S} \\
+m &= \frac{(S - f)\,(r_{\text{mid}} - r_{\text{provider}})}{r_{\text{mid}}} \\
+\text{TEER} &= r_{\text{mid}}\cdot\left(1 - \text{RCI}_{\text{cost}}^{(w)}\right)
+\end{aligned}`
+
+const formulaRci = String.raw`\begin{aligned}
+\text{RCI} &= \frac{\sum_i w_i\cdot \text{cost\_ratio}_i}{\sum_i w_i} \\
+\text{cost\_ratio} &= \frac{f + m}{S}
+\end{aligned}`
+
+const formulaRvi = String.raw`\begin{aligned}
+\;r_{\text{eff}} &= \frac{(S - f)\, r_{\text{provider}}}{S} \\
+\text{RVI} &= \sqrt{\operatorname{Var}_w(r_{\text{eff}})} \\
+\text{RVI}_{\text{bps}} &= \frac{\text{RVI}}{\text{TEER}} \cdot 10{,}000
+\end{aligned}`
 
 const { public: { siteUrl } } = useRuntimeConfig()
 

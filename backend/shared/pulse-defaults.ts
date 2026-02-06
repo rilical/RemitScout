@@ -36,8 +36,9 @@ type ChartData = {
   insight: string
 }
 
-const now = Date.now()
-const lastUpdated = new Date(now).toISOString()
+// Defaults are intentionally "empty templates".
+// Do not fabricate timestamps; the API should surface real Gold/Gold-export freshness only.
+const lastUpdated = ''
 
 const categoryLabels: Record<ChartCategory, string> = {
   'cost-markup': 'Pricing & Margin',
@@ -124,32 +125,7 @@ export const buildChartData = (chartId: string): ChartData => {
 }
 
 export const pulseDefaults = {
-  corridors: [
-    {
-      value: 'us-ph',
-      label: 'US to Philippines',
-      fromFlag: 'US',
-      toFlag: 'PH',
-      fromCode: 'US',
-      toCode: 'PH',
-    },
-    {
-      value: 'us-mx',
-      label: 'US to Mexico',
-      fromFlag: 'US',
-      toFlag: 'MX',
-      fromCode: 'US',
-      toCode: 'MX',
-    },
-    {
-      value: 'gb-in',
-      label: 'UK to India',
-      fromFlag: 'GB',
-      toFlag: 'IN',
-      fromCode: 'GB',
-      toCode: 'IN',
-    },
-  ],
+  corridors: [],
   overview: {
     tiles: [],
     charts: [],

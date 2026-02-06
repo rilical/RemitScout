@@ -38,7 +38,7 @@
             </p>
 
             <p>
-              That frustration led to building <span class="font-semibold text-brand-600">Remit-Scout</span>, a completely transparent comparison platform where <span class="font-semibold">providers can't pay to rank higher</span>. We just show you which option gets the most money to your recipient, because every dollar matters when you're sending money home.
+              That frustration led to building <span class="font-semibold text-brand-600">Remit-Scout</span>, a completely transparent comparison platform where <span class="font-semibold">providers cannot pay to rank higher</span>. We just show you which option gets the most money to your recipient, because every dollar matters when you're sending money home.
             </p>
           </div>
 

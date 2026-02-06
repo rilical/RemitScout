@@ -70,7 +70,7 @@ export const useEntitlements = () => {
   const plan = useState<Plan>('entitlements:plan', () => 'free')
   const limits = useState<PlanLimits>('entitlements:limits', () => ({
     watchlistItems: 3,
-    alerts: 3,
+    alerts: 1,
     historyDays: 30,
     exports: false,
   }))
@@ -96,7 +96,7 @@ export const useEntitlements = () => {
       plan.value = 'free'
       limits.value = {
         watchlistItems: 3,
-        alerts: 3,
+        alerts: 1,
         historyDays: 30,
         exports: false,
       }
@@ -141,7 +141,7 @@ export const useEntitlements = () => {
       plan.value = 'free'
       limits.value = {
         watchlistItems: 3,
-        alerts: 3,
+        alerts: 1,
         historyDays: 30,
         exports: false,
       }
@@ -186,7 +186,7 @@ export const useEntitlements = () => {
       plan.value = 'free'
       limits.value = {
         watchlistItems: 3,
-        alerts: 3,
+        alerts: 1,
         historyDays: 30,
         exports: false,
       }

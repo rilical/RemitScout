@@ -65,13 +65,13 @@
               v-if="comparison.midRate && comparison.midRate > 0"
               class="text-sm text-neutral-600"
             >
-              ≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD retained by selecting the optimal counterparty
+              ≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD retained by selecting the optimal provider
             </div>
             <div
               v-else
               class="text-sm text-neutral-600"
             >
-              retained by selecting the optimal counterparty
+              retained by selecting the optimal provider
             </div>
           </div>
         </div>
@@ -480,7 +480,7 @@
               Incumbents benefit from opaque FX Spread when transfers are executed without comparison. A disciplined quote audit surfaces tighter spreads and higher Net Delivered Value across corridors.
             </p>
             <p class="text-neutral-600 text-base leading-relaxed">
-              Remit-Scout publishes real-time quotes from licensed counterparties so execution decisions are based on measurable cost and liquidity.
+              Remit-Scout publishes real-time quotes from licensed providers so execution decisions are based on measurable cost and liquidity.
             </p>
           </div>
         </div>

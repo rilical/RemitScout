@@ -53,7 +53,7 @@
       </h2>
       <p class="mb-4">
         Providers are ranked by total cost (fees + FX), delivery speed, payout breadth, and trust
-        signals. If a provider we don’t partner with beats a partner on cost or speed, it still
+        signals. If a provider we do not partner with beats a partner on cost or speed, it still
         appears higher.
       </p>
       <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">

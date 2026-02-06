@@ -4,39 +4,40 @@
  */
 
 export const SITE_STATS = {
-  // Total money saved by users in fees
+  // Estimated money saved by users (fees + FX spread), in USD.
   totalSaved: {
     value: 2500000, // in USD
     display: '$2.5M+',
     label: 'Saved',
   },
 
-  // Total number of users who trust us
+  // Total number of comparisons executed across the platform.
   users: {
     value: 80000,
     display: '80k+',
     label: 'Comparisons Executed',
   },
 
-  // Number of providers we compare
+  // Number of providers we compare (where available).
   providers: {
     value: 30,
     display: '30+',
     label: 'Providers',
   },
 
-  // Number of corridors covered
+  // Number of licensed/regulator-supervised providers (where we can verify).
+  // Note: today this matches `providers`, but keep this separate so we can diverge later without refactors.
+  licensedProviders: {
+    value: 30,
+    display: '30+',
+    label: 'Licensed Providers',
+  },
+
+  // Number of corridors covered (origin -> destination pairs) with recent comparison data.
   corridors: {
     value: 150,
     display: '150+',
     label: 'Global Corridors',
-  },
-
-  // Licensed and regulated providers
-  licensedProviders: {
-    value: 30,
-    display: '30+',
-    label: 'All fully regulated & trusted',
   },
 } as const
 

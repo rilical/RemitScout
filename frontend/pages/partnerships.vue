@@ -1192,7 +1192,7 @@
             Our independence rules
           </h2>
           <p class="text-lg leading-relaxed text-white/90 mb-10 max-w-3xl">
-            Independence isn’t a tagline. It’s a set of rules we enforce so partners can’t influence what users see.
+            Independence is not a tagline. It's a set of rules we enforce so partners cannot influence what users see.
           </p>
 
           <div class="grid gap-6 md:grid-cols-2">
@@ -1372,7 +1372,7 @@
                 to="/contact"
                 class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
               >
-                Report an issue
+                Report a problem
               </NuxtLink>
               <NuxtLink
                 to="/corrections"

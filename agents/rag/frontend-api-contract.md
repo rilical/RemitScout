@@ -70,6 +70,13 @@ Use route definitions to confirm field names and types before asserting.
 - Required fields: `corridors[]`, `updatedAt`, `providerCount`.
 - Business logic: must reflect Gold pulse cache; timestamp should match cache.
 
+7) **/api/pulse/teaser** (public) and **/api/v1/pulse/teaser** (public)
+- Required fields: `success`, `updatedAt`, `windowHours`, `movers[]`.
+- Business logic:
+  - Must be backed by Gold Export only (no demo/placeholder movers).
+  - When Gold Export has no recent rows, return `movers=[]` and `updatedAt=null`.
+  - `deltaPct` must be computed from two real buckets: `(current-prev)/prev`.
+
 ## Field dictionary (business meaning)
 - `bucketUsed`: exact amount bucket used by backend for pricing.
 - `approximate`: true when response is not exact and must be labeled.
@@ -141,6 +148,8 @@ Backend:
 - `collected_at` or `updatedAt` must reflect actual data freshness.
 - Cache metadata must map to the response payload shown in UI.
 - UI “Updated X minutes ago” should use the backend timestamp.
+- Never use `new Date()`/client time as a "last updated" indicator unless the backend explicitly returned
+  that timestamp as a freshness value. Missing freshness must render as "—" or "warming up".
 
 ## Localization and formatting rules
 - Currency formatting must use locale‑aware formatting on numeric fields.

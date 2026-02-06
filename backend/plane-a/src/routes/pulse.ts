@@ -234,7 +234,8 @@ const loadPulseEntry = async (
     const entries = await pulseCacheRepository.getEntries(candidates)
     const entryMap = new Map(entries.map((entry) => [entry.key, entry]))
     const entry = candidates.map((key) => entryMap.get(key)).find(Boolean)
-    const updatedAt = toIsoString(entry?.updated_at) || new Date().toISOString()
+    // Do not fabricate freshness. If Gold cache is missing, updatedAt must be empty.
+    const updatedAt = toIsoString(entry?.updated_at) || ''
     if (!entry) {
       return { payload: fallback, updatedAt }
     }
@@ -248,7 +249,7 @@ const loadPulseEntry = async (
       key: baseKey,
       error: error instanceof Error ? error.message : String(error),
     })
-    return { payload: fallback, updatedAt: new Date().toISOString() }
+    return { payload: fallback, updatedAt: '' }
   }
 }
 
@@ -557,7 +558,8 @@ const mapEvents = (payload: unknown) => {
         const severity = httpStatus >= 500 || blockReason ? 'high' : httpStatus >= 400 ? 'medium' : 'low'
         return {
           id: String(record.id || `${provider}-${corridor}-${httpStatus}`),
-          timestamp: toIsoString(record.created_at) || new Date().toISOString(),
+          // Never fabricate timestamps; missing created_at must surface as empty.
+          timestamp: toIsoString(record.created_at) || '',
           severity,
           title: blockReason ? `Block: ${blockReason}` : `HTTP ${httpStatus}`,
           description: `${provider} on ${corridor}`,
@@ -729,13 +731,19 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       loadPulseEntry('snapshot-summary', filters, null),
     ])
     const updatedAt = overview.updatedAt
-    return mapOverview(
+    const payload = mapOverview(
       overview.payload,
       coverage.payload,
       snapshot.payload,
       updatedAt,
       corridorName,
     )
+    return {
+      ...payload,
+      dataAvailable: Boolean(updatedAt),
+      updatedAt: updatedAt || null,
+      source: updatedAt ? 'gold_cache' : 'none',
+    }
   })
 
   app.get('/pulse/charts/:chartId', guard, async (request, reply) => {
@@ -746,10 +754,21 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     if (INDEX_CHART_IDS.has(chartId)) {
-      return await loadIndicesChartData(chartId, filters, (request.query ?? {}) as Record<string, unknown>)
+      const indices = await loadIndicesChartData(chartId, filters, (request.query ?? {}) as Record<string, unknown>)
+      return {
+        ...indices,
+        dataAvailable: Array.isArray(indices.series) && indices.series.length > 0,
+        updatedAt: indices.metadata?.lastUpdated || null,
+        source: 'gold_export',
+      }
     }
     const { payload, updatedAt } = await loadPulseEntry(`chart:${chartId}`, filters, null)
-    return normalizeChartPayload(chartId, payload, updatedAt)
+    return {
+      ...normalizeChartPayload(chartId, payload, updatedAt),
+      dataAvailable: Boolean(updatedAt),
+      updatedAt: updatedAt || null,
+      source: updatedAt ? 'gold_cache' : 'none',
+    }
   })
 
   app.get('/pulse/method-coverage', guard, async (request) => {
@@ -772,9 +791,20 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulseEntry('hero', filters, pulseDefaults.hero)
     if (isObject(payload)) {
-      return { ...payload, lastUpdated: (payload as any).lastUpdated || updatedAt }
+      return {
+        ...payload,
+        lastUpdated: (payload as any).lastUpdated || updatedAt,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
     }
-    return pulseDefaults.hero
+    return {
+      ...pulseDefaults.hero,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+    }
   })
 
   app.get('/pulse/coverage-summary', guard, async (request) => {
@@ -785,13 +815,19 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       loadPulseEntry('overview', filters, null),
       loadPulseEntry('snapshot-summary', filters, null),
     ])
-    return mapCoverageSummary(
+    const payload = mapCoverageSummary(
       coverage.payload,
       coverage.updatedAt,
       methodCoverage.payload,
       overview.payload,
       snapshot.payload,
     )
+    return {
+      ...payload,
+      dataAvailable: Boolean(coverage.updatedAt),
+      updatedAt: coverage.updatedAt || null,
+      source: coverage.updatedAt ? 'gold_cache' : 'none',
+    }
   })
 
   app.get('/pulse/snapshot-summary', guard, async (request) => {
@@ -811,6 +847,14 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     )
     if (summary && isObject(summary) && !(summary as any).amount) {
       (summary as any).amount = amount
+    }
+    if (summary && isObject(summary)) {
+      return {
+        ...(summary as any),
+        dataAvailable: Boolean(snapshot.updatedAt),
+        updatedAt: snapshot.updatedAt || null,
+        source: snapshot.updatedAt ? 'gold_cache' : 'none',
+      }
     }
     return summary
   })
@@ -841,18 +885,40 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       pulseDefaults.providerHeatmap,
     )
     if (isObject(payload) && Array.isArray((payload as any).days)) {
-      return { ...payload, lastUpdated: (payload as any).lastUpdated || updatedAt }
+      return {
+        ...payload,
+        lastUpdated: (payload as any).lastUpdated || updatedAt,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
     }
-    return pulseDefaults.providerHeatmap
+    return {
+      ...pulseDefaults.providerHeatmap,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+    }
   })
 
   app.get('/pulse/smart-send', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulseEntry('smart-send', filters, pulseDefaults.smartSend)
     if (isObject(payload)) {
-      return { ...payload, lastUpdated: (payload as any).lastUpdated || updatedAt }
+      return {
+        ...payload,
+        lastUpdated: (payload as any).lastUpdated || updatedAt,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
     }
-    return pulseDefaults.smartSend
+    return {
+      ...pulseDefaults.smartSend,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+    }
   })
 
   app.get('/pulse/market-snapshot', guard, async (request) => {
@@ -863,9 +929,20 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       pulseDefaults.marketSnapshot,
     )
     if (isObject(payload)) {
-      return { ...payload, lastUpdated: (payload as any).lastUpdated || updatedAt }
+      return {
+        ...payload,
+        lastUpdated: (payload as any).lastUpdated || updatedAt,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
     }
-    return pulseDefaults.marketSnapshot
+    return {
+      ...pulseDefaults.marketSnapshot,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+    }
   })
 
   app.get('/pulse/true-cost', guard, async (request) => {
@@ -876,20 +953,54 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/market-depth', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('market-depth', filters, pulseDefaults.marketDepth)
-    return isObject(payload) ? payload : pulseDefaults.marketDepth
+    const { payload, updatedAt } = await loadPulseEntry('market-depth', filters, pulseDefaults.marketDepth)
+    if (isObject(payload)) {
+      return {
+        ...payload,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
+    }
+    return {
+      ...pulseDefaults.marketDepth,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+    }
   })
 
   app.get('/pulse/arbitrage', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('arbitrage', filters, pulseDefaults.arbitrage)
-    return isObject(payload) ? payload : pulseDefaults.arbitrage
+    const { payload, updatedAt } = await loadPulseEntry('arbitrage', filters, pulseDefaults.arbitrage)
+    if (isObject(payload)) {
+      return {
+        ...payload,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
+    }
+    return pulseDefaults.arbitrage
   })
 
   app.get('/pulse/bank-comparison', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('bank-comparison', filters, pulseDefaults.bankComparison)
-    return isObject(payload) ? payload : pulseDefaults.bankComparison
+    const { payload, updatedAt } = await loadPulseEntry('bank-comparison', filters, pulseDefaults.bankComparison)
+    if (isObject(payload)) {
+      return {
+        ...payload,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+      }
+    }
+    return {
+      ...pulseDefaults.bankComparison,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+    }
   })
 
   app.get('/pulse/cost-trend', guard, async (request) => {
@@ -905,7 +1016,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       baseCurrency: pair?.base ?? null,
       quoteCurrency: pair?.quote ?? null,
       history: [],
-      lastUpdated: new Date().toISOString(),
+      // Never pretend data is fresh when Gold cache is missing.
+      lastUpdated: '',
     }
 
     const { payload, updatedAt } = await loadPulseEntry('fx-rate-history', filters, fallback)

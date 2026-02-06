@@ -76,7 +76,7 @@
             </div>
             <h3 class="font-semibold text-slate-900 mb-2">Smart Rate Alerts</h3>
             <p class="text-sm text-slate-600 mb-3">Get notified when rates hit your target. Set alerts for exchange rates, fees, or total recipient amount.</p>
-            <div class="text-xs text-slate-400">Free: 3 alerts • Plus: 16 alerts</div>
+            <div class="text-xs text-slate-400">Free: 1 alert • Plus: 16 alerts</div>
           </div>
           <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all">
             <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
@@ -152,7 +152,7 @@
                 </li>
                 <li class="flex items-center gap-2 text-slate-700">
                   <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  3 active alerts
+                  1 active alert
                 </li>
                 <li class="flex items-center gap-2 text-slate-700">
                   <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
@@ -1664,7 +1664,7 @@
                 </div>
                 <div>
                   <h4 class="font-semibold mb-1">Need More Alerts?</h4>
-                  <p class="text-sm text-slate-300">Free accounts are limited to 3 alerts. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
+                  <p class="text-sm text-slate-300">Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
                 </div>
               </div>
               <NuxtLink to="/plus" class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">

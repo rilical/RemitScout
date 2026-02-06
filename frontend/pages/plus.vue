@@ -134,7 +134,7 @@
                   />
                 </svg>
                 <div>
-                  <span class="text-slate-700 font-medium">3 active alerts</span>
+                  <span class="text-slate-700 font-medium">1 active alert</span>
                   <p class="text-xs text-slate-500 mt-1">
                     Get notified when rates change
                   </p>
@@ -155,7 +155,7 @@
                   />
                 </svg>
                 <div>
-                  <span class="text-slate-700 font-medium">30-day rate history</span>
+                  <span class="text-slate-700 font-medium">30-day transfer history</span>
                   <p class="text-xs text-slate-500 mt-1">
                     See recent trends
                   </p>
@@ -176,9 +176,30 @@
                   />
                 </svg>
                 <div>
-                  <span class="text-slate-700 font-medium">Basic email alerts</span>
+                  <span class="text-slate-700 font-medium">Ads and sponsored placements</span>
                   <p class="text-xs text-slate-500 mt-1">
-                    Daily updates
+                    Keeps the free plan free
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <svg
+                  class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                <div>
+                  <span class="text-slate-400 line-through">Pulse access</span>
+                  <p class="text-xs text-slate-400 mt-1">
+                    Plus only
                   </p>
                 </div>
               </li>
@@ -265,6 +286,12 @@
               <div class="text-sm text-white/80 font-medium">
                 {{ plusPriceSuffix }}
               </div>
+              <p
+                v-if="billedAnnuallyMonthlyDisplay"
+                class="mt-1 text-xs text-white/80"
+              >
+                {{ billedAnnuallyMonthlyDisplay }}
+              </p>
               <p class="mt-2 text-xs text-white/80">
                 <span v-if="trialDays > 0">{{ trialDays }}-day free trial • Cancel anytime</span>
                 <span v-else>Cancel anytime</span>
@@ -316,7 +343,7 @@
                 <div>
                   <span class="text-white font-semibold">16 smart alerts</span>
                   <p class="text-xs text-white/80 mt-1">
-                    Send-score windows and target-rate alerts
+                    Send-score windows and target-rate alerts (eligible corridors)
                   </p>
                 </div>
               </li>
@@ -1042,6 +1069,18 @@ const formatMoney = (amount: number | null | undefined, currency: string | null 
 
 const plusPriceDisplay = computed(() => formatMoney(selectedPrice.value?.amount, selectedPrice.value?.currency))
 const plusPriceSuffix = computed(() => (billingInterval.value === 'year' ? 'per year' : 'per month'))
+
+const billedAnnuallyMonthlyDisplay = computed(() => {
+  if (billingInterval.value !== 'year') return null
+  const annualAmount = pricing.value?.plus.year.amount
+  const currency = pricing.value?.plus.year.currency
+  if (typeof annualAmount !== 'number' || !Number.isFinite(annualAmount) || annualAmount <= 0) return null
+  if (!currency) return null
+  const monthly = annualAmount / 12
+  const formatted = formatMoney(monthly, currency)
+  if (!formatted) return null
+  return `${formatted} / month billed annually`
+})
 
 const annualSavingsPct = computed(() => {
   const month = pricing.value?.plus.month.amount

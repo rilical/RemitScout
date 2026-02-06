@@ -16,6 +16,9 @@ This file is the primary reference for Remit-Scout architecture. It defines key 
 ## System invariants (must not break)
 - Plane A must never read Bronze data directly.
 - All public APIs must validate inputs and return stable response schemas.
+- Pulse endpoints must never fabricate freshness timestamps or demo values. If Gold/Gold Export inputs are missing,
+  APIs must return empty payloads with explicit availability flags (for example `dataAvailable=false`, `updatedAt=null`)
+  so the UI can render a truthful "warming up" state.
 - Silver is the primary source of truth for alert evaluations; Gold is used for aggregates.
 - Tier assignments are versioned; historical assignments are immutable.
 - All exports should normalize to a $500 USD equivalent in the sending currency and include the relevant destination value.

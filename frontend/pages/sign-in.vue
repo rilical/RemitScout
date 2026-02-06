@@ -64,6 +64,73 @@
           >
             {{ errorMessage }}
           </div>
+          <!-- Email/Password -->
+          <form
+            class="space-y-4"
+            @submit.prevent="handleEmailSignIn"
+          >
+            <div>
+              <label
+                for="email"
+                class="block text-sm font-semibold text-slate-700 mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                v-model.trim="email"
+                type="email"
+                autocomplete="email"
+                required
+                class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                placeholder="you@example.com"
+              >
+            </div>
+            <div>
+              <label
+                for="password"
+                class="block text-sm font-semibold text-slate-700 mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                minlength="8"
+                class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                placeholder="Your password"
+              >
+              <div class="mt-2 flex items-center justify-between">
+                <NuxtLink
+                  to="/forgot-password"
+                  class="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  Forgot password?
+                </NuxtLink>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+              :disabled="loading"
+            >
+              {{ loading ? 'Signing in…' : 'Sign in' }}
+            </button>
+          </form>
+
+          <!-- Divider -->
+          <div class="my-6 flex items-center gap-4">
+            <div class="h-px flex-1 bg-slate-200" />
+            <div class="text-xs font-semibold text-slate-500">
+              OR
+            </div>
+            <div class="h-px flex-1 bg-slate-200" />
+          </div>
+
           <!-- Social Login Buttons -->
           <div class="space-y-3">
             <button
@@ -96,10 +163,6 @@
               Continue with Google
             </button>
           </div>
-
-          <p class="mt-4 text-xs text-slate-500">
-            Google sign-in is the only supported login method for now.
-          </p>
         </div>
       </div>
 
@@ -147,14 +210,32 @@
 </template>
 
 <script setup lang="ts">
-const { user, isLoggedIn, signOut, signInWithOAuth } = useAuth()
+const { user, isLoggedIn, signOut, signIn, signInWithOAuth } = useAuth()
 const route = useRoute()
 
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
+const email = ref('')
+const password = ref('')
 
 async function handleSignOut() {
   await signOut()
+}
+
+async function handleEmailSignIn() {
+  errorMessage.value = null
+  loading.value = true
+
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+  const result = await signIn(email.value, password.value)
+  loading.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Unable to sign in.'
+    return
+  }
+
+  await navigateTo(redirect)
 }
 
 async function handleSocialSignIn(provider: 'google') {

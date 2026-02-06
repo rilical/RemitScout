@@ -135,7 +135,7 @@
             Send more home,<br><span class="text-brand-600">pay less</span> in fees.
           </h1>
           <p class="mb-8 text-lg leading-relaxed text-neutral-600 sm:text-xl">
-            Compare current quotes, total fees, and estimated delivery times <span class="whitespace-nowrap">across {{ SITE_STATS.providers.display }} licensed providers.</span>
+            Compare current quotes, total fees, and estimated delivery times <span class="whitespace-nowrap">across {{ SITE_STATS.licensedProviders.display }} licensed providers.</span>
           </p>
 
           <div
@@ -474,7 +474,7 @@
               <!-- Money Saved -->
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">
-                  Total money saved for users
+                  {{ SITE_STATS.totalSaved.label }}
                 </p>
                 <p class="text-4xl font-bold text-brand-600">
                   {{ SITE_STATS.totalSaved.display }}
@@ -487,26 +487,26 @@
               <!-- Providers Compared -->
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">
-                  Licensed providers compared
+                  {{ SITE_STATS.providers.label }}
                 </p>
                 <p class="text-4xl font-bold text-brand-600">
                   {{ SITE_STATS.providers.display }}
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
-                  {{ SITE_STATS.licensedProviders.label }}
+                  Licensed and regulated where available
                 </p>
               </div>
 
               <!-- Countries Covered -->
               <div class="border-b border-neutral-200 pb-6">
                 <p class="mb-1 text-xs text-neutral-600">
-                  Countries & corridors
+                  {{ SITE_STATS.corridors.label }}
                 </p>
                 <p class="text-4xl font-bold text-brand-600">
                   {{ SITE_STATS.corridors.display }}
                 </p>
                 <p class="mt-1 text-xs text-neutral-600">
-                  Coverage across major corridors
+                  Coverage varies by corridor
                 </p>
               </div>
 

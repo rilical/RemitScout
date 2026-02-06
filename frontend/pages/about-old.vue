@@ -776,6 +776,14 @@ import { SITE_STATS } from '~/config/stats'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { getCorridorUrl } from '~/utils/country-slugs'
 
+// Legacy page kept for backward compatibility. Canonical page is `/about`.
+if (import.meta.server) {
+  await navigateTo('/about', { redirectCode: 301 })
+}
+else {
+  await navigateTo('/about')
+}
+
 const founderHeadshotUrl = '/images/about/omar-ghabayen-headshot.webp'
 
 const { form: moneyForm, submit: submitForm } = useCompareForm()

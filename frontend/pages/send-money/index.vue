@@ -383,7 +383,7 @@
                 <!-- Main Description -->
                 <div class="flex-1">
                   <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
-                    <strong class="text-white font-bold">100% independent rankings.</strong> Providers can't pay for better placement.
+                    <strong class="text-white font-bold">100% independent rankings.</strong> Providers cannot pay for better placement.
                   </p>
                   <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
                     Our methodology is fully transparent and publicly available. We update our data continuously to ensure accuracy.

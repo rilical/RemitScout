@@ -9,7 +9,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
-        alerts_max: 3,
+        alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
         api_access: false,
@@ -57,7 +57,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
-        alerts_max: 3,
+        alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
         api_access: false,
@@ -73,7 +73,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
-        alerts_max: 3,
+        alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
         api_access: false,
@@ -89,7 +89,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
-        alerts_max: 3,
+        alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
         api_access: false,
@@ -124,7 +124,7 @@ describe('entitlements', () => {
       const plus = getEntitlementsForPlan('plus')
       const enterprise = getEntitlementsForPlan('enterprise')
 
-      expect(free.alerts_max).toBe(3)
+      expect(free.alerts_max).toBe(1)
       expect(plus.alerts_max).toBe(16)
       expect(enterprise.alerts_max).toBeNull()
     })

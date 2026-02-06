@@ -4,9 +4,12 @@ import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
+import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 
 const logger = createLogger('plane-a.ads')
 const pool = getPool(config.db.planeAUrl)
+
+const isPlanActiveStatus = (status?: string | null) => status === 'active' || status === 'trialing'
 
 const placementQuerySchema = z.object({
   placement: z.string().min(1),
@@ -92,6 +95,24 @@ export const adsRoutes = async (app: FastifyInstance) => {
     if (!parsed.success) {
       reply.code(400)
       return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    // Plus/Enterprise should be truly ad-free. Enforce server-side, not just in UI.
+    if (request.user?.user_id) {
+      try {
+        await ensureUserPlan(pool, request.user.user_id)
+        const plan = await getUserPlan(pool, request.user.user_id)
+        const effectivePlanCode =
+          plan && isPlanActiveStatus(plan.status) ? plan.plan_code : 'free'
+        if (effectivePlanCode === 'plus' || effectivePlanCode === 'enterprise') {
+          return { ad: null }
+        }
+      } catch (error: unknown) {
+        logger.warn('ad_entitlement_check_failed', {
+          user_id: request.user.user_id,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
 
     const input = parsed.data
