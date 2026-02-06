@@ -1,0 +1,26 @@
+:root {
+  /* Layout */
+  --rs-page-max-width: 72rem;
+  --rs-space-page-x: 1rem;
+  --rs-space-page-y: 1.5rem;
+  --rs-space-stack: 1.5rem;
+
+  /* Color (semantic) */
+  --rs-color-bg: #f8fafc;
+  --rs-color-surface: #ffffff;
+  --rs-color-fg: #0f172a;
+  --rs-color-muted: #475569;
+  --rs-color-border: #e2e8f0;
+  --rs-color-brand: #2563eb;
+
+  /* Radii */
+  --rs-radius-md: 12px;
+  --rs-radius-lg: 16px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --rs-space-page-x: 2rem;
+    --rs-space-page-y: 2.5rem;
+  }
+}
