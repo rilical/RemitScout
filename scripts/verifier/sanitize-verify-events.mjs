@@ -93,6 +93,53 @@ function listRepoRalphDirs() {
   return Array.from(out);
 }
 
+function bootstrapRalphConfigForRepoWorktrees() {
+  // Pragmatic self-heal: older/local worktrees can exist on branches that
+  // predate the committed `ralph.yml`. If Ralph is run from such a worktree,
+  // it falls back to built-in defaults and may auto-emit legacy `verify.*`
+  // events with empty/string payloads (missing `quality.*`).
+  //
+  // When running `--repo`, we opportunistically copy the repo-root config into
+  // any discovered worktree that has a `.ralph/` dir but is missing `ralph.yml`.
+  // This is intentionally best-effort and only fills missing files (never
+  // overwrites).
+  const sourceRalphYml = "ralph.yml";
+  const sourceRalphExampleYml = "ralph.example.yml";
+
+  if (!fs.existsSync(sourceRalphYml)) return;
+
+  const worktreesDir = ".worktrees";
+  if (!fs.existsSync(worktreesDir)) return;
+
+  try {
+    for (const name of fs.readdirSync(worktreesDir)) {
+      const worktreeRoot = path.join(worktreesDir, name);
+      const ralphDir = path.join(worktreeRoot, ".ralph");
+      if (!fs.existsSync(ralphDir)) continue;
+
+      const targetRalphYml = path.join(worktreeRoot, "ralph.yml");
+      if (!fs.existsSync(targetRalphYml)) {
+        try {
+          fs.copyFileSync(sourceRalphYml, targetRalphYml);
+        } catch {
+          // best-effort
+        }
+      }
+
+      const targetRalphExampleYml = path.join(worktreeRoot, "ralph.example.yml");
+      if (fs.existsSync(sourceRalphExampleYml) && !fs.existsSync(targetRalphExampleYml)) {
+        try {
+          fs.copyFileSync(sourceRalphExampleYml, targetRalphExampleYml);
+        } catch {
+          // best-effort
+        }
+      }
+    }
+  } catch {
+    // best-effort
+  }
+}
+
 function normalizeEventPayload(payload) {
   if (payload && typeof payload === "object" && !Array.isArray(payload)) {
     return normalizeVerifyPayload(payload);
@@ -175,6 +222,8 @@ function main() {
 
   let files;
   if (repo) {
+    bootstrapRalphConfigForRepoWorktrees();
+
     const allFiles = [];
     for (const dir of listRepoRalphDirs()) {
       allFiles.push(...listAllEventsFilesInDir(dir));
