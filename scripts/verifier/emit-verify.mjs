@@ -20,7 +20,9 @@ function usageAndExit(code) {
 }
 
 function getArgValue(args, flag) {
-  const idx = args.indexOf(flag);
+  // Prefer the last occurrence so wrapper scripts can provide defaults that
+  // callers override explicitly.
+  const idx = args.lastIndexOf(flag);
   if (idx === -1) return null;
   if (idx + 1 >= args.length) usageAndExit(2);
   return args[idx + 1];
@@ -31,13 +33,18 @@ function hasFlag(args, flag) {
 }
 
 function normalizeVerifyPayload(input) {
+  const safeInput =
+    typeof input === "object" && input !== null && !Array.isArray(input)
+      ? input
+      : { value: input };
+
   const nodeVersion =
-    input?.node ??
+    safeInput?.node ??
     process.version.replace(/^v/, "");
 
   const inputQuality =
-    typeof input?.quality === "object" && input.quality !== null
-      ? input.quality
+    typeof safeInput?.quality === "object" && safeInput.quality !== null
+      ? safeInput.quality
       : {};
 
   const normalizeSignalObject = (value, defaults) => {
@@ -111,7 +118,7 @@ function normalizeVerifyPayload(input) {
   });
 
   const normalized = {
-    ...input,
+    ...safeInput,
     node: nodeVersion,
     quality: {
       ...inputQuality,
@@ -125,6 +132,42 @@ function normalizeVerifyPayload(input) {
   };
 
   return normalized;
+}
+
+function ensureObjectAtPath(root, path) {
+  let cursor = root;
+  for (const segment of path) {
+    if (typeof cursor[segment] !== "object" || cursor[segment] === null) {
+      cursor[segment] = {};
+    }
+    cursor = cursor[segment];
+  }
+  return cursor;
+}
+
+function setNestedValue(root, path, value) {
+  if (path.length === 0) return;
+  const parent = ensureObjectAtPath(root, path.slice(0, -1));
+  parent[path[path.length - 1]] = value;
+}
+
+function repairDottedQualityKeys(input) {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return input;
+  }
+
+  for (const [key, value] of Object.entries(input)) {
+    if (!key.startsWith("quality.")) continue;
+
+    // Example drift patterns we've seen:
+    // - { "quality.tests": { ... } }
+    // - { "quality.tests.status": "pass" }
+    const path = key.split(".");
+    setNestedValue(input, path, value);
+    delete input[key];
+  }
+
+  return input;
 }
 
 function main() {
@@ -150,7 +193,11 @@ function main() {
   } else {
     try {
       const raw = fileArg ? fs.readFileSync(fileArg, "utf8") : jsonArg;
-      input = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      input =
+        typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+          ? parsed
+          : { value: parsed };
     } catch (err) {
       // Pragmatic drift guard: if the verifier passes a non-JSON string by
       // mistake, still emit a schema-stable payload rather than failing and
@@ -162,6 +209,8 @@ function main() {
       };
     }
   }
+
+  input = repairDottedQualityKeys(input);
 
   const payload = normalizeVerifyPayload(input);
   const payloadStr = JSON.stringify(payload);

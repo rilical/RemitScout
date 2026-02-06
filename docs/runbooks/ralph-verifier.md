@@ -22,6 +22,24 @@ these keys always exist:
 
 Missing signals are filled with `"n/a"`.
 
+### Preferred wrapper commands
+
+To reduce quoting mistakes and prevent schema drift, prefer the pnpm wrappers:
+
+```bash
+pnpm verifier:emit:passed
+pnpm verifier:emit:failed
+```
+
+To provide a richer payload, pass args through to the underlying script:
+
+```bash
+pnpm verifier:emit:passed -- --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
+```
+
+Important: `quality.tests` is a *path*, not a JSON key. Do not emit dotted keys
+like `{"quality.tests": ...}`.
+
 ## Smoke check (recommended)
 
 ```bash

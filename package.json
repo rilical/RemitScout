@@ -13,6 +13,8 @@
   "scripts": {
     "lint": "eslint backend",
     "lint:compliance": "eslint backend",
+    "verifier:emit:passed": "node scripts/verifier/emit-verify.mjs verify.passed --json '{}'",
+    "verifier:emit:failed": "node scripts/verifier/emit-verify.mjs verify.failed --json '{}'",
     "verifier:smoke": "node scripts/verifier/smoke.mjs",
     "dev:all": "bash scripts/dev/start-local.sh",
     "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh"

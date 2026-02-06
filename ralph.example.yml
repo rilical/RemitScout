@@ -56,7 +56,7 @@ hats:
       missing signals with `"n/a"`:
 
       ```bash
-      node scripts/verifier/emit-verify.mjs verify.passed --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
+      pnpm verifier:emit:passed -- --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
       ```
 
       Notes:

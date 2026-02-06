@@ -77,6 +77,31 @@ function run() {
 
   const payloadBadJson = JSON.parse(resultBadJson.stdout);
   assertQualityShape(payloadBadJson);
+
+  // Drift guard: some callers mistakenly emit dotted keys ("quality.tests").
+  // The emitter should repair these into nested objects.
+  const resultDotted = runEmitter(
+    '{"quality.tests":{"status":"pass","command":"(smoke)"}}',
+  );
+  assert.equal(
+    resultDotted.status,
+    0,
+    resultDotted.stderr || "smoke: emitter failed (dotted keys)",
+  );
+
+  const payloadDotted = JSON.parse(resultDotted.stdout);
+  assertQualityShape(payloadDotted);
+
+  // Drift guard: "null" JSON should not crash normalization.
+  const resultNull = runEmitter("null");
+  assert.equal(
+    resultNull.status,
+    0,
+    resultNull.stderr || "smoke: emitter failed (null payload)",
+  );
+
+  const payloadNull = JSON.parse(resultNull.stdout);
+  assertQualityShape(payloadNull);
 }
 
 try {
