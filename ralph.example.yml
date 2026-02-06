@@ -45,6 +45,9 @@ hats:
       Do NOT call `ralph emit verify.passed` / `ralph emit verify.failed` directly.
       That is the #1 source of drift (missing `quality.*` keys).
 
+      Do NOT use dotted JSON keys like `"quality.tests"` (that is a *literal* JSON
+      key, not an object). The payload must be nested as `quality: { tests: ... }`.
+
       Also do NOT rely on Ralph's default publish behavior (plain-text payloads).
       This hat must explicitly emit via `scripts/verifier/emit-verify.mjs` so the
       payload is always a JSON object with stable `quality.*` shape.
@@ -61,10 +64,12 @@ hats:
       - Use `--dry-run | jq .quality` to sanity-check the normalized output.
 
       ### Suggested commands (repo default)
+      Start by asserting the schema helper is working (fast drift guard):
+
+      - Required: `pnpm verifier:smoke`
+
+      Then run the actual checks:
+
       - Tests: `pnpm -C backend test` (include coverage if enabled in Vitest)
       - Build: `pnpm -C backend build`
       - Lint: `pnpm -C backend lint`
-
-      ### Payload schema smoke check
-      - `node scripts/verifier/smoke.mjs`
-      - (optional) `pnpm verifier:smoke` (requires Node 20)
