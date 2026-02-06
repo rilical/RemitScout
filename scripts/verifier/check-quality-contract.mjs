@@ -174,6 +174,8 @@ function assertVerifierDoesNotDefaultPublish(filePath) {
   // Ralph merges config with built-in defaults. The built-in verifier hat sets
   // `default_publishes: verify.passed`, which can auto-emit an empty payload.
   // We require explicitly overriding it with an empty string.
+  // (Ralph's config schema expects a string here; an empty list like `[]` is a
+  // YAML type error and won't parse.)
   if (defaultPublishesValue === null) {
     fail(
       `${filePath}: hats.verifier.default_publishes is missing; set it to "" to disable builtin defaults`,
@@ -184,7 +186,7 @@ function assertVerifierDoesNotDefaultPublish(filePath) {
   const disabled = trimmed === '""' || trimmed === "''";
   if (!disabled) {
     fail(
-      `${filePath}: hats.verifier.default_publishes must be "" (got ${JSON.stringify(trimmed)})`,
+      `${filePath}: hats.verifier.default_publishes must be "" (got ${JSON.stringify(trimmed)}; Ralph requires a string here)`,
     );
   }
 }

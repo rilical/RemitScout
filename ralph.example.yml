@@ -40,7 +40,7 @@ hats:
     #
     # NOTE: YAML `null` does NOT reliably override built-in defaults during merge
     # (it may be treated as "unset"). Use an explicit empty string to override.
-    # (Ralph tolerates empty topics; we treat this as "disabled".)
+    # (Ralph expects a string here; we treat the empty topic as "disabled".)
     default_publishes: ""
     instructions: |
       ## VERIFIER MODE (Node/TypeScript)
