@@ -129,6 +129,18 @@ function main() {
   const { runUnitTests, full, emitTopic, dryRun } = parseArgs(process.argv.slice(2));
 
   let tmpDir = null;
+
+  // Guardrail: the orchestrator/harness can scan historical events.
+  // If any legacy verify.* payloads exist (e.g. payload as a string), sanitize
+  // them up-front so the harness can never observe a non-contract verify event
+  // even if this run fails before the post-emit sanitizer executes.
+  if (emitTopic) {
+    try {
+      sanitizeVerifyEvents();
+    } catch {
+      // best-effort
+    }
+  }
   try {
     if (emitTopic && emitTopic !== "verify.passed" && emitTopic !== "verify.failed") {
       // Treat invalid emit topics as an internal verifier error.

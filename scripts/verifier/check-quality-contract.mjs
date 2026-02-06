@@ -31,6 +31,173 @@ function isPlainObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
 }
 
+function findRepoRoot(startDir = process.cwd()) {
+  let dir = path.resolve(startDir);
+  let ralphCandidate = null;
+
+  for (let i = 0; i < 50; i += 1) {
+    if (fs.existsSync(path.join(dir, ".git"))) {
+      return dir;
+    }
+    if (!ralphCandidate && fs.existsSync(path.join(dir, "ralph.yml"))) {
+      ralphCandidate = dir;
+    }
+
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  return ralphCandidate ?? path.resolve(startDir);
+}
+
+function sanitizeVerifyEventsRepoWide() {
+  const repoRoot = findRepoRoot();
+  const sanitizeScript = path.join(
+    repoRoot,
+    "scripts",
+    "verifier",
+    "sanitize-verify-events.mjs",
+  );
+
+  const result = spawnSync(process.execPath, [sanitizeScript, "--all", "--repo"], {
+    encoding: "utf8",
+    cwd: repoRoot,
+  });
+
+  if (result.status !== 0) {
+    fail(
+      `sanitize-verify-events exited ${result.status}. stderr=${JSON.stringify(
+        result.stderr ?? "",
+      )}`,
+    );
+  }
+}
+
+function listAllEventsFilesInRalphDir(ralphDir) {
+  const out = new Set();
+
+  // 1) Active file pointed to by .ralph/current-events
+  try {
+    const currentEventsPath = path.join(ralphDir, "current-events");
+    if (fs.existsSync(currentEventsPath)) {
+      const p = fs.readFileSync(currentEventsPath, "utf8").trim();
+      if (p) out.add(p);
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2) Conventional single-file log
+  const fallback = path.join(ralphDir, "events.jsonl");
+  if (fs.existsSync(fallback)) out.add(fallback);
+
+  // 3) Rotated logs
+  try {
+    for (const name of fs.readdirSync(ralphDir)) {
+      if (!/^events-.*\.jsonl$/.test(name)) continue;
+      out.add(path.join(ralphDir, name));
+    }
+  } catch {
+    // best-effort
+  }
+
+  return Array.from(out);
+}
+
+function listRepoRalphDirs(repoRoot) {
+  const out = new Set();
+
+  const ignore = new Set([
+    ".git",
+    "node_modules",
+    "cdk.out",
+    ".pnpm-store",
+    ".nuxt",
+    ".output",
+    ".cursor",
+    ".vscode",
+    "dist",
+    "coverage",
+  ]);
+
+  const stack = [repoRoot];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    if (!dir) break;
+
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (ignore.has(entry.name)) continue;
+
+      const fullPath = path.join(dir, entry.name);
+      if (entry.name === ".ralph") {
+        out.add(fullPath);
+        continue;
+      }
+      stack.push(fullPath);
+    }
+  }
+
+  return Array.from(out);
+}
+
+function assertRepoVerifyEventsAreContractValid() {
+  const repoRoot = findRepoRoot();
+  const ralphDirs = listRepoRalphDirs(repoRoot);
+  const files = Array.from(
+    new Set(ralphDirs.flatMap((dir) => listAllEventsFilesInRalphDir(dir))),
+  );
+
+  for (const filePath of files) {
+    if (!fs.existsSync(filePath)) continue;
+
+    let raw;
+    try {
+      raw = fs.readFileSync(filePath, "utf8");
+    } catch {
+      continue;
+    }
+
+    const lines = raw.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      let evt;
+      try {
+        evt = JSON.parse(line);
+      } catch {
+        fail(`malformed JSONL in ${filePath}:${i + 1}`);
+      }
+
+      if (evt?.topic !== "verify.passed" && evt?.topic !== "verify.failed") {
+        continue;
+      }
+
+      const payload = evt.payload;
+      if (!isPlainObject(payload)) {
+        fail(`verify payload is not an object in ${filePath}:${i + 1}`);
+      }
+      if (!isPlainObject(payload.quality)) {
+        fail(`verify payload.quality missing in ${filePath}:${i + 1}`);
+      }
+      for (const signal of EXPECTED_SIGNALS) {
+        if (!isPlainObject(payload.quality[signal])) {
+          fail(`verify payload missing quality.${signal} in ${filePath}:${i + 1}`);
+        }
+      }
+    }
+  }
+}
+
 function runEmitVerify(topic, json) {
   const result = spawnSync(
     process.execPath,
@@ -277,6 +444,11 @@ function main() {
   if (fs.existsSync("frontend")) {
     assertFilePresent("frontend/ralph.yml");
   }
+
+  // Self-heal + guardrail: the harness can scan historical event logs.
+  // Normalize legacy verify.* events, then enforce none remain non-contract.
+  sanitizeVerifyEventsRepoWide();
+  assertRepoVerifyEventsAreContractValid();
 
   const passedEmpty = runEmitVerify("verify.passed", "{}");
   assertQualityShape(passedEmpty, "verify.passed:{}");
