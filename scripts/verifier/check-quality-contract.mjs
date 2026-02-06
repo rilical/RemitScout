@@ -19,6 +19,14 @@ function fail(message) {
   process.exit(1);
 }
 
+function assertFilePresent(filePath) {
+  if (!fs.existsSync(filePath)) {
+    fail(
+      `${filePath} is missing. This repo relies on a committed ralph.yml to avoid Ralph falling back to built-in defaults (which can auto-emit verify.* without quality.*).`,
+    );
+  }
+}
+
 function isPlainObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
 }
@@ -258,6 +266,12 @@ function assertNoVerifyDefaultPublishes(filePath) {
 }
 
 function main() {
+  // Determinism: ralph defaults to `-c ralph.yml`. If it is missing, Ralph will
+  // fall back to built-in presets (including verifier defaults that can emit an
+  // empty verify.* payload).
+  assertFilePresent("ralph.yml");
+  assertFilePresent("ralph.example.yml");
+
   const passedEmpty = runEmitVerify("verify.passed", "{}");
   assertQualityShape(passedEmpty, "verify.passed:{}");
 
