@@ -149,19 +149,30 @@ describe('db', () => {
     })
 
     it('calculates query duration', async () => {
-      const mockPool = {
-        query: vi.fn().mockImplementation(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 10))
-          return { rows: [] }
-        }),
-      } as unknown as Pool
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(0))
 
-      await query('SELECT * FROM test', [], mockPool)
+      try {
+        const mockPool = {
+          query: vi.fn().mockImplementation(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 10))
+            return { rows: [] }
+          }),
+        } as unknown as Pool
 
-      const call = vi.mocked(dbMetrics.recordQueryFromSql).mock.calls[0]
-      const duration = call[1] as number
-      expect(duration).toBeGreaterThanOrEqual(0.01)
-      expect(duration).toBeLessThan(0.1)
+        const queryPromise = query('SELECT * FROM test', [], mockPool)
+        await vi.advanceTimersByTimeAsync(10)
+        await queryPromise
+
+        const call = vi.mocked(dbMetrics.recordQueryFromSql).mock.calls[0]
+        const duration = call[1] as number
+
+        expect(duration).toBeGreaterThanOrEqual(0)
+        expect(duration).toBeLessThan(0.1)
+        expect(duration).toBeCloseTo(0.01, 6)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('uses default pool when poolInstance not provided', async () => {
@@ -175,6 +186,5 @@ describe('db', () => {
     })
   })
 })
-
 
 
