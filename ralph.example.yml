@@ -44,35 +44,22 @@ hats:
       (`tests`, `coverage`, `lint`, `audit`, `mutation`, `complexity`) even when
       failing early. If a signal is unavailable, set that field to `"n/a"`.
 
-      ### Required `verify.*` JSON payload shape
-      Emit either `verify.passed` or `verify.failed` via `ralph emit` with:
+      ### Emitting `verify.*` events (REQUIRED)
+      Do NOT call `ralph emit verify.passed` / `ralph emit verify.failed` directly.
+      That is the #1 source of drift (missing `quality.*` keys).
 
-      ```json
-      {
-        "node": "<node version>",
-        "quality": {
-          "tests": { "status": "pass|fail|n/a", "command": "..." },
-          "coverage": "n/a" | { "status": "reported", "tool": "..." },
-          "lint": { "status": "pass|fail|n/a", "command": "...", "errors": 0, "warnings": 0 },
-          "audit": "n/a" | { "status": "pass|fail|n/a", "command": "..." },
-          "mutation": "n/a" | { "status": "pass|fail|n/a", "tool": "..." },
-          "complexity": "n/a" | { "status": "reported", "tool": "..." }
-        }
-      }
-      ```
-
-      Use `"n/a"` when a check/tool isn't configured.
-
-      ### Suggested commands (repo default)
-      - Tests: `pnpm -C backend test` (include coverage if enabled in Vitest)
-      - Build: `pnpm -C backend build`
-      - Lint: `pnpm -C backend lint`
-
-      ### Required helper (schema stability)
-      Route *all* `verify.passed`/`verify.failed` emissions through the helper
-      so the payload is normalized and never misses required `quality.*` keys:
+      Always emit via the repo helper, which normalizes the payload and fills
+      missing signals with `"n/a"`:
 
       ```bash
       node scripts/verifier/emit-verify.mjs verify.passed --json '{"quality":{"tests":{"status":"pass","command":"pnpm -C backend test"}}}'
       ```
 
+      Notes:
+      - You may pass a *partial* `quality` object; the helper will add missing keys.
+      - Use `--dry-run | jq .quality` to sanity-check the normalized output.
+
+      ### Suggested commands (repo default)
+      - Tests: `pnpm -C backend test` (include coverage if enabled in Vitest)
+      - Build: `pnpm -C backend build`
+      - Lint: `pnpm -C backend lint`
