@@ -6,6 +6,7 @@ export default {
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
+    './shared/**/*.{js,vue,ts}',
     './nuxt.config.{js,ts}',
     './app.vue',
   ],
@@ -19,6 +20,14 @@ export default {
         xl: '1536px',
       },
       colors: {
+        rs: {
+          bg: 'var(--rs-color-bg)',
+          surface: 'var(--rs-color-surface)',
+          fg: 'var(--rs-color-fg)',
+          muted: 'var(--rs-color-muted)',
+          border: 'var(--rs-color-border)',
+          brand: 'var(--rs-color-brand)',
+        },
         brand: {
           600: '#2563EB',
           700: '#1D4ED8',
@@ -82,10 +91,15 @@ export default {
         '88': '22rem',
         'section-desktop': '4.5rem',
         'section-mobile': '3.5rem',
+
+        'page-x': 'var(--rs-space-page-x)',
+        'page-y': 'var(--rs-space-page-y)',
+        'stack': 'var(--rs-space-stack)',
       },
       maxWidth: {
         960: '960px',
         1200: '1200px',
+        page: 'var(--rs-page-max-width)',
       },
       height: {
         18: '4.5rem',
@@ -96,7 +110,9 @@ export default {
         btn: '44px',
       },
       borderRadius: {
-        btn: '12px',
+        'btn': '12px',
+        'rs-md': 'var(--rs-radius-md)',
+        'rs-lg': 'var(--rs-radius-lg)',
       },
       gridTemplateColumns: {
         12: 'repeat(12, minmax(0, 1fr))',

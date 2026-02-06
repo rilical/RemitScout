@@ -1,9 +1,7 @@
-# Ralph Orchestrator Configuration (template)
+# Ralph Orchestrator Configuration (example)
 #
-# This repository ignores `ralph.yml` (local-only). To use Ralph consistently
-# across dev machines/CI, copy this file to `ralph.yml` and adjust as needed:
-#
-#   cp ralph.example.yml ralph.yml
+# Source-of-truth config lives in `ralph.yml` (tracked).
+# This file is kept as a readable example/reference.
 #
 # Docs: https://github.com/mikeyobrien/ralph-orchestrator
 
@@ -58,6 +56,9 @@ hats:
       Do NOT call `ralph emit verify.passed` / `ralph emit verify.failed` directly.
       That is the #1 source of drift (missing `quality.*` keys).
 
+      Do NOT use dotted JSON keys like `"quality.tests"` (that is a *literal* JSON
+      key, not an object). The payload must be nested as `quality: { tests: ... }`.
+
       Blessed path: run the repo helper, which *collects* signals and *emits*
       a normalized payload with all required `quality.*` keys:
 
@@ -81,7 +82,10 @@ hats:
         `quality.* = n/a` plus an `error.message`.
 
       ### Suggested commands (repo default)
-      
+      Start by asserting the schema helper is working (fast drift guard):
+
+      - Required: `pnpm verifier:smoke`
+
       This repo is a Node/TS monorepo, and backend lint currently has known debt.
       To avoid blocking *frontend* audit/proof iterations on unrelated backend
       ESLint errors, default to a **frontend-scoped** verification gate:

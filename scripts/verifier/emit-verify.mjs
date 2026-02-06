@@ -22,7 +22,9 @@ function usageAndExit(code) {
 }
 
 function getArgValue(args, flag) {
-  const idx = args.indexOf(flag);
+  // Prefer the last occurrence so wrapper scripts can provide defaults that
+  // callers override explicitly.
+  const idx = args.lastIndexOf(flag);
   if (idx === -1) return null;
   if (idx + 1 >= args.length) usageAndExit(2);
   return args[idx + 1];
@@ -63,6 +65,42 @@ function findRepoRoot(startDir = process.cwd()) {
   return ralphCandidate ?? path.resolve(startDir);
 }
 
+function ensureObjectAtPath(root, path) {
+  let cursor = root;
+  for (const segment of path) {
+    if (typeof cursor[segment] !== "object" || cursor[segment] === null) {
+      cursor[segment] = {};
+    }
+    cursor = cursor[segment];
+  }
+  return cursor;
+}
+
+function setNestedValue(root, path, value) {
+  if (path.length === 0) return;
+  const parent = ensureObjectAtPath(root, path.slice(0, -1));
+  parent[path[path.length - 1]] = value;
+}
+
+function repairDottedQualityKeys(input) {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return input;
+  }
+
+  for (const [key, value] of Object.entries(input)) {
+    if (!key.startsWith("quality.")) continue;
+
+    // Example drift patterns we've seen:
+    // - { "quality.tests": { ... } }
+    // - { "quality.tests.status": "pass" }
+    const path = key.split(".");
+    setNestedValue(input, path, value);
+    delete input[key];
+  }
+
+  return input;
+}
+
 function main() {
   const args = process.argv.slice(2);
   const topic = args[0];
@@ -78,18 +116,32 @@ function main() {
   const fileArg = getArgValue(args, "--file");
   const dryRun = hasFlag(args, "--dry-run");
 
-  if (!jsonArg && !fileArg) usageAndExit(2);
   if (jsonArg && fileArg) usageAndExit(2);
 
   let input;
-  try {
-    const raw = fileArg ? fs.readFileSync(fileArg, "utf8") : jsonArg;
-    input = JSON.parse(raw);
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(`Failed to parse JSON: ${err?.message ?? String(err)}`);
-    process.exit(2);
+  if (!jsonArg && !fileArg) {
+    input = {};
+  } else {
+    try {
+      const raw = fileArg ? fs.readFileSync(fileArg, "utf8") : jsonArg;
+      const parsed = JSON.parse(raw);
+      input =
+        typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+          ? parsed
+          : { value: parsed };
+    } catch (err) {
+      // Pragmatic drift guard: if the verifier passes a non-JSON string by
+      // mistake, still emit a schema-stable payload rather than failing and
+      // tempting a fallback to `ralph emit verify.*` directly.
+      input = {
+        message: "non-json input passed to emit-verify.mjs",
+        raw: jsonArg ?? "",
+        parse_error: err?.message ?? String(err),
+      };
+    }
   }
+
+  input = repairDottedQualityKeys(input);
 
   const payload = normalizeVerifyPayload(input);
   const payloadStr = JSON.stringify(payload);

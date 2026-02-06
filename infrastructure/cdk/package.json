@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "20.18.1"
+    "node": ">=20.19.0 <21"
   },
   "scripts": {
     "build": "tsc",
@@ -17,8 +17,6 @@
     "constructs": "^10.3.0"
   },
   "devDependencies": {
-    "@esbuild/darwin-arm64": "0.24.2",
-    "@esbuild/linux-x64": "0.24.2",
     "@types/node": "^22.10.2",
     "aws-cdk": "^2.171.0",
     "esbuild": "^0.24.0",

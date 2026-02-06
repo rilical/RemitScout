@@ -139,8 +139,7 @@ This keeps the HTML output deterministic for SEO while eliminating copy/paste UI
 Recommended sequencing (keeps business risk low):
 
 1. Scaffold `frontend/domains`, `frontend/shared`, `frontend/platform` with docs + empty `index.ts` public surfaces.
-2. Create golden layout wrapper (Nuxt/Vue equivalent of `CenteredPage`) in `frontend/shared/ui` and reuse it in 2 routes.
+2. Create golden layout wrapper (Nuxt/Vue equivalent of `CenteredPage`) in `frontend/shared/ui` and reuse it in 2 routes. Back it with design tokens in `frontend/assets/css/tokens.css` (documented in `frontend/shared/docs/ui-system.md`).
 3. Build a single `DataTable` component (dense vs roomy variants) in `frontend/shared/ui` and reuse it in 2 routes.
 4. Migrate one “product” page (`send-money` or `pulse`) to the new structure.
 5. Migrate provider review pages to the Content template (biggest LOC win).
-

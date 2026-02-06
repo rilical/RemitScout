@@ -288,7 +288,12 @@ export default defineNuxtConfig({
   },
 
   // CSS
-  css: ['./assets/css/tailwind.css', './assets/css/reduced-motion.css', 'katex/dist/katex.min.css'],
+  css: [
+    './assets/css/tokens.css',
+    './assets/css/tailwind.css',
+    './assets/css/reduced-motion.css',
+    'katex/dist/katex.min.css',
+  ],
 
   // Runtime Configuration
   runtimeConfig: {
