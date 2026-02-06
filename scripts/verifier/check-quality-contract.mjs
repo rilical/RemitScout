@@ -129,6 +129,71 @@ function assertNoDirectVerifyEmits() {
   }
 }
 
+function assertVerifierDoesNotDefaultPublish(filePath) {
+  if (!fs.existsSync(filePath)) return;
+
+  let text;
+  try {
+    text = fs.readFileSync(filePath, "utf8");
+  } catch {
+    return;
+  }
+
+  const lines = text.split(/\r?\n/);
+  const hatsIdx = lines.findIndex((line) => /^hats:\s*$/.test(line));
+  if (hatsIdx === -1) return;
+
+  let inVerifier = false;
+  let verifierIndent = "";
+  let defaultPublishesValue = null;
+
+  for (let i = hatsIdx + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+
+    if (!inVerifier) {
+      const match = line.match(/^(\s*)verifier:\s*$/);
+      if (match) {
+        inVerifier = true;
+        verifierIndent = match[1] ?? "";
+      }
+      continue;
+    }
+
+    // Exit when we hit the next hat key at the same indentation.
+    const nextHatRe = new RegExp(`^${verifierIndent}(?!verifier:)[A-Za-z0-9_-]+:\\s*$`);
+    if (nextHatRe.test(line)) break;
+
+    const dpMatch = line.match(/^\s*default_publishes:\s*(.*)\s*$/);
+    if (dpMatch) {
+      defaultPublishesValue = (dpMatch[1] ?? "").trim();
+    }
+  }
+
+  if (!inVerifier) return;
+
+  // Ralph merges config with built-in defaults. The built-in verifier hat sets
+  // `default_publishes: verify.passed`, which can auto-emit an empty payload.
+  // We require explicitly nulling it out.
+  if (defaultPublishesValue === null) {
+    fail(
+      `${filePath}: hats.verifier.default_publishes is missing; set it to null to disable builtin defaults`,
+    );
+  }
+
+  const nullish =
+    defaultPublishesValue === "" ||
+    defaultPublishesValue === "null" ||
+    defaultPublishesValue === "~";
+
+  if (!nullish) {
+    fail(
+      `${filePath}: hats.verifier.default_publishes must be null (got ${JSON.stringify(
+        defaultPublishesValue,
+      )})`,
+    );
+  }
+}
+
 function main() {
   const passedEmpty = runEmitVerify("verify.passed", "{}");
   assertQualityShape(passedEmpty, "verify.passed:{}");
@@ -143,6 +208,9 @@ function main() {
   assertQualityShape(weird, "verify.passed:lint coercion");
 
   assertNoDirectVerifyEmits();
+
+  assertVerifierDoesNotDefaultPublish("ralph.yml");
+  assertVerifierDoesNotDefaultPublish("ralph.example.yml");
 
   // eslint-disable-next-line no-console
   console.log("verifier contract check ok");
