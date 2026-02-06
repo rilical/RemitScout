@@ -111,148 +111,202 @@ function main() {
     process.exit(2);
   }
 
-  const lintTargets = getFrontendLintTargets({ full });
+  let tmpDir = null;
+  try {
+    const lintTargets = getFrontendLintTargets({ full });
 
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "remit-scout-verifier-"));
-  const eslintOutFile = path.join(tmpDir, "eslint.json");
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "remit-scout-verifier-"));
+    const eslintOutFile = path.join(tmpDir, "eslint.json");
 
-  const lintCommand =
-    lintTargets.targets.length > 0
-      ? `${PNPM} -C frontend exec eslint ${lintTargets.targets.join(" ")} -f json --output-file ${eslintOutFile}`
-      : "n/a";
+    const lintCommand =
+      lintTargets.targets.length > 0
+        ? `${PNPM} -C frontend exec eslint ${lintTargets.targets.join(" ")} -f json --output-file ${eslintOutFile}`
+        : "n/a";
 
-  const lintResult =
-    lintTargets.targets.length > 0
-      ? run(PNPM, [
-          "-C",
-          "frontend",
-          "exec",
-          "eslint",
-          ...lintTargets.targets,
-          "-f",
-          "json",
-          "--output-file",
-          eslintOutFile,
-        ])
+    const lintResult =
+      lintTargets.targets.length > 0
+        ? run(PNPM, [
+            "-C",
+            "frontend",
+            "exec",
+            "eslint",
+            ...lintTargets.targets,
+            "-f",
+            "json",
+            "--output-file",
+            eslintOutFile,
+          ])
+        : { exitCode: 0, stdout: "", stderr: "", error: null };
+
+    let lintCounts = { errors: 0, warnings: 0 };
+    let lintCountsParsed = false;
+    if (lintTargets.targets.length > 0) {
+      try {
+        const raw = fs.readFileSync(eslintOutFile, "utf8");
+        lintCounts = summarizeLintJson(raw);
+        lintCountsParsed = true;
+      } catch {
+        lintCounts = { errors: 0, warnings: 0 };
+      }
+    }
+
+    const typecheckCommand = `${PNPM} -C frontend type-check`;
+    const typecheckResult = lintTargets.targets.length > 0 || full
+      ? run(PNPM, ["-C", "frontend", "type-check"])
       : { exitCode: 0, stdout: "", stderr: "", error: null };
 
-  let lintCounts = { errors: 0, warnings: 0 };
-  let lintCountsParsed = false;
-  if (lintTargets.targets.length > 0) {
-    try {
-      const raw = fs.readFileSync(eslintOutFile, "utf8");
-      lintCounts = summarizeLintJson(raw);
-      lintCountsParsed = true;
-    } catch {
-      lintCounts = { errors: 0, warnings: 0 };
-    }
-  }
+    const unitTestCommand = `${PNPM} -C frontend test`;
+    const unitTestResult = runUnitTests && (lintTargets.targets.length > 0 || full)
+      ? run(PNPM, ["-C", "frontend", "test"])
+      : { exitCode: 0, stdout: "", stderr: "", error: null };
 
-  const typecheckCommand = `${PNPM} -C frontend type-check`;
-  const typecheckResult = lintTargets.targets.length > 0 || full
-    ? run(PNPM, ["-C", "frontend", "type-check"])
-    : { exitCode: 0, stdout: "", stderr: "", error: null };
+    const testsExitCode =
+      typecheckResult.exitCode === 0 && (runUnitTests ? unitTestResult.exitCode === 0 : true)
+        ? 0
+        : 1;
 
-  const unitTestCommand = `${PNPM} -C frontend test`;
-  const unitTestResult = runUnitTests && (lintTargets.targets.length > 0 || full)
-    ? run(PNPM, ["-C", "frontend", "test"])
-    : { exitCode: 0, stdout: "", stderr: "", error: null };
+    // ESLint can exit non-zero due to max-warnings configuration.
+    // For the verifier payload, treat warnings as non-blocking as long as
+    // errorCount is 0 (but still report the warning count).
+    const lintExitCode =
+      lintCountsParsed && lintCounts.errors === 0
+        ? 0
+        : lintResult.exitCode;
 
-  const testsExitCode =
-    typecheckResult.exitCode === 0 && (runUnitTests ? unitTestResult.exitCode === 0 : true)
-      ? 0
-      : 1;
-
-  // ESLint can exit non-zero due to max-warnings configuration.
-  // For the verifier payload, treat warnings as non-blocking as long as
-  // errorCount is 0 (but still report the warning count).
-  const lintExitCode =
-    lintCountsParsed && lintCounts.errors === 0
-      ? 0
-      : lintResult.exitCode;
-
-  const payload = {
-    scope: "frontend",
-    node: process.version.replace(/^v/, ""),
-    quality: {
-      tests: {
-        status:
-          lintTargets.targets.length === 0 && !full
-            ? "n/a"
-            : statusFromExitCode(testsExitCode),
-        command:
-          lintTargets.targets.length === 0 && !full
-            ? "n/a"
-            : runUnitTests
-              ? `${typecheckCommand} && ${unitTestCommand}`
-              : typecheckCommand,
-        details: {
-          typecheck: {
-            status:
-              lintTargets.targets.length === 0 && !full
-                ? "n/a"
-                : statusFromExitCode(typecheckResult.exitCode),
-            command: typecheckCommand,
-            exitCode:
-              lintTargets.targets.length === 0 && !full
-                ? null
-                : typecheckResult.exitCode,
-          },
-          unit: {
-            status:
-              runUnitTests && (lintTargets.targets.length > 0 || full)
-                ? statusFromExitCode(unitTestResult.exitCode)
-                : "n/a",
-            command: unitTestCommand,
-            exitCode:
-              runUnitTests && (lintTargets.targets.length > 0 || full)
-                ? unitTestResult.exitCode
-                : null,
-            skipped: !(runUnitTests && (lintTargets.targets.length > 0 || full)),
+    const payload = {
+      scope: "frontend",
+      node: process.version.replace(/^v/, ""),
+      quality: {
+        tests: {
+          status:
+            lintTargets.targets.length === 0 && !full
+              ? "n/a"
+              : statusFromExitCode(testsExitCode),
+          command:
+            lintTargets.targets.length === 0 && !full
+              ? "n/a"
+              : runUnitTests
+                ? `${typecheckCommand} && ${unitTestCommand}`
+                : typecheckCommand,
+          details: {
+            typecheck: {
+              status:
+                lintTargets.targets.length === 0 && !full
+                  ? "n/a"
+                  : statusFromExitCode(typecheckResult.exitCode),
+              command: typecheckCommand,
+              exitCode:
+                lintTargets.targets.length === 0 && !full
+                  ? null
+                  : typecheckResult.exitCode,
+            },
+            unit: {
+              status:
+                runUnitTests && (lintTargets.targets.length > 0 || full)
+                  ? statusFromExitCode(unitTestResult.exitCode)
+                  : "n/a",
+              command: unitTestCommand,
+              exitCode:
+                runUnitTests && (lintTargets.targets.length > 0 || full)
+                  ? unitTestResult.exitCode
+                  : null,
+              skipped: !(runUnitTests && (lintTargets.targets.length > 0 || full)),
+            },
           },
         },
+        lint: {
+          status:
+            lintTargets.targets.length === 0 && !full
+              ? "n/a"
+              : statusFromExitCode(lintExitCode),
+          command: lintCommand,
+          errors: lintCounts.errors,
+          warnings: lintCounts.warnings,
+        },
+        coverage: { status: "n/a", tool: "n/a" },
+        audit: { status: "n/a", command: "n/a" },
+        mutation: { status: "n/a", tool: "n/a" },
+        complexity: { status: "n/a", tool: "n/a" },
       },
-      lint: {
-        status:
-          lintTargets.targets.length === 0 && !full
-            ? "n/a"
-            : statusFromExitCode(lintExitCode),
-        command: lintCommand,
-        errors: lintCounts.errors,
-        warnings: lintCounts.warnings,
-      },
-      coverage: { status: "n/a", tool: "n/a" },
-      audit: { status: "n/a", command: "n/a" },
-      mutation: { status: "n/a", tool: "n/a" },
-      complexity: { status: "n/a", tool: "n/a" },
-    },
-  };
+    };
 
-  const payloadJson = JSON.stringify(payload);
+    const payloadJson = JSON.stringify(payload);
 
-  if (emitTopic) {
-    // Always normalize through the single choke-point, so quality.* keys are stable.
-    const normalizedJson = emitVerify({
-      topic: emitTopic,
-      json: payloadJson,
-      dryRun: true,
-    });
+    if (emitTopic) {
+      // Always normalize through the single choke-point, so quality.* keys are stable.
+      const normalizedJson = emitVerify({
+        topic: emitTopic,
+        json: payloadJson,
+        dryRun: true,
+      });
 
-    // eslint-disable-next-line no-console
-    console.log(normalizedJson);
+      // eslint-disable-next-line no-console
+      console.log(normalizedJson);
 
-    if (!dryRun) {
-      emitVerify({ topic: emitTopic, json: normalizedJson, dryRun: false });
+      if (!dryRun) {
+        emitVerify({ topic: emitTopic, json: normalizedJson, dryRun: false });
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(payloadJson);
     }
-  } else {
-    // eslint-disable-next-line no-console
-    console.log(payloadJson);
-  }
+  } catch (err) {
+    // If `--emit` is set, never fail without emitting a contract-valid `verify.failed`.
+    if (emitTopic) {
+      const fallbackPayload = {
+        scope: "frontend",
+        node: process.version.replace(/^v/, ""),
+        quality: {
+          tests: { status: "n/a", command: "n/a" },
+          coverage: { status: "n/a", tool: "n/a" },
+          lint: { status: "n/a", command: "n/a", errors: 0, warnings: 0 },
+          audit: { status: "n/a", command: "n/a" },
+          mutation: { status: "n/a", tool: "n/a" },
+          complexity: { status: "n/a", tool: "n/a" },
+        },
+        error: {
+          message: err?.message ?? String(err),
+        },
+      };
 
-  try {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  } catch {
-    // best-effort cleanup
+      try {
+        const normalizedJson = emitVerify({
+          topic: "verify.failed",
+          json: JSON.stringify(fallbackPayload),
+          dryRun: true,
+        });
+
+        // eslint-disable-next-line no-console
+        console.log(normalizedJson);
+
+        if (!dryRun) {
+          emitVerify({ topic: "verify.failed", json: normalizedJson, dryRun: false });
+        }
+      } catch (emitErr) {
+        // eslint-disable-next-line no-console
+        console.error(
+          `Verifier fallback emit failed: ${emitErr?.message ?? String(emitErr)}`,
+        );
+      }
+
+      // eslint-disable-next-line no-console
+      console.error(
+        `run-frontend-quality failed: ${err?.message ?? String(err)}`,
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    // No `--emit` set: surface the failure normally.
+    throw err;
+  } finally {
+    if (tmpDir) {
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      } catch {
+        // best-effort cleanup
+      }
+    }
   }
 }
 

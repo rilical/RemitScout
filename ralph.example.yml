@@ -72,6 +72,13 @@ hats:
       - Use `--full` to force full frontend lint/typecheck.
       - Use `--run-unit-tests` to attempt Vitest.
       - Use `--dry-run` to print the normalized JSON payload without emitting.
+      - Do NOT run `cargo`/Rust checks in this repo (not applicable).
+
+      Failure rule:
+      - On any failure, emit `verify.failed` (never emit `verify.passed`).
+      - If `run-frontend-quality` throws while `--emit` is set, it will
+        best-effort emit a contract-valid `verify.failed` payload with
+        `quality.* = n/a` plus an `error.message`.
 
       ### Suggested commands (repo default)
       
