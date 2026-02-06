@@ -69,6 +69,15 @@ function emitVerify({ topic, json, dryRun }) {
   return result.stdout.trim();
 }
 
+function sanitizeVerifyEvents() {
+  const result = run(process.execPath, ["scripts/verifier/sanitize-verify-events.mjs"]);
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `sanitize-verify-events failed (exit ${result.exitCode}): ${result.stderr || result.stdout}`,
+    );
+  }
+}
+
 function getChangedFiles() {
   const result = run("git", ["diff", "--name-only", "--diff-filter=ACMR", "HEAD~1..HEAD"]);
   if (result.exitCode !== 0) return [];
@@ -246,6 +255,14 @@ function main() {
 
       if (!dryRun) {
         emitVerify({ topic: emitTopic, json: normalizedJson, dryRun: false });
+
+        // Belt-and-suspenders: ensure the events file does not contain any
+        // legacy verify.* payloads missing quality.*.
+        try {
+          sanitizeVerifyEvents();
+        } catch {
+          // best-effort
+        }
       }
     } else {
       // eslint-disable-next-line no-console
@@ -282,6 +299,12 @@ function main() {
 
         if (!dryRun) {
           emitVerify({ topic: "verify.failed", json: normalizedJson, dryRun: false });
+
+          try {
+            sanitizeVerifyEvents();
+          } catch {
+            // best-effort
+          }
         }
       } catch (emitErr) {
         // eslint-disable-next-line no-console
