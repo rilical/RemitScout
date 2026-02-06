@@ -34,6 +34,12 @@ test('plus + pulse surfaces load (logged out)', async ({ page }) => {
   await expect(page.getByRole('link', { name: /upgrade to plus/i }).first()).toBeVisible()
 })
 
+test('US corridor page renders', async ({ page }) => {
+  await page.goto('/send-money/united-states-to-philippines')
+  await expect(page.getByText('United States to Philippines', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /add to watchlist/i }).first()).toBeVisible()
+})
+
 test('mobile nav renders', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
