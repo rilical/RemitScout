@@ -103,16 +103,17 @@ function getFrontendLintTargets({ full }) {
 function main() {
   const { runUnitTests, full, emitTopic, dryRun } = parseArgs(process.argv.slice(2));
 
-  if (emitTopic && emitTopic !== "verify.passed" && emitTopic !== "verify.failed") {
-    // eslint-disable-next-line no-console
-    console.error(
-      `Invalid --emit topic: ${emitTopic}. Expected verify.passed or verify.failed.`,
-    );
-    process.exit(2);
-  }
-
   let tmpDir = null;
   try {
+    if (emitTopic && emitTopic !== "verify.passed" && emitTopic !== "verify.failed") {
+      // Treat invalid emit topics as an internal verifier error.
+      // Important: do not exit non-zero here, or the orchestrator may auto-emit
+      // a legacy `verify.failed` payload without `quality.*`.
+      throw new Error(
+        `Invalid --emit topic: ${emitTopic}. Expected verify.passed or verify.failed.`,
+      );
+    }
+
     const lintTargets = getFrontendLintTargets({ full });
 
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "remit-scout-verifier-"));
@@ -293,7 +294,11 @@ function main() {
       console.error(
         `run-frontend-quality failed: ${err?.message ?? String(err)}`,
       );
-      process.exitCode = 1;
+      // Crucial: exit 0 when `--emit` is set.
+      // We already emitted (or best-effort attempted to emit) a structured
+      // `verify.failed` payload, and a non-zero exit can cause the orchestrator
+      // to emit a second, non-normalized `verify.failed` event.
+      process.exitCode = 0;
       return;
     }
 
