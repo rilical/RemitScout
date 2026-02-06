@@ -14,6 +14,7 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, "..", "..");
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
+    cwd: REPO_ROOT,
     ...options,
   });
 
