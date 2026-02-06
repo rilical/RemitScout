@@ -20,6 +20,7 @@ import { processFxRateRefreshQueue } from '../plane-b/src/fx-rate-refresh'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 import { initTracing } from '../shared/tracing'
 
@@ -58,6 +59,9 @@ const loopEnabled = toBoolean(process.env.FX_RATE_REFRESH_LOOP)
 const loopDelayMs = Math.max(50, toNumber(process.env.FX_RATE_REFRESH_LOOP_DELAY_MS, 250))
 const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.FX_RATE_REFRESH_IDLE_DELAY_MS, 750))
 const loopJitterMs = resolveJitterMs(process.env.FX_RATE_REFRESH_LOOP_JITTER_MS, 0)
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
 initTracing('fx-rate-refresh-worker')
 
@@ -65,6 +69,7 @@ let shutdownRequested = false
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
 
 const shutdown = (signal: string) => {
   if (shutdownRequested) return
@@ -156,6 +161,21 @@ export const runFxRateRefreshWorker = async (): Promise<number> => {
 export const runFxRateRefreshWorkerLoop = async (): Promise<number> => {
   let exitCode = 0
   try {
+    if (!isLambdaRuntime && healthEnabled) {
+      try {
+        healthServer = await startHealthServer({
+          port: healthPort,
+          logger,
+          loggerName: 'fx-rate-refresh-worker',
+          enableDatabaseCheck: true,
+          enableRedisCheck: true,
+        })
+      } catch (error) {
+        logger.warn('health_server_start_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
     if (loopEnabled) {
       while (!shutdownRequested) {
         await applyJitter(logger, 'fx_rate_refresh_loop', loopJitterMs)
@@ -178,6 +198,13 @@ export const runFxRateRefreshWorkerLoop = async (): Promise<number> => {
   } finally {
     if (forceExitTimer) {
       clearTimeout(forceExitTimer)
+    }
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     }
   }
 

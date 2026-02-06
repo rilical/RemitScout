@@ -1,7 +1,10 @@
 <template>
   <div class="relative">
     <!-- Chart Container -->
-    <div ref="chartContainer" class="relative h-80 w-full">
+    <div
+      ref="chartContainer"
+      class="relative h-80 w-full"
+    >
       <svg
         class="h-full w-full"
         :viewBox="`0 0 ${width} ${height}`"
@@ -23,7 +26,10 @@
         </g>
 
         <!-- Y-axis labels -->
-        <g class="y-axis" font-size="11">
+        <g
+          class="y-axis"
+          font-size="11"
+        >
           <text
             v-for="(label, i) in yAxisLabels"
             :key="`y-label-${i}`"
@@ -38,7 +44,10 @@
         </g>
 
         <!-- X-axis labels -->
-        <g class="x-axis" font-size="10">
+        <g
+          class="x-axis"
+          font-size="10"
+        >
           <text
             v-for="(label, i) in xAxisLabels"
             :key="`x-label-${i}`"
@@ -90,7 +99,9 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
         :style="tooltipStyle"
       >
-        <div class="mb-1 text-xs text-neutral-400">{{ hoveredBar.date }}</div>
+        <div class="mb-1 text-xs text-neutral-400">
+          {{ hoveredBar.date }}
+        </div>
         <div class="flex items-center gap-2 text-sm">
           <span
             class="h-2 w-2 rounded-full"
@@ -107,8 +118,14 @@
         <span class="h-3 w-3 rounded bg-brand-600" />
         <span>Daily volatility</span>
       </div>
-      <div v-if="threshold !== null" class="flex items-center gap-2">
-        <span class="h-0.5 w-6 bg-brand-600" style="border-top: 2px dashed" />
+      <div
+        v-if="threshold !== null"
+        class="flex items-center gap-2"
+      >
+        <span
+          class="h-0.5 w-6 bg-brand-600"
+          style="border-top: 2px dashed"
+        />
         <span>High volatility threshold</span>
       </div>
     </div>
@@ -154,14 +171,14 @@ const maxVal = computed(() => {
 
 const bars = computed(() => {
   if (points.value.length === 0) return []
-  
+
   const barWidth = Math.max(4, (chartWidth / points.value.length) * 0.7)
   const gap = (chartWidth - barWidth * points.value.length) / (points.value.length + 1)
-  
+
   return points.value.map((p, i) => {
     const normalizedHeight = ((p.v - minVal.value) / (maxVal.value - minVal.value)) * chartHeight
     const color = p.v > (props.threshold ?? Infinity) ? '#1D4ED8' : '#2563EB'
-    
+
     return {
       x: padding.left + gap + i * (barWidth + gap),
       y: padding.top + chartHeight - normalizedHeight,
@@ -183,7 +200,7 @@ const hoveredBar = computed(() => {
 const gridLines = computed(() => {
   const count = 5
   return Array.from({ length: count }, (_, i) =>
-    padding.top + (i / (count - 1)) * chartHeight
+    padding.top + (i / (count - 1)) * chartHeight,
   )
 })
 
@@ -202,7 +219,7 @@ const xAxisLabels = computed(() => {
   if (bars.value.length === 0) return []
   const count = Math.min(8, bars.value.length)
   const step = Math.floor(bars.value.length / (count - 1))
-  
+
   return Array.from({ length: count }, (_, i) => {
     const idx = Math.min(i * step, bars.value.length - 1)
     const bar = bars.value[idx]
@@ -253,7 +270,3 @@ function formatDate(timestamp: number): string {
   })
 }
 </script>
-
-
-
-

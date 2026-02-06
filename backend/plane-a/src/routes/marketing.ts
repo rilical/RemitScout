@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'crypto'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { requireAdmin } from '../plugins/auth-plugin'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 
 const logger = createLogger('plane-a.marketing')
@@ -170,7 +171,7 @@ const sendToMeta = async (payload: {
 }
 
 export const marketingRoutes = async (app: FastifyInstance) => {
-  app.post('/marketing/meta', async (request, reply) => {
+  app.post('/marketing/meta', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = eventSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
       reply.code(400)

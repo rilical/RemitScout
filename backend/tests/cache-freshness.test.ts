@@ -222,6 +222,7 @@ describe('Cache Freshness Integration', () => {
 
     expect(freshness.exists).toBe(false)
     expect(freshness.isFresh).toBe(false)
-    expect(freshness.ttlSeconds).toBe(6 * 60 * 60)
+    // When volatility is missing, we use the shared default TTL.
+    expect(freshness.ttlSeconds).toBe(4 * 60 * 60)
   })
 })

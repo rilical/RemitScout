@@ -2,8 +2,18 @@
   <div>
     <div class="mb-6">
       <h2 class="mb-2 text-2xl font-bold text-white flex items-center gap-2">
-        <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="h-6 w-6 text-blue-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         All Corridors
       </h2>
@@ -14,8 +24,18 @@
 
     <div class="mb-6 flex flex-col gap-4 sm:flex-row">
       <div class="relative flex-1">
-        <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <svg
+          class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
         </svg>
         <input
           v-model="search"
@@ -28,9 +48,24 @@
         v-model="sortBy"
         class="h-12 rounded-xl border border-white/10 bg-white/5 px-4 text-slate-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
       >
-        <option value="popular" class="bg-slate-800">Most popular</option>
-        <option value="change" class="bg-slate-800">Biggest change</option>
-        <option value="value" class="bg-slate-800">Best value</option>
+        <option
+          value="popular"
+          class="bg-slate-800"
+        >
+          Most popular
+        </option>
+        <option
+          value="change"
+          class="bg-slate-800"
+        >
+          Biggest change
+        </option>
+        <option
+          value="value"
+          class="bg-slate-800"
+        >
+          Best value
+        </option>
       </select>
     </div>
 
@@ -45,8 +80,18 @@
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-2 text-2xl">
               <span>{{ corridor.fromFlag }}</span>
-              <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <svg
+                class="h-4 w-4 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
               </svg>
               <span>{{ corridor.toFlag }}</span>
             </div>
@@ -56,7 +101,12 @@
             class="flex items-center gap-1 text-sm font-semibold"
             :class="corridor.changeType === 'up' ? 'text-emerald-400' : 'text-red-400'"
           >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 v-if="corridor.changeType === 'up'"
                 stroke-linecap="round"
@@ -75,18 +125,28 @@
             {{ corridor.change24h }}
           </span>
         </div>
-        
+
         <div class="grid grid-cols-3 gap-4">
           <div class="rounded-xl bg-white/5 p-3">
-            <div class="text-xs text-slate-500 mb-1">Best provider</div>
-            <div class="font-semibold text-white">{{ corridor.bestProvider }}</div>
+            <div class="text-xs text-slate-500 mb-1">
+              Best provider
+            </div>
+            <div class="font-semibold text-white">
+              {{ corridor.bestProvider }}
+            </div>
           </div>
           <div class="rounded-xl bg-white/5 p-3">
-            <div class="text-xs text-slate-500 mb-1">Recipient gets</div>
-            <div class="font-semibold text-emerald-400">{{ corridor.recipientGets }}</div>
+            <div class="text-xs text-slate-500 mb-1">
+              Recipient gets
+            </div>
+            <div class="font-semibold text-emerald-400">
+              {{ corridor.recipientGets }}
+            </div>
           </div>
           <div class="rounded-xl bg-white/5 p-3">
-            <div class="text-xs text-slate-500 mb-1">Updated</div>
+            <div class="text-xs text-slate-500 mb-1">
+              Updated
+            </div>
             <div class="font-semibold text-white flex items-center gap-1">
               <span class="relative flex h-1.5 w-1.5">
                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -102,8 +162,18 @@
     <div class="mt-8 text-center">
       <button class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white">
         Load more corridors
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
     </div>
@@ -114,7 +184,7 @@
 import { ref, computed } from 'vue'
 
 defineEmits<{
-  'corridor-click': [corridor: { from: string; to: string }]
+  'corridor-click': [corridor: { from: string, to: string }]
 }>()
 
 const search = ref('')
@@ -137,8 +207,3 @@ const filteredCorridors = computed(() => {
   )
 })
 </script>
-
-
-
-
-

@@ -1,6 +1,6 @@
-import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import type { Ref } from 'vue'
 import { computed, isRef, unref } from 'vue'
+import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import { getProviderScore } from '~/lib/providerScores'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode } from '~/utils/countries-currencies'
@@ -21,6 +21,7 @@ export const useRemittanceApi = () => {
     midMarketSource?: string | null
     midMarketUpdatedAt?: string | null
     availableMethods?: string[]
+    indicesReason?: string | null
     indices?: {
       teer: number | null
       rvi_bps: number | null
@@ -28,7 +29,15 @@ export const useRemittanceApi = () => {
       providerCount: number
       amount: number
       midMarketRate: number | null
-      weights: 'equal' | 'provider_volume' | 'synthetic_volume_v1'
+      weights: string
+      weightConfidence?: number | null
+      weightWindowDays?: number | null
+      source?: 'gold'
+      updatedAt?: string | null
+      indicesBucket?: number
+      methodProfile?: string
+      suppressionFlag?: boolean
+      suppressionReason?: string | null
     }
   }>()
 
@@ -39,14 +48,15 @@ export const useRemittanceApi = () => {
       async () => {
         try {
           return await request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } })
-        } catch (error: any) {
+        }
+        catch (error: any) {
           if (error?.statusCode === 401 || error?.statusCode === 403) {
             return { data: [], updatedAt: new Date().toISOString() }
           }
           throw error
         }
       },
-      { watch: false, ...options },
+      { watch: [], ...options },
     )
   }
 
@@ -57,14 +67,15 @@ export const useRemittanceApi = () => {
       async () => {
         try {
           return await request<{ data: CorridorPopularity[], updatedAt: string }>('/popular-corridors')
-        } catch (error: any) {
+        }
+        catch (error: any) {
           if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
             return { data: [], updatedAt: fallbackUpdatedAt() }
           }
           throw error
         }
       },
-      { watch: false, ...options },
+      { watch: [], ...options },
     )
   }
 
@@ -124,7 +135,7 @@ export const useRemittanceApi = () => {
     const watch = Array.isArray(optionWatch)
       ? [...optionWatch, ...watchSources]
       : optionWatch === false
-        ? false
+        ? []
         : (watchSources.length ? watchSources : undefined)
     return useAsyncData(
       key,
@@ -162,6 +173,7 @@ export const useRemittanceApi = () => {
             midMarketSource?: string | null
             midMarketUpdatedAt?: string | null
             availableMethods?: string[]
+            indicesReason?: string | null
             indices?: {
               teer: number | null
               rvi_bps: number | null
@@ -169,9 +181,17 @@ export const useRemittanceApi = () => {
               providerCount: number
               amount: number
               midMarketRate: number | null
-              weights: 'equal' | 'provider_volume' | 'synthetic_volume_v1'
+              weights: string
+              weightConfidence?: number | null
+              weightWindowDays?: number | null
+              source?: 'gold'
+              updatedAt?: string | null
+              indicesBucket?: number
+              methodProfile?: string
+              suppressionFlag?: boolean
+              suppressionReason?: string | null
             }
-            error?: { code: string; message: string }
+            error?: { code: string, message: string }
           }>(
             '/providers',
             {
@@ -188,7 +208,8 @@ export const useRemittanceApi = () => {
           )
           providersSuccessCache.set(resolvedKey.value, response)
           return response
-        } catch (error: any) {
+        }
+        catch (error: any) {
           if (import.meta.dev) {
             console.warn('[remittance] providers unavailable', error)
           }
@@ -230,7 +251,8 @@ export const useRemittanceApi = () => {
         retries: 0,
         timeoutMs: 3000,
       })
-    } catch {
+    }
+    catch {
       return null
     }
   }
@@ -307,14 +329,15 @@ export const useRemittanceApi = () => {
   const formatMoney = (amount: number, currency = 'USD') => {
     // Ensure currency is uppercase and valid
     const currencyCode = currency?.toUpperCase().trim() || 'USD'
-    
+
     try {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currencyCode,
         maximumFractionDigits: 2,
       }).format(amount)
-    } catch (error) {
+    }
+    catch (error) {
       // Fallback for unsupported currency codes
       // Use the currency code directly with the amount
       return `${currencyCode} ${amount.toFixed(2)}`

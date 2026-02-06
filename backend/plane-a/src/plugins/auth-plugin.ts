@@ -97,13 +97,18 @@ export const requireAdmin = () => async (request: FastifyRequest, reply: Fastify
     return reply.send({ error: 'unauthorized' })
   }
 
-  const supabaseRole = request.user.role
-  if (supabaseRole === 'admin' || supabaseRole === 'super_admin') {
-    return
+  const email = request.user.email?.toLowerCase()
+  const allowlist = config.planeA.adminEmails
+  if (allowlist.length > 0) {
+    if (email && allowlist.includes(email)) {
+      return
+    }
+    reply.code(403)
+    return reply.send({ error: 'forbidden' })
   }
 
-  const email = request.user.email?.toLowerCase()
-  if (email && config.planeA.adminEmails.includes(email)) {
+  const supabaseRole = request.user.role
+  if (supabaseRole === 'admin' || supabaseRole === 'super_admin') {
     return
   }
 
@@ -164,6 +169,10 @@ const resolveApiKeyToken = (request: FastifyRequest): string | null => {
 
 const isPlanActive = (status?: string | null): boolean => {
   return status === 'active' || status === 'trialing'
+}
+
+const isPaidEntitlement = (entitlement: EntitlementType): boolean => {
+  return entitlement === 'pulse' || entitlement === 'exports' || entitlement === 'api_access'
 }
 
 const applyApiKeyRateLimit = async (
@@ -271,8 +280,13 @@ export const requireEntitlement = (entitlement: EntitlementType) => async (reque
       reply.code(403)
       return reply.send({ error: 'plan_inactive' })
     }
+    if (request.user && isPaidEntitlement(entitlement) && !isPlanActive(plan.status)) {
+      reply.code(403)
+      return reply.send({ error: 'plan_inactive' })
+    }
 
-    const entitlements = getEntitlementsForPlan(plan.plan_code)
+    const effectivePlanCode = isPlanActive(plan.status) ? plan.plan_code : 'free'
+    const entitlements = getEntitlementsForPlan(effectivePlanCode)
     if (!isEntitled(entitlement, entitlements)) {
       reply.code(403)
       return reply.send({ error: 'forbidden', entitlement })

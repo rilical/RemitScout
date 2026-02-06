@@ -11,7 +11,10 @@
           <h2 class="text-2xl font-bold text-white">
             {{ chartData?.metadata.title }}
           </h2>
-          <p v-if="chartData?.insight" class="mt-1 text-neutral-400">
+          <p
+            v-if="chartData?.insight"
+            class="mt-1 text-neutral-400"
+          >
             {{ chartData.insight }}
           </p>
         </div>
@@ -29,7 +32,7 @@
                   ? 'bg-brand-600 text-white'
                   : r.isGated && !isPlus
                     ? 'text-neutral-500 cursor-not-allowed'
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-700'
+                    : 'text-neutral-400 hover:text-white hover:bg-neutral-700',
               ]"
               :disabled="r.isGated && !isPlus"
               @click="selectRange(r)"
@@ -42,7 +45,12 @@
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
               </svg>
             </button>
           </div>
@@ -54,8 +62,18 @@
               :class="viewMode === 'chart' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
               @click="viewMode = 'chart'"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                />
               </svg>
               Chart
             </button>
@@ -64,8 +82,18 @@
               :class="viewMode === 'table' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
               @click="viewMode = 'table'"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
               </svg>
               Table
             </button>
@@ -77,27 +105,51 @@
     <!-- Chart / Table Content -->
     <div class="p-6">
       <!-- Loading -->
-      <div v-if="loading" class="flex h-80 items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-80 items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading chart data...
         </div>
       </div>
 
       <!-- Chart View -->
-      <div v-else-if="viewMode === 'chart'" class="min-h-[320px]">
+      <div
+        v-else-if="viewMode === 'chart'"
+        class="min-h-[320px]"
+      >
         <component
-          v-if="chartComponent && chartData"
           :is="chartComponent"
+          v-if="chartComponent && chartData"
           :series="chartData.series"
           :unit="chartData.metadata.unit"
           :unit-label="chartData.metadata.unitLabel"
           :rows="matrixRows"
         />
-        <div v-else class="flex h-80 items-center justify-center text-neutral-400">
+        <div
+          v-else
+          class="flex h-80 items-center justify-center text-neutral-400"
+        >
           No data available
         </div>
       </div>
@@ -123,8 +175,18 @@
           class="flex items-center gap-1 hover:text-white transition-colors"
           :title="chartData?.metadata.sourceNotes"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           Data source
         </button>
@@ -134,8 +196,18 @@
           class="flex items-center gap-1.5 text-neutral-400 hover:text-white transition-colors"
           @click="$emit('share')"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+            />
           </svg>
           Share
         </button>
@@ -143,8 +215,18 @@
           class="flex items-center gap-1.5 text-neutral-400 hover:text-white transition-colors"
           @click="$emit('embed')"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+            />
           </svg>
           Embed
         </button>
@@ -154,12 +236,33 @@
           :disabled="!isPlus"
           @click="isPlus && $emit('download')"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
           </svg>
           Download
-          <svg v-if="!isPlus" class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <svg
+            v-if="!isPlus"
+            class="h-3 w-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
           </svg>
         </button>
       </div>
@@ -169,15 +272,15 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, markRaw } from 'vue'
-import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
-import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
-import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
 import PulseLineChart from './PulseLineChart.vue'
 import PulseBarChart from './PulseBarChart.vue'
 import PulseStackedChart from './PulseStackedChart.vue'
 import PulseScatterChart from './PulseScatterChart.vue'
 import PulseMatrixTable from './PulseMatrixTable.vue'
 import PulseTableView from './PulseTableView.vue'
+import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
+import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
+import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 
 interface Props {
   chartId: string
@@ -192,9 +295,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  share: []
-  embed: []
-  download: []
+  'share': []
+  'embed': []
+  'download': []
   'range-change': [range: TimeRange]
 }>()
 
@@ -209,7 +312,7 @@ const chartMeta = computed(() => getChartById(props.chartId))
 const ranges = computed(() => {
   const meta = chartMeta.value
   if (!meta) return []
-  
+
   return [
     { value: '7d' as TimeRange, label: '7D', isGated: false },
     { value: '30d' as TimeRange, label: '30D', isGated: false },
@@ -220,7 +323,7 @@ const ranges = computed(() => {
 
 const chartComponent = computed(() => {
   if (!chartMeta.value) return null
-  
+
   switch (chartMeta.value.type) {
     case 'line':
       return markRaw(PulseLineChart)
@@ -243,17 +346,20 @@ async function loadData() {
     if (chartMeta.value?.type === 'matrix') {
       matrixRows.value = await getMethodCoverage(props.filters)
       chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value)
-    } else {
+    }
+    else {
       chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value)
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load chart data:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
-function selectRange(range: { value: TimeRange; isGated: boolean }) {
+function selectRange(range: { value: TimeRange, isGated: boolean }) {
   if (range.isGated && !props.isPlus) return
   selectedRange.value = range.value
   emit('range-change', range.value)
@@ -275,7 +381,3 @@ watch(() => props.chartId, loadData)
 
 onMounted(loadData)
 </script>
-
-
-
-

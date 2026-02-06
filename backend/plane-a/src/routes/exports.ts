@@ -26,6 +26,7 @@ const exportCreateSchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   itemIds: z.array(z.string()).optional(),
+  corridorIds: z.array(z.string().min(1)).max(50).optional(),
 })
 
 const exportListSchema = z.object({
@@ -174,6 +175,9 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
     if (parsed.data.itemIds?.length) {
       params.itemIds = parsed.data.itemIds
+    }
+    if (parsed.data.corridorIds?.length) {
+      params.corridorIds = parsed.data.corridorIds
     }
 
     try {

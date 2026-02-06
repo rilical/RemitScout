@@ -41,7 +41,7 @@
                   Set Up Your Alerts
                 </h3>
                 <p class="text-sm text-slate-400">
-                  Create unlimited rate alerts for the corridors you use most
+                  Create up to 16 smart alerts for the corridors you use most
                 </p>
               </div>
             </div>
@@ -55,7 +55,7 @@
                   Build Your Watchlist
                 </h3>
                 <p class="text-sm text-slate-400">
-                  Track all your important corridors in one place
+                  Track up to 16 corridors in one place
                 </p>
               </div>
             </div>
@@ -85,21 +85,34 @@
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-400">Billing</span>
-              <span class="text-white">$9/month</span>
+              <span class="text-white">{{ billingAmountDisplay }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-400">Trial Period</span>
-              <span class="text-white">14 days free</span>
+              <span class="text-white">{{ trialDisplay }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-400">Next Billing Date</span>
-              <span class="text-white">{{ nextBillingDate }}</span>
+              <span class="text-white">{{ nextBillingDateDisplay }}</span>
+            </div>
+            <div
+              v-if="billingStatusDisplay"
+              class="flex items-center justify-between"
+            >
+              <span class="text-slate-400">Subscription Status</span>
+              <span class="text-white">{{ billingStatusDisplay }}</span>
             </div>
           </div>
         </div>
 
         <p class="text-sm text-slate-400 mb-8">
           A confirmation email has been sent to your inbox with all the details.
+        </p>
+        <p
+          v-if="meError"
+          class="text-sm text-amber-200 mb-6"
+        >
+          {{ meError }}
         </p>
 
         <!-- Action Buttons -->
@@ -136,15 +149,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '~/composables/useApi'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+
+type BillingPricingResponse = {
+  success: true
+  configured: boolean
+  trialDays: number
+  plus: {
+    month: { amount: number | null, currency: string | null, priceId: string | null }
+    year: { amount: number | null, currency: string | null, priceId: string | null }
+  }
+}
+
+type MeResponse = {
+  success: boolean
+  billing?: {
+    next_billing_date: string | null
+    amount: number | null
+    currency: string | null
+    status: string | null
+  }
+}
 
 const route = useRoute()
 const _sessionId = route.query.session_id as string | undefined
 const { request } = useApi()
 const { trackPlusPurchase } = useMarketingAnalytics()
+
+const me = ref<MeResponse | null>(null)
+const meLoading = ref(false)
+const meError = ref<string | null>(null)
+const purchaseTracked = ref(false)
+
+const { data: pricing } = await useAsyncData(
+  'billing:pricing',
+  () => request<BillingPricingResponse>('/billing/pricing', { retries: 0 }),
+  { server: true },
+)
 
 if (_sessionId) {
   try {
@@ -152,27 +196,71 @@ if (_sessionId) {
       method: 'POST',
       body: { sessionId: _sessionId },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.warn('Stripe verification failed:', error)
   }
 }
 
-const nextBillingDate = computed(() => {
-  const date = new Date()
-  date.setDate(date.getDate() + 14)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+const billing = computed(() => me.value?.billing ?? null)
+const trialDays = computed(() => pricing.value?.trialDays ?? 0)
+
+const formatMoney = (amount: number | null | undefined, currency: string | null | undefined) => {
+  if (amount === null || amount === undefined || !currency) return '—'
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
+  }
+  catch {
+    return `${currency.toUpperCase()} ${amount.toFixed(2)}`
+  }
+}
+
+const billingAmountDisplay = computed(() => formatMoney(billing.value?.amount, billing.value?.currency))
+
+const nextBillingDateDisplay = computed(() => {
+  const value = billing.value?.next_billing_date
+  if (!value) return '—'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return '—'
+  return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 })
 
-onMounted(() => {
+const billingStatusDisplay = computed(() => billing.value?.status ?? null)
+
+const trialDisplay = computed(() => {
+  if (billing.value?.status !== 'trialing') return '—'
+  if (trialDays.value <= 0) return 'Trial'
+  return `${trialDays.value} days`
+})
+
+const loadMe = async () => {
+  meLoading.value = true
+  meError.value = null
+  try {
+    me.value = await request<MeResponse>('/me', { retries: 0 })
+  }
+  catch (error: any) {
+    meError.value = error?.message || 'Unable to load billing details. Visit your dashboard for full status.'
+  }
+  finally {
+    meLoading.value = false
+  }
+}
+
+const trackPurchase = () => {
+  if (purchaseTracked.value) return
+  purchaseTracked.value = true
   void trackPlusPurchase({
-    value: 9,
-    currency: 'USD',
+    value: billing.value?.amount ?? pricing.value?.plus.month.amount ?? 0,
+    currency: billing.value?.currency ?? pricing.value?.plus.month.currency ?? 'USD',
     plan: 'plus',
     pagePath: route.fullPath,
+  })
+}
+
+onMounted(() => {
+  void loadMe().finally(() => {
+    trackPurchase()
   })
 })
 
@@ -183,8 +271,3 @@ useHead({
   ],
 })
 </script>
-
-
-
-
-

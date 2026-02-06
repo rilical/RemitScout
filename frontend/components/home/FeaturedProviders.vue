@@ -141,9 +141,14 @@ const fetchProviders = async () => {
 
   try {
     const { data } = await useProviders()
-    if (data.value) {
-      providers.value = data.value.slice(0, props.count)
-    }
+    const payload = data.value as { data?: Provider[] } | Provider[] | null
+    const list = Array.isArray(payload) ? payload : payload?.data ?? []
+    providers.value = list.slice(0, props.count).map(provider => ({
+      id: provider.id,
+      name: provider.name,
+      slug: provider.slug || provider.id,
+      rating: provider.rating,
+    }))
   }
   catch (err) {
     console.error('Failed to fetch providers:', err)

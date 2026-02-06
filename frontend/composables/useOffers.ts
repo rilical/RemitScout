@@ -7,6 +7,6 @@ export const useOffers = (params: Record<string, unknown> = {}, options: Record<
   return useAsyncData(
     key,
     () => request('/offers', { query: params }),
-    { watch: false, ...options },
+    { watch: [], ...options },
   )
 }

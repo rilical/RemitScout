@@ -25,9 +25,11 @@ export const useSessions = () => {
     try {
       const data = await request<SessionsResponse>('/sessions')
       sessions.value = Array.isArray(data.sessions) ? data.sessions : []
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load sessions.'
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

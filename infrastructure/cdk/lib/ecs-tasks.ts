@@ -123,7 +123,10 @@ export const createEcsTasks = (
   ].join('\n')
 
   const workerHealthCheck: HealthCheck = {
-    command: ['CMD-SHELL', 'pgrep -x node || exit 1'],
+    command: [
+      'CMD-SHELL',
+      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/healthz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+    ],
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),
     retries: 3,
@@ -380,6 +383,8 @@ export const createEcsTasks = (
       process.env.PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM || '60'
     sharedEnv.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS =
       process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS || '3600'
+    sharedEnv.SLO_FRESHNESS_P95_TIER2_THRESHOLD =
+      process.env.SLO_FRESHNESS_P95_TIER2_THRESHOLD || '21600'
   }
   if (process.env.DB_DISABLE_STATEMENT_TIMEOUT) {
     sharedEnv.DB_DISABLE_STATEMENT_TIMEOUT = process.env.DB_DISABLE_STATEMENT_TIMEOUT

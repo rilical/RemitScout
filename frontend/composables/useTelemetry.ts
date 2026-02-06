@@ -63,7 +63,8 @@ const readAttribution = (): Attribution => {
     const raw = window.localStorage.getItem(attributionStorageKey)
     if (!raw) return {}
     return JSON.parse(raw) as Attribution
-  } catch {
+  }
+  catch {
     return {}
   }
 }
@@ -72,7 +73,8 @@ const persistAttribution = (next: Attribution) => {
   if (!import.meta.client) return
   try {
     window.localStorage.setItem(attributionStorageKey, JSON.stringify(next))
-  } catch {
+  }
+  catch {
     // ignore storage failures
   }
 }
@@ -80,10 +82,12 @@ const persistAttribution = (next: Attribution) => {
 export const useTelemetry = () => {
   const { request } = useApi()
   const { ensureSession, trackSession } = useSession()
-  const { settings: privacySettings } = usePrivacySettings()
+  const { settings: privacySettings, hasConsent } = usePrivacySettings()
   const marketing = useMarketingAnalytics()
   const route = useRoute()
   const sessionInitialized = useState<boolean>('telemetry:session:initialized', () => false)
+  const shouldSkip = () =>
+    privacySettings.value.analytics === false || !hasConsent.value
 
   const getAttribution = (): Attribution => {
     if (!import.meta.client) return {}
@@ -117,7 +121,7 @@ export const useTelemetry = () => {
 
   const initSession = async () => {
     if (import.meta.server) return
-    if (privacySettings.value.analytics === false) return
+    if (shouldSkip()) return
     if (sessionInitialized.value) return
     const ids = ensureSession()
     const payload = {
@@ -135,13 +139,14 @@ export const useTelemetry = () => {
       })
       await trackSession()
       sessionInitialized.value = true
-    } catch {
+    }
+    catch {
       // ignore telemetry init errors
     }
   }
 
   const trackSearch = async (payload: SearchPayload) => {
-    if (privacySettings.value.analytics === false) return
+    if (shouldSkip()) return
     const base = buildBasePayload()
     try {
       await request('/telemetry/search', {
@@ -152,7 +157,8 @@ export const useTelemetry = () => {
         },
         retries: 0,
       })
-    } catch {
+    }
+    catch {
       // ignore telemetry errors
     }
     void marketing.trackSearch({
@@ -166,7 +172,7 @@ export const useTelemetry = () => {
   }
 
   const trackClick = async (payload: ClickPayload) => {
-    if (privacySettings.value.analytics === false) return
+    if (shouldSkip()) return
     const base = buildBasePayload()
     try {
       await request('/telemetry/click', {
@@ -177,7 +183,8 @@ export const useTelemetry = () => {
         },
         retries: 0,
       })
-    } catch {
+    }
+    catch {
       // ignore telemetry errors
     }
     void marketing.trackProviderClick({
@@ -191,7 +198,7 @@ export const useTelemetry = () => {
   }
 
   const trackConversion = async (payload: ConversionPayload) => {
-    if (privacySettings.value.analytics === false) return
+    if (shouldSkip()) return
     const base = buildBasePayload()
     try {
       await request('/telemetry/conversion', {
@@ -202,7 +209,8 @@ export const useTelemetry = () => {
         },
         retries: 0,
       })
-    } catch {
+    }
+    catch {
       // ignore telemetry errors
     }
     void marketing.trackAffiliateConversion({

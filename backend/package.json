@@ -16,6 +16,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:coverage:report": "vitest run --coverage",
+    "check:provider-score-drift": "node ../tools/check-provider-score-drift.mjs",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:seed": "tsx scripts/ingest-run.ts",
     "ingest:run": "tsx scripts/ingest-run.ts",
@@ -84,6 +85,7 @@
     "smart-alerts:refresh": "tsx scripts/smart-alerts-job.ts",
     "capability:probe": "tsx scripts/provider-capability-probe.ts",
     "ci:api-smoke": "tsx scripts/ci/api-smoke.ts",
+    "ci:integration-smoke": "tsx scripts/ci/integration-smoke.ts",
     "ci:seed-sanity": "tsx scripts/ci/seed-sanity.ts",
     "ci:config-validate": "tsx scripts/ci/validate-runtime-config.ts",
     "ci:observability": "tsx scripts/ci/observability-check.ts"

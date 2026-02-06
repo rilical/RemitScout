@@ -3,11 +3,14 @@
     <section class="bg-gray-900 text-white py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70">
-          <NuxtLink to="/" class="hover:text-white transition-colors">Home</NuxtLink>
+          <NuxtLink
+            to="/"
+            class="hover:text-white transition-colors"
+          >Home</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">Popular Corridors</span>
         </nav>
-        
+
         <div class="max-w-3xl">
           <h1 class="text-4xl sm:text-5xl font-bold mb-4">
             Popular Money Transfer Corridors
@@ -21,15 +24,28 @@
 
     <section class="py-16">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div v-if="pending" class="text-center py-12">
-          <p class="text-neutral-600">Loading popular corridors...</p>
+        <div
+          v-if="pending"
+          class="text-center py-12"
+        >
+          <p class="text-neutral-600">
+            Loading popular corridors...
+          </p>
         </div>
 
-        <div v-else-if="error" class="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center">
-          <p class="text-rose-900">Unable to load popular corridors. Please try again later.</p>
+        <div
+          v-else-if="error"
+          class="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center"
+        >
+          <p class="text-rose-900">
+            Unable to load popular corridors. Please try again later.
+          </p>
         </div>
 
-        <div v-else-if="corridorsByCountry.length" class="space-y-12">
+        <div
+          v-else-if="corridorsByCountry.length"
+          class="space-y-12"
+        >
           <div
             v-for="group in corridorsByCountry"
             :key="group.fromCountry"
@@ -39,7 +55,7 @@
               <h2 class="text-2xl font-bold text-neutral-900">
                 From {{ group.fromCountry }}
               </h2>
-              <div class="h-px flex-1 bg-neutral-200"></div>
+              <div class="h-px flex-1 bg-neutral-200" />
               <span class="text-sm text-neutral-500">
                 {{ group.corridors.length }} corridor{{ group.corridors.length !== 1 ? 's' : '' }}
               </span>
@@ -55,27 +71,63 @@
                 <div class="flex items-center justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <span class="text-3xl">{{ getCountryFlag(corridor.from) }}</span>
-                    <svg class="h-5 w-5 text-neutral-400 group-hover:text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <svg
+                      class="h-5 w-5 text-neutral-400 group-hover:text-brand-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
                     </svg>
                     <span class="text-3xl">{{ getCountryFlag(corridor.to) }}</span>
                   </div>
-                  <svg class="w-5 h-5 text-neutral-400 group-hover:text-brand-600 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="w-5 h-5 text-neutral-400 group-hover:text-brand-600 transition-transform group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </div>
-                
+
                 <div class="font-bold text-lg text-neutral-900 mb-2">
                   {{ corridor.from }} → {{ corridor.to }}
                 </div>
-                
-                <div v-if="corridor.top_provider" class="text-sm text-neutral-600 mb-2">
+
+                <div
+                  v-if="corridor.top_provider"
+                  class="text-sm text-neutral-600 mb-2"
+                >
                   Top provider: <span class="font-semibold text-neutral-900">{{ corridor.top_provider }}</span>
                 </div>
-                
-                <div v-if="corridor.count_24h" class="flex items-center gap-2 text-xs text-neutral-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+
+                <div
+                  v-if="corridor.count_24h"
+                  class="flex items-center gap-2 text-xs text-neutral-500"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
                   </svg>
                   {{ corridor.count_24h }} searches in last 24h
                 </div>
@@ -84,8 +136,13 @@
           </div>
         </div>
 
-        <div v-else class="text-center py-12">
-          <p class="text-neutral-600">No popular corridors found.</p>
+        <div
+          v-else
+          class="text-center py-12"
+        >
+          <p class="text-neutral-600">
+            No popular corridors found.
+          </p>
         </div>
       </div>
     </section>
@@ -112,10 +169,10 @@ interface CorridorData {
 
 const corridorsByCountry = computed(() => {
   if (!popularCorridors.value?.data) return []
-  
+
   const corridors = popularCorridors.value.data.map((item: any) => {
     const route = item.route || ''
-    const [from, to] = route.split(' → ').map(s => s.trim())
+    const [from, to] = route.split(' → ').map((s: string) => s.trim())
     return {
       from: from || '',
       to: to || '',

@@ -14,7 +14,8 @@ describe('entitlements', () => {
         watchlist_items: 3,
         api_access: false,
         api_tier: null,
-        api_cadence_hours: null,
+        bulk_export: false,
+        indices_api: false,
       })
     })
 
@@ -24,12 +25,13 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'full',
         exports_enabled: true,
-        alerts_max: null,
+        alerts_max: 16,
         history_max_days: 365,
-        watchlist_items: null,
+        watchlist_items: 16,
         api_access: false,
         api_tier: null,
-        api_cadence_hours: null,
+        bulk_export: false,
+        indices_api: false,
       })
     })
 
@@ -44,7 +46,8 @@ describe('entitlements', () => {
         watchlist_items: null,
         api_access: true,
         api_tier: 2,
-        api_cadence_hours: 6,
+        bulk_export: true,
+        indices_api: true,
       })
     })
 
@@ -59,7 +62,8 @@ describe('entitlements', () => {
         watchlist_items: 3,
         api_access: false,
         api_tier: null,
-        api_cadence_hours: null,
+        bulk_export: false,
+        indices_api: false,
       })
     })
 
@@ -74,7 +78,8 @@ describe('entitlements', () => {
         watchlist_items: 3,
         api_access: false,
         api_tier: null,
-        api_cadence_hours: null,
+        bulk_export: false,
+        indices_api: false,
       })
     })
 
@@ -89,7 +94,8 @@ describe('entitlements', () => {
         watchlist_items: 3,
         api_access: false,
         api_tier: null,
-        api_cadence_hours: null,
+        bulk_export: false,
+        indices_api: false,
       })
     })
 
@@ -119,7 +125,7 @@ describe('entitlements', () => {
       const enterprise = getEntitlementsForPlan('enterprise')
 
       expect(free.alerts_max).toBe(3)
-      expect(plus.alerts_max).toBeNull()
+      expect(plus.alerts_max).toBe(16)
       expect(enterprise.alerts_max).toBeNull()
     })
 
@@ -139,7 +145,7 @@ describe('entitlements', () => {
       const enterprise = getEntitlementsForPlan('enterprise')
 
       expect(free.watchlist_items).toBe(3)
-      expect(plus.watchlist_items).toBeNull()
+      expect(plus.watchlist_items).toBe(16)
       expect(enterprise.watchlist_items).toBeNull()
     })
 
@@ -156,7 +162,8 @@ describe('entitlements', () => {
         'watchlist_items',
         'api_access',
         'api_tier',
-        'api_cadence_hours',
+        'bulk_export',
+        'indices_api',
       ])
       expect(Object.keys(plus)).toEqual([
         'pulse_access',
@@ -166,7 +173,8 @@ describe('entitlements', () => {
         'watchlist_items',
         'api_access',
         'api_tier',
-        'api_cadence_hours',
+        'bulk_export',
+        'indices_api',
       ])
       expect(Object.keys(enterprise)).toEqual([
         'pulse_access',
@@ -176,7 +184,8 @@ describe('entitlements', () => {
         'watchlist_items',
         'api_access',
         'api_tier',
-        'api_cadence_hours',
+        'bulk_export',
+        'indices_api',
       ])
     })
   })

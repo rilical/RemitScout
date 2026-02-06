@@ -2,7 +2,7 @@
   <nav
     :class="[
       'mb-6 flex items-center space-x-2 text-sm',
-      isDark ? 'text-white' : 'text-gray-500'
+      isDark ? 'text-white' : 'text-gray-500',
     ]"
     aria-label="Breadcrumb"
   >

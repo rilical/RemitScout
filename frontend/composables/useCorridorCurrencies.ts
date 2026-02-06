@@ -71,9 +71,11 @@ export const useCorridorCurrencies = (
       pairs.value = Array.isArray(data.pairs) ? data.pairs : []
       fromCurrencies.value = Array.isArray(data.fromCurrencies) ? data.fromCurrencies : []
       toCurrencies.value = Array.isArray(data.toCurrencies) ? data.toCurrencies : []
-    } catch {
+    }
+    catch {
       resetWithFallback()
-    } finally {
+    }
+    finally {
       pending.value = false
     }
   }
@@ -84,7 +86,7 @@ export const useCorridorCurrencies = (
 
   const availableFromCurrencies = computed(() => {
     const result: string[] = []
-    
+
     // Collect currencies from pairs (filtered by to currency if selected)
     if (pairs.value.length) {
       const targetTo = normalize(toCurrency?.value)
@@ -96,12 +98,12 @@ export const useCorridorCurrencies = (
         result.push(...list)
       }
     }
-    
+
     // Add currencies from API response
     if (fromCurrencies.value.length) {
       result.push(...fromCurrencies.value)
     }
-    
+
     // Add fallback currency if available
     if (fromFallback.value) {
       result.push(fromFallback.value)
@@ -109,20 +111,20 @@ export const useCorridorCurrencies = (
 
     // Get unique list
     const uniqueList = unique(result)
-    
+
     // Sort: fallback first, then alphabetically
     const sorted = uniqueList.sort((a, b) => {
       if (a === fromFallback.value) return -1
       if (b === fromFallback.value) return 1
       return a.localeCompare(b)
     })
-    
+
     return sorted.length ? sorted : (fromFallback.value ? [fromFallback.value] : [])
   })
 
   const availableToCurrencies = computed(() => {
     const result: string[] = []
-    
+
     // Collect currencies from pairs (filtered by from currency if selected)
     if (pairs.value.length) {
       const targetFrom = normalize(fromCurrency?.value)
@@ -134,12 +136,12 @@ export const useCorridorCurrencies = (
         result.push(...list)
       }
     }
-    
+
     // Add currencies from API response
     if (toCurrencies.value.length) {
       result.push(...toCurrencies.value)
     }
-    
+
     // Add fallback currency if available
     if (toFallback.value) {
       result.push(toFallback.value)
@@ -147,14 +149,14 @@ export const useCorridorCurrencies = (
 
     // Get unique list
     const uniqueList = unique(result)
-    
+
     // Sort: fallback first, then alphabetically
     const sorted = uniqueList.sort((a, b) => {
       if (a === toFallback.value) return -1
       if (b === toFallback.value) return 1
       return a.localeCompare(b)
     })
-    
+
     return sorted.length ? sorted : (toFallback.value ? [toFallback.value] : [])
   })
 

@@ -129,10 +129,10 @@ export const usePulseStore = defineStore('pulse', {
   }),
 
   getters: {
-    corridorSlug: (state) => state.corridor.slug,
-    
-    corridorLabel: (state) => state.corridor.label,
-    
+    corridorSlug: state => state.corridor.slug,
+
+    corridorLabel: state => state.corridor.label,
+
     timeframeDays: (state): number => {
       const map: Record<PulseTimeframe, number> = {
         '24H': 1,
@@ -143,7 +143,7 @@ export const usePulseStore = defineStore('pulse', {
       }
       return map[state.timeframe]
     },
-    
+
     timeframeHours: (state): number => {
       const map: Record<PulseTimeframe, number> = {
         '24H': 24,
@@ -154,9 +154,9 @@ export const usePulseStore = defineStore('pulse', {
       }
       return map[state.timeframe]
     },
-    
-    isAnalystMode: (state) => state.viewMode === 'analyst',
-    
+
+    isAnalystMode: state => state.viewMode === 'analyst',
+
     lastUpdatedRelative: (state) => {
       const diff = Date.now() - new Date(state.lastUpdated).getTime()
       const minutes = Math.floor(diff / 60000)
@@ -228,7 +228,7 @@ export const usePulseStore = defineStore('pulse', {
         this.viewMode = query.mode as PulseViewMode
       }
       if (query.amount) {
-        const amount = parseInt(query.amount, 10)
+        const amount = Number.parseInt(query.amount, 10)
         if ([100, 200, 500, 1000, 5000, 10000].includes(amount)) {
           this.amount = amount
         }
@@ -253,5 +253,3 @@ export const usePulseStore = defineStore('pulse', {
     },
   },
 })
-
-

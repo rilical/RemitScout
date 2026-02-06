@@ -230,8 +230,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: 'https://instarem.prf.hn/click/camref:1101l5hXkw/[p_id:1110l11228]',
     isAffiliate: true,
     logo: {
-      sm: '/logos/instarem.png',
-      ico: '/logos/instarem.png',
+      sm: '/logos/instarem.svg',
+      ico: '/logos/instarem.svg',
     },
     remitScore: 8.4,
     scoreBreakdown: {
@@ -450,8 +450,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/logos/dahabshiil.svg',
-      ico: '/logos/dahabshiil.svg',
+      sm: '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png',
+      ico: '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png',
     },
     remitScore: 8.0,
     scoreBreakdown: {
@@ -475,7 +475,14 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
       sm: '/logos/boss-money.svg',
       ico: '/logos/boss-money.svg',
     },
-    remitScore: 8.0,
+    remitScore: 8.8,
+    scoreBreakdown: {
+      deliveredValue: 0.82,
+      reliability: 0.90,
+      frictionSpeed: 0.87,
+      supportRefunds: 0.75,
+      trustSafety: 0.90,
+    },
   },
   sendwave: {
     id: 'sendwave',
@@ -490,13 +497,13 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
       sm: '/logos/sendwave.svg',
       ico: '/logos/sendwave.svg',
     },
-    remitScore: 8.8,
+    remitScore: 9.0,
     scoreBreakdown: {
-      deliveredValue: 0.9,
-      reliability: 0.85,
-      frictionSpeed: 0.9,
-      supportRefunds: 0.8,
-      trustSafety: 0.85,
+      deliveredValue: 0.92,
+      reliability: 0.90,
+      frictionSpeed: 0.95,
+      supportRefunds: 0.88,
+      trustSafety: 0.88,
     },
   },
   mukuru: {
@@ -512,13 +519,13 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
       sm: '/logos/MUKURU_LOGO.PNG',
       ico: '/logos/MUKURU_LOGO.PNG',
     },
-    remitScore: 8.1,
+    remitScore: 8.4,
     scoreBreakdown: {
-      deliveredValue: 0.78,
-      reliability: 0.8,
-      frictionSpeed: 0.77,
-      supportRefunds: 0.77,
-      trustSafety: 0.79,
+      deliveredValue: 0.80,
+      reliability: 0.88,
+      frictionSpeed: 0.85,
+      supportRefunds: 0.82,
+      trustSafety: 0.85,
     },
   },
   wellsfargo: {

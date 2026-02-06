@@ -25,6 +25,7 @@
     "planeBOpsAlertsDesiredCount": 0,
     "planeBQueueWorkerDesiredCount": 0,
     "planeBQueueWorkerMaxCount": 0,
+    "planeBDisableTier1": true,
     "enableFrontend": false,
     "cpuArchitecture": "arm64"
   },

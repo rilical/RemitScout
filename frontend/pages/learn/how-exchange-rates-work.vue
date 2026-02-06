@@ -5,7 +5,10 @@
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 max-w-4xl">
           <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
@@ -44,7 +47,9 @@
                 </div>
 
                 <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
-                  <h3 class="font-bold text-2xl mb-4">The Bottom Line</h3>
+                  <h3 class="font-bold text-2xl mb-4">
+                    The Bottom Line
+                  </h3>
                   <p class="text-lg font-medium leading-relaxed mb-4">
                     The mid-market rate is your anchor; anything worse is a markup. Total cost = fee + FX spread vs. mid-market.
                   </p>
@@ -56,13 +61,19 @@
 
               <!-- Right Column -->
               <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">Quick Takeaways</h3>
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                  Quick Takeaways
+                </h3>
                 <div class="grid gap-4">
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Mid-market is your anchor</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Mid-market is your anchor
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           The mid-market rate is a neutral reference; anything worse is a markup.
                         </p>
@@ -72,9 +83,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Total cost = fee + spread</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Total cost = fee + spread
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Both the upfront fee and the FX spread (markup) determine your total cost.
                         </p>
@@ -84,9 +99,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Compare per corridor</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Compare per corridor
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Rates and fees differ by route, method, and amount. Compare the final amount received.
                         </p>
@@ -99,7 +118,11 @@
           </div>
           <!-- What Shapes the FX Rate -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -107,7 +130,9 @@
             </h2>
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">1. <span class="text-brand-600">Supply & Demand</span> (most common)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  1. <span class="text-brand-600">Supply & Demand</span> (most common)
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Capital flows, trade balances, and sentiment move currencies. When demand for a currency increases, its value goes up. Economic news, political events, and market sentiment all drive currency movements in real-time.
                 </p>
@@ -116,7 +141,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">2. <span class="text-brand-600">Interest Rates & Inflation</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  2. <span class="text-brand-600">Interest Rates & Inflation</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Central bank policy shifts FX relative values. Higher interest rates typically strengthen a currency as investors seek better returns. Inflation expectations also drive currency movements.
                 </p>
@@ -125,7 +152,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">3. <span class="text-brand-600">News & Risk Events</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  3. <span class="text-brand-600">News & Risk Events</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Geo events, data releases, and risk-on/off swings drive intraday moves. Major announcements can cause rapid rate changes. Elections, trade deals, and economic data releases all impact rates.
                 </p>
@@ -134,7 +163,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">4. <span class="text-brand-600">Market Liquidity</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  4. <span class="text-brand-600">Market Liquidity</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Thin trading volumes widen spreads. Popular currency pairs (USD/EUR) have tighter spreads than exotic pairs. Weekend and holiday trading also affects liquidity.
                 </p>
@@ -143,7 +174,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">5. <span class="text-brand-600">Provider Pricing Models</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  5. <span class="text-brand-600">Provider Pricing Models</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Different providers use different pricing strategies. Some offer lower fees but wider FX spreads, while others charge higher fees but offer better exchange rates. The provider's cost structure and target market affect how they price each corridor.
                 </p>
@@ -152,7 +185,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">6. <span class="text-brand-600">Payment Method & Corridor</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  6. <span class="text-brand-600">Payment Method & Corridor</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Bank transfers usually get better rates than card payments. Popular corridors (like USD → MXN) often have tighter spreads than less common routes. The payout method (bank deposit vs cash pickup) can also affect the rate.
                 </p>
@@ -170,19 +205,25 @@
             </h2>
             <div class="space-y-4">
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #1: <span class="text-brand-600">Compare "recipient gets"</span>, not just fees.</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Rule #1: <span class="text-brand-600">Compare "recipient gets"</span>, not just fees.
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   The final amount your recipient receives is what matters. A zero-fee provider with a worse exchange rate can deliver less money than a provider with a small fee but a better rate.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #2: Compare providers <span class="text-brand-600">at the same moment</span>.</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Rule #2: Compare providers <span class="text-brand-600">at the same moment</span>.
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Exchange rates move continuously. Comparing one provider now and another five minutes later can mislead you because rates change in real-time.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #3: <span class="text-brand-600">Match the same inputs</span>.</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Rule #3: <span class="text-brand-600">Match the same inputs</span>.
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Same:
                 </p>
@@ -245,9 +286,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- How to Lock In Best Outcome -->
           <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-8 lg:p-12">
@@ -283,7 +327,9 @@
 
           <!-- Simple Takeaway -->
           <div class="mb-12 rounded-xl border-2 border-brand-600 bg-brand-600 p-6">
-            <h3 class="text-lg font-bold text-white mb-3">The simple takeaway</h3>
+            <h3 class="text-lg font-bold text-white mb-3">
+              The simple takeaway
+            </h3>
             <p class="text-base text-white leading-relaxed">
               Exchange rates move continuously, but you don't need to be a forex trader. The <strong class="font-semibold">mid-market rate</strong> is your anchor—compare providers on the final "recipient gets" amount, including both fee and FX spread. Focus on comparing at checkout with identical inputs.
             </p>
@@ -302,12 +348,21 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
             >
               Compare Providers Now
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
-
         </div>
       </div>
     </section>
@@ -331,8 +386,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -348,8 +413,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -365,8 +440,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>

@@ -17,6 +17,6 @@ export const useProvider = (idOrSlug: string, options: Record<string, any> = {})
       )
       return response.data
     },
-    { watch: false, ...options },
+    { watch: [], ...options },
   )
 }

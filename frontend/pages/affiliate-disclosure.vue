@@ -5,4 +5,3 @@ await navigateTo('/legal/disclosure', { redirectCode: 301 })
 <template>
   <div />
 </template>
-

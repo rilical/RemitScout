@@ -345,10 +345,10 @@ export const useStructuredData = () => {
       'offers': {
         '@type': 'Offer',
         'priceCurrency': params.currency,
-        ...(params.amount && { 'price': params.amount }),
-        ...(params.exchangeRate && { 'description': `Exchange rate: ${params.exchangeRate}` }),
+        ...(params.amount && { price: params.amount }),
+        ...(params.exchangeRate && { description: `Exchange rate: ${params.exchangeRate}` }),
       },
-      ...(params.deliveryTime && { 'availabilityStarts': params.deliveryTime }),
+      ...(params.deliveryTime && { availabilityStarts: params.deliveryTime }),
     }
 
     useHead({
@@ -410,7 +410,7 @@ export const useStructuredData = () => {
   const addHowToSchema = (params: {
     name: string
     description: string
-    steps: Array<{ name: string; text: string; image?: string }>
+    steps: Array<{ name: string, text: string, image?: string }>
   }) => {
     const schema = {
       '@context': 'https://schema.org',
@@ -423,7 +423,7 @@ export const useStructuredData = () => {
         'name': step.name,
         'text': step.text,
         ...(step.image && {
-          'image': {
+          image: {
             '@type': 'ImageObject',
             'url': step.image,
           },
@@ -464,8 +464,8 @@ export const useStructuredData = () => {
         'postalCode': params.address.postalCode,
         'addressCountry': params.address.addressCountry,
       },
-      ...(params.telephone && { 'telephone': params.telephone }),
-      ...(params.openingHours && { 'openingHoursSpecification': params.openingHours }),
+      ...(params.telephone && { telephone: params.telephone }),
+      ...(params.openingHours && { openingHoursSpecification: params.openingHours }),
     }
 
     useHead({
@@ -492,4 +492,3 @@ export const useStructuredData = () => {
     addLocalBusinessSchema,
   }
 }
-

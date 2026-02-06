@@ -61,10 +61,16 @@
             <div class="text-2xl font-bold text-success-600">
               Net Delivered Value delta: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}+
             </div>
-            <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-neutral-600">
+            <div
+              v-if="comparison.midRate && comparison.midRate > 0"
+              class="text-sm text-neutral-600"
+            >
               ≈ {{ formatMoney(Math.round(comparison.savings.recipientGetsDifference / comparison.midRate), comparison.corridor.sendCurrency) }} USD retained by selecting the optimal counterparty
             </div>
-            <div v-else class="text-sm text-neutral-600">
+            <div
+              v-else
+              class="text-sm text-neutral-600"
+            >
               retained by selecting the optimal counterparty
             </div>
           </div>
@@ -136,7 +142,7 @@
                 :src="comparison.bank.logoUrl"
                 :alt="comparison.bank.name"
                 class="h-full w-full object-contain"
-              />
+              >
             </div>
             <div
               v-else
@@ -147,7 +153,7 @@
                 alt="Wells Fargo"
                 class="h-full w-full object-contain"
                 loading="lazy"
-              />
+              >
             </div>
             <div>
               <h3 class="text-2xl font-bold text-neutral-900">
@@ -161,7 +167,9 @@
 
           <div class="space-y-4">
             <div class="bg-red-50 rounded-xl p-5 border border-red-200">
-              <div class="text-sm text-neutral-600 mb-2">Exchange Rate</div>
+              <div class="text-sm text-neutral-600 mb-2">
+                Exchange Rate
+              </div>
               <div class="text-2xl font-bold text-neutral-900">
                 {{ formatRate(comparison.bank.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
               </div>
@@ -171,18 +179,25 @@
             </div>
 
             <div class="bg-red-50 rounded-xl p-5 border border-red-200">
-              <div class="text-sm text-neutral-600 mb-2">Transfer Fee</div>
+              <div class="text-sm text-neutral-600 mb-2">
+                Transfer Fee
+              </div>
               <div class="text-2xl font-bold text-red-600">
                 {{ formatMoney(comparison.bank.fee, comparison.corridor.sendCurrency) }}
               </div>
             </div>
 
             <div class="bg-red-50 rounded-2xl p-6 border-2 border-red-300">
-              <div class="text-sm text-red-700 mb-2">Net Delivered Value</div>
+              <div class="text-sm text-red-700 mb-2">
+                Net Delivered Value
+              </div>
               <div class="text-4xl font-bold text-red-900 mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
               </div>
-              <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm text-red-600">
+              <div
+                v-if="comparison.midRate && comparison.midRate > 0"
+                class="text-sm text-red-600"
+              >
                 ≈ {{ formatMoney(Math.round(comparison.bank.recipientGets / comparison.midRate), comparison.corridor.sendCurrency) }} USD
               </div>
             </div>
@@ -200,14 +215,24 @@
                 :src="comparison.top.logoUrl"
                 :alt="comparison.top.name"
                 class="h-full w-full object-contain"
-              />
+              >
             </div>
             <div
               v-else
               class="h-24 w-24 flex items-center justify-center flex-shrink-0"
             >
-              <svg class="h-full w-full text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              <svg
+                class="h-full w-full text-emerald-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
               </svg>
             </div>
             <div>
@@ -222,7 +247,9 @@
 
           <div class="space-y-4">
             <div class="bg-emerald-50 rounded-xl p-5 border border-emerald-200">
-              <div class="text-sm text-neutral-600 mb-2">Exchange Rate</div>
+              <div class="text-sm text-neutral-600 mb-2">
+                Exchange Rate
+              </div>
               <div class="text-2xl font-bold text-emerald-700">
                 {{ formatRate(comparison.top.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
               </div>
@@ -232,18 +259,25 @@
             </div>
 
             <div class="bg-emerald-50 rounded-xl p-5 border border-emerald-200">
-              <div class="text-sm text-neutral-600 mb-2">Transfer Fee</div>
+              <div class="text-sm text-neutral-600 mb-2">
+                Transfer Fee
+              </div>
               <div class="text-2xl font-bold text-emerald-600">
                 {{ formatMoney(comparison.top.fee, comparison.corridor.sendCurrency) }}
               </div>
             </div>
 
             <div class="bg-emerald-600 rounded-2xl p-6 border-2 border-emerald-400 text-white">
-              <div class="text-sm opacity-90 mb-2">Net Delivered Value</div>
+              <div class="text-sm opacity-90 mb-2">
+                Net Delivered Value
+              </div>
               <div class="text-4xl font-bold mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
               </div>
-              <div v-if="comparison.midRate && comparison.midRate > 0" class="text-sm opacity-90 mb-3">
+              <div
+                v-if="comparison.midRate && comparison.midRate > 0"
+                class="text-sm opacity-90 mb-3"
+              >
                 ≈ {{ formatMoney(Math.round(comparison.top.recipientGets / comparison.midRate), comparison.corridor.sendCurrency) }} USD
               </div>
               <div
@@ -261,7 +295,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </section>
 
@@ -294,7 +327,10 @@
           <p class="text-neutral-700 leading-relaxed mb-6 text-sm">
             The mid-market rate is the reference price institutions use between themselves. The spread delta is the margin captured by the intermediary.
           </p>
-          <div v-if="comparison" class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div
+            v-if="comparison"
+            class="bg-blue-50 border border-blue-200 rounded-xl p-4"
+          >
             <p class="text-sm font-bold text-neutral-900 mb-3">
               {{ comparison.bank.name }}
             </p>
@@ -311,7 +347,10 @@
                 <span class="text-neutral-600">Upfront fee:</span>
                 <span class="font-bold text-neutral-900">{{ formatMoney(comparison.bank.fee, comparison.corridor.sendCurrency) }}</span>
               </div>
-              <div v-if="comparison.savings" class="pt-2 border-t border-blue-200">
+              <div
+                v-if="comparison.savings"
+                class="pt-2 border-t border-blue-200"
+              >
                 <div class="flex justify-between text-sm">
                   <span class="text-neutral-600">Spread delta impact:</span>
                   <span class="font-bold text-blue-700">{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}</span>
@@ -335,9 +374,14 @@
           <p class="text-neutral-700 leading-relaxed mb-6">
             We overlay provider rates against the live mid-market benchmark. This reveals the exact margin being captured by the intermediary.
           </p>
-          <div v-if="comparison" class="space-y-4">
+          <div
+            v-if="comparison"
+            class="space-y-4"
+          >
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p class="text-xs text-neutral-600 mb-2">Lower Effective Rate:</p>
+              <p class="text-xs text-neutral-600 mb-2">
+                Lower Effective Rate:
+              </p>
               <p class="text-sm font-bold text-neutral-900 mb-1">
                 {{ comparison.bank.name }}
               </p>
@@ -349,7 +393,9 @@
               </p>
             </div>
             <div class="bg-blue-600 rounded-xl p-4 text-white">
-              <p class="text-xs text-blue-100 mb-2">Higher Effective Rate:</p>
+              <p class="text-xs text-blue-100 mb-2">
+                Higher Effective Rate:
+              </p>
               <p class="text-sm font-bold mb-1">
                 {{ comparison.top.name }}
               </p>
@@ -359,7 +405,10 @@
               <p class="text-xs text-blue-100 mt-2">
                 Net Delivered Value: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
               </p>
-              <p v-if="comparison.savings && comparison.savings.recipientGetsDifference > 0" class="text-xs font-bold mt-2">
+              <p
+                v-if="comparison.savings && comparison.savings.recipientGetsDifference > 0"
+                class="text-xs font-bold mt-2"
+              >
                 +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta per transfer
               </p>
             </div>
@@ -377,8 +426,13 @@
           <p class="text-neutral-700 leading-relaxed mb-6">
             For recurring transfers, spread optimization compounds. A 2% tighter spread on monthly volume materially improves annual retained capital and capital preservation.
           </p>
-          <div v-if="comparison?.savings" class="bg-blue-600 rounded-xl p-4 text-white mt-auto">
-            <p class="text-xs text-blue-100 mb-2">Annual retained capital:</p>
+          <div
+            v-if="comparison?.savings"
+            class="bg-blue-600 rounded-xl p-4 text-white mt-auto"
+          >
+            <p class="text-xs text-blue-100 mb-2">
+              Annual retained capital:
+            </p>
             <p class="text-lg font-bold mb-1">
               {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference * 12).toLocaleString() }}
             </p>
@@ -389,7 +443,10 @@
               {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta per transfer × 12 months
             </p>
           </div>
-          <div v-else class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-auto">
+          <div
+            v-else
+            class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-auto"
+          >
             <p class="text-sm text-neutral-700 text-center">
               Compare quotes to see annual retained capital
             </p>
@@ -401,8 +458,18 @@
       <div class="bg-white rounded-3xl border-2 border-neutral-200 p-10 shadow-xl">
         <div class="flex flex-col lg:flex-row items-center gap-8 max-w-4xl mx-auto">
           <div class="flex-shrink-0 w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            <svg
+              class="w-10 h-10 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
             </svg>
           </div>
           <div class="flex-1 text-center lg:text-left">
@@ -421,12 +488,15 @@
 
       <!-- Footer -->
       <div class="mt-12 text-center">
-        <p class="text-sm text-slate-400" v-if="comparison">
+        <p
+          v-if="comparison"
+          class="text-sm text-slate-400"
+        >
           Live rates for ${{ amount }} • {{ comparison.corridor.from }} → {{ comparison.corridor.to }} • Updated {{ lastUpdated }}
         </p>
       </div>
     </div>
-    </section>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -453,7 +523,7 @@ const lastUpdated = computed(() => {
 })
 
 // Debug: Log data to console
-if (process.client) {
+if (import.meta.client) {
   watch([data, pending, error], ([newData, newPending, newError]) => {
     console.log('BankVsSpecialistDynamic Debug:', {
       hasData: !!newData,

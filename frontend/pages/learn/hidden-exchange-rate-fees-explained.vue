@@ -5,7 +5,10 @@
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 max-w-4xl">
           <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
@@ -42,9 +45,11 @@
                     When a money transfer advertises "low fees" or "no fees," it's not saying the transfer is free. It's telling you <strong class="font-semibold text-neutral-900">where</strong> they earn their money. Most remittance pricing is built from two components: <strong class="font-semibold text-neutral-900">(1) the upfront fee</strong> and <strong class="font-semibold text-neutral-900">(2) the FX markup</strong> (also called spread). If you understand both, you can spot "cheap-looking" quotes that actually deliver less money to your recipient.
                   </p>
                 </div>
-                
+
                 <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
-                  <h3 class="font-bold text-2xl mb-4">The Simple Rule</h3>
+                  <h3 class="font-bold text-2xl mb-4">
+                    The Simple Rule
+                  </h3>
                   <p class="text-lg font-medium leading-relaxed mb-4">
                     A transfer can be <strong class="font-bold">expensive even with a $0 fee</strong>. The exchange rate is the other half of the price.
                   </p>
@@ -53,40 +58,54 @@
                   </p>
                 </div>
               </div>
-              
+
               <!-- Right Column -->
               <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">Quick Takeaways</h3>
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                  Quick Takeaways
+                </h3>
                 <div class="grid gap-4">
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Fees are visible</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Fees are visible
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           FX spread is the hidden cost. You see the upfront fee, but the exchange rate markup is built into the rate you're offered.
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">"No fee" can still be expensive</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          "No fee" can still be expensive
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           When the exchange rate is weak, you're paying through the spread, even if the upfront fee is zero.
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Compare the final amount</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Compare the final amount
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Compare mid market vs offered rate and focus on the final "recipient gets" amount, not just the fee.
                         </p>
@@ -99,7 +118,11 @@
           </div>
           <!-- Upfront Transfer Fee -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -135,27 +158,27 @@
               <span class="text-brand-600">FX markup</span> (the hidden one)
             </h2>
             <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <p class="text-base text-neutral-700 leading-relaxed mb-6">
-                  FX markup is the difference between:
+              <p class="text-base text-neutral-700 leading-relaxed mb-6">
+                FX markup is the difference between:
+              </p>
+              <ul class="space-y-3 text-base text-neutral-700 mb-6">
+                <li class="flex items-start gap-3">
+                  <span class="text-brand-600 mt-1">•</span>
+                  <span>the <strong class="font-semibold text-neutral-900">mid market rate</strong> (a neutral reference rate between banks), and</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-brand-600 mt-1">•</span>
+                  <span>the <strong class="font-semibold text-neutral-900">rate you're offered</strong>.</span>
+                </li>
+              </ul>
+              <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
+                <p class="text-base text-neutral-700 leading-relaxed mb-3">
+                  If the mid market rate is 1.0000 and you're offered 0.9750, the spread is 2.5%. That 2.5% is a cost, even if the provider charges "no fee."
                 </p>
-                <ul class="space-y-3 text-base text-neutral-700 mb-6">
-                  <li class="flex items-start gap-3">
-                    <span class="text-brand-600 mt-1">•</span>
-                    <span>the <strong class="font-semibold text-neutral-900">mid market rate</strong> (a neutral reference rate between banks), and</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <span class="text-brand-600 mt-1">•</span>
-                    <span>the <strong class="font-semibold text-neutral-900">rate you're offered</strong>.</span>
-                  </li>
-                </ul>
-                <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                  <p class="text-base text-neutral-700 leading-relaxed mb-3">
-                    If the mid market rate is 1.0000 and you're offered 0.9750, the spread is 2.5%. That 2.5% is a cost, even if the provider charges "no fee."
-                  </p>
-                  <p class="text-base font-semibold text-neutral-900">
-                    Why it's hidden: you don't see "FX fee: $18.42" as a line item. Instead, you just get a worse exchange rate.
-                  </p>
-                </div>
+                <p class="text-base font-semibold text-neutral-900">
+                  Why it's hidden: you don't see "FX fee: $18.42" as a line item. Instead, you just get a worse exchange rate.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -166,13 +189,17 @@
             </h2>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Fee (fixed cost)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Fee (fixed cost)
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Often a flat or percentage charge. Visible and doesn't scale with transfer size.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">FX markup (scales with amount)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  FX markup (scales with amount)
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Applied to the money you convert. On larger transfers, this usually dominates the total cost.
                 </p>
@@ -205,15 +232,21 @@
               </li>
             </ol>
             <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-              <h3 class="text-lg font-bold text-neutral-900 mb-4">Quick Formula</h3>
+              <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                Quick Formula
+              </h3>
               <div class="bg-white rounded-lg p-4 mb-3 border border-brand-200">
-                <p class="text-sm font-medium text-brand-600 mb-1">Markup Percentage</p>
+                <p class="text-sm font-medium text-brand-600 mb-1">
+                  Markup Percentage
+                </p>
                 <p class="text-lg font-bold text-brand-600 font-mono">
                   (Mid Market Rate minus Provider Rate) divided by Mid Market Rate
                 </p>
               </div>
               <div class="bg-white rounded-lg p-4 border border-brand-200">
-                <p class="text-sm font-medium text-brand-600 mb-1">Money Lost to FX</p>
+                <p class="text-sm font-medium text-brand-600 mb-1">
+                  Money Lost to FX
+                </p>
                 <p class="text-lg font-bold text-brand-600 font-mono">
                   (Send Amount minus Fee) times Rate Difference
                 </p>
@@ -228,37 +261,49 @@
             </h2>
             <div class="grid md:grid-cols-2 gap-6 mb-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3"><span class="text-brand-600">"Great rate"</span> claims</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  <span class="text-brand-600">"Great rate"</span> claims
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Without a mid market comparison, assume the spread is doing work.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Different rates by <span class="text-brand-600">payment method</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Different rates by <span class="text-brand-600">payment method</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Bank funding often gets better rates than card funding.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3"><span class="text-brand-600">Weekend/after-hours</span> pricing</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  <span class="text-brand-600">Weekend/after-hours</span> pricing
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Some providers widen spreads when markets are closed.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3"><span class="text-brand-600">"Estimated"</span> rates until checkout</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  <span class="text-brand-600">"Estimated"</span> rates until checkout
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Rates can change before you confirm. The displayed rate may be optimistic.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Different <span class="text-brand-600">payout rails</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Different <span class="text-brand-600">payout rails</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Cash pickup or home delivery can have different spreads than bank deposits.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Other <span class="text-brand-600">hidden costs</span></h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Other <span class="text-brand-600">hidden costs</span>
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Card issuer fees, recipient bank charges, rounding, and minimums can also reduce delivered value.
                 </p>
@@ -267,9 +312,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- Detection Checklist -->
           <div class="mb-12">
@@ -318,8 +366,18 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
             >
               Compare Providers Now
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -346,8 +404,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -363,8 +431,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -380,8 +458,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -417,12 +505,3 @@ jsonLdBreadcrumb([
   { name: 'Hidden Fees', url: `${siteUrl}/learn/hidden-exchange-rate-fees-explained` },
 ])
 </script>
-
-
-
-
-
-
-
-
-

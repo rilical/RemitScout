@@ -4,7 +4,10 @@
       :to="countryPageUrl"
       class="flex items-center gap-4 mb-4"
     >
-      <span class="text-4xl" aria-hidden="true">{{ country.flag }}</span>
+      <span
+        class="text-4xl"
+        aria-hidden="true"
+      >{{ country.flag }}</span>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
           {{ country.name }}
@@ -26,7 +29,10 @@
       </svg>
     </NuxtLink>
 
-    <div v-if="sourceLinks.length" class="pt-4 border-t border-slate-200">
+    <div
+      v-if="sourceLinks.length"
+      class="pt-4 border-t border-slate-200"
+    >
       <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
         Most Common Corridors
       </p>

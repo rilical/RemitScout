@@ -3,8 +3,12 @@
     <div class="mx-auto max-w-6xl px-6 py-10">
       <div class="flex items-center justify-between gap-4 mb-8">
         <div>
-          <h1 class="text-2xl font-semibold text-slate-900">Ad Inventory</h1>
-          <p class="text-sm text-slate-500">Manage sponsored placements and track impressions.</p>
+          <h1 class="text-2xl font-semibold text-slate-900">
+            Ad Inventory
+          </h1>
+          <p class="text-sm text-slate-500">
+            Manage sponsored placements and track impressions.
+          </p>
         </div>
         <button
           type="button"
@@ -21,46 +25,85 @@
           class="bg-white rounded-xl border border-slate-200 p-6 space-y-4"
           @submit.prevent="handleCreate"
         >
-          <h2 class="text-lg font-semibold text-slate-900">Create Ad</h2>
+          <h2 class="text-lg font-semibold text-slate-900">
+            Create Ad
+          </h2>
           <label class="block text-sm font-medium text-slate-700">
             Name
-            <input v-model="form.name" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required />
+            <input
+              v-model="form.name"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              required
+            >
           </label>
           <label class="block text-sm font-medium text-slate-700">
             Tagline
-            <input v-model="form.tagline" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required />
+            <input
+              v-model="form.tagline"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              required
+            >
           </label>
           <label class="block text-sm font-medium text-slate-700">
             Brand color
-            <input v-model="form.brandColor" type="color" class="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+            <input
+              v-model="form.brandColor"
+              type="color"
+              class="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            >
           </label>
           <label class="block text-sm font-medium text-slate-700">
             Destination URL
-            <input v-model="form.url" type="url" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required />
+            <input
+              v-model="form.url"
+              type="url"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              required
+            >
           </label>
           <label class="block text-sm font-medium text-slate-700">
             CTA text
-            <input v-model="form.ctaText" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+            <input
+              v-model="form.ctaText"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            >
           </label>
           <label class="block text-sm font-medium text-slate-700">
             Status
-            <select v-model="form.status" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+            <select
+              v-model="form.status"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
           </label>
           <label class="block text-sm font-medium text-slate-700">
             Layout
-            <select v-model="form.layout" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+            <select
+              v-model="form.layout"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            >
               <option value="horizontal">Horizontal</option>
               <option value="vertical">Vertical</option>
               <option value="compact">Compact</option>
             </select>
           </label>
           <div class="space-y-2">
-            <div class="text-sm font-medium text-slate-700">Placements</div>
-            <label v-for="placement in placements" :key="placement" class="flex items-center gap-2 text-sm text-slate-600">
-              <input v-model="form.placements" type="checkbox" :value="placement" class="h-4 w-4 rounded border-slate-300 text-blue-600" />
+            <div class="text-sm font-medium text-slate-700">
+              Placements
+            </div>
+            <label
+              v-for="placement in placements"
+              :key="placement"
+              class="flex items-center gap-2 text-sm text-slate-600"
+            >
+              <input
+                v-model="form.placements"
+                type="checkbox"
+                :value="placement"
+                class="h-4 w-4 rounded border-slate-300 text-blue-600"
+              >
               {{ placement }}
             </label>
           </div>
@@ -71,27 +114,57 @@
           >
             {{ saving ? 'Creating…' : 'Create ad' }}
           </button>
-          <p v-if="formError" class="text-xs text-red-600">{{ formError }}</p>
-          <p v-if="formSuccess" class="text-xs text-emerald-700">{{ formSuccess }}</p>
+          <p
+            v-if="formError"
+            class="text-xs text-red-600"
+          >
+            {{ formError }}
+          </p>
+          <p
+            v-if="formSuccess"
+            class="text-xs text-emerald-700"
+          >
+            {{ formSuccess }}
+          </p>
         </form>
 
         <div class="space-y-4">
-          <div v-if="error" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <div
+            v-if="error"
+            class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700"
+          >
             {{ error }}
           </div>
-          <div v-else-if="ads.length === 0" class="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
+          <div
+            v-else-if="ads.length === 0"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500"
+          >
             No ads yet.
           </div>
-          <div v-else class="grid gap-4">
-            <div v-for="ad in ads" :key="ad.id" class="rounded-xl border border-slate-200 bg-white p-5">
+          <div
+            v-else
+            class="grid gap-4"
+          >
+            <div
+              v-for="ad in ads"
+              :key="ad.id"
+              class="rounded-xl border border-slate-200 bg-white p-5"
+            >
               <div class="flex items-start justify-between gap-4">
                 <div>
                   <div class="flex items-center gap-2">
-                    <div class="h-3 w-3 rounded-full" :style="{ backgroundColor: ad.brandColor }"></div>
-                    <h3 class="text-sm font-semibold text-slate-900">{{ ad.name }}</h3>
+                    <div
+                      class="h-3 w-3 rounded-full"
+                      :style="{ backgroundColor: ad.brandColor }"
+                    />
+                    <h3 class="text-sm font-semibold text-slate-900">
+                      {{ ad.name }}
+                    </h3>
                     <span class="text-xs text-slate-500">{{ ad.status }}</span>
                   </div>
-                  <p class="text-xs text-slate-500 mt-1">{{ ad.tagline }}</p>
+                  <p class="text-xs text-slate-500 mt-1">
+                    {{ ad.tagline }}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -102,7 +175,11 @@
                 </button>
               </div>
               <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                <span v-for="placement in ad.placements" :key="placement.placement" class="rounded-full bg-slate-100 px-2 py-1">
+                <span
+                  v-for="placement in ad.placements"
+                  :key="placement.placement"
+                  class="rounded-full bg-slate-100 px-2 py-1"
+                >
                   {{ placement.placement }} · {{ placement.layout || 'auto' }}
                 </span>
               </div>
@@ -178,9 +255,11 @@ const loadAds = async () => {
   try {
     const response = await request<{ ads: AdminAd[] }>('/admin/ads', { method: 'GET' })
     ads.value = response.ads ?? []
-  } catch (err: any) {
+  }
+  catch (err: any) {
     error.value = err?.message || 'Failed to load ads.'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -205,7 +284,7 @@ const handleCreate = async () => {
           ctaText: form.ctaText,
           status: form.status,
         },
-        placements: form.placements.map((placement) => ({
+        placements: form.placements.map(placement => ({
           placement,
           layout: form.layout,
         })),
@@ -217,9 +296,11 @@ const handleCreate = async () => {
     form.url = ''
     form.placements = []
     await loadAds()
-  } catch (err: any) {
+  }
+  catch (err: any) {
     formError.value = err?.message || 'Failed to create ad.'
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -234,7 +315,8 @@ const toggleStatus = async (ad: AdminAd) => {
       },
     })
     await loadAds()
-  } catch (err: any) {
+  }
+  catch (err: any) {
     error.value = err?.message || 'Failed to update status.'
   }
 }

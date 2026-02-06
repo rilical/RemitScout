@@ -56,7 +56,10 @@
                 class="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 bg-white shadow-lg mb-4"
                 :style="{ borderColor: scoreColor }"
               >
-                <span :class="scoreTextClass" class="text-3xl font-bold">
+                <span
+                  :class="scoreTextClass"
+                  class="text-3xl font-bold"
+                >
                   {{ score.toFixed(1) }}
                 </span>
               </div>
@@ -336,4 +339,3 @@ const getRatingTextClass = (badgeClass: string) => {
   transform: scale(0.95);
 }
 </style>
-

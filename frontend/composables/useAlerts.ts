@@ -94,18 +94,21 @@ export const useAlerts = () => {
     try {
       syncing.value = true
       const response = await request<AlertsApiResponse>('/alerts')
-      
+
       if (response.success && response.alerts) {
         alerts.value = response.alerts.sort(sortByUpdatedDesc)
         hydrated.value = true
-      } else {
+      }
+      else {
         console.warn('Failed to fetch alerts from backend:', response)
         hydrated.value = true
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching alerts from backend:', error)
       hydrated.value = true
-    } finally {
+    }
+    finally {
       syncing.value = false
     }
   }
@@ -135,7 +138,8 @@ export const useAlerts = () => {
           created = true
           serverKeys.add(key)
         }
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Error syncing local alert to backend:', error)
       }
     }
@@ -201,7 +205,8 @@ export const useAlerts = () => {
           frequency: fullAlert.frequency,
           enabled: fullAlert.enabled,
         })
-      } else if (operation === 'update' && id) {
+      }
+      else if (operation === 'update' && id) {
         const patch = alert as Partial<Alert>
         const response = await request<AlertsApiResponse>(`/alerts/${id}`, {
           method: 'PATCH',
@@ -215,12 +220,14 @@ export const useAlerts = () => {
         if (response.success && response.alert) {
           upsertAlert(response.alert)
         }
-      } else if (operation === 'delete' && id) {
+      }
+      else if (operation === 'delete' && id) {
         await request<AlertsApiResponse>(`/alerts/${id}`, {
           method: 'DELETE',
         })
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Error syncing ${operation} to backend:`, error)
     }
   }
@@ -229,7 +236,8 @@ export const useAlerts = () => {
     if (isLoggedIn.value) {
       resetLocalStorage()
       await fetchFromBackend()
-    } else {
+    }
+    else {
       hydrated.value = localStorageHydrated.value
     }
   })
@@ -238,7 +246,8 @@ export const useAlerts = () => {
     if (loggedIn) {
       resetLocalStorage()
       await fetchFromBackend()
-    } else {
+    }
+    else {
       hydrated.value = localStorageHydrated.value
     }
   })
@@ -279,11 +288,11 @@ export const useAlerts = () => {
     if (existing) {
       existing.updatedAt = now
       alerts.value = [...alerts.value].sort(sortByUpdatedDesc)
-      
+
       if (isLoggedIn.value) {
         await syncToBackend('update', existing, existing.id)
       }
-      
+
       return { status: 'already_exists', alert: existing, watchlistItemId }
     }
 
@@ -297,7 +306,8 @@ export const useAlerts = () => {
     if (isLoggedIn.value) {
       try {
         return await createAlertInBackend(next)
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Error creating alert on backend:', error)
         return {
           message: 'Unable to create alert right now.',
@@ -355,7 +365,7 @@ export const useAlerts = () => {
   async function update(id: string, patch: Partial<Omit<Alert, 'id' | 'createdAt'>>) {
     const existing = findById(id)
     if (!existing) return
-    
+
     const next: Alert = {
       ...existing,
       ...patch,

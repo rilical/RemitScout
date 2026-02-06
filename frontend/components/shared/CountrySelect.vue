@@ -20,7 +20,7 @@
           :class="[
             'h-5 w-5 transition-transform duration-200',
             props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-400',
-            { 'rotate-180': isOpen }
+            { 'rotate-180': isOpen },
           ]"
           fill="none"
           stroke="currentColor"
@@ -47,7 +47,7 @@
           'fixed z-[9999] overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
           props.theme === 'dark'
             ? 'border-neutral-700 bg-neutral-800'
-            : 'border-gray-300 bg-white'
+            : 'border-gray-300 bg-white',
         ]"
         style="max-height: 400px;"
         :style="dropdownStyle"
@@ -56,7 +56,7 @@
           v-if="filteredCountries.length === 0"
           :class="[
             'px-4 py-2 text-sm',
-            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500',
           ]"
         >
           No countries found
@@ -69,7 +69,7 @@
             'w-full px-4 py-2.5 text-left text-sm transition-colors focus:outline-none',
             props.theme === 'dark'
               ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
-              : 'text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100'
+              : 'text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
           ]"
           @mousedown.prevent="selectCountry(country)"
           @touchstart.prevent="selectCountry(country)"
@@ -140,12 +140,12 @@ const dropdownStyle = ref({})
 
 const filterCountries = () => {
   let countries = allCountries
-  
+
   // Exclude the specified country if provided
   if (props.excludeCountry) {
     countries = countries.filter(country => country.value !== props.excludeCountry)
   }
-  
+
   if (!searchQuery.value) {
     filteredCountries.value = countries
   }
@@ -171,27 +171,28 @@ const selectCountry = (country: typeof allCountries[0]) => {
 const handleSearch = (event: Event) => {
   const target = event.target as HTMLInputElement
   const value = target.value
-  
+
   // If user is typing and there's a selected country, allow free typing for search
   // But preserve emoji if they're just editing the selected country name
   if (props.modelValue && value && !isOpen.value) {
     // User started typing - allow free search
     searchQuery.value = value
     isOpen.value = true
-  } else {
+  }
+  else {
     searchQuery.value = value
     isOpen.value = true
   }
-  
+
   updateDropdownPosition()
 }
 
 const handleFocus = async () => {
   isOpen.value = true
-  
+
   // Clear search query when focusing to show all countries
   searchQuery.value = ''
-  
+
   await nextTick()
   filteredCountries.value = [...allCountries]
 
@@ -208,7 +209,8 @@ const handleBlur = () => {
         // Show full label with emoji
         searchQuery.value = country.label
       }
-    } else {
+    }
+    else {
       searchQuery.value = ''
     }
   }, 200)
@@ -231,11 +233,12 @@ watch(
   () => props.modelValue,
   (newValue) => {
     if (newValue && !isOpen.value) {
-      const country = allCountries.find((c) => c.value === newValue)
+      const country = allCountries.find(c => c.value === newValue)
       if (country) {
         searchQuery.value = country.label
       }
-    } else if (!newValue) {
+    }
+    else if (!newValue) {
       searchQuery.value = ''
     }
   },

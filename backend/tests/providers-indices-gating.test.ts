@@ -143,17 +143,18 @@ describe('providers indices gating', () => {
 
   it('returns indicesReason bucket_mismatch when bucket != 500', async () => {
     mockListLatestByCorridorAllMethods.mockResolvedValue([
-      buildQuote({ amount_bucket: 200 }),
+      buildQuote({ amount_bucket: 100 }),
     ])
 
-    const handler = vi
+    const handler = (vi
       .mocked(app.get)
-      .mock.calls.find((call) => call[0] === '/providers')?.[2] as any
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
 
     const mockRequest: Partial<FastifyRequest> = {
       query: {
         corridor_id: 'US-PH-USD-PHP',
-        amount_bucket: 200,
+        amount_bucket: 100,
         method: 'bank',
       },
     }
@@ -172,9 +173,10 @@ describe('providers indices gating', () => {
       }),
     ])
 
-    const handler = vi
+    const handler = (vi
       .mocked(app.get)
-      .mock.calls.find((call) => call[0] === '/providers')?.[2] as any
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
 
     const mockRequest: Partial<FastifyRequest> = {
       query: {

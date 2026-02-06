@@ -2,14 +2,20 @@
   <div class="min-h-screen bg-slate-50">
     <section class="relative overflow-hidden border-b border-blue-600 bg-blue-600">
       <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-6">
           <div>
             <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
               {{ title }}
             </h1>
-            <p v-if="subtitle" class="mt-4 text-lg text-white/90">
+            <p
+              v-if="subtitle"
+              class="mt-4 text-lg text-white/90"
+            >
               {{ subtitle }}
             </p>
 
@@ -19,7 +25,10 @@
                 class="inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1"
               >
                 <span class="font-semibold text-white">Last updated</span>
-                <time :datetime="lastUpdatedIso" class="text-white/90">{{ lastUpdatedLabel }}</time>
+                <time
+                  :datetime="lastUpdatedIso"
+                  class="text-white/90"
+                >{{ lastUpdatedLabel }}</time>
               </div>
               <slot name="meta" />
             </div>
@@ -36,7 +45,10 @@
           </article>
 
           <aside class="space-y-6">
-            <div v-if="related?.length" class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/70">
+            <div
+              v-if="related?.length"
+              class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/70"
+            >
               <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Related
               </h2>

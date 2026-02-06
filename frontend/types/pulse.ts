@@ -182,5 +182,3 @@ export interface PulseEventItem {
   description: string
   chartId?: string
 }
-
-

@@ -1,4 +1,4 @@
-import { COUNTRIES as BASE_COUNTRIES, BASE_CURRENCIES } from '../../backend/shared/countries-currencies'
+import { COUNTRIES as BASE_COUNTRIES, BASE_CURRENCIES as BASE_CURRENCIES_RAW } from '../../backend/shared/countries-currencies'
 
 export interface Country {
   name: string
@@ -14,7 +14,7 @@ export interface Currency {
   countries: string[]
 }
 
-export { BASE_CURRENCIES }
+export const BASE_CURRENCIES = [...BASE_CURRENCIES_RAW] as string[]
 
 const COUNTRY_NAME_OVERRIDES: Record<string, string> = {
   CI: 'Côte d\'Ivoire',
@@ -31,7 +31,7 @@ const flagFromCode = (code: string): string => {
   )
 }
 
-export const COUNTRIES: Country[] = BASE_COUNTRIES.map((country) => ({
+export const COUNTRIES: Country[] = BASE_COUNTRIES.map(country => ({
   ...country,
   name: COUNTRY_NAME_OVERRIDES[country.code] || country.name,
   flag: flagFromCode(country.code),

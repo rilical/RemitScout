@@ -11,6 +11,7 @@ import { setTimeout as sleep } from 'timers/promises'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import { deleteMessages, receiveJsonMessages, sendToDLQ, createVisibilityTimeoutExtender } from '../shared/sqs'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { dispatchQueuedSignal, type NotificationsQueueMessage } from '../plane-b/src/notifications/dispatcher'
@@ -36,8 +37,12 @@ const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = toNumber(process.env.NOTIFICATIONS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
 const loopJitterMs = resolveJitterMs(process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS)
 const messageJitterMs = resolveJitterMs(process.env.NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS)
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
 
 const shutdown = (signal: string) => {
   if (shutdownRequested) return
@@ -69,6 +74,22 @@ export const runNotificationsQueueWorkerLoop = async () => {
   if (!queueUrl) {
     logger.warn('notifications_worker_disabled', { reason: 'missing_queue_url' })
     return
+  }
+
+  if (!isLambdaRuntime && healthEnabled) {
+    try {
+      healthServer = await startHealthServer({
+        port: healthPort,
+        logger,
+        loggerName: 'notifications-queue-worker',
+        enableDatabaseCheck: true,
+        enableRedisCheck: true,
+      })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   const lock = new WorkerLock('notifications-queue-worker', lockTtlSeconds)
@@ -165,6 +186,13 @@ export const runNotificationsQueueWorkerLoop = async () => {
     await pool.end()
     if (forceExitTimer) {
       clearTimeout(forceExitTimer)
+    }
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     }
   }
 }

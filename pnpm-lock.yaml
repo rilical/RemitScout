@@ -216,6 +216,9 @@ importers:
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.26(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.13
+        version: 3.5.26(typescript@5.9.3)
       vue-echarts:
         specifier: ^8.0.1
         version: 8.0.1(echarts@6.0.0)(vue@3.5.26(typescript@5.9.3))

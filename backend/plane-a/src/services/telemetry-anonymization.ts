@@ -7,6 +7,8 @@ export const anonymizeTelemetryData = async (pool: Pool, userId: string): Promis
     `UPDATE silver.telemetry_outbound_click SET user_id = NULL WHERE user_id = $1`,
     `UPDATE silver.telemetry_session SET user_id = NULL WHERE user_id = $1`,
     `UPDATE silver.telemetry_provider_visit SET user_id = NULL WHERE user_id = $1`,
+    `UPDATE silver.telemetry_affiliate_conversion SET user_id = NULL WHERE user_id = $1`,
+    `UPDATE silver.telemetry_marketing_event SET user_id = NULL WHERE user_id = $1`,
   ]
 
   for (const statement of statements) {

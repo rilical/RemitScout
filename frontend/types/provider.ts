@@ -15,7 +15,12 @@ export type ProviderMetadata = {
   url: string
   affiliateUrl?: string | null
   isAffiliate?: boolean
-  logo?: { sm: string; ico: string }
+  logo?: { sm: string, ico: string }
   remitScore?: number
   scoreBreakdown?: ProviderScoreBreakdown
+  rating?: number
+  countries?: number
+  speed?: string
+  score?: number
+  features?: string[]
 }

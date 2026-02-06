@@ -98,4 +98,3 @@ export const getRandomAuthor = (): Author => {
   const randomId = authorIds[Math.floor(Math.random() * authorIds.length)]
   return authors[randomId]
 }
-

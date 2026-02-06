@@ -20,8 +20,18 @@
             aria-label="Close modal"
             @click="close"
           >
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              class="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
@@ -52,8 +62,18 @@
                   />
                 </div>
                 <div class="flex items-center text-slate-400">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
                   </svg>
                 </div>
                 <div class="flex-1">
@@ -67,18 +87,32 @@
                 </div>
               </div>
               <!-- Current Rate Preview -->
-              <div v-if="ratePairAvailable" class="mt-2 flex items-center justify-between text-sm">
+              <div
+                v-if="ratePairAvailable"
+                class="mt-2 flex items-center justify-between text-sm"
+              >
                 <span class="text-blue-600">Current rate:</span>
                 <span class="font-medium text-blue-700">1 {{ ratePairBase }} = {{ currentRateLabel }} {{ ratePairQuote }}</span>
               </div>
               <!-- Corridor Coverage Indicator -->
-              <div v-if="corridorEligibility && !eligibilityLoading" class="mt-2">
+              <div
+                v-if="corridorEligibility && !eligibilityLoading"
+                class="mt-2"
+              >
                 <div
                   v-if="corridorEligibility.isMacroCorridor"
                   class="flex items-center gap-1.5 text-xs text-emerald-600"
                 >
-                  <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                   <span class="font-medium">Popular corridor</span>
                   <span class="text-emerald-500">— rates updated frequently</span>
@@ -87,18 +121,46 @@
                   v-else
                   class="flex items-center gap-1.5 text-xs text-slate-500"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>Less common corridor</span>
                   <span class="text-slate-400">— rates refreshed on demand</span>
                 </div>
               </div>
-              <div v-else-if="eligibilityLoading" class="mt-2">
+              <div
+                v-else-if="eligibilityLoading"
+                class="mt-2"
+              >
                 <div class="flex items-center gap-1.5 text-xs text-slate-400">
-                  <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    class="w-3.5 h-3.5 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    />
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   <span>Checking corridor data...</span>
                 </div>
@@ -110,8 +172,13 @@
                 Target
               </label>
               <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div class="text-sm font-semibold text-slate-900">{{ targetLabel }}</div>
-                <div v-if="ratePairAvailable" class="mt-1 text-xs text-slate-600">
+                <div class="text-sm font-semibold text-slate-900">
+                  {{ targetLabel }}
+                </div>
+                <div
+                  v-if="ratePairAvailable"
+                  class="mt-1 text-xs text-slate-600"
+                >
                   1 {{ ratePairBase }} = {{ currentRateLabel }} {{ ratePairQuote }}
                 </div>
               </div>
@@ -128,9 +195,22 @@
                 button-class="h-11"
               >
                 <template #selected="{ option }">
-                  <div v-if="option?.value === 'sendScore'" class="flex items-center gap-2 w-full">
-                    <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <div
+                    v-if="option?.value === 'sendScore'"
+                    class="flex items-center gap-2 w-full"
+                  >
+                    <svg
+                      class="w-4 h-4 text-purple-600 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
                     </svg>
                     <span class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
                       {{ option?.label }}
@@ -139,8 +219,18 @@
                       v-if="option?.locked"
                       class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 ml-auto"
                     >
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4" />
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4"
+                        />
                       </svg>
                       Locked
                     </span>
@@ -148,7 +238,11 @@
                       v-else
                       class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-1.5 py-0.5 text-xs font-bold text-white ml-auto"
                     >
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        class="w-3 h-3"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                       Plus
@@ -157,10 +251,23 @@
                   <span v-else>{{ option?.label || 'Select metric' }}</span>
                 </template>
                 <template #option="{ option }">
-                  <div v-if="option.value === 'sendScore'" class="flex items-center gap-2 w-full">
+                  <div
+                    v-if="option.value === 'sendScore'"
+                    class="flex items-center gap-2 w-full"
+                  >
                     <div class="flex items-center gap-2 flex-1">
-                      <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      <svg
+                        class="w-4 h-4 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                        />
                       </svg>
                       <span :class="option.unavailable ? 'text-slate-400' : 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600'">
                         {{ option.label }}
@@ -171,8 +278,18 @@
                       class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
                       :title="option.unavailableReason"
                     >
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
                       </svg>
                       No data
                     </span>
@@ -180,8 +297,18 @@
                       v-else-if="option.locked"
                       class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600"
                     >
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4" />
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4"
+                        />
                       </svg>
                       Locked
                     </span>
@@ -189,7 +316,11 @@
                       v-else
                       class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-2 py-0.5 text-xs font-bold text-white"
                     >
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        class="w-3 h-3"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                       Plus
@@ -204,13 +335,26 @@
                 class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
               >
                 <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-4 h-4 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <div>
                     <span class="font-medium">Smart alerts unavailable for this corridor.</span>
                     <span class="block mt-0.5 text-amber-700">{{ smartAlertDisabledMessage }}</span>
-                    <span v-if="corridorEligibility" class="block mt-1 text-amber-600">
+                    <span
+                      v-if="corridorEligibility"
+                      class="block mt-1 text-amber-600"
+                    >
                       Try popular corridors like US→Mexico, UK→India, or US→Philippines.
                     </span>
                   </div>
@@ -302,7 +446,10 @@
                 <span class="font-semibold text-slate-800">{{ limitTitle }}</span>
                 <span class="text-xs text-slate-500">{{ limitCount }}/{{ limitState.limit }}</span>
               </div>
-              <div v-if="limitItems.length" class="mb-3 rounded-lg border border-slate-200 bg-white max-h-40 overflow-y-auto">
+              <div
+                v-if="limitItems.length"
+                class="mb-3 rounded-lg border border-slate-200 bg-white max-h-40 overflow-y-auto"
+              >
                 <div
                   v-for="item in limitItems"
                   :key="item.id"
@@ -312,7 +459,10 @@
                     <div class="text-sm font-medium text-slate-800 truncate">
                       {{ item.label }}
                     </div>
-                    <div v-if="item.meta" class="text-xs text-slate-500 truncate">
+                    <div
+                      v-if="item.meta"
+                      class="text-xs text-slate-500 truncate"
+                    >
                       {{ item.meta }}
                     </div>
                   </div>
@@ -401,10 +551,10 @@ watch(() => route.fullPath, () => {
 const modalContent = ref<HTMLElement | null>(null)
 const error = ref<string>('')
 const initializing = ref(false)
-const successToastRef = ref<{ show: () => void; hide: () => void } | null>(null)
+const successToastRef = ref<{ show: () => void, hide: () => void } | null>(null)
 const toastTitle = ref('')
 const toastMessage = ref('')
-const limitState = ref<{ feature: 'watchlist' | 'alert'; limit: number } | null>(null)
+const limitState = ref<{ feature: 'watchlist' | 'alert', limit: number } | null>(null)
 
 const metric = ref<AlertRule['metric']>('rate')
 const comparator = ref<AlertComparator>('gte')
@@ -482,6 +632,8 @@ const targetLabel = computed(() => {
       return `Pulse chart ${target.value.chartId}`
     case 'guide':
       return `Guide: ${target.value.slug}`
+    default:
+      return 'Alert target'
   }
 })
 
@@ -557,12 +709,15 @@ const loadCorridorEligibility = async () => {
     })
     if (data?.success) {
       corridorEligibility.value = data
-    } else {
+    }
+    else {
       corridorEligibility.value = null
     }
-  } catch {
+  }
+  catch {
     corridorEligibility.value = null
-  } finally {
+  }
+  finally {
     eligibilityLoading.value = false
   }
 }
@@ -608,7 +763,8 @@ const loadCurrentRate = async () => {
       retries: 0,
     })
     currentRateValue.value = typeof data?.rate === 'number' ? data.rate : null
-  } catch {
+  }
+  catch {
     currentRateValue.value = null
   }
 }
@@ -785,6 +941,7 @@ const limitItems = computed(() => {
   const items = watchlist.items.value.map(item => ({
     id: item.id,
     label: item.label,
+    meta: undefined,
   }))
   return limit > 0 ? items.slice(0, limit) : items
 })
@@ -793,7 +950,8 @@ const handleLimitRemove = async (id: string) => {
   if (!limitState.value) return
   if (limitState.value.feature === 'watchlist') {
     await watchlist.remove(id)
-  } else {
+  }
+  else {
     await alerts.remove(id)
   }
 
@@ -843,7 +1001,7 @@ async function handleManage() {
 
 const isEditing = computed(() => !!context.value?.alertId)
 const shouldDefaultToSmartAlert = computed(() => (
-  context.value?.source === 'alerts'
+  (context.value?.source === 'alerts' || context.value?.source === 'pulse')
   && isPlus.value
   && target.value.type === 'corridor'
 ))
@@ -905,7 +1063,8 @@ async function save() {
     toastTitle.value = 'Rate alert created!'
     toastMessage.value = `We'll notify you about ${contextLabel.value}`
     successToastRef.value?.show()
-  } else if (res.status === 'already_exists') {
+  }
+  else if (res.status === 'already_exists') {
     toastTitle.value = 'Alert exists'
     toastMessage.value = 'You already have an alert for this item'
     successToastRef.value?.show()
@@ -954,7 +1113,8 @@ watch(
         frequency.value = existingAlert.frequency
         currency.value = existingAlert.rule.currency || defaultCurrencyForMetric(existingAlert.rule.metric)
       }
-    } else {
+    }
+    else {
       const defaultMetric = shouldDefaultToSmartAlert.value
         ? 'sendScore'
         : firstEnabledMetric.value

@@ -15,7 +15,7 @@ export function calculateHiddenMarkup(
   amount: number,
   midMarketRate: number,
   providerRate: number,
-  upfrontFee: number = 0
+  upfrontFee: number = 0,
 ): number {
   if (midMarketRate === 0) return 0
   // Fee is deducted upfront, so only (amount - fee) is available for conversion
@@ -53,7 +53,7 @@ export function buildTrueCostBreakdown(
   upfrontFee: number,
   midMarketRate: number,
   providerRate: number,
-  bestTotalCost: number = 0
+  bestTotalCost: number = 0,
 ): TrueCostBreakdown {
   const hiddenMarkup = calculateHiddenMarkup(amount, midMarketRate, providerRate, upfrontFee)
   const hiddenMarkupPercent = calculateSpreadPercent(midMarketRate, providerRate)
@@ -78,7 +78,7 @@ export function buildTrueCostBreakdown(
 }
 
 export function buildMarketDepth(
-  providers: Array<{ name: string; rate: number }>
+  providers: Array<{ name: string, rate: number }>,
 ): MarketDepth {
   if (providers.length === 0) {
     return {
@@ -99,7 +99,7 @@ export function buildMarketDepth(
   const best = sorted[0]
   const secondBest = sorted[1] || sorted[0]
   const worst = sorted[sorted.length - 1]
-  
+
   const rates = sorted.map(p => p.rate)
   const midIndex = Math.floor(rates.length / 2)
   const medianRate = rates.length % 2 === 0
@@ -132,7 +132,7 @@ export function buildBankComparison(
   bankFee: number,
   bestSpecialistRate: number,
   bestSpecialistFee: number,
-  bestSpecialistName: string
+  bestSpecialistName: string,
 ): BankComparisonData {
   const bankMarkup = calculateHiddenMarkup(amount, midMarketRate, bankRate, bankFee)
   const bankTotalCost = calculateTrueCost(bankFee, bankMarkup)
@@ -193,5 +193,3 @@ export function getMarkupSeverity(spreadBps: number): 'excellent' | 'good' | 'fa
   if (spreadBps < 200) return 'fair'
   return 'poor'
 }
-
-

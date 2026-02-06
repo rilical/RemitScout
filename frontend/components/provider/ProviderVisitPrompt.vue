@@ -1,17 +1,38 @@
 <template>
-  <div v-if="showPrompt" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50" @click="dismissPrompt" />
+  <div
+    v-if="showPrompt"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+  >
+    <div
+      class="absolute inset-0 bg-black/50"
+      @click="dismissPrompt"
+    />
     <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h3 class="text-lg font-semibold text-slate-900">Did you complete your transfer?</h3>
+          <h3 class="text-lg font-semibold text-slate-900">
+            Did you complete your transfer?
+          </h3>
           <p class="text-sm text-slate-500">
             Help us verify provider accuracy and improve reliability scores.
           </p>
         </div>
-        <button class="text-slate-400 hover:text-slate-600" @click="dismissPrompt">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <button
+          class="text-slate-400 hover:text-slate-600"
+          @click="dismissPrompt"
+        >
+          <svg
+            class="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -20,7 +41,10 @@
         <div class="text-sm font-semibold text-slate-900">
           {{ activeVisit.provider_name || activeVisit.provider_id }}
         </div>
-        <div v-if="activeVisit.corridor_id" class="text-xs text-slate-500">
+        <div
+          v-if="activeVisit.corridor_id"
+          class="text-xs text-slate-500"
+        >
           Corridor: {{ activeVisit.corridor_id }}
         </div>
         <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
@@ -47,38 +71,78 @@
           </button>
         </div>
 
-        <div v-if="completedTransfer !== null" class="space-y-3">
-          <div v-if="completedTransfer" class="grid grid-cols-2 gap-3">
+        <div
+          v-if="completedTransfer !== null"
+          class="space-y-3"
+        >
+          <div
+            v-if="completedTransfer"
+            class="grid grid-cols-2 gap-3"
+          >
             <label class="text-xs text-slate-600">
               Transfer amount
-              <input v-model="transferAmount" type="number" min="0" class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+              <input
+                v-model="transferAmount"
+                type="number"
+                min="0"
+                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+              >
             </label>
             <label class="text-xs text-slate-600">
               Transfer date
-              <input v-model="transferDate" type="date" class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+              <input
+                v-model="transferDate"
+                type="date"
+                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+              >
             </label>
             <label class="text-xs text-slate-600">
               Actual rate
-              <input v-model="actualRate" type="number" min="0" step="0.0001" class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+              <input
+                v-model="actualRate"
+                type="number"
+                min="0"
+                step="0.0001"
+                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+              >
             </label>
             <label class="text-xs text-slate-600">
               Actual fee
-              <input v-model="actualFee" type="number" min="0" step="0.01" class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+              <input
+                v-model="actualFee"
+                type="number"
+                min="0"
+                step="0.01"
+                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+              >
             </label>
           </div>
 
           <label class="text-xs text-slate-600">
             Rating (1-5)
-            <input v-model="feedbackRating" type="number" min="1" max="5" class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+            <input
+              v-model="feedbackRating"
+              type="number"
+              min="1"
+              max="5"
+              class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+            >
           </label>
 
           <label class="text-xs text-slate-600">
             Notes (optional)
-            <textarea v-model="feedbackNotes" rows="2" class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+            <textarea
+              v-model="feedbackNotes"
+              rows="2"
+              class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+            />
           </label>
         </div>
 
-        <p v-if="errorMessage" class="text-xs text-red-600">
+        <p
+          v-if="errorMessage"
+          class="text-xs text-red-600"
+        >
           {{ errorMessage }}
         </p>
       </div>
@@ -186,9 +250,11 @@ const submit = async () => {
     }
     resetForm()
     showPrompt.value = pendingVisits.value.length > 0
-  } catch (error: any) {
+  }
+  catch (error: any) {
     errorMessage.value = error?.message || 'Unable to submit feedback.'
-  } finally {
+  }
+  finally {
     submitting.value = false
   }
 }

@@ -6,11 +6,20 @@
     <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
-          <NuxtLink to="/" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Home</NuxtLink>
+          <NuxtLink
+            to="/"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Home</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Learn</NuxtLink>
+          <NuxtLink
+            to="/learn"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Learn</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
+          <NuxtLink
+            to="/learn/providers"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">WireBarley Review</span>
         </nav>
@@ -26,7 +35,11 @@
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    class="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   Provider Review
@@ -50,8 +63,18 @@
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Compare WireBarley Now
               </NuxtLink>
@@ -61,8 +84,18 @@
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </a>
             </div>
@@ -72,71 +105,62 @@
           <div class="flex justify-center lg:justify-end">
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
-                <div class="relative inline-flex items-center justify-center">
-                  <svg class="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" stroke-width="12" />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      fill="none"
-                      stroke="#3b82f6"
-                      stroke-width="12"
-                      stroke-linecap="round"
-                      :stroke-dasharray="`${82 * 4.4} 440`"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">8.2</span>
-                    <span class="text-sm text-slate-500">/10</span>
-                  </div>
+                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  REMIT-SCOUT SCORE
                 </div>
+                <RemitScoreRing :score="score" />
               </div>
 
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-2" >
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
               </div>
 
               <div class="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p class="text-xs" style="color: rgba(17, 24, 39, 1);">
+                <p
+                  class="text-xs"
+                  style="color: rgba(17, 24, 39, 1);"
+                >
                   Based on our independent methodology.<br>
-                  <NuxtLink to="/methodology" class="font-semibold hover:text-brand-700" style="color: rgba(37, 99, 235, 1);">Learn how we score →</NuxtLink>
+                  <NuxtLink
+                    to="/methodology"
+                    class="font-semibold hover:text-brand-700"
+                    style="color: rgba(37, 99, 235, 1);"
+                  >Learn how we score →</NuxtLink>
                 </p>
               </div>
             </div>
@@ -150,27 +174,46 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">40</div>
-            <div class="text-sm text-slate-600">Receiving Countries</div>
+            <div class="text-3xl font-bold text-slate-900">
+              40
+            </div>
+            <div class="text-sm text-slate-600">
+              Receiving Countries
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">5 Markets</div>
-            <div class="text-sm text-slate-600">Send From</div>
+            <div class="text-3xl font-bold text-slate-900">
+              5 Markets
+            </div>
+            <div class="text-sm text-slate-600">
+              Send From
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-blue-600">Korea-Focused</div>
-            <div class="text-sm text-slate-600">Core Strength</div>
+            <div class="text-3xl font-bold text-blue-600">
+              Korea-Focused
+            </div>
+            <div class="text-sm text-slate-600">
+              Core Strength
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">30 Min</div>
-            <div class="text-sm text-slate-600">Rate Guarantee</div>
+            <div class="text-3xl font-bold text-slate-900">
+              30 Min
+            </div>
+            <div class="text-sm text-slate-600">
+              Rate Guarantee
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Main Content -->
-    <section id="review" class="py-16 bg-white">
+    <section
+      id="review"
+      class="py-16 bg-white"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
@@ -179,8 +222,18 @@
               <!-- Introduction -->
               <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
-                  <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="w-12 h-12 text-brand-600/20"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
@@ -190,7 +243,7 @@
 
               <div class="mb-22">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
@@ -200,12 +253,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-8">
                 <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   Score Breakdown
                 </h2>
@@ -223,72 +286,120 @@
                     <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
                       WireBarley
                     </h3>
-                    <p class="text-sm text-black">Remit-Score</p>
+                    <p class="text-sm text-black">
+                      Remit-Score
+                    </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Delivered Value
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">In South Korea sending, WireBarley publishes low, tiered transfer fees (and can be free above certain thresholds), which can keep total cost competitive in-core.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      40% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      In South Korea sending, WireBarley publishes low, tiered transfer fees (and can be free above certain thresholds), which can keep total cost competitive in-core.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Reliability</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Reliability
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">FX quotes are time-bound (rate guarantee window), so if you delay funding/confirmation you may need to re-quote and accept a different rate.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      20% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      FX quotes are time-bound (rate guarantee window), so if you delay funding/confirmation you may need to re-quote and accept a different rate.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Friction & Speed
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">WireBarley's stated delivery range includes "minutes" on some corridors/methods, which is meaningful for Korea-linked use cases where speed matters.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      WireBarley's stated delivery range includes "minutes" on some corridors/methods, which is meaningful for Korea-linked use cases where speed matters.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Support & Refunds
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Customer center contacts, hours, and supported languages are clearly posted across multiple regions.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Customer center contacts, hours, and supported languages are clearly posted across multiple regions.
+                    </div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Trust & Safety
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Small overseas remittance business registered corporation approved by Korea's Ministry of Strategy and Finance. Australia subsidiary has IRD license from AUSTRAC. US transfers through Community Federal Savings Bank with FinCEN eligibility.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      10% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Small overseas remittance business registered corporation approved by Korea's Ministry of Strategy and Finance. Australia subsidiary has IRD license from AUSTRAC. US transfers through Community Federal Savings Bank with FinCEN eligibility.
+                    </div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-2.5">Why 8.2 (not 9.0+):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">WireBarley's 8.2/10 is driven first by Delivered Value because in its core use case—Korea-linked corridors—WireBarley can be cost-effective with clearly tiered fees. The score doesn't push higher mainly because corridor footprint is narrower than the global leaders, especially on the "send-from" side, so it's not always an option even if the receiving country is supported.</div>
+                      <div class="font-semibold text-slate-900 mb-2.5">
+                        Why 8.2 (not 9.0+):
+                      </div>
+                      <div class="text-sm text-slate-700 leading-relaxed">
+                        WireBarley's 8.2/10 is driven first by Delivered Value because in its core use case—Korea-linked corridors—WireBarley can be cost-effective with clearly tiered fees. The score doesn't push higher mainly because corridor footprint is narrower than the global leaders, especially on the "send-from" side, so it's not always an option even if the receiving country is supported.
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Delivered Value (40%)
+                  </h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
                   Remit-Scout's scoring starts with what you actually pay, not just the headline fee. A widely used framework (including the World Bank's Remittance Prices Worldwide work) is that total remittance cost is typically the transfer fee + exchange-rate margin (spread) + any recipient-side fees where they exist.
@@ -314,7 +425,9 @@
                       <span><strong class="text-slate-900">SWIFT OUR fees:</strong> &lt; 5,000,000 KRW: 15,000 KRW; ≥ 5,000,000 KRW: 5,000 KRW</span>
                     </li>
                   </ul>
-                  <p class="text-slate-700 mt-3 mb-0">That said, WireBarley also warns that the final received amount can change due to intermediary bank fees (important if you're trying to deliver an exact amount).</p>
+                  <p class="text-slate-700 mt-3 mb-0">
+                    That said, WireBarley also warns that the final received amount can change due to intermediary bank fees (important if you're trying to deliver an exact amount).
+                  </p>
                 </div>
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200 mb-6">
@@ -324,20 +437,42 @@
                 </div>
 
                 <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">"How often is it cheapest?"</p>
+                  <p class="font-semibold text-slate-900 mb-3">
+                    "How often is it cheapest?"
+                  </p>
                   <p class="text-slate-800 leading-relaxed mb-4">
                     Remit-Scout isn't claiming WireBarley is "always cheapest." What the data signals support is:
                   </p>
                   <ul class="space-y-2 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>It can be very competitive in Korea-linked lanes where published fees are small and the delivery method is efficient.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
                       </svg>
                       <span>It can lose when the effective cost is driven by FX spread, intermediary deductions, or when you choose a more expensive delivery option (WireBarley notes home delivery costs more than cash pickup and takes longer in at least one corridor).</span>
                     </li>
@@ -356,7 +491,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Reliability & Success (20%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -366,20 +503,28 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Quote success / availability
                     </p>
-                    <p class="text-slate-700 mb-3">WireBarley's help center lists the following as places you can initiate transfers from: Australia, Hong Kong, New Zealand, South Korea, and the USA.</p>
-                    <p class="text-slate-700 mb-0">It also lists 40 receiving countries (as of the referenced help article). This is the "footprint constraint" behind the score: even if the receiving country is supported, you still need WireBarley to support your sending country and funding flow.</p>
+                    <p class="text-slate-700 mb-3">
+                      WireBarley's help center lists the following as places you can initiate transfers from: Australia, Hong Kong, New Zealand, South Korea, and the USA.
+                    </p>
+                    <p class="text-slate-700 mb-0">
+                      It also lists 40 receiving countries (as of the referenced help article). This is the "footprint constraint" behind the score: even if the receiving country is supported, you still need WireBarley to support your sending country and funding flow.
+                    </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Pricing stability & data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-0">WireBarley provides a clear "freshness" signal via its exchange rate guarantee period (30 minutes). That implies quotes aren't open-ended, and it sets a predictable expectation for how long a price is valid.</p>
+                    <p class="text-slate-700 mb-0">
+                      WireBarley provides a clear "freshness" signal via its exchange rate guarantee period (30 minutes). That implies quotes aren't open-ended, and it sets a predictable expectation for how long a price is valid.
+                    </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Operational status transparency
                     </p>
-                    <p class="text-slate-700 mb-0">WireBarley states it will notify you when remittance is complete via a message to your registered mobile number. This doesn't prove success rates, but it does indicate a defined completion signal.</p>
+                    <p class="text-slate-700 mb-0">
+                      WireBarley states it will notify you when remittance is complete via a message to your registered mobile number. This doesn't prove success rates, but it does indicate a defined completion signal.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -389,7 +534,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Friction & Speed (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -399,40 +546,70 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       ETA / speed buckets (what WireBarley says to expect)
                     </p>
-                    <p class="text-slate-700 mb-3">WireBarley's help center sets a broad but useful range:</p>
+                    <p class="text-slate-700 mb-3">
+                      WireBarley's help center sets a broad but useful range:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Fast lanes:</strong> "a few minutes" (corridor- and payment-method dependent)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Typical slow end:</strong> up to 2 business days</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">That aligns with the auditor note: good speed in-core, but not universal instant.</p>
+                    <p class="text-slate-700 mt-3 mb-0">
+                      That aligns with the auditor note: good speed in-core, but not universal instant.
+                    </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods (what recipients can use)
                     </p>
-                    <p class="text-slate-700 mb-3">Payout types vary by destination. For example, for Nepal WireBarley lists:</p>
+                    <p class="text-slate-700 mb-3">
+                      Payout types vary by destination. For example, for Nepal WireBarley lists:
+                    </p>
                     <div class="flex flex-wrap gap-2 mb-3">
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Bank deposit</span>
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Mobile wallet</span>
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Cash pickup</span>
                     </div>
-                    <p class="text-slate-700 mb-0">And WireBarley notes (in Vietnam guidance) that home delivery costs more and takes longer than cash pickup.</p>
+                    <p class="text-slate-700 mb-0">
+                      And WireBarley notes (in Vietnam guidance) that home delivery costs more and takes longer than cash pickup.
+                    </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Typical delivery-speed behavior (what to watch)
                     </p>
-                    <p class="text-slate-700 mb-0">Because the experience depends on payout method and local processing, the same provider can feel "instant" in one lane and "bank-timed" in another. WireBarley explicitly tells users to check the delivery estimate at the "final confirmation" step.</p>
+                    <p class="text-slate-700 mb-0">
+                      Because the experience depends on payout method and local processing, the same provider can feel "instant" in one lane and "bank-timed" in another. WireBarley explicitly tells users to check the delivery estimate at the "final confirmation" step.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -442,7 +619,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Support & Refunds (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -452,44 +631,94 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Support access (hours + languages)
                     </p>
-                    <p class="text-slate-700 mb-3">WireBarley publishes regional support windows and languages—for example:</p>
+                    <p class="text-slate-700 mb-3">
+                      WireBarley publishes regional support windows and languages—for example:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Korea:</strong> weekdays 10:00–19:00 KST, multiple languages including Korean/English/Chinese/Vietnamese/Thai/Filipino</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">US/Canada:</strong> weekdays 10:00–20:00 EST, English/Korean/Thai/Chinese</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">…and similar coverage for other regions. This matters post-issue: you can at least know where to go and when.</p>
+                    <p class="text-slate-700 mt-3 mb-0">
+                      …and similar coverage for other regions. This matters post-issue: you can at least know where to go and when.
+                    </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Refunds & dispute handling (what the rules imply for consumers)
                     </p>
-                    <p class="text-slate-700 mb-3">WireBarley's help center draws a hard line that users should understand:</p>
+                    <p class="text-slate-700 mb-3">
+                      WireBarley's help center draws a hard line that users should understand:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
                         <span>If you cancel before the remittance instruction is delivered to the recipient-side payment institution, a refund is possible (with an estimated 1–3 business days).</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
                         <span>If it's already been sent to the recipient-side institution or already received, refunds are not possible.</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-3">On refund amounts: If the issue is customer-caused (e.g., incorrect recipient info), WireBarley states it may refund excluding the fee; if not customer-caused (e.g., delay in payment), it states fees are included.</p>
-                    <p class="text-slate-700 mb-0">On timing: WireBarley states bank transfer refunds are typically processed within 7 business days (though it may be faster depending on factors).</p>
+                    <p class="text-slate-700 mt-3 mb-3">
+                      On refund amounts: If the issue is customer-caused (e.g., incorrect recipient info), WireBarley states it may refund excluding the fee; if not customer-caused (e.g., delay in payment), it states fees are included.
+                    </p>
+                    <p class="text-slate-700 mb-0">
+                      On timing: WireBarley states bank transfer refunds are typically processed within 7 business days (though it may be faster depending on factors).
+                    </p>
                   </div>
                 </div>
               </div>
@@ -499,7 +728,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Trust & Safety (10%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -508,25 +739,57 @@
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span>It states it is a small overseas remittance business registered corporation approved by Korea's Ministry of Strategy and Finance (with a registration number referenced).</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span>It states its Australia subsidiary has an Independent Remittance Dealer (IRD) license from AUSTRAC.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span>It states it partners with Community Federal Savings Bank for US money transfers and is "eligible for international remittance" with FinCEN.</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">Practical guidance: treat these as checkpoints, not guarantees. If you're making a decision based on licensing, look up the relevant regulator's public register (when one exists) and confirm the entity name and license status.</p>
+                    <p class="text-slate-700 mt-3 mb-0">
+                      Practical guidance: treat these as checkpoints, not guarantees. If you're making a decision based on licensing, look up the relevant regulator's public register (when one exists) and confirm the entity name and license status.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -536,11 +799,21 @@
                 </p>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
-                <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  class="w-7 h-7 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 Pros and Cons
               </h2>
@@ -548,8 +821,16 @@
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
                 <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Pros
                   </h3>
@@ -570,8 +851,16 @@
                 </div>
                 <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Cons
                   </h3>
@@ -592,32 +881,72 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-22">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Best For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Sending from / to South Korea when you want a straightforward bank-style remittance flow and are comparing costs across providers.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Users who can fund and confirm within the quote window (WireBarley says the exchange rate is guaranteed for a limited time).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Recipients who can use bank deposit, cash pickup, or mobile wallet depending on the corridor (WireBarley lists multiple payout types in certain countries).</span>
                     </li>
@@ -626,27 +955,67 @@
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Not Ideal For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>If you need "send-from anywhere" coverage: WireBarley's help center lists only a handful of sending countries (and coverage varies by product/region).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>If you need guaranteed instant delivery: WireBarley frames delivery as anywhere from minutes up to 2 business days depending on country and payout method.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>If you need easy reversals after payout has started/completed: WireBarley states refunds aren't possible once the instruction has been delivered to the recipient-side institution or the funds are received.</span>
                     </li>
@@ -654,12 +1023,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
                   </svg>
                   How to Get the Best Rate with WireBarley
                 </h2>
@@ -668,35 +1047,45 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      1
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Compare "effective cost," not the headline fee:</strong>
                       <span class="text-slate-700">check the send fee and the FX rate you're being offered.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      2
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Move within the quote window:</strong>
                       <span class="text-slate-700">WireBarley says the rate is guaranteed for 30 minutes during the application flow.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      3
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">Choose payout method carefully:</strong>
                       <span class="text-slate-700">cash pickup vs home delivery can change both cost and speed (home delivery can be more expensive and slower, depending on corridor).</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      4
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">If sending SWIFT, expect possible intermediary deductions:</strong>
                       <span class="text-slate-700">WireBarley flags this directly; don't assume "fee = total cost."</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      5
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-2.5 text-base">If you might need a refund, cancel early:</strong>
                       <span class="text-slate-700">refunds become impossible once the instruction is delivered/received.</span>
@@ -705,12 +1094,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
                   </svg>
                   Two Alternatives (and When They Beat WireBarley)
                 </h2>
@@ -718,7 +1117,7 @@
                 <div class="space-y-6">
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Remitly (9.1)
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -731,7 +1130,7 @@
 
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       XE Money (8.7)
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -744,24 +1143,38 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   Bottom Line
                 </h2>
                 <div class="space-y-5 text-lg leading-relaxed text-slate-700">
                   <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">Who should use WireBarley?</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Who should use WireBarley?
+                    </p>
                     <p class="text-slate-800 mb-0">
                       WireBarley is a good fit if you're using it for what it scores best at: Korea-corridor transfers where WireBarley's fee structure and delivery behavior are competitive, and you're willing to treat the exchange rate (and potential intermediary deductions) as part of the real price.
                     </p>
                   </div>
                   <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">Why the 8.2/10 is justified:</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Why the 8.2/10 is justified:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       The 8.2/10 is justified because Delivered Value is strong in-core and speed can be good—while the overall ceiling is set by narrower corridor/sending-country footprint compared with global leaders.
                     </p>
@@ -776,7 +1189,9 @@
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">
+                  Ready to Compare?
+                </h3>
                 <p class="text-sm text-slate-600 mb-4">
                   See how WireBarley stacks up for your specific corridor and amount.
                 </p>
@@ -788,53 +1203,106 @@
                 </NuxtLink>
               </div>
 
-              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
+              <AdPlacement
+                placement="blog_sidebar"
+                layout="vertical"
+                wrapper-class="rounded-xl"
+                min-height="160px"
+              />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Quick Facts
+                </h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Primary Market</dt>
-                    <dd class="font-semibold text-slate-900">Korea</dd>
+                    <dt class="text-slate-600">
+                      Primary Market
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Korea
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Send From</dt>
-                    <dd class="font-semibold text-slate-900">5 Markets</dd>
+                    <dt class="text-slate-600">
+                      Send From
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      5 Markets
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Receiving Countries</dt>
-                    <dd class="font-semibold text-slate-900">40</dd>
+                    <dt class="text-slate-600">
+                      Receiving Countries
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      40
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Rate Guarantee</dt>
-                    <dd class="font-semibold text-slate-900">30 Minutes</dd>
+                    <dt class="text-slate-600">
+                      Rate Guarantee
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      30 Minutes
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Typical Speed</dt>
-                    <dd class="font-semibold text-slate-900">Minutes - 2 Days</dd>
+                    <dt class="text-slate-600">
+                      Typical Speed
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Minutes - 2 Days
+                    </dd>
                   </div>
                 </dl>
               </div>
 
               <!-- Why Trust Us -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Why Trust This Review?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Why Trust This Review?
+                </h3>
                 <ul class="space-y-3 text-sm text-slate-700">
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>100% independent - providers can't pay to rank higher</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Based on real transfer data</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Transparent methodology</span>
                   </li>
@@ -844,36 +1312,60 @@
                   class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
 
               <!-- More Providers -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  More Provider Reviews
+                </h3>
                 <ul class="space-y-3">
                   <li>
-                    <NuxtLink to="/learn/providers/remitly" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/remitly"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/xe-money" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/xe-money"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/singx" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/singx"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">SX</div>
                       <span>SingX Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers" class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                    >
                       View all providers →
                     </NuxtLink>
                   </li>
@@ -886,12 +1378,21 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
+    <section
+      class="py-16 bg-blue-600"
+      style="background-color: rgba(37, 99, 235, 1);"
+    >
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
+        <h2
+          class="text-3xl font-bold mb-4"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Ready to See How WireBarley Compares?
         </h2>
-        <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
+        <p
+          class="text-lg mb-8"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Enter your transfer details to see real-time rates from WireBarley and 30+ other providers.
         </p>
         <NuxtLink
@@ -900,8 +1401,18 @@
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </NuxtLink>
       </div>
@@ -913,12 +1424,10 @@
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 
-definePageMeta({
-  alias: ['/reviews/wirebarley'],
-})
-
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+const score = 8.2
 
 setSeo({
   title: 'WireBarley Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
@@ -934,7 +1443,7 @@ addReviewSchema({
   itemReviewed: 'WireBarley',
   reviewBody,
   author: 'Remit-Scout Editorial Team',
-  ratingValue: 8.2,
+  ratingValue: score,
   bestRating: 10,
   worstRating: 1,
   datePublished: '2024-01-01',

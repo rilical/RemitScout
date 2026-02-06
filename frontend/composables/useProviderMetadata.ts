@@ -15,6 +15,6 @@ export const useProviderMetadata = (options: Record<string, any> = {}) => {
       const response = await request<ProviderMetadataResponse>('/providers/metadata')
       return response.data
     },
-    { watch: false, ...options },
+    { watch: [], ...options },
   )
 }

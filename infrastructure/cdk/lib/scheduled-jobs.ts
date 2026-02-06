@@ -44,6 +44,8 @@ export type ScheduledJobsResources = {
   goldPulseCacheRule: Rule
   goldPublisherRule: Rule
   goldIndicesRule: Rule
+  dataHealthSloFunction: IFunction
+  dataHealthSloRule: Rule
   goldReconciliationRule: Rule
   b2cRetryFailedRule: Rule
   b2cQueueCleanupRule: Rule
@@ -1440,6 +1442,116 @@ export const createScheduledJobs = (
     planeCDbName,
   })
 
+  const dataHealthSloIntervalMinutes = options.envName === 'dev' ? 15 : 5
+  const dataHealthTier2Freshness = options.envName === 'dev' ? '21600' : '10800'
+  const dataHealthSloEnvironment: Record<string, string> = {
+    JOB_NAME: 'data-health-slo',
+    ENVIRONMENT: options.envName,
+    NODE_ENV: 'production',
+    PGSSLMODE: 'require',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    TRACING_EXPORTER: tracingExporter,
+    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+    CLOUDWATCH_NAMESPACE: 'RemitScout',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+    SLO_FRESHNESS_P95_THRESHOLD: '900',
+    SLO_FRESHNESS_P95_TIER2_THRESHOLD: dataHealthTier2Freshness,
+    SLO_QUOTE_SUCCESS_RATE_THRESHOLD: '0.98',
+    SLO_QUOTE_SUCCESS_RATE_TIER2_THRESHOLD: '0.95',
+    SLO_PROVIDER_COVERAGE_THRESHOLD: '3',
+    SLO_PROVIDER_COVERAGE_TIER2_THRESHOLD: '3',
+    SLO_INDICES_AVAILABLE_RATIO_THRESHOLD: '0.8',
+    SLO_INDICES_SUPPRESSED_RATIO_THRESHOLD: '0.2',
+    SLO_WEIGHT_CONFIDENCE_P10_THRESHOLD: '0.3',
+  }
+  if (planeBDbHost) {
+    dataHealthSloEnvironment.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (planeBDbPort) {
+    dataHealthSloEnvironment.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (planeBDbName) {
+    dataHealthSloEnvironment.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (planeCDbHost) {
+    dataHealthSloEnvironment.PLANE_C_DB_HOST = planeCDbHost
+  }
+  if (planeCDbPort) {
+    dataHealthSloEnvironment.PLANE_C_DB_PORT = planeCDbPort
+  }
+  if (planeCDbName) {
+    dataHealthSloEnvironment.PLANE_C_DB_NAME = planeCDbName
+  }
+
+  const dataHealthSloFunction = new NodejsFunction(scope, 'DataHealthSloJobFunction', {
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'data-health-slo-job-lambda.ts',
+    ),
+    handler: 'handler',
+    runtime: Runtime.NODEJS_18_X,
+    architecture: options.lambdaArchitecture,
+    memorySize: 512,
+    timeout: Duration.minutes(5),
+    ...planeCLambdaNetworking,
+    role: options.roles.planeCLambdaRole,
+    tracing: tracingMode,
+    environment: dataHealthSloEnvironment,
+    logRetention,
+    layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+  })
+
+  applySentryEnv(
+    scope,
+    dataHealthSloFunction,
+    'DataHealthSloSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
+
+  if (planeBDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'DataHealthSloPlaneBDbSecret',
+      planeBDbSecretArn,
+    )
+    secret.grantRead(dataHealthSloFunction)
+    dataHealthSloFunction.addEnvironment('PLANE_B_DB_SECRET_ARN', planeBDbSecretArn)
+  }
+  if (planeBDbSsmName) {
+    dataHealthSloFunction.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
+  }
+  if (planeCDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'DataHealthSloPlaneCDbSecret',
+      planeCDbSecretArn,
+    )
+    secret.grantRead(dataHealthSloFunction)
+    dataHealthSloFunction.addEnvironment('PLANE_C_DB_SECRET_ARN', planeCDbSecretArn)
+  }
+  if (planeCDbSsmName) {
+    dataHealthSloFunction.addEnvironment('PLANE_C_DB_SSM_NAME', planeCDbSsmName)
+  }
+
+  const dataHealthSloRule = new Rule(scope, 'DataHealthSloSchedule', {
+    ruleName: ruleName('data-health-slo'),
+    schedule: Schedule.rate(Duration.minutes(dataHealthSloIntervalMinutes)),
+    description: 'Runs data health SLO job on a fixed cadence.',
+    enabled: rulesEnabled,
+  })
+  tagManagedRule(dataHealthSloRule, options.envName)
+
+  dataHealthSloRule.addTarget(new LambdaFunction(dataHealthSloFunction, { retryAttempts: 1 }))
+
   const goldReconciliationEnvironment: Record<string, string> = {
     JOB_NAME: 'gold-reconciliation',
     ENVIRONMENT: options.envName,
@@ -1855,6 +1967,8 @@ export const createScheduledJobs = (
     goldPulseCacheRule,
     goldPublisherRule,
     goldIndicesRule,
+    dataHealthSloFunction,
+    dataHealthSloRule,
     goldReconciliationRule,
     b2cRetryFailedRule,
     b2cQueueCleanupRule,

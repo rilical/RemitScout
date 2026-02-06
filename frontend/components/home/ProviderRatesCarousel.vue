@@ -18,7 +18,10 @@
         </div>
       </div>
 
-      <div v-if="pending" class="relative">
+      <div
+        v-if="pending"
+        class="relative"
+      >
         <div class="overflow-x-auto scrollbar-hide -mx-4 px-4">
           <div class="flex gap-6 pb-4">
             <div
@@ -39,7 +42,10 @@
         Provider scores are unavailable right now. Try again in a moment.
       </div>
 
-      <div v-else class="relative group/section">
+      <div
+        v-else
+        class="relative group/section"
+      >
         <div
           ref="scrollContainer"
           class="overflow-x-auto scrollbar-hide -mx-4 px-4 scroll-smooth snap-x snap-mandatory"
@@ -189,7 +195,7 @@ const { request } = useApi()
 const { data, pending, error } = await useAsyncData(
   'provider-metadata-carousel',
   () => request<{ data: ProviderMetadata[] }>('/providers/metadata'),
-  { watch: false },
+  { watch: [] },
 )
 
 const labelForMetric = (

@@ -50,6 +50,8 @@ See below for canonical definitions; treat this as a high-level summary.
 - Gold publishing requires provider coverage and quality.
 - Alerts only trigger when coverage and data freshness are above threshold.
 - Tier changes only take effect for future periods (snapshots are monthly/quarterly).
+- Indices readiness (TEER/RCI/RVI) requires passing availability, suppression, and weight-confidence SLOs
+  produced by the data-health SLO job.
 
 ## Cadence tiers (2-tier model)
 
@@ -136,10 +138,34 @@ See below for canonical definitions; treat this as a high-level summary.
 - **Immutability**: Tier snapshots are immutable once created; new changes require a new version.
 
 ## SLO targets (default values)
-- Dev: p95 API ≤1500ms, data freshness ≤60m, DLQ=0.
-- Staging: p95 API ≤1000ms, data freshness ≤30m, DLQ=0.
-- Prod: p95 API ≤800ms, freshness per tier, DLQ=0.
+- API p95 latency (quotes/providers/rates):
+  dev <= 1500ms, staging <= 1000ms, prod <= 800ms.
+- Freshness p95:
+  tier-1 <= 900s (15m), tier-2 <= 10,800s (3h),
+  dev override for tier-2 = 21,600s (6h).
+- Quote success rate: tier-1 >= 0.98, tier-2 >= 0.95.
+- Provider coverage: tier-1 >= 3, tier-2 >= 3.
+- Indices readiness (Tier-0 corridors, amount=500, method=standard_bank):
+  available_ratio >= 0.80, suppressed_ratio <= 0.20, weight_confidence_p10 >= 0.30.
+- DLQ depth must remain 0 across queues.
 - Treat missing SLO metrics as SLO failures.
+
+## Health + readiness endpoints (current)
+- Plane A: `/healthz` (liveness) and `/readyz` (DB + Redis dependency checks).
+- ECS workers: shared health server on port 8080 with `/healthz` + `/readyz`;
+  ECS health checks call `/healthz` instead of `pgrep`.
+- Ops admin: `/api/v1/ops/indices/health` summarizes Tier-0 indices readiness
+  from `gold_export.cdp_daily`.
+
+## Observability additions (current)
+- **Data health SLO job** (`data-health-slo`) runs on EventBridge and emits:
+  freshness p95 (tier1/tier2), quote success rate (tier1/tier2), provider coverage (tier1/tier2),
+  indices readiness ratios, and weight-confidence p10.
+- **Probe heartbeats**: `RemitScout/Probes:probe_run_total` with heartbeat alarms
+  (treat missing data as breaching).
+- **Synthetics**: canaries for `/healthz`, `/quotes`, and `/api/indices/latest`
+  (dev: health only; staging/prod: health + quotes + indices).
+- **Runbooks**: `docs/runbooks/provider-outage.md`, `docs/runbooks/indices-readiness.md`.
 
 ## Volatility computation
 - Volatility is derived from FX history (OANDA or Gold sources); not directly provided.

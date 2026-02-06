@@ -2,8 +2,15 @@
   <div class="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
-        <NuxtLink to="/" class="inline-block">
-          <img src="/png/SVG/LOGO.svg" alt="RemitScout" class="h-10 w-auto mx-auto mb-4">
+        <NuxtLink
+          to="/"
+          class="inline-block"
+        >
+          <img
+            src="/png/SVG/LOGO.svg"
+            alt="RemitScout"
+            class="h-10 w-auto mx-auto mb-4"
+          >
         </NuxtLink>
         <h1 class="text-3xl font-bold text-slate-900">
           Set a new password
@@ -18,8 +25,18 @@
           v-if="success"
           class="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-4 text-center"
         >
-          <svg class="w-12 h-12 text-emerald-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            class="w-12 h-12 text-emerald-600 mx-auto mb-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <p class="text-sm font-semibold text-emerald-900 mb-1">
             Password updated
@@ -43,9 +60,15 @@
             {{ errorMessage }}
           </div>
 
-          <form class="space-y-4" @submit.prevent="handlePasswordUpdate">
+          <form
+            class="space-y-4"
+            @submit.prevent="handlePasswordUpdate"
+          >
             <div>
-              <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
+              <label
+                for="password"
+                class="block text-sm font-semibold text-slate-700 mb-2"
+              >
                 New password
               </label>
               <input
@@ -63,7 +86,10 @@
             </div>
 
             <div>
-              <label for="confirm-password" class="block text-sm font-semibold text-slate-700 mb-2">
+              <label
+                for="confirm-password"
+                class="block text-sm font-semibold text-slate-700 mb-2"
+              >
                 Confirm password
               </label>
               <input
@@ -76,7 +102,10 @@
                 placeholder="••••••••"
                 required
               >
-              <p v-if="confirmPassword && password !== confirmPassword" class="mt-1.5 text-xs text-red-600">
+              <p
+                v-if="confirmPassword && password !== confirmPassword"
+                class="mt-1.5 text-xs text-red-600"
+              >
                 Passwords do not match
               </p>
             </div>
@@ -94,7 +123,10 @@
 
       <div class="mt-6 text-center text-xs text-slate-500">
         Trouble with the link? Request a new reset email from
-        <NuxtLink to="/forgot-password" class="text-blue-600 hover:text-blue-700">Forgot password</NuxtLink>.
+        <NuxtLink
+          to="/forgot-password"
+          class="text-blue-600 hover:text-blue-700"
+        >Forgot password</NuxtLink>.
       </div>
     </div>
   </div>

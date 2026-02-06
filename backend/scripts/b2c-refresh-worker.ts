@@ -33,7 +33,8 @@ import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 import { initTracing } from '../shared/tracing'
-import { startHealthServer } from './b2c-refresh-worker-health'
+import { startHealthServer } from '../shared/health-server'
+import { getMetrics, metricsContentType } from './b2c-refresh-worker-metrics'
 import { recordRequest, updateQueueDepth } from './b2c-refresh-worker-metrics'
 
 const toNumber = (value: string | undefined, fallback: number) => {
@@ -235,7 +236,15 @@ export const runB2cRefreshWorkerLoop = async (
   const enableHealthServer = options.enableHealthServer ?? (!isLambdaRuntime && healthEnabled)
   if (enableHealthServer) {
     try {
-      healthServer = await startHealthServer({ port: healthPort, logger })
+      healthServer = await startHealthServer({
+        port: healthPort,
+        logger,
+        loggerName: 'b2c-refresh-worker',
+        getMetrics,
+        metricsContentType,
+        enableDatabaseCheck: true,
+        enableRedisCheck: true,
+      })
     } catch (error) {
       logger.warn('health_server_unavailable', {
         error: error instanceof Error ? error.message : String(error),

@@ -148,7 +148,10 @@
                 </tbody>
               </table>
 
-              <div class="mt-5" style="margin-top: 20px;">
+              <div
+                class="mt-5"
+                style="margin-top: 20px;"
+              >
                 <NuxtLink
                   to="/dashboard?tab=alerts"
                   class="inline-block rounded-[10px] bg-[#1d4ed8] px-5 py-3 text-sm font-semibold text-white no-underline"
@@ -165,7 +168,10 @@
                 <div>
                   Recipient gets at least 1,200 · Corridor: USD → MXN (bank)
                 </div>
-                <div class="mt-2.5" style="margin-top: 10px;">
+                <div
+                  class="mt-2.5"
+                  style="margin-top: 10px;"
+                >
                   <NuxtLink
                     to="/dashboard?tab=account&section=notifications"
                     class="text-[#6b7785] underline"
@@ -198,5 +204,4 @@ useHead({
 
 const sampleMessage = 'Recipient gets crossed above 1,200 USD. The best provider for USD → MXN (bank) now delivers at least this amount.'
 const summaryTarget = 'USD → MXN (bank)'
-
 </script>

@@ -20,7 +20,6 @@ const logger = createLogger('plane-a.alerts')
 const pool = getPool(config.db.planeAUrl)
 const alertRepository = new AlertRepository(pool)
 const watchlistRepository = new WatchlistRepository(pool)
-const PLUS_ALERTS_SOFT_LIMIT = 16
 const ALERT_COOLDOWN_MINUTES: Record<'weekly' | 'daily', number> = {
   weekly: 10080,
   daily: 1440,
@@ -62,10 +61,6 @@ const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) =>
   return !!plan
     && ['plus', 'enterprise'].includes(plan.plan_code)
     && ['active', 'trialing'].includes(plan.status)
-}
-
-const isActivePlusPlan = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
-  return !!plan && plan.plan_code === 'plus' && ['active', 'trialing'].includes(plan.status)
 }
 
 const resolveAlertLimit = (plan: Awaited<ReturnType<typeof getUserPlan>> | null): number | 'unlimited' => {
@@ -606,6 +601,12 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       if (limit !== 'unlimited') {
         const count = await getAlertCount(user.user_id)
         if (count >= limit) {
+          const planLabel =
+            plan?.plan_code === 'plus'
+              ? 'Plus'
+              : plan?.plan_code === 'enterprise'
+                ? 'Enterprise'
+                : 'Free'
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('POST', '/alerts', 403, durationSeconds)
 
@@ -613,22 +614,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
           return {
             success: false,
             error: 'limit_reached',
-            message: `Free plan supports up to ${limit} alert${limit === 1 ? '' : 's'}.`,
+            message: `${planLabel} plan supports up to ${limit} alert${limit === 1 ? '' : 's'}.`,
             limit,
-          }
-        }
-      } else if (isActivePlusPlan(plan)) {
-        const count = await getAlertCount(user.user_id)
-        if (count >= PLUS_ALERTS_SOFT_LIMIT) {
-          const durationSeconds = (Date.now() - startTime) / 1000
-          recordRequest('POST', '/alerts', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'limit_reached',
-            message: `Plus alerts are capped at ${PLUS_ALERTS_SOFT_LIMIT} for now. Remove one to add another.`,
-            limit: PLUS_ALERTS_SOFT_LIMIT,
           }
         }
       }

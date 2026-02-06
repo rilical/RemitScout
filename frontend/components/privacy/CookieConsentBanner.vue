@@ -5,13 +5,21 @@
   >
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div class="text-sm text-slate-700">
-        <p class="font-semibold text-slate-900">We use cookies for analytics</p>
+        <p class="font-semibold text-slate-900">
+          We use cookies for analytics
+        </p>
         <p class="mt-1 text-slate-600">
           Help us improve Remit-Scout by allowing analytics cookies. You can change this anytime in your privacy settings.
         </p>
         <div class="mt-2 flex gap-3 text-xs">
-          <NuxtLink to="/legal/privacy" class="text-blue-600 hover:text-blue-700">Privacy Policy</NuxtLink>
-          <NuxtLink to="/cookies" class="text-blue-600 hover:text-blue-700">Cookie Policy</NuxtLink>
+          <NuxtLink
+            to="/legal/privacy"
+            class="text-blue-600 hover:text-blue-700"
+          >Privacy Policy</NuxtLink>
+          <NuxtLink
+            to="/cookies"
+            class="text-blue-600 hover:text-blue-700"
+          >Cookie Policy</NuxtLink>
         </div>
       </div>
       <div class="flex shrink-0 flex-col gap-2 sm:flex-row">

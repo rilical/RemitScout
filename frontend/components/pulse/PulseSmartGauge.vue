@@ -4,15 +4,23 @@
     <div class="border-b border-neutral-700 px-6 py-4">
       <!-- Consumer Mode Header -->
       <template v-if="store.viewMode === 'sender'">
-        <h2 class="text-lg font-bold text-white">Best Time to Send</h2>
-        <p class="text-sm text-neutral-400">Rate trend signal for your corridor</p>
+        <h2 class="text-lg font-bold text-white">
+          Best Time to Send
+        </h2>
+        <p class="text-sm text-neutral-400">
+          Rate trend signal for your corridor
+        </p>
       </template>
       <!-- Analyst Mode Header -->
       <template v-else>
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-bold text-white">Execution Signal</h2>
-            <p class="text-sm text-neutral-400">FX Volatility & Timing Indicator</p>
+            <h2 class="text-lg font-bold text-white">
+              Execution Signal
+            </h2>
+            <p class="text-sm text-neutral-400">
+              FX Volatility & Timing Indicator
+            </p>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs font-mono text-neutral-500">{{ store.corridor.label }}</span>
@@ -26,17 +34,38 @@
 
     <!-- Gauge -->
     <div class="p-6">
-      <div v-if="loading" class="flex h-48 items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-48 items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading...
         </div>
       </div>
 
-      <div v-else class="flex flex-col items-center">
+      <div
+        v-else
+        class="flex flex-col items-center"
+      >
         <!-- ECharts Gauge -->
         <div class="h-48 w-64">
           <v-chart
@@ -56,7 +85,10 @@
         </div>
 
         <!-- Analyst Mode: Execution Rating -->
-        <div v-else class="mt-2 flex items-center gap-3">
+        <div
+          v-else
+          class="mt-2 flex items-center gap-3"
+        >
           <span
             class="rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wide"
             :class="levelClasses"
@@ -69,29 +101,48 @@
         </div>
 
         <!-- Consumer Mode: Recommendation -->
-        <p v-if="store.viewMode === 'sender'" class="mt-4 text-center text-sm text-neutral-300 max-w-xs">
+        <p
+          v-if="store.viewMode === 'sender'"
+          class="mt-4 text-center text-sm text-neutral-300 max-w-xs"
+        >
           {{ data?.recommendation }}
         </p>
 
         <!-- Analyst Mode: Actionable Insight -->
-        <p v-else class="mt-4 text-center text-sm text-neutral-300 max-w-xs">
+        <p
+          v-else
+          class="mt-4 text-center text-sm text-neutral-300 max-w-xs"
+        >
           {{ analystRecommendation }}
         </p>
 
         <!-- Analyst Mode: Full Stats Panel -->
-        <div v-if="store.viewMode === 'analyst' && data" class="mt-6 w-full space-y-4">
+        <div
+          v-if="store.viewMode === 'analyst' && data"
+          class="mt-6 w-full space-y-4"
+        >
           <!-- Primary Metrics -->
           <div class="grid grid-cols-3 gap-4">
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">Spot Rate</div>
-              <div class="text-lg font-bold font-mono text-white">{{ data.currentRate.toFixed(4) }}</div>
+              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+                Spot Rate
+              </div>
+              <div class="text-lg font-bold font-mono text-white">
+                {{ data.currentRate.toFixed(4) }}
+              </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">30D VWAP</div>
-              <div class="text-lg font-bold font-mono text-white">{{ data.avg30Day.toFixed(4) }}</div>
+              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+                30D VWAP
+              </div>
+              <div class="text-lg font-bold font-mono text-white">
+                {{ data.avg30Day.toFixed(4) }}
+              </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">Δ vs Avg</div>
+              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+                Δ vs Avg
+              </div>
               <div
                 class="text-lg font-bold font-mono"
                 :class="data.percentFromAvg >= 0 ? 'text-brand-600' : 'text-danger-600'"
@@ -104,14 +155,26 @@
           <!-- Secondary Metrics (Analyst Only) -->
           <div class="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-700">
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">Volatility (7D)</div>
-              <div class="text-base font-bold font-mono text-white">{{ volatility7D.toFixed(2) }}%</div>
-              <div class="text-xs text-neutral-500">σ = {{ stdDev.toFixed(4) }}</div>
+              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+                Volatility (7D)
+              </div>
+              <div class="text-base font-bold font-mono text-white">
+                {{ volatility7D.toFixed(2) }}%
+              </div>
+              <div class="text-xs text-neutral-500">
+                σ = {{ stdDev.toFixed(4) }}
+              </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">Spread Rank</div>
-              <div class="text-base font-bold font-mono text-white">#{{ spreadRank }} of {{ totalProviders }}</div>
-              <div class="text-xs text-neutral-500">{{ spreadBps }} bps avg</div>
+              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+                Spread Rank
+              </div>
+              <div class="text-base font-bold font-mono text-white">
+                #{{ spreadRank }} of {{ totalProviders }}
+              </div>
+              <div class="text-xs text-neutral-500">
+                {{ spreadBps }} bps avg
+              </div>
             </div>
           </div>
 
@@ -137,18 +200,31 @@
         </div>
 
         <!-- Consumer Mode: Basic Stats (hidden by default, shown on analyst) -->
-        <div v-if="store.viewMode === 'sender' && data" class="mt-6 w-full">
+        <div
+          v-if="store.viewMode === 'sender' && data"
+          class="mt-6 w-full"
+        >
           <div class="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div class="text-xs text-neutral-500">Current</div>
-              <div class="text-sm font-semibold text-white">{{ data.currentRate.toFixed(2) }}</div>
+              <div class="text-xs text-neutral-500">
+                Current
+              </div>
+              <div class="text-sm font-semibold text-white">
+                {{ data.currentRate.toFixed(2) }}
+              </div>
             </div>
             <div>
-              <div class="text-xs text-neutral-500">Average</div>
-              <div class="text-sm font-semibold text-white">{{ data.avg30Day.toFixed(2) }}</div>
+              <div class="text-xs text-neutral-500">
+                Average
+              </div>
+              <div class="text-sm font-semibold text-white">
+                {{ data.avg30Day.toFixed(2) }}
+              </div>
             </div>
             <div>
-              <div class="text-xs text-neutral-500">Trend</div>
+              <div class="text-xs text-neutral-500">
+                Trend
+              </div>
               <div
                 class="text-sm font-semibold"
                 :class="data.percentFromAvg >= 0 ? 'text-brand-600' : 'text-danger-600'"
@@ -162,7 +238,10 @@
     </div>
 
     <!-- Trust Stamp -->
-    <PulseTrustStamp v-if="data" :last-updated="data.lastUpdated" />
+    <PulseTrustStamp
+      v-if="data"
+      :last-updated="data.lastUpdated"
+    />
   </div>
 </template>
 
@@ -181,7 +260,28 @@ use([CanvasRenderer, GaugeChart, TitleComponent, TooltipComponent])
 const store = usePulseStore()
 
 const loading = ref(true)
-const data = ref<SmartSendData | null>(null)
+type SmartSendNormalized = SmartSendData & {
+  recommendation: string
+  currentRate: number
+  avg30Day: number
+  percentFromAvg: number
+  confidence: number
+  percentile: number
+}
+
+const data = ref<SmartSendNormalized | null>(null)
+
+const normalizeSmartSend = (payload: SmartSendData): SmartSendNormalized => {
+  return {
+    ...payload,
+    recommendation: payload.recommendation ?? payload.message ?? '',
+    currentRate: payload.currentRate ?? 0,
+    avg30Day: payload.avg30Day ?? 0,
+    percentFromAvg: payload.percentFromAvg ?? 0,
+    confidence: payload.confidence ?? 0,
+    percentile: payload.percentile ?? 50,
+  }
+}
 
 const levelLabel = computed(() => {
   if (!data.value) return ''
@@ -281,15 +381,18 @@ const gaugeOption = computed(() => {
   if (!data.value) return {}
 
   const percentile = data.value.percentile
-  
+
   let color: string
   if (percentile >= 85) {
     color = '#2563EB'
-  } else if (percentile >= 60) {
+  }
+  else if (percentile >= 60) {
     color = '#3B82F6'
-  } else if (percentile >= 35) {
+  }
+  else if (percentile >= 35) {
     color = '#6B7280'
-  } else {
+  }
+  else {
     color = '#DC2626'
   }
 
@@ -374,25 +477,24 @@ const gaugeOption = computed(() => {
 async function loadData() {
   loading.value = true
   try {
-    data.value = await getSmartSendData(store.corridor, store.amount)
-  } catch (e) {
+    const payload = await getSmartSendData(store.corridor, store.timeframe, store.amount)
+    data.value = normalizeSmartSend(payload)
+  }
+  catch (e) {
     console.error('Failed to load smart send data:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 watch(
-  () => [store.corridor, store.amount],
+  () => [store.corridor, store.timeframe, store.amount],
   () => loadData(),
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
   loadData()
 })
 </script>
-
-
-
-

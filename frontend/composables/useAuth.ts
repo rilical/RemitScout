@@ -1,4 +1,6 @@
-import type { Session, User as SupabaseUser, OAuthProvider } from '@supabase/supabase-js'
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
+
+type OAuthProvider = 'google'
 
 export interface User {
   id: string
@@ -25,10 +27,10 @@ type SignUpInput = {
 
 const isEmailConfirmed = (supabaseUser: SupabaseUser | null): boolean => {
   if (!supabaseUser) return false
-  const confirmedAt =
-    supabaseUser.email_confirmed_at ||
-    (supabaseUser as { confirmed_at?: string | null }).confirmed_at ||
-    null
+  const confirmedAt
+    = supabaseUser.email_confirmed_at
+      || (supabaseUser as { confirmed_at?: string | null }).confirmed_at
+      || null
   return Boolean(confirmedAt)
 }
 
@@ -36,11 +38,11 @@ const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
   if (!supabaseUser) return null
   const metadata = supabaseUser.user_metadata || {}
   const email = supabaseUser.email || ''
-  const name =
-    metadata.full_name ||
-    metadata.name ||
-    metadata.display_name ||
-    (email ? email.split('@')[0] : 'User')
+  const name
+    = metadata.full_name
+      || metadata.name
+      || metadata.display_name
+      || (email ? email.split('@')[0] : 'User')
 
   return {
     id: supabaseUser.id,
@@ -77,13 +79,13 @@ export const useAuth = () => {
   }
 
   const getSupabase = () => {
-    if (!process.client) return null
+    if (!import.meta.client) return null
     return useSupabaseClient()
   }
 
   const getRedirectBase = () => {
     if (config.public.siteUrl) return config.public.siteUrl
-    if (process.client && typeof window !== 'undefined') {
+    if (import.meta.client && typeof window !== 'undefined') {
       return window.location.origin
     }
     return ''
@@ -101,7 +103,7 @@ export const useAuth = () => {
 
   const ensureHydrated = async () => {
     if (hydrated.value) return
-    if (!process.client) {
+    if (!import.meta.client) {
       hydrated.value = true
       return
     }
@@ -142,7 +144,7 @@ export const useAuth = () => {
     await initPromise.value
   }
 
-  if (process.client && !hydrated.value) {
+  if (import.meta.client && !hydrated.value) {
     void ensureHydrated()
   }
 
@@ -228,7 +230,8 @@ export const useAuth = () => {
 
     if (data.session) {
       setSession(data.session)
-    } else {
+    }
+    else {
       hydrated.value = true
     }
 
@@ -257,7 +260,7 @@ export const useAuth = () => {
       return { ok: false, error: lastError.value }
     }
 
-    if (process.client) {
+    if (import.meta.client) {
       sessionStorage.setItem('auth:redirect', redirectPath)
     }
 
@@ -353,17 +356,20 @@ export const useAuth = () => {
         },
       })
       return { ok: true }
-    } catch (error: unknown) {
+    }
+    catch (error: unknown) {
       const apiError = error as {
-        data?: { error?: string; message?: string }
+        data?: { error?: string, message?: string }
         message?: string
       }
       const code = apiError?.data?.error
       if (code === 'invalid_credentials') {
         lastError.value = 'Current password is incorrect.'
-      } else if (code === 'supabase_not_configured') {
+      }
+      else if (code === 'supabase_not_configured') {
         lastError.value = 'Password updates are unavailable right now.'
-      } else {
+      }
+      else {
         lastError.value = apiError?.data?.message || apiError?.message || 'Unable to update password.'
       }
       return { ok: false, error: lastError.value }
@@ -430,8 +436,8 @@ export const useAuth = () => {
 
   const applyBackendProfile = (profile: BackendProfile) => {
     if (!profile) return
-    const fallbackName =
-      profile.email && profile.email.includes('@')
+    const fallbackName
+      = profile.email && profile.email.includes('@')
         ? profile.email.split('@')[0]
         : 'User'
 

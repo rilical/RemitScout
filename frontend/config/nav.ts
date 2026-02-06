@@ -25,7 +25,7 @@ export const NAV = {
       icon: 'arrows-right-left',
       title: 'Hidden fees to avoid',
       subtitle: 'Transfer fees, correspondent fees, and transparency.',
-      href: '/learn/hidden-fees-money-transfers',
+      href: '/learn/hidden-exchange-rate-fees-explained',
     },
     {
       icon: 'arrows-right-left',

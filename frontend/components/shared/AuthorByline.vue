@@ -64,4 +64,3 @@ const formattedDate = computed(() => {
   }).format(dateObj)
 })
 </script>
-

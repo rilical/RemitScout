@@ -41,9 +41,11 @@ export const useNotificationSettings = () => {
       })
       settings.value = { ...defaults, ...response.settings }
       loaded.value = true
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to load notification settings.'
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -68,9 +70,11 @@ export const useNotificationSettings = () => {
       })
       settings.value = { ...defaults, ...response.settings }
       loaded.value = true
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to save notification settings.'
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

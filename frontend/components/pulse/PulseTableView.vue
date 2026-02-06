@@ -11,11 +11,14 @@
               class="py-3 px-4 text-xs font-semibold uppercase tracking-wider transition-colors"
               :class="[
                 col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-                col.sortable ? 'cursor-pointer hover:bg-neutral-700' : ''
+                col.sortable ? 'cursor-pointer hover:bg-neutral-700' : '',
               ]"
               @click="col.sortable && toggleSort(col.key)"
             >
-              <div class="flex items-center gap-1" :class="col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''">
+              <div
+                class="flex items-center gap-1"
+                :class="col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''"
+              >
                 <span class="text-neutral-400">{{ col.label }}</span>
                 <svg
                   v-if="col.sortable"
@@ -90,7 +93,10 @@
                 class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
                 :class="getProvenanceClass(row.provenance)"
               >
-                <span class="h-1.5 w-1.5 rounded-full" :class="getProvenanceDotClass(row.provenance)" />
+                <span
+                  class="h-1.5 w-1.5 rounded-full"
+                  :class="getProvenanceDotClass(row.provenance)"
+                />
                 {{ row.provenance }}
               </span>
             </td>
@@ -104,7 +110,10 @@
       <!-- Row info -->
       <div class="text-sm text-neutral-400">
         Showing {{ startRow }}–{{ endRow }} of {{ totalRows }} rows
-        <span v-if="!isPlus && totalRows > freeRowLimit" class="text-brand-600">
+        <span
+          v-if="!isPlus && totalRows > freeRowLimit"
+          class="text-brand-600"
+        >
           ({{ freeRowLimit }} free limit)
         </span>
       </div>
@@ -116,11 +125,21 @@
           :disabled="currentPage === 1"
           @click="currentPage--"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
-        
+
         <div class="flex items-center gap-1">
           <button
             v-for="page in visiblePages"
@@ -132,14 +151,24 @@
             {{ page }}
           </button>
         </div>
-        
+
         <button
           class="flex h-8 w-8 items-center justify-center rounded border border-neutral-700 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="currentPage >= totalPages"
           @click="currentPage++"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
@@ -151,12 +180,33 @@
         :disabled="!isPlus"
         @click="isPlus && exportCsv()"
       >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
         </svg>
         Export CSV
-        <svg v-if="!isPlus" class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <svg
+          v-if="!isPlus"
+          class="h-3 w-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
         </svg>
       </button>
     </div>
@@ -167,21 +217,43 @@
       class="mt-4 rounded-lg border border-brand-600/30 bg-brand-600/10 p-4"
     >
       <div class="flex items-start gap-3">
-        <svg class="h-5 w-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <svg
+          class="h-5 w-5 text-brand-600 flex-shrink-0 mt-0.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
         </svg>
         <div>
-          <p class="font-semibold text-brand-600">Unlock full history with Plus</p>
+          <p class="font-semibold text-brand-600">
+            Unlock full history with Plus
+          </p>
           <p class="mt-1 text-sm text-neutral-400">
-            Get access to 365 days of data, unlimited rows, and CSV export.
+            Get access to 365 days of data, full table access, and CSV export.
           </p>
           <NuxtLink
             to="/plus"
             class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700"
           >
             Learn more
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -238,34 +310,34 @@ const visiblePages = computed(() => {
   const pages: number[] = []
   const total = totalPages.value
   const current = currentPage.value
-  
+
   let start = Math.max(1, current - 2)
   let end = Math.min(total, current + 2)
-  
+
   if (current <= 3) end = Math.min(5, total)
   if (current >= total - 2) start = Math.max(1, total - 4)
-  
+
   for (let i = start; i <= end; i++) {
     pages.push(i)
   }
-  
+
   return pages
 })
 
 const displayRows = computed(() => {
   if (!tableData.value) return []
-  
-  let rows = [...tableData.value.rows]
-  
+
+  const rows = [...tableData.value.rows]
+
   if (sortKey.value) {
     rows.sort((a, b) => {
       const aVal = a[sortKey.value]
       const bVal = b[sortKey.value]
-      
+
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection.value === 'asc' ? aVal - bVal : bVal - aVal
       }
-      
+
       const aStr = String(aVal)
       const bStr = String(bVal)
       return sortDirection.value === 'asc'
@@ -273,7 +345,7 @@ const displayRows = computed(() => {
         : bStr.localeCompare(aStr)
     })
   }
-  
+
   return rows
 })
 
@@ -285,11 +357,13 @@ async function loadData() {
       props.filters,
       props.range,
       currentPage.value,
-      pageSize
+      pageSize,
     )
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load table data:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -297,7 +371,8 @@ async function loadData() {
 function toggleSort(key: keyof TableRow) {
   if (sortKey.value === key) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
+  }
+  else {
     sortKey.value = key
     sortDirection.value = 'desc'
   }
@@ -351,9 +426,9 @@ function getProvenanceDotClass(provenance: string): string {
 
 function exportCsv() {
   if (!tableData.value) return
-  
+
   const headers = columns.value.map(c => c.label).join(',')
-  const rows = tableData.value.rows.map(row => 
+  const rows = tableData.value.rows.map(row =>
     [
       new Date(row.timestamp).toISOString(),
       row.provider,
@@ -362,9 +437,9 @@ function exportCsv() {
       row.rate,
       row.markupBps,
       row.provenance,
-    ].join(',')
+    ].join(','),
   )
-  
+
   const csv = [headers, ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
@@ -379,7 +454,3 @@ watch([() => props.chartId, () => props.filters, () => props.range, currentPage]
 
 onMounted(loadData)
 </script>
-
-
-
-

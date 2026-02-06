@@ -3,7 +3,7 @@ import type { WatchTarget } from '~/types/tracking'
 export type SaveAlertModalContext = {
   target: WatchTarget
   label?: string
-  source?: 'compare' | 'exchange_rates' | 'pulse' | 'guide' | 'other'
+  source?: 'compare' | 'exchange_rates' | 'pulse' | 'guide' | 'other' | 'alerts' | 'dashboard'
   alertId?: string
 }
 

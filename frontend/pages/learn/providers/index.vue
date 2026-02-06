@@ -14,7 +14,7 @@
             <span class="text-neutral-900">Providers</span>
           </h1>
           <p class="text-xl leading-relaxed text-neutral-600 mb-8">
-            Compare trusted money transfer providers with Remit-Scout scores to find the best service for your needs. 
+            Compare trusted money transfer providers with Remit-Scout scores to find the best service for your needs.
             Our data-driven methodology evaluates providers based on delivered value, reliability, and transparency.
           </p>
 
@@ -39,26 +39,42 @@
               <h3 class="text-2xl font-bold text-white mb-8 text-center">
                 Rating Categories & Weights
               </h3>
-              
+
               <div class="space-y-4 w-full">
                 <!-- Delivered Value - 40% -->
                 <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                   <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        class="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">Delivered Value</h4>
+                    <h4 class="font-bold text-white text-lg mb-2">
+                      Delivered Value
+                    </h4>
                     <p class="text-sm text-white/80 leading-relaxed">
                       Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">40%</div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                    <div class="text-4xl font-bold text-white mb-1">
+                      40%
+                    </div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                      Weight
+                    </div>
                   </div>
                 </div>
 
@@ -66,20 +82,36 @@
                 <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                   <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      <svg
+                        class="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">Reliability & Success</h4>
+                    <h4 class="font-bold text-white text-lg mb-2">
+                      Reliability & Success
+                    </h4>
                     <p class="text-sm text-white/80 leading-relaxed">
                       Quote success rate, data freshness, pricing stability (where available)
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">20%</div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                    <div class="text-4xl font-bold text-white mb-1">
+                      20%
+                    </div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                      Weight
+                    </div>
                   </div>
                 </div>
 
@@ -87,20 +119,36 @@
                 <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                   <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <svg
+                        class="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">Friction & Speed</h4>
+                    <h4 class="font-bold text-white text-lg mb-2">
+                      Friction & Speed
+                    </h4>
                     <p class="text-sm text-white/80 leading-relaxed">
                       ETA where available, speed buckets, observed delivery times on selected corridors
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">15%</div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                    <div class="text-4xl font-bold text-white mb-1">
+                      15%
+                    </div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                      Weight
+                    </div>
                   </div>
                 </div>
 
@@ -108,20 +156,36 @@
                 <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                   <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                      <svg
+                        class="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">Support & Refunds</h4>
+                    <h4 class="font-bold text-white text-lg mb-2">
+                      Support & Refunds
+                    </h4>
                     <p class="text-sm text-white/80 leading-relaxed">
                       Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">15%</div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                    <div class="text-4xl font-bold text-white mb-1">
+                      15%
+                    </div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                      Weight
+                    </div>
                   </div>
                 </div>
 
@@ -129,20 +193,36 @@
                 <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                   <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      <svg
+                        class="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">Trust & Safety</h4>
+                    <h4 class="font-bold text-white text-lg mb-2">
+                      Trust & Safety
+                    </h4>
                     <p class="text-sm text-white/80 leading-relaxed">
                       Public licensing checks where available, regulatory register verification
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">10%</div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                    <div class="text-4xl font-bold text-white mb-1">
+                      10%
+                    </div>
+                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                      Weight
+                    </div>
                   </div>
                 </div>
               </div>
@@ -160,7 +240,10 @@
     </section>
 
     <!-- Provider Cards Section -->
-    <section id="provider-cards" class="py-12 bg-neutral-50 scroll-mt-20">
+    <section
+      id="provider-cards"
+      class="py-12 bg-neutral-50 scroll-mt-20"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <ProviderCard
@@ -190,8 +273,18 @@
         <div class="mx-auto max-w-4xl text-center">
           <div class="flex items-center justify-center gap-3 mb-6">
             <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
               </svg>
             </div>
             <h2 class="text-4xl lg:text-5xl font-bold text-white">
@@ -239,10 +332,6 @@ import HomeFaq from '~/components/home/HomeFaq.vue'
 import { PROVIDER_SCORES } from '~/lib/providerScores'
 import { useProviderMetadata } from '~/composables/useProviderMetadata'
 import { setSeo, jsonLdBreadcrumb, jsonLdSiteNavigation } from '~/composables/useSeo'
-
-definePageMeta({
-  alias: ['/reviews'],
-})
 
 // Breadcrumbs
 const breadcrumbItems = [
@@ -307,8 +396,8 @@ const allProviders = computed(() => {
   // Add all providers from PROVIDER_SCORES, merging with metadata when available
   const allProvidersMap = new Map()
   const seenSlugs = new Set() // Track slugs to prevent duplicates
-  
-  Object.values(PROVIDER_SCORES).forEach(scoreProvider => {
+
+  Object.values(PROVIDER_SCORES).forEach((scoreProvider) => {
     seenSlugs.add(scoreProvider.slug)
     const existing = metadataMap.get(scoreProvider.id)
     if (existing) {
@@ -318,7 +407,8 @@ const allProviders = computed(() => {
         score: scoreProvider.remitScore,
         scoreBreakdown: scoreProvider.scoreBreakdown || existing.scoreBreakdown,
       })
-    } else {
+    }
+    else {
       // Provider not in metadata, use score data
       allProvidersMap.set(scoreProvider.id, {
         id: scoreProvider.id,
@@ -331,7 +421,7 @@ const allProviders = computed(() => {
   })
 
   // Also add any metadata providers that might not be in PROVIDER_SCORES yet (but avoid duplicates)
-  metadata.forEach(provider => {
+  metadata.forEach((provider) => {
     if (!allProvidersMap.has(provider.id) && !seenSlugs.has(provider.slug)) {
       const scoreSource = scoreLookup.get(provider.id) || scoreBySlug.get(provider.slug)
       allProvidersMap.set(provider.id, {

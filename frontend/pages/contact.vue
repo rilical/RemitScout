@@ -22,287 +22,414 @@
             </p>
             <p class="text-sm text-slate-500">
               Advertiser disclosure -
-              <NuxtLink to="/legal/disclosure" class="font-semibold text-brand-600 hover:text-brand-700 underline">Read disclosure</NuxtLink>
+              <NuxtLink
+                to="/legal/disclosure"
+                class="font-semibold text-brand-600 hover:text-brand-700 underline"
+              >Read disclosure</NuxtLink>
             </p>
             <p class="mb-6 mt-4 text-slate-600">
               We are not able to answer questions about individual money transfers. Please refer to our frequently asked
               questions or use the form below for general inquiries.
             </p>
 
-          <!-- Important Note -->
-          <div class="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-4">
-            <div class="flex">
-              <svg
-                class="mr-3 h-6 w-6 flex-shrink-0 text-orange-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <div>
-                <p class="text-sm font-medium text-orange-800">
-                  If you have a question about an ongoing transaction, the fastest path is to contact the provider's
-                  support team directly.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <!-- Contact Form -->
-            <div class="text-slate-900">
-              <h2 class="mb-6 text-2xl font-bold text-slate-900">
-                Send a message
-              </h2>
-
-              <form class="space-y-6" @submit.prevent="handleSubmit">
-                <div v-if="submitSuccess" class="rounded-lg bg-green-50 border border-green-200 p-4">
-                  <div class="flex">
-                    <svg class="h-5 w-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    <p class="text-sm text-green-800">{{ submitSuccess }}</p>
-                  </div>
-                </div>
-
-                <div v-if="submitError" class="rounded-lg bg-red-50 border border-red-200 p-4">
-                  <div class="flex">
-                    <svg class="h-5 w-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                    <p class="text-sm text-red-800">{{ submitError }}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    for="name"
-                    class="mb-2 block text-sm font-medium text-gray-600"
-                  >Name <span class="text-red-500">*</span></label>
-                  <input
-                    id="name"
-                    v-model="form.name"
-                    type="text"
-                    required
-                    :disabled="isSubmitting"
-                    class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                    :class="errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
-                  >
-                  <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
-                </div>
-
-                <div>
-                  <label
-                    for="email"
-                    class="mb-2 block text-sm font-medium text-gray-600"
-                  >Email <span class="text-red-500">*</span></label>
-                  <input
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    required
-                    :disabled="isSubmitting"
-                    class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                    :class="errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
-                  >
-                  <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
-                </div>
-
-                <div>
-                  <label
-                    for="subject"
-                    class="mb-2 block text-sm font-medium text-gray-600"
-                  >Subject <span class="text-red-500">*</span></label>
-                  <select
-                    id="subject"
-                    v-model="form.subject"
-                    required
-                    :disabled="isSubmitting"
-                    class="w-full rounded-md border px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 transition-colors"
-                    :class="errors.subject ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
-                  >
-                    <option value="" disabled>Select a subject</option>
-                    <option value="General Question">General Question</option>
-                    <option value="Provider Comparison">Provider Comparison</option>
-                    <option value="Technical Support">Technical Support</option>
-                    <option value="Partnership Inquiry">Partnership Inquiry</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <p v-if="errors.subject" class="mt-1 text-sm text-red-600">{{ errors.subject }}</p>
-                </div>
-
-                <div>
-                  <label
-                    for="message"
-                    class="mb-2 block text-sm font-medium text-gray-600"
-                  >Message <span class="text-red-500">*</span></label>
-                  <textarea
-                    id="message"
-                    v-model="form.message"
-                    rows="6"
-                    required
-                    :disabled="isSubmitting"
-                    class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                    :class="errors.message ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
-                  />
-                  <p v-if="errors.message" class="mt-1 text-sm text-red-600">{{ errors.message }}</p>
-                  <p class="mt-1 text-xs text-gray-500">{{ form.message.length }}/5000 characters</p>
-                </div>
-
-                <button
-                  type="submit"
-                  :disabled="isSubmitting"
-                  class="w-full rounded-md px-4 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  :class="isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'"
+            <!-- Important Note -->
+            <div class="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-4">
+              <div class="flex">
+                <svg
+                  class="mr-3 h-6 w-6 flex-shrink-0 text-orange-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <span v-if="isSubmitting" class="flex items-center justify-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Sending...
-                  </span>
-                  <span v-else>Send Message</span>
-                </button>
-              </form>
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-orange-800">
+                    If you have a question about an ongoing transaction, the fastest path is to contact the provider's
+                    support team directly.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <!-- Resources -->
-            <div>
-              <!-- Internal Links -->
-              <div class="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
-                <h3 class="mb-5 text-xl font-bold text-gray-900">
-                  Explore Our Resources
-                </h3>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <NuxtLink
-                    to="/learn/providers"
-                    class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
-                  >
-                    <div class="mb-2 flex items-center gap-3">
-                      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
-                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">Provider Reviews</span>
-                        <p class="mt-1 text-xs text-gray-600">Compare trusted money transfer services</p>
-                      </div>
-                    </div>
-                    <svg
-                      class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </NuxtLink>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              <!-- Contact Form -->
+              <div class="text-slate-900">
+                <h2 class="mb-6 text-2xl font-bold text-slate-900">
+                  Send a message
+                </h2>
 
-                  <NuxtLink
-                    to="/learn"
-                    class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                <form
+                  class="space-y-6"
+                  @submit.prevent="handleSubmit"
+                >
+                  <div
+                    v-if="submitSuccess"
+                    class="rounded-lg bg-green-50 border border-green-200 p-4"
                   >
-                    <div class="mb-2 flex items-center gap-3">
-                      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
-                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                      </div>
-                      <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">Learn Guides</span>
-                        <p class="mt-1 text-xs text-gray-600">Expert guides and insights</p>
-                      </div>
+                    <div class="flex">
+                      <svg
+                        class="h-5 w-5 text-green-600 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <p class="text-sm text-green-800">
+                        {{ submitSuccess }}
+                      </p>
                     </div>
-                    <svg
-                      class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </NuxtLink>
+                  </div>
 
-                  <NuxtLink
-                    to="/about"
-                    class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                  <div
+                    v-if="submitError"
+                    class="rounded-lg bg-red-50 border border-red-200 p-4"
                   >
-                    <div class="mb-2 flex items-center gap-3">
-                      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
-                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">About Us</span>
-                        <p class="mt-1 text-xs text-gray-600">Our story and mission</p>
-                      </div>
+                    <div class="flex">
+                      <svg
+                        class="h-5 w-5 text-red-600 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <p class="text-sm text-red-800">
+                        {{ submitError }}
+                      </p>
                     </div>
-                    <svg
-                      class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </NuxtLink>
+                  </div>
 
-                  <NuxtLink
-                    to="/methodology"
-                    class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
-                  >
-                    <div class="mb-2 flex items-center gap-3">
-                      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
-                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
-                      </div>
-                      <div class="flex-1">
-                        <span class="font-semibold text-gray-900 group-hover:text-primary-700">Our Methodology</span>
-                        <p class="mt-1 text-xs text-gray-600">How we compare providers</p>
-                      </div>
-                    </div>
-                    <svg
-                      class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div>
+                    <label
+                      for="name"
+                      class="mb-2 block text-sm font-medium text-gray-600"
+                    >Name <span class="text-red-500">*</span></label>
+                    <input
+                      id="name"
+                      v-model="form.name"
+                      type="text"
+                      required
+                      :disabled="isSubmitting"
+                      class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                      :class="errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </NuxtLink>
+                    <p
+                      v-if="errors.name"
+                      class="mt-1 text-sm text-red-600"
+                    >
+                      {{ errors.name }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      for="email"
+                      class="mb-2 block text-sm font-medium text-gray-600"
+                    >Email <span class="text-red-500">*</span></label>
+                    <input
+                      id="email"
+                      v-model="form.email"
+                      type="email"
+                      required
+                      :disabled="isSubmitting"
+                      class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                      :class="errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                    >
+                    <p
+                      v-if="errors.email"
+                      class="mt-1 text-sm text-red-600"
+                    >
+                      {{ errors.email }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      for="subject"
+                      class="mb-2 block text-sm font-medium text-gray-600"
+                    >Subject <span class="text-red-500">*</span></label>
+                    <select
+                      id="subject"
+                      v-model="form.subject"
+                      required
+                      :disabled="isSubmitting"
+                      class="w-full rounded-md border px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 transition-colors"
+                      :class="errors.subject ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                    >
+                      <option
+                        value=""
+                        disabled
+                      >
+                        Select a subject
+                      </option>
+                      <option value="General Question">
+                        General Question
+                      </option>
+                      <option value="Provider Comparison">
+                        Provider Comparison
+                      </option>
+                      <option value="Technical Support">
+                        Technical Support
+                      </option>
+                      <option value="Partnership Inquiry">
+                        Partnership Inquiry
+                      </option>
+                      <option value="Other">
+                        Other
+                      </option>
+                    </select>
+                    <p
+                      v-if="errors.subject"
+                      class="mt-1 text-sm text-red-600"
+                    >
+                      {{ errors.subject }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      for="message"
+                      class="mb-2 block text-sm font-medium text-gray-600"
+                    >Message <span class="text-red-500">*</span></label>
+                    <textarea
+                      id="message"
+                      v-model="form.message"
+                      rows="6"
+                      required
+                      :disabled="isSubmitting"
+                      class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                      :class="errors.message ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                    />
+                    <p
+                      v-if="errors.message"
+                      class="mt-1 text-sm text-red-600"
+                    >
+                      {{ errors.message }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-500">
+                      {{ form.message.length }}/5000 characters
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    :disabled="isSubmitting"
+                    class="w-full rounded-md px-4 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'"
+                  >
+                    <span
+                      v-if="isSubmitting"
+                      class="flex items-center justify-center"
+                    >
+                      <svg
+                        class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        />
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Sending...
+                    </span>
+                    <span v-else>Send Message</span>
+                  </button>
+                </form>
+              </div>
+
+              <!-- Resources -->
+              <div>
+                <!-- Internal Links -->
+                <div class="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
+                  <h3 class="mb-5 text-xl font-bold text-gray-900">
+                    Explore Our Resources
+                  </h3>
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                    >
+                      <div class="mb-2 flex items-center gap-3">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                          <svg
+                            class="w-5 h-5 text-primary-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">Provider Reviews</span>
+                          <p class="mt-1 text-xs text-gray-600">Compare trusted money transfer services</p>
+                        </div>
+                      </div>
+                      <svg
+                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </NuxtLink>
+
+                    <NuxtLink
+                      to="/learn"
+                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                    >
+                      <div class="mb-2 flex items-center gap-3">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                          <svg
+                            class="w-5 h-5 text-primary-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">Learn Guides</span>
+                          <p class="mt-1 text-xs text-gray-600">Expert guides and insights</p>
+                        </div>
+                      </div>
+                      <svg
+                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </NuxtLink>
+
+                    <NuxtLink
+                      to="/about"
+                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                    >
+                      <div class="mb-2 flex items-center gap-3">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                          <svg
+                            class="w-5 h-5 text-primary-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">About Us</span>
+                          <p class="mt-1 text-xs text-gray-600">Our story and mission</p>
+                        </div>
+                      </div>
+                      <svg
+                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </NuxtLink>
+
+                    <NuxtLink
+                      to="/methodology"
+                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                    >
+                      <div class="mb-2 flex items-center gap-3">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                          <svg
+                            class="w-5 h-5 text-primary-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">Our Methodology</span>
+                          <p class="mt-1 text-xs text-gray-600">How we compare providers</p>
+                        </div>
+                      </div>
+                      <svg
+                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </NuxtLink>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         <!-- Mini FAQ Section -->
@@ -487,7 +614,7 @@ const errors = reactive({
 
 const validateForm = (): boolean => {
   let isValid = true
-  
+
   // Reset errors
   errors.name = ''
   errors.email = ''
@@ -498,7 +625,8 @@ const validateForm = (): boolean => {
   if (!form.name.trim()) {
     errors.name = 'Name is required'
     isValid = false
-  } else if (form.name.length > 200) {
+  }
+  else if (form.name.length > 200) {
     errors.name = 'Name must be less than 200 characters'
     isValid = false
   }
@@ -507,10 +635,12 @@ const validateForm = (): boolean => {
   if (!form.email.trim()) {
     errors.email = 'Email is required'
     isValid = false
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+  }
+  else if (!/^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(form.email)) {
     errors.email = 'Please enter a valid email address'
     isValid = false
-  } else if (form.email.length > 200) {
+  }
+  else if (form.email.length > 200) {
     errors.email = 'Email must be less than 200 characters'
     isValid = false
   }
@@ -519,7 +649,8 @@ const validateForm = (): boolean => {
   if (!form.subject) {
     errors.subject = 'Please select a subject'
     isValid = false
-  } else if (form.subject.length > 200) {
+  }
+  else if (form.subject.length > 200) {
     errors.subject = 'Subject must be less than 200 characters'
     isValid = false
   }
@@ -528,10 +659,12 @@ const validateForm = (): boolean => {
   if (!form.message.trim()) {
     errors.message = 'Message is required'
     isValid = false
-  } else if (form.message.trim().length < 10) {
+  }
+  else if (form.message.trim().length < 10) {
     errors.message = 'Message must be at least 10 characters'
     isValid = false
-  } else if (form.message.length > 5000) {
+  }
+  else if (form.message.length > 5000) {
     errors.message = 'Message must be less than 5000 characters'
     isValid = false
   }
@@ -550,7 +683,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await request<{ success: boolean; message?: string; error?: string }>(
+    const response = await request<{ success: boolean, message?: string, error?: string }>(
       '/contact',
       {
         method: 'POST',
@@ -565,7 +698,7 @@ const handleSubmit = async () => {
 
     if (response.success) {
       submitSuccess.value = response.message || 'Thank you for contacting us. We will get back to you soon.'
-      
+
       // Reset form
       form.name = ''
       form.email = ''
@@ -574,16 +707,19 @@ const handleSubmit = async () => {
 
       // Scroll to top to show success message
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
+    }
+    else {
       submitError.value = response.message || 'Failed to send message. Please try again.'
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     const errorMessage = error?.data?.message || error?.message || 'An error occurred while sending your message. Please try again later.'
     submitError.value = errorMessage
-    
+
     // Scroll to top to show error message
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  } finally {
+  }
+  finally {
     isSubmitting.value = false
   }
 }

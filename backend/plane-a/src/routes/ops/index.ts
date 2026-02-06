@@ -24,6 +24,7 @@ import { wirebarleyHealthRoutes } from './wirebarley-health'
 import { intermexHealthRoutes } from './intermex-health'
 import { alansariHealthRoutes } from './alansari-health'
 import { b2bSweepStatusRoutes } from './b2b-sweep-status'
+import { indicesHealthRoutes } from './indices-health'
 
 export const opsRoutes = async (app: FastifyInstance) => {
   remitlyHealthRoutes(app)
@@ -51,4 +52,5 @@ export const opsRoutes = async (app: FastifyInstance) => {
   alansariHealthRoutes(app)
   intermexHealthRoutes(app)
   b2bSweepStatusRoutes(app)
+  indicesHealthRoutes(app)
 }

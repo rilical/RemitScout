@@ -36,9 +36,11 @@ export const useProviderVisits = () => {
         query: { limit },
       })
       pendingVisits.value = Array.isArray(response.visits) ? response.visits : []
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to load provider feedback.'
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -49,7 +51,7 @@ export const useProviderVisits = () => {
       method: 'POST',
       body: feedback,
     })
-    pendingVisits.value = pendingVisits.value.filter((visit) => visit.id !== visitId)
+    pendingVisits.value = pendingVisits.value.filter(visit => visit.id !== visitId)
   }
 
   const trackProviderVisit = async (payload: {
@@ -72,7 +74,8 @@ export const useProviderVisits = () => {
         body: payload,
         retries: 0,
       })
-    } catch {
+    }
+    catch {
       // ignore tracking errors
     }
   }

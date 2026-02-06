@@ -1,6 +1,6 @@
 /**
  * Corridor Comparison API Response Types
- * 
+ *
  * These types match the server response for /api/compare endpoints.
  * See the backend API schema for concrete response examples.
  */
@@ -324,7 +324,7 @@ export interface CorridorMeta {
 
 /**
  * Main API Response
- * 
+ *
  * This is the complete response from:
  * GET /api/compare?from={fromCountry}&to={toCountry}&amount={amount}
  */
@@ -350,10 +350,10 @@ export interface CorridorComparisonResponse {
  * API Request params
  */
 export interface CorridorComparisonRequest {
-  from: string           // Country slug or code (e.g., 'united-states' or 'US')
-  to: string             // Country slug or code (e.g., 'jordan' or 'JO')
-  amount?: number        // Send amount (default: 200)
-  currency?: string      // Send currency (default: from country's currency)
+  from: string // Country slug or code (e.g., 'united-states' or 'US')
+  to: string // Country slug or code (e.g., 'jordan' or 'JO')
+  amount?: number // Send amount (default: 200)
+  currency?: string // Send currency (default: from country's currency)
   payinMethod?: PaymentMethod
   payoutMethod?: PaymentMethod
   sortBy?: SortConfig['by']
@@ -374,14 +374,14 @@ export interface FlattenedQuote {
   isAffiliate: boolean
   providerScore: number
   providerLogo: string
-  
+
   // Quote info
   quoteId: string
   payinMethod: PaymentMethod
   payinLabel: string
   payoutMethod: PaymentMethod
   payoutLabel: string
-  
+
   // Amounts
   receivedAmount: number
   rate: number
@@ -389,18 +389,18 @@ export interface FlattenedQuote {
   fxMarkupBps: number
   totalCostUsd: number
   totalCostPercent: string
-  
+
   // Speed
   transferTimeLabel: string
   transferTimeHrs: number
-  
+
   // Ranking
   rank: number
   isCheapest: boolean
   isFastest: boolean
   isTopRated: boolean
   isBestValue: boolean
-  
+
   // Extras
   hasPromo: boolean
   promoLabel?: string
@@ -413,7 +413,7 @@ export interface FlattenedQuote {
  */
 export function flattenQuotes(providerQuotes: ProviderQuote[]): FlattenedQuote[] {
   const flattened: FlattenedQuote[] = []
-  
+
   for (const pq of providerQuotes) {
     for (const quote of pq.quotes) {
       flattened.push({
@@ -425,29 +425,29 @@ export function flattenQuotes(providerQuotes: ProviderQuote[]): FlattenedQuote[]
         isAffiliate: pq.provider.isAffiliate,
         providerScore: pq.provider.score.value,
         providerLogo: pq.provider.logo.sm,
-        
+
         quoteId: quote.quoteId,
         payinMethod: quote.payin,
         payinLabel: quote.payinLabel,
         payoutMethod: quote.payout,
         payoutLabel: quote.payoutLabel,
-        
+
         receivedAmount: quote.receivedAmount,
         rate: quote.rate,
         fee: quote.fee.total,
         fxMarkupBps: quote.fxMarkupBps,
         totalCostUsd: quote.totalCostUsd,
         totalCostPercent: quote.totalCostPercent,
-        
+
         transferTimeLabel: quote.transferTime.label,
         transferTimeHrs: quote.transferTime.maxHrs,
-        
+
         rank: quote.rank,
         isCheapest: quote.bestFlags.cheapest,
         isFastest: quote.bestFlags.fastest,
         isTopRated: quote.bestFlags.topRated,
         isBestValue: quote.bestFlags.bestValue,
-        
+
         hasPromo: quote.promos.length > 0,
         promoLabel: quote.promos[0]?.description,
         warnings: quote.warnings.map(w => w.text),
@@ -455,7 +455,6 @@ export function flattenQuotes(providerQuotes: ProviderQuote[]): FlattenedQuote[]
       })
     }
   }
-  
+
   return flattened.sort((a, b) => a.rank - b.rank)
 }
-

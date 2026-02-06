@@ -14,7 +14,8 @@ const readStorage = (key: string): string | null => {
   if (typeof window === 'undefined') return null
   try {
     return window.localStorage.getItem(key)
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -23,7 +24,8 @@ const writeStorage = (key: string, value: string) => {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(key, value)
-  } catch {
+  }
+  catch {
     // ignore storage failures
   }
 }
@@ -78,7 +80,8 @@ export const useSession = () => {
           },
           retries: 0,
         })
-      } catch {
+      }
+      catch {
         // ignore session tracking errors
       }
     },

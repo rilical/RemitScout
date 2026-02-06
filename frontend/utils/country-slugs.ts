@@ -16,7 +16,7 @@ import { COUNTRIES, type Country } from './countries-currencies'
 export const nameToSlug = (name: string): string => {
   return name
     .toLowerCase()
-    .replace(/['']/g, '')
+    .replace(/'/g, '')
     .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')

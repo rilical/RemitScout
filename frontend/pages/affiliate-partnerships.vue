@@ -5,4 +5,3 @@ await navigateTo('/partnerships', { redirectCode: 301 })
 <template>
   <div />
 </template>
-

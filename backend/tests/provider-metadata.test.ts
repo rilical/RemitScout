@@ -124,7 +124,7 @@ describe('provider-metadata', () => {
 
       expect(metadata).toBeDefined()
       expect(metadata?.id).toBe('sendwave')
-      expect(metadata?.remitScore).toBe(8.8)
+      expect(metadata?.remitScore).toBe(9.0)
     })
 
     it('returns metadata for mukuru', () => {
@@ -132,7 +132,7 @@ describe('provider-metadata', () => {
 
       expect(metadata).toBeDefined()
       expect(metadata?.id).toBe('mukuru')
-      expect(metadata?.remitScore).toBe(8.1)
+      expect(metadata?.remitScore).toBe(8.4)
     })
 
     it('returns metadata for transfergo', () => {
@@ -164,7 +164,7 @@ describe('provider-metadata', () => {
 
       expect(metadata).toBeDefined()
       expect(metadata?.id).toBe('bossmoney')
-      expect(metadata?.remitScore).toBe(8.0)
+      expect(metadata?.remitScore).toBe(8.8)
     })
 
     it('returns metadata for koronapay', () => {

@@ -314,6 +314,9 @@ export const createMonitoring = (
     { sloName: 'provider_coverage', timeWindow: '1h', alarmSuffix: 'provider-coverage-slo-breach' },
     { sloName: 'provider_coverage_tier2', timeWindow: '1h', alarmSuffix: 'provider-coverage-tier2-slo-breach' },
     { sloName: 'gold_export_lag', timeWindow: 'live_p95', alarmSuffix: 'gold-export-lag-slo-breach' },
+    { sloName: 'indices_available_ratio', timeWindow: '1h', alarmSuffix: 'indices-available-slo-breach' },
+    { sloName: 'indices_suppressed_ratio', timeWindow: '1h', alarmSuffix: 'indices-suppressed-slo-breach' },
+    { sloName: 'weight_confidence_p10', timeWindow: '1h', alarmSuffix: 'weight-confidence-p10-slo-breach' },
   ]
 
   for (const config of sloAlarmConfigs) {
@@ -366,6 +369,8 @@ export const createMonitoring = (
     'gold-publisher-job',
     'gold-indices-job',
     'gold-reconciliation-job',
+    'provider-weighting-job',
+    'data-health-slo',
     'b2b-sweep-scheduler',
     'stoplist-auto-resume',
     'quote-refresh-queue-cleanup',
@@ -546,7 +551,26 @@ export const createMonitoring = (
   })
 
   // Provider Probe Failure Alarms
-  const probeProviders = ['remitly', 'westernunion', 'wise', 'worldremit', 'ria', 'dahabshiil', 'sendwave', 'mukuru', 'xe']
+  const probeProviders = [
+    'remitly',
+    'westernunion',
+    'wise',
+    'worldremit',
+    'ria',
+    'dahabshiil',
+    'sendwave',
+    'mukuru',
+    'xe',
+    'alansari',
+    'instarem',
+    'xoom',
+    'remitbee',
+    'singx',
+    'placid',
+    'koronapay',
+    'wirebarley',
+    'intermex',
+  ]
   const probeFailureAlarms = probeProviders.map((providerId) =>
     new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {
       alarmName: `remit-scout-${options.envName}-${providerId}-probe-failure`,
@@ -571,6 +595,31 @@ export const createMonitoring = (
 
   for (const alarm of probeFailureAlarms) {
     alarm.addAlarmAction(warningAction)
+  }
+
+  const probeHeartbeatAlarms = probeProviders.map((providerId) =>
+    new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeHeartbeatAlarm`, {
+      alarmName: `remit-scout-${options.envName}-${providerId}-probe-heartbeat`,
+      metric: new Metric({
+        namespace: 'RemitScout/Probes',
+        metricName: 'probe_run_total',
+        statistic: 'Sum',
+        period: Duration.minutes(15),
+        dimensionsMap: {
+          ProviderId: providerId,
+          environment: options.envName,
+        },
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.BREACHING,
+      alarmDescription: `${providerId} probe heartbeat missing`,
+    }),
+  )
+
+  for (const alarm of probeHeartbeatAlarms) {
+    alarm.addAlarmAction(isProd ? opsAction : warningAction)
   }
 
   // API Health Alarms
@@ -809,11 +858,73 @@ export const createMonitoring = (
     period: Duration.minutes(5),
   })
 
+  const indicesReadinessWidget = new GraphWidget({
+    title: 'Indices Readiness (Tier-0)',
+    left: [
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_actual_value',
+        dimensionsMap: {
+          slo_name: 'indices_available_ratio',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_actual_value',
+        dimensionsMap: {
+          slo_name: 'indices_suppressed_ratio',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout',
+        metricName: 'slo_actual_value',
+        dimensionsMap: {
+          slo_name: 'weight_confidence_p10',
+          time_window: '1h',
+          environment: options.envName,
+          service: serviceDimension,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+    ],
+    period: Duration.minutes(5),
+  })
+
+  const probeHeartbeatWidget = new GraphWidget({
+    title: 'Probe Heartbeat (runs/15m)',
+    left: probeProviders.map((providerId) =>
+      new Metric({
+        namespace: 'RemitScout/Probes',
+        metricName: 'probe_run_total',
+        dimensionsMap: {
+          ProviderId: providerId,
+          environment: options.envName,
+        },
+        statistic: 'Sum',
+        period: Duration.minutes(15),
+      }),
+    ),
+    period: Duration.minutes(15),
+  })
+
   dashboard.addWidgets(
     dataFreshnessWidget,
     quoteSuccessRateWidget,
     providerCoverageWidget,
     sloComplianceWidget,
+    indicesReadinessWidget,
+    probeHeartbeatWidget,
   )
 
   return {

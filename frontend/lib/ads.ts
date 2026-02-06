@@ -81,7 +81,7 @@ const HOUSE_ADS: AdCreative[] = [
   {
     id: 'rs-plus',
     name: 'Remit-Scout Plus',
-    tagline: 'Ad-free comparisons, unlimited alerts, and longer history windows.',
+    tagline: 'Ad-free comparisons, Pulse access, 16 smart alerts, and 365-day history.',
     brandColor: '#2563EB',
     url: '/plus',
     ctaText: 'Upgrade',
@@ -110,7 +110,7 @@ const isWithinWindow = (ad: AdCreative, now: Date) => {
 }
 
 const filterByPlacement = (ads: AdCreative[], placement: AdPlacement, now: Date) => {
-  return ads.filter((ad) => ad.placements.includes(placement) && isWithinWindow(ad, now))
+  return ads.filter(ad => ad.placements.includes(placement) && isWithinWindow(ad, now))
 }
 
 const hashString = (value: string) => {

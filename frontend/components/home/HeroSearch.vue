@@ -311,7 +311,8 @@ watch(
 
     if (!fromCurrency.value || normalizeCurrency(fromCurrency.value) === normalizeCurrency(previousDefaultCurrency)) {
       fromCurrency.value = resolveAllowedCurrency(newCountry, nextDefaultCurrency, nextDefaultCurrency)
-    } else {
+    }
+    else {
       fromCurrency.value = resolveAllowedCurrency(newCountry, fromCurrency.value, nextDefaultCurrency)
     }
     clampAmount()
@@ -332,7 +333,8 @@ watch(
 
     if (!toCurrency.value || normalizeCurrency(toCurrency.value) === normalizeCurrency(previousDefaultCurrency)) {
       toCurrency.value = resolveAllowedCurrency(newCountry, nextDefaultCurrency, nextDefaultCurrency)
-    } else {
+    }
+    else {
       toCurrency.value = resolveAllowedCurrency(newCountry, toCurrency.value, nextDefaultCurrency)
     }
   },

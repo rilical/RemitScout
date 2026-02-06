@@ -3,7 +3,7 @@ import { useApi } from '~/composables/useApi'
 import type { AdPlacement, AdCreative } from '~/lib/ads'
 
 export type AdApiResponse = {
-  ad: (AdCreative & { placement?: string; layout?: string }) | null
+  ad: (AdCreative & { placement?: string, layout?: string }) | null
 }
 
 export const useAds = () => {

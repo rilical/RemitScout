@@ -51,14 +51,3 @@ const adClass = computed(() => {
   return ''
 })
 </script>
-
-
-
-
-
-
-
-
-
-
-

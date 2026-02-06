@@ -3,6 +3,7 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useAuth } from '~/composables/useAuth'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
 const mobileMenuOpen = ref(false)
 const scrolled = ref(false)
@@ -11,6 +12,7 @@ const logoError = ref(false)
 const { compareUrl } = useCompareForm()
 const { isAuthenticated } = useAuth()
 const { isPlus } = useEntitlements()
+const { pulseEnabled } = useFeatureFlags()
 
 const logoPlusSrc = computed(() => {
   // Route to SVG file in public/png/SVG directory
@@ -94,9 +96,12 @@ watch(() => route.path, () => {
             alt="Remit-Scout logo"
             class="h-10 w-10 object-contain flex-shrink-0"
           >
-            <span class="text-lg font-bold text-neutral-900 whitespace-nowrap">
+          <span class="text-lg font-bold text-neutral-900 whitespace-nowrap">
             Remit-Scout
-            <span v-if="isPlus && !logoError" class="text-brand-600"> Plus</span>
+            <span
+              v-if="isPlus && !logoError"
+              class="text-brand-600"
+            > Plus</span>
           </span>
         </NuxtLink>
 
@@ -129,14 +134,14 @@ watch(() => route.path, () => {
             Providers
           </NuxtLink>
 
-          <!-- Pulse (Hidden behind feature flag) -->
-          <!-- <NuxtLink
-            v-if="FEATURE_FLAGS.PULSE_ENABLED"
+          <!-- Pulse (feature-flagged) -->
+          <NuxtLink
+            v-if="pulseEnabled"
             to="/pulse"
             class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Pulse
-          </NuxtLink> -->
+          </NuxtLink>
 
           <!-- Guides -->
           <NuxtLink
@@ -266,22 +271,25 @@ watch(() => route.path, () => {
               class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
               @click="closeMobileMenu"
             >
-            <img
-              v-if="isPlus && !logoError"
-              :src="logoPlusSrc"
-              alt="Remit-Scout Plus logo"
-              class="h-10 w-10 object-contain flex-shrink-0"
-              @error="handleLogoError"
-            >
-            <img
-              v-else
-              :src="logoRegularSrc"
-              alt="Remit-Scout logo"
-              class="h-10 w-10 object-contain flex-shrink-0"
-            >
+              <img
+                v-if="isPlus && !logoError"
+                :src="logoPlusSrc"
+                alt="Remit-Scout Plus logo"
+                class="h-10 w-10 object-contain flex-shrink-0"
+                @error="handleLogoError"
+              >
+              <img
+                v-else
+                :src="logoRegularSrc"
+                alt="Remit-Scout logo"
+                class="h-10 w-10 object-contain flex-shrink-0"
+              >
               <span class="text-base font-bold text-neutral-900 whitespace-nowrap">
                 Remit-Scout
-                <span v-if="isPlus && !logoError" class="text-brand-600"> Plus</span>
+                <span
+                  v-if="isPlus && !logoError"
+                  class="text-brand-600"
+                > Plus</span>
               </span>
             </NuxtLink>
             <button
@@ -330,15 +338,15 @@ watch(() => route.path, () => {
               <span aria-hidden="true">→</span>
             </NuxtLink>
 
-            <!-- Pulse (Hidden behind feature flag) -->
-            <!-- <NuxtLink
-              v-if="FEATURE_FLAGS.PULSE_ENABLED"
+            <!-- Pulse (feature-flagged) -->
+            <NuxtLink
+              v-if="pulseEnabled"
               to="/pulse"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
             >
               <span>Pulse</span>
               <span aria-hidden="true">→</span>
-            </NuxtLink> -->
+            </NuxtLink>
 
             <NuxtLink
               to="/learn"

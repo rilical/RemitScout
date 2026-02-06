@@ -7,12 +7,12 @@
           src="/png/SVG/FULL_LOGO_PLUS.svg"
           alt="Remit-Scout Plus"
           class="h-12 sm:h-16 object-contain mx-auto mb-6"
-        />
+        >
         <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
           Get More Out of <span class="text-brand-600">Remit-Scout</span>
         </h2>
         <p class="text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed break-words">
-          Unlock advanced features like unlimited alerts, extended history tracking, data exports, and an ad-free experience. Perfect for frequent senders who want deeper insights and better control.
+          Unlock Pulse access, 16 smart alerts, 365-day history, data exports, and an ad-free experience. Perfect for frequent senders who want deeper insights and better control.
         </p>
       </div>
 
@@ -22,56 +22,118 @@
           What is Plus?
         </h2>
         <p class="text-lg text-slate-300 mb-8 text-center max-w-3xl mx-auto leading-relaxed break-words">
-          For people who send money repeatedly. Plus monitors the market 24/7 and notifies you when rates improve, giving you deeper insights and unlimited tracking capabilities.
+          For people who send money repeatedly. Plus monitors the market 24/7 and notifies you when rates improve, giving you deeper insights and higher limits (up to 16 watchlist corridors and 16 alerts).
         </p>
-        
+
         <!-- Free vs Plus Comparison -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Free Account -->
           <div class="rounded-xl border-2 border-slate-600 p-8 bg-slate-900">
             <div class="flex items-center gap-3 mb-6">
-              <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <svg
+                class="w-7 h-7 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
               </svg>
-              <h4 class="text-2xl font-bold text-white">Free Account</h4>
+              <h4 class="text-2xl font-bold text-white">
+                Free Account
+              </h4>
             </div>
             <ul class="space-y-4">
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">3 watchlist corridors</strong></span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">1 alert</strong></span>
+                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">3 alerts</strong></span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">30-day history</strong> for your transfer</span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-slate-300 leading-relaxed">Compare 50+ providers</span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-slate-300 leading-relaxed">Ads and sponsored placements</span>
@@ -83,49 +145,111 @@
           <div class="rounded-xl border-2 border-blue-600 p-8 bg-blue-600 relative">
             <div class="flex items-center gap-3 mb-6">
               <div class="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+                <svg
+                  class="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
               </div>
-              <h4 class="text-2xl font-bold text-white">Plus Account</h4>
+              <h4 class="text-2xl font-bold text-white">
+                Plus Account
+              </h4>
             </div>
             <ul class="space-y-4">
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed"><strong>Unlimited watchlist</strong></span>
+                <span class="text-base text-white leading-relaxed"><strong>Up to 16 watchlist corridors</strong></span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed"><strong>Unlimited intelligent alerts</strong></span>
+                <span class="text-base text-white leading-relaxed"><strong>Up to 16 intelligent alerts</strong></span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-white leading-relaxed"><strong>365-day history</strong> for your transfer</span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-white leading-relaxed">Export data to CSV or PDF</span>
               </li>
               <li class="flex items-start gap-3">
                 <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                  <svg
+                    class="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
                   </svg>
                 </div>
                 <span class="text-base text-white leading-relaxed"><strong>Ad-free</strong> experience</span>
@@ -144,26 +268,46 @@
           <!-- Feature 1 -->
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
               </svg>
             </div>
             <h4 class="text-lg font-bold text-white mb-2">
-              Unlimited Intelligent Alerts
+              16 Intelligent Alerts
             </h4>
             <p class="text-sm text-slate-300 leading-relaxed mb-4">
               Smart score alerts analyze rate patterns and volatility, scoring 0–100. Only triggers when score hits your threshold. Weekly smart alerts plus daily alerts for Plus.
             </p>
             <div class="text-xs text-slate-500 mt-auto">
-              Free: 1 alert | Plus: Unlimited
+              Free: 3 alerts | Plus: 16 alerts
             </div>
           </div>
 
           <!-- Feature 2 -->
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <h4 class="text-lg font-bold text-white mb-2">
@@ -180,26 +324,46 @@
           <!-- Feature 3 -->
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
             </div>
             <h4 class="text-lg font-bold text-white mb-2">
-              Unlimited Watchlist
+              16 Watchlist Corridors
             </h4>
             <p class="text-sm text-slate-300 leading-relaxed mb-4">
-              Monitor every corridor you send to—no limits. Weekly digest emails show what changed so you never miss better rates.
+              Monitor up to 16 corridors you send to. Weekly digest emails show what changed so you never miss better rates.
             </p>
             <div class="text-xs text-slate-500 mt-auto">
-              Free: 3 corridors | Plus: Unlimited
+              Free: 3 corridors | Plus: 16 corridors
             </div>
           </div>
 
           <!-- Feature 4 -->
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
             </div>
             <h4 class="text-lg font-bold text-white mb-2">
@@ -216,8 +380,18 @@
           <!-- Feature 5 -->
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                />
               </svg>
             </div>
             <h4 class="text-lg font-bold text-white mb-2">
@@ -234,8 +408,18 @@
           <!-- Feature 6 -->
           <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
               </svg>
             </div>
             <h4 class="text-lg font-bold text-white mb-2">
@@ -254,13 +438,25 @@
       <!-- Trust Message -->
       <div class="bg-slate-800 border-2 border-slate-700 rounded-xl p-8 mb-10 text-center">
         <div class="flex items-center justify-center gap-3 mb-3">
-          <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            class="w-6 h-6 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
-          <h4 class="text-lg font-bold text-white">How Plus Fits Our Independence</h4>
+          <h4 class="text-lg font-bold text-white">
+            How Plus Fits Our Independence
+          </h4>
         </div>
         <p class="text-base text-slate-300 leading-relaxed max-w-3xl mx-auto break-words">
-          Plus helps fund RemitScout without pay-to-rank sponsorships. Plus users see fewer ads, but <strong>scoring and rankings remain identical for everyone.</strong> Whether free or Plus, you see the same data-driven comparisons.
+          Plus helps fund Remit-Scout without pay-to-rank sponsorships. Plus users see no ads, but <strong>scoring and rankings remain identical for everyone.</strong> Whether free or Plus, you see the same data-driven comparisons.
         </p>
       </div>
 
@@ -271,8 +467,18 @@
           class="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl text-white text-lg font-semibold shadow-xl hover:shadow-2xl transition-all group"
         >
           <span>See Full Features and Pricing</span>
-          <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="w-6 h-6 group-hover:translate-x-1 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </NuxtLink>
         <p class="mt-4 text-sm text-slate-400">
@@ -285,12 +491,3 @@
 
 <script setup lang="ts">
 </script>
-
-
-
-
-
-
-
-
-

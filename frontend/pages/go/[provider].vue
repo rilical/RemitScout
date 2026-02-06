@@ -10,7 +10,10 @@
               :alt="provider.name"
               size="large"
             />
-            <span v-else class="text-4xl font-bold text-slate-600">
+            <span
+              v-else
+              class="text-4xl font-bold text-slate-600"
+            >
               {{ provider?.name?.slice(0, 1) || '?' }}
             </span>
             <div class="text-xl font-normal text-slate-300 my-2">
@@ -21,7 +24,7 @@
                 src="/png/SVG/FULL_LOGO.svg"
                 alt="Remit-Scout"
                 class="h-16 w-auto mx-auto"
-              />
+              >
             </div>
           </div>
           <div>
@@ -61,7 +64,10 @@
         </div>
       </div>
 
-      <div v-if="!targetUrl" class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <div
+        v-if="!targetUrl"
+        class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+      >
         We could not determine a valid destination URL for this provider. Please go back and try another link.
       </div>
     </div>
@@ -102,9 +108,10 @@ const { data: providerResponse } = await useAsyncData(
 
 const provider = computed(() => providerResponse.value?.data ?? null)
 
-const getQueryValue = (key: string) => {
+const getQueryValue = (key: string): string | undefined => {
   const raw = route.query[key]
-  return Array.isArray(raw) ? raw[0] : raw
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' ? value : undefined
 }
 
 const toNumber = (value?: string) => {
@@ -118,8 +125,9 @@ const readAttribution = () => {
   try {
     const raw = window.localStorage.getItem('rs:attribution')
     if (!raw) return {}
-    return JSON.parse(raw) as { gclid?: string; fbclid?: string; msclkid?: string }
-  } catch {
+    return JSON.parse(raw) as { gclid?: string, fbclid?: string, msclkid?: string }
+  }
+  catch {
     return {}
   }
 }
@@ -134,7 +142,8 @@ const sanitizeTarget = (value?: string | null) => {
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
       return parsed.toString()
     }
-  } catch {
+  }
+  catch {
     return null
   }
   return null
@@ -167,7 +176,8 @@ const targetHost = computed(() => {
   if (targetUrl.value.startsWith('/')) return 'Remit-Scout'
   try {
     return new URL(targetUrl.value).hostname.replace(/^www\./, '')
-  } catch {
+  }
+  catch {
     return 'Provider site'
   }
 })

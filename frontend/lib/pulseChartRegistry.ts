@@ -1,6 +1,6 @@
 import type { ChartMetadata, ChartCategory } from '~/types/pulse'
 
-export const CHART_CATEGORIES: Record<ChartCategory, { label: string; order: number }> = {
+export const CHART_CATEGORIES: Record<ChartCategory, { label: string, order: number }> = {
   'cost-markup': { label: 'Pricing & Margin', order: 1 },
   'delivered-amount': { label: 'Competitive Dynamics', order: 2 },
   'volatility': { label: 'Volatility & Risk', order: 3 },
@@ -292,7 +292,7 @@ export function getChartsByCategory(category: ChartCategory): ChartMetadata[] {
   return pulseChartRegistry.filter(chart => chart.category === category)
 }
 
-export function getAllCategories(): { category: ChartCategory; label: string; charts: ChartMetadata[] }[] {
+export function getAllCategories(): { category: ChartCategory, label: string, charts: ChartMetadata[] }[] {
   return Object.entries(CHART_CATEGORIES)
     .sort(([, a], [, b]) => a.order - b.order)
     .map(([category, { label }]) => ({
@@ -305,13 +305,13 @@ export function getAllCategories(): { category: ChartCategory; label: string; ch
 export function getRelatedCharts(chartId: string, limit = 3): ChartMetadata[] {
   const chart = getChartById(chartId)
   if (!chart) return []
-  
+
   const sameCategory = pulseChartRegistry
     .filter(c => c.category === chart.category && c.id !== chartId)
-  
+
   const otherCharts = pulseChartRegistry
     .filter(c => c.category !== chart.category && c.id !== chartId)
-  
+
   return [...sameCategory, ...otherCharts].slice(0, limit)
 }
 

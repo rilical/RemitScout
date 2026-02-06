@@ -1,14 +1,20 @@
 <template>
   <div class="relative">
     <!-- Chart Container -->
-    <div ref="chartContainer" class="relative h-80 w-full">
+    <div
+      ref="chartContainer"
+      class="relative h-80 w-full"
+    >
       <svg
         class="h-full w-full"
         :viewBox="`0 0 ${width} ${height}`"
         preserveAspectRatio="xMidYMid meet"
       >
         <!-- Y-axis labels -->
-        <g class="y-axis" font-size="11">
+        <g
+          class="y-axis"
+          font-size="11"
+        >
           <text
             v-for="(provider, i) in providers"
             :key="`y-label-${i}`"
@@ -41,7 +47,10 @@
         </g>
 
         <!-- X-axis labels -->
-        <g class="x-axis" font-size="10">
+        <g
+          class="x-axis"
+          font-size="10"
+        >
           <text
             v-for="(label, i) in xAxisLabels"
             :key="`x-label-${i}`"
@@ -62,7 +71,9 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
         :style="tooltipStyle"
       >
-        <div class="mb-1 text-xs text-neutral-400">{{ hoveredSegment.date }}</div>
+        <div class="mb-1 text-xs text-neutral-400">
+          {{ hoveredSegment.date }}
+        </div>
         <div class="flex items-center gap-2 text-sm">
           <span
             class="h-2 w-2 rounded-full"
@@ -127,7 +138,7 @@ const providers = computed(() => {
 
 const stackedSegments = computed(() => {
   if (props.series.length === 0) return []
-  
+
   const segments: Array<{
     x: number
     y: number
@@ -137,14 +148,14 @@ const stackedSegments = computed(() => {
     date: string
     dayIndex: number
   }> = []
-  
+
   const pointsPerProvider = props.series[0]?.points.length || 0
   const segmentWidth = Math.max(4, chartWidth / pointsPerProvider - 1)
-  
+
   for (let dayIdx = 0; dayIdx < pointsPerProvider; dayIdx++) {
     let winnerProvider: string | null = null
     let maxValue = -Infinity
-    
+
     for (const s of props.series) {
       const point = s.points[dayIdx]
       if (point && point.v > maxValue) {
@@ -152,11 +163,11 @@ const stackedSegments = computed(() => {
         winnerProvider = s.label
       }
     }
-    
+
     if (winnerProvider) {
       const providerIdx = providers.value.indexOf(winnerProvider)
       const timestamp = props.series[0].points[dayIdx]?.t ?? 0
-      
+
       segments.push({
         x: padding.left + (dayIdx / pointsPerProvider) * chartWidth,
         y: getProviderY(providerIdx),
@@ -168,17 +179,17 @@ const stackedSegments = computed(() => {
       })
     }
   }
-  
+
   return segments
 })
 
 const xAxisLabels = computed(() => {
   if (props.series.length === 0 || props.series[0].points.length === 0) return []
-  
+
   const points = props.series[0].points
   const count = Math.min(8, points.length)
   const step = Math.floor(points.length / (count - 1))
-  
+
   return Array.from({ length: count }, (_, i) => {
     const idx = Math.min(i * step, points.length - 1)
     return {
@@ -234,7 +245,3 @@ function formatDate(timestamp: number): string {
   })
 }
 </script>
-
-
-
-

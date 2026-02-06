@@ -22,7 +22,7 @@ const requireContent = (relativePath, pattern, message) => {
   }
 }
 
-requireContent('public/_robots.txt', /Sitemap:/i, 'robots.txt missing sitemap entry')
+requireContent('server/routes/robots.txt.ts', /Sitemap:/i, 'robots.txt route missing sitemap entry')
 requireContent('server/routes/sitemap.xml.ts', /getAllCorridorUrls/, 'sitemap missing corridor coverage')
 requireContent('server/routes/sitemap.xml.ts', /PROVIDER_SCORES/, 'sitemap missing provider coverage')
 requireContent('server/routes/sitemap.xml.ts', /pulseChartRegistry/, 'sitemap missing pulse chart coverage')
@@ -35,6 +35,7 @@ if (checks.length) {
     console.error(`- ${issue}`)
   }
   process.exitCode = 1
-} else {
+}
+else {
   console.log('SEO checks passed.')
 }

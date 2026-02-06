@@ -58,15 +58,18 @@ const getSLOTargetFromEnv = (sloName: string, defaultTarget: SLOTarget): SLOTarg
 }
 
 const SLO_TARGETS_DEFAULTS: Record<string, SLOTarget> = {
-  freshness_p95: { threshold: 5 * 60, unit: 'seconds', direction: 'lower_is_better' },
-  freshness_p95_tier2: { threshold: 5 * 60, unit: 'seconds', direction: 'lower_is_better' },
+  freshness_p95: { threshold: 15 * 60, unit: 'seconds', direction: 'lower_is_better' },
+  freshness_p95_tier2: { threshold: 3 * 60 * 60, unit: 'seconds', direction: 'lower_is_better' },
   quote_success_rate: { threshold: 0.98, unit: 'ratio', direction: 'higher_is_better' },
-  quote_success_rate_tier2: { threshold: 0.98, unit: 'ratio', direction: 'higher_is_better' },
+  quote_success_rate_tier2: { threshold: 0.95, unit: 'ratio', direction: 'higher_is_better' },
   provider_coverage: { threshold: 3, unit: 'count', direction: 'higher_is_better' },
   provider_coverage_tier2: { threshold: 3, unit: 'count', direction: 'higher_is_better' },
   gold_export_lag: { threshold: 60, unit: 'seconds', direction: 'lower_is_better' },
   api_latency_p95: { threshold: 5, unit: 'seconds', direction: 'lower_is_better' },
   api_error_rate: { threshold: 0.05, unit: 'ratio', direction: 'lower_is_better' },
+  indices_available_ratio: { threshold: 0.8, unit: 'ratio', direction: 'higher_is_better' },
+  indices_suppressed_ratio: { threshold: 0.2, unit: 'ratio', direction: 'lower_is_better' },
+  weight_confidence_p10: { threshold: 0.3, unit: 'ratio', direction: 'higher_is_better' },
 }
 
 const SLO_TARGETS: Record<string, SLOTarget> = Object.fromEntries(

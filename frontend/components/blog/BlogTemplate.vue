@@ -168,7 +168,12 @@
                 </NuxtLink>
               </div>
 
-              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
+              <AdPlacement
+                placement="blog_sidebar"
+                layout="vertical"
+                wrapper-class="rounded-xl"
+                min-height="160px"
+              />
             </div>
           </aside>
         </div>
@@ -245,7 +250,7 @@ interface Props {
   showImpact?: boolean
   showOurStory?: boolean
   showNewsletter?: boolean
-  breadcrumbItems?: Array<{ name: string; path: string }>
+  breadcrumbItems?: Array<{ name: string, path: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -272,12 +277,3 @@ const guideAlertTarget = computed(() => ({
 
 const guideAlertLabel = computed(() => `${guideAlertTarget.value.from}→${guideAlertTarget.value.to} • ${guideAlertTarget.value.method}`)
 </script>
-
-
-
-
-
-
-
-
-

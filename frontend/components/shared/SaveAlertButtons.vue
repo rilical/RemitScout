@@ -80,6 +80,8 @@ const targetLabel = computed(() => {
       return `Pulse chart ${props.target.chartId}`
     case 'guide':
       return `Guide: ${props.target.slug}`
+    default:
+      return 'Saved item'
   }
 })
 
@@ -88,7 +90,7 @@ const authModalFeature = ref<'watchlist' | 'alert'>('watchlist')
 const limitModalOpen = ref(false)
 const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
 const limitModalLimit = ref(3)
-const successToastRef = ref<{ show: () => void; hide: () => void } | null>(null)
+const successToastRef = ref<{ show: () => void, hide: () => void } | null>(null)
 const toastTitle = ref('')
 const toastMessage = ref('')
 const toastVariant = ref<'success' | 'error'>('success')
@@ -166,7 +168,8 @@ const limitModalItems = computed(() => {
 const handleLimitRemove = async (id: string) => {
   if (limitModalFeature.value === 'watchlist') {
     await watchlist.remove(id)
-  } else {
+  }
+  else {
     await alerts.remove(id)
   }
 
@@ -187,16 +190,19 @@ const handleSave = async () => {
     toastMessage.value = `${targetLabel.value} saved`
     toastVariant.value = 'success'
     successToastRef.value?.show()
-  } else if (result.status === 'already_saved') {
+  }
+  else if (result.status === 'already_saved') {
     toastTitle.value = 'Already saved'
     toastMessage.value = 'This item is already in your watchlist'
     toastVariant.value = 'success'
     successToastRef.value?.show()
-  } else if (result.status === 'limit_reached') {
+  }
+  else if (result.status === 'limit_reached') {
     limitModalFeature.value = 'watchlist'
     limitModalLimit.value = result.limit
     limitModalOpen.value = true
-  } else if (result.status === 'error') {
+  }
+  else if (result.status === 'error') {
     toastTitle.value = 'Unable to save'
     toastMessage.value = result.message
     toastVariant.value = 'error'

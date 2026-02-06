@@ -41,11 +41,9 @@
         </div>
 
         <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-primary-600">
-              {{ scoreDisplay }}
-            </div>
-            <div class="text-gray-600">
+          <div class="flex flex-col items-center">
+            <RemitScoreRing :score="provider?.remitScore ?? 0" />
+            <div class="mt-2 text-gray-600">
               Remit-Scout Score
             </div>
           </div>
@@ -71,7 +69,10 @@
           <h3 class="mb-4 text-lg font-semibold text-gray-900">
             Score Breakdown
           </h3>
-          <div v-if="scoreBreakdownItems.length" class="space-y-3">
+          <div
+            v-if="scoreBreakdownItems.length"
+            class="space-y-3"
+          >
             <div
               v-for="item in scoreBreakdownItems"
               :key="item.label"
@@ -81,14 +82,21 @@
               <span class="text-sm font-semibold text-gray-900">{{ item.value }}</span>
             </div>
           </div>
-          <p v-else class="text-sm text-gray-500">
+          <p
+            v-else
+            class="text-sm text-gray-500"
+          >
             Score breakdown is unavailable for this provider.
           </p>
         </div>
       </div>
 
       <div class="mb-8">
-        <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+        <AdPlacement
+          placement="blog_inline"
+          wrapper-class="rounded-xl"
+          min-height="120px"
+        />
       </div>
       <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -111,33 +119,50 @@
           </NuxtLink>
         </div>
 
-        <div v-if="quotesPending" class="mt-6 text-sm text-gray-500">
+        <div
+          v-if="quotesPending"
+          class="mt-6 text-sm text-gray-500"
+        >
           Loading the latest quote...
         </div>
-        <div v-else-if="quotesError || !providerQuote" class="mt-6 text-sm text-gray-500">
+        <div
+          v-else-if="quotesError || !providerQuote"
+          class="mt-6 text-sm text-gray-500"
+        >
           No live quote is available for this corridor yet.
         </div>
-        <div v-else class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div
+          v-else
+          class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4"
+        >
           <div>
-            <p class="text-xs text-gray-500">Recipient gets</p>
+            <p class="text-xs text-gray-500">
+              Recipient gets
+            </p>
             <p class="text-lg font-semibold text-gray-900">
               {{ formatMoney(providerQuote.recipientGets, toCurrency) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Fee</p>
+            <p class="text-xs text-gray-500">
+              Fee
+            </p>
             <p class="text-lg font-semibold text-gray-900">
               {{ formatMoney(providerQuote.fee, fromCurrency) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">FX rate</p>
+            <p class="text-xs text-gray-500">
+              FX rate
+            </p>
             <p class="text-sm font-semibold text-gray-900">
               {{ formatRate(providerQuote.fxRate, fromCurrency, toCurrency) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Delivery</p>
+            <p class="text-xs text-gray-500">
+              Delivery
+            </p>
             <p class="text-sm font-semibold text-gray-900">
               {{ providerQuote.delivery || 'Unknown' }}
             </p>
@@ -176,11 +201,6 @@ import { useStructuredData } from '~/composables/useStructuredData'
 import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
 
 const route = useRoute()
-const isReviewPath = computed(() => route.path.startsWith('/reviews'))
-
-definePageMeta({
-  alias: ['/reviews/:slug'],
-})
 
 const slug = route.params.slug as string
 
@@ -269,11 +289,6 @@ const compareUrl = computed(() => {
   return `${getCorridorUrl(from.value, to.value)}?${params.toString()}`
 })
 
-const scoreDisplay = computed(() => {
-  const score = provider.value?.remitScore
-  return typeof score === 'number' ? score.toFixed(1) : 'N/A'
-})
-
 const providerTypeLabel = computed(() => {
   const type = provider.value?.type
   if (!type) return 'Provider profile'
@@ -315,7 +330,7 @@ setSeo({
   title: `${provider.value?.name || 'Provider'} Review | Remit-Scout`,
   description: `Compare ${provider.value?.name || 'this provider'} on Remit-Scout and see live rates across providers.`,
   canonical: `${siteBaseUrl}${route.path}`,
-  ogImage: provider.value?.slug 
+  ogImage: provider.value?.slug
     ? `${siteBaseUrl}/og-images/provider-${provider.value.slug}.jpg`
     : `${siteBaseUrl}/og-image.jpg`,
 })
@@ -324,7 +339,7 @@ setSeo({
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
-  { name: isReviewPath.value ? 'Reviews' : 'Providers', path: isReviewPath.value ? '/reviews' : '/learn/providers' },
+  { name: 'Providers', path: '/learn/providers' },
   { name: provider.value?.name || 'Provider', path: route.path },
 ])
 
@@ -333,7 +348,7 @@ const { addReviewSchema } = useStructuredData()
 
 if (provider.value?.remitScore && typeof provider.value.remitScore === 'number') {
   const reviewBody = `${provider.value.name} earns a Remit-Score of ${provider.value.remitScore.toFixed(1)}/10 based on our independent analysis of delivered value, reliability, speed, support, and trust factors.`
-  
+
   addReviewSchema({
     itemReviewed: provider.value.name || 'Provider',
     reviewBody,

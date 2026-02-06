@@ -6,11 +6,20 @@
     <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
-          <NuxtLink to="/" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Home</NuxtLink>
+          <NuxtLink
+            to="/"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Home</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Learn</NuxtLink>
+          <NuxtLink
+            to="/learn"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Learn</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
+          <NuxtLink
+            to="/learn/providers"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">Xoom Review</span>
         </nav>
@@ -28,7 +37,11 @@
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    class="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   Provider Review
@@ -55,8 +68,18 @@
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Compare Xoom Now
               </NuxtLink>
@@ -66,8 +89,18 @@
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </a>
             </div>
@@ -77,26 +110,10 @@
           <div class="flex justify-center lg:justify-end">
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
-                <div class="relative inline-flex items-center justify-center">
-                  <svg class="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" stroke-width="12" />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      fill="none"
-                      stroke="#3b82f6"
-                      stroke-width="12"
-                      stroke-linecap="round"
-                      :stroke-dasharray="`${85 * 4.4} 440`"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">8.5</span>
-                    <span class="text-sm text-slate-500">/10</span>
-                  </div>
+                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  REMIT-SCOUT SCORE
                 </div>
+                <RemitScoreRing :score="score" />
               </div>
 
               <!-- Quick Rating Bars -->
@@ -106,42 +123,49 @@
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
               </div>
 
               <div class="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p class="text-xs" style="color: rgba(17, 24, 39, 1);">
+                <p
+                  class="text-xs"
+                  style="color: rgba(17, 24, 39, 1);"
+                >
                   Based on our independent methodology.<br>
-                  <NuxtLink to="/methodology" class="font-semibold hover:text-brand-700" style="color: rgba(37, 99, 235, 1);">Learn how we score →</NuxtLink>
+                  <NuxtLink
+                    to="/methodology"
+                    class="font-semibold hover:text-brand-700"
+                    style="color: rgba(37, 99, 235, 1);"
+                  >Learn how we score →</NuxtLink>
                 </p>
               </div>
             </div>
@@ -155,27 +179,46 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">PayPal</div>
-            <div class="text-sm text-slate-600">Ecosystem</div>
+            <div class="text-3xl font-bold text-slate-900">
+              PayPal
+            </div>
+            <div class="text-sm text-slate-600">
+              Ecosystem
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">Minutes</div>
-            <div class="text-sm text-slate-600">Fast Delivery</div>
+            <div class="text-3xl font-bold text-emerald-600">
+              Minutes
+            </div>
+            <div class="text-sm text-slate-600">
+              Fast Delivery
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Multiple</div>
-            <div class="text-sm text-slate-600">Payout Options</div>
+            <div class="text-3xl font-bold text-slate-900">
+              Multiple
+            </div>
+            <div class="text-sm text-slate-600">
+              Payout Options
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Reliable</div>
-            <div class="text-sm text-slate-600">Execution</div>
+            <div class="text-3xl font-bold text-slate-900">
+              Reliable
+            </div>
+            <div class="text-sm text-slate-600">
+              Execution
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Main Content -->
-    <section id="review" class="py-16 bg-white">
+    <section
+      id="review"
+      class="py-16 bg-white"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
@@ -184,8 +227,18 @@
               <!-- Introduction -->
               <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
-                  <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="w-12 h-12 text-brand-600/20"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
@@ -195,7 +248,7 @@
 
               <div class="mb-12">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
@@ -205,12 +258,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-8">
                 <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   Score Breakdown
                 </h2>
@@ -228,73 +291,123 @@
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
                       Xoom
                     </h3>
-                    <p class="text-sm text-black">Remit-Score</p>
-                    <p class="text-xs text-slate-500 mt-1">(a PayPal service)</p>
+                    <p class="text-sm text-black">
+                      Remit-Score
+                    </p>
+                    <p class="text-xs text-slate-500 mt-1">
+                      (a PayPal service)
+                    </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Delivered Value
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Can be weaker due to fees/spread. Xoom charges transaction fees and earns via currency conversion. Often not the cheapest when comparing "recipient gets".</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      40% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Can be weaker due to fees/spread. Xoom charges transaction fees and earns via currency conversion. Often not the cheapest when comparing "recipient gets".
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Reliability</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Reliability
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Clear delivery expectations. Funds delivered by date on receipt, often within minutes. Explicit about factors that can cause delays.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      20% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Clear delivery expectations. Funds delivered by date on receipt, often within minutes. Explicit about factors that can cause delays.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Friction & Speed
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Multiple payout rails with fast "minutes" behavior in many cases. Strong payout options: bank, debit card, mobile wallet, cash pickup, home delivery.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Multiple payout rails with fast "minutes" behavior in many cases. Strong payout options: bank, debit card, mobile wallet, cash pickup, home delivery.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Support & Refunds
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Refund/cancellation is time-sensitive (30-minute window for full refund; after that, refunds are limited). Becomes hard once funds are picked up/deposited.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Refund/cancellation is time-sensitive (30-minute window for full refund; after that, refunds are limited). Becomes hard once funds are picked up/deposited.
+                    </div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Trust & Safety
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">U.S. money transmission by PayPal, Inc. (NMLS ID). UK/EEA regulatory context published. Strong institutional trust signals via PayPal-linked licensing.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      10% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      U.S. money transmission by PayPal, Inc. (NMLS ID). UK/EEA regulatory context published. Strong institutional trust signals via PayPal-linked licensing.
+                    </div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.5 (not 9.0+):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">Delivered Value (40%) is held back because Xoom discloses both transaction fees and that it earns money on currency conversion, which means effective cost can be higher than more rate-focused alternatives.</div>
+                      <div class="font-semibold text-slate-900 mb-1.5">
+                        Why 8.5 (not 9.0+):
+                      </div>
+                      <div class="text-sm text-slate-700 leading-relaxed">
+                        Delivered Value (40%) is held back because Xoom discloses both transaction fees and that it earns money on currency conversion, which means effective cost can be higher than more rate-focused alternatives.
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Delivered Value (40%)
+                  </h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
                   Effective cost: fees + FX spread
@@ -319,20 +432,42 @@
                 </div>
 
                 <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">"How often is it the cheapest?"</p>
+                  <p class="font-semibold text-slate-900 mb-3">
+                    "How often is it the cheapest?"
+                  </p>
                   <p class="text-slate-800 leading-relaxed mb-4">
                     We don't publish "Xoom wins X%" type stats here (none were provided in your auditor notes). The most accurate framing is:
                   </p>
                   <ul class="space-y-2 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Xoom can be a rational choice when its payout convenience (cash pickup/home delivery/debit card deposit) saves time and hassle.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
                       </svg>
                       <span>But if your top priority is lowest all-in price, Xoom is often not the first place you'd expect to win because it has both fees and spread in the mix.</span>
                     </li>
@@ -354,7 +489,9 @@
                   </p>
                 </div>
                 <div class="mt-6 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                  <p class="font-semibold text-slate-900 mb-2">Delivered Value takeaway:</p>
+                  <p class="font-semibold text-slate-900 mb-2">
+                    Delivered Value takeaway:
+                  </p>
                   <p class="text-slate-800 mb-0">
                     Xoom's pricing model is straightforward (fees + FX conversion margin), but that often means you're paying a convenience premium.
                   </p>
@@ -366,7 +503,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Reliability & Success (20%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
@@ -389,14 +528,18 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Data freshness signals (what's "current")
                     </p>
-                    <p class="text-slate-700 mb-3">Two useful freshness cues Xoom provides:</p>
+                    <p class="text-slate-700 mb-3">
+                      Two useful freshness cues Xoom provides:
+                    </p>
                     <ul class="space-y-2 text-slate-700">
                       <li>• A receipt-based delivery date promise ("delivered by the date listed on your receipt").</li>
                       <li>• A live "partner locations" locator (helpful for cash pickup) and corridor-specific pages with typical availability times.</li>
                     </ul>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Reliability takeaway:</p>
+                    <p class="font-semibold text-slate-900 mb-2">
+                      Reliability takeaway:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       Xoom is typically dependable for supported corridors, and it's explicit about the real-world factors that can introduce variability.
                     </p>
@@ -409,7 +552,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Friction & Speed (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
@@ -427,29 +572,71 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods (strong point)
                     </p>
-                    <p class="text-slate-700 mb-3">Xoom's supported "receive" methods are a big reason it scores well on convenience:</p>
+                    <p class="text-slate-700 mb-3">
+                      Xoom's supported "receive" methods are a big reason it scores well on convenience:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Bank account, debit card, mobile wallet</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Cash pickup or home delivery</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Pay international bills</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Reload prepaid mobile phones</span>
                       </li>
@@ -468,7 +655,9 @@
                     </ul>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Friction & Speed takeaway:</p>
+                    <p class="font-semibold text-slate-900 mb-2">
+                      Friction & Speed takeaway:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       Xoom is often fast and low-friction when the corridor is well-supported, and it gives you a realistic "why delays happen" list.
                     </p>
@@ -481,36 +670,80 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Support & Refunds (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Refunds and cancellation: the key rules
                     </p>
-                    <p class="text-slate-700 mb-3">Xoom's User Agreement says:</p>
+                    <p class="text-slate-700 mb-3">
+                      Xoom's User Agreement says:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>You can cancel for a full refund within 30 minutes of authorizing the transaction, unless funds/reload/bill pay have already been paid out.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>If eligible (funds not picked up or deposited), Xoom states it will refund your money within 4 business days of your cancellation request.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
                         <span>After 30 minutes, refunds are generally not provided except in limited circumstances.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Refunds go back to the same payment method and are in the same send currency (not adjusted for currency value changes).</span>
                       </li>
@@ -532,7 +765,9 @@
                     </ul>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Support & Refunds takeaway:</p>
+                    <p class="font-semibold text-slate-900 mb-2">
+                      Support & Refunds takeaway:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       Xoom's policy is documented and clear, but cancellation is time-sensitive and becomes difficult once payout happens.
                     </p>
@@ -545,7 +780,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Trust & Safety (10%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -557,20 +794,50 @@
                     </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">United States:</strong> Xoom's legal page states that all U.S. money transmission is provided by PayPal, Inc. (NMLS ID 910457) pursuant to PayPal's licenses, and links to state licensing disclosures.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">UK/EEA:</strong> Xoom's legal page states PayPal (Europe) is licensed as a Luxembourg credit institution and under CSSF supervision, and references FCA temporary permissions regime context.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Australia:</strong> Xoom's fees page states the service is provided by PayPal Australia Pty Limited, which holds an Australian Financial Services Licence (AFSL).</span>
                       </li>
@@ -580,7 +847,9 @@
                     </p>
                   </div>
                   <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">Trust & Safety takeaway:</p>
+                    <p class="font-semibold text-slate-900 mb-2">
+                      Trust & Safety takeaway:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       Strong "institutional" trust signals via PayPal-linked licensing disclosures, plus jurisdiction-specific regulatory statements.
                     </p>
@@ -588,11 +857,21 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
-                <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  class="w-7 h-7 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 Pros and Cons
               </h2>
@@ -600,8 +879,16 @@
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
                 <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Pros
                   </h3>
@@ -622,8 +909,16 @@
                 </div>
                 <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Cons
                   </h3>
@@ -644,32 +939,72 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-12">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Best For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>People who value convenience (especially if you already live in the PayPal ecosystem) and want a familiar checkout experience.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Senders who need strong payout options (bank deposit, debit card deposit, mobile wallets, cash pickup/home delivery depending on corridor).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Transfers where reliability and predictable execution matter more than squeezing every last basis point of FX cost.</span>
                     </li>
@@ -678,27 +1013,67 @@
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Not Ideal For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Rate-maximizers who want the lowest all-in cost most of the time (Xoom charges transaction fees and also earns via currency conversion).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Large transfers where FX spread can dominate total cost (because spread scales with amount, even when the fee looks small).</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Users outside Xoom's supported send/receive footprint for their corridor or payout type (availability and fees vary by country and feature).</span>
                     </li>
@@ -706,12 +1081,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
                   </svg>
                   How to Get the Best Rate with Xoom
                 </h2>
@@ -720,35 +1105,45 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      1
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Compare the total outcome ("recipient gets"), not just the fee line:</strong>
                       <span class="text-slate-700">Xoom's cost can be in both fees + FX conversion margin.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      2
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Test funding methods (bank vs debit/credit vs PayPal balance where available):</strong>
                       <span class="text-slate-700">Fees can vary by payment method and corridor.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      3
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Use the fee / exchange-rate calculator (or corridor flow page) right before sending:</strong>
                       <span class="text-slate-700">Xoom notes rates can change.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      4
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Pick payout method intentionally:</strong>
                       <span class="text-slate-700">Cash pickup/debit card deposit/mobile wallet can be fast, but also reduces your ability to cancel if you spot an error late.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      5
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">If you might need to cancel, act immediately:</strong>
                       <span class="text-slate-700">The agreement describes a 30-minute cancellation window for full refund (if not already paid out).</span>
@@ -757,12 +1152,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
                   </svg>
                   Two Alternatives (and When They Beat Xoom)
                 </h2>
@@ -770,7 +1175,7 @@
                 <div class="space-y-6">
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       1) Wise
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -783,7 +1188,7 @@
 
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       2) Remitly
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -796,24 +1201,38 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   Bottom Line
                 </h2>
                 <div class="space-y-5 text-lg leading-relaxed text-slate-700">
                   <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">Who should use Xoom?</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Who should use Xoom?
+                    </p>
                     <p class="text-slate-800 mb-0">
                       If you want convenience, you already trust the PayPal ecosystem, and you care about strong payout options (cash pickup/home delivery/mobile wallets/debit card deposit where available), Xoom is a solid, reliable choice.
                     </p>
                   </div>
                   <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">Why the 8.5/10 is justified:</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Why the 8.5/10 is justified:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       Xoom scores well on Reliability and Friction & Speed because it's explicit about delivery expectations and offers flexible payout methods. But the score is held back by Delivered Value (40%): Xoom discloses both transaction fees and that it earns money on currency conversion, which means the effective cost can be higher than more rate-focused alternatives.
                     </p>
@@ -828,7 +1247,9 @@
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">
+                  Ready to Compare?
+                </h3>
                 <p class="text-sm text-slate-600 mb-4">
                   See how Xoom stacks up for your specific corridor and amount.
                 </p>
@@ -840,57 +1261,114 @@
                 </NuxtLink>
               </div>
 
-              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
+              <AdPlacement
+                placement="blog_sidebar"
+                layout="vertical"
+                wrapper-class="rounded-xl"
+                min-height="160px"
+              />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Quick Facts
+                </h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Operator</dt>
-                    <dd class="font-semibold text-slate-900">PayPal</dd>
+                    <dt class="text-slate-600">
+                      Operator
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      PayPal
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Platform</dt>
-                    <dd class="font-semibold text-slate-900">Web & App</dd>
+                    <dt class="text-slate-600">
+                      Platform
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Web & App
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Speed</dt>
-                    <dd class="font-semibold text-slate-900">Minutes</dd>
+                    <dt class="text-slate-600">
+                      Speed
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Minutes
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Payout Options</dt>
-                    <dd class="font-semibold text-slate-900">Multiple</dd>
+                    <dt class="text-slate-600">
+                      Payout Options
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Multiple
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Cancellation</dt>
-                    <dd class="font-semibold text-slate-900">30 Min Window</dd>
+                    <dt class="text-slate-600">
+                      Cancellation
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      30 Min Window
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Regulation</dt>
-                    <dd class="font-semibold text-slate-900">PayPal Licensed</dd>
+                    <dt class="text-slate-600">
+                      Regulation
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      PayPal Licensed
+                    </dd>
                   </div>
                 </dl>
               </div>
 
               <!-- Why Trust Us -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Why Trust This Review?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Why Trust This Review?
+                </h3>
                 <ul class="space-y-3 text-sm text-slate-700">
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>100% independent - providers can't pay to rank higher</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Based on real transfer data</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Transparent methodology</span>
                   </li>
@@ -900,36 +1378,60 @@
                   class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
 
               <!-- More Providers -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  More Provider Reviews
+                </h3>
                 <ul class="space-y-3">
                   <li>
-                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/wise"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/remitly" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/remitly"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/xe-money" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/xe-money"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers" class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                    >
                       View all providers →
                     </NuxtLink>
                   </li>
@@ -942,12 +1444,21 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
+    <section
+      class="py-16 bg-blue-600"
+      style="background-color: rgba(37, 99, 235, 1);"
+    >
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
+        <h2
+          class="text-3xl font-bold mb-4"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Ready to See How Xoom Compares?
         </h2>
-        <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
+        <p
+          class="text-lg mb-8"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Enter your transfer details to see real-time rates from Xoom and 30+ other providers.
         </p>
         <NuxtLink
@@ -956,8 +1467,18 @@
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </NuxtLink>
       </div>
@@ -969,12 +1490,10 @@
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 
-definePageMeta({
-  alias: ['/reviews/xoom'],
-})
-
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+const score = 8.5
 
 setSeo({
   title: 'Xoom Review 2024 - Remit-Score 8.5/10 | Remit-Scout',
@@ -990,7 +1509,7 @@ addReviewSchema({
   itemReviewed: 'Xoom',
   reviewBody,
   author: 'Remit-Scout Editorial Team',
-  ratingValue: 8.5,
+  ratingValue: score,
   bestRating: 10,
   worstRating: 1,
   datePublished: '2024-01-01',
@@ -1003,6 +1522,3 @@ const breadcrumbItems = [
   { name: 'Xoom Review', path: '/learn/providers/xoom' },
 ]
 </script>
-
-
-

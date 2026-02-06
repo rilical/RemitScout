@@ -13,4 +13,3 @@ const { addWebSiteSearchSchema } = useStructuredData()
 // Add WebSite search schema
 addWebSiteSearchSchema()
 </script>
-

@@ -164,7 +164,7 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
   const rateLimitRate = stats.rateLimitCount / stats.attemptCount
   const http2xxRate = stats.http2xxCount / stats.attemptCount
   const successRate = stats.successCount / stats.attemptCount
-  const twoXXStable = http2xxRate >= thresholds.http2xxStableThreshold
+  const twoXXStable = http2xxRate > thresholds.http2xxStableThreshold
 
   let decision: 'increase' | 'decrease' | 'hold' = 'hold'
   let nextRpm = rates.rpm

@@ -6,11 +6,20 @@
     <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
-          <NuxtLink to="/" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Home</NuxtLink>
+          <NuxtLink
+            to="/"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Home</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Learn</NuxtLink>
+          <NuxtLink
+            to="/learn"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Learn</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
+          <NuxtLink
+            to="/learn/providers"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">Mukuru Review</span>
         </nav>
@@ -26,7 +35,11 @@
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    class="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   Provider Review
@@ -50,8 +63,18 @@
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Compare Mukuru Now
               </NuxtLink>
@@ -61,8 +84,18 @@
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </a>
             </div>
@@ -72,71 +105,62 @@
           <div class="flex justify-center lg:justify-end">
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
-                <div class="relative inline-flex items-center justify-center">
-                  <svg class="w-40 h-40 -rotate-90">
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" stroke-width="12" />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      fill="none"
-                      stroke="#3b82f6"
-                      stroke-width="12"
-                      stroke-linecap="round"
-                      :stroke-dasharray="`${84 * 4.4} 440`"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold text-black">8.4</span>
-                    <span class="text-sm text-slate-500">/10</span>
-                  </div>
+                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  REMIT-SCOUT SCORE
                 </div>
+                <RemitScoreRing :score="score" />
               </div>
 
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-2" >
+                  <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
               </div>
 
               <div class="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p class="text-xs" style="color: rgba(17, 24, 39, 1);">
+                <p
+                  class="text-xs"
+                  style="color: rgba(17, 24, 39, 1);"
+                >
                   Based on our independent methodology.<br>
-                  <NuxtLink to="/methodology" class="font-semibold hover:text-brand-700" style="color: rgba(37, 99, 235, 1);">Learn how we score →</NuxtLink>
+                  <NuxtLink
+                    to="/methodology"
+                    class="font-semibold hover:text-brand-700"
+                    style="color: rgba(37, 99, 235, 1);"
+                  >Learn how we score →</NuxtLink>
                 </p>
               </div>
             </div>
@@ -150,27 +174,46 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Africa</div>
-            <div class="text-sm text-slate-600">Focused Rails</div>
+            <div class="text-3xl font-bold text-slate-900">
+              Africa
+            </div>
+            <div class="text-sm text-slate-600">
+              Focused Rails
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">Instant</div>
-            <div class="text-sm text-slate-600">Cash Collection</div>
+            <div class="text-3xl font-bold text-emerald-600">
+              Instant
+            </div>
+            <div class="text-sm text-slate-600">
+              Cash Collection
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Multi-Channel</div>
-            <div class="text-sm text-slate-600">Access Options</div>
+            <div class="text-3xl font-bold text-slate-900">
+              Multi-Channel
+            </div>
+            <div class="text-sm text-slate-600">
+              Access Options
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">Large</div>
-            <div class="text-sm text-slate-600">Payout Network</div>
+            <div class="text-3xl font-bold text-slate-900">
+              Large
+            </div>
+            <div class="text-sm text-slate-600">
+              Payout Network
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Main Content -->
-    <section id="review" class="py-16 bg-white">
+    <section
+      id="review"
+      class="py-16 bg-white"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
@@ -179,8 +222,18 @@
               <!-- Introduction -->
               <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
-                  <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="w-12 h-12 text-brand-600/20"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
@@ -190,7 +243,7 @@
 
               <div class="mb-22">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
@@ -200,12 +253,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-8">
                 <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   Score Breakdown
                 </h2>
@@ -223,91 +286,177 @@
                     <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
                       Mukuru
                     </h3>
-                    <p class="text-sm text-black">Remit-Score</p>
+                    <p class="text-sm text-black">
+                      Remit-Score
+                    </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Delivered Value
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Effective cost is a mix of fees + exchange-rate margin, and it can be method/corridor dependent—so it's not safe to assume it's the cheapest without comparing. Value can be inconsistent outside its strongest lanes.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      40% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Effective cost is a mix of fees + exchange-rate margin, and it can be method/corridor dependent—so it's not safe to assume it's the cheapest without comparing. Value can be inconsistent outside its strongest lanes.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Reliability</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Reliability
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Large pay-in/payout footprint supports in-core availability where cash collection is necessary. Multiple channels (WhatsApp, USSD, call center, app, branches) reduce single-point-of-failure risk.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      20% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Large pay-in/payout footprint supports in-core availability where cash collection is necessary. Multiple channels (WhatsApp, USSD, call center, app, branches) reduce single-point-of-failure risk.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Friction & Speed
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Instant cash collection at branches/partners for some routes. Transfers processed instantly once payment is confirmed. Multiple payout methods: cash collection, bank account, mobile wallet.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Instant cash collection at branches/partners for some routes. Transfers processed instantly once payment is confirmed. Multiple payout methods: cash collection, bank account, mobile wallet.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Support & Refunds
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Clear cancellation pathways exist (different steps for unpaid vs paid orders). Refunds may be time-bound and can require documentation; fees/"delivery fees" may be non-refundable in some cases.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Clear cancellation pathways exist (different steps for unpaid vs paid orders). Refunds may be time-bound and can require documentation; fees/"delivery fees" may be non-refundable in some cases.
+                    </div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Trust & Safety
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Remitix Limited (operating as Mukuru) is a regulated Authorised Payment Institution registered with the UK FCA. Mukuru Africa holds an Authorised Dealer in Foreign Exchange licence from the South African Reserve Bank.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      10% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Remitix Limited (operating as Mukuru) is a regulated Authorised Payment Institution registered with the UK FCA. Mukuru Africa holds an Authorised Dealer in Foreign Exchange licence from the South African Reserve Bank.
+                    </div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-2.5">Why 8.4 (not 9.0+):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">Mukuru is reliably strong in-core and well-suited to cash/mobile use cases, but Delivered Value is more variable than the top-tier leaders: the all-in cost depends on fees + FX margin, and that mix can change by corridor, access point, and amount.</div>
+                      <div class="font-semibold text-slate-900 mb-2.5">
+                        Why 8.4 (not 9.0+):
+                      </div>
+                      <div class="text-sm text-slate-700 leading-relaxed">
+                        Mukuru is reliably strong in-core and well-suited to cash/mobile use cases, but Delivered Value is more variable than the top-tier leaders: the all-in cost depends on fees + FX margin, and that mix can change by corridor, access point, and amount.
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <!-- Best For / Not Ideal For -->
               <div class="grid md:grid-cols-2 gap-6 mb-22">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Best for
                   </h3>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Cash pick-up / agent payout use cases in Mukuru's strongest African corridors (when the recipient needs physical collection points).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Senders who prefer assisted or low-tech channels (WhatsApp, USSD, call center, branches) rather than app-only flows.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Time-sensitive "bank deposit" corridors where Mukuru publishes fast ETAs (corridor-dependent).</span>
                     </li>
@@ -316,27 +465,67 @@
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                   <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
                     </svg>
                     Not ideal for
                   </h3>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>People optimizing purely for cheapest possible total cost every time (because fees vs FX margin vary by route and method, and Mukuru won't reliably win everywhere).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Senders needing truly broad global coverage with consistent product parity across many regions (Mukuru is strong in-core but "breadth/variance" limits the ceiling).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Anyone who wants "cancel anytime, fee-free" style flexibility—refund rules can be strict once funds are collected and some fees may not come back.</span>
                     </li>
@@ -347,23 +536,55 @@
               <!-- Pros and Cons -->
               <div class="grid md:grid-cols-2 gap-6 mb-22">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h3 class="text-xl font-bold text-slate-900 mb-4">Pros</h3>
+                  <h3 class="text-xl font-bold text-slate-900 mb-4">
+                    Pros
+                  </h3>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span><strong class="text-slate-900">Friction & Speed:</strong> Multiple ways to start a transfer (app, WhatsApp, USSD, call center, branches) reduces onboarding and "I can't use the app" failure modes.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span><strong class="text-slate-900">Reliability & Success:</strong> Large pay-in/payout footprint (as reported by Mukuru) supports in-core availability where cash collection is necessary.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span><strong class="text-slate-900">Support & Refunds:</strong> Clear cancellation pathways exist (different steps for unpaid vs paid orders).</span>
                     </li>
@@ -371,23 +592,55 @@
                 </div>
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h3 class="text-xl font-bold text-slate-900 mb-4">Cons</h3>
+                  <h3 class="text-xl font-bold text-slate-900 mb-4">
+                    Cons
+                  </h3>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span><strong class="text-slate-900">Delivered Value:</strong> Effective cost is a mix of fees + exchange-rate margin, and it can be method/corridor dependent—so it's not safe to assume it's the cheapest without comparing.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span><strong class="text-slate-900">Support & Refunds:</strong> Refunds may be time-bound and can require you to provide documentation; fees/"delivery fees" may be non‑refundable in some cases.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span><strong class="text-slate-900">Trust & Safety / Reliability:</strong> Like most remittance flows, transfers may be delayed/cancelled due to compliance checks, business hours, or currency availability—important if you're on a deadline.</span>
                     </li>
@@ -395,14 +648,16 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Delivered Value (40%)
+                  </h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
                   Delivered Value is the biggest driver of the score. With Mukuru, the "price" you pay is best understood as two components:
@@ -433,7 +688,9 @@
                 </div>
 
                 <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">"How often is it the cheapest?"</p>
+                  <p class="font-semibold text-slate-900 mb-3">
+                    "How often is it the cheapest?"
+                  </p>
                   <p class="text-slate-800 leading-relaxed mb-4">
                     We're not going to invent a "win rate" without corridor-by-corridor pricing logs. What we can say, data-first:
                   </p>
@@ -458,7 +715,9 @@
                   </ul>
                 </div>
                 <div class="mt-6 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                  <p class="font-semibold text-slate-900 mb-2">Why this supports an 8.4/10 (not a 9+):</p>
+                  <p class="font-semibold text-slate-900 mb-2">
+                    Why this supports an 8.4/10 (not a 9+):
+                  </p>
                   <p class="text-slate-800 mb-0">
                     Mukuru's value proposition is strong when it fits the corridor/use case, but the effective cost can be less predictable than the top, consistently price-leading apps.
                   </p>
@@ -470,7 +729,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Reliability & Success (20%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
@@ -503,7 +764,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Friction & Speed (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
@@ -521,7 +784,9 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods (typical)
                     </p>
-                    <p class="text-slate-700 mb-3">Across corridors (availability varies), Mukuru supports combinations of:</p>
+                    <p class="text-slate-700 mb-3">
+                      Across corridors (availability varies), Mukuru supports combinations of:
+                    </p>
                     <ul class="space-y-2 text-slate-700">
                       <li>• Cash collection at branches/booths/partners</li>
                       <li>• Bank account credit</li>
@@ -533,7 +798,7 @@
                       A "friction" detail that matters
                     </p>
                     <p class="text-slate-700 mb-0">
-                      In South Africa, Mukuru's terms describe a wiCode option for smaller remittances (<= R2,999) with a 7‑day validity window, which is great for retail redemption but adds a "don't wait too long" constraint.
+                      In South Africa, Mukuru's terms describe a wiCode option for smaller remittances (&le; R2,999) with a 7‑day validity window, which is great for retail redemption but adds a "don't wait too long" constraint.
                     </p>
                   </div>
                 </div>
@@ -544,7 +809,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Support & Refunds (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
@@ -562,7 +829,9 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Friction after an issue
                     </p>
-                    <p class="text-slate-700 mb-3">Two practical takeaways:</p>
+                    <p class="text-slate-700 mb-3">
+                      Two practical takeaways:
+                    </p>
                     <ul class="space-y-2 text-slate-700">
                       <li>• Keep your receipt/proof of payment and ensure your refund bank details are accurate (support flow explicitly asks for these).</li>
                       <li>• If you selected add‑on delivery, note that some "delivery fee" types may be non‑refundable (where applicable).</li>
@@ -576,7 +845,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Trust & Safety (10%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -605,7 +876,7 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <!-- How to get the best rate -->
               <div class="mb-22 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
@@ -614,32 +885,82 @@
                 </h2>
                 <ul class="space-y-3 text-slate-700">
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                     <span>Compare the final "recipient gets" number, not just the fee or headline rate (your effective cost is fee + spread).</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                     <span>Test multiple payout methods (cash pick‑up vs bank vs wallet) because the fee/spread mix can change by method.</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                     <span>Try different send amounts—fees can be flat or tiered, so the cheapest option at $50 might not be cheapest at $300.</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                     <span>Confirm speed claims at checkout (especially when it matters), and plan around payment confirmation timing.</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                     <span>Keep proof of payment in case you need to cancel/refund a paid order.</span>
                   </li>
@@ -677,7 +998,7 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <!-- Bottom line -->
               <div class="mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200">
@@ -699,7 +1020,9 @@
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">
+                  Ready to Compare?
+                </h3>
                 <p class="text-sm text-slate-600 mb-4">
                   See how Mukuru stacks up for your specific corridor and amount.
                 </p>
@@ -711,57 +1034,114 @@
                 </NuxtLink>
               </div>
 
-              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
+              <AdPlacement
+                placement="blog_sidebar"
+                layout="vertical"
+                wrapper-class="rounded-xl"
+                min-height="160px"
+              />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Quick Facts
+                </h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Founded</dt>
-                    <dd class="font-semibold text-slate-900">2004</dd>
+                    <dt class="text-slate-600">
+                      Founded
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      2004
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Headquarters</dt>
-                    <dd class="font-semibold text-slate-900">South Africa</dd>
+                    <dt class="text-slate-600">
+                      Headquarters
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      South Africa
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Specialty</dt>
-                    <dd class="font-semibold text-slate-900">Africa Corridors</dd>
+                    <dt class="text-slate-600">
+                      Specialty
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Africa Corridors
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Speed</dt>
-                    <dd class="font-semibold text-slate-900">Instant - 2 Days</dd>
+                    <dt class="text-slate-600">
+                      Speed
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Instant - 2 Days
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Payout Methods</dt>
-                    <dd class="font-semibold text-slate-900">Cash, Bank, Mobile</dd>
+                    <dt class="text-slate-600">
+                      Payout Methods
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Cash, Bank, Mobile
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Channels</dt>
-                    <dd class="font-semibold text-slate-900">App, WhatsApp, USSD</dd>
+                    <dt class="text-slate-600">
+                      Channels
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      App, WhatsApp, USSD
+                    </dd>
                   </div>
                 </dl>
               </div>
 
               <!-- Why Trust Us -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Why Trust This Review?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Why Trust This Review?
+                </h3>
                 <ul class="space-y-3 text-sm text-slate-700">
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>100% independent - providers can't pay to rank higher</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Based on real transfer data</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Transparent methodology</span>
                   </li>
@@ -771,36 +1151,60 @@
                   class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
 
               <!-- More Providers -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  More Provider Reviews
+                </h3>
                 <ul class="space-y-3">
                   <li>
-                    <NuxtLink to="/learn/providers/remitly" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/remitly"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/wise"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/instarem" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/instarem"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">I</div>
                       <span>Instarem Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers" class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                    >
                       View all providers →
                     </NuxtLink>
                   </li>
@@ -819,10 +1223,6 @@ import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 
-definePageMeta({
-  alias: ['/reviews/mukuru'],
-})
-
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Learn', path: '/learn' },
@@ -832,6 +1232,8 @@ const breadcrumbItems = [
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+const score = 8.4
 
 setSeo({
   title: 'Mukuru Review 2024 - Remit-Score 8.4/10 | Remit-Scout',
@@ -847,7 +1249,7 @@ addReviewSchema({
   itemReviewed: 'Mukuru',
   reviewBody,
   author: 'Remit-Scout Editorial Team',
-  ratingValue: 8.4,
+  ratingValue: score,
   bestRating: 10,
   worstRating: 1,
   datePublished: '2024-01-01',
@@ -860,7 +1262,3 @@ jsonLdBreadcrumb([
   { name: 'Mukuru Review', url: `${siteUrl}/learn/providers/mukuru` },
 ])
 </script>
-
-
-
-

@@ -430,6 +430,8 @@ export class OandaRateFetcher {
       })
       return this.getFallbackRate(baseCurrency, quoteCurrency)
     }
+
+    return this.getFallbackRate(baseCurrency, quoteCurrency)
   }
 
   private async fetchFromAuthenticatedApi(

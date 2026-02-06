@@ -13,7 +13,7 @@ export interface ProviderScore {
 }
 
 export const PROVIDER_SCORES: Record<string, ProviderScore> = {
-  wise: {
+  'wise': {
     id: 'wise',
     slug: 'wise',
     name: 'Wise',
@@ -26,7 +26,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.95,
     },
   },
-  remitly: {
+  'remitly': {
     id: 'remitly',
     slug: 'remitly',
     name: 'Remitly',
@@ -39,7 +39,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.88,
     },
   },
-  sendwave: {
+  'sendwave': {
     id: 'sendwave',
     slug: 'sendwave',
     name: 'Sendwave',
@@ -65,7 +65,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.88,
     },
   },
-  transfergo: {
+  'transfergo': {
     id: 'transfergo',
     slug: 'transfergo',
     name: 'TransferGo',
@@ -78,7 +78,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.85,
     },
   },
-  xoom: {
+  'xoom': {
     id: 'xoom',
     slug: 'xoom',
     name: 'Xoom',
@@ -91,7 +91,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.88,
     },
   },
-  mukuru: {
+  'mukuru': {
     id: 'mukuru',
     slug: 'mukuru',
     name: 'Mukuru',
@@ -104,7 +104,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.85,
     },
   },
-  instarem: {
+  'instarem': {
     id: 'instarem',
     slug: 'instarem',
     name: 'Instarem',
@@ -117,7 +117,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.85,
     },
   },
-  intermex: {
+  'intermex': {
     id: 'intermex',
     slug: 'intermex',
     name: 'Intermex',
@@ -130,7 +130,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.79,
     },
   },
-  remitbee: {
+  'remitbee': {
     id: 'remitbee',
     slug: 'remitbee',
     name: 'RemitBee',
@@ -143,7 +143,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.80,
     },
   },
-  pangea: {
+  'pangea': {
     id: 'pangea',
     slug: 'pangea',
     name: 'Pangea',
@@ -156,7 +156,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.80,
     },
   },
-  koronapay: {
+  'koronapay': {
     id: 'koronapay',
     slug: 'koronapay',
     name: 'KoronaPay',
@@ -182,7 +182,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.85,
     },
   },
-  worldremit: {
+  'worldremit': {
     id: 'worldremit',
     slug: 'worldremit',
     name: 'WorldRemit',
@@ -195,7 +195,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.82,
     },
   },
-  ria: {
+  'ria': {
     id: 'ria',
     slug: 'ria',
     name: 'RIA',
@@ -208,7 +208,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.79,
     },
   },
-  dahabshiil: {
+  'dahabshiil': {
     id: 'dahabshiil',
     slug: 'dahabshiil',
     name: 'Dahabshiil',
@@ -221,7 +221,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.79,
     },
   },
-  singx: {
+  'singx': {
     id: 'singx',
     slug: 'singx',
     name: 'SingX',
@@ -234,7 +234,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.82,
     },
   },
-  wirebarley: {
+  'wirebarley': {
     id: 'wirebarley',
     slug: 'wirebarley',
     name: 'WireBarley',
@@ -247,7 +247,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.78,
     },
   },
-  placid: {
+  'placid': {
     id: 'placid',
     slug: 'placid',
     name: 'Placid',
@@ -260,7 +260,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.76,
     },
   },
-  paysend: {
+  'paysend': {
     id: 'paysend',
     slug: 'paysend',
     name: 'Paysend',
@@ -273,7 +273,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.77,
     },
   },
-  orbitremit: {
+  'orbitremit': {
     id: 'orbitremit',
     slug: 'orbitremit',
     name: 'OrbitRemit',
@@ -286,7 +286,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.78,
     },
   },
-  alansari: {
+  'alansari': {
     id: 'alansari',
     slug: 'al-ansari-exchange',
     name: 'Al Ansari Exchange',
@@ -299,7 +299,7 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
       trustSafety: 0.81,
     },
   },
-  bossmoney: {
+  'bossmoney': {
     id: 'bossmoney',
     slug: 'boss-money',
     name: 'BOSS Money',

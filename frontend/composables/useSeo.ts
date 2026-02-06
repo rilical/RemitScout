@@ -38,7 +38,8 @@ const sanitizeCanonical = (value: string, siteUrl: string) => {
     }
     url.hash = ''
     return `${url.origin}${url.pathname}${url.search}`
-  } catch {
+  }
+  catch {
     return value
   }
 }

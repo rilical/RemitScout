@@ -19,14 +19,29 @@
             <h2 class="text-2xl font-bold text-slate-900 mb-4">
               Your Money Transfer Comparison Engine
             </h2>
-            
+
             <div class="space-y-5 flex-1 flex flex-col">
               <p class="text-base text-slate-700 leading-relaxed">
-                Compare rates from <NuxtLink to="/learn/providers" class="text-blue-600 hover:text-blue-700 font-medium">30+ licensed providers</NuxtLink> including
-                <NuxtLink to="/learn/providers/wise" class="text-blue-600 hover:text-blue-700 font-medium">Wise</NuxtLink>,
-                <NuxtLink to="/learn/providers/remitly" class="text-blue-600 hover:text-blue-700 font-medium">Remitly</NuxtLink>,
-                <NuxtLink to="/learn/providers/western-union" class="text-blue-600 hover:text-blue-700 font-medium">Western Union</NuxtLink>,
-                <NuxtLink to="/learn/providers/xe" class="text-blue-600 hover:text-blue-700 font-medium">XE</NuxtLink>, and many more.
+                Compare rates from <NuxtLink
+                  to="/learn/providers"
+                  class="text-blue-600 hover:text-blue-700 font-medium"
+                >30+ licensed providers</NuxtLink> including
+                <NuxtLink
+                  to="/learn/providers/wise"
+                  class="text-blue-600 hover:text-blue-700 font-medium"
+                >Wise</NuxtLink>,
+                <NuxtLink
+                  to="/learn/providers/remitly"
+                  class="text-blue-600 hover:text-blue-700 font-medium"
+                >Remitly</NuxtLink>,
+                <NuxtLink
+                  to="/learn/providers/western-union"
+                  class="text-blue-600 hover:text-blue-700 font-medium"
+                >Western Union</NuxtLink>,
+                <NuxtLink
+                  to="/learn/providers/xe"
+                  class="text-blue-600 hover:text-blue-700 font-medium"
+                >XE</NuxtLink>, and many more.
                 All providers are fully licensed and regulated in their respective jurisdictions.
               </p>
 
@@ -57,8 +72,18 @@
                   class="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-6 py-3 transition-all shadow-md hover:shadow-lg"
                 >
                   <span>Read More Money Transfer Guides on Our Blog</span>
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
@@ -171,37 +196,79 @@
                     step="1"
                     class="h-10 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                     placeholder="500"
-                  />
+                  >
                 </div>
 
                 <div class="rounded-lg bg-blue-50 border border-blue-200 p-4">
                   <div class="flex items-start gap-3">
                     <div class="flex-shrink-0">
-                      <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        class="w-7 h-7 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
                     <div class="text-sm text-blue-900">
-                      <p class="font-semibold mb-1.5">Live Rate Comparison</p>
+                      <p class="font-semibold mb-1.5">
+                        Live Rate Comparison
+                      </p>
                       <p class="text-blue-700 text-xs mb-2">
                         Rates are updated in real-time directly from provider APIs. See the exact amount your recipient will receive before you send.
                       </p>
                       <ul class="space-y-1 text-blue-700 text-xs">
                         <li class="flex items-center gap-2">
-                          <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <svg
+                            class="w-3.5 h-3.5 text-blue-600 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           <span>No hidden fees, total cost shown</span>
                         </li>
                         <li class="flex items-center gap-2">
-                          <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <svg
+                            class="w-3.5 h-3.5 text-blue-600 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           <span>100% independent rankings</span>
                         </li>
                         <li class="flex items-center gap-2">
-                          <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <svg
+                            class="w-3.5 h-3.5 text-blue-600 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           <span>Exact recipient amounts shown</span>
                         </li>
@@ -217,8 +284,18 @@
                 >
                   <span v-if="isWaitingForQuotes">Checking...</span>
                   <span v-else>Compare Providers</span>
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </button>
 
@@ -242,15 +319,24 @@
                     Need help? Learn more about our comparison process
                   </p>
                   <div class="flex justify-center gap-4 flex-wrap">
-                    <NuxtLink to="/methodology" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                    <NuxtLink
+                      to="/methodology"
+                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       How we compare
                     </NuxtLink>
                     <span class="text-slate-300">•</span>
-                    <NuxtLink to="/faq" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                    <NuxtLink
+                      to="/faq"
+                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       FAQ
                     </NuxtLink>
                     <span class="text-slate-300">•</span>
-                    <NuxtLink to="/learn/providers" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
                       All Providers
                     </NuxtLink>
                   </div>
@@ -258,10 +344,9 @@
               </form>
             </div>
 
-            
             <!-- Market Snapshot Box -->
             <PulseSnapshotBox
-              v-if="FEATURE_FLAGS.PULSE_ENABLED"
+              v-if="pulseEnabled"
               title="Market Snapshot"
               description="Track live market trends and pricing intelligence across global corridors with Remit-Pulse."
               link="/pulse"
@@ -276,11 +361,23 @@
                 <!-- Icon and Title -->
                 <div class="flex items-center gap-4 flex-shrink-0">
                   <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    <svg
+                      class="w-6 h-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
                     </svg>
                   </div>
-                  <h3 class="text-xl lg:text-2xl font-bold">Trust & Independence</h3>
+                  <h3 class="text-xl lg:text-2xl font-bold">
+                    Trust & Independence
+                  </h3>
                 </div>
 
                 <!-- Main Description -->
@@ -296,24 +393,54 @@
                   <div class="flex flex-wrap items-center gap-4 mb-4">
                     <div class="flex items-center gap-2">
                       <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        <svg
+                          class="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </div>
                       <span class="text-white text-sm font-medium">No paid placements</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        <svg
+                          class="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </div>
                       <span class="text-white text-sm font-medium">Real-time rate updates</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        <svg
+                          class="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </div>
                       <span class="text-white text-sm font-medium">Transparent methodology</span>
@@ -328,8 +455,18 @@
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
                   >
                     <span>Learn more</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </NuxtLink>
                 </div>
@@ -348,193 +485,193 @@
             Browse Money Transfer Routes by Country
           </h2>
           <p class="text-xl text-slate-600 max-w-3xl mx-auto mb-8 break-words">
-            Select your destination country to see the best money transfer providers, exchange rates, and fees. 
+            Select your destination country to see the best money transfer providers, exchange rates, and fees.
             All providers are licensed and regulated for your security.
           </p>
         </div>
 
         <div class="space-y-20">
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money To <span class="text-brand-600">South-Eastern Asia</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.southEasternAsia"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money To <span class="text-brand-600">South-Eastern Asia</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.southEasternAsia"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to the <span class="text-brand-600">Middle East</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.middleEast"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to the <span class="text-brand-600">Middle East</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.middleEast"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">East Asia</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.eastAsia"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">East Asia</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.eastAsia"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">South Asia</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.southAsia"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">South Asia</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.southAsia"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">Western Europe</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.westernEurope"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">Western Europe</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.westernEurope"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">Southern Europe</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.southernEurope"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">Southern Europe</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.southernEurope"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">Eastern Europe</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.easternEurope"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">Eastern Europe</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.easternEurope"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">Northern Europe</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.northernEurope"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">Northern Europe</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.northernEurope"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">North America</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.northAmerica"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">North America</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.northAmerica"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">Central America & Caribbean</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.centralAmericaCaribbean"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">Central America & Caribbean</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.centralAmericaCaribbean"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">South America</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.southAmerica"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">South America</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.southAmerica"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Send Money to <span class="text-brand-600">Africa</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.africa"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Send Money to <span class="text-brand-600">Africa</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.africa"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
 
-        <section>
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
-            Overseas Money Transfers to <span class="text-brand-600">Oceania</span>
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <CountryCard
-              v-for="country in regions.oceania"
-              :key="country.code"
-              :country="country"
-              :routes="countryRoutesMap[country.code]"
-            />
-          </div>
-        </section>
+          <section>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+              Overseas Money Transfers to <span class="text-brand-600">Oceania</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <CountryCard
+                v-for="country in regions.oceania"
+                :key="country.code"
+                :country="country"
+                :routes="countryRoutesMap[country.code]"
+              />
+            </div>
+          </section>
         </div>
       </div>
     </section>
@@ -564,7 +701,10 @@
             <p class="text-slate-700 mb-4">
               International money transfers allow you to send funds from your account to a recipient in another country. The provider converts your currency to the recipient's currency using an exchange rate, then delivers it to their bank account, mobile wallet, or for cash pickup.
             </p>
-            <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <NuxtLink
+              to="/faq"
+              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
               Learn more about transfers →
             </NuxtLink>
           </div>
@@ -576,7 +716,10 @@
             <p class="text-slate-700 mb-4">
               A <strong>transfer fee</strong> is the upfront charge you see (e.g., $5.99). An <strong>exchange rate markup</strong> is hidden in the rate they offer you versus the real "mid-market" rate. Always check "Total Received" to see the true cost.
             </p>
-            <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <NuxtLink
+              to="/faq"
+              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
               Understand fees better →
             </NuxtLink>
           </div>
@@ -588,7 +731,10 @@
             <p class="text-slate-700 mb-4">
               Speed varies by method: Instant (0-30 min) for debit card to mobile wallet, same day for many online providers to bank accounts, 1-3 days for bank transfers, and 3-5 days for traditional banks.
             </p>
-            <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <NuxtLink
+              to="/faq"
+              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
               See delivery times →
             </NuxtLink>
           </div>
@@ -600,7 +746,10 @@
             <p class="text-slate-700 mb-4">
               Yes, limits vary by provider and your verification level. Unverified accounts typically allow $500-$1,000, while ID-verified accounts can send $10,000-$50,000+. Banks typically allow higher amounts but charge more.
             </p>
-            <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <NuxtLink
+              to="/faq"
+              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
               Check transfer limits →
             </NuxtLink>
           </div>
@@ -612,7 +761,10 @@
             <p class="text-slate-700 mb-4">
               Yes! All modern providers offer tracking via app or website. You'll get updates when the transfer is initiated, funds are received by provider, currency is exchanged, and money is available to recipient.
             </p>
-            <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <NuxtLink
+              to="/faq"
+              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
               Learn about tracking →
             </NuxtLink>
           </div>
@@ -624,7 +776,10 @@
             <p class="text-slate-700 mb-4">
               Generally, yes. Many providers charge a percentage fee (e.g., 1%), so larger amounts cost more in absolute terms but the same percentage. Fixed fees ($5) are better for large amounts, and some providers offer better rates for $5,000+.
             </p>
-            <NuxtLink to="/faq" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <NuxtLink
+              to="/faq"
+              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
               Compare large transfers →
             </NuxtLink>
           </div>
@@ -636,8 +791,18 @@
             class="inline-flex items-center gap-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold shadow-lg transition-all"
           >
             <span>View All FAQs</span>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
           </NuxtLink>
         </div>
@@ -662,7 +827,9 @@ import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
-import { FEATURE_FLAGS } from '~/utils/constants'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
+
+const { pulseEnabled } = useFeatureFlags()
 
 const { form: moneyForm, validationError, submit: submitForm, statusMessage, isWaitingForQuotes } = useCompareForm()
 const formError = validationError
@@ -683,7 +850,7 @@ watch(() => moneyForm.value.to, (newCountry) => {
   if (!country) return
 
   const availableCurrencies = getAvailableCurrencies(newCountry)
-  
+
   // If current currency is not available for the new country, reset to country's default currency
   if (!moneyForm.value.toCurrency || !availableCurrencies.includes(moneyForm.value.toCurrency)) {
     moneyForm.value.toCurrency = country.currency
@@ -700,7 +867,7 @@ watch(() => moneyForm.value.from, (newCountry) => {
   if (!country) return
 
   const availableCurrencies = getAvailableCurrencies(newCountry)
-  
+
   // If current currency is not available for the new country, reset to country's default currency
   if (!moneyForm.value.fromCurrency || !availableCurrencies.includes(moneyForm.value.fromCurrency)) {
     moneyForm.value.fromCurrency = country.currency
@@ -983,7 +1150,7 @@ const buildRoutes = (country: Country): CountryRoutes => {
   const uniqueSources = Array.from(new Set(['US', ...sources]))
 
   const inboundLinks = uniqueSources
-    .map(code => {
+    .map((code) => {
       const src = countryLookup[code]
       if (!src) return null
       return {
@@ -1002,7 +1169,7 @@ const buildRoutes = (country: Country): CountryRoutes => {
 
 const countryRoutesMap = computed(() => {
   const map: Record<string, CountryRoutes> = {}
-  COUNTRIES.forEach(country => {
+  COUNTRIES.forEach((country) => {
     map[country.code] = buildRoutes(country)
   })
   return map

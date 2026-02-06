@@ -2,7 +2,10 @@
   <section class="py-12 sm:py-16 bg-white">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <NuxtLink to="/learn" class="group">
+        <NuxtLink
+          to="/learn"
+          class="group"
+        >
           <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
             Read Our Guides
           </h2>

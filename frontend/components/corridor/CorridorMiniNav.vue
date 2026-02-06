@@ -11,7 +11,7 @@
               'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
               activeSection === item.id
                 ? 'bg-brand-50 text-brand-700'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
             ]"
             @click="scrollTo(item.id)"
           >
@@ -60,7 +60,7 @@ function scrollTo(sectionId: string) {
 function handleScroll() {
   const sections = navItems.map(item => ({
     id: item.id,
-    element: document.getElementById(item.id)
+    element: document.getElementById(item.id),
   })).filter(s => s.element)
 
   const scrollPosition = window.scrollY + 150
@@ -83,7 +83,3 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 </script>
-
-
-
-

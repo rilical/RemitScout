@@ -3,7 +3,7 @@ import type { Method, ProviderQuote } from '~/types/remit'
 type ApiFetchOptions = {
   query?: Record<string, unknown>
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  body?: unknown
+  body?: BodyInit | Record<string, any> | null
   headers?: Record<string, string>
   timeoutMs?: number
   validate?: (data: unknown) => unknown
@@ -29,16 +29,16 @@ type ProviderQuotesResponse = {
 function joinBase(base: string, path: string) {
   // If path is already a full URL, return as-is
   if (/^https?:\/\//.test(path)) return path
-  
+
   const cleanedBase = base.endsWith('/') ? base.slice(0, -1) : base
   const cleanedPath = path.startsWith('/') ? path : `/${path}`
-  
+
   // If path already includes the base, return path as-is
   // This handles cases where path might be '/api/v1/me' and base is '/api/v1'
   if (cleanedPath === cleanedBase || cleanedPath.startsWith(cleanedBase + '/')) {
     return cleanedPath
   }
-  
+
   // Join base and path
   return `${cleanedBase}${cleanedPath}`
 }
@@ -75,12 +75,13 @@ export const useApi = () => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await fn()
-      } catch (error: any) {
+      }
+      catch (error: any) {
         lastError = error
         const statusCode = error?.statusCode || error?.response?.status
         if (statusCode && statusCode >= 500 && attempt < maxRetries) {
           const delay = baseDelayMs * Math.pow(2, attempt)
-          await new Promise((resolve) => setTimeout(resolve, delay))
+          await new Promise(resolve => setTimeout(resolve, delay))
           continue
         }
         throw error
@@ -89,7 +90,7 @@ export const useApi = () => {
     throw lastError
   }
 
-  async function request<T>(path: string, options: ApiFetchOptions = {}) {
+  async function request<T = any>(path: string, options: ApiFetchOptions = {}) {
     const url = joinBase(base, path)
     const requestId = options.headers?.['x-request-id'] || makeRequestId()
     const cloudfrontRequestId = getCloudFrontRequestId()
@@ -108,14 +109,14 @@ export const useApi = () => {
 
     const makeRequest = async () => {
       const headers: Record<string, string> = {
-        accept: 'application/json',
+        'accept': 'application/json',
         'x-request-id': requestId,
         ...serverHeaders,
         ...options.headers,
       }
 
-      const hasAuthHeader =
-        'authorization' in headers || 'Authorization' in headers
+      const hasAuthHeader
+        = 'authorization' in headers || 'Authorization' in headers
 
       if (!import.meta.server && accessToken.value && !hasAuthHeader) {
         headers.authorization = `Bearer ${accessToken.value}`
@@ -128,7 +129,7 @@ export const useApi = () => {
       const data = await $fetch(url as string, {
         method: options.method || 'GET',
         query: options.query as Record<string, string>,
-        body: options.body,
+        body: options.body ?? undefined,
         headers,
         timeout: timeoutMs,
         signal: options.signal,
@@ -149,7 +150,8 @@ export const useApi = () => {
       )
 
       return data
-    } catch (error: unknown) {
+    }
+    catch (error: unknown) {
       const apiError = error as {
         statusCode?: number
         response?: { status?: number }
@@ -158,13 +160,13 @@ export const useApi = () => {
         message?: string
       }
 
-      const statusCode =
-        apiError?.statusCode || apiError?.response?.status
-      const message =
-        apiError?.data?.message ||
-        apiError?.statusMessage ||
-        apiError?.message ||
-        'Request failed'
+      const statusCode
+        = apiError?.statusCode || apiError?.response?.status
+      const message
+        = apiError?.data?.message
+          || apiError?.statusMessage
+          || apiError?.message
+          || 'Request failed'
       const wrapped = new Error(message) as Error & {
         statusCode?: number
         requestId?: string

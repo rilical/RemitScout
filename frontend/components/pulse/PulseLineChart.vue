@@ -1,7 +1,10 @@
 <template>
   <div class="relative">
     <!-- Chart Container -->
-    <div ref="chartContainer" class="relative h-80 w-full">
+    <div
+      ref="chartContainer"
+      class="relative h-80 w-full"
+    >
       <svg
         class="h-full w-full"
         :viewBox="`0 0 ${width} ${height}`"
@@ -10,15 +13,21 @@
         <defs>
           <linearGradient
             v-for="s in series"
-            :key="`gradient-${s.id}`"
             :id="`area-gradient-${s.id}`"
+            :key="`gradient-${s.id}`"
             x1="0%"
             y1="0%"
             x2="0%"
             y2="100%"
           >
-            <stop offset="0%" :style="`stop-color: ${s.color}; stop-opacity: 0.2`" />
-            <stop offset="100%" :style="`stop-color: ${s.color}; stop-opacity: 0`" />
+            <stop
+              offset="0%"
+              :style="`stop-color: ${s.color}; stop-opacity: 0.2`"
+            />
+            <stop
+              offset="100%"
+              :style="`stop-color: ${s.color}; stop-opacity: 0`"
+            />
           </linearGradient>
         </defs>
 
@@ -38,7 +47,10 @@
         </g>
 
         <!-- Y-axis labels -->
-        <g class="y-axis text-slate-400" font-size="11">
+        <g
+          class="y-axis text-slate-400"
+          font-size="11"
+        >
           <text
             v-for="(label, i) in yAxisLabels"
             :key="`y-label-${i}`"
@@ -53,7 +65,10 @@
         </g>
 
         <!-- X-axis labels -->
-        <g class="x-axis text-slate-400" font-size="11">
+        <g
+          class="x-axis text-slate-400"
+          font-size="11"
+        >
           <text
             v-for="(label, i) in xAxisLabels"
             :key="`x-label-${i}`"
@@ -68,7 +83,10 @@
         </g>
 
         <!-- Area fills -->
-        <g v-if="showArea" class="areas">
+        <g
+          v-if="showArea"
+          class="areas"
+        >
           <path
             v-for="s in renderedSeries"
             :key="`area-${s.id}`"
@@ -92,7 +110,10 @@
         </g>
 
         <!-- Dots on hover -->
-        <g v-if="hoveredIndex !== null" class="hover-dots">
+        <g
+          v-if="hoveredIndex !== null"
+          class="hover-dots"
+        >
           <circle
             v-for="s in renderedSeries"
             :key="`dot-${s.id}`"
@@ -137,7 +158,9 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
         :style="tooltipStyle"
       >
-        <div class="mb-1 text-xs text-neutral-400">{{ tooltipData.date }}</div>
+        <div class="mb-1 text-xs text-neutral-400">
+          {{ tooltipData.date }}
+        </div>
         <div
           v-for="item in tooltipData.values"
           :key="item.label"
@@ -202,7 +225,8 @@ const chartHeight = height - padding.top - padding.bottom
 function toggleSeries(id: string) {
   if (visibleSeries.has(id)) {
     if (visibleSeries.size > 1) visibleSeries.delete(id)
-  } else {
+  }
+  else {
     visibleSeries.add(id)
   }
 }
@@ -219,7 +243,7 @@ const renderedSeries = computed(() => {
 
   return props.series
     .filter(s => visibleSeries.has(s.id))
-    .map(s => {
+    .map((s) => {
       const denom = Math.max(1, s.points.length - 1)
       const normalizedPoints = s.points.map((p, i) => ({
         x: padding.left + (i / denom) * chartWidth,
@@ -244,7 +268,7 @@ watch(
 const gridLines = computed(() => {
   const count = 5
   return Array.from({ length: count }, (_, i) =>
-    padding.top + (i / (count - 1)) * chartHeight
+    padding.top + (i / (count - 1)) * chartHeight,
   )
 })
 
@@ -354,11 +378,11 @@ function formatDate(timestamp: number): string {
   })
 }
 
-function getLinePath(points: { x: number; y: number }[]): string {
+function getLinePath(points: { x: number, y: number }[]): string {
   return points.map(p => `${p.x},${p.y}`).join(' ')
 }
 
-function getAreaPath(points: { x: number; y: number }[]): string {
+function getAreaPath(points: { x: number, y: number }[]): string {
   if (points.length === 0) return ''
   const start = `M ${points[0].x},${height - padding.bottom}`
   const line = points.map(p => `L ${p.x},${p.y}`).join(' ')
@@ -366,4 +390,3 @@ function getAreaPath(points: { x: number; y: number }[]): string {
   return `${start} ${line} ${end}`
 }
 </script>
-

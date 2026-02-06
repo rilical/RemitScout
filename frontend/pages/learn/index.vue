@@ -5,7 +5,10 @@
     <!-- Hero Section with Search -->
     <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12">
           <div class="text-center mb-12">
@@ -148,7 +151,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -294,7 +297,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -381,7 +384,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -569,7 +572,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -653,7 +656,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -737,7 +740,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -811,7 +814,7 @@
               :to="`/learn/${guide.slug}`"
               class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
             >
-              <span v-html="guide.title"></span>
+              <span v-html="guide.title" />
             </NuxtLink>
             <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -871,15 +874,25 @@
                 </span>
               </div>
               <h3 class="text-lg font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
-                <span v-html="guide.title"></span>
+                <span v-html="guide.title" />
               </h3>
               <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
                 {{ guide.excerpt }}
               </p>
               <div class="flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:gap-3 transition-all">
                 <span>Read guide</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </div>
             </div>
@@ -910,8 +923,18 @@
           >
             <div class="flex items-center gap-3 mb-4">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                <svg
+                  class="w-5 h-5 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                  />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-white">Research & Data Practices</h3>
@@ -921,8 +944,18 @@
             </p>
             <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
               <span>Read research</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </NuxtLink>
@@ -933,8 +966,18 @@
           >
             <div class="flex items-center gap-3 mb-4">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <svg
+                  class="w-5 h-5 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-white">Data Methodology</h3>
@@ -944,8 +987,18 @@
             </p>
             <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
               <span>Read documentation</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </NuxtLink>
@@ -956,8 +1009,18 @@
           >
             <div class="flex items-center gap-3 mb-4">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  class="w-5 h-5 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-white">Corrections Policy</h3>
@@ -967,8 +1030,18 @@
             </p>
             <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
               <span>Read corrections</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </NuxtLink>
@@ -977,20 +1050,50 @@
         <div class="mt-10 pt-8 border-t border-slate-700">
           <div class="flex flex-wrap items-center gap-6 text-sm text-slate-500">
             <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <svg
+                class="w-4 h-4 text-emerald-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <span>Synthetically verified data</span>
             </div>
             <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <svg
+                class="w-4 h-4 text-emerald-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <span>Timestamped & auditable</span>
             </div>
             <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <svg
+                class="w-4 h-4 text-emerald-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <span>Audit-ready snapshots</span>
             </div>
@@ -1010,6 +1113,25 @@ import { setSeo } from '~/composables/useSeo'
 import { useArticles } from '~/composables/useArticles'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { PROVIDER_SCORES } from '~/lib/providerScores'
+import { LEARN_STATIC_ARTICLES } from '~/lib/learnStaticArticles'
+
+type GuideArticle = {
+  slug: string
+  title: string
+  excerpt: string
+  category?: string
+  categoryKey?: string
+  readTime?: string
+  level?: string
+  author?: string
+  date?: string
+  lastUpdated?: string
+  helpfulCount?: number
+  tags?: string[]
+  relatedArticles?: Array<{ slug: string, title: string, excerpt?: string }>
+  faq?: Array<{ q: string, a: string }>
+  content?: string
+}
 
 const { data: articles } = await useArticles()
 
@@ -1075,11 +1197,11 @@ const getCategoryIcon = (iconName: string) => {
   return icons[iconName] || icons.currency
 }
 
-const allGuides = computed(() => {
-  const markdownArticles = articles.value || []
-  const vueArticles = staticArticles.map(article => ({
+const allGuides = computed<GuideArticle[]>(() => {
+  const markdownArticles = (articles.value || []) as GuideArticle[]
+  const vueArticles: GuideArticle[] = staticArticles.map(article => ({
     ...article,
-    category: getCategoryName(article.categoryKey),
+    category: getCategoryName(article.categoryKey || ''),
   }))
   return [...vueArticles, ...markdownArticles]
 })
@@ -1106,102 +1228,12 @@ const articleMapping: Record<string, string[]> = {
     'how-fast-is-international-money-transfer',
   ],
   'exchange-rates-timing': [
+    'how-exchange-rates-work',
     'best-time-to-send-money',
   ],
 }
 
-const staticArticles = [
-  {
-    slug: 'why-compare-before-every-transfer',
-    title: 'Why You Must Compare Before Every Transfer',
-    excerpt: 'Even on the same transfer, the difference between providers can be hundreds of dollars. Here\'s why you must compare before every transfer.',
-    categoryKey: 'money-transfer-basics',
-    readTime: '5 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'hidden-exchange-rate-fees-explained',
-    title: 'Hidden Fees Explained<br><span class="text-base font-normal">(FX Markup vs Fee)</span>',
-    excerpt: 'Learn the difference between FX markup and transfer fees, and why "no fee" doesn\'t mean no cost.',
-    categoryKey: 'fees-hidden-costs',
-    readTime: '6 min read',
-    level: 'Intermediate',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'how-to-read-remittance-quote',
-    title: 'How to Read a Quote<br><span class="text-base font-normal">("Recipient Gets")</span>',
-    excerpt: 'Understand what "Recipient Gets" really means and how to compare quotes effectively.',
-    categoryKey: 'money-transfer-basics',
-    readTime: '5 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'why-checkout-price-differs',
-    title: 'Why Checkout Differs<br><span class="text-base font-normal">and What to Do</span>',
-    excerpt: 'Why the final price at checkout might differ from the quote, and what you can do about it.',
-    categoryKey: 'fees-hidden-costs',
-    readTime: '4 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'bank-transfer-vs-card-vs-cash-pickup',
-    title: 'Bank Transfer vs Card vs Cash Pickup',
-    excerpt: 'Compare different transfer methods: bank transfer, card payment, and cash pickup options.',
-    categoryKey: 'money-transfer-basics',
-    readTime: '7 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'bank-transfer-vs-card-funding',
-    title: 'Bank Transfer vs Card Funding: Which Is Cheaper (and When)?',
-    excerpt: 'Understand when bank transfer funding is cheaper than card funding, and when speed matters more than cost.',
-    categoryKey: 'money-transfer-basics',
-    readTime: '6 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'choose-right-delivery-method',
-    title: 'Choose the Right Delivery Method: Bank Deposit vs Cash Pickup vs Mobile Money',
-    excerpt: 'Learn which payout method works best for your needs: bank deposit, cash pickup, or mobile money.',
-    categoryKey: 'money-transfer-basics',
-    readTime: '7 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'how-fast-is-international-money-transfer',
-    title: 'How Long Transfers Take (Speed Buckets)',
-    excerpt: 'Understand transfer speed buckets: instant, same-day, next-day, and multi-day transfers.',
-    categoryKey: 'speed-delivery',
-    readTime: '5 min read',
-    level: 'Beginner',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'best-time-to-send-money',
-    title: 'Best Time to Send Money',
-    excerpt: 'Practical guidance on when to send money, without over-optimizing for rate movements.',
-    categoryKey: 'exchange-rates-timing',
-    readTime: '6 min read',
-    level: 'Intermediate',
-    lastUpdated: 'December 2024',
-  },
-  {
-    slug: 'promo-codes-intro-rates',
-    title: 'Promo Rates and "$0 Fee" Traps',
-    excerpt: 'Understand promotional rates, introductory offers, and "$0 fee" marketing traps.',
-    categoryKey: 'fees-hidden-costs',
-    readTime: '5 min read',
-    level: 'Intermediate',
-    lastUpdated: 'December 2024',
-  },
-]
+const staticArticles: GuideArticle[] = LEARN_STATIC_ARTICLES
 
 const startHereGuides = computed(() => {
   const slugs = [

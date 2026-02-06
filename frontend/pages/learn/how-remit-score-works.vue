@@ -35,7 +35,9 @@
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
           <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
-            <h2 class="text-xl font-bold text-neutral-900 mb-3">Quick takeaways</h2>
+            <h2 class="text-xl font-bold text-neutral-900 mb-3">
+              Quick takeaways
+            </h2>
             <ul class="space-y-2 text-base text-neutral-700">
               <li class="flex items-start gap-2">
                 <span class="text-brand-600 mt-1">•</span>
@@ -53,96 +55,140 @@
           </div>
           <!-- Categories & Weights -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-8 text-center">
               Rating Categories & Weights
             </h2>
-            
+
             <div class="space-y-4 w-full">
               <!-- Delivered Value - 40% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <div class="bg-gradient-to-r from-green-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
-                  <div class="text-4xl">💰</div>
+                  <div class="text-4xl">
+                    💰
+                  </div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Delivered Value</h4>
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">
+                    Delivered Value
+                  </h4>
                   <p class="text-sm text-neutral-600 leading-relaxed">
                     Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
                   </p>
                 </div>
                 <div class="bg-green-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                  <div class="text-4xl font-bold text-white mb-1">40%</div>
-                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    40%
+                  </div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    Weight
+                  </div>
                 </div>
               </div>
 
               <!-- Reliability & Success - 20% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <div class="bg-gradient-to-r from-blue-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
-                  <div class="text-4xl">🛡️</div>
+                  <div class="text-4xl">
+                    🛡️
+                  </div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Reliability & Success</h4>
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">
+                    Reliability & Success
+                  </h4>
                   <p class="text-sm text-neutral-600 leading-relaxed">
                     Quote success rate, data freshness, pricing stability (where available)
                   </p>
                 </div>
                 <div class="bg-blue-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                  <div class="text-4xl font-bold text-white mb-1">20%</div>
-                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    20%
+                  </div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    Weight
+                  </div>
                 </div>
               </div>
 
               <!-- Friction & Speed - 15% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <div class="bg-gradient-to-r from-purple-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
-                  <div class="text-4xl">⚡</div>
+                  <div class="text-4xl">
+                    ⚡
+                  </div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Friction & Speed</h4>
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">
+                    Friction & Speed
+                  </h4>
                   <p class="text-sm text-neutral-600 leading-relaxed">
                     ETA where available, speed buckets, observed delivery times on selected corridors
                   </p>
                 </div>
                 <div class="bg-purple-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                  <div class="text-4xl font-bold text-white mb-1">15%</div>
-                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    15%
+                  </div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    Weight
+                  </div>
                 </div>
               </div>
 
               <!-- Support & Refunds - 15% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <div class="bg-gradient-to-r from-orange-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
-                  <div class="text-4xl">🎯</div>
+                  <div class="text-4xl">
+                    🎯
+                  </div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Support & Refunds</h4>
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">
+                    Support & Refunds
+                  </h4>
                   <p class="text-sm text-neutral-600 leading-relaxed">
                     Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
                   </p>
                 </div>
                 <div class="bg-orange-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                  <div class="text-4xl font-bold text-white mb-1">15%</div>
-                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    15%
+                  </div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    Weight
+                  </div>
                 </div>
               </div>
 
               <!-- Trust & Safety - 10% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <div class="bg-gradient-to-r from-slate-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
-                  <div class="text-4xl">🔒</div>
+                  <div class="text-4xl">
+                    🔒
+                  </div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                  <h4 class="font-bold text-neutral-900 text-lg mb-2">Trust & Safety</h4>
+                  <h4 class="font-bold text-neutral-900 text-lg mb-2">
+                    Trust & Safety
+                  </h4>
                   <p class="text-sm text-neutral-600 leading-relaxed">
                     Public licensing checks where available, regulatory register verification
                   </p>
                 </div>
                 <div class="bg-slate-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                  <div class="text-4xl font-bold text-white mb-1">10%</div>
-                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">Weight</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    10%
+                  </div>
+                  <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    Weight
+                  </div>
                 </div>
               </div>
             </div>
@@ -155,7 +201,9 @@
             </h2>
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">📊 Quote Records</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  📊 Quote Records
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   We capture normalized snapshots called "Quote Records" that include: fees, implied FX rate vs mid-market, delivered amount, ETA, availability, and timestamp.
                 </p>
@@ -164,13 +212,17 @@
                 </p>
               </div>
               <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">✅ Quote vs. Delivered Accuracy</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  ✅ Quote vs. Delivered Accuracy
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   We track how often the amount quoted matches what recipients actually receive. Providers with high accuracy score better.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">🔄 Data Freshness</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  🔄 Data Freshness
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   We measure how often providers return usable quotes and how fresh the data is. Providers with stale or unreliable data score lower.
                 </p>
@@ -187,7 +239,9 @@
               <div class="flex items-start gap-3">
                 <span class="text-2xl">❌</span>
                 <div>
-                  <h3 class="text-base font-bold text-neutral-900 mb-1">No Pay-to-Rank</h3>
+                  <h3 class="text-base font-bold text-neutral-900 mb-1">
+                    No Pay-to-Rank
+                  </h3>
                   <p class="text-sm text-neutral-700">
                     Providers cannot pay to appear higher or improve their Remit-Score. Rankings are driven by data, not payments.
                   </p>
@@ -196,7 +250,9 @@
               <div class="flex items-start gap-3">
                 <span class="text-2xl">❌</span>
                 <div>
-                  <h3 class="text-base font-bold text-neutral-900 mb-1">No Affiliate Influence</h3>
+                  <h3 class="text-base font-bold text-neutral-900 mb-1">
+                    No Affiliate Influence
+                  </h3>
                   <p class="text-sm text-neutral-700">
                     Affiliate relationships do not influence score calculation. We may earn commissions, but they never affect rankings.
                   </p>
@@ -205,7 +261,9 @@
               <div class="flex items-start gap-3">
                 <span class="text-2xl">❌</span>
                 <div>
-                  <h3 class="text-base font-bold text-neutral-900 mb-1">No Paid Reviews</h3>
+                  <h3 class="text-base font-bold text-neutral-900 mb-1">
+                    No Paid Reviews
+                  </h3>
                   <p class="text-sm text-neutral-700">
                     We don't use user reviews or ratings in our scoring. Scores are based on objective data: fees, rates, delivery times, and reliability.
                   </p>
@@ -215,9 +273,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- Data Sources -->
           <div class="mb-12">
@@ -231,7 +292,9 @@
               <div class="rounded-xl border border-brand-200 bg-white p-5">
                 <div class="flex items-center gap-3 mb-2">
                   <span class="text-2xl">🧩</span>
-                  <h3 class="text-base font-bold text-neutral-900">Provider Data Feed / Partner Feed</h3>
+                  <h3 class="text-base font-bold text-neutral-900">
+                    Provider Data Feed / Partner Feed
+                  </h3>
                 </div>
                 <p class="text-sm text-neutral-700">
                   Highest consistency when available. Direct data feeds from providers or partners.
@@ -240,7 +303,9 @@
               <div class="rounded-xl border border-brand-200 bg-white p-5">
                 <div class="flex items-center gap-3 mb-2">
                   <span class="text-2xl">🌐</span>
-                  <h3 class="text-base font-bold text-neutral-900">Public Quote Flow</h3>
+                  <h3 class="text-base font-bold text-neutral-900">
+                    Public Quote Flow
+                  </h3>
                 </div>
                 <p class="text-sm text-neutral-700">
                   Structured capture from provider quote pages where direct data feeds are not available.
@@ -249,7 +314,9 @@
               <div class="rounded-xl border border-brand-200 bg-white p-5">
                 <div class="flex items-center gap-3 mb-2">
                   <span class="text-2xl">🧪</span>
-                  <h3 class="text-base font-bold text-neutral-900">Spot-Check Transfers</h3>
+                  <h3 class="text-base font-bold text-neutral-900">
+                    Spot-Check Transfers
+                  </h3>
                 </div>
                 <p class="text-sm text-neutral-700">
                   Real transfer tests on selected corridors and methods to validate provider claims.
@@ -271,8 +338,18 @@
               class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-md hover:bg-brand-700 transition-all"
             >
               View Provider Scores
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -352,11 +429,3 @@ jsonLdBreadcrumb([
   { name: 'Remit-Score', url: `${siteUrl}/learn/how-remit-score-works` },
 ])
 </script>
-
-
-
-
-
-
-
-

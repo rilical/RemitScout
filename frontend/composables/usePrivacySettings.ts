@@ -19,7 +19,8 @@ const readStored = (): PrivacySettings | null => {
       personalization: parsed.personalization ?? true,
       updated_at: parsed.updated_at ?? null,
     }
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -28,7 +29,8 @@ const persistStored = (settings: PrivacySettings) => {
   if (!import.meta.client) return
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(settings))
-  } catch {
+  }
+  catch {
     // ignore storage failures
   }
 }
@@ -71,9 +73,11 @@ export const usePrivacySettings = () => {
       }
       persistStored(settings.value)
       loaded.value = true
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to load privacy settings.'
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -107,9 +111,11 @@ export const usePrivacySettings = () => {
       }
       persistStored(settings.value)
       loaded.value = true
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to save privacy settings.'
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

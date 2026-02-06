@@ -4,8 +4,18 @@
       <!-- Header -->
       <div class="text-center mb-12">
         <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full mb-6">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <svg
+            class="w-5 h-5 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
           </svg>
           <span class="text-sm font-semibold text-white">Remit-Scout Pulse</span>
         </div>
@@ -21,8 +31,18 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div class="bg-white rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md transition-all">
           <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center mb-4">
-            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+            <svg
+              class="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+              />
             </svg>
           </div>
           <h3 class="text-lg font-bold text-neutral-900 mb-2">
@@ -35,8 +55,18 @@
 
         <div class="bg-white rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md transition-all">
           <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center mb-4">
-            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            <svg
+              class="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
             </svg>
           </div>
           <h3 class="text-lg font-bold text-neutral-900 mb-2">
@@ -49,8 +79,18 @@
 
         <div class="bg-white rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md transition-all">
           <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center mb-4">
-            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <svg
+              class="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
             </svg>
           </div>
           <h3 class="text-lg font-bold text-neutral-900 mb-2">
@@ -69,8 +109,18 @@
             <div>
               <div class="flex items-center gap-3 mb-2">
                 <span class="text-4xl">🇺🇸</span>
-                <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-5 h-5 text-neutral-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span class="text-4xl">🇵🇭</span>
                 <div class="ml-3">
@@ -86,8 +136,18 @@
                 <span class="text-4xl font-bold text-neutral-900">56.82</span>
                 <span class="text-lg text-neutral-600">PHP per USD</span>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700 border border-green-300">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    />
                   </svg>
                   +2.3%
                 </span>
@@ -189,9 +249,15 @@
 
           <!-- Table Header -->
           <div class="grid grid-cols-5 gap-4 pb-4 border-b border-neutral-200 text-xs font-semibold text-neutral-600 uppercase tracking-wider">
-            <div class="col-span-2">Corridor</div>
-            <div class="text-center">24h Change</div>
-            <div class="text-center">Current Rate</div>
+            <div class="col-span-2">
+              Corridor
+            </div>
+            <div class="text-center">
+              24h Change
+            </div>
+            <div class="text-center">
+              Current Rate
+            </div>
             <div>Best Provider</div>
           </div>
 
@@ -200,13 +266,25 @@
             <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
               <div class="col-span-2 flex items-center gap-3">
                 <span class="text-3xl">🇺🇸</span>
-                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-4 h-4 text-neutral-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span class="text-3xl">🇵🇭</span>
                 <div class="ml-2">
                   <span class="text-base font-semibold text-neutral-900">US to PH</span>
-                  <div class="text-xs text-neutral-600">Philippines Peso</div>
+                  <div class="text-xs text-neutral-600">
+                    Philippines Peso
+                  </div>
                 </div>
               </div>
               <div class="text-center">
@@ -214,24 +292,40 @@
               </div>
               <div class="text-center">
                 <span class="text-base font-semibold text-neutral-900">56.82</span>
-                <div class="text-xs text-neutral-600">PHP per USD</div>
+                <div class="text-xs text-neutral-600">
+                  PHP per USD
+                </div>
               </div>
               <div>
                 <span class="text-sm font-medium text-neutral-900">Remitly</span>
-                <div class="text-xs text-neutral-600">0.8% fee</div>
+                <div class="text-xs text-neutral-600">
+                  0.8% fee
+                </div>
               </div>
             </div>
 
             <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
               <div class="col-span-2 flex items-center gap-3">
                 <span class="text-3xl">🇬🇧</span>
-                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-4 h-4 text-neutral-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span class="text-3xl">🇮🇳</span>
                 <div class="ml-2">
                   <span class="text-base font-semibold text-neutral-900">GB to IN</span>
-                  <div class="text-xs text-neutral-600">Indian Rupee</div>
+                  <div class="text-xs text-neutral-600">
+                    Indian Rupee
+                  </div>
                 </div>
               </div>
               <div class="text-center">
@@ -239,24 +333,40 @@
               </div>
               <div class="text-center">
                 <span class="text-base font-semibold text-neutral-900">103.45</span>
-                <div class="text-xs text-neutral-600">INR per GBP</div>
+                <div class="text-xs text-neutral-600">
+                  INR per GBP
+                </div>
               </div>
               <div>
                 <span class="text-sm font-medium text-neutral-900">Wise</span>
-                <div class="text-xs text-neutral-600">0.6% fee</div>
+                <div class="text-xs text-neutral-600">
+                  0.6% fee
+                </div>
               </div>
             </div>
 
             <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
               <div class="col-span-2 flex items-center gap-3">
                 <span class="text-3xl">🇨🇦</span>
-                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-4 h-4 text-neutral-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span class="text-3xl">🇲🇽</span>
                 <div class="ml-2">
                   <span class="text-base font-semibold text-neutral-900">CA to MX</span>
-                  <div class="text-xs text-neutral-600">Mexican Peso</div>
+                  <div class="text-xs text-neutral-600">
+                    Mexican Peso
+                  </div>
                 </div>
               </div>
               <div class="text-center">
@@ -264,24 +374,40 @@
               </div>
               <div class="text-center">
                 <span class="text-base font-semibold text-neutral-900">14.32</span>
-                <div class="text-xs text-neutral-600">MXN per CAD</div>
+                <div class="text-xs text-neutral-600">
+                  MXN per CAD
+                </div>
               </div>
               <div>
                 <span class="text-sm font-medium text-neutral-900">XE</span>
-                <div class="text-xs text-neutral-600">1.2% fee</div>
+                <div class="text-xs text-neutral-600">
+                  1.2% fee
+                </div>
               </div>
             </div>
 
             <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
               <div class="col-span-2 flex items-center gap-3">
                 <span class="text-3xl">🇦🇺</span>
-                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-4 h-4 text-neutral-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span class="text-3xl">🇻🇳</span>
                 <div class="ml-2">
                   <span class="text-base font-semibold text-neutral-900">AU to VN</span>
-                  <div class="text-xs text-neutral-600">Vietnamese Dong</div>
+                  <div class="text-xs text-neutral-600">
+                    Vietnamese Dong
+                  </div>
                 </div>
               </div>
               <div class="text-center">
@@ -289,24 +415,40 @@
               </div>
               <div class="text-center">
                 <span class="text-base font-semibold text-neutral-900">16,234</span>
-                <div class="text-xs text-neutral-600">VND per AUD</div>
+                <div class="text-xs text-neutral-600">
+                  VND per AUD
+                </div>
               </div>
               <div>
                 <span class="text-sm font-medium text-neutral-900">Wise</span>
-                <div class="text-xs text-neutral-600">0.7% fee</div>
+                <div class="text-xs text-neutral-600">
+                  0.7% fee
+                </div>
               </div>
             </div>
 
             <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
               <div class="col-span-2 flex items-center gap-3">
                 <span class="text-3xl">🇩🇪</span>
-                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-4 h-4 text-neutral-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span class="text-3xl">🇹🇷</span>
                 <div class="ml-2">
                   <span class="text-base font-semibold text-neutral-900">DE to TR</span>
-                  <div class="text-xs text-neutral-600">Turkish Lira</div>
+                  <div class="text-xs text-neutral-600">
+                    Turkish Lira
+                  </div>
                 </div>
               </div>
               <div class="text-center">
@@ -314,11 +456,15 @@
               </div>
               <div class="text-center">
                 <span class="text-base font-semibold text-neutral-900">36.15</span>
-                <div class="text-xs text-neutral-600">TRY per EUR</div>
+                <div class="text-xs text-neutral-600">
+                  TRY per EUR
+                </div>
               </div>
               <div>
                 <span class="text-sm font-medium text-neutral-900">Remitly</span>
-                <div class="text-xs text-neutral-600">1.5% fee</div>
+                <div class="text-xs text-neutral-600">
+                  1.5% fee
+                </div>
               </div>
             </div>
           </div>
@@ -329,22 +475,44 @@
       <div class="relative mb-12">
         <div class="bg-white rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-neutral-900">Market Insights</h3>
+            <h3 class="text-xl font-bold text-neutral-900">
+              Market Insights
+            </h3>
             <div class="flex gap-2">
               <button
                 class="w-10 h-10 rounded-lg bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-all border border-neutral-300"
                 @click="previousStat"
               >
-                <svg class="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                <svg
+                  class="w-5 h-5 text-neutral-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
               <button
                 class="w-10 h-10 rounded-lg bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-all border border-neutral-300"
                 @click="nextStat"
               >
-                <svg class="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-5 h-5 text-neutral-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </div>
@@ -353,23 +521,55 @@
           <!-- Statistics Carousel -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Rotating Stat 1 -->
-            <Transition name="fade" mode="out-in">
-              <div :key="`stat-${currentStatIndex}`" class="bg-neutral-50 rounded-xl border border-neutral-200 p-6">
-                <h4 class="text-lg font-bold text-neutral-900 mb-4">{{ rotatingStats[currentStatIndex].title }}</h4>
-                <div class="text-5xl font-bold text-neutral-900 mb-2">{{ rotatingStats[currentStatIndex].value }}</div>
-                <p class="text-sm text-neutral-600 mb-4">{{ rotatingStats[currentStatIndex].description }}</p>
-                <div class="flex items-center gap-2 text-sm" :class="rotatingStats[currentStatIndex].trendClass">
-                  <svg v-if="rotatingStats[currentStatIndex].trendIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            <Transition
+              name="fade"
+              mode="out-in"
+            >
+              <div
+                :key="`stat-${currentStatIndex}`"
+                class="bg-neutral-50 rounded-xl border border-neutral-200 p-6"
+              >
+                <h4 class="text-lg font-bold text-neutral-900 mb-4">
+                  {{ rotatingStats[currentStatIndex].title }}
+                </h4>
+                <div class="text-5xl font-bold text-neutral-900 mb-2">
+                  {{ rotatingStats[currentStatIndex].value }}
+                </div>
+                <p class="text-sm text-neutral-600 mb-4">
+                  {{ rotatingStats[currentStatIndex].description }}
+                </p>
+                <div
+                  class="flex items-center gap-2 text-sm"
+                  :class="rotatingStats[currentStatIndex].trendClass"
+                >
+                  <svg
+                    v-if="rotatingStats[currentStatIndex].trendIcon"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
                   </svg>
                   <span v-if="rotatingStats[currentStatIndex].trendText">{{ rotatingStats[currentStatIndex].trendText }}</span>
                   <template v-else>
-                    <span v-if="rotatingStats[currentStatIndex].flag1" class="text-2xl">{{ rotatingStats[currentStatIndex].flag1 }}</span>
+                    <span
+                      v-if="rotatingStats[currentStatIndex].flag1"
+                      class="text-2xl"
+                    >{{ rotatingStats[currentStatIndex].flag1 }}</span>
                     <span v-if="rotatingStats[currentStatIndex].flag2">
                       <span class="ml-2">to</span>
                       <span class="text-2xl ml-2">{{ rotatingStats[currentStatIndex].flag2 }}</span>
                     </span>
-                    <span v-if="rotatingStats[currentStatIndex].flagText" class="ml-2">{{ rotatingStats[currentStatIndex].flagText }}</span>
+                    <span
+                      v-if="rotatingStats[currentStatIndex].flagText"
+                      class="ml-2"
+                    >{{ rotatingStats[currentStatIndex].flagText }}</span>
                   </template>
                 </div>
               </div>
@@ -377,17 +577,33 @@
 
             <!-- Static stats (always visible) -->
             <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-6">
-              <h4 class="text-lg font-bold text-neutral-900 mb-4">Rate Updates</h4>
-              <div class="text-5xl font-bold text-neutral-900 mb-2">4,287</div>
-              <p class="text-sm text-neutral-600 mb-4">Searches processed today</p>
-              <div class="text-xs text-neutral-500">Updates every 5 minutes</div>
+              <h4 class="text-lg font-bold text-neutral-900 mb-4">
+                Rate Updates
+              </h4>
+              <div class="text-5xl font-bold text-neutral-900 mb-2">
+                4,287
+              </div>
+              <p class="text-sm text-neutral-600 mb-4">
+                Searches processed today
+              </p>
+              <div class="text-xs text-neutral-500">
+                Updates every 5 minutes
+              </div>
             </div>
 
             <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-6">
-              <h4 class="text-lg font-bold text-neutral-900 mb-4">Providers Tracked</h4>
-              <div class="text-5xl font-bold text-neutral-900 mb-2">30+</div>
-              <p class="text-sm text-neutral-600 mb-4">Money transfer services monitored</p>
-              <div class="text-xs text-neutral-500">Wise, Remitly, XE, and more</div>
+              <h4 class="text-lg font-bold text-neutral-900 mb-4">
+                Providers Tracked
+              </h4>
+              <div class="text-5xl font-bold text-neutral-900 mb-2">
+                30+
+              </div>
+              <p class="text-sm text-neutral-600 mb-4">
+                Money transfer services monitored
+              </p>
+              <div class="text-xs text-neutral-500">
+                Wise, Remitly, XE, and more
+              </div>
             </div>
           </div>
         </div>
@@ -400,8 +616,18 @@
           class="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-white/90 text-brand-600 rounded-lg font-semibold transition-all group shadow-lg"
         >
           <span>Explore Pulse</span>
-          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="w-5 h-5 group-hover:translate-x-1 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </NuxtLink>
       </div>
@@ -567,13 +793,3 @@ const formatChartTooltip = (rate: number, date: string) => {
   transform: translateY(-10px);
 }
 </style>
-
-
-
-
-
-
-
-
-
-

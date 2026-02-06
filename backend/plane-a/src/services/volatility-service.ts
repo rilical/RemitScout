@@ -29,7 +29,19 @@ class PlaneAVolatilityRepository implements VolatilityRepository {
       this.pool,
     )
 
-    return result.rows[0] ?? null
+    const row = result.rows[0]
+    if (!row) return null
+
+    // `numeric` columns from Postgres can arrive as strings in Node `pg`.
+    // Normalize to numbers so tier thresholds work correctly.
+    return {
+      corridor_id: row.corridor_id,
+      volatility_score: Number((row as any).volatility_score),
+      sample_count: Number((row as any).sample_count),
+      mean_rate: Number((row as any).mean_rate),
+      stddev_rate: Number((row as any).stddev_rate),
+      calculated_at: new Date((row as any).calculated_at),
+    }
   }
 
   async calculateVolatilityScore(corridorId: string): Promise<VolatilityRecord | null> {

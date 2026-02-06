@@ -21,8 +21,9 @@ const planeAPool = getPool(config.db.planeAUrl)
 const indicesCache = createTtlCache<IndicesSeriesResponse>({ namespace: 'plane_a:indices' })
 const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
 const envName = (process.env.ENVIRONMENT || '').toLowerCase()
+const isVitestRuntime = Boolean(process.env.VITEST_WORKER_ID || process.env.VITEST)
 const allowUnauthedIndices =
-  envName === 'dev' || config.env === 'development' || config.env === 'test'
+  !isVitestRuntime && (envName === 'dev' || config.env === 'development')
 const apiAccessGuard = allowUnauthedIndices ? undefined : requireEntitlement('api_access')
 
 const querySchema = z.object({

@@ -217,7 +217,13 @@ export const meRoutes = async (app: FastifyInstance) => {
         return { error: 'plan_not_found' }
       }
 
-      const entitlements = getEntitlementsForPlan(plan.plan_code)
+      const isPlanActive = plan.status === 'active' || plan.status === 'trialing'
+      const normalizedPlanCode =
+        plan.plan_code === 'free' || plan.plan_code === 'plus' || plan.plan_code === 'enterprise'
+          ? plan.plan_code
+          : 'free'
+      const effectivePlanCode = isPlanActive ? normalizedPlanCode : 'free'
+      const entitlements = getEntitlementsForPlan(effectivePlanCode)
       const usage = await getUsageForUser(planeAPool, user.user_id)
       const billing = await buildBillingInfo(plan)
       const profile = await userAccountRepository.getProfile(user.user_id)
@@ -239,6 +245,10 @@ export const meRoutes = async (app: FastifyInstance) => {
         plan: {
           plan_code: plan.plan_code,
           status: plan.status,
+        },
+        plan_effective: {
+          plan_code: effectivePlanCode,
+          is_active: isPlanActive,
         },
         billing,
         entitlements,

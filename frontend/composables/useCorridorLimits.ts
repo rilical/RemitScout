@@ -60,7 +60,8 @@ export const useCorridorLimits = (
       if (currentRequest !== requestId) return
       data.value = response
       status.value = 'ready'
-    } catch (err: any) {
+    }
+    catch (err: any) {
       if (currentRequest !== requestId) return
       data.value = null
       status.value = 'error'

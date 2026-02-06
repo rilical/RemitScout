@@ -109,10 +109,16 @@
               </div>
             </div>
 
-            <div v-if="historyLoading" class="flex h-48 items-center justify-center text-xs text-neutral-500">
+            <div
+              v-if="historyLoading"
+              class="flex h-48 items-center justify-center text-xs text-neutral-500"
+            >
               Loading rate history...
             </div>
-            <div v-else-if="historicalData.length === 0" class="flex h-48 items-center justify-center text-xs text-neutral-500">
+            <div
+              v-else-if="historicalData.length === 0"
+              class="flex h-48 items-center justify-center text-xs text-neutral-500"
+            >
               No rate history yet.
             </div>
             <svg
@@ -167,7 +173,10 @@
               </circle>
             </svg>
 
-            <div v-if="historicalData.length > 0" class="flex justify-between text-xs text-neutral-500 mt-2">
+            <div
+              v-if="historicalData.length > 0"
+              class="flex justify-between text-xs text-neutral-500 mt-2"
+            >
               <span>{{ chartDateLabels[0] }}</span>
               <span>{{ chartDateLabels[Math.floor(chartDateLabels.length / 2)] }}</span>
               <span>{{ chartDateLabels[chartDateLabels.length - 1] }}</span>
@@ -176,7 +185,10 @@
 
           <div class="mt-4 text-xs text-neutral-500">
             <p>Last updated: {{ lastUpdatedText }}</p>
-            <p v-if="historyError" class="mt-1 italic">
+            <p
+              v-if="historyError"
+              class="mt-1 italic"
+            >
               {{ historyError }}
             </p>
           </div>
@@ -341,7 +353,7 @@ const chartHeight = 180
 const chartPadding = 10
 
 const { request } = useApi()
-const historicalData = ref<Array<{ date: string; rate: number }>>([])
+const historicalData = ref<Array<{ date: string, rate: number }>>([])
 const historyLoading = ref(false)
 const historyError = ref<string | null>(null)
 const historyLastUpdated = ref<string | null>(null)
@@ -440,7 +452,7 @@ const loadHistory = async () => {
   try {
     const base = fromCurrencyDisplay.value
     const quote = toCurrencyDisplay.value
-    const response = await request<{ history?: Array<{ date: string; rate: number }>; lastUpdated?: string }>(
+    const response = await request<{ history?: Array<{ date: string, rate: number }>, lastUpdated?: string }>(
       '/rates/history',
       {
         query: { base, quote, days: 30 },
@@ -450,11 +462,13 @@ const loadHistory = async () => {
       ? response.history.map(entry => ({ date: entry.date, rate: Number(entry.rate) }))
       : []
     historyLastUpdated.value = response.lastUpdated || null
-  } catch (error) {
+  }
+  catch (error) {
     historyError.value = 'Rate history unavailable.'
     historicalData.value = []
     historyLastUpdated.value = null
-  } finally {
+  }
+  finally {
     historyLoading.value = false
   }
 }

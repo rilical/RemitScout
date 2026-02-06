@@ -13,10 +13,12 @@ export type ProviderQuote = {
   name: string
   logoUrl?: string
   fee: number // in sendCurrency
+  feeAmount?: number // optional alias for fee
   marginPct: number // exchange margin vs mid
   fxRate: number // send->recv
   recipientGets: number // in recvCurrency for given amount
   delivery: string // "15–30 min", "1–2 days"
+  speed?: string
   reliability: number // 0..1 (success rate last 30d)
   methods: Method[]
   bestFor: string
@@ -27,6 +29,21 @@ export type ProviderQuote = {
   affiliateUrl?: string | null
   outboundUrl?: string | null
   isAffiliate?: boolean
+  hasPromo?: boolean
+  promoInfo?: {
+    fee: number
+    rate: number
+    headline: string
+    details: string[]
+    newCustomersOnly: boolean
+  } | null
+  score?: number
+  scoreBreakdown?: {
+    cost: number
+    speed: number
+    reliability: number
+    coverage: number
+  }
 }
 
 export type BankVsSpecialist = {
@@ -35,6 +52,11 @@ export type BankVsSpecialist = {
   bank: Omit<ProviderQuote, 'id'> & { name: string }
   top: ProviderQuote
   updatedAt: string // ISO
+  savings?: {
+    amount: number
+    recipientGetsDifference: number
+    percentage: number
+  }
 }
 
 export type RecentSearch = {

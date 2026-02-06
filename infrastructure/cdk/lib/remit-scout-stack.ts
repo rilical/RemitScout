@@ -494,6 +494,10 @@ export class RemitScoutStack extends Stack {
     const publicAdsEnabled =
       this.node.tryGetContext('publicAdsEnabled') ??
       process.env.PUBLIC_ADS_ENABLED
+    const publicPulseEnabled =
+      this.node.tryGetContext('publicPulseEnabled') ??
+      process.env.PUBLIC_PULSE_ENABLED ??
+      process.env.NUXT_PUBLIC_PULSE_ENABLED
     const publicSupabaseUrlSecretJsonKey =
       this.node.tryGetContext('publicSupabaseUrlSecretJsonKey') ??
       process.env.PUBLIC_SUPABASE_URL_SECRET_JSON_KEY
@@ -905,6 +909,7 @@ export class RemitScoutStack extends Stack {
           publicGa4MeasurementId,
           publicMetaPixelId,
           publicAdsEnabled,
+          publicPulseEnabled,
           devPaused,
         })
       : null

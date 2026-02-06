@@ -77,10 +77,12 @@ export const usePushNotifications = () => {
       })
 
       return response
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to enable browser notifications.'
       return { success: false }
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -107,10 +109,12 @@ export const usePushNotifications = () => {
       })
 
       return response
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to disable browser notifications.'
       return { success: false }
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

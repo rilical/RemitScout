@@ -1864,6 +1864,66 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/ops/indices/health:
+    get:
+      summary: Indices readiness health (Admin only)
+      description: Returns Tier-0 indices readiness summary and reasons if degraded.
+      tags:
+        - Operations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Indices readiness summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded, error]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  summary:
+                    type: object
+                    properties:
+                      corridors_expected:
+                        type: integer
+                      corridors_observed:
+                        type: integer
+                      corridors_missing:
+                        type: integer
+                      available_ratio:
+                        type: number
+                        format: float
+                      suppressed_ratio:
+                        type: number
+                        format: float
+                      min_provider_count:
+                        type: integer
+                        nullable: true
+                      weight_confidence_p10:
+                        type: number
+                        format: float
+                        nullable: true
+                      latest_date:
+                        type: string
+                        nullable: true
+                      amount_bucket:
+                        type: integer
+                      method_profile:
+                        type: string
+                  reasons:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /healthz:
     get:
       summary: Health check
@@ -2240,6 +2300,20 @@ components:
 
     IndicesDataAvailabilityResponse:
       type: object
+      required:
+        - corridorId
+        - amountBucket
+        - methodProfile
+        - dataAvailable
+        - reason
+        - message
+        - dataTier
+        - cadenceMinutes
+        - exportCadenceMinutes
+        - collectionCadenceMinutes
+        - collectionTier
+        - isUsdOrigin
+        - dataWindow
       properties:
         corridorId:
           type: string

@@ -64,9 +64,10 @@ describe('telemetry click route', () => {
   })
 
   it('records affiliate clicks with sanitized urls', async () => {
-    const handler = vi
+    const call = vi
       .mocked(app.post)
-      .mock.calls.find((call) => call[0] === '/telemetry/click')?.[1] as any
+      .mock.calls.find((call) => call[0] === '/telemetry/click')
+    const handler = (call?.[2] ?? call?.[1]) as any
 
     const result = await handler(mockRequest, mockReply)
 

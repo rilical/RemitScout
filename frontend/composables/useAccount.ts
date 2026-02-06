@@ -42,11 +42,13 @@ export const useAccount = () => {
       await navigateTo('/')
 
       return { ok: true, result: response }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       const message = err?.message || 'Failed to delete account.'
       error.value = message
       return { ok: false, error: message }
-    } finally {
+    }
+    finally {
       deleting.value = false
     }
   }

@@ -73,7 +73,8 @@ const readStored = (): Attribution => {
     const raw = window.localStorage.getItem(storageKey)
     if (!raw) return {}
     return JSON.parse(raw) as Attribution
-  } catch {
+  }
+  catch {
     return {}
   }
 }
@@ -82,7 +83,8 @@ const persistStored = (next: Attribution) => {
   if (!import.meta.client) return
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(next))
-  } catch {
+  }
+  catch {
     // ignore storage failures
   }
 }
@@ -139,7 +141,7 @@ const metaStandardEvents = new Set([
 
 export const useMarketingAnalytics = () => {
   const { request } = useApi()
-  const { settings } = usePrivacySettings()
+  const { settings, hasConsent } = usePrivacySettings()
   const route = useRoute()
   const runtimeConfig = useRuntimeConfig()
   const ga4Id = runtimeConfig.public.ga4MeasurementId
@@ -163,7 +165,7 @@ export const useMarketingAnalytics = () => {
 
   const ensureAttribution = () => updateAttribution()
 
-  const shouldSkip = () => settings.value.analytics === false
+  const shouldSkip = () => settings.value.analytics === false || !hasConsent.value
 
   const generateEventId = () => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -215,7 +217,8 @@ export const useMarketingAnalytics = () => {
         },
         retries: 0,
       })
-    } catch {
+    }
+    catch {
       // ignore marketing errors
     }
   }

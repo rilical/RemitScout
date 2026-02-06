@@ -21,6 +21,10 @@ type MeResponse = {
     plan_code: string
     status: string
   }
+  plan_effective?: {
+    plan_code: string
+    is_active: boolean
+  }
   billing?: {
     next_billing_date: string | null
     amount: number | null
@@ -53,7 +57,7 @@ type MeResponse = {
 const mapEntitlementsToLimits = (entitlements: MeResponse['entitlements']): PlanLimits => {
   return {
     watchlistItems: entitlements.watchlist_items === null ? 'unlimited' : entitlements.watchlist_items,
-    alerts: entitlements.alerts_max === null ? 'unlimited' : (entitlements.alerts_max === 0 ? 1 : entitlements.alerts_max),
+    alerts: entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max,
     historyDays: entitlements.history_max_days === null ? 'unlimited' : entitlements.history_max_days,
     exports: entitlements.exports_enabled,
   }
@@ -109,12 +113,13 @@ export const useEntitlements = () => {
 
     try {
       const data = await request<MeResponse>('/me')
-      
+
       if (data.success && data.plan) {
-        const planCode =
-          data.plan.plan_code === 'enterprise'
+        const effectivePlanCode = data.plan_effective?.plan_code || data.plan.plan_code
+        const planCode
+          = effectivePlanCode === 'enterprise'
             ? 'enterprise'
-            : (data.plan.plan_code === 'plus' ? 'plus' : 'free')
+            : (effectivePlanCode === 'plus' ? 'plus' : 'free')
         plan.value = planCode
         limits.value = mapEntitlementsToLimits(data.entitlements)
         apiAccess.value = Boolean(data.entitlements.api_access)
@@ -125,10 +130,12 @@ export const useEntitlements = () => {
           applyBackendProfile(data.user)
         }
         hydrated.value = true
-      } else {
+      }
+      else {
         throw new Error('Invalid response from /me endpoint')
       }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Failed to fetch plan'
       // Default to free plan on error
       plan.value = 'free'
@@ -143,7 +150,8 @@ export const useEntitlements = () => {
       apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -153,7 +161,8 @@ export const useEntitlements = () => {
     refreshInFlight.value = true
     try {
       await fetchPlan()
-    } finally {
+    }
+    finally {
       refreshInFlight.value = false
     }
   }
@@ -162,7 +171,8 @@ export const useEntitlements = () => {
   onMounted(() => {
     if (isLoggedIn.value) {
       fetchPlan()
-    } else {
+    }
+    else {
       hydrated.value = true
     }
   })
@@ -171,7 +181,8 @@ export const useEntitlements = () => {
   watch(isLoggedIn, (loggedIn) => {
     if (loggedIn) {
       fetchPlan()
-    } else {
+    }
+    else {
       plan.value = 'free'
       limits.value = {
         watchlistItems: 3,

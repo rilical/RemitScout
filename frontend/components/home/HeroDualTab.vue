@@ -528,8 +528,18 @@
               <!-- Trust -->
               <div class="space-y-4">
                 <div class="flex items-center gap-3">
-                  <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="w-6 h-6 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                   <div>
                     <p class="text-sm font-semibold text-neutral-900">
@@ -647,16 +657,17 @@ watch(
   () => moneyForm.value.from,
   (newFrom) => {
     if (!newFrom) return
-    
+
     const country = getCountryByCode(newFrom)
     if (!country?.currency) return
-    
+
     const defaultCurrency = country.currency.toUpperCase()
-    
+
     if (availableFromCurrencies.value.length > 0) {
       if (availableFromCurrencies.value.includes(defaultCurrency)) {
         moneyForm.value.fromCurrency = defaultCurrency
-      } else if (!moneyForm.value.fromCurrency || !availableFromCurrencies.value.includes(moneyForm.value.fromCurrency)) {
+      }
+      else if (!moneyForm.value.fromCurrency || !availableFromCurrencies.value.includes(moneyForm.value.fromCurrency)) {
         moneyForm.value.fromCurrency = availableFromCurrencies.value[0]
       }
     }
@@ -668,16 +679,17 @@ watch(
   () => moneyForm.value.to,
   (newTo) => {
     if (!newTo) return
-    
+
     const country = getCountryByCode(newTo)
     if (!country?.currency) return
-    
+
     const defaultCurrency = country.currency.toUpperCase()
-    
+
     if (availableToCurrencies.value.length > 0) {
       if (availableToCurrencies.value.includes(defaultCurrency)) {
         moneyForm.value.toCurrency = defaultCurrency
-      } else if (!moneyForm.value.toCurrency || !availableToCurrencies.value.includes(moneyForm.value.toCurrency)) {
+      }
+      else if (!moneyForm.value.toCurrency || !availableToCurrencies.value.includes(moneyForm.value.toCurrency)) {
         moneyForm.value.toCurrency = availableToCurrencies.value[0]
       }
     }
@@ -689,14 +701,15 @@ watch(
   availableFromCurrencies,
   (currencies) => {
     if (!moneyForm.value.from || currencies.length === 0) return
-    
+
     const country = getCountryByCode(moneyForm.value.from)
     if (!country?.currency) return
-    
+
     const defaultCurrency = country.currency.toUpperCase()
     if (currencies.includes(defaultCurrency) && (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency))) {
       moneyForm.value.fromCurrency = defaultCurrency
-    } else if (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency)) {
+    }
+    else if (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency)) {
       moneyForm.value.fromCurrency = currencies[0]
     }
   },
@@ -725,14 +738,15 @@ watch(
   availableToCurrencies,
   (currencies) => {
     if (!moneyForm.value.to || currencies.length === 0) return
-    
+
     const country = getCountryByCode(moneyForm.value.to)
     if (!country?.currency) return
-    
+
     const defaultCurrency = country.currency.toUpperCase()
     if (currencies.includes(defaultCurrency) && (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency))) {
       moneyForm.value.toCurrency = defaultCurrency
-    } else if (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency)) {
+    }
+    else if (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency)) {
       moneyForm.value.toCurrency = currencies[0]
     }
   },
@@ -1018,11 +1032,10 @@ const detectUserLocation = async () => {
   }
 }
 
-
 const handleAmountBlur = (event: Event) => {
   const target = event.target as HTMLInputElement
   const currency = moneyForm.value.fromCurrency || 'USD'
-  
+
   // Sanitize amount based on currency limits
   const sanitized = sanitizeAmount(target.value, currency, amountLimits.value)
   moneyForm.value.amount = sanitized
@@ -1031,47 +1044,47 @@ const handleAmountBlur = (event: Event) => {
 
 const sanitizeAmountInput = (event: Event) => {
   const target = event.target as HTMLInputElement
-  
+
   // Check if all text is currently selected (user likely just pressed Cmd+A)
   const isAllSelected = target.selectionStart === 0 && target.selectionEnd === target.value.length && target.value.length > 0
-  
+
   // Skip sanitization if user just selected all text - let them delete/replace it first
   if (isSelecting.value || isAllSelected) {
     // Don't reset isSelecting immediately - let it reset on next keydown
     // Still update the model value
-    const numValue = parseFloat(target.value)
+    const numValue = Number.parseFloat(target.value)
     if (!isNaN(numValue) && numValue >= 0) {
       moneyForm.value.amount = numValue
     }
     return
   }
-  
+
   // Preserve selection/cursor position
   const selectionStart = target.selectionStart ?? 0
   const selectionEnd = target.selectionEnd ?? 0
   const hadSelection = selectionStart !== selectionEnd
-  
+
   let value = target.value
-  
+
   // Remove any non-numeric characters except decimal point
   const originalValue = value
   value = value.replace(/[^\d.]/g, '')
-  
+
   // Ensure only one decimal point
   const parts = value.split('.')
   if (parts.length > 2) {
     value = parts[0] + '.' + parts.slice(1).join('')
   }
-  
+
   // Limit decimal places to 2
   if (parts.length === 2 && parts[1].length > 2) {
     value = parts[0] + '.' + parts[1].substring(0, 2)
   }
-  
+
   // Only update if value actually changed
   if (originalValue !== value) {
     const lengthDiff = value.length - originalValue.length
-    
+
     // Calculate new cursor position
     let newCursorPos = selectionStart
     if (lengthDiff < 0) {
@@ -1079,29 +1092,32 @@ const sanitizeAmountInput = (event: Event) => {
       const removedBeforeCursor = originalValue.slice(0, selectionStart).replace(/[^\d.]/g, '').length
       const validCharsBeforeCursor = value.slice(0, removedBeforeCursor).length
       newCursorPos = Math.max(0, Math.min(validCharsBeforeCursor, value.length))
-    } else {
+    }
+    else {
       newCursorPos = Math.max(0, Math.min(selectionStart + lengthDiff, value.length))
     }
-    
+
     target.value = value
-    
+
     // Restore selection or cursor position
     nextTick(() => {
       if (hadSelection && !isSelecting.value) {
         // Try to preserve selection if it existed (but not if we just selected all)
         const endPos = Math.max(newCursorPos, Math.min(selectionEnd + lengthDiff, value.length))
         target.setSelectionRange(newCursorPos, endPos)
-      } else if (!isSelecting.value) {
+      }
+      else if (!isSelecting.value) {
         target.setSelectionRange(newCursorPos, newCursorPos)
       }
     })
   }
-  
+
   // Update the model value (but don't clamp on input, only on blur)
-  const numValue = parseFloat(value || target.value)
+  const numValue = Number.parseFloat(value || target.value)
   if (!isNaN(numValue) && numValue >= 0) {
     moneyForm.value.amount = numValue
-  } else if (value === '' || target.value === '') {
+  }
+  else if (value === '' || target.value === '') {
     moneyForm.value.amount = 0
   }
 }
@@ -1115,17 +1131,18 @@ const handleAmountKeydown = (event: KeyboardEvent) => {
     // Allow default behavior (select all)
     return
   }
-  
+
   // Check for other selection shortcuts (Cmd+C, Cmd+V, Cmd+X, etc.)
   if ((event.metaKey || event.ctrlKey) && ['c', 'v', 'x', 'a'].includes(event.key.toLowerCase())) {
     // Allow these shortcuts, don't interfere
     return
   }
-  
+
   // Only prevent specific problematic keys
   if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
     event.preventDefault()
-  } else {
+  }
+  else {
     isSelecting.value = false
   }
 }
@@ -1155,15 +1172,17 @@ const handleMoneySubmit = async () => {
     // Sanitize and validate amount using currency-based limits
     const currency = moneyForm.value.fromCurrency || 'USD'
     const sanitizedAmount = sanitizeAmount(amount, currency, amountLimits.value)
-    
+
     if (!isValidAmount(sanitizedAmount, currency, amountLimits.value)) {
       const min = amountLimits.value.minAmount
       const max = amountLimits.value.maxAmount
       if (min !== null && max !== null) {
         formError.value = `Please enter a valid amount between ${formatCurrency(min, currency)} and ${formatCurrency(max, currency)}.`
-      } else if (min !== null) {
+      }
+      else if (min !== null) {
         formError.value = `Please enter an amount of at least ${formatCurrency(min, currency)}.`
-      } else {
+      }
+      else {
         formError.value = 'Please enter a valid amount.'
       }
       moneyForm.value.amount = sanitizedAmount

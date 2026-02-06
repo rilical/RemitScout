@@ -12,6 +12,9 @@
     <!-- 4b. Remit-Score explanation -->
     <RemitScoreBanner />
 
+    <!-- Funnel: Pulse + Plus (above fold CTA) -->
+    <PlusPulseStrip />
+
     <!-- EEAT: Transparency Strip (how we compare) -->
     <TransparencyStrip />
 
@@ -37,10 +40,10 @@
     <WhyPricesVary />
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
-    <PulseMiniTiles v-if="FEATURE_FLAGS.PULSE_ENABLED" />
+    <PulseMiniTiles v-if="pulseEnabled" />
 
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
-    <InstitutionalTeaser v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" />
+    <InstitutionalTeaser v-if="enterpriseEnabled" />
 
     <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
     <PlusTeaser />
@@ -83,6 +86,7 @@
 import { ref, defineAsyncComponent } from 'vue'
 import HeroDualTab from '~/components/home/HeroDualTab.vue'
 import RemitScoreBanner from '~/components/home/RemitScoreBanner.vue'
+import PlusPulseStrip from '~/components/home/PlusPulseStrip.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HowItWorks from '~/components/home/HowItWorks.vue'
 import FounderStory from '~/components/home/FounderStory.vue'
@@ -91,7 +95,7 @@ import TransparencyStrip from '~/components/home/TransparencyStrip.vue'
 import WhyPricesVary from '~/components/home/WhyPricesVary.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'
-import { FEATURE_FLAGS } from '~/utils/constants'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import PulseMiniTiles from '~/components/home/PulseMiniTiles.vue'
 import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
 import PlusTeaser from '~/components/home/PlusTeaser.vue'
@@ -114,6 +118,7 @@ const NewsletterSignup = defineAsyncComponent(() => import('~/components/home/Ne
 
 const modalOpen = ref(false)
 const heroDualTabRef = ref<InstanceType<typeof HeroDualTab> | null>(null)
+const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
 
 const handleCorridorSelected = (data: { from: string, to: string }) => {
   heroDualTabRef.value?.prefillMoneyForm({
@@ -151,7 +156,7 @@ addBreadcrumbSchema([
 ])
 jsonLdSiteNavigation([
   { name: 'Send Money', url: `${siteUrl}/send-money` },
-  { name: 'Provider Reviews', url: `${siteUrl}/reviews` },
+  { name: 'Provider Reviews', url: `${siteUrl}/learn/providers` },
   { name: 'Exchange Rates', url: `${siteUrl}/exchange-rates` },
   { name: 'Guides', url: `${siteUrl}/learn` },
   { name: 'FAQ', url: `${siteUrl}/faq` },

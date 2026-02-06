@@ -87,4 +87,3 @@ defineProps<Props>()
 
 const showTooltip = ref(false)
 </script>
-

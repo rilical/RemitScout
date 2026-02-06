@@ -3,36 +3,69 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">{{ chartTitle }}</h2>
-        <p class="text-sm text-neutral-400">{{ chartSubtitle }}</p>
+        <h2 class="text-lg font-bold text-white">
+          {{ chartTitle }}
+        </h2>
+        <p class="text-sm text-neutral-400">
+          {{ chartSubtitle }}
+        </p>
       </div>
       <div class="flex items-center gap-4">
         <!-- Spread Indicator -->
         <div class="text-right">
-          <div class="text-sm text-neutral-400">Current Markup</div>
-          <div class="text-xl font-bold text-brand-600">{{ currentSpreadBps }} bps</div>
+          <div class="text-sm text-neutral-400">
+            Current Markup
+          </div>
+          <div class="text-xl font-bold text-brand-600">
+            {{ currentSpreadBps }} bps
+          </div>
         </div>
         <div class="h-10 w-px bg-neutral-700" />
         <!-- Loss Indicator -->
         <div class="text-right">
-          <div class="text-sm text-neutral-400">Markup cost on ${{ store.amount.toLocaleString() }}</div>
-          <div class="text-xl font-bold text-danger-600">{{ lossOn1000Display }}</div>
+          <div class="text-sm text-neutral-400">
+            Markup cost on ${{ store.amount.toLocaleString() }}
+          </div>
+          <div class="text-xl font-bold text-danger-600">
+            {{ lossOn1000Display }}
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Chart -->
     <div class="relative p-4">
-      <div v-if="loading" class="flex h-[500px] items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-[500px] items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading chart data...
         </div>
       </div>
-      <div v-else class="h-[500px]">
+      <div
+        v-else
+        class="h-[500px]"
+      >
         <v-chart
           class="h-full w-full"
           :option="chartOption"
@@ -47,7 +80,9 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-xl"
         :style="{ left: tooltipPosition.x + 'px', top: tooltipPosition.y + 'px' }"
       >
-        <div class="mb-2 text-xs font-medium text-neutral-400">{{ tooltipData.timestamp }}</div>
+        <div class="mb-2 text-xs font-medium text-neutral-400">
+          {{ tooltipData.timestamp }}
+        </div>
         <div class="space-y-1.5">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-2">
@@ -96,7 +131,10 @@
     </div>
 
     <!-- Trust Stamp -->
-    <PulseTrustStamp v-if="data" :last-updated="data.lastUpdated" />
+    <PulseTrustStamp
+      v-if="data"
+      :last-updated="data.lastUpdated"
+    />
   </div>
 </template>
 
@@ -355,7 +393,7 @@ const chartOption = computed(() => {
   }
 })
 
-function handleMouseMove(params: { event?: { offsetX?: number; offsetY?: number }; dataIndex?: number }) {
+function handleMouseMove(params: { event?: { offsetX?: number, offsetY?: number }, dataIndex?: number }) {
   if (!data.value || !params.event || params.dataIndex === undefined) {
     tooltipData.value = null
     return
@@ -396,9 +434,11 @@ async function loadData() {
   loading.value = true
   try {
     data.value = await getHeroChartData(store.corridor, store.timeframe, store.amount)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load hero chart data:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -406,13 +446,10 @@ async function loadData() {
 watch(
   () => [store.corridor, store.timeframe, store.amount],
   () => loadData(),
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
   loadData()
 })
 </script>
-
-
-

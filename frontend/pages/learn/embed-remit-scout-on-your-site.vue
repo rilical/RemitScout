@@ -35,7 +35,9 @@
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg max-w-none">
           <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
-            <h2 class="text-xl font-bold text-neutral-900 mb-3">Quick takeaways</h2>
+            <h2 class="text-xl font-bold text-neutral-900 mb-3">
+              Quick takeaways
+            </h2>
             <ul class="space-y-2 text-base text-neutral-700">
               <li class="flex items-start gap-2">
                 <span class="text-brand-600 mt-1">•</span>
@@ -53,7 +55,11 @@
           </div>
           <!-- Widget Examples -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -63,7 +69,9 @@
               We offer embeddable comparison widgets that you can integrate into your site or app. These widgets show live rates and rankings, updated automatically.
             </p>
             <div class="rounded-2xl border-2 border-neutral-200 bg-neutral-50 p-6 mb-6">
-              <div class="text-sm font-semibold text-neutral-600 mb-2">Example Widget</div>
+              <div class="text-sm font-semibold text-neutral-600 mb-2">
+                Example Widget
+              </div>
               <div class="bg-white rounded-lg p-4 border border-neutral-200">
                 <div class="text-center py-8 text-neutral-400">
                   [Comparison Widget Preview]
@@ -82,7 +90,9 @@
             </h2>
             <div class="space-y-4">
               <div class="rounded-xl border border-brand-200 bg-white p-5">
-                <h3 class="text-base font-bold text-neutral-900 mb-2">✓ What Partners Can Customize</h3>
+                <h3 class="text-base font-bold text-neutral-900 mb-2">
+                  ✓ What Partners Can Customize
+                </h3>
                 <ul class="space-y-1 text-sm text-neutral-700 list-disc list-inside">
                   <li>Widget colors and styling</li>
                   <li>Default corridors shown</li>
@@ -90,7 +100,9 @@
                 </ul>
               </div>
               <div class="rounded-xl border border-red-200 bg-red-50 p-5">
-                <h3 class="text-base font-bold text-neutral-900 mb-2">✗ What Partners Cannot Change</h3>
+                <h3 class="text-base font-bold text-neutral-900 mb-2">
+                  ✗ What Partners Cannot Change
+                </h3>
                 <ul class="space-y-1 text-sm text-neutral-700 list-disc list-inside">
                   <li>Rankings or sort order</li>
                   <li>Remit-Score values</li>
@@ -111,28 +123,47 @@
             </p>
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <p class="text-sm font-semibold text-neutral-900 mb-2">1) Scope & corridors</p>
-                <p class="text-sm text-neutral-700">Choose the corridors, amounts, and payout methods you want to show by default.</p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">
+                  1) Scope & corridors
+                </p>
+                <p class="text-sm text-neutral-700">
+                  Choose the corridors, amounts, and payout methods you want to show by default.
+                </p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <p class="text-sm font-semibold text-neutral-900 mb-2">2) Embed & styling</p>
-                <p class="text-sm text-neutral-700">Drop in the widget, align styles, and place disclosures where required.</p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">
+                  2) Embed & styling
+                </p>
+                <p class="text-sm text-neutral-700">
+                  Drop in the widget, align styles, and place disclosures where required.
+                </p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <p class="text-sm font-semibold text-neutral-900 mb-2">3) QA & validation</p>
-                <p class="text-sm text-neutral-700">We verify live quotes against provider checkout for the default scenarios.</p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">
+                  3) QA & validation
+                </p>
+                <p class="text-sm text-neutral-700">
+                  We verify live quotes against provider checkout for the default scenarios.
+                </p>
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-5">
-                <p class="text-sm font-semibold text-neutral-900 mb-2">4) Launch & monitoring</p>
-                <p class="text-sm text-neutral-700">Monitor performance and corridor coverage as your audience grows.</p>
+                <p class="text-sm font-semibold text-neutral-900 mb-2">
+                  4) Launch & monitoring
+                </p>
+                <p class="text-sm text-neutral-700">
+                  Monitor performance and corridor coverage as your audience grows.
+                </p>
               </div>
             </div>
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- Use Cases -->
           <div class="mb-12">
@@ -141,25 +172,33 @@
             </h2>
             <div class="grid gap-6 md:grid-cols-2">
               <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">📰 News Sites</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  📰 News Sites
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   Embed comparison widgets in articles about remittances, exchange rates, or financial news. Provide readers with actionable tools.
                 </p>
               </div>
               <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">💻 Fintech Apps</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  💻 Fintech Apps
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   Embed our comparison module inside your app. White-label the experience while maintaining independent rankings.
                 </p>
               </div>
               <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">🌐 Expat Communities</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  🌐 Expat Communities
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   Add comparison tools to community forums or websites. Help members find the best rates for their specific corridors.
                 </p>
               </div>
               <div class="rounded-2xl border-2 border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">📊 Research Platforms</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  📊 Research Platforms
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   Use our data feeds for academic research, market analysis, or financial reporting. Access aggregated, anonymized insights.
                 </p>
@@ -177,7 +216,9 @@
             </p>
             <div class="space-y-4">
               <div class="rounded-xl border border-emerald-200 bg-white p-4">
-                <h3 class="text-base font-bold text-neutral-900 mb-2">✓ Partners Can:</h3>
+                <h3 class="text-base font-bold text-neutral-900 mb-2">
+                  ✓ Partners Can:
+                </h3>
                 <ul class="space-y-1 text-sm text-neutral-700 list-disc list-inside">
                   <li>Customize widget appearance</li>
                   <li>Choose default corridors</li>
@@ -186,7 +227,9 @@
                 </ul>
               </div>
               <div class="rounded-xl border border-red-200 bg-red-50 p-4">
-                <h3 class="text-base font-bold text-neutral-900 mb-2">✗ Partners Cannot:</h3>
+                <h3 class="text-base font-bold text-neutral-900 mb-2">
+                  ✗ Partners Cannot:
+                </h3>
                 <ul class="space-y-1 text-sm text-neutral-700 list-disc list-inside">
                   <li>Change provider rankings</li>
                   <li>Modify Remit-Score values</li>
@@ -212,8 +255,18 @@
                 class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-md hover:bg-brand-700 transition-all"
               >
                 Request Widget Access
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </NuxtLink>
               <NuxtLink
@@ -221,8 +274,18 @@
                 class="inline-flex items-center gap-2 rounded-xl border-2 border-brand-600 bg-white px-6 py-3 text-base font-semibold text-brand-600 hover:bg-brand-50 transition-all"
               >
                 Learn About Partnerships
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </NuxtLink>
             </div>
@@ -303,7 +366,3 @@ jsonLdBreadcrumb([
   { name: 'For Publishers', url: `${siteUrl}/learn/embed-remit-scout-on-your-site` },
 ])
 </script>
-
-
-
-

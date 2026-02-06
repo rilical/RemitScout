@@ -4,34 +4,73 @@
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-          <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <svg
+            class="h-5 w-5 text-brand-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">Market Spread</h2>
-          <p class="text-sm text-neutral-400">Best-to-worst pricing dispersion</p>
+          <h2 class="text-lg font-bold text-white">
+            Market Spread
+          </h2>
+          <p class="text-sm text-neutral-400">
+            Best-to-worst pricing dispersion
+          </p>
         </div>
       </div>
       <div class="text-right">
-        <div class="text-xs text-neutral-500">Providers</div>
-        <div class="text-xl font-bold text-white">{{ data?.providerCount || 0 }}</div>
+        <div class="text-xs text-neutral-500">
+          Providers
+        </div>
+        <div class="text-xl font-bold text-white">
+          {{ data?.providerCount || 0 }}
+        </div>
       </div>
     </div>
 
     <!-- Content -->
     <div class="p-6">
-      <div v-if="loading" class="flex h-40 items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-40 items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading...
         </div>
       </div>
 
-      <div v-else class="space-y-4">
+      <div
+        v-else
+        class="space-y-4"
+      >
         <!-- Rate Ladder -->
         <div class="space-y-3">
           <!-- Best Rate -->
@@ -41,12 +80,18 @@
                 <span class="text-xs font-bold text-white">1</span>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">Best Price</div>
-                <div class="text-xs text-neutral-400">{{ data?.bestProvider }}</div>
+                <div class="text-sm font-semibold text-white">
+                  Best Price
+                </div>
+                <div class="text-xs text-neutral-400">
+                  {{ data?.bestProvider }}
+                </div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-brand-600">{{ formatRate(data?.bestRate) }}</div>
+              <div class="text-lg font-mono font-bold text-brand-600">
+                {{ formatRate(data?.bestRate) }}
+              </div>
             </div>
           </div>
 
@@ -57,12 +102,18 @@
                 <span class="text-xs font-bold text-white">2</span>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">Runner-up</div>
-                <div class="text-xs text-neutral-400">{{ data?.secondBestProvider }}</div>
+                <div class="text-sm font-semibold text-white">
+                  Runner-up
+                </div>
+                <div class="text-xs text-neutral-400">
+                  {{ data?.secondBestProvider }}
+                </div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-white">{{ formatRate(data?.secondBestRate) }}</div>
+              <div class="text-lg font-mono font-bold text-white">
+                {{ formatRate(data?.secondBestRate) }}
+              </div>
             </div>
           </div>
 
@@ -72,10 +123,14 @@
               <div class="flex h-6 w-6 items-center justify-center">
                 <span class="text-xs text-neutral-500">-</span>
               </div>
-              <div class="text-sm text-neutral-400">Median Rate</div>
+              <div class="text-sm text-neutral-400">
+                Median Rate
+              </div>
             </div>
             <div class="text-right">
-              <div class="font-mono text-neutral-300">{{ formatRate(data?.medianRate) }}</div>
+              <div class="font-mono text-neutral-300">
+                {{ formatRate(data?.medianRate) }}
+              </div>
             </div>
           </div>
 
@@ -83,17 +138,33 @@
           <div class="flex items-center justify-between rounded-lg bg-danger-600/10 border border-danger-600/30 px-4 py-3">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-danger-600/20">
-                <svg class="h-4 w-4 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  class="h-4 w-4 text-danger-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">Worst Price</div>
-                <div class="text-xs text-neutral-400">{{ data?.worstProvider }}</div>
+                <div class="text-sm font-semibold text-white">
+                  Worst Price
+                </div>
+                <div class="text-xs text-neutral-400">
+                  {{ data?.worstProvider }}
+                </div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-danger-600">{{ formatRate(data?.worstRate) }}</div>
+              <div class="text-lg font-mono font-bold text-danger-600">
+                {{ formatRate(data?.worstRate) }}
+              </div>
             </div>
           </div>
         </div>
@@ -102,12 +173,20 @@
         <div class="mt-6 rounded-lg bg-neutral-900 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">Market Spread</div>
-              <div class="text-2xl font-bold text-white">{{ spreadRangeBpsDisplay }}</div>
+              <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Market Spread
+              </div>
+              <div class="text-2xl font-bold text-white">
+                {{ spreadRangeBpsDisplay }}
+              </div>
             </div>
             <div class="text-right">
-              <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">Range</div>
-              <div class="text-lg font-mono text-neutral-300">{{ formatRate(data?.spreadRange) }}</div>
+              <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Range
+              </div>
+              <div class="text-lg font-mono text-neutral-300">
+                {{ formatRate(data?.spreadRange) }}
+              </div>
             </div>
           </div>
           <div class="mt-3">
@@ -127,18 +206,33 @@
         <!-- Analyst Insight -->
         <div class="rounded-lg border border-neutral-700 bg-neutral-900/50 p-4">
           <div class="flex items-start gap-3">
-            <svg class="h-5 w-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              class="h-5 w-5 text-brand-600 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <div>
-              <p class="text-sm text-neutral-300">{{ analystInsight }}</p>
+              <p class="text-sm text-neutral-300">
+                {{ analystInsight }}
+              </p>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <PulseTrustStamp v-if="data" :last-updated="lastUpdated" />
+    <PulseTrustStamp
+      v-if="data"
+      :last-updated="lastUpdated"
+    />
   </div>
 </template>
 
@@ -164,15 +258,18 @@ const spreadRangeBpsDisplay = computed(() => {
 
 const analystInsight = computed(() => {
   if (!data.value) return ''
-  
+
   const spread = data.value.spreadRangeBps
   if (spread < 50) {
     return 'Market is tightly priced. Competitive pressure is high and spreads are compressed.'
-  } else if (spread < 150) {
+  }
+  else if (spread < 150) {
     return 'Normal dispersion. Leader advantage is meaningful but not extreme.'
-  } else if (spread < 300) {
+  }
+  else if (spread < 300) {
     return 'Wide dispersion. Pricing variance creates clear winner/loser positioning.'
-  } else {
+  }
+  else {
     return 'Extreme dispersion detected. Expect aggressive leader shifts and higher price sensitivity.'
   }
 })
@@ -187,9 +284,11 @@ async function loadData() {
   try {
     data.value = await getMarketDepthData(store.corridor)
     lastUpdated.value = new Date().toISOString()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load market depth:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -197,13 +296,10 @@ async function loadData() {
 watch(
   () => [store.corridor, store.timeframe],
   () => loadData(),
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
   loadData()
 })
 </script>
-
-
-

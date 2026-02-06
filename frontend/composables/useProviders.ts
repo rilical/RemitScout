@@ -22,6 +22,6 @@ export const useProviders = (
   return useAsyncData(
     key,
     () => request('/providers', { query }),
-    { watch: false, ...restOptions },
+    { watch: [], ...restOptions },
   )
 }

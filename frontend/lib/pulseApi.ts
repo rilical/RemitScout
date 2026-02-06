@@ -45,7 +45,7 @@ export interface ProviderHeatmapDay {
 
 export interface ProviderHeatmapData {
   days: ProviderHeatmapDay[]
-  providerStats: Record<string, { wins: number; percentage: number }>
+  providerStats: Record<string, { wins: number, percentage: number }>
   lastUpdated: string
 }
 
@@ -76,6 +76,12 @@ export interface SmartSendData {
   message: string
   rationale: string[]
   lastUpdated: string
+  recommendation?: string
+  currentRate?: number
+  avg30Day?: number
+  percentFromAvg?: number
+  confidence?: number
+  percentile?: number
 }
 
 let corridorCache: CorridorOption[] | null = null

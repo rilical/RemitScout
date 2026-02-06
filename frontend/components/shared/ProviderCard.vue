@@ -26,23 +26,32 @@
           :style="{ borderColor: scoreColor }"
         >
           <div class="text-center">
-            <div class="text-3xl font-bold leading-none" :class="scoreTextClass">
+            <div
+              class="text-3xl font-bold leading-none"
+              :class="scoreTextClass"
+            >
               {{ scoreDisplay }}
             </div>
           </div>
           <!-- Score Ring Animation -->
-          <div class="absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" :style="{ background: `radial-gradient(circle, ${scoreColor}15 0%, transparent 70%)` }"></div>
+          <div
+            class="absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+            :style="{ background: `radial-gradient(circle, ${scoreColor}15 0%, transparent 70%)` }"
+          />
         </div>
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-bold uppercase tracking-wider" :class="scoreTextClass">Remit-Scout Score</span>
+          <span
+            class="text-sm font-bold uppercase tracking-wider"
+            :class="scoreTextClass"
+          >Remit-Scout Score</span>
           <span class="text-xs font-medium text-neutral-500">Scored on 0-10 scale</span>
           <div class="mt-1 flex items-center gap-1">
             <div class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-200">
-              <div 
+              <div
                 class="h-full transition-all duration-500"
                 :class="scoreTextClass.replace('text-', 'bg-')"
                 :style="{ width: `${(props.provider?.score || 0) * 10}%` }"
-              ></div>
+              />
             </div>
           </div>
         </div>
@@ -88,7 +97,10 @@
     </div>
 
     <!-- Hover Accent Line -->
-    <div class="absolute bottom-0 left-0 h-1 w-0 transition-all duration-300 group-hover:w-full" :style="{ backgroundColor: scoreColor }"></div>
+    <div
+      class="absolute bottom-0 left-0 h-1 w-0 transition-all duration-300 group-hover:w-full"
+      :style="{ backgroundColor: scoreColor }"
+    />
   </div>
 </template>
 

@@ -24,10 +24,12 @@ export const useAudit = () => {
     error.value = null
     try {
       return await fn()
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to load audit logs.'
       throw err
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

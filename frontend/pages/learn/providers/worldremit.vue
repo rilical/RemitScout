@@ -6,11 +6,20 @@
     <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
-          <NuxtLink to="/" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Home</NuxtLink>
+          <NuxtLink
+            to="/"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Home</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Learn</NuxtLink>
+          <NuxtLink
+            to="/learn"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Learn</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
+          <NuxtLink
+            to="/learn/providers"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">WorldRemit Review</span>
         </nav>
@@ -30,7 +39,11 @@
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    class="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   Provider Review
@@ -54,8 +67,18 @@
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Compare WorldRemit Now
               </NuxtLink>
@@ -65,8 +88,18 @@
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </a>
             </div>
@@ -76,17 +109,11 @@
           <div class="flex justify-center lg:justify-end">
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
+                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  REMIT-SCOUT SCORE
+                </div>
                 <div class="flex justify-center">
-                  <div
-                    class="relative flex h-40 w-40 items-center justify-center rounded-full border-4 bg-white shadow-lg"
-                    :style="{ borderColor: scoreColor }"
-                  >
-                    <div class="text-center">
-                      <span :class="[scoreTextClass, 'text-5xl font-bold leading-none']">8.4</span>
-                      <span class="text-sm text-slate-500">/10</span>
-                    </div>
-                  </div>
+                  <RemitScoreRing :score="score" />
                 </div>
               </div>
 
@@ -97,42 +124,49 @@
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
               </div>
 
               <div class="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p class="text-xs" style="color: rgba(17, 24, 39, 1);">
+                <p
+                  class="text-xs"
+                  style="color: rgba(17, 24, 39, 1);"
+                >
                   Based on our independent methodology.<br>
-                  <NuxtLink to="/methodology" class="font-semibold hover:text-brand-700" style="color: rgba(37, 99, 235, 1);">Learn how we score →</NuxtLink>
+                  <NuxtLink
+                    to="/methodology"
+                    class="font-semibold hover:text-brand-700"
+                    style="color: rgba(37, 99, 235, 1);"
+                  >Learn how we score →</NuxtLink>
                 </p>
               </div>
             </div>
@@ -146,27 +180,46 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">130+</div>
-            <div class="text-sm text-slate-600">Countries Supported</div>
+            <div class="text-3xl font-bold text-slate-900">
+              130+
+            </div>
+            <div class="text-sm text-slate-600">
+              Countries Supported
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">50</div>
-            <div class="text-sm text-slate-600">Send Countries</div>
+            <div class="text-3xl font-bold text-slate-900">
+              50
+            </div>
+            <div class="text-sm text-slate-600">
+              Send Countries
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">Instant</div>
-            <div class="text-sm text-slate-600">Cash Pickup</div>
+            <div class="text-3xl font-bold text-emerald-600">
+              Instant
+            </div>
+            <div class="text-sm text-slate-600">
+              Cash Pickup
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">24/7</div>
-            <div class="text-sm text-slate-600">Support Available</div>
+            <div class="text-3xl font-bold text-slate-900">
+              24/7
+            </div>
+            <div class="text-sm text-slate-600">
+              Support Available
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Main Content -->
-    <section id="review" class="py-16 bg-white">
+    <section
+      id="review"
+      class="py-16 bg-white"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
@@ -175,18 +228,28 @@
               <!-- Introduction -->
               <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
-                  <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="w-12 h-12 text-brand-600/20"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
-                  Remit-Scout scores providers using a weighted rubric focused on what actually happens to your money: <strong class="text-brand-600 font-bold">Delivered Value (40%)</strong>, then reliability, speed/friction, support/refunds, and trust/safety. For this review, the headline score is 8.4/10.
+                  Remit-Scout scores providers using a weighted rubric focused on what actually happens to your money: <strong class="text-brand-600 font-bold">Delivered Value (40%)</strong>, then reliability, speed/friction, support/refunds, and trust/safety. For this review, the headline score is 8.2/10.
                 </p>
               </div>
 
               <div class="mb-12">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
@@ -196,12 +259,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-8">
                 <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   Score Breakdown
                 </h2>
@@ -213,81 +286,129 @@
               <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
                   <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
-                    8.4
+                    8.2
                   </div>
                   <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
                       WorldRemit
                     </h3>
-                    <p class="text-sm text-black">Remit-Score</p>
+                    <p class="text-sm text-black">
+                      Remit-Score
+                    </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Delivered Value
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Solid all‑in pricing when fee is low and FX rate is tight, but effective cost varies by corridor, payout method, and funding choice.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      40% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Solid all‑in pricing when fee is low and FX rate is tight, but effective cost varies by corridor, payout method, and funding choice.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Reliability</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Reliability
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Available to senders in 50 countries with payout options that vary by corridor. Strong availability signal.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      20% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Available to senders in 50 countries with payout options that vary by corridor. Strong availability signal.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Friction & Speed
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Clear speed buckets: cash pickup instant, mobile money within minutes, bank transfer varies. App shows expected delivery time before paying.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Clear speed buckets: cash pickup instant, mobile money within minutes, bank transfer varies. App shows expected delivery time before paying.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Support & Refunds
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">24/7 in-app support plus phone support during listed hours. Refunds can take up to 7 working days after cancellation; may not be possible once paid out.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      24/7 in-app support plus phone support during listed hours. Refunds can take up to 7 working days after cancellation; may not be possible once paid out.
+                    </div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Trust & Safety
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">UK FCA authorization and US money transmitter licensing disclosures available. Public regulatory signals in major markets.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      10% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      UK FCA authorization and US money transmitter licensing disclosures available. Public regulatory signals in major markets.
+                    </div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 8.4 (not higher):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">WorldRemit explicitly charges via transfer fees + FX margin, so it won't reliably be the cheapest option in every corridor. Value is "good, not always best," even when everything else works smoothly.</div>
+                      <div class="font-semibold text-slate-900 mb-1.5">
+                        Why 8.2 (not higher):
+                      </div>
+                      <div class="text-sm text-slate-700 leading-relaxed">
+                        WorldRemit explicitly charges via transfer fees + FX margin, so it won't reliably be the cheapest option in every corridor. Value is "good, not always best," even when everything else works smoothly.
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Delivered Value (40%)
+                  </h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
-                  WorldRemit's 8.4/10 is driven first by Delivered Value (40%): you can get solid all‑in pricing when the transfer fee is low and the FX rate is tight, but WorldRemit openly makes money through two levers—a transfer fee and a margin in the exchange rate—so the effective cost can vary meaningfully by corridor, payout method, and funding choice.
+                  WorldRemit's 8.2/10 is driven first by Delivered Value (40%): you can get solid all‑in pricing when the transfer fee is low and the FX rate is tight, but WorldRemit openly makes money through two levers—a transfer fee and a margin in the exchange rate—so the effective cost can vary meaningfully by corridor, payout method, and funding choice.
                 </p>
                 <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
                   <p class="font-semibold text-slate-900 mb-3 text-base">
@@ -319,26 +440,58 @@
                 </div>
 
                 <div class="p-6 rounded-xl border-2 border-blue-200 mb-6">
-                  <p class="font-semibold text-slate-900 mb-3">"How often is it the cheapest?"</p>
+                  <p class="font-semibold text-slate-900 mb-3">
+                    "How often is it the cheapest?"
+                  </p>
                   <p class="text-slate-800 leading-relaxed mb-4">
                     We don't have an internal lane-by-lane price win rate here, so we won't fabricate one. The most honest way to frame it from the public pricing model:
                   </p>
                   <ul class="space-y-2 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>WorldRemit can be competitive when its fee is low and the FX margin is tight for that corridor.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
                       </svg>
                       <span>It will not always be cheapest versus services optimized primarily for tight FX spreads, because WorldRemit explicitly earns margin in the exchange rate.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>In corridors where you specifically need cash pickup / mobile money / airtime, WorldRemit's "value" may come from availability + speed, not only price.</span>
                     </li>
@@ -357,7 +510,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Reliability & Success (20%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -375,23 +530,55 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-3">WorldRemit provides practical "freshness" cues:</p>
+                    <p class="text-slate-700 mb-3">
+                      WorldRemit provides practical "freshness" cues:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>It will email you if there's an unexpected delay</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>You can check transfer status in your account</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>It suggests checking live updates by searching the destination country on the homepage if needed</span>
                       </li>
@@ -405,7 +592,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Friction & Speed (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -415,35 +604,87 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       ETA / speed buckets
                     </p>
-                    <p class="text-slate-700 mb-3">WorldRemit's own "getting started" page offers clear speed expectations:</p>
+                    <p class="text-slate-700 mb-3">
+                      WorldRemit's own "getting started" page offers clear speed expectations:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Cash pickup:</strong> "available to collect instantly" (with real-world dependency on partner hours and any required compliance checks)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Mobile money:</strong> typically "within minutes"</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Airtime top-up:</strong> typically "within minutes," and the airtime FAQ notes it's usually instant/within a few minutes (rare delays due to network congestion/outages)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Bank transfer:</strong> "within minutes at selected banks," but could be instant or 1–2 working days, and is "usually" within one working day depending on country</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Home delivery</strong> (where available): 24 hours to 7 days depending on location</span>
                       </li>
@@ -453,7 +694,9 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods
                     </p>
-                    <p class="text-slate-700 mb-3">Across its documentation, WorldRemit commonly supports:</p>
+                    <p class="text-slate-700 mb-3">
+                      Across its documentation, WorldRemit commonly supports:
+                    </p>
                     <div class="flex flex-wrap gap-2">
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Bank transfer</span>
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Cash pickup</span>
@@ -477,7 +720,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Support & Refunds (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -487,17 +732,39 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Refund experience
                     </p>
-                    <p class="text-slate-700 mb-3">WorldRemit's refund timeline is clearly stated:</p>
+                    <p class="text-slate-700 mb-3">
+                      WorldRemit's refund timeline is clearly stated:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Refunds "usually take up to 7 working days" after cancellation, depending on how you paid</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
                         <span>It may not be able to refund a transfer after it has been paid out</span>
                       </li>
@@ -507,24 +774,48 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Dispute handling
                     </p>
-                    <p class="text-slate-700 mb-3">WorldRemit publishes a complaint pathway:</p>
+                    <p class="text-slate-700 mb-3">
+                      WorldRemit publishes a complaint pathway:
+                    </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>For US customers: contact WorldRemit customer service first; if unresolved, the FAQ lists state-level complaint contacts</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Its recipient terms also describe submitting complaints in writing and that it will acknowledge and investigate</span>
                       </li>
                     </ul>
                   </div>
                   <div class="mt-5 p-4 rounded-lg bg-slate-50 border-l-4 border-slate-400">
-                    <p class="font-semibold text-slate-900 mb-2">User friction post-issue</p>
+                    <p class="font-semibold text-slate-900 mb-2">
+                      User friction post-issue
+                    </p>
                     <p class="m-0 text-slate-800">
                       Expect friction to increase when: details are incorrect and can't be edited later, compliance checks require more info before release, or the transfer is already paid out (fewer options). Support access looks solid on paper: WorldRemit advertises 24/7 in-app support, plus phone support during listed hours.
                     </p>
@@ -537,7 +828,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Trust & Safety (10%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -546,14 +839,34 @@
                   <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">UK:</strong> WorldRemit Ltd is stated as authorised and regulated by the FCA under the Payment Services Regulations 2017 and Electronic Money Regulations 2011 (registration number shown)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">US:</strong> WorldRemit Corp. publishes state licensing disclosures (including being licensed as a money transmitter in New York and other listed jurisdictions, with NMLS number shown)</span>
                       </li>
@@ -567,11 +880,21 @@
                 </p>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
-                <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  class="w-7 h-7 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 Pros and Cons
               </h2>
@@ -579,8 +902,16 @@
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
                 <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Pros
                   </h3>
@@ -605,8 +936,16 @@
                 </div>
                 <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Cons
                   </h3>
@@ -627,32 +966,72 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-12">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Best For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Senders who want flexible payout methods (cash pickup, mobile money, bank transfer, airtime top‑up) and want the app to show the expected delivery time before paying</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Cash pickup and mobile money corridors where speed matters (these are typically "instant/within minutes" in WorldRemit's own guidance)</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>People who want clear pre‑send disclosure of fees/rate and a trackable status flow (including email updates if there's an unexpected delay)</span>
                     </li>
@@ -661,27 +1040,67 @@
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Not Ideal For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Price-maximizers who care only about the tightest FX spread every time (because WorldRemit explicitly earns a margin on FX, it won't consistently win vs rate‑first specialists)</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Transfers where you need guaranteed reversibility after payout (WorldRemit notes refunds may not be possible once the transfer is paid out)</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Users who fund with credit cards and assume the "WorldRemit total" is the final all‑in cost (issuers can add fees that reduce effective value)</span>
                     </li>
@@ -689,12 +1108,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
                   </svg>
                   How to Get the Best Rate on WorldRemit
                 </h2>
@@ -703,35 +1132,45 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      1
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
                       <span class="text-slate-700">Bank transfer vs debit vs credit card. Credit cards can trigger issuer fees and reduce delivered value.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      2
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Treat FX as a cost:</strong>
                       <span class="text-slate-700">WorldRemit earns a margin on the exchange rate, so compare the quoted rate to a mid‑market reference and focus on "receiver gets."</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      3
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Choose payout method intentionally:</strong>
                       <span class="text-slate-700">Cash pickup / mobile money / airtime are often minutes; bank transfer can be slower depending on the destination and bank.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      4
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Triple-check recipient details:</strong>
                       <span class="text-slate-700">Incorrect info can delay processing and may not be editable later.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      5
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">If you might cancel, act quickly:</strong>
                       <span class="text-slate-700">Cancellation/refund options can disappear once paid out; refunds can take up to 7 working days after cancellation.</span>
@@ -740,12 +1179,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
                   </svg>
                   Two Alternatives (and When They Beat WorldRemit)
                 </h2>
@@ -753,7 +1202,7 @@
                 <div class="space-y-6">
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Remitly (9.1)
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -763,7 +1212,7 @@
 
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Sendwave (9.0)
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -773,24 +1222,38 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   Bottom Line
                 </h2>
                 <div class="space-y-5 text-lg leading-relaxed text-slate-700">
                   <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">Who should use WorldRemit?</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Who should use WorldRemit?
+                    </p>
                     <p class="text-slate-800 mb-0">
                       People who want payout flexibility (cash pickup, mobile money, bank, airtime), generally fast delivery in non-bank rails, and a provider with verifiable regulatory disclosures in major markets.
                     </p>
                   </div>
                   <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">Why the 8.4/10 is justified:</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Why the 8.2/10 is justified:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       WorldRemit does well on speed and payout optionality, and it provides clear pre-send visibility (expected delivery time + receiver amount). The score is capped mainly by Delivered Value (40%): because WorldRemit explicitly charges via fees + FX margin, it won't reliably be the cheapest option in every corridor—so value is "good, not always best," even when everything else works smoothly.
                     </p>
@@ -805,7 +1268,9 @@
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">
+                  Ready to Compare?
+                </h3>
                 <p class="text-sm text-slate-600 mb-4">
                   See how WorldRemit stacks up for your specific corridor and amount.
                 </p>
@@ -817,57 +1282,114 @@
                 </NuxtLink>
               </div>
 
-              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
+              <AdPlacement
+                placement="blog_sidebar"
+                layout="vertical"
+                wrapper-class="rounded-xl"
+                min-height="160px"
+              />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Quick Facts
+                </h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Founded</dt>
-                    <dd class="font-semibold text-slate-900">2010</dd>
+                    <dt class="text-slate-600">
+                      Founded
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      2010
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Headquarters</dt>
-                    <dd class="font-semibold text-slate-900">London, UK</dd>
+                    <dt class="text-slate-600">
+                      Headquarters
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      London, UK
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Send Countries</dt>
-                    <dd class="font-semibold text-slate-900">50</dd>
+                    <dt class="text-slate-600">
+                      Send Countries
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      50
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Receive Countries</dt>
-                    <dd class="font-semibold text-slate-900">130+</dd>
+                    <dt class="text-slate-600">
+                      Receive Countries
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      130+
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Payout Methods</dt>
-                    <dd class="font-semibold text-slate-900">Multiple</dd>
+                    <dt class="text-slate-600">
+                      Payout Methods
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Multiple
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Support</dt>
-                    <dd class="font-semibold text-slate-900">24/7</dd>
+                    <dt class="text-slate-600">
+                      Support
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      24/7
+                    </dd>
                   </div>
                 </dl>
               </div>
 
               <!-- Why Trust Us -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Why Trust This Review?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Why Trust This Review?
+                </h3>
                 <ul class="space-y-3 text-sm text-slate-700">
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>100% independent - providers can't pay to rank higher</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Based on public documentation and methodology</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Transparent methodology</span>
                   </li>
@@ -877,36 +1399,60 @@
                   class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
 
               <!-- More Providers -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  More Provider Reviews
+                </h3>
                 <ul class="space-y-3">
                   <li>
-                    <NuxtLink to="/learn/providers/remitly" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/remitly"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/sendwave" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/sendwave"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">S</div>
                       <span>Sendwave Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/wise"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers" class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                    >
                       View all providers →
                     </NuxtLink>
                   </li>
@@ -919,12 +1465,21 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
+    <section
+      class="py-16 bg-blue-600"
+      style="background-color: rgba(37, 99, 235, 1);"
+    >
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
+        <h2
+          class="text-3xl font-bold mb-4"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Ready to See How WorldRemit Compares?
         </h2>
-        <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
+        <p
+          class="text-lg mb-8"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Enter your transfer details to see real-time rates from WorldRemit and 30+ other providers.
         </p>
         <NuxtLink
@@ -933,8 +1488,18 @@
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </NuxtLink>
       </div>
@@ -943,21 +1508,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
-
-definePageMeta({
-  alias: ['/reviews/worldremit'],
-})
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 setSeo({
-  title: 'WorldRemit Review 2024 - Remit-Score 8.4/10 | Remit-Scout',
-  description: 'Independent WorldRemit review with Remit-Score 8.4/10. Flexible payout methods, clear pre-send disclosure, fast cash pickup and mobile money. Detailed breakdown of fees, speed, and delivered value.',
+  title: 'WorldRemit Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
+  description: 'Independent WorldRemit review with Remit-Score 8.2/10. Flexible payout methods, clear pre-send disclosure, fast cash pickup and mobile money. Detailed breakdown of fees, speed, and delivered value.',
   canonical: `${siteUrl}/learn/providers/worldremit`,
   ogImage: `${siteUrl}/og-images/provider-worldremit.jpg`,
 })
@@ -969,31 +1529,17 @@ const breadcrumbItems = [
   { name: 'WorldRemit Review', path: '/learn/providers/worldremit' },
 ]
 
-const score = 8.4
-
-const scoreColor = computed(() => {
-  if (score >= 9.0) return '#10b981'
-  if (score >= 8.0) return '#2563eb'
-  if (score >= 7.0) return '#eab308'
-  return '#6b7280'
-})
-
-const scoreTextClass = computed(() => {
-  if (score >= 9.0) return 'text-green-600'
-  if (score >= 8.0) return 'text-brand-600'
-  if (score >= 7.0) return 'text-yellow-600'
-  return 'text-neutral-600'
-})
+const score = 8.2
 
 const { addReviewSchema } = useStructuredData()
 
-const reviewBody = `WorldRemit earns a Remit-Score of 8.4/10 based on our independent analysis. The provider offers flexible payout methods (cash pickup, mobile money, bank transfer, airtime top-up) with clear pre-send disclosure of fees and expected delivery times. Solid all-in pricing when transfer fees are low and FX rates are tight, but effective cost varies by corridor, payout method, and funding choice. Available to senders in 50 countries with payout to 130+ countries. Fast delivery for cash pickup (instant) and mobile money (within minutes). 24/7 support available.`
+const reviewBody = `WorldRemit earns a Remit-Score of 8.2/10 based on our independent analysis. The provider offers flexible payout methods (cash pickup, mobile money, bank transfer, airtime top-up) with clear pre-send disclosure of fees and expected delivery times. Solid all-in pricing when transfer fees are low and FX rates are tight, but effective cost varies by corridor, payout method, and funding choice. Available to senders in 50 countries with payout to 130+ countries. Fast delivery for cash pickup (instant) and mobile money (within minutes). 24/7 support available.`
 
 addReviewSchema({
   itemReviewed: 'WorldRemit',
   reviewBody,
   author: 'Remit-Scout Editorial Team',
-  ratingValue: 8.4,
+  ratingValue: score,
   bestRating: 10,
   worstRating: 1,
   datePublished: '2024-01-01',

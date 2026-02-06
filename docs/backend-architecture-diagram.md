@@ -29,8 +29,8 @@ flowchart LR
     EB["EventBridge Rules\nremit-scout-${env}-*"]
     JOBS_A["Plane A Scheduled Lambdas\nexport-worker\nalert-evaluation-scheduler (daily/weekly)\nalert-evaluation-worker\nalert-corridor-refresh\ntelemetry-analytics\nsession-cleanup\nbank-vs-specialist-refresh\naudit-log-cleanup\noanda-sync"]
     JOBS_B["Plane B Scheduled Lambdas\ngold-fx-rates\nsmart-alerts\ngold-popular-corridors\ngold-pulse-cache\nb2c-retry-failed\nb2c-queue-cleanup\nstoplist-auto-resume\nrights-matrix-sync-countries"]
-    JOBS_C["Plane C Scheduled Lambdas\ngold-publisher\ngold-indices\nprovider-weighting\ngold-reconciliation"]
-    PROBES["Provider Probe Lambdas\nremitly, westernunion, wise, worldremit\nria, dahabshiil, sendwave, mukuru\nxe, wirebarley, intermex"]
+    JOBS_C["Plane C Scheduled Lambdas\ngold-publisher\ngold-indices\nprovider-weighting\ndata-health-slo\ngold-reconciliation"]
+    PROBES["Provider Probe Lambdas\nremitly, westernunion, wise, worldremit\nria, dahabshiil, sendwave, mukuru\nxe, alansari, instarem, xoom\nremitbee, singx, placid, koronapay\nwirebarley, intermex"]
     ECS_B2B_SWEEP["ECS Scheduled Task\nb2b-sweep-scheduler\n(b2b-sweep-scheduler-ecs.ts)"]
   end
 
@@ -78,7 +78,8 @@ flowchart LR
     direction TB
     OBS_SOURCES["All Lambdas + ECS\n(logs/metrics/traces)"]
     CW_DASH["CloudWatch Dashboard\nremit-scout-${env}"]
-    CW_ALARMS["CloudWatch Alarms\nAPI p95/5xx, SQS depth/DLQ\nECS CPU/Mem, RDS, Redis"]
+    CW_ALARMS["CloudWatch Alarms\nAPI p95/5xx, SQS depth/DLQ\nSLOs (freshness, indices), probe heartbeats\nECS CPU/Mem, RDS, Redis"]
+    SYN["Synthetics Canaries\nhealth, quotes, indices"]
     SNS_CRIT["SNS: alerts-critical"]
     SNS_WARN["SNS: alerts-warning"]
     SNS_OPS["SNS: alerts-ops"]
@@ -193,6 +194,7 @@ flowchart LR
   CW_ALARMS --> SNS_WARN
   CW_ALARMS --> SNS_OPS
   OBS_SOURCES --> XRAY
+  SYN --> CW_ALARMS
 
   %% Cost wiring
   CUR --> BUDGET --> ANOMALY_MON --> ANOMALY_SUB

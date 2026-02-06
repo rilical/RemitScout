@@ -12,6 +12,7 @@ import {
   metricsContentType as apiMetricsContentType,
 } from '../../shared/api-metrics'
 import { getTracer } from '../../shared/tracing'
+import { getRedisClient } from '../../shared/redis'
 import { authPlugin, requireAuth } from './plugins/auth-plugin'
 import { createBackwardCompatibilityLayer } from './plugins/api-versioning'
 import { swaggerPlugin } from './plugins/swagger'
@@ -300,8 +301,30 @@ export const buildApp = async () => {
   app.get('/readyz', async (_request, reply) => {
     try {
       const pool = getPlaneAPool()
-      await pool.query('SELECT 1')
-      return { status: 'ready' }
+      const dbCheck = pool.query('SELECT 1')
+      const redisCheck = (async () => {
+        const client = await getRedisClient()
+        if (!client) return false
+        await client.ping()
+        return true
+      })()
+
+      const [dbOk, redisOk] = await Promise.all([
+        dbCheck.then(() => true).catch(() => false),
+        redisCheck.catch(() => false),
+      ])
+
+      const status = dbOk && redisOk ? 'ready' : 'not_ready'
+      const statusCode = dbOk && redisOk ? 200 : 503
+
+      reply.code(statusCode)
+      return {
+        status,
+        dependencies: {
+          database: dbOk ? 'ok' : 'unreachable',
+          redis: redisOk ? 'ok' : 'unreachable',
+        },
+      }
     } catch (error) {
       reply.code(503)
       return { status: 'not_ready' }

@@ -1,7 +1,10 @@
 <template>
   <div class="relative">
     <!-- Chart Container -->
-    <div ref="chartContainer" class="relative h-80 w-full">
+    <div
+      ref="chartContainer"
+      class="relative h-80 w-full"
+    >
       <svg
         class="h-full w-full"
         :viewBox="`0 0 ${width} ${height}`"
@@ -42,7 +45,10 @@
         </g>
 
         <!-- Zone labels -->
-        <g class="labels" font-size="10">
+        <g
+          class="labels"
+          font-size="10"
+        >
           <text
             :x="centerX + deviationCircles[0] + 5"
             :y="centerY - 5"
@@ -174,10 +180,23 @@
     </div>
 
     <!-- Anomaly summary -->
-    <div v-if="anomalyPoints.length > 0" class="mt-4 rounded-lg border border-brand-600/30 bg-brand-600/10 p-4">
+    <div
+      v-if="anomalyPoints.length > 0"
+      class="mt-4 rounded-lg border border-brand-600/30 bg-brand-600/10 p-4"
+    >
       <div class="flex items-center gap-2 text-brand-600">
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
         </svg>
         <span class="font-semibold">{{ anomalyPoints.length }} anomalies detected</span>
       </div>
@@ -272,7 +291,7 @@ const tooltipStyle = computed(() => {
 function handlePointHover(point: typeof scatterPoints.value[0], event: MouseEvent) {
   hoveredProvider.value = point.provider
   hoveredPoint.value = point
-  
+
   const rect = (event.target as Element).closest('svg')?.getBoundingClientRect()
   if (rect) {
     tooltipPosition.value = {
@@ -287,7 +306,3 @@ function clearHover() {
   hoveredPoint.value = null
 }
 </script>
-
-
-
-

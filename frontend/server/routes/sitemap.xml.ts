@@ -32,7 +32,6 @@ export default defineEventHandler((event) => {
   const highPriorityPages = [
     { path: '/send-money', priority: '0.9', changefreq: 'daily' },
     { path: '/learn/providers', priority: '0.9', changefreq: 'weekly' },
-    { path: '/reviews', priority: '0.8', changefreq: 'weekly' },
     { path: '/pulse', priority: '0.8', changefreq: 'daily' },
     { path: '/learn', priority: '0.8', changefreq: 'weekly' },
   ]
@@ -61,7 +60,7 @@ export default defineEventHandler((event) => {
   const learnGuides = Object.keys(learnPageModules)
     .map(slugFromPath)
     .filter((slug): slug is string => Boolean(slug))
-    .filter(slug => slug !== 'index' && slug !== 'providers' && !slug.startsWith('['))
+    .filter(slug => slug !== 'index' && slug !== 'providers' && slug !== 'test' && !slug.startsWith('['))
     .map(slug => ({ path: `/learn/${slug}`, priority: '0.7', changefreq: 'monthly' }))
 
   // Provider reviews - generated from provider scores
@@ -72,11 +71,6 @@ export default defineEventHandler((event) => {
   )
   const providerReviews = providerSlugs.map(slug => ({
     path: `/learn/providers/${slug}`,
-    priority: '0.8',
-    changefreq: 'weekly' as const,
-  }))
-  const providerReviewAliases = providerSlugs.map(slug => ({
-    path: `/reviews/${slug}`,
     priority: '0.8',
     changefreq: 'weekly' as const,
   }))
@@ -117,7 +111,6 @@ export default defineEventHandler((event) => {
     ...legalPages,
     ...learnGuides,
     ...providerReviews,
-    ...providerReviewAliases,
     ...providerComparisons,
     ...corridorPages,
     ...countryPages,
@@ -125,8 +118,8 @@ export default defineEventHandler((event) => {
   ]
 
   // Check if we need to split into multiple sitemaps (>50,000 URLs)
-  const maxUrlsPerSitemap = parseInt(process.env.SITEMAP_MAX_URLS || '50000', 10)
-  
+  const maxUrlsPerSitemap = Number.parseInt(process.env.SITEMAP_MAX_URLS || '50000', 10)
+
   if (allPages.length > maxUrlsPerSitemap) {
     // For now, we'll keep it simple but this is future-proofed
     // In the future, we can split into sitemap-index.xml

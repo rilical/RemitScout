@@ -118,18 +118,21 @@ export const useWatchlist = () => {
     try {
       syncing.value = true
       const response = await request<WatchlistApiResponse>('/watchlist')
-      
+
       if (response.success && response.items) {
         items.value = response.items.sort(sortByUpdatedDesc)
         hydrated.value = true
-      } else {
+      }
+      else {
         console.warn('Failed to fetch watchlist from backend:', response)
         hydrated.value = true
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching watchlist from backend:', error)
       hydrated.value = true
-    } finally {
+    }
+    finally {
       syncing.value = false
     }
   }
@@ -154,10 +157,12 @@ export const useWatchlist = () => {
         const response = await request<WatchlistApiResponse>('/watchlist')
         if (response.success && response.items) {
           serverItems = response.items
-        } else {
+        }
+        else {
           console.warn('Failed to fetch watchlist from backend:', response)
         }
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Error fetching watchlist from backend:', error)
         hydrated.value = true
         syncing.value = false
@@ -190,7 +195,8 @@ export const useWatchlist = () => {
             serverByKey.set(key, response.item)
             idMap[localItem.id] = response.item.id
           }
-        } catch (error) {
+        }
+        catch (error) {
           console.error('Error syncing local watchlist item to backend:', error)
         }
       }
@@ -203,7 +209,8 @@ export const useWatchlist = () => {
 
     try {
       return await syncPromise
-    } finally {
+    }
+    finally {
       syncPromise = null
     }
   }
@@ -243,7 +250,8 @@ export const useWatchlist = () => {
         const target = item as WatchTarget
         const normalized = normalizeTarget(target)
         await saveToBackend(normalized)
-      } else if (operation === 'update' && id) {
+      }
+      else if (operation === 'update' && id) {
         const watchlistItem = item as WatchlistItem
         await request<WatchlistApiResponse>(`/watchlist/${id}`, {
           method: 'PATCH',
@@ -251,12 +259,14 @@ export const useWatchlist = () => {
             label: watchlistItem.label,
           },
         })
-      } else if (operation === 'delete' && id) {
+      }
+      else if (operation === 'delete' && id) {
         await request<WatchlistApiResponse>(`/watchlist/${id}`, {
           method: 'DELETE',
         })
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Error syncing ${operation} to backend:`, error)
     }
   }
@@ -265,7 +275,8 @@ export const useWatchlist = () => {
     if (isLoggedIn.value) {
       resetLocalStorage()
       await fetchFromBackend()
-    } else {
+    }
+    else {
       hydrated.value = localStorageHydrated.value
     }
   })
@@ -274,7 +285,8 @@ export const useWatchlist = () => {
     if (loggedIn) {
       resetLocalStorage()
       await fetchFromBackend()
-    } else {
+    }
+    else {
       hydrated.value = localStorageHydrated.value
     }
   })
@@ -300,7 +312,8 @@ export const useWatchlist = () => {
     if (isLoggedIn.value) {
       try {
         return await saveToBackend(normalized, label)
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Error saving watchlist item to backend:', error)
         return {
           message: 'Unable to save watchlist item right now.',
@@ -310,15 +323,15 @@ export const useWatchlist = () => {
     }
 
     const existing = findByTarget(normalized)
-    
+
     if (existing) {
       existing.updatedAt = new Date().toISOString()
       items.value = [...items.value].sort(sortByUpdatedDesc)
-      
+
       if (isLoggedIn.value) {
         await syncToBackend('update', existing, existing.id)
       }
-      
+
       return { status: 'already_saved', item: existing }
     }
 
@@ -380,7 +393,7 @@ export const useWatchlist = () => {
   async function updateLabel(id: string, label: string) {
     const idx = items.value.findIndex(i => i.id === id)
     if (idx === -1) return
-    
+
     const now = new Date().toISOString()
     const next = { ...items.value[idx], label, updatedAt: now }
     items.value = [next, ...items.value.filter(i => i.id !== id)].sort(sortByUpdatedDesc)

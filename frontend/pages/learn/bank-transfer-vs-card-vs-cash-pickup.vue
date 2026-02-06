@@ -5,7 +5,10 @@
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 max-w-4xl">
           <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
@@ -49,7 +52,9 @@
                 </div>
 
                 <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
-                  <h3 class="font-bold text-2xl mb-4">The Bottom Line</h3>
+                  <h3 class="font-bold text-2xl mb-4">
+                    The Bottom Line
+                  </h3>
                   <p class="text-lg font-medium leading-relaxed mb-4">
                     Funding method and payout method both shape total cost and delivery time. Bank funding is cheapest, cards are fastest, and wallets or cash maximize access. Match the method to recipient access and urgency, not just headline fees.
                   </p>
@@ -61,13 +66,19 @@
 
               <!-- Right Column -->
               <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">Quick Takeaways</h3>
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                  Quick Takeaways
+                </h3>
                 <div class="grid gap-4">
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Payment method affects cost</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Payment method affects cost
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Bank transfers are cheapest (often $0-3), cards are expensive (2-4% fees). Choose based on urgency and amount.
                         </p>
@@ -77,9 +88,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Payout method affects speed</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Payout method affects speed
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Mobile wallets and cash pickup are fastest (minutes to hours). Bank transfers take 1-3 business days.
                         </p>
@@ -89,9 +104,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Match method to needs</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Match method to needs
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Consider recipient access, urgency, and cost. Rural areas often need mobile wallets or cash pickup.
                         </p>
@@ -105,7 +124,11 @@
 
           <!-- Payment Methods Comparison -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -116,11 +139,17 @@
             </p>
             <div class="grid md:grid-cols-2 gap-6 mb-8">
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">1</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">Bank Transfer (ACH/Wire)</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  1
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  Bank Transfer (ACH/Wire)
+                </h3>
                 <div class="grid gap-4 mb-4">
                   <div class="bg-white rounded-lg p-4 border border-brand-200">
-                    <p class="text-sm font-semibold text-brand-600 mb-2">Pros:</p>
+                    <p class="text-sm font-semibold text-brand-600 mb-2">
+                      Pros:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-brand-600 mt-1">•</span>
@@ -141,7 +170,9 @@
                     </ul>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-2">Cons:</p>
+                    <p class="text-sm font-semibold text-red-600 mb-2">
+                      Cons:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-red-600 mt-1">•</span>
@@ -169,11 +200,17 @@
               </div>
 
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">2</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">Debit/Credit Card</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  2
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  Debit/Credit Card
+                </h3>
                 <div class="grid gap-4 mb-4">
                   <div class="bg-white rounded-lg p-4 border border-brand-200">
-                    <p class="text-sm font-semibold text-brand-600 mb-2">Pros:</p>
+                    <p class="text-sm font-semibold text-brand-600 mb-2">
+                      Pros:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-brand-600 mt-1">•</span>
@@ -194,7 +231,9 @@
                     </ul>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-2">Cons:</p>
+                    <p class="text-sm font-semibold text-red-600 mb-2">
+                      Cons:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-red-600 mt-1">•</span>
@@ -237,11 +276,17 @@
             </p>
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">1</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">Mobile Wallet</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  1
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  Mobile Wallet
+                </h3>
                 <div class="space-y-4 mb-4">
                   <div class="bg-white rounded-lg p-4 border border-brand-200">
-                    <p class="text-sm font-semibold text-brand-600 mb-2">Pros:</p>
+                    <p class="text-sm font-semibold text-brand-600 mb-2">
+                      Pros:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-brand-600 mt-1">•</span>
@@ -262,7 +307,9 @@
                     </ul>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-2">Cons:</p>
+                    <p class="text-sm font-semibold text-red-600 mb-2">
+                      Cons:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-red-600 mt-1">•</span>
@@ -287,11 +334,17 @@
               </div>
 
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">2</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">Cash Pickup</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  2
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  Cash Pickup
+                </h3>
                 <div class="space-y-4 mb-4">
                   <div class="bg-white rounded-lg p-4 border border-brand-200">
-                    <p class="text-sm font-semibold text-brand-600 mb-2">Pros:</p>
+                    <p class="text-sm font-semibold text-brand-600 mb-2">
+                      Pros:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-brand-600 mt-1">•</span>
@@ -312,7 +365,9 @@
                     </ul>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-2">Cons:</p>
+                    <p class="text-sm font-semibold text-red-600 mb-2">
+                      Cons:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-red-600 mt-1">•</span>
@@ -337,11 +392,17 @@
               </div>
 
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">3</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">Bank Transfer</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  3
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  Bank Transfer
+                </h3>
                 <div class="space-y-4 mb-4">
                   <div class="bg-white rounded-lg p-4 border border-brand-200">
-                    <p class="text-sm font-semibold text-brand-600 mb-2">Pros:</p>
+                    <p class="text-sm font-semibold text-brand-600 mb-2">
+                      Pros:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-brand-600 mt-1">•</span>
@@ -362,7 +423,9 @@
                     </ul>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-2">Cons:</p>
+                    <p class="text-sm font-semibold text-red-600 mb-2">
+                      Cons:
+                    </p>
                     <ul class="space-y-1.5 text-sm text-neutral-700">
                       <li class="flex items-start gap-2">
                         <span class="text-red-600 mt-1">•</span>
@@ -398,7 +461,9 @@
             </p>
             <div class="grid md:grid-cols-3 gap-6">
               <div class="rounded-xl border-2 border-brand-300 bg-white p-6 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Bank + Bank</h3>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Bank + Bank
+                </h3>
                 <div class="space-y-2 text-sm text-neutral-700 mb-4">
                   <p><strong class="text-brand-600">Fee:</strong> $0-3</p>
                   <p><strong class="text-brand-600">Speed:</strong> 1-2 days</p>
@@ -411,7 +476,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-300 bg-white p-6 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Card + Cash</h3>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Card + Cash
+                </h3>
                 <div class="space-y-2 text-sm text-neutral-700 mb-4">
                   <p><strong class="text-brand-600">Fee:</strong> $20-40</p>
                   <p><strong class="text-brand-600">Speed:</strong> 15 min - 4 hours</p>
@@ -424,7 +491,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-300 bg-white p-6 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Bank + Mobile</h3>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Bank + Mobile
+                </h3>
                 <div class="space-y-2 text-sm text-neutral-700 mb-4">
                   <p><strong class="text-brand-600">Fee:</strong> $3-5</p>
                   <p><strong class="text-brand-600">Speed:</strong> 15 min - 2 hours</p>
@@ -440,9 +509,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- Safety Tips -->
           <div class="mb-12">
@@ -454,10 +526,14 @@
             </p>
             <div class="grid md:grid-cols-3 gap-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Cash Pickup</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Cash Pickup
+                </h3>
                 <div class="space-y-3">
                   <div class="bg-red-50 rounded-lg p-3 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-1">Critical: Name Matching</p>
+                    <p class="text-sm font-semibold text-red-600 mb-1">
+                      Critical: Name Matching
+                    </p>
                     <p class="text-xs text-neutral-700">
                       The recipient's name must match their ID exactly. Middle names, accents, spelling, and order matter. Double-check before sending.
                     </p>
@@ -480,10 +556,14 @@
               </div>
 
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Mobile Wallet</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Mobile Wallet
+                </h3>
                 <div class="space-y-3">
                   <div class="bg-red-50 rounded-lg p-3 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-1">Check Limits First</p>
+                    <p class="text-sm font-semibold text-red-600 mb-1">
+                      Check Limits First
+                    </p>
                     <p class="text-xs text-neutral-700">
                       Some wallets have daily withdrawal limits ($500-2,000). Recipients may need to verify their account before receiving large amounts.
                     </p>
@@ -506,10 +586,14 @@
               </div>
 
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Bank Transfer</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Bank Transfer
+                </h3>
                 <div class="space-y-3">
                   <div class="bg-red-50 rounded-lg p-3 border border-red-200">
-                    <p class="text-sm font-semibold text-red-600 mb-1">Verify Account Details</p>
+                    <p class="text-sm font-semibold text-red-600 mb-1">
+                      Verify Account Details
+                    </p>
                     <p class="text-xs text-neutral-700">
                       Always verify account numbers and routing codes. One wrong digit can send money to the wrong account, making recovery difficult.
                     </p>
@@ -543,7 +627,9 @@
             </p>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Choosing Card Payment for Large Amounts</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Choosing Card Payment for Large Amounts
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Card fees are percentage-based. On a $2,000 transfer, a 3% card fee costs $60 vs. $3 for a bank transfer. That's a $57 difference for the same transfer.
                 </p>
@@ -555,7 +641,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Cash Pickup Name Mismatch</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Cash Pickup Name Mismatch
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   If the name doesn't match the recipient's ID exactly, they can't pick up the money. You'll need to cancel and resend with correct name, losing time and possibly paying fees twice.
                 </p>
@@ -567,7 +655,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Mobile Wallet Daily Limits</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Mobile Wallet Daily Limits
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Some wallets limit how much can be received per day ($500-2,000). Sending $3,000 might require the recipient to wait 2-3 days to receive it all, or they may need to upgrade their account.
                 </p>
@@ -579,7 +669,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Assuming Bank Transfer is Always Cheapest</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Assuming Bank Transfer is Always Cheapest
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   While bank transfers usually have the lowest fees, some providers charge higher FX markup on bank transfers. Always compare "recipient gets" not just fees.
                 </p>
@@ -602,7 +694,9 @@
             </p>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <h3 class="font-bold text-lg mb-3">For Regular Transfers</h3>
+                <h3 class="font-bold text-lg mb-3">
+                  For Regular Transfers
+                </h3>
                 <ul class="space-y-2 text-sm text-white/90">
                   <li class="flex items-start gap-2">
                     <span class="mt-1">•</span>
@@ -619,7 +713,9 @@
                 </ul>
               </div>
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <h3 class="font-bold text-lg mb-3">For Urgent Transfers</h3>
+                <h3 class="font-bold text-lg mb-3">
+                  For Urgent Transfers
+                </h3>
                 <ul class="space-y-2 text-sm text-white/90">
                   <li class="flex items-start gap-2">
                     <span class="mt-1">•</span>
@@ -636,7 +732,9 @@
                 </ul>
               </div>
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <h3 class="font-bold text-lg mb-3">For Large Amounts ($1,000+)</h3>
+                <h3 class="font-bold text-lg mb-3">
+                  For Large Amounts ($1,000+)
+                </h3>
                 <ul class="space-y-2 text-sm text-white/90">
                   <li class="flex items-start gap-2">
                     <span class="mt-1">•</span>
@@ -653,7 +751,9 @@
                 </ul>
               </div>
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <h3 class="font-bold text-lg mb-3">For Rural Recipients</h3>
+                <h3 class="font-bold text-lg mb-3">
+                  For Rural Recipients
+                </h3>
                 <ul class="space-y-2 text-sm text-white/90">
                   <li class="flex items-start gap-2">
                     <span class="mt-1">•</span>
@@ -685,8 +785,18 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
             >
               Compare Providers Now
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -713,8 +823,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -730,8 +850,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -747,8 +877,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>

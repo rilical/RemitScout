@@ -29,7 +29,10 @@
         </p>
       </div>
 
-      <h2 id="what-are-cookies" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="what-are-cookies"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         What are cookies?
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -39,7 +42,10 @@
         your preferred language and other settings.
       </p>
 
-      <h2 id="how-we-use-cookies" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="how-we-use-cookies"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         How we use cookies
       </h2>
       <p class="mb-4 leading-relaxed">
@@ -51,7 +57,10 @@
         <li><strong class="text-blue-600">Security:</strong> Detect abuse, prevent fraud, and protect the service.</li>
       </ul>
 
-      <h2 id="types-of-cookies" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="types-of-cookies"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Types of cookies we use
       </h2>
       <p class="mb-4 leading-relaxed">
@@ -66,7 +75,10 @@
         we will update this policy and request consent where required by law.
       </p>
 
-      <h2 id="manage-preferences" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="manage-preferences"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Manage your preferences
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -76,7 +88,10 @@
         cookies may limit your ability to use some features of our platform.
       </p>
 
-      <h2 id="third-party-services" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="third-party-services"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Third-party services
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -85,7 +100,10 @@
         We do not allow third-party advertising cookies or tracking cookies for marketing purposes.
       </p>
 
-      <h2 id="policy-updates" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="policy-updates"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Updates to this policy
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -102,8 +120,14 @@
           Need help with privacy or cookies?
         </h3>
         <p class="mt-2 text-sm text-blue-800 leading-relaxed">
-          Visit our <NuxtLink to="/legal/privacy" class="font-semibold underline hover:text-blue-900">Privacy Policy</NuxtLink>
-          or <NuxtLink to="/contact" class="font-semibold underline hover:text-blue-900">contact us</NuxtLink>.
+          Visit our <NuxtLink
+            to="/legal/privacy"
+            class="font-semibold underline hover:text-blue-900"
+          >Privacy Policy</NuxtLink>
+          or <NuxtLink
+            to="/contact"
+            class="font-semibold underline hover:text-blue-900"
+          >contact us</NuxtLink>.
         </p>
       </div>
     </template>

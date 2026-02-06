@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">Live Provider Quotes</h2>
+        <h2 class="text-lg font-bold text-white">
+          Live Provider Quotes
+        </h2>
         <p class="text-sm text-neutral-400">
           Current rates for ${{ store.amount.toLocaleString() }} {{ store.corridor.fromCode }} → {{ store.corridor.toCode }}
         </p>
@@ -17,17 +19,38 @@
 
     <!-- Quotes Grid -->
     <div class="p-4">
-      <div v-if="loading" class="flex h-32 items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-32 items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading quotes...
         </div>
       </div>
 
-      <div v-else-if="data?.quotes.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div
+        v-else-if="data?.quotes.length"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
+      >
         <div
           v-for="(quote, index) in data?.quotes"
           :key="quote.provider"
@@ -59,13 +82,20 @@
               {{ quote.provider.charAt(0) }}
             </div>
             <div>
-              <div class="font-semibold text-white">{{ quote.provider }}</div>
-              <div class="text-xs text-neutral-400">{{ quote.speed }}</div>
+              <div class="font-semibold text-white">
+                {{ quote.provider }}
+              </div>
+              <div class="text-xs text-neutral-400">
+                {{ quote.speed }}
+              </div>
             </div>
           </div>
 
           <div class="text-right">
-            <div class="text-lg font-bold" :class="index === 0 ? 'text-brand-600' : 'text-white'">
+            <div
+              class="text-lg font-bold"
+              :class="index === 0 ? 'text-brand-600' : 'text-white'"
+            >
               {{ getCurrencySymbol(store.corridor.toCode) }}{{ formatNumber(quote.recipientGets) }}
             </div>
             <div class="flex items-center justify-end gap-2 text-xs">
@@ -81,26 +111,42 @@
           </div>
         </div>
       </div>
-      <div v-else class="flex h-24 items-center justify-center text-sm text-neutral-500">
+      <div
+        v-else
+        class="flex h-24 items-center justify-center text-sm text-neutral-500"
+      >
         No live quotes yet.
       </div>
 
       <!-- Analyst View: Additional Details -->
-      <div v-if="store.viewMode === 'analyst' && data" class="mt-6 border-t border-neutral-700 pt-4">
+      <div
+        v-if="store.viewMode === 'analyst' && data"
+        class="mt-6 border-t border-neutral-700 pt-4"
+      >
         <div class="grid grid-cols-3 gap-4 text-sm">
           <div>
-            <div class="text-neutral-500 mb-1">Best vs Worst</div>
+            <div class="text-neutral-500 mb-1">
+              Best vs Worst
+            </div>
             <div class="font-semibold text-brand-600">
               {{ getCurrencySymbol(store.corridor.toCode) }}{{ formatNumber(bestWorstDiff) }} more
             </div>
           </div>
           <div>
-            <div class="text-neutral-500 mb-1">Average Markup</div>
-            <div class="font-semibold text-white">{{ averageMarkup }} bps</div>
+            <div class="text-neutral-500 mb-1">
+              Average Markup
+            </div>
+            <div class="font-semibold text-white">
+              {{ averageMarkup }} bps
+            </div>
           </div>
           <div>
-            <div class="text-neutral-500 mb-1">Providers with Promo</div>
-            <div class="font-semibold text-white">{{ promoCount }}</div>
+            <div class="text-neutral-500 mb-1">
+              Providers with Promo
+            </div>
+            <div class="font-semibold text-white">
+              {{ promoCount }}
+            </div>
           </div>
         </div>
       </div>
@@ -109,18 +155,31 @@
     <!-- Compare CTA -->
     <div class="border-t border-neutral-700 px-6 py-3">
       <NuxtLink
-        :to="`/send-money/united-states-to-philippines?amount=${store.amount}`"
+        :to="compareCorridorUrl"
         class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
       >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
         </svg>
         Compare All Providers
       </NuxtLink>
     </div>
 
     <!-- Trust Stamp -->
-    <PulseTrustStamp v-if="data" :last-updated="data.lastUpdated" />
+    <PulseTrustStamp
+      v-if="data"
+      :last-updated="data.lastUpdated"
+    />
   </div>
 </template>
 
@@ -128,6 +187,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getMarketSnapshot, getCurrencySymbol, type MarketSnapshotData } from '~/lib/pulseApi'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const store = usePulseStore()
 
@@ -168,13 +228,25 @@ const midMarketRateDisplay = computed(() => {
   return data.value.midMarketRate.toFixed(4)
 })
 
+const compareCorridorUrl = computed(() => {
+  const id = store.corridor.corridorId
+  const fallback = `/send-money/united-states-to-philippines?amount=${store.amount}`
+  if (!id) return fallback
+  const [from, to] = id.split('-')
+  if (!from || !to) return fallback
+  const base = getCorridorUrl(from, to)
+  return `${base}?amount=${encodeURIComponent(String(store.amount))}`
+})
+
 async function loadData() {
   loading.value = true
   try {
     data.value = await getMarketSnapshot(store.corridor, store.amount)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load market snapshot:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -182,13 +254,10 @@ async function loadData() {
 watch(
   () => [store.corridor, store.amount],
   () => loadData(),
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
   loadData()
 })
 </script>
-
-
-

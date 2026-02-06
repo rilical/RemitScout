@@ -40,6 +40,7 @@ export type PipelineOptions = {
   publicGa4MeasurementId?: string
   publicMetaPixelId?: string
   publicAdsEnabled?: string
+  publicPulseEnabled?: string
 }
 
 export type PipelineResources = {
@@ -124,6 +125,9 @@ export const createPipeline = (
   if (options.publicAdsEnabled) {
     buildEnvVars.PUBLIC_ADS_ENABLED = { value: options.publicAdsEnabled }
   }
+  if (options.publicPulseEnabled) {
+    buildEnvVars.PUBLIC_PULSE_ENABLED = { value: options.publicPulseEnabled }
+  }
 
   const buildProject = new PipelineProject(scope, 'RemitScoutBuildProject', {
     environment: {
@@ -171,6 +175,7 @@ export const createPipeline = (
               '  export PUBLIC_IMAGE_BASE=${FRONTEND_DISTRIBUTION_ID:+https://d$FRONTEND_DISTRIBUTION_ID.cloudfront.net/images}',
               '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',
               '  export PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY:-}',
+              '  export PUBLIC_PULSE_ENABLED=${PUBLIC_PULSE_ENABLED:-}',
               '  pnpm -C frontend build',
               '  pnpm -C frontend generate',
               '  echo "Frontend build complete"',

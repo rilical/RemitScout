@@ -10,13 +10,27 @@
               @click="showCorridorDropdown = !showCorridorDropdown"
             >
               <span class="text-2xl">{{ store.corridor.fromFlag }}</span>
-              <svg class="h-4 w-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <svg
+                class="h-4 w-4 text-neutral-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
               </svg>
               <span class="text-2xl">{{ store.corridor.toFlag }}</span>
               <div class="ml-2">
-                <div class="text-sm font-semibold text-white">{{ store.corridor.label }}</div>
-                <div class="text-xs text-neutral-400">{{ store.corridor.from }} to {{ store.corridor.to }}</div>
+                <div class="text-sm font-semibold text-white">
+                  {{ store.corridor.label }}
+                </div>
+                <div class="text-xs text-neutral-400">
+                  {{ store.corridor.from }} to {{ store.corridor.to }}
+                </div>
               </div>
               <svg
                 class="ml-2 h-4 w-4 text-neutral-400 transition-transform"
@@ -25,7 +39,12 @@
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -46,13 +65,27 @@
                   @click="selectCorridor(corridor)"
                 >
                   <span class="text-xl">{{ corridor.fromFlag }}</span>
-                  <svg class="h-3 w-3 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  <svg
+                    class="h-3 w-3 text-neutral-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
                   </svg>
                   <span class="text-xl">{{ corridor.toFlag }}</span>
                   <div class="flex-1">
-                    <div class="text-sm font-medium text-white">{{ corridor.label }}</div>
-                    <div class="text-xs text-neutral-400">{{ corridor.from }}</div>
+                    <div class="text-sm font-medium text-white">
+                      {{ corridor.label }}
+                    </div>
+                    <div class="text-xs text-neutral-400">
+                      {{ corridor.from }}
+                    </div>
                   </div>
                   <svg
                     v-if="corridor.slug === store.corridor.slug"
@@ -61,7 +94,12 @@
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -75,16 +113,38 @@
               class="h-10 rounded-lg border border-neutral-600 bg-neutral-800 px-4 pr-8 text-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="handleAmountChange"
             >
-              <option :value="100">$100</option>
-              <option :value="200">$200</option>
-              <option :value="500">$500</option>
-              <option :value="1000">$1,000</option>
-              <option :value="5000">$5,000</option>
-              <option :value="10000">$10,000</option>
+              <option :value="100">
+                $100
+              </option>
+              <option :value="200">
+                $200
+              </option>
+              <option :value="500">
+                $500
+              </option>
+              <option :value="1000">
+                $1,000
+              </option>
+              <option :value="5000">
+                $5,000
+              </option>
+              <option :value="10000">
+                $10,000
+              </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <svg
+                class="h-4 w-4 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -158,7 +218,7 @@ function selectCorridor(corridor: PulseCorridor) {
 
 function handleAmountChange(event: Event) {
   const target = event.target as HTMLSelectElement
-  store.setAmount(parseInt(target.value, 10))
+  store.setAmount(Number.parseInt(target.value, 10))
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -182,7 +242,8 @@ function formatMethods(methods: string[]): string {
 async function loadSummary() {
   try {
     summary.value = await getPulseCoverageSummary(store.corridor, store.timeframe)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load coverage summary:', e)
   }
 }
@@ -199,10 +260,6 @@ onUnmounted(() => {
 watch(
   () => [store.corridor, store.timeframe, store.amount],
   () => loadSummary(),
-  { deep: true }
+  { deep: true },
 )
 </script>
-
-
-
-

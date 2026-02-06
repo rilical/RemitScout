@@ -20,7 +20,7 @@
           :class="[
             'h-5 w-5 transition-transform duration-200',
             props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-400',
-            { 'rotate-180': isOpen }
+            { 'rotate-180': isOpen },
           ]"
           fill="none"
           stroke="currentColor"
@@ -47,7 +47,7 @@
           'fixed z-[9999] overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
           props.theme === 'dark'
             ? 'border-neutral-700 bg-neutral-800'
-            : 'border-gray-300 bg-white'
+            : 'border-gray-300 bg-white',
         ]"
         style="max-height: 400px;"
         :style="dropdownStyle"
@@ -56,7 +56,7 @@
           v-if="filteredCurrencies.length === 0"
           :class="[
             'px-4 py-2 text-sm',
-            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500',
           ]"
         >
           No currencies found
@@ -69,7 +69,7 @@
             'w-full px-4 py-2.5 text-left text-sm transition-colors focus:outline-none',
             props.theme === 'dark'
               ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
-              : 'text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100'
+              : 'text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
           ]"
           @mousedown.prevent="selectCurrency(currency)"
           @touchstart.prevent="selectCurrency(currency)"
@@ -208,12 +208,12 @@ const filteredCurrencies = ref<CurrencyOption[]>([])
 
 const filterCurrencies = () => {
   let currencies = allCurrencies.value
-  
+
   // Exclude the specified currency if provided
   if (props.excludeCurrency) {
     currencies = currencies.filter(currency => currency.code !== props.excludeCurrency)
   }
-  
+
   if (!searchQuery.value) {
     filteredCurrencies.value = currencies
   }
@@ -269,7 +269,8 @@ const handleBlur = () => {
     // Restore to previous selection if no currency was selected
     if (props.modelValue) {
       searchQuery.value = props.modelValue
-    } else {
+    }
+    else {
       searchQuery.value = ''
     }
   }, 200)
@@ -291,21 +292,15 @@ const updateDropdownPosition = async () => {
 watch(
   () => props.modelValue,
   (newValue, oldValue) => {
-    console.log('=== ModelValue Watch ===')
-    console.log('Old:', oldValue, 'New:', newValue)
-    console.log('isOpen:', isOpen.value)
-
     if (newValue && !isOpen.value) {
       // Always show just the code (regardless of codeOnly prop for input display)
-      console.log('Setting searchQuery to:', newValue)
       searchQuery.value = newValue
     }
     else if (!newValue) {
-      console.log('Clearing searchQuery')
       searchQuery.value = ''
     }
     else {
-      console.log('Skipping update because dropdown is open')
+      // Dropdown is open: don't clobber in-progress user input.
     }
   },
   { immediate: true },
@@ -313,7 +308,7 @@ watch(
 
 onMounted(() => {
   isMounted.value = true
-  
+
   // Initialize filtered currencies immediately
   filteredCurrencies.value = [...allCurrencies.value]
   filterCurrencies()

@@ -18,7 +18,6 @@ import { WatchlistRepository } from '../repositories'
 const logger = createLogger('plane-a.watchlist')
 const pool = getPool(config.db.planeAUrl)
 const watchlistRepository = new WatchlistRepository(pool)
-const PLUS_WATCHLIST_SOFT_LIMIT = 16
 const USD_EQUIVALENT_AMOUNT = 500
 
 const updateWatchlistUsage = async (userId: string) => {
@@ -148,10 +147,6 @@ function defaultLabel(target: z.infer<typeof watchTargetSchema>): string {
     case 'guide':
       return `Guide: ${target.slug}`
   }
-}
-
-const isActivePlusPlan = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
-  return !!plan && plan.plan_code === 'plus' && ['active', 'trialing'].includes(plan.status)
 }
 
 async function getWatchlistLimit(
@@ -312,6 +307,12 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       if (limit !== 'unlimited') {
         const count = await getWatchlistCount(user.user_id)
         if (count >= limit) {
+          const planLabel =
+            plan?.plan_code === 'plus'
+              ? 'Plus'
+              : plan?.plan_code === 'enterprise'
+                ? 'Enterprise'
+                : 'Free'
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('POST', '/watchlist', 403, durationSeconds)
 
@@ -319,22 +320,8 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           return {
             success: false,
             error: 'limit_reached',
-            message: `Free plan supports up to ${limit} saved item${limit === 1 ? '' : 's'}.`,
+            message: `${planLabel} plan supports up to ${limit} saved item${limit === 1 ? '' : 's'}.`,
             limit,
-          }
-        }
-      } else if (isActivePlusPlan(plan)) {
-        const count = await getWatchlistCount(user.user_id)
-        if (count >= PLUS_WATCHLIST_SOFT_LIMIT) {
-          const durationSeconds = (Date.now() - startTime) / 1000
-          recordRequest('POST', '/watchlist', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'limit_reached',
-            message: `Plus watchlists are capped at ${PLUS_WATCHLIST_SOFT_LIMIT} items for now. Remove one to add another.`,
-            limit: PLUS_WATCHLIST_SOFT_LIMIT,
           }
         }
       }

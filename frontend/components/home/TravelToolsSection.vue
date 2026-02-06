@@ -5,7 +5,7 @@
         <!-- Header -->
         <div class="text-center mb-12">
           <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Don't Make These<br />
+            Don't Make These<br>
             Money Transfer Mistakes
           </h2>
           <p class="text-xl text-white/90 max-w-3xl mx-auto">
@@ -19,8 +19,18 @@
           <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
-                <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  class="w-6 h-6 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div class="flex-1">
@@ -31,7 +41,9 @@
                   "Zero fee" doesn't mean zero cost. Providers hide profit in exchange rate markups that often cost more than the fee.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
+                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                    How to avoid:
+                  </p>
                   <p class="text-sm text-brand-800">
                     Compare the "recipient gets" amount—that shows the true total cost including hidden markup.
                   </p>
@@ -44,8 +56,18 @@
           <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
-                <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  class="w-6 h-6 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div class="flex-1">
@@ -56,7 +78,9 @@
                   Exchange rates change daily. The best provider last month might not be the best today.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
+                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                    How to avoid:
+                  </p>
                   <p class="text-sm text-brand-800">
                     Always compare rates before sending. Use our tool to see live quotes from multiple providers side-by-side.
                   </p>
@@ -69,8 +93,18 @@
           <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
-                <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  class="w-6 h-6 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div class="flex-1">
@@ -81,7 +115,9 @@
                   Banks typically charge 3-5% more in hidden exchange rate markups because they know customers don't compare.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
+                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                    How to avoid:
+                  </p>
                   <p class="text-sm text-brand-800">
                     Compare your bank's rate to money transfer specialists. Most specialists beat banks by 3-7x.
                   </p>
@@ -94,8 +130,18 @@
           <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
-                <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  class="w-6 h-6 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div class="flex-1">
@@ -106,7 +152,9 @@
                   Checkout prices can differ from initial quotes due to promo rates, verification, or rate changes.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">How to avoid:</p>
+                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                    How to avoid:
+                  </p>
                   <p class="text-sm text-brand-800">
                     Review the final quote at checkout. If it differs significantly, compare other providers.
                   </p>
@@ -115,13 +163,23 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Beginner Guide CTA -->
         <div class="bg-white rounded-2xl p-8 md:p-10 shadow-2xl">
           <div class="flex flex-col md:flex-row items-center gap-8">
             <div class="flex-shrink-0">
-              <svg class="w-20 h-20 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              <svg
+                class="w-20 h-20 text-brand-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
               </svg>
             </div>
             <div class="flex-1 text-center md:text-left">

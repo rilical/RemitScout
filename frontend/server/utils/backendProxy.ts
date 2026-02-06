@@ -1,5 +1,4 @@
 import { createError, getHeaders, getMethod, getQuery, readBody, setResponseStatus } from 'h3'
-import { joinURL } from 'ufo'
 
 const FORWARDED_HEADERS = [
   'authorization',
@@ -37,10 +36,10 @@ const getBackendBase = () => {
 
   // Parse the base URL
   const baseUrl = new URL(base)
-  
+
   // Ensure base URL path ends with /api/v1 for versioned endpoints
   let pathname = baseUrl.pathname.replace(/\/$/, '') // Remove trailing slash
-  
+
   // If pathname doesn't end with /api/v1, append it
   if (!pathname.endsWith('/api/v1')) {
     // Remove /api if present to avoid /api/api/v1
@@ -49,7 +48,7 @@ const getBackendBase = () => {
     }
     pathname = pathname + '/api/v1'
   }
-  
+
   baseUrl.pathname = pathname
 
   return baseUrl.toString().replace(/\/$/, '')
@@ -93,6 +92,12 @@ const RETRYABLE_ERROR_CODES = new Set([
 
 const isNonBlockingPath = (path: string) => NON_BLOCKING_PATHS.has(path)
 
+const joinUrl = (base: string, path: string) => {
+  const cleanBase = base.endsWith('/') ? base : `${base}/`
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path
+  return `${cleanBase}${cleanPath}`
+}
+
 type ProxyOptions = {
   timeoutMs?: number
   maxRetries?: number
@@ -108,14 +113,15 @@ const retryWithBackoff = async <T>(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn()
-    } catch (error: any) {
+    }
+    catch (error: any) {
       lastError = error
       const statusCode = error?.statusCode || error?.response?.status
       const errorCode = error?.code || error?.cause?.code
       const shouldRetry = (statusCode && statusCode >= 500) || (errorCode && RETRYABLE_ERROR_CODES.has(errorCode))
       if (shouldRetry && attempt < maxRetries) {
         const delay = baseDelayMs * Math.pow(2, attempt)
-        await new Promise((resolve) => setTimeout(resolve, delay))
+        await new Promise(resolve => setTimeout(resolve, delay))
         continue
       }
       throw error
@@ -131,52 +137,62 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
   const headers = buildForwardHeaders(getHeaders(event))
   const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(event)
   const nonBlocking = options.nonBlocking ?? isNonBlockingPath(path)
+  const fetcher: (input: string, init?: any) => Promise<any> = $fetch as any
+
+  const envTimeoutMs = Number(process.env.BACKEND_PROXY_TIMEOUT_MS)
+  const resolvedEnvTimeoutMs = Number.isFinite(envTimeoutMs) && envTimeoutMs > 0 ? envTimeoutMs : undefined
 
   const timeoutMs = options.timeoutMs
     ?? (nonBlocking ? 3000 : undefined)
-    ?? Number(process.env.BACKEND_PROXY_TIMEOUT_MS)
+    ?? resolvedEnvTimeoutMs
     ?? DEFAULT_TIMEOUT_MS
   const maxRetries = options.maxRetries ?? (nonBlocking ? 0 : 3)
 
-  return await retryWithBackoff(async () => {
-    try {
-      return await $fetch(joinURL(base, path), {
-        method,
-        query,
-        body,
-        headers,
-        timeout: timeoutMs,
-      })
-    } catch (error: any) {
-      const statusCode = error?.statusCode || error?.response?.status
-      const errorCode = error?.code || error?.cause?.code
-      if (nonBlocking) {
-        setResponseStatus(event, 204)
-        return { ok: false, status: statusCode ?? 0 }
+  try {
+    return await retryWithBackoff(async () => {
+      try {
+        return await fetcher(joinUrl(base, path), {
+          method,
+          query,
+          body,
+          headers,
+          timeout: timeoutMs,
+        })
       }
-      // Propagate non-5xx responses from the backend instead of throwing 500s.
-      if (statusCode && statusCode < 500) {
-        setResponseStatus(event, statusCode)
-        return error?.data ?? { error: 'backend_error', message: error?.message || 'Request failed' }
-      }
-      if (statusCode && statusCode >= 500) {
+      catch (error: any) {
+        const statusCode = error?.statusCode || error?.response?.status
+        const errorCode = error?.code || error?.cause?.code
+        if (nonBlocking) {
+          setResponseStatus(event, 204)
+          return { ok: false, status: statusCode ?? 0 }
+        }
+        // Propagate non-5xx responses from the backend instead of turning them into 500s.
+        if (statusCode && statusCode < 500) {
+          setResponseStatus(event, statusCode)
+          return error?.data ?? { error: 'backend_error', message: error?.message || 'Request failed' }
+        }
+        // Retryable backend/server errors bubble up to the retry wrapper. We'll map them to 503 if retries exhaust.
+        if (statusCode && statusCode >= 500) throw error
+        if (errorCode && RETRYABLE_ERROR_CODES.has(errorCode)) throw error
+        if (!statusCode && typeof error?.message === 'string' && error.message.includes('fetch failed')) throw error
         throw error
       }
-      if (errorCode && RETRYABLE_ERROR_CODES.has(errorCode)) {
-        setResponseStatus(event, 503)
-        return {
-          error: 'backend_unreachable',
-          message: `Backend unreachable (${errorCode}).`,
-        }
-      }
-      if (!statusCode && typeof error?.message === 'string' && error.message.includes('fetch failed')) {
-        setResponseStatus(event, 503)
-        return {
-          error: 'backend_unreachable',
-          message: 'Backend unreachable (fetch failed).',
-        }
-      }
-      throw error
+    }, maxRetries)
+  }
+  catch (error: any) {
+    const statusCode = error?.statusCode || error?.response?.status
+    const errorCode = error?.code || error?.cause?.code
+    const message = error?.data?.message || error?.message || 'Request failed'
+
+    // Never crash the Nuxt server due to backend outages; return a stable 503 shape.
+    setResponseStatus(event, 503)
+    return {
+      error: 'backend_unreachable',
+      message: statusCode
+        ? `Backend error (${statusCode}). ${message}`
+        : errorCode
+          ? `Backend unreachable (${errorCode}).`
+          : 'Backend unreachable.',
     }
-  }, maxRetries)
+  }
 }

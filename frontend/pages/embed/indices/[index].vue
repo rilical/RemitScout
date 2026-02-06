@@ -36,25 +36,59 @@
       </div>
 
       <div class="p-4">
-        <div v-if="loading" class="flex h-64 items-center justify-center">
+        <div
+          v-if="apiKeyWarning"
+          class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"
+        >
+          {{ apiKeyWarning }}
+        </div>
+        <div
+          v-if="loading"
+          class="flex h-64 items-center justify-center"
+        >
           <div
             class="flex items-center gap-2"
             :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'"
           >
-            <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            <svg
+              class="h-5 w-5 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
             Loading...
           </div>
         </div>
-        <div v-else-if="error" class="flex h-64 items-center justify-center text-sm text-rose-500">
+        <div
+          v-else-if="error"
+          class="flex h-64 items-center justify-center text-sm text-rose-500"
+        >
           {{ error }}
         </div>
         <div v-else-if="chartSeries.length">
-          <PulseLineChart :series="chartSeries" :unit="unit" :unit-label="unitLabel" />
+          <PulseLineChart
+            :series="chartSeries"
+            :unit="unit"
+            :unit-label="unitLabel"
+          />
         </div>
-        <div v-else class="flex h-64 items-center justify-center text-sm text-neutral-500">
+        <div
+          v-else
+          class="flex h-64 items-center justify-center text-sm text-neutral-500"
+        >
           No data available yet.
         </div>
         <div
@@ -83,8 +117,12 @@
           class="flex items-center gap-1.5 text-xs font-medium transition-colors"
           :class="theme === 'dark' ? 'text-brand-600 hover:text-brand-700' : 'text-brand-600 hover:text-brand-700'"
         >
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
           </svg>
           Powered by Remit-Scout
         </a>
@@ -111,12 +149,12 @@ const config = useRuntimeConfig()
 const theme = computed(() => (route.query.theme as 'dark' | 'light') || 'dark')
 const indexKey = computed(() => route.params.index as IndexKey)
 const corridorId = computed(() => (route.query.corridor_id as string) || 'US-PH-USD-PHP')
-const amountBucket = computed(() => parseInt(route.query.amount_bucket as string) || 500)
+const amountBucket = computed(() => Number.parseInt(route.query.amount_bucket as string) || 500)
 const methodProfile = computed(() => (route.query.method_profile as string) || 'standard_bank')
-const days = computed(() => parseInt(route.query.days as string) || 30)
+const days = computed(() => Number.parseInt(route.query.days as string) || 30)
 const apiKey = computed(() => (route.query.api_key as string) || '')
 
-const indexMeta: Record<IndexKey, { title: string; color: string; unit: 'rate' | 'percent' | 'bps'; unitLabel: string }> = {
+const indexMeta: Record<IndexKey, { title: string, color: string, unit: 'rate' | 'percent' | 'bps', unitLabel: string }> = {
   teer: { title: 'Total Effective Exchange Rate (TEER)', color: '#16a34a', unit: 'rate', unitLabel: 'rate' },
   rci: { title: 'Remittance Cost Index (RCI)', color: '#f97316', unit: 'percent', unitLabel: 'percent' },
   rvi_bps: { title: 'Remittance Volatility Index (RVI) · bps', color: '#0ea5e9', unit: 'bps', unitLabel: 'bps' },
@@ -124,6 +162,7 @@ const indexMeta: Record<IndexKey, { title: string; color: string; unit: 'rate' |
 
 const loading = ref(true)
 const error = ref<string | null>(null)
+const apiKeyWarning = ref<string | null>(null)
 const chartSeries = ref<ChartSeries[]>([])
 const lastUpdated = ref('')
 const weightingLabel = ref('synthetic volume weighted')
@@ -147,8 +186,8 @@ const fullIndexUrl = computed(() => {
   const anchor = indexKey.value === 'teer'
     ? 'teer'
     : indexKey.value === 'rci'
-    ? 'rci'
-    : 'rvi'
+      ? 'rci'
+      : 'rvi'
   return `${baseUrl}/indices-methodology#${anchor}`
 })
 
@@ -170,9 +209,14 @@ onMounted(async () => {
     return
   }
   if (!apiKey.value) {
-    error.value = 'Missing API key.'
-    loading.value = false
-    return
+    if (config.public.pulseEnabled) {
+      apiKeyWarning.value = 'API key is required for production embeds. Provide api_key to remove this warning.'
+    }
+    else {
+      error.value = 'Missing API key.'
+      loading.value = false
+      return
+    }
   }
 
   try {
@@ -181,20 +225,20 @@ onMounted(async () => {
       amount_bucket: amountBucket.value,
       method_profile: methodProfile.value,
       days: days.value,
-      api_key: apiKey.value,
+      ...(apiKey.value ? { api_key: apiKey.value } : {}),
     })
     lastUpdated.value = data.lastUpdated || ''
     weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'synthetic volume weighted'
 
     const points = data.series
-      .filter((point) => !point.suppressionFlag)
+      .filter(point => !point.suppressionFlag)
       .map((point) => {
         const rawValue = point[indexKey.value]
         if (rawValue === null || rawValue === undefined) return null
         const value = meta.value?.unit === 'percent' ? rawValue * 100 : rawValue
         return { t: new Date(point.date).getTime(), v: value }
       })
-      .filter((point): point is { t: number; v: number } => Boolean(point))
+      .filter((point): point is { t: number, v: number } => Boolean(point))
 
     chartSeries.value = points.length
       ? [{
@@ -204,9 +248,11 @@ onMounted(async () => {
           points,
         }]
       : []
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to load index data.'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 })

@@ -43,10 +43,12 @@ const normalizeApiBase = (base?: string) => {
   let pathname = url.pathname.replace(/\/$/, '')
   if (!pathname || pathname === '') {
     pathname = '/api/v1'
-  } else if (!pathname.endsWith('/api/v1')) {
+  }
+  else if (!pathname.endsWith('/api/v1')) {
     if (pathname.endsWith('/api')) {
       pathname = `${pathname}/v1`
-    } else {
+    }
+    else {
       pathname = `${pathname}/api/v1`
     }
   }
@@ -81,15 +83,17 @@ const resolveServerApiBase = () => {
   return ''
 }
 const hmrPort = Number(process.env.NUXT_VITE_HMR_PORT || process.env.VITE_HMR_PORT) || 24678
-const isrRouteRules = isStagingOrProd ? {
-  '/send-money/**': { isr: 600 }, // 10 minutes
-  '/providers/**': { isr: 1800 }, // 30 minutes
-  '/compare/**': { isr: 86400 }, // 24 hours
-  '/learn/**': { isr: 604800 }, // 7 days
-  '/pulse': { isr: 300 }, // 5 minutes - main pulse dashboard
-  '/pulse/charts/**': { isr: 300 }, // 5 minutes - chart detail pages
-  '/embed/pulse/**': { isr: 60 }, // 1 minute - embeds refresh faster
-} : {}
+const isrRouteRules = isStagingOrProd
+  ? {
+      '/send-money/**': { isr: 600 }, // 10 minutes
+      '/providers/**': { isr: 1800 }, // 30 minutes
+      '/compare/**': { isr: 86400 }, // 24 hours
+      '/learn/**': { isr: 604800 }, // 7 days
+      '/pulse': { isr: 300 }, // 5 minutes - main pulse dashboard
+      '/pulse/charts/**': { isr: 300 }, // 5 minutes - chart detail pages
+      '/embed/pulse/**': { isr: 60 }, // 1 minute - embeds refresh faster
+    }
+  : {}
 const projectRoot = process.cwd()
 const workspaceRoot = join(projectRoot, '..')
 const localNodeModules = join(projectRoot, 'node_modules')
@@ -118,24 +122,26 @@ const watchOptions = {
   ...(usePolling ? { usePolling: true, interval: 1000 } : {}),
 }
 const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt']
-if (isStagingOrProd) {
-  nuxtModules.push('@nuxtjs/robots')
-}
 const enableEzoic = (process.env.PUBLIC_ENABLE_EZOIC === 'true' || process.env.ENABLE_EZOIC === 'true') && isStagingOrProd
 const adsEnabled = enableEzoic
+const analyticsEnabled = (() => {
+  const flag = resolveEnvValue('NUXT_PUBLIC_ANALYTICS_ENABLED', 'PUBLIC_ANALYTICS_ENABLED')
+  // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
+  return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
+})()
 const ezoicScripts = adsEnabled
   ? [
       {
-        key: 'ezoic-privacy-cmp',
+        'key': 'ezoic-privacy-cmp',
         'data-cfasync': 'false',
-        src: 'https://cmp.gatekeeperconsent.com/min.js',
-        tagPriority: -10,
+        'src': 'https://cmp.gatekeeperconsent.com/min.js',
+        'tagPriority': -10,
       },
       {
-        key: 'ezoic-privacy-gatekeeper',
+        'key': 'ezoic-privacy-gatekeeper',
         'data-cfasync': 'false',
-        src: 'https://the.gatekeeperconsent.com/cmp.min.js',
-        tagPriority: -10,
+        'src': 'https://the.gatekeeperconsent.com/cmp.min.js',
+        'tagPriority': -10,
       },
       {
         key: 'ezoic-header',
@@ -157,7 +163,8 @@ const ensureClientPrecomputed = async () => {
   const precomputedPath = join(serverDist, 'client.precomputed.mjs')
   try {
     await fs.access(precomputedPath)
-  } catch {
+  }
+  catch {
     await fs.writeFile(precomputedPath, 'export default undefined', 'utf8')
   }
 }
@@ -169,7 +176,8 @@ const ensureNuxtPaths = async () => {
   try {
     await fs.access(pathsPath)
     return
-  } catch {
+  }
+  catch {
     // Continue and write fallback file if missing.
   }
 
@@ -179,7 +187,7 @@ const ensureNuxtPaths = async () => {
     cdnURL: '',
   }
   const contents = [
-    "import { joinRelativeURL } from 'ufo'",
+    'import { joinRelativeURL } from \'ufo\'',
     `const getAppConfig = () => (${JSON.stringify(appConfig)})`,
     'export const baseURL = () => getAppConfig().baseURL',
     'export const buildAssetsDir = () => getAppConfig().buildAssetsDir',
@@ -210,87 +218,9 @@ export default defineNuxtConfig({
       '~/components/home',
       '~/components/nav',
       '~/components/pulse',
-  ],
+    ],
   },
   devtools: { enabled: false },
-  hooks: {
-    'build:before': async () => {
-      // Copy SVG files from frontend/png/SVG to public/png/SVG for proper routing
-      const sourceDir = join(projectRoot, 'png', 'SVG')
-      const destDir = join(projectRoot, 'public', 'png', 'SVG')
-      try {
-        await fs.mkdir(destDir, { recursive: true })
-        const files = await fs.readdir(sourceDir)
-        for (const file of files) {
-          if (file.endsWith('.svg')) {
-            const sourcePath = join(sourceDir, file)
-            const destPath = join(destDir, file)
-            await fs.copyFile(sourcePath, destPath)
-          }
-        }
-      } catch (error) {
-        // Source directory doesn't exist or is empty - that's okay
-      }
-
-      // Copy PROVIDERS SVG files to public/png/SVG/PROVIDERS
-      const providersSourceDirForPublic = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
-      const providersDestDir = join(projectRoot, 'public', 'png', 'SVG', 'PROVIDERS')
-      try {
-        await fs.mkdir(providersDestDir, { recursive: true })
-        const providerFiles = await fs.readdir(providersSourceDirForPublic)
-        for (const file of providerFiles) {
-          if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.webp')) {
-            const sourcePath = join(providersSourceDirForPublic, file)
-            const destPath = join(providersDestDir, file)
-            await fs.copyFile(sourcePath, destPath)
-          }
-        }
-      } catch (error) {
-        // Providers directory doesn't exist or is empty - that's okay
-      }
-
-      // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
-      const providersSourceDir = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
-      const logosDestDir = join(projectRoot, 'public', 'logos')
-      const providerLogoMap: Record<string, string> = {
-        'WISE_LOGO.svg': 'wise.svg',
-        'REMITLY_LOGO.svg': 'remitly.svg',
-        'WORLD_REMIT_LOGO.svg': 'worldremit.svg',
-        'WESTERN_UNION_LOGO.svg': 'western-union.svg',
-        'XE_LOGO.svg': 'xe-money.svg',
-        'WELLS_FARGO_LOGO.svg': 'wellsfargo.svg',
-        'TRANSFERGO_LOGO.svg': 'transfergo.svg',
-        'PAYSEND_LOGO.svg': 'paysend.svg',
-        'SENDWAVE_LOGO.svg': 'sendwave.svg',
-        'INSTAREM_LOGO.svg': 'instarem.svg',
-        'KORONAPAY_LOGO.svg': 'koronapay.svg',
-        'REMITBEE_LOGO.svg': 'remitbee.svg',
-        'RIA_LOGO.svg': 'ria.svg',
-        'XOOM_LOGO.svg': 'xoom.svg',
-      }
-      try {
-        await fs.mkdir(logosDestDir, { recursive: true })
-        const providerFiles = await fs.readdir(providersSourceDir)
-        for (const file of providerFiles) {
-          if (file.endsWith('.svg') && providerLogoMap[file]) {
-            const sourcePath = join(providersSourceDir, file)
-            const destPath = join(logosDestDir, providerLogoMap[file])
-            await fs.copyFile(sourcePath, destPath)
-          }
-        }
-      } catch {
-        // Providers directory doesn't exist or is empty - that's okay
-      }
-    },
-    'build:done': async () => {
-      await ensureClientPrecomputed()
-      await ensureNuxtPaths()
-    },
-    'nitro:build:done': async () => {
-      await ensureClientPrecomputed()
-      await ensureNuxtPaths()
-    },
-  },
 
   // App Head
   app: {
@@ -366,8 +296,8 @@ export default defineNuxtConfig({
     apiBase: resolveServerApiBase(),
     public: {
       siteUrl:
-        process.env.PUBLIC_SITE_URL ||
-        (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
+        process.env.PUBLIC_SITE_URL
+        || (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
           : 'https://Remit-Scout.com'),
       apiBase: resolvePublicApiBase(),
@@ -375,8 +305,8 @@ export default defineNuxtConfig({
       b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 2500,
       b2cBackgroundRefreshEnabled: process.env.PUBLIC_B2C_BACKGROUND_REFRESH_ENABLED === '1',
       imageBase:
-        process.env.PUBLIC_IMAGE_BASE ||
-        (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
+        process.env.PUBLIC_IMAGE_BASE
+        || (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net/images`
           : 'https://images.Remit-Scout.com'),
       supabaseUrl: resolveEnvValue(
@@ -392,10 +322,14 @@ export default defineNuxtConfig({
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
+      analyticsEnabled,
       adsEnabled,
+      stripeTrialDays: Number(process.env.PUBLIC_STRIPE_TRIAL_DAYS || process.env.STRIPE_TRIAL_DAYS || 14),
       pulseEnabled: (() => {
         const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED')
-        return flag !== undefined ? parseEnvFlag(flag) : isDev
+        // Default ON. Pre-alpha: Pulse should be visible for marketing and gated by entitlements.
+        // Set NUXT_PUBLIC_PULSE_ENABLED=0 to hard-disable.
+        return flag !== undefined ? parseEnvFlag(flag) : true
       })(),
       enterpriseEnabled: (() => {
         const flag = resolveEnvValue('NUXT_PUBLIC_ENTERPRISE_ENABLED', 'PUBLIC_ENTERPRISE_ENABLED')
@@ -414,6 +348,12 @@ export default defineNuxtConfig({
     ...isrRouteRules,
     '/ads.txt': { redirect: { to: 'https://srv.adstxtmanager.com/19390/remit-scout.com', statusCode: 301 } },
     '/legal/methodology': { redirect: '/methodology' },
+  },
+
+  watchers: {
+    chokidar: {
+      ...watchOptions,
+    },
   },
 
   // Experimental Features
@@ -463,15 +403,86 @@ export default defineNuxtConfig({
     },
   },
 
-  watchers: {
-    chokidar: {
-      ...watchOptions,
-    },
-  },
-
   // TypeScript
   typescript: {
     typeCheck: false,
+  },
+  hooks: {
+    'build:before': async () => {
+      // Copy SVG files from frontend/png/SVG to public/png/SVG for proper routing
+      const sourceDir = join(projectRoot, 'png', 'SVG')
+      const destDir = join(projectRoot, 'public', 'png', 'SVG')
+      try {
+        await fs.mkdir(destDir, { recursive: true })
+        const files = await fs.readdir(sourceDir)
+        for (const file of files) {
+          if (file.endsWith('.svg')) {
+            const sourcePath = join(sourceDir, file)
+            const destPath = join(destDir, file)
+            await fs.copyFile(sourcePath, destPath)
+          }
+        }
+      }
+      catch (error) {
+        // Source directory doesn't exist or is empty - that's okay
+      }
+
+      // Copy PROVIDERS SVG files to public/png/SVG/PROVIDERS
+      const providersSourceDirForPublic = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
+      const providersDestDir = join(projectRoot, 'public', 'png', 'SVG', 'PROVIDERS')
+      try {
+        await fs.mkdir(providersDestDir, { recursive: true })
+        const providerFiles = await fs.readdir(providersSourceDirForPublic)
+        for (const file of providerFiles) {
+          if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.webp')) {
+            const sourcePath = join(providersSourceDirForPublic, file)
+            const destPath = join(providersDestDir, file)
+            await fs.copyFile(sourcePath, destPath)
+          }
+        }
+      }
+      catch (error) {
+        // Providers directory doesn't exist or is empty - that's okay
+      }
+
+      // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
+      const providersSourceDir = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
+      const logosDestDir = join(projectRoot, 'public', 'logos')
+      const providerLogoMap: Record<string, string> = {
+        'WISE_LOGO.svg': 'wise.svg',
+        'REMITLY_LOGO.svg': 'remitly.svg',
+        'WORLD_REMIT_LOGO.svg': 'worldremit.svg',
+        'WESTERN_UNION_LOGO.svg': 'western-union.svg',
+        'XE_LOGO.svg': 'xe-money.svg',
+        'WELLS_FARGO_LOGO.svg': 'wellsfargo.svg',
+        'TRANSFERGO_LOGO.svg': 'transfergo.svg',
+        'PAYSEND_LOGO.svg': 'paysend.svg',
+        'SENDWAVE_LOGO.svg': 'sendwave.svg',
+        'INSTAREM_LOGO.svg': 'instarem.svg',
+        'KORONAPAY_LOGO.svg': 'koronapay.svg',
+        'REMITBEE_LOGO.svg': 'remitbee.svg',
+        'RIA_LOGO.svg': 'ria.svg',
+        'XOOM_LOGO.svg': 'xoom.svg',
+      }
+      try {
+        await fs.mkdir(logosDestDir, { recursive: true })
+        const providerFiles = await fs.readdir(providersSourceDir)
+        for (const file of providerFiles) {
+          if (file.endsWith('.svg') && providerLogoMap[file]) {
+            const sourcePath = join(providersSourceDir, file)
+            const destPath = join(logosDestDir, providerLogoMap[file])
+            await fs.copyFile(sourcePath, destPath)
+          }
+        }
+      }
+      catch {
+        // Providers directory doesn't exist or is empty - that's okay
+      }
+    },
+    'build:done': async () => {
+      await ensureClientPrecomputed()
+      await ensureNuxtPaths()
+    },
   },
 
   // i18n Configuration (temporarily disabled)
@@ -506,13 +517,5 @@ export default defineNuxtConfig({
     cloudflare: false,
   },
 
-  // Robots Configuration
-  robots: {
-    // In production, use the static robots.txt, otherwise block all crawlers in dev/staging
-    disallow: process.env.NODE_ENV !== 'production' ? ['/'] : undefined,
-    // Reference the dynamic sitemap
-    sitemap: process.env.NODE_ENV === 'production'
-      ? [`${process.env.PUBLIC_SITE_URL || 'https://remitscout.com'}/sitemap.xml`]
-      : undefined,
-  },
+  // robots.txt is served by `server/routes/robots.txt.ts` (env-aware).
 })

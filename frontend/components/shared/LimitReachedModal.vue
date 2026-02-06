@@ -14,8 +14,8 @@
         @click.self="close"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-        
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+
         <!-- Modal -->
         <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <!-- Close button -->
@@ -24,15 +24,35 @@
             class="absolute right-4 top-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             @click="close"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
           <!-- Icon -->
           <div class="mx-auto w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center mb-4">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              class="w-8 h-8 text-brand-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
 
@@ -56,14 +76,20 @@
               <div
                 class="h-full bg-brand-600 rounded-full transition-all"
                 :style="{ width: `${Math.min(100, (currentCount / limit) * 100)}%` }"
-              ></div>
+              />
             </div>
-            <p v-if="showUpgrade" class="mt-3 text-xs text-slate-500">
-              Upgrade to Remit-Scout Plus for unlimited {{ featureLabel.toLowerCase() }}.
+            <p
+              v-if="showUpgrade"
+              class="mt-3 text-xs text-slate-500"
+            >
+              {{ upgradeHint }}
             </p>
           </div>
 
-          <div v-if="hasItems" class="mb-6 text-left">
+          <div
+            v-if="hasItems"
+            class="mb-6 text-left"
+          >
             <div class="text-sm font-semibold text-slate-800 mb-2">
               {{ itemsTitle }}
             </div>
@@ -77,7 +103,10 @@
                   <div class="text-sm font-medium text-slate-800 truncate">
                     {{ item.label }}
                   </div>
-                  <div v-if="item.meta" class="text-xs text-slate-500 truncate">
+                  <div
+                    v-if="item.meta"
+                    class="text-xs text-slate-500 truncate"
+                  >
                     {{ item.meta }}
                   </div>
                 </div>
@@ -127,7 +156,7 @@ const props = withDefaults(defineProps<{
   showUpgrade?: boolean
   manageLabel?: string
   managePath?: string
-  items?: Array<{ id: string; label: string; meta?: string }>
+  items?: Array<{ id: string, label: string, meta?: string }>
   itemsTitle?: string
 }>(), {
   title: 'Limit reached',
@@ -146,6 +175,11 @@ const emit = defineEmits<{
 
 const featureLabel = computed(() => {
   return props.feature === 'watchlist' ? 'Watchlist items' : 'Rate alerts'
+})
+
+const upgradeHint = computed(() => {
+  if (props.feature === 'watchlist') return 'Upgrade to Remit-Scout Plus for up to 16 watchlist corridors.'
+  return 'Upgrade to Remit-Scout Plus for up to 16 alerts.'
 })
 
 const manageLabel = computed(() => {

@@ -92,7 +92,7 @@
             </li>
           </ul>
           <NuxtLink
-            to="/reviews"
+            to="/learn/providers"
             class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 transition"
           >
             See provider reviews
@@ -182,7 +182,7 @@ const breadcrumbItems = computed(() => [
 
 const providerPricing = computed(() => {
   if (!providerRates.value?.data?.length) return []
-  return providerRates.value.data.map((item) => ({
+  return providerRates.value.data.map(item => ({
     name: item.name,
     rate: `${quote.value} ${item.rate.toFixed(4)}`,
     markup: item.markupBps ? item.markupBps / 100 : undefined,
@@ -192,8 +192,8 @@ const providerPricing = computed(() => {
 
 const corridorLinks = computed(() => [
   { label: `${pairLabel.value} money transfers`, href: getCorridorUrl(baseCountryCode.value, quoteCountryCode.value) },
-  { label: 'Provider reviews', href: '/reviews' },
-  { label: 'Hidden fees guide', href: '/learn/hidden-fees-money-transfers' },
+  { label: 'Provider reviews', href: '/learn/providers' },
+  { label: 'Hidden fees guide', href: '/learn/hidden-exchange-rate-fees-explained' },
   { label: 'FAQ', href: '/faq' },
 ])
 
@@ -202,5 +202,4 @@ setSeo({
   description: `See today’s ${base.value}/${quote.value} rate, typical provider markups, and timing tips to keep more in ${quote.value}.`,
   canonical: `${siteUrl}/exchange-rates/${route.params.base}-${route.params.quote}`,
 })
-
 </script>

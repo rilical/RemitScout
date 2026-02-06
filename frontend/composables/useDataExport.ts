@@ -12,17 +12,17 @@ export const useDataExport = () => {
   const { request } = useApi()
 
   const requestExport = async () => {
-    return await request<{ success: boolean; job: DataExportJob }>('/data/export', {
+    return await request<{ success: boolean, job: DataExportJob }>('/data/export', {
       method: 'POST',
     })
   }
 
   const getExportStatus = async (id: string) => {
-    return await request<{ success: boolean; job: DataExportJob }>(`/data/export/${id}`)
+    return await request<{ success: boolean, job: DataExportJob }>(`/data/export/${id}`)
   }
 
   const getExportDownloadUrl = async (id: string) => {
-    return await request<{ success: boolean; url: string; expiresIn: number }>(
+    return await request<{ success: boolean, url: string, expiresIn: number }>(
       `/data/export/${id}/download`,
     )
   }

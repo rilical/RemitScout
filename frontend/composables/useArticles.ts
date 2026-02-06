@@ -24,7 +24,7 @@ const parseFrontmatter = (raw: string): { frontmatter: Frontmatter, body: string
   const [, fm, body] = match
   const frontmatter: Frontmatter = {}
 
-  fm.split('\n').forEach(line => {
+  fm.split('\n').forEach((line) => {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) return
     const [key, ...rest] = trimmed.split(':')
@@ -50,15 +50,15 @@ const simpleMarkdownToHtml = (md: string): string => {
     .replace(/>/g, '&gt;')
 
   // headings
-  html = html.replace(/^### (.*)$/gim, '<h3>$1</h3>')
-    .replace(/^## (.*)$/gim, '<h2>$1</h2>')
-    .replace(/^# (.*)$/gim, '<h1>$1</h1>')
+  html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.*)$/gm, '<h1>$1</h1>')
   // bold/italic
-  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
   // unordered lists
-  html = html.replace(/^\s*-\s+(.*)$/gim, '<li>$1</li>')
-  html = html.replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+  html = html.replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>')
+  html = html.replace(/(<li>.*<\/li>)/gis, '<ul>$1</ul>')
   // paragraphs
   html = html.replace(/^(?!<h[1-3]|<ul|<li|<p|<blockquote|<pre)(.+)$/gim, '<p>$1</p>')
 

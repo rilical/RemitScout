@@ -47,8 +47,8 @@ export function useCompareForm() {
 
     geoDefaultPromise = (async () => {
       const current = form.value
-      const isDefaultFrom =
-        !current.from || (current.from === 'US' && current.fromCurrency === 'USD')
+      const isDefaultFrom
+        = !current.from || (current.from === 'US' && current.fromCurrency === 'USD')
 
       if (!isDefaultFrom) {
         return
@@ -71,7 +71,8 @@ export function useCompareForm() {
 
         form.value.from = country.code
         form.value.fromCurrency = country.currency
-      } catch {
+      }
+      catch {
         // Keep default values when geo lookup fails.
       }
     })()

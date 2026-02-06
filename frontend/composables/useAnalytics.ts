@@ -53,10 +53,12 @@ export const useAnalytics = () => {
     error.value = null
     try {
       return await fn()
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err?.message || 'Failed to load analytics.'
       throw err
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

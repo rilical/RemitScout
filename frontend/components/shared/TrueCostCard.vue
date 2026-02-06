@@ -7,9 +7,9 @@
         ? isBest
           ? 'border-white/30 bg-white/10'
           : 'border-white/20 bg-white/5'
-        : isBest 
+        : isBest
           ? 'border-brand-600 bg-brand-50/20'
-          : 'border-neutral-200 bg-neutral-50'
+          : 'border-neutral-200 bg-neutral-50',
     ]"
   >
     <!-- Header -->
@@ -18,8 +18,18 @@
       class="flex items-center justify-between border-b border-neutral-200 px-4 py-3 bg-gradient-to-r from-neutral-50 to-white"
     >
       <div class="flex items-center gap-2">
-        <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        <svg
+          class="h-5 w-5 text-brand-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
         </svg>
         <span class="text-sm font-bold text-neutral-900 uppercase tracking-wide">True Cost Breakdown</span>
       </div>
@@ -28,8 +38,18 @@
         class="group flex items-center gap-1 text-xs text-neutral-500 hover:text-brand-600 transition-colors"
         @click="showTooltip = !showTooltip"
       >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <span>What's this?</span>
       </button>
@@ -40,7 +60,9 @@
       v-if="showTooltip && !compact"
       class="border-b border-neutral-200 bg-blue-50 px-4 py-3 text-xs text-blue-800"
     >
-      <p class="mb-1 font-semibold">Hidden Exchange Rate Markup</p>
+      <p class="mb-1 font-semibold">
+        Hidden Exchange Rate Markup
+      </p>
       <p class="leading-relaxed">
         Providers often offer a worse exchange rate than the real "mid-market" rate banks use between themselves.
         This difference is a hidden fee that costs you money. We calculate it by comparing the provider's rate to the current mid-market rate.
@@ -63,12 +85,25 @@
             <span :class="['font-medium text-sm', darkBackground ? 'text-white' : 'text-neutral-900']">
               Upfront Fee
             </span>
-            <span v-if="hasPromo && promoInfo" :class="[
-              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
-              darkBackground ? 'bg-emerald-500/30 text-emerald-200 border border-white' : 'bg-emerald-100 text-emerald-700'
-            ]">
-              <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <span
+              v-if="hasPromo && promoInfo"
+              :class="[
+                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
+                darkBackground ? 'bg-emerald-500/30 text-emerald-200 border border-white' : 'bg-emerald-100 text-emerald-700',
+              ]"
+            >
+              <svg
+                class="w-2.5 h-2.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               PROMO
             </span>
@@ -239,6 +274,3 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 </script>
-
-
-

@@ -32,6 +32,16 @@ const publishProbeMetrics = async (
         Namespace: 'RemitScout/Probes',
         MetricData: [
           {
+            MetricName: 'probe_run_total',
+            Value: 1,
+            Unit: 'Count',
+            Timestamp: new Date(),
+            Dimensions: [
+              { Name: 'ProviderId', Value: providerId },
+              { Name: 'environment', Value: environmentDimension },
+            ],
+          },
+          {
             MetricName: 'probe_result',
             Value: result.success ? 1 : 0,
             Unit: 'Count',

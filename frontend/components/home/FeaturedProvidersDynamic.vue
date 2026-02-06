@@ -40,7 +40,9 @@
         v-else-if="!providers.length || error"
         class="rounded-2xl border border-neutral-200 bg-white p-8 text-center"
       >
-        <p class="text-neutral-600">Provider information is temporarily unavailable. Please try again later.</p>
+        <p class="text-neutral-600">
+          Provider information is temporarily unavailable. Please try again later.
+        </p>
       </div>
 
       <!-- Provider cards horizontal scroll -->
@@ -65,7 +67,7 @@
                 <!-- Logo: 50% left -->
                 <div class="w-1/2 flex items-center justify-start">
                   <img
-                    v-if="provider.logoUrl && !provider.logoUrl.includes('instarem')"
+                    v-if="provider.logoUrl"
                     :src="provider.logoUrl"
                     :alt="provider.name"
                     :class="[provider.logoSize || 'h-18 w-auto', 'object-contain flex-shrink-0']"
@@ -114,7 +116,6 @@
             </article>
           </div>
         </div>
-
       </div>
 
       <!-- Navigation controls -->
@@ -217,14 +218,15 @@ const { data, pending, error } = await useAsyncData(
   async () => {
     try {
       return await request<{ data: ProviderMetadata[] }>('/providers/metadata')
-    } catch (error: any) {
+    }
+    catch (error: any) {
       if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
         return { data: [] }
       }
       throw error
     }
   },
-  { watch: false },
+  { watch: [] },
 )
 
 const labelForMetric = (
@@ -269,7 +271,7 @@ const getLogoSize = (slug: string): string => {
 
 const providers = computed(() => {
   const list = data.value?.data || []
-  
+
   // Create lookup maps for PROVIDER_SCORES (source of truth)
   const scoreLookup = new Map(
     Object.values(PROVIDER_SCORES).map(provider => [provider.id, provider]),
@@ -277,14 +279,14 @@ const providers = computed(() => {
   const scoreBySlug = new Map(
     Object.values(PROVIDER_SCORES).map(provider => [provider.slug, provider]),
   )
-  
+
   return [...list]
-    .filter((provider) => provider.id !== 'wellsfargo' && provider.slug !== 'wells-fargo')
+    .filter(provider => provider.id !== 'wellsfargo' && provider.slug !== 'wells-fargo')
     .map((provider) => {
       // Get score from PROVIDER_SCORES (source of truth) - matches individual provider pages
       const scoreSource = scoreLookup.get(provider.id) || scoreBySlug.get(provider.slug)
       const remitScore = scoreSource?.remitScore ?? provider.remitScore ?? 0
-      
+
       // Use scoreBreakdown from PROVIDER_SCORES if available, otherwise from API
       const breakdown = scoreSource?.scoreBreakdown || provider.scoreBreakdown
       const metrics: MetricRow[] = [
@@ -304,7 +306,7 @@ const providers = computed(() => {
         metrics,
       }
     })
-    .filter((provider) => provider.remitScore > 0) // Only show providers with valid scores
+    .filter(provider => provider.remitScore > 0) // Only show providers with valid scores
     .sort((a, b) => (b.remitScore || 0) - (a.remitScore || 0))
     .slice(0, 12)
 })
@@ -323,9 +325,9 @@ const totalPages = computed(() => {
   if (!scrollContainer.value || providers.value.length === 0) return 1
   const container = scrollContainer.value
   const visibleWidth = container.clientWidth
-  
+
   if (visibleWidth <= 0) return 1
-  
+
   // Calculate based on card width + gap
   // Cards are w-[280px] sm:w-[320px] with gap-6 (24px)
   const cardWidth = getCardWidth()
@@ -334,7 +336,7 @@ const totalPages = computed(() => {
   const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
   const totalCards = providers.value.length
   const pages = Math.ceil(totalCards / cardsPerPage)
-  
+
   return Math.max(1, pages)
 })
 
@@ -346,20 +348,21 @@ const handleScroll = () => {
 
   const visibleWidth = container.clientWidth
   if (visibleWidth <= 0) return
-  
+
   const cardWidth = getCardWidth()
   const gap = 24
   const cardWidthWithGap = cardWidth + gap
   const cardsPerPage = Math.floor(visibleWidth / cardWidthWithGap) || 1
   const scrollAmountPerPage = cardsPerPage * cardWidthWithGap
-  
+
   const scrollPosition = container.scrollLeft
   const maxScroll = container.scrollWidth - container.clientWidth
   const threshold = 10
-  
+
   if (scrollPosition >= maxScroll - threshold) {
     currentPage.value = totalPages.value
-  } else {
+  }
+  else {
     const currentPageIndex = Math.round(scrollPosition / scrollAmountPerPage)
     currentPage.value = Math.min(Math.max(1, currentPageIndex + 1), totalPages.value)
   }
@@ -420,7 +423,7 @@ onMounted(() => {
   nextTick(() => {
     if (scrollContainer.value) {
       handleScroll()
-      
+
       if (typeof ResizeObserver !== 'undefined') {
         resizeObserver = new ResizeObserver(() => {
           handleScroll()

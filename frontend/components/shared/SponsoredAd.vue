@@ -36,9 +36,16 @@
 
         <!-- Provider Info -->
         <div class="flex-1 min-w-0">
-          <h4 class="font-semibold text-slate-900 text-sm truncate">{{ ad.name }}</h4>
-          <p class="text-xs text-slate-500 line-clamp-2">{{ ad.tagline }}</p>
-          <div v-if="ad.rating" class="flex items-center gap-2 mt-1">
+          <h4 class="font-semibold text-slate-900 text-sm truncate">
+            {{ ad.name }}
+          </h4>
+          <p class="text-xs text-slate-500 line-clamp-2">
+            {{ ad.tagline }}
+          </p>
+          <div
+            v-if="ad.rating"
+            class="flex items-center gap-2 mt-1"
+          >
             <div class="flex">
               <svg
                 v-for="i in 5"
@@ -56,7 +63,17 @@
         </div>
 
         <!-- CTA Button -->
+        <NuxtLink
+          v-if="isInternalUrl"
+          :to="ad.url"
+          class="flex-shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+          :style="{ backgroundColor: ad.brandColor }"
+          @click="trackClick"
+        >
+          {{ ad.ctaText || 'Learn More' }}
+        </NuxtLink>
         <a
+          v-else
           :href="ad.url"
           target="_blank"
           rel="noopener sponsored"
@@ -82,13 +99,27 @@
             {{ ad.logoLetter || ad.name.charAt(0) }}
           </div>
           <div class="min-w-0">
-            <h4 class="font-semibold text-slate-900 text-sm truncate">{{ ad.name }}</h4>
-            <p class="text-xs text-slate-500 truncate">{{ ad.tagline }}</p>
+            <h4 class="font-semibold text-slate-900 text-sm truncate">
+              {{ ad.name }}
+            </h4>
+            <p class="text-xs text-slate-500 truncate">
+              {{ ad.tagline }}
+            </p>
           </div>
         </div>
 
         <!-- CTA Button -->
+        <NuxtLink
+          v-if="isInternalUrl"
+          :to="ad.url"
+          class="block w-full text-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90"
+          :style="{ backgroundColor: ad.brandColor }"
+          @click="trackClick"
+        >
+          {{ ad.ctaText || 'Learn More' }}
+        </NuxtLink>
         <a
+          v-else
           :href="ad.url"
           target="_blank"
           rel="noopener sponsored"
@@ -112,9 +143,20 @@
           {{ ad.logoLetter || ad.name.charAt(0) }}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-slate-900 truncate">{{ ad.name }}</p>
+          <p class="text-sm font-medium text-slate-900 truncate">
+            {{ ad.name }}
+          </p>
         </div>
+        <NuxtLink
+          v-if="isInternalUrl"
+          :to="ad.url"
+          class="text-xs font-semibold text-blue-600 hover:text-blue-700 whitespace-nowrap"
+          @click="trackClick"
+        >
+          {{ ad.ctaText || 'View' }} →
+        </NuxtLink>
         <a
+          v-else
           :href="ad.url"
           target="_blank"
           rel="noopener sponsored"
@@ -129,6 +171,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 export interface SponsoredAdData {
   id: string
   name: string
@@ -161,10 +205,9 @@ const emit = defineEmits<{
 }>()
 
 const hidden = ref(false)
+const isInternalUrl = computed(() => props.ad.url.startsWith('/'))
 
 const trackClick = () => {
   emit('click', props.ad.id)
 }
 </script>
-
-

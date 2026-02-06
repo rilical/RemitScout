@@ -23,14 +23,18 @@ useHead({
 })
 
 const { initSession } = useTelemetry()
-const { settings } = usePrivacySettings()
+const { settings, hasConsent } = usePrivacySettings()
 const { initMarketing, trackPageView } = useMarketingAnalytics()
 const { isPlus, hydrated } = useEntitlements()
 const runtimeConfig = useRuntimeConfig()
 const ga4Id = runtimeConfig.public.ga4MeasurementId
 const metaPixelId = runtimeConfig.public.metaPixelId
 const route = useRoute()
-const allowAnalytics = computed(() => settings.value.analytics === true)
+const allowAnalytics = computed(() =>
+  runtimeConfig.public.analyticsEnabled === true
+  && settings.value.analytics === true
+  && hasConsent.value,
+)
 const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
 
 useHead(() => {
@@ -80,7 +84,7 @@ onMounted(() => {
 })
 
 watch(
-  () => settings.value.analytics,
+  () => allowAnalytics.value,
   async (value) => {
     if (!value) return
     await nextTick()

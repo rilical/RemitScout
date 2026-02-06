@@ -11,6 +11,7 @@ import { context as otelContext } from '@opentelemetry/api'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import {
   deleteMessages,
   receiveJsonMessages,
@@ -94,8 +95,12 @@ const maxAttempts = Math.max(1, toNumber(process.env.INGEST_FANOUT_MAX_ATTEMPTS,
 const loopJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_LOOP_JITTER_MS)
 const messageJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_MESSAGE_JITTER_MS, 500)
 const providerJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_PROVIDER_JITTER_MS, 200)
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
 
 const shutdown = (signal: string) => {
   if (shutdownRequested) return
@@ -833,6 +838,21 @@ const runWorker = async () => {
   const sweepRepo = new B2bSweepRepository(pool)
 
   try {
+    if (!isLambdaRuntime && healthEnabled) {
+      try {
+        healthServer = await startHealthServer({
+          port: healthPort,
+          logger,
+          loggerName: 'ingest-fanout-worker',
+          enableDatabaseCheck: true,
+          enableRedisCheck: true,
+        })
+      } catch (error) {
+        logger.warn('health_server_start_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
     logger.info('fanout_worker_start', {
       batch_size: batchSize,
       concurrency: maxConcurrency,
@@ -858,6 +878,13 @@ const runWorker = async () => {
     await pool.end()
     if (forceExitTimer) {
       clearTimeout(forceExitTimer)
+    }
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     }
   }
 }

@@ -4,13 +4,27 @@
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-          <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          <svg
+            class="h-5 w-5 text-brand-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+            />
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">Cost Trend</h2>
-          <p class="text-sm text-neutral-400">Hidden fee changes over time</p>
+          <h2 class="text-lg font-bold text-white">
+            Cost Trend
+          </h2>
+          <p class="text-sm text-neutral-400">
+            Hidden fee changes over time
+          </p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -28,11 +42,29 @@
 
     <!-- Content -->
     <div class="p-6">
-      <div v-if="loading" class="flex h-48 items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-48 items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading trend data...
         </div>
@@ -57,31 +89,71 @@
             </div>
           </div>
           <div class="rounded-lg bg-neutral-900 p-4">
-            <div class="text-xs text-neutral-500 mb-2">Market Leader</div>
-            <div class="text-xl font-bold text-white">{{ marketLeader }}</div>
-            <div class="text-sm text-neutral-500">{{ marketLeaderDays }} of {{ selectedDays }} days</div>
+            <div class="text-xs text-neutral-500 mb-2">
+              Market Leader
+            </div>
+            <div class="text-xl font-bold text-white">
+              {{ marketLeader }}
+            </div>
+            <div class="text-sm text-neutral-500">
+              {{ marketLeaderDays }} of {{ selectedDays }} days
+            </div>
           </div>
           <div class="rounded-lg bg-neutral-900 p-4">
-            <div class="text-xs text-neutral-500 mb-2">Consistency</div>
-            <div class="text-xl font-bold text-white">{{ leaderConsistency }}%</div>
-            <div class="text-sm text-neutral-500">same best provider</div>
+            <div class="text-xs text-neutral-500 mb-2">
+              Consistency
+            </div>
+            <div class="text-xl font-bold text-white">
+              {{ leaderConsistency }}%
+            </div>
+            <div class="text-sm text-neutral-500">
+              same best provider
+            </div>
           </div>
         </div>
 
         <!-- Mini Chart -->
         <div class="relative h-32 mb-4">
-          <svg class="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
+          <svg
+            class="w-full h-full"
+            viewBox="0 0 400 100"
+            preserveAspectRatio="none"
+          >
             <!-- Grid lines -->
-            <line x1="0" y1="25" x2="400" y2="25" stroke="#404040" stroke-width="1" stroke-dasharray="4" />
-            <line x1="0" y1="50" x2="400" y2="50" stroke="#404040" stroke-width="1" stroke-dasharray="4" />
-            <line x1="0" y1="75" x2="400" y2="75" stroke="#404040" stroke-width="1" stroke-dasharray="4" />
-            
+            <line
+              x1="0"
+              y1="25"
+              x2="400"
+              y2="25"
+              stroke="#404040"
+              stroke-width="1"
+              stroke-dasharray="4"
+            />
+            <line
+              x1="0"
+              y1="50"
+              x2="400"
+              y2="50"
+              stroke="#404040"
+              stroke-width="1"
+              stroke-dasharray="4"
+            />
+            <line
+              x1="0"
+              y1="75"
+              x2="400"
+              y2="75"
+              stroke="#404040"
+              stroke-width="1"
+              stroke-dasharray="4"
+            />
+
             <!-- Area fill -->
             <path
               :d="areaPath"
               fill="url(#costGradient)"
             />
-            
+
             <!-- Line -->
             <path
               :d="linePath"
@@ -89,15 +161,29 @@
               stroke="#2563EB"
               stroke-width="2"
             />
-            
+
             <defs>
-              <linearGradient id="costGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+              <linearGradient
+                id="costGradient"
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="#2563EB"
+                  stop-opacity="0.3"
+                />
+                <stop
+                  offset="100%"
+                  stop-color="#2563EB"
+                  stop-opacity="0"
+                />
               </linearGradient>
             </defs>
           </svg>
-          
+
           <!-- X-axis labels -->
           <div class="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-neutral-500">
             <span>{{ startLabel }}</span>
@@ -107,7 +193,9 @@
 
         <!-- Provider Performance -->
         <div class="border-t border-neutral-700 pt-4 mt-4">
-          <h4 class="text-sm font-semibold text-white mb-3">Provider Performance ({{ selectedRange }})</h4>
+          <h4 class="text-sm font-semibold text-white mb-3">
+            Provider Performance ({{ selectedRange }})
+          </h4>
           <div class="space-y-2">
             <div
               v-for="(provider, index) in providerPerformance"
@@ -158,7 +246,7 @@ const lastUpdated = ref(new Date().toISOString())
 
 const trendData = ref<number[]>([])
 const costTrendRows = ref<CostTrendData[]>([])
-const providerPerformance = ref<{ name: string; winDays: number }[]>([])
+const providerPerformance = ref<{ name: string, winDays: number }[]>([])
 
 const selectedDays = computed(() => {
   const map: Record<string, number> = { '7D': 7, '30D': 30, '90D': 90 }
@@ -209,18 +297,18 @@ const startLabel = computed(() => {
 
 const linePath = computed(() => {
   if (trendData.value.length === 0) return ''
-  
+
   const data = trendData.value
   const maxVal = Math.max(...data) * 1.1
   const minVal = Math.min(...data) * 0.9
   const range = maxVal - minVal
-  
+
   const points = data.map((val, i) => {
     const x = (i / (data.length - 1)) * 400
     const y = 100 - ((val - minVal) / range) * 100
     return `${x},${y}`
   })
-  
+
   return `M${points.join(' L')}`
 })
 
@@ -250,9 +338,11 @@ async function loadData() {
 
     const lastDate = windowed[windowed.length - 1]?.date
     lastUpdated.value = lastDate ? new Date(lastDate).toISOString() : new Date().toISOString()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load cost trend:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -260,12 +350,10 @@ async function loadData() {
 watch(
   () => [store.corridor, store.timeframe, store.amount, selectedRange.value],
   () => loadData(),
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
   loadData()
 })
 </script>
-
-

@@ -66,7 +66,7 @@
             </div>
             <h3 class="font-semibold text-slate-900 mb-2">Corridor Watchlist</h3>
             <p class="text-sm text-slate-600 mb-3">Save your frequently used corridors and track rates without searching again. See rate trends at a glance.</p>
-            <div class="text-xs text-slate-400">Free: 3 corridors • Plus: Unlimited</div>
+            <div class="text-xs text-slate-400">Free: 3 corridors • Plus: 16 corridors</div>
           </div>
           <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all">
             <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
@@ -76,7 +76,7 @@
             </div>
             <h3 class="font-semibold text-slate-900 mb-2">Smart Rate Alerts</h3>
             <p class="text-sm text-slate-600 mb-3">Get notified when rates hit your target. Set alerts for exchange rates, fees, or total recipient amount.</p>
-            <div class="text-xs text-slate-400">Free: 1 alert • Plus: Unlimited</div>
+            <div class="text-xs text-slate-400">Free: 3 alerts • Plus: 16 alerts</div>
           </div>
           <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all">
             <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
@@ -129,7 +129,7 @@
         <div class="max-w-4xl mx-auto px-4">
           <div class="text-center mb-10">
             <h2 class="text-3xl font-bold text-slate-900 mb-4">Choose Your Plan</h2>
-            <p class="text-slate-600 max-w-2xl mx-auto">Start with our free account to track corridors and set alerts. When you need more power, upgrade to Plus for unlimited features and an ad-free experience.</p>
+            <p class="text-slate-600 max-w-2xl mx-auto">Start with our free account to track corridors and set alerts. When you need more power, upgrade to Plus for Pulse, exports, and higher limits.</p>
           </div>
           <div class="grid md:grid-cols-2 gap-6">
             <!-- Free -->
@@ -152,7 +152,7 @@
                 </li>
                 <li class="flex items-center gap-2 text-slate-700">
                   <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  1 active alert
+                  3 active alerts
                 </li>
                 <li class="flex items-center gap-2 text-slate-700">
                   <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
@@ -183,11 +183,15 @@
               <ul class="space-y-3 mb-6">
                 <li class="flex items-center gap-2 text-white">
                   <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  <strong>Unlimited</strong> watchlist corridors
+                  <strong>16</strong> watchlist corridors
                 </li>
                 <li class="flex items-center gap-2 text-white">
                   <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  <strong>Unlimited</strong> alerts
+                  <strong>16</strong> smart alerts
+                </li>
+                <li class="flex items-center gap-2 text-white">
+                  <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                  <strong>Pulse</strong> access
                 </li>
                 <li class="flex items-center gap-2 text-white">
                   <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
@@ -230,7 +234,7 @@
       <div v-if="!isPlus" class="bg-blue-600 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <div class="flex items-center justify-center gap-3 text-sm">
-            <span><strong>Upgrade to Plus</strong> — Unlimited alerts, 365-day history, export, and ad-free experience</span>
+            <span><strong>Upgrade to Plus</strong> — Pulse access, 16 alerts, 16 watchlist corridors, exports, and an ad-free experience</span>
             <NuxtLink to="/plus" class="inline-flex items-center gap-1 font-semibold text-white hover:text-blue-100 underline underline-offset-2">
               Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </NuxtLink>
@@ -240,7 +244,7 @@
 
       <div v-if="!isPlus" class="bg-slate-50 border-b border-slate-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <AdSlot placement="dashboard_inline" wrapper-class="rounded-xl" min-height="120px" />
+          <AdPlacement placement="dashboard_inline" wrapper-class="rounded-xl" min-height="120px" />
         </div>
       </div>
 
@@ -337,11 +341,12 @@
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-sm text-white/90">Watchlist</span>
-                <span v-if="!isPlus" class="text-xs text-white/70">{{ watchlistCount }}/{{ limits.watchlistItems }}</span>
-                <span v-else class="text-xs text-white">∞</span>
+                <span class="text-xs text-white/70">
+                  {{ watchlistCount }}/{{ limits.watchlistItems === 'unlimited' ? '∞' : limits.watchlistItems }}
+                </span>
               </div>
               <div class="text-2xl font-semibold text-white">{{ watchlistCount }}</div>
-              <div v-if="!isPlus" class="mt-2">
+              <div v-if="limits.watchlistItems !== 'unlimited'" class="mt-2">
                 <div class="h-1.5 bg-white/30 rounded-full overflow-hidden">
                   <div
                     class="h-full rounded-full transition-all bg-white"
@@ -349,11 +354,11 @@
                   />
                 </div>
                 <NuxtLink
-                  v-if="watchlistLimitPercent >= 100"
+                  v-if="!isPlus && watchlistLimitPercent >= 100"
                   to="/plus"
                   class="text-xs text-white hover:text-white/80 font-medium mt-1 inline-block"
                 >
-                  Upgrade for unlimited →
+                  Upgrade for Plus →
                 </NuxtLink>
               </div>
             </div>
@@ -362,11 +367,12 @@
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-sm text-white/90">Active Alerts</span>
-                <span v-if="!isPlus" class="text-xs text-white/70">{{ alertsCount }}/{{ limits.alerts }}</span>
-                <span v-else class="text-xs text-white">∞</span>
+                <span class="text-xs text-white/70">
+                  {{ alertsCount }}/{{ limits.alerts === 'unlimited' ? '∞' : limits.alerts }}
+                </span>
               </div>
               <div class="text-2xl font-semibold text-white">{{ alertsCount }}</div>
-              <div v-if="!isPlus" class="mt-2">
+              <div v-if="limits.alerts !== 'unlimited'" class="mt-2">
                 <div class="h-1.5 bg-white/30 rounded-full overflow-hidden">
                   <div
                     class="h-full rounded-full transition-all bg-white"
@@ -374,11 +380,11 @@
                   />
                 </div>
                 <NuxtLink
-                  v-if="alertsLimitPercent >= 100"
+                  v-if="!isPlus && alertsLimitPercent >= 100"
                   to="/plus"
                   class="text-xs text-white hover:text-white/80 font-medium mt-1 inline-block"
                 >
-                  Upgrade for unlimited →
+                  Upgrade for Plus →
                 </NuxtLink>
               </div>
             </div>
@@ -432,10 +438,10 @@
             class="mb-8 bg-gradient-to-r from-gray-900 to-slate-900 rounded-xl p-6 text-white"
           >
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 class="font-semibold text-lg">You're approaching your limits</h3>
-                <p class="text-white/90 text-sm mt-1">Upgrade to Plus for unlimited watchlist items, alerts, extended history, and export.</p>
-              </div>
+            <div>
+              <h3 class="font-semibold text-lg">You're approaching your limits</h3>
+              <p class="text-white/90 text-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 365-day history, and exports.</p>
+            </div>
               <NuxtLink
                 to="/plus"
                 class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors flex-shrink-0"
@@ -771,7 +777,7 @@
                     View all
                   </button>
                 </div>
-                <div v-if="watchlistItems.length === 0" class="px-6 py-12 text-center">
+                <div v-if="corridorWatchlistItems.length === 0" class="px-6 py-12 text-center">
                   <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -787,7 +793,7 @@
                 </div>
                 <div v-else class="divide-y divide-slate-100">
                   <div
-                    v-for="item in watchlistItems.slice(0, 3)"
+                    v-for="item in corridorWatchlistItems.slice(0, 3)"
                     :key="item.id"
                     class="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
                   >
@@ -874,7 +880,7 @@
                   Loading...
                 </div>
                 <div
-                  v-else-if="watchlistItems.length === 0"
+                  v-else-if="corridorWatchlistItems.length === 0"
                   class="text-center py-4"
                 >
                   <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
@@ -919,15 +925,15 @@
                       {{ formatPercentValue(item.change) }}
                     </span>
                   </NuxtLink>
-                  <div v-if="watchlistItems.length > topMoversLimit" class="pt-2 border-t border-slate-100">
+                  <div v-if="corridorWatchlistItems.length > topMoversLimit" class="pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       class="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
                       @click="setTab('watchlist')"
                     >
-                      View all {{ watchlistItems.length }} corridors →
-                    </button>
-                  </div>
+                      View all {{ corridorWatchlistItems.length }} corridors →
+                  </button>
+                </div>
                 </div>
               </div>
 
@@ -969,7 +975,7 @@
                   </div>
                   <div class="flex-1">
                     <h4 class="font-semibold text-sm mb-1">Remove Ads with Plus</h4>
-                    <p class="text-xs text-white/90 mb-3">Get unlimited alerts, 365-day history, and an ad-free experience.</p>
+                    <p class="text-xs text-white/90 mb-3">Get Pulse access, 16 alerts, 365-day history, exports, and an ad-free experience.</p>
                     <NuxtLink to="/plus" class="inline-flex items-center gap-1 text-xs font-semibold text-white hover:text-blue-100">
                       Learn more <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </NuxtLink>
@@ -987,7 +993,7 @@
               <div class="flex items-center gap-3">
                 <h2 class="text-lg font-semibold text-slate-900">Watchlist</h2>
                 <span
-                  v-if="!isPlus"
+                  v-if="limits.watchlistItems !== 'unlimited'"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   :class="watchlistLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : watchlistLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
                 >
@@ -1034,7 +1040,7 @@
             </svg>
             <div class="flex-1">
               <h4 class="text-sm font-medium text-brand-600">Watchlist limit reached</h4>
-              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist items. Upgrade to Plus for unlimited watchlist items.</p>
+              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Upgrade to Plus for up to 16 corridors.</p>
             </div>
             <NuxtLink
               to="/plus"
@@ -1044,9 +1050,24 @@
             </NuxtLink>
           </div>
 
+          <div
+            v-else-if="isPlus && watchlistLimitReached"
+            class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+          >
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex-1">
+              <h4 class="text-sm font-medium text-amber-800">Watchlist limit reached</h4>
+              <p class="text-sm text-amber-800/90 mt-0.5">
+                You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Remove a corridor to add another.
+              </p>
+            </div>
+          </div>
+
           <!-- Quick Add Corridor Form -->
           <div
-            v-if="!isPlus ? watchlistLimitPercent < 100 : true"
+            v-if="!watchlistLimitReached"
             class="bg-white rounded-xl border border-slate-200 p-4 mb-6"
           >
             <form class="flex flex-col sm:flex-row gap-3" @submit.prevent="handleAddWatchlist">
@@ -1088,7 +1109,7 @@
           <div v-if="!watchlistHydrated" class="text-center py-12 text-slate-500">
             Loading...
           </div>
-          <div v-else-if="watchlistItems.length === 0" class="text-center py-16 bg-white rounded-xl border border-slate-200">
+          <div v-else-if="corridorWatchlistItems.length === 0" class="text-center py-16 bg-white rounded-xl border border-slate-200">
             <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
               <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -1101,7 +1122,7 @@
           <!-- Enhanced Watchlist Cards -->
           <div v-else class="grid gap-6 sm:grid-cols-2">
             <div
-              v-for="item in watchlistItems"
+              v-for="item in corridorWatchlistItems"
               :key="item.id"
               class="bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-blue-300 hover:shadow-lg transition-all group"
             >
@@ -1143,13 +1164,13 @@
                   <div class="text-right">
                     <div
                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-semibold"
-                      :class="getWatchlistSnapshot(item.id).change === null
+                      :class="!getWatchlistSnapshot(item.id).hasChange
                         ? 'bg-slate-100 text-slate-500'
-                        : (getWatchlistSnapshot(item.id).change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')"
+                        : (getWatchlistSnapshot(item.id).changeValue >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')"
                     >
                       <svg
                         class="w-4 h-4"
-                        :class="getWatchlistSnapshot(item.id).change !== null && getWatchlistSnapshot(item.id).change < 0 ? 'rotate-180' : ''"
+                        :class="getWatchlistSnapshot(item.id).hasChange && getWatchlistSnapshot(item.id).changeValue < 0 ? 'rotate-180' : ''"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1176,10 +1197,10 @@
                     </svg>
                     {{ getWatchlistAlertCount(item.id) }} alert{{ getWatchlistAlertCount(item.id) !== 1 ? 's' : '' }}
                   </span>
-                </div>
-                
-                <!-- Enhanced Chart -->
-                <div class="relative h-32 mb-3">
+                  </div>
+
+                  <!-- Enhanced Chart -->
+                  <div class="relative h-32 mb-3">
                   <div
                     v-if="isWatchlistHistoryLoading(item.id)"
                     class="absolute inset-0 flex items-center justify-center text-xs text-slate-400"
@@ -1198,32 +1219,32 @@
                         <stop offset="0%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.2" />
                         <stop offset="100%" style="stop-color:rgb(59, 130, 246);stop-opacity:0" />
                       </linearGradient>
-                    </defs>
-                    
-                    <!-- Grid lines -->
-                    <line x1="0" y1="30" x2="400" y2="30" stroke="#e2e8f0" stroke-width="1" />
-                    <line x1="0" y1="60" x2="400" y2="60" stroke="#e2e8f0" stroke-width="1" />
-                    <line x1="0" y1="90" x2="400" y2="90" stroke="#e2e8f0" stroke-width="1" />
-                    
-                    <!-- Area fill -->
-                    <path
-                      :d="getWatchlistChartPath(item.id)"
-                      :fill="`url(#chartGradient-${item.id})`"
-                    />
-                    
-                    <!-- Line -->
-                    <polyline
-                      :points="getWatchlistChartPoints(item.id)"
+                      </defs>
+
+                      <!-- Grid lines -->
+                      <line x1="0" y1="30" x2="400" y2="30" stroke="#e2e8f0" stroke-width="1" />
+                      <line x1="0" y1="60" x2="400" y2="60" stroke="#e2e8f0" stroke-width="1" />
+                      <line x1="0" y1="90" x2="400" y2="90" stroke="#e2e8f0" stroke-width="1" />
+
+                      <!-- Area fill -->
+                      <path
+                        :d="getWatchlistChartPath(item.id)"
+                        :fill="`url(#chartGradient-${item.id})`"
+                      />
+
+                      <!-- Line -->
+                      <polyline
+                        :points="getWatchlistChartPoints(item.id)"
                       fill="none"
                       stroke="#3b82f6"
                       stroke-width="2.5"
                       stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    
-                    <!-- Current point indicator -->
-                    <circle
-                      :cx="380"
+                        stroke-linejoin="round"
+                      />
+
+                      <!-- Current point indicator -->
+                      <circle
+                        :cx="380"
                       :cy="getWatchlistChartCurrentY(item.id)"
                       r="4"
                       fill="#3b82f6"
@@ -1358,7 +1379,7 @@
               <div class="flex items-center gap-3">
                 <h2 class="text-lg font-semibold text-slate-900">Rate Alerts</h2>
                 <span
-                  v-if="!isPlus"
+                  v-if="limits.alerts !== 'unlimited'"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   :class="alertsLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : alertsLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
                 >
@@ -1380,7 +1401,7 @@
               <button
                 type="button"
                 class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!isPlus && alertsLimitPercent >= 100"
+                :disabled="alertsLimitReached"
                 @click="openCreateAlert"
               >
                 New Alert
@@ -1416,7 +1437,7 @@
             </svg>
             <div class="flex-1">
               <h4 class="text-sm font-medium text-brand-600">Alert limit reached</h4>
-              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alert. Upgrade to Plus for unlimited alerts.</p>
+              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alerts. Upgrade to Plus for up to 16 alerts.</p>
             </div>
             <NuxtLink
               to="/plus"
@@ -1424,6 +1445,21 @@
             >
               Upgrade
             </NuxtLink>
+          </div>
+
+          <div
+            v-else-if="isPlus && alertsLimitReached"
+            class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+          >
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex-1">
+              <h4 class="text-sm font-medium text-amber-800">Alert limit reached</h4>
+              <p class="text-sm text-amber-800/90 mt-0.5">
+                You've reached your limit of {{ limits.alerts }} alerts. Disable or delete an alert to add another.
+              </p>
+            </div>
           </div>
 
           <div v-if="!alertsHydrated" class="text-center py-12 text-slate-500">
@@ -1440,7 +1476,7 @@
             <button
               type="button"
               class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-              :disabled="!isPlus && alertsLimitPercent >= 100"
+              :disabled="alertsLimitReached"
               @click="openCreateAlert"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1628,7 +1664,7 @@
                 </div>
                 <div>
                   <h4 class="font-semibold mb-1">Need More Alerts?</h4>
-                  <p class="text-sm text-slate-300">Free accounts are limited to 1 weekly alert. Upgrade to Plus for daily alerts and unlimited smart alerts.</p>
+                  <p class="text-sm text-slate-300">Free accounts are limited to 3 alerts. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
                 </div>
               </div>
               <NuxtLink to="/plus" class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
@@ -1775,6 +1811,28 @@
                   </select>
                 </div>
 
+                <div v-if="exportSettings.dataType === 'history'" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input
+                      v-model="exportSettings.includeCorridorHistory"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60"
+                      :disabled="exportCorridorIds.length === 0"
+                    />
+                    <div class="flex-1">
+                      <div class="text-sm font-semibold text-slate-900">
+                        Include corridor history (Pulse indices)
+                      </div>
+                      <div v-if="exportCorridorIds.length > 0" class="text-xs text-slate-500 mt-0.5">
+                        Adds Pulse indices history for {{ exportCorridorIds.length }} watchlist corridor{{ exportCorridorIds.length !== 1 ? 's' : '' }} (max 16).
+                      </div>
+                      <div v-else class="text-xs text-slate-500 mt-0.5">
+                        Add corridors to your watchlist to include indices history in this export.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
                 <div>
                   <label class="block text-sm font-semibold text-slate-900 mb-3">Export Format</label>
                   <div class="grid grid-cols-2 gap-3">
@@ -1857,7 +1915,7 @@
                 <button
                   type="button"
                   class="text-slate-400 hover:text-slate-600"
-                  :disabled="accountApi.deleting"
+                  :disabled="accountDeleting"
                   @click="closeDeleteAccountModal"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1903,7 +1961,7 @@
                 <button
                   type="button"
                   class="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                  :disabled="accountApi.deleting"
+                  :disabled="accountDeleting"
                   @click="closeDeleteAccountModal"
                 >
                   Cancel
@@ -1911,14 +1969,14 @@
                 <button
                   type="button"
                   class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-60"
-                  :disabled="!deleteAccountReady || accountApi.deleting"
+                  :disabled="!deleteAccountReady || accountDeleting"
                   @click="handleDeleteAccount"
                 >
-                  <svg v-if="accountApi.deleting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg v-if="accountDeleting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  {{ accountApi.deleting ? 'Deleting...' : 'Delete Account' }}
+                  {{ accountDeleting ? 'Deleting...' : 'Delete Account' }}
                 </button>
               </div>
             </div>
@@ -2644,7 +2702,10 @@
                     <ul class="mt-3 space-y-2">
                       <li v-for="row in opsPopularCorridors" :key="row.corridor_id" class="flex items-center justify-between gap-4">
                         <span class="text-slate-700">{{ row.from_country }} → {{ row.to_country }}</span>
-                        <span class="text-xs text-slate-500">{{ row.search_count }} searches</span>
+                        <span class="text-xs text-slate-500">
+                          {{ row.search_count }} searches
+                          <span v-if="row.trend_percentage !== undefined"> • {{ formatTrendPercentage(row.trend_percentage) }}</span>
+                        </span>
                       </li>
                       <li v-if="!opsAnalyticsLoading && opsPopularCorridors.length === 0" class="text-xs text-slate-400">No corridor data yet.</li>
                     </ul>
@@ -2708,6 +2769,141 @@
                 </div>
                 <div class="mt-4 text-xs text-slate-500">
                   <NuxtLink to="/admin/audit" class="font-semibold text-blue-600 hover:text-blue-700">Open audit console →</NuxtLink>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 bg-white rounded-xl border border-slate-200 p-6">
+            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <h3 class="text-base font-semibold text-slate-900">Affiliate + Conversion Snapshot</h3>
+                <p class="text-xs text-slate-500">Admin-only telemetry. Conversion values are reported volume, not commissions.</p>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                :disabled="opsAnalyticsLoading"
+                @click="loadOpsAnalytics"
+              >
+                {{ opsAnalyticsLoading ? 'Refreshing...' : 'Refresh' }}
+              </button>
+            </div>
+            <p v-if="opsAnalyticsError" class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+              {{ opsAnalyticsError }}
+            </p>
+            <div v-else class="mt-4 space-y-6">
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm text-slate-700">
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Total clicks</div>
+                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(opsRevenueSummary.totalClicks, 0) }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Affiliate clicks</div>
+                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(opsRevenueSummary.affiliateClicks, 0) }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Affiliate rate</div>
+                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsPercent(opsRevenueSummary.affiliateRate, 2) }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Conversions</div>
+                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(opsConversionSummary.conversions, 0) }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Conversion rate</div>
+                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsPercent(opsConversionSummary.conversionRate, 2) }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Reported volume</div>
+                  <div class="text-sm font-semibold text-slate-900">{{ formatCurrencyTotals(opsConversionSummary.conversionValues) }}</div>
+                </div>
+              </div>
+
+              <div class="grid gap-6 lg:grid-cols-2">
+                <div class="rounded-xl border border-slate-100 p-4">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Top affiliate links</div>
+                  <div class="mt-3 overflow-auto">
+                    <table class="min-w-full text-sm">
+                      <thead class="text-xs uppercase text-slate-400">
+                        <tr>
+                          <th class="py-2 text-left">Provider</th>
+                          <th class="py-2 text-left">Corridor</th>
+                          <th class="py-2 text-right">Affiliate clicks</th>
+                          <th class="py-2 text-right">Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="row in opsRevenueRows.slice(0, 8)" :key="`${row.provider_id}-${row.corridor_id || 'none'}`" class="border-t border-slate-100">
+                          <td class="py-2 text-slate-700">{{ row.provider_name || row.provider_id }}</td>
+                          <td class="py-2 text-slate-600">{{ row.corridor_id || '—' }}</td>
+                          <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.affiliate_clicks, 0) }}</td>
+                          <td class="py-2 text-right text-slate-600">{{ formatOpsPercent(row.affiliate_rate, 2) }}</td>
+                        </tr>
+                        <tr v-if="opsRevenueRows.length === 0">
+                          <td colspan="4" class="py-3 text-center text-xs text-slate-400">No affiliate click data yet.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-slate-100 p-4">
+                  <div class="text-xs text-slate-400 uppercase tracking-wide">Conversions by provider</div>
+                  <div class="mt-3 overflow-auto">
+                    <table class="min-w-full text-sm">
+                      <thead class="text-xs uppercase text-slate-400">
+                        <tr>
+                          <th class="py-2 text-left">Provider</th>
+                          <th class="py-2 text-right">Conversions</th>
+                          <th class="py-2 text-right">Rate</th>
+                          <th class="py-2 text-right">Reported volume</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="row in opsProviderImpact.slice(0, 8)" :key="row.provider_id" class="border-t border-slate-100">
+                          <td class="py-2 text-slate-700">{{ row.provider_name || row.provider_id }}</td>
+                          <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.conversions, 0) }}</td>
+                          <td class="py-2 text-right text-slate-600">{{ formatOpsPercent(row.conversion_rate, 2) }}</td>
+                          <td class="py-2 text-right text-slate-600">{{ formatCurrencyTotals(row.conversion_values) }}</td>
+                        </tr>
+                        <tr v-if="opsProviderImpact.length === 0">
+                          <td colspan="4" class="py-3 text-center text-xs text-slate-400">No conversion data yet.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-slate-100 p-4">
+                <div class="text-xs text-slate-400 uppercase tracking-wide">Top provider corridors</div>
+                <div class="mt-3 overflow-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="text-xs uppercase text-slate-400">
+                      <tr>
+                        <th class="py-2 text-left">Provider</th>
+                        <th class="py-2 text-left">Corridor</th>
+                        <th class="py-2 text-right">Clicks</th>
+                        <th class="py-2 text-right">Conversions</th>
+                        <th class="py-2 text-right">Rate</th>
+                        <th class="py-2 text-right">Reported volume</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="row in opsProviderCorridors.slice(0, 8)" :key="`${row.provider_id}-${row.corridor_id || 'none'}`" class="border-t border-slate-100">
+                        <td class="py-2 text-slate-700">{{ row.provider_name || row.provider_id }}</td>
+                        <td class="py-2 text-slate-600">{{ row.corridor_id || '—' }}</td>
+                        <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.total_clicks, 0) }}</td>
+                        <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.conversions, 0) }}</td>
+                        <td class="py-2 text-right text-slate-600">{{ formatOpsPercent(row.conversion_rate, 2) }}</td>
+                        <td class="py-2 text-right text-slate-600">{{ formatCurrencyTotals(row.conversion_values) }}</td>
+                      </tr>
+                      <tr v-if="opsProviderCorridors.length === 0">
+                        <td colspan="6" class="py-3 text-center text-xs text-slate-400">No corridor conversion data yet.</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -2868,15 +3064,15 @@
                       </div>
                       <div class="flex-1">
                         <h4 class="text-sm font-semibold text-slate-900">Upgrade to Plus</h4>
-                        <p class="text-xs text-slate-600 mt-0.5">Unlimited alerts, extended history, and export</p>
+                        <p class="text-xs text-slate-600 mt-0.5">Pulse access, 16 alerts, 365-day history, exports, and ad-free</p>
                       </div>
                       <button
                         type="button"
                         class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-300"
-                        :disabled="billingActions.checkoutLoading"
+                        :disabled="billingCheckoutLoading"
                         @click="startCheckout"
                       >
-                        {{ billingActions.checkoutLoading ? 'Starting…' : 'Upgrade' }}
+                        {{ billingCheckoutLoading ? 'Starting…' : 'Upgrade' }}
                       </button>
                     </div>
                   </div>
@@ -2886,9 +3082,9 @@
                       type="button"
                       @click="openBillingPortal"
                       class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
-                      :disabled="billingActions.portalLoading"
+                      :disabled="billingPortalLoading"
                     >
-                      {{ billingActions.portalLoading ? 'Opening…' : 'Manage Subscription' }}
+                      {{ billingPortalLoading ? 'Opening…' : 'Manage Subscription' }}
                     </button>
                   </div>
                 </div>
@@ -2916,7 +3112,7 @@
                       type="button"
                       @click="openBillingPortal"
                       class="text-sm font-medium text-blue-600 hover:text-blue-700"
-                      :disabled="billingActions.portalLoading"
+                      :disabled="billingPortalLoading"
                     >
                       Update
                     </button>
@@ -3432,14 +3628,16 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
-
+import type { LocationQueryRaw } from 'vue-router'
 import type { AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
-import AdSlot from '~/components/ads/AdSlot.vue'
+
+import AdPlacement from '~/components/ads/AdPlacement.vue'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { COUNTRIES } from '~/utils/countries-currencies'
+
+definePageMeta({ middleware: 'auth' })
 
 const { ensureHydrated } = useAuth()
 await ensureHydrated()
@@ -3447,7 +3645,7 @@ await ensureHydrated()
 type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'enterprise' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
 
-const tabs: { id: DashboardTab; label: string }[] = [
+const tabs: { id: DashboardTab, label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'watchlist', label: 'Watchlist' },
   { id: 'alerts', label: 'Alerts' },
@@ -3459,42 +3657,42 @@ const tabs: { id: DashboardTab; label: string }[] = [
 
 const IconUser = defineComponent({
   render: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' })
-  ])
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' }),
+  ]),
 })
 
 const IconCreditCard = defineComponent({
   render: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' })
-  ])
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' }),
+  ]),
 })
 
 const IconBell = defineComponent({
   render: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' })
-  ])
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' }),
+  ]),
 })
 
 const IconShield = defineComponent({
   render: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' })
-  ])
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }),
+  ]),
 })
 
 const IconEye = defineComponent({
   render: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' }),
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' })
-  ])
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' }),
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' }),
+  ]),
 })
 
 const IconDocument = defineComponent({
   render: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' })
-  ])
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }),
+  ]),
 })
 
-const accountSections: { id: AccountSection; label: string; icon: ReturnType<typeof defineComponent> }[] = [
+const accountSections: { id: AccountSection, label: string, icon: ReturnType<typeof defineComponent> }[] = [
   { id: 'profile', label: 'Profile', icon: IconUser },
   { id: 'billing', label: 'Billing', icon: IconCreditCard },
   { id: 'notifications', label: 'Notifications', icon: IconBell },
@@ -3516,12 +3714,15 @@ const {
 const { updateProfile } = useMe()
 const { isPlus, isEnterprise, apiAccess, apiTier, apiCadenceHours, limits, billing, refreshPlan } = useEntitlements()
 const billingActions = useBilling()
+const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.value)
+const billingPortalLoading = computed(() => billingActions.portalLoading.value)
 const exportsApi = useExports()
 const dataExportApi = useDataExport()
 const accountApi = useAccount()
+const accountDeleting = computed(() => accountApi.deleting.value)
 const modal = useSaveAlertModal()
 const { request } = useApi()
-const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: false })
+const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: [] })
 
 const {
   items: watchlistItems,
@@ -3531,6 +3732,13 @@ const {
   reset: watchlistReset,
   save: watchlistSave,
 } = useWatchlist()
+
+const corridorWatchlistItems = computed(() =>
+  watchlistItems.value.filter(
+    (item): item is WatchlistItem & { target: Extract<WatchTarget, { type: 'corridor' }> } =>
+      item.target.type === 'corridor',
+  ),
+)
 
 const {
   alerts: alertItems,
@@ -3587,6 +3795,8 @@ type RateSnapshot = {
   rateLabel: string
   rateValue: number | null
   change: number | null
+  changeValue: number
+  hasChange: boolean
   lastUpdated: string | null
   history: RateHistoryEntry[]
 }
@@ -3661,7 +3871,7 @@ const formatDateLabel = (value: string | null | undefined) => {
   return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-const countryOverrides: Record<string, { name: string; code: string; flag: string; currency: string }> = {
+const countryOverrides: Record<string, { name: string, code: string, flag: string, currency: string }> = {
   EU: { name: 'Eurozone', code: 'EU', flag: '🇪🇺', currency: 'EUR' },
   UK: { name: 'United Kingdom', code: 'UK', flag: '🇬🇧', currency: 'GBP' },
 }
@@ -3714,13 +3924,15 @@ const loadRateHistory = async (base: string, quote: string, days: number) => {
       query: { base, quote, days },
     })
     rateHistoryCache.value = { ...rateHistoryCache.value, [key]: response }
-  } catch (error: any) {
+  }
+ catch (error: any) {
     rateHistoryErrors.value[key] = error?.message || 'Unable to load rate history.'
     rateHistoryCache.value = {
       ...rateHistoryCache.value,
       [key]: { base, quote, history: [], lastUpdated: null },
     }
-  } finally {
+  }
+ finally {
     rateHistoryLoading.value[key] = false
   }
 }
@@ -3735,13 +3947,15 @@ const loadProviderRates = async (base: string, quote: string) => {
       query: { base, quote },
     })
     providerRatesCache.value = { ...providerRatesCache.value, [key]: response }
-  } catch (error: any) {
+  }
+ catch (error: any) {
     providerRatesErrors.value[key] = error?.message || 'Unable to load provider rates.'
     providerRatesCache.value = {
       ...providerRatesCache.value,
       [key]: { base, quote, midMarketRate: null, data: [] },
     }
-  } finally {
+  }
+ finally {
     providerRatesLoading.value[key] = false
   }
 }
@@ -3758,8 +3972,15 @@ const alertsLimitPercent = computed(() => {
   return (alertsCount.value / (limits.value.alerts as number)) * 100
 })
 
-const watchlistLimitReached = computed(() => !isPlus.value && watchlistLimitPercent.value >= 100)
-const alertsLimitReached = computed(() => !isPlus.value && alertsLimitPercent.value >= 100)
+const watchlistLimitReached = computed(() => {
+  if (limits.value.watchlistItems === 'unlimited') return false
+  return watchlistCount.value >= (limits.value.watchlistItems as number)
+})
+
+const alertsLimitReached = computed(() => {
+  if (limits.value.alerts === 'unlimited') return false
+  return alertsCount.value >= (limits.value.alerts as number)
+})
 
 const runtimeConfig = useRuntimeConfig()
 
@@ -3794,7 +4015,7 @@ const tier3CadenceLabel = computed(() => 24)
 
 const embedSiteOrigin = computed(() => {
   if (runtimeConfig.public?.siteUrl) return runtimeConfig.public.siteUrl
-  if (process.client) return window.location.origin
+  if (import.meta.client) return window.location.origin
   return ''
 })
 
@@ -3847,13 +4068,15 @@ const toApiKeyErrorMessage = (error: unknown, fallback: string) => {
 }
 
 const copyApiKeyToken = async () => {
-  if (!apiKeyToken.value || !process.client) return
+  if (!apiKeyToken.value || !import.meta.client) return
   try {
     await navigator.clipboard.writeText(apiKeyToken.value)
     apiKeyCopyStatus.value = 'Token copied.'
-  } catch {
+  }
+ catch {
     apiKeyCopyStatus.value = 'Copy failed.'
-  } finally {
+  }
+ finally {
     setTimeout(() => {
       apiKeyCopyStatus.value = null
     }, 2000)
@@ -3862,13 +4085,15 @@ const copyApiKeyToken = async () => {
 
 const copyEmbedCode = async (key: EmbedIndexKey) => {
   const code = embedCodes.value[key]
-  if (!code || !process.client) return
+  if (!code || !import.meta.client) return
   try {
     await navigator.clipboard.writeText(code)
     embedCopyStatus.value = `${key.toUpperCase()} embed copied.`
-  } catch {
+  }
+ catch {
     embedCopyStatus.value = 'Copy failed.'
-  } finally {
+  }
+ finally {
     setTimeout(() => {
       embedCopyStatus.value = null
     }, 2000)
@@ -3883,9 +4108,11 @@ const fetchApiKeys = async () => {
     const response = await request<ApiKeyListResponse>('/me/api-keys')
     apiKeys.value = response.keys ?? []
     apiKeysLoaded.value = true
-  } catch (error) {
+  }
+ catch (error) {
     apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to load API keys.')
-  } finally {
+  }
+ finally {
     apiKeysLoading.value = false
   }
 }
@@ -3911,9 +4138,11 @@ const createEnterpriseApiKey = async () => {
     embedApiKey.value = response.token
     apiKeyName.value = ''
     apiKeyTier.value = '2'
-  } catch (error) {
+  }
+ catch (error) {
     apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to create API key.')
-  } finally {
+  }
+ finally {
     apiKeysLoading.value = false
   }
 }
@@ -3928,15 +4157,17 @@ const rotateEnterpriseApiKey = async (key: ApiKeyRecord) => {
     const response = await request<ApiKeyCreateResponse>(`/me/api-keys/${key.key_id}/rotate`, {
       method: 'POST',
     })
-    apiKeys.value = apiKeys.value.map((item) => (
+    apiKeys.value = apiKeys.value.map(item => (
       item.key_id === key.key_id ? response.api_key : item
     ))
     apiKeyToken.value = response.token
     apiKeyTokenLabel.value = response.api_key.key_prefix
     embedApiKey.value = response.token
-  } catch (error) {
+  }
+ catch (error) {
     apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to rotate API key.')
-  } finally {
+  }
+ finally {
     apiKeysLoading.value = false
   }
 }
@@ -3947,12 +4178,14 @@ const revokeEnterpriseApiKey = async (key: ApiKeyRecord) => {
   apiKeysError.value = null
   try {
     await request(`/me/api-keys/${key.key_id}`, { method: 'DELETE' })
-    apiKeys.value = apiKeys.value.map((item) => (
+    apiKeys.value = apiKeys.value.map(item => (
       item.key_id === key.key_id ? { ...item, revoked_at: new Date().toISOString() } : item
     ))
-  } catch (error) {
+  }
+ catch (error) {
     apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to revoke API key.')
-  } finally {
+  }
+ finally {
     apiKeysLoading.value = false
   }
 }
@@ -3971,9 +4204,11 @@ const checkAdminAccess = async () => {
   try {
     await request('/admin/users', { query: { limit: 1 } })
     hasAdminAccess.value = true
-  } catch {
+  }
+ catch {
     hasAdminAccess.value = false
-  } finally {
+  }
+ finally {
     adminAccessChecked.value = true
   }
 }
@@ -3995,10 +4230,11 @@ const activeTab = computed<DashboardTab>(() => {
 function setTab(tab: DashboardTab) {
   if (tab === 'ops' && !hasAdminAccess.value) return
   if (tab === 'enterprise' && !isEnterprise.value) return
-  const nextQuery = { ...route.query } as Record<string, unknown>
+  const nextQuery: LocationQueryRaw = { ...route.query }
   if (tab === 'overview') {
     delete nextQuery.tab
-  } else {
+  }
+ else {
     nextQuery.tab = tab
   }
   void navigateTo({ path: route.path, query: nextQuery })
@@ -4025,7 +4261,7 @@ async function startCheckout() {
     return
   }
 
-  if (process.client) {
+  if (import.meta.client) {
     window.location.href = result.url
   }
 }
@@ -4107,6 +4343,39 @@ type OpsAnalyticsProvider = {
   click_through_rate: number
 }
 
+type OpsRevenueMetric = {
+  provider_id: string
+  provider_name?: string | null
+  corridor_id?: string | null
+  total_clicks: number
+  affiliate_clicks: number
+  affiliate_rate: number
+  unique_users: number
+}
+
+type OpsProviderImpactSummary = {
+  provider_id: string
+  provider_name?: string | null
+  total_clicks: number
+  unique_clicks: number
+  affiliate_clicks: number
+  conversions: number
+  unique_conversions: number
+  conversion_rate: number
+  conversion_values: Record<string, number> | null
+}
+
+type OpsProviderCorridorImpact = {
+  provider_id: string
+  provider_name?: string | null
+  corridor_id?: string | null
+  total_clicks: number
+  unique_clicks: number
+  conversions: number
+  conversion_rate: number
+  conversion_values: Record<string, number> | null
+}
+
 type OpsAuditLog = {
   event_id: string
   created_at: string
@@ -4176,11 +4445,12 @@ const adminRoleLoading = ref(false)
 const adminRoleError = ref<string | null>(null)
 const adminRoleSuccess = ref<string | null>(null)
 
-const buildOpsRecord = <T>(factory: () => T) =>
-  opsProviders.reduce((acc, provider) => {
+function buildOpsRecord<T>(factory: () => T): Record<OpsProviderId, T> {
+  return opsProviders.reduce((acc, provider) => {
     acc[provider.id] = factory()
     return acc
   }, {} as Record<OpsProviderId, T>)
+}
 
 const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>(
   buildOpsRecord(() => null),
@@ -4213,6 +4483,9 @@ const opsAnalyticsLoading = ref(false)
 const opsAnalyticsError = ref<string | null>(null)
 const opsPopularCorridors = ref<OpsAnalyticsCorridor[]>([])
 const opsFavoriteProviders = ref<OpsAnalyticsProvider[]>([])
+const opsRevenueRows = ref<OpsRevenueMetric[]>([])
+const opsProviderImpact = ref<OpsProviderImpactSummary[]>([])
+const opsProviderCorridors = ref<OpsProviderCorridorImpact[]>([])
 const opsAnalyticsHasLoaded = ref(false)
 
 const opsAuditLoading = ref(false)
@@ -4266,13 +4539,61 @@ const formatOpsNumber = (value: number | null | undefined, digits = 2) => {
   return number.toLocaleString(undefined, { maximumFractionDigits: digits })
 }
 
+const formatOpsPercent = (value: number | null | undefined, digits = 2) => {
+  if (value === null || value === undefined) return 'n/a'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 'n/a'
+  return `${number.toFixed(digits)}%`
+}
+
+const formatTrendPercentage = (value: number | null | undefined) => {
+  if (value === null || value === undefined) return '—'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return '—'
+  return `${number >= 0 ? '+' : ''}${number.toFixed(1)}%`
+}
+
+const formatCurrencyValue = (value: number, currency: string) => {
+  if (!Number.isFinite(value)) return `${currency} 0`
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value)
+  }
+ catch {
+    return `${currency} ${value.toLocaleString()}`
+  }
+}
+
+const mergeCurrencyTotals = (
+  totals: Record<string, number>,
+  values?: Record<string, number> | null,
+) => {
+  if (!values || typeof values !== 'object') return
+  for (const [currency, rawValue] of Object.entries(values)) {
+    const number = Number(rawValue)
+    if (!Number.isFinite(number)) continue
+    totals[currency] = (totals[currency] || 0) + number
+  }
+}
+
+const formatCurrencyTotals = (values?: Record<string, number> | null) => {
+  if (!values || typeof values !== 'object') return '—'
+  const entries = Object.entries(values)
+    .filter(([, amount]) => Number.isFinite(Number(amount)))
+    .sort(([a], [b]) => a.localeCompare(b))
+  if (!entries.length) return '—'
+  return entries
+    .map(([currency, amount]) => formatCurrencyValue(Number(amount), currency))
+    .join(', ')
+}
+
 const formatOpsFlags = (value: unknown) => {
   if (!value) return 'none'
   if (Array.isArray(value)) return value.length ? value.join(', ') : 'none'
   if (typeof value === 'string') return value
   try {
     return JSON.stringify(value)
-  } catch {
+  }
+ catch {
     return 'unknown'
   }
 }
@@ -4290,7 +4611,7 @@ const attemptStatusClass = (success: boolean | null) => {
 }
 
 const toOpsErrorMessage = (error: unknown) => {
-  const candidate = error as { statusCode?: number; status?: number; message?: string; data?: { message?: string } }
+  const candidate = error as { statusCode?: number, status?: number, message?: string, data?: { message?: string } }
   const status = candidate?.statusCode ?? candidate?.status
   if (status === 401 || status === 403) {
     return 'Admin access required to view ops data.'
@@ -4314,7 +4635,7 @@ const telemetryEngagement = computed(() => {
   if (telemetryMetric.value !== 'engagement') return null
   const payload = telemetryLatest.value?.value
   if (!payload || typeof payload !== 'object') return null
-  return payload as { avg_engagement?: number; session_count?: number }
+  return payload as { avg_engagement?: number, session_count?: number }
 })
 
 const telemetryListRows = computed<TelemetryListRow[]>(() => {
@@ -4347,6 +4668,43 @@ const telemetryListRows = computed<TelemetryListRow[]>(() => {
   return []
 })
 
+const opsRevenueSummary = computed(() => {
+  const totals = {
+    totalClicks: 0,
+    affiliateClicks: 0,
+    uniqueUsers: 0,
+  }
+  for (const row of opsRevenueRows.value) {
+    totals.totalClicks += Number(row.total_clicks) || 0
+    totals.affiliateClicks += Number(row.affiliate_clicks) || 0
+    totals.uniqueUsers += Number(row.unique_users) || 0
+  }
+  const affiliateRate = totals.totalClicks > 0
+    ? (totals.affiliateClicks / totals.totalClicks) * 100
+    : 0
+  return { ...totals, affiliateRate }
+})
+
+const opsConversionSummary = computed(() => {
+  const totals = {
+    totalClicks: 0,
+    conversions: 0,
+    uniqueConversions: 0,
+    conversionRate: 0,
+    conversionValues: {} as Record<string, number>,
+  }
+  for (const row of opsProviderImpact.value) {
+    totals.totalClicks += Number(row.total_clicks) || 0
+    totals.conversions += Number(row.conversions) || 0
+    totals.uniqueConversions += Number(row.unique_conversions) || 0
+    mergeCurrencyTotals(totals.conversionValues, row.conversion_values)
+  }
+  totals.conversionRate = totals.totalClicks > 0
+    ? (totals.conversions / totals.totalClicks) * 100
+    : 0
+  return totals
+})
+
 const loadOpsHealth = async (providerId: OpsProviderId) => {
   const provider = opsProviders.find(item => item.id === providerId)
   if (!provider) return
@@ -4356,9 +4714,11 @@ const loadOpsHealth = async (providerId: OpsProviderId) => {
   try {
     const response = await request<OpsHealthResponse>(provider.endpoint)
     opsState.value[providerId] = response
-  } catch (error) {
+  }
+ catch (error) {
     opsErrors.value[providerId] = toOpsErrorMessage(error)
-  } finally {
+  }
+ finally {
     opsLoading.value[providerId] = false
   }
 }
@@ -4386,9 +4746,11 @@ const handleAdminRoleUpdate = async () => {
       },
     })
     adminRoleSuccess.value = `Role updated for ${email}.`
-  } catch (error) {
+  }
+ catch (error) {
     adminRoleError.value = toOpsErrorMessage(error)
-  } finally {
+  }
+ finally {
     adminRoleLoading.value = false
   }
 }
@@ -4412,10 +4774,12 @@ const loadTelemetryAnalytics = async () => {
       },
     })
     telemetryRows.value = response?.data ?? []
-  } catch (error) {
+  }
+ catch (error) {
     telemetryError.value = toOpsErrorMessage(error)
     telemetryRows.value = []
-  } finally {
+  }
+ finally {
     telemetryLoading.value = false
   }
 }
@@ -4427,21 +4791,35 @@ const loadOpsAnalytics = async () => {
   opsAnalyticsError.value = null
   const range = buildOpsDateRange(7)
   try {
-    const [corridors, providers] = await Promise.all([
+    const [corridors, providers, impact, revenue] = await Promise.all([
       request<{ corridors: OpsAnalyticsCorridor[] }>('/analytics/corridors', {
         query: { ...range, limit: 6 },
       }),
       request<{ providers: OpsAnalyticsProvider[] }>('/analytics/providers', {
         query: { ...range, limit: 6 },
       }),
+      request<{ providers: OpsProviderImpactSummary[], corridors: OpsProviderCorridorImpact[] }>('/analytics/providers/impact', {
+        query: { ...range, limit: 8, corridor_limit: 8 },
+      }),
+      request<{ revenue: OpsRevenueMetric[] }>('/analytics/revenue', {
+        query: { ...range, limit: 10 },
+      }),
     ])
     opsPopularCorridors.value = corridors?.corridors ?? []
     opsFavoriteProviders.value = providers?.providers ?? []
-  } catch (error) {
+    opsProviderImpact.value = impact?.providers ?? []
+    opsProviderCorridors.value = impact?.corridors ?? []
+    opsRevenueRows.value = revenue?.revenue ?? []
+  }
+ catch (error) {
     opsAnalyticsError.value = toOpsErrorMessage(error)
     opsPopularCorridors.value = []
     opsFavoriteProviders.value = []
-  } finally {
+    opsProviderImpact.value = []
+    opsProviderCorridors.value = []
+    opsRevenueRows.value = []
+  }
+ finally {
     opsAnalyticsLoading.value = false
   }
 }
@@ -4457,10 +4835,12 @@ const loadOpsAudit = async () => {
       query: { ...range, limit: 8, offset: 0 },
     })
     opsAuditLogs.value = response?.logs ?? []
-  } catch (error) {
+  }
+ catch (error) {
     opsAuditError.value = toOpsErrorMessage(error)
     opsAuditLogs.value = []
-  } finally {
+  }
+ finally {
     opsAuditLoading.value = false
   }
 }
@@ -4468,7 +4848,8 @@ const loadOpsAudit = async () => {
 watch(() => activeTab.value, (tab) => {
   if (tab === 'ops') {
     startOpsAutoRefresh()
-  } else {
+  }
+ else {
     stopOpsAutoRefresh()
   }
   if (tab === 'ops' && !hasAdminAccess.value) {
@@ -4531,7 +4912,7 @@ const isTimeframeLocked = (value: string) => {
 const countryOptions = computed(() => {
   return Object.values(countryMap)
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map((c) => ({
+    .map(c => ({
       label: `${getFlag(c.code)} ${c.code} - ${c.name}`,
       value: c.code,
       code: c.code,
@@ -4543,7 +4924,6 @@ const countryOptions = computed(() => {
 const inlineFromOptions = computed(() => countryOptions.value)
 const inlineToOptions = computed(() => countryOptions.value)
 
-
 const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30)
 
 const selectedPair = computed(() => {
@@ -4553,22 +4933,41 @@ const selectedPair = computed(() => {
 const selectedSnapshot = computed<RateSnapshot>(() => {
   const pair = selectedPair.value
   if (!pair) {
-    return { rateLabel: '—', rateValue: null, change: null, lastUpdated: null, history: [] }
+    return {
+      rateLabel: '—',
+      rateValue: null,
+      change: null,
+      changeValue: 0,
+      hasChange: false,
+      lastUpdated: null,
+      history: [],
+    }
   }
   const history = getRateHistory(pair.base, pair.quote, selectedHistoryDays.value)
   if (!history.length) {
-    return { rateLabel: '—', rateValue: null, change: null, lastUpdated: null, history }
+    return {
+      rateLabel: '—',
+      rateValue: null,
+      change: null,
+      changeValue: 0,
+      hasChange: false,
+      lastUpdated: null,
+      history,
+    }
   }
   const latest = history[history.length - 1]
   const previous = history.length > 1 ? history[history.length - 2] : null
   const change = previous && previous.rate > 0
     ? ((latest.rate - previous.rate) / previous.rate) * 100
     : null
+  const hasChange = change !== null && change !== undefined && Number.isFinite(change)
   const meta = getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
   return {
     rateLabel: formatRateValue(latest.rate),
     rateValue: latest.rate,
     change,
+    changeValue: hasChange ? change : 0,
+    hasChange,
     lastUpdated: meta?.lastUpdated ?? latest.date,
     history,
   }
@@ -4640,7 +5039,7 @@ function getTimeframeStartLabel() {
 }
 
 const watchlistPairs = computed(() => {
-  const pairs = new Map<string, { base: string; quote: string }>()
+  const pairs = new Map<string, { base: string, quote: string }>()
   watchlistItems.value.forEach((item) => {
     const pair = getPairForTarget(item.target)
     if (!pair) return
@@ -4663,7 +5062,15 @@ const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
     if (!pair) return
     const history = getRateHistory(pair.base, pair.quote, watchlistHistoryDays)
     if (!history.length) {
-      map[item.id] = { rateLabel: '—', rateValue: null, change: null, lastUpdated: null, history }
+      map[item.id] = {
+        rateLabel: '—',
+        rateValue: null,
+        change: null,
+        changeValue: 0,
+        hasChange: false,
+        lastUpdated: null,
+        history,
+      }
       return
     }
     const latest = history[history.length - 1]
@@ -4676,6 +5083,8 @@ const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
       rateLabel: formatRateValue(latest.rate),
       rateValue: latest.rate,
       change,
+      changeValue: change ?? 0,
+      hasChange: change !== null,
       lastUpdated: meta?.lastUpdated ?? latest.date,
       history,
     }
@@ -4688,6 +5097,8 @@ const getWatchlistSnapshot = (itemId: string) => {
     rateLabel: '—',
     rateValue: null,
     change: null,
+    changeValue: 0,
+    hasChange: false,
     lastUpdated: null,
     history: [],
   }
@@ -4749,7 +5160,12 @@ const isProviderRatesLoadingForItem = (itemId: string) => {
 
 async function handleAddToWatchlist() {
   if (watchlistLimitReached.value) {
-    alert('Watchlist limit reached. Upgrade to Plus for unlimited corridors.')
+    if (!isPlus.value) {
+      alert('Watchlist limit reached. Upgrade to Plus for up to 16 corridors.')
+    }
+ else {
+      alert(`Watchlist limit reached (${limits.value.watchlistItems}). Remove a corridor to add another.`)
+    }
     return
   }
   const target: WatchTarget = {
@@ -4760,7 +5176,7 @@ async function handleAddToWatchlist() {
   }
   const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
   const result = await watchlistSave(target, { label })
-  
+
   if (result.status === 'limit_reached' || result.status === 'error') {
     alert(result.message)
   }
@@ -4768,7 +5184,12 @@ async function handleAddToWatchlist() {
 
 function handleSetAlert() {
   if (alertsLimitReached.value) {
-    alert('Alert limit reached. Upgrade to Plus for unlimited alerts.')
+    if (!isPlus.value) {
+      alert('Alert limit reached. Upgrade to Plus for up to 16 alerts.')
+    }
+ else {
+      alert(`Alert limit reached (${limits.value.alerts}). Disable or delete an alert to add another.`)
+    }
     return
   }
   const target: WatchTarget = {
@@ -4784,6 +5205,24 @@ function handleSetAlert() {
 // Account section state
 const activeAccountSection = ref<AccountSection>('profile')
 const checkoutNotice = ref<'success' | 'cancel' | null>(null)
+
+const requestedAccountSection = computed<AccountSection | null>(() => {
+  const raw = route.query.section
+  const section = Array.isArray(raw) ? raw[0] : raw
+  if (section === 'profile' || section === 'billing' || section === 'notifications' || section === 'security' || section === 'privacy' || section === 'compliance') {
+    return section
+  }
+  return null
+})
+
+watch(
+  () => [activeTab.value, requestedAccountSection.value] as const,
+  ([tab, section]) => {
+    if (tab !== 'account' || !section) return
+    activeAccountSection.value = section
+  },
+  { immediate: true },
+)
 
 const billingHistory = ref<BillingInvoice[]>([])
 const billingHistoryLoading = ref(false)
@@ -4804,7 +5243,8 @@ const formatBillingAmount = (amount: number | null | undefined, currency: string
   if (amount === null || amount === undefined || !currency) return '—'
   try {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
-  } catch {
+  }
+ catch {
     return `${currency.toUpperCase()} ${amount.toFixed(2)}`
   }
 }
@@ -4914,7 +5354,8 @@ async function saveProfile() {
     setTimeout(() => {
       profileSaved.value = false
     }, 3000)
-  } catch (error) {
+  }
+ catch (error) {
     console.warn('Profile update failed', error)
   }
 }
@@ -4959,7 +5400,8 @@ async function handlePushToggle() {
 
   if (result.success) {
     await fetchNotificationSettings()
-  } else if (pushError.value) {
+  }
+ else if (pushError.value) {
     notificationSaveError.value = pushError.value
   }
 }
@@ -5003,10 +5445,12 @@ async function handlePasswordUpdate() {
     setTimeout(() => {
       passwordUpdateSuccess.value = false
     }, 3000)
-  } catch (error) {
-    passwordUpdateError.value =
-      error instanceof Error ? error.message : 'Unable to update password.'
-  } finally {
+  }
+ catch (error) {
+    passwordUpdateError.value
+      = error instanceof Error ? error.message : 'Unable to update password.'
+  }
+ finally {
     passwordUpdateLoading.value = false
   }
 }
@@ -5023,7 +5467,7 @@ const formatSessionActivity = (timestamp: string) => {
   return parsed.toLocaleDateString()
 }
 
-const sessionMeta = (session: { device_type: string | null; location: string | null }) => {
+const sessionMeta = (session: { device_type: string | null, location: string | null }) => {
   const device = session.device_type
     ? session.device_type.charAt(0).toUpperCase() + session.device_type.slice(1)
     : 'Unknown device'
@@ -5034,16 +5478,18 @@ const sessionMeta = (session: { device_type: string | null; location: string | n
 const handleRevokeSession = async (sessionId: string) => {
   try {
     await revokeSession(sessionId)
-  } catch (error) {
+  }
+ catch (error) {
     console.warn('Failed to revoke session', error)
   }
 }
 
 const handleRevokeAllSessions = async () => {
-  const current = sessions.value.find((session) => session.is_current)
+  const current = sessions.value.find(session => session.is_current)
   try {
     await revokeAllSessions(current?.session_id)
-  } catch (error) {
+  }
+ catch (error) {
     console.warn('Failed to revoke sessions', error)
   }
 }
@@ -5059,9 +5505,11 @@ const fetchBillingHistory = async (force = false) => {
   try {
     const response = await request<{ invoices: BillingInvoice[] }>('/billing/history')
     billingHistory.value = Array.isArray(response.invoices) ? response.invoices : []
-  } catch (error: any) {
+  }
+ catch (error: any) {
     billingHistoryError.value = error?.message || 'Unable to load billing history.'
-  } finally {
+  }
+ finally {
     billingHistoryLoading.value = false
   }
 }
@@ -5071,14 +5519,16 @@ async function handleCheckoutNotice(value: unknown) {
     checkoutNotice.value = 'success'
     await refreshPlan()
     await fetchBillingHistory(true)
-  } else if (value === 'cancel') {
+  }
+ else if (value === 'cancel') {
     checkoutNotice.value = 'cancel'
-  } else {
+  }
+ else {
     checkoutNotice.value = null
     return
   }
 
-  const nextQuery = { ...route.query } as Record<string, unknown>
+  const nextQuery: LocationQueryRaw = { ...route.query }
   delete nextQuery.checkout
   void navigateTo({ path: route.path, query: nextQuery, replace: true })
 }
@@ -5100,6 +5550,24 @@ const exportSettings = ref({
   dateFrom: getDefaultDateFrom(),
   dateTo: new Date().toISOString().split('T')[0],
   format: 'csv' as 'csv' | 'pdf',
+  includeCorridorHistory: false,
+})
+
+const exportCorridorIds = computed<string[]>(() => {
+  const ids: string[] = []
+  for (const item of watchlistItems.value) {
+    if (item.target.type !== 'corridor') continue
+    const pair = getPairForTarget(item.target)
+    if (!pair) continue
+    const from = item.target.from.toUpperCase()
+    const to = item.target.to.toUpperCase()
+    const base = pair.base.toUpperCase()
+    const quote = pair.quote.toUpperCase()
+    ids.push(`${from}-${to}-${base}-${quote}`)
+  }
+
+  const unique = Array.from(new Set(ids))
+  return unique.slice(0, 16)
 })
 
 const exportStatusMessage = ref<string | null>(null)
@@ -5143,10 +5611,12 @@ const pollExportStatus = async (jobId: string) => {
         triggerDownload(download.url)
         isExporting.value = false
         clearExportPolling()
-      } else {
+      }
+ else {
         exportStatusMessage.value = 'Export in progress...'
       }
-    } catch (error: any) {
+    }
+ catch (error: any) {
       exportErrorMessage.value = error?.message || 'Failed to check export status.'
       isExporting.value = false
       clearExportPolling()
@@ -5157,7 +5627,7 @@ const pollExportStatus = async (jobId: string) => {
 function setExportDateRange(range: '7d' | '30d' | '90d') {
   const today = new Date()
   exportSettings.value.dateTo = today.toISOString().split('T')[0]
-  
+
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
   const fromDate = new Date()
   fromDate.setDate(fromDate.getDate() - days)
@@ -5172,24 +5642,54 @@ watch(() => showExportModal.value, (isOpen) => {
   }
 })
 
+watch(
+  () => exportSettings.value.dataType,
+  (dataType) => {
+    if (dataType !== 'history') {
+      exportSettings.value.includeCorridorHistory = false
+    }
+  },
+)
+
+watch(
+  () => exportCorridorIds.value.length,
+  (count) => {
+    if (count === 0) {
+      exportSettings.value.includeCorridorHistory = false
+    }
+  },
+)
+
 async function handleExport() {
   exportErrorMessage.value = null
   exportStatusMessage.value = null
   isExporting.value = true
 
   try {
+    const itemIds = exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
+      ? selectedExportItems.value
+      : undefined
+
+    const corridorIds = exportSettings.value.dataType === 'history'
+      && exportSettings.value.includeCorridorHistory
+      && exportCorridorIds.value.length > 0
+      ? exportCorridorIds.value
+      : undefined
+
     const response = await exportsApi.createExport({
       dataType: exportSettings.value.dataType,
       format: exportSettings.value.format,
       dateFrom: exportSettings.value.dateFrom,
       dateTo: exportSettings.value.dateTo,
-      itemIds: selectedExportItems.value.length > 0 ? selectedExportItems.value : undefined,
+      itemIds,
+      corridorIds,
     })
 
     exportJobId.value = response.job.id
     exportStatusMessage.value = 'Export queued. We will start processing shortly.'
     await pollExportStatus(response.job.id)
-  } catch (error: any) {
+  }
+ catch (error: any) {
     exportErrorMessage.value = error?.message || 'Failed to start export.'
     isExporting.value = false
   }
@@ -5220,7 +5720,8 @@ const requestGdprExport = async () => {
   try {
     const response = await dataExportApi.requestExport()
     gdprExportStatus.value = `Export requested (job ${response.job.id}). We'll notify you when it's ready.`
-  } catch (error: any) {
+  }
+ catch (error: any) {
     gdprExportError.value = error?.message || 'Failed to request GDPR export.'
   }
 }
@@ -5234,7 +5735,7 @@ const openDeleteAccountModal = () => {
 }
 
 const closeDeleteAccountModal = () => {
-  if (accountApi.deleting.value) return
+  if (accountDeleting.value) return
   showDeleteAccountModal.value = false
   deleteAccountConfirmText.value = ''
   deleteAccountConfirmed.value = false
@@ -5302,36 +5803,45 @@ const graphPoints = computed(() => graphData.value.map(d => `${d.x},${d.y}`).joi
 // Top Movers from Watchlist
 const topMoversLimit = computed(() => isPlus.value ? 5 : 3)
 const topMoversFromWatchlist = computed(() => {
-  if (!watchlistItems.value.length) return []
-  
+  if (!corridorWatchlistItems.value.length) return []
+
   // Deduplicate by corridor (from-to pair) to prevent showing the same corridor multiple times
   const seen = new Set<string>()
-  const uniqueItems = watchlistItems.value.filter((item) => {
-    if (item.target.type !== 'corridor') return false
+  const uniqueItems = corridorWatchlistItems.value.filter((item) => {
     const key = `${item.target.from}-${item.target.to}`
     if (seen.has(key)) return false
     seen.add(key)
     return true
   })
-  
+
   return uniqueItems
     .map((item) => {
       const snapshot = getWatchlistSnapshot(item.id)
       if (snapshot.change === null || snapshot.change === undefined) return null
       return { ...item, change: snapshot.change }
     })
-    .filter((item): item is WatchlistItem & { change: number } => Boolean(item) && Number.isFinite(item.change))
+    .filter((item): item is WatchlistItem & {
+      target: Extract<WatchTarget, { type: 'corridor' }>
+      change: number
+    } => (
+      item !== null && item !== undefined && Number.isFinite(item.change)
+    ))
     .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
     .slice(0, topMoversLimit.value)
 })
 
 const topMoversLoading = computed(() => {
-  return watchlistItems.value.some(item => isWatchlistHistoryLoading(item.id))
+  return corridorWatchlistItems.value.some(item => isWatchlistHistoryLoading(item.id))
 })
 
 async function handleAddWatchlist() {
   if (watchlistLimitReached.value) {
-    alert('Watchlist limit reached. Upgrade to Plus for unlimited corridors.')
+    if (!isPlus.value) {
+      alert('Watchlist limit reached. Upgrade to Plus for up to 16 corridors.')
+    }
+ else {
+      alert(`Watchlist limit reached (${limits.value.watchlistItems}). Remove a corridor to add another.`)
+    }
     return
   }
   const target: WatchTarget = {
@@ -5342,13 +5852,15 @@ async function handleAddWatchlist() {
   }
   const label = `${newWatchlist.value.from} → ${newWatchlist.value.to}`
   const result = await watchlistSave(target, { label })
-  
+
   if (result.status === 'saved') {
     newWatchlist.value = { from: 'US', to: 'PH' }
-  } else if (result.status === 'already_saved') {
+  }
+ else if (result.status === 'already_saved') {
     // Already in watchlist, just reset the form
     newWatchlist.value = { from: 'US', to: 'PH' }
-  } else if (result.status === 'limit_reached' || result.status === 'error') {
+  }
+ else if (result.status === 'limit_reached' || result.status === 'error') {
     alert(result.message)
   }
 }
@@ -5358,28 +5870,35 @@ const comparingSelectedCorridor = ref(false)
 
 async function handleCompareClick(item: WatchlistItem) {
   if (comparingCorridor.value === item.id) return
-  
+
   comparingCorridor.value = item.id
-  
+
+  if (item.target.type !== 'corridor') {
+    comparingCorridor.value = null
+    return
+  }
+
   const url = getCorridorUrl(item.target.from, item.target.to)
-  
+
   try {
     await navigateTo(url)
-  } finally {
+  }
+ finally {
     comparingCorridor.value = null
   }
 }
 
 async function handleCompareSelectedCorridor() {
   if (comparingSelectedCorridor.value) return
-  
+
   comparingSelectedCorridor.value = true
-  
-  const url = getCorridorUrl(selectedCorridor.from, selectedCorridor.to)
-  
+
+  const url = getCorridorUrl(selectedCorridor.value.from, selectedCorridor.value.to)
+
   try {
     await navigateTo(url)
-  } finally {
+  }
+ finally {
     comparingSelectedCorridor.value = false
   }
 }
@@ -5390,10 +5909,15 @@ function openAlert(item: WatchlistItem) {
 
 function openCreateAlert() {
   if (alertsLimitReached.value) {
-    alert('Alert limit reached. Upgrade to Plus for unlimited alerts.')
+    if (!isPlus.value) {
+      alert('Alert limit reached. Upgrade to Plus for up to 16 alerts.')
+    }
+ else {
+      alert(`Alert limit reached (${limits.value.alerts}). Disable or delete an alert to add another.`)
+    }
     return
   }
-  const first = watchlistItems.value[0]
+  const first = corridorWatchlistItems.value[0]
   const fallbackTarget: WatchTarget = { type: 'corridor', from: 'US', to: 'PH', method: 'bank' }
   modal.open({
     target: first?.target ?? fallbackTarget,
@@ -5413,7 +5937,6 @@ function formatMethod(method: string | null | undefined): string {
     bank_deposit: 'Bank',
     cash_pickup: 'Cash Pickup',
     mobile_wallet: 'Mobile Wallet',
-    airtime: 'Airtime',
   }
   return methodMap[method.toLowerCase()] || method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ')
 }
@@ -5453,7 +5976,8 @@ function formatCurrency(amount: number, countryCode: string): string {
   const currency = getCurrencyForCountry(countryCode.toUpperCase()) || 'USD'
   try {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)
-  } catch {
+  }
+ catch {
     return `${currency} ${amount.toLocaleString()}`
   }
 }
@@ -5489,18 +6013,18 @@ function getWatchlistChartPoints(itemId: string) {
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1
-  
+
   const width = 400
   const height = 120
   const padding = 15
-  
+
   const points = data.map((rate, i) => {
     const x = padding + (i / (data.length - 1)) * (width - 2 * padding)
     const normalized = (rate - min) / range
     const y = height - padding - (normalized * (height - 2 * padding))
     return `${x},${y}`
   })
-  
+
   return points.join(' ')
 }
 
@@ -5510,11 +6034,11 @@ function getWatchlistChartPath(itemId: string) {
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1
-  
+
   const width = 400
   const height = 120
   const padding = 15
-  
+
   let path = ''
   data.forEach((rate, i) => {
     const x = padding + (i / (data.length - 1)) * (width - 2 * padding)
@@ -5522,15 +6046,16 @@ function getWatchlistChartPath(itemId: string) {
     const y = height - padding - (normalized * (height - 2 * padding))
     if (i === 0) {
       path = `M ${x},${y}`
-    } else {
+    }
+ else {
       path += ` L ${x},${y}`
     }
   })
-  
+
   const lastX = padding + ((data.length - 1) / (data.length - 1)) * (width - 2 * padding)
   const firstX = padding
   path += ` L ${lastX},${height} L ${firstX},${height} Z`
-  
+
   return path
 }
 
@@ -5541,7 +6066,7 @@ function getWatchlistChartCurrentY(itemId: string) {
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1
-  
+
   const height = 120
   const padding = 15
   const normalized = (lastRate - min) / range
@@ -5576,7 +6101,7 @@ function getAlertCorridor(alert: { watchlistItemId: string }) {
   return { from: 'US', to: 'PH' }
 }
 
-function getAlertProgress(alert: { rule: AlertRule; watchlistItemId: string }) {
+function getAlertProgress(alert: { rule: AlertRule, watchlistItemId: string }) {
   const snapshot = getAlertSnapshot(alert)
   const current = snapshot.rateValue
   const target = alert.rule.value
@@ -5589,13 +6114,13 @@ function getAlertProgress(alert: { rule: AlertRule; watchlistItemId: string }) {
   return (target / current) * 100
 }
 
-function editAlert(alert: { id: string; watchlistItemId: string }) {
+function editAlert(alert: { id: string, watchlistItemId: string }) {
   const existingAlert = alertsFindById(alert.id)
   const item = watchlistFindById(alert.watchlistItemId)
   if (item && existingAlert) {
-    modal.open({ 
-      target: item.target, 
-      label: item.label, 
+    modal.open({
+      target: item.target,
+      label: item.label,
       source: 'dashboard',
       alertId: alert.id,
     })

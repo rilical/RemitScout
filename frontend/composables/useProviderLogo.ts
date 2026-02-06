@@ -26,7 +26,7 @@ export function getProviderLogoPath(slug: string): string {
     'wirebarley': '/png/SVG/PROVIDERS/WIREBARLEY_LOGO.png',
     'intermex': '/png/SVG/PROVIDERS/INTERMEX_LOGO.png',
     'koronapay': '/png/SVG/PROVIDERS/KORONAPAY_LOGO.svg',
-    'remitbee': '/png/SVG/PROVIDERS/REMITBEE_LOGO.svg',
+    'remitbee': '/png/SVG/PROVIDERS/REMITBEE_LOGO.jpeg',
     'ria': '/png/SVG/PROVIDERS/RIA_LOGO.svg',
     'al-ansari-exchange': '/png/SVG/PROVIDERS/ALANSARI_LOGO.svg',
     'alansari': '/png/SVG/PROVIDERS/ALANSARI_LOGO.svg',
@@ -35,13 +35,13 @@ export function getProviderLogoPath(slug: string): string {
     'wells-fargo': '/png/SVG/PROVIDERS/WELLS_FARGO_LOGO.svg',
     'singx': '/png/SVG/PROVIDERS/SINGX_LOGO.png',
     'placid': '/png/SVG/PROVIDERS/PLACID_LOGO.png',
-    'dahabshiil': '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.svg',
+    'dahabshiil': '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png',
   }
 
   const normalizedSlug = slug.toLowerCase().trim()
   const logoFile = slugMap[normalizedSlug]
   if (logoFile) return logoFile
-  
+
   // Fallback: try to construct path from slug
   const fallbackPath = `/png/SVG/PROVIDERS/${normalizedSlug.toUpperCase().replace(/-/g, '_')}_LOGO.svg`
   return fallbackPath

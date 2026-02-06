@@ -9,28 +9,28 @@
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">From</label>
             <div class="relative w-full">
-            <CountrySelect
-              id="corridor-from-country"
-              v-model="localFromCountry"
-              label="From"
-              :exclude-country="localToCountry"
-              placeholder="Sending from"
-              @country-selected="emitUpdate"
-            />
+              <CountrySelect
+                id="corridor-from-country"
+                v-model="localFromCountry"
+                label="From"
+                :exclude-country="localToCountry"
+                placeholder="Sending from"
+                @country-selected="emitUpdate"
+              />
             </div>
           </div>
           <!-- To Country -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">To</label>
             <div class="relative w-full">
-            <CountrySelect
-              id="corridor-to-country"
-              v-model="localToCountry"
-              label="To"
-              :exclude-country="localFromCountry"
-              placeholder="Receiving in"
-              @country-selected="emitUpdate"
-            />
+              <CountrySelect
+                id="corridor-to-country"
+                v-model="localToCountry"
+                label="To"
+                :exclude-country="localFromCountry"
+                placeholder="Receiving in"
+                @country-selected="emitUpdate"
+              />
             </div>
           </div>
         </div>
@@ -100,8 +100,19 @@
                 fill="none"
                 viewBox="0 0 24 24"
               >
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
               <span v-if="isSearching">Searching...</span>
               <span v-else>Compare</span>
@@ -112,7 +123,12 @@
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </button>
           </div>
@@ -127,15 +143,36 @@
         <div class="flex items-center gap-2">
           <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Delivery</span>
           <!-- Loading state -->
-          <div v-if="props.methodsLoading" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm">
-            <svg class="w-4 h-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <div
+            v-if="props.methodsLoading"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm"
+          >
+            <svg
+              class="w-4 h-4 animate-spin text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
             <span class="text-xs text-slate-500">Loading options...</span>
           </div>
           <!-- Actual method buttons -->
-          <div v-else-if="payoutMethods.length > 0" class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+          <div
+            v-else-if="payoutMethods.length > 0"
+            class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+          >
             <button
               v-for="method in payoutMethods"
               :key="method.value"
@@ -144,11 +181,14 @@
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all',
                 localPayoutMethod === method.value
                   ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50'
+                  : 'text-slate-600 hover:bg-slate-50',
               ]"
               @click="selectMethod(method.value)"
             >
-              <component :is="method.icon" class="w-3.5 h-3.5" />
+              <component
+                :is="method.icon"
+                class="w-3.5 h-3.5"
+              />
               {{ method.label }}
             </button>
           </div>
@@ -180,8 +220,18 @@
               title="Add to watchlist"
               @click="emit('save')"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                />
               </svg>
             </button>
             <button
@@ -190,8 +240,18 @@
               title="Set rate alert"
               @click="emit('alert')"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
               </svg>
             </button>
             <button
@@ -200,8 +260,18 @@
               title="Share"
               @click="emit('share')"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
               </svg>
             </button>
           </div>
@@ -220,19 +290,19 @@ import { getCountryByCode } from '~/utils/countries-currencies'
 import { sanitizeAmount, getMinAmount, getMaxAmount } from '~/utils/currency-limits'
 
 const BankIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' })
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' }),
 ])
 const CashIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' })
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' }),
 ])
 const WalletIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' })
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' }),
 ])
 const AirtimeIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 21h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2zM12 17h.01M7 5h10' })
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M8 21h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2zM12 17h.01M7 5h10' }),
 ])
 const CardIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' })
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' }),
 ])
 
 const props = withDefaults(defineProps<{
@@ -259,12 +329,12 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  update: [{ amount: number; payoutMethod: string; currency: string; fromCurrency: string; fromCountry?: string; toCountry?: string }]
-  sort: [sortBy: string]
-  save: []
-  alert: []
-  share: []
-  'new-query': [{ fromCountry: string; toCountry: string; amount: number; currency: string; fromCurrency: string; payoutMethod: string }]
+  'update': [{ amount: number, payoutMethod: string, currency: string, fromCurrency: string, fromCountry?: string, toCountry?: string }]
+  'sort': [sortBy: string]
+  'save': []
+  'alert': []
+  'share': []
+  'new-query': [{ fromCountry: string, toCountry: string, amount: number, currency: string, fromCurrency: string, payoutMethod: string }]
 }>()
 
 const localAmount = ref(props.amount)
@@ -300,7 +370,7 @@ const availableMethodsArray = computed(() => {
   return []
 })
 
-const methodConfig: Record<string, { label: string; value: string; icon: ReturnType<typeof h> }> = {
+const methodConfig: Record<string, { label: string, value: string, icon: ReturnType<typeof h> }> = {
   bank: { label: 'Bank deposit', value: 'bank', icon: BankIcon() },
   cash: { label: 'Cash Pickup', value: 'cash', icon: CashIcon() },
   wallet: { label: 'Mobile Wallet', value: 'wallet', icon: WalletIcon() },
@@ -353,31 +423,32 @@ const preventNegative = (event: KeyboardEvent) => {
 const sanitizeAmountInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   let value = target.value
-  
+
   // Remove any non-numeric characters except decimal point
   value = value.replace(/[^\d.]/g, '')
-  
+
   // Ensure only one decimal point
   const parts = value.split('.')
   if (parts.length > 2) {
     value = parts[0] + '.' + parts.slice(1).join('')
   }
-  
+
   // Limit decimal places to 2
   if (parts.length === 2 && parts[1].length > 2) {
     value = parts[0] + '.' + parts[1].substring(0, 2)
   }
-  
+
   // Update the input value
   if (target.value !== value) {
     target.value = value
   }
-  
+
   // Update the model value (but don't clamp on input, only on blur)
-  const numValue = parseFloat(value)
+  const numValue = Number.parseFloat(value)
   if (!isNaN(numValue) && numValue >= 0) {
     localAmount.value = numValue
-  } else if (value === '' || value === '.') {
+  }
+  else if (value === '' || value === '.') {
     localAmount.value = 0
   }
 }
@@ -385,8 +456,8 @@ const sanitizeAmountInput = (event: Event) => {
 const handleAmountBlur = (event: Event) => {
   const target = event.target as HTMLInputElement
   const currency = localFromCurrency.value || 'USD'
-  
-  const numValue = parseFloat(target.value) || 0
+
+  const numValue = Number.parseFloat(target.value) || 0
   const sanitized = sanitizeAmount(numValue, currency, amountLimits.value)
   localAmount.value = sanitized
   target.value = String(sanitized)
@@ -459,12 +530,12 @@ watch(localFromCountry, (newCountry) => {
     localFromCurrency.value = ''
     return
   }
-  
+
   const country = getCountryByCode(newCountry)
   if (!country?.currency) return
-  
+
   const defaultCurrency = country.currency.toUpperCase()
-  
+
   // Always set to country's default currency when country changes
   // The available currencies watcher will adjust if needed when the list loads
   if (localFromCurrency.value !== defaultCurrency) {
@@ -478,12 +549,12 @@ watch(localToCountry, (newCountry) => {
     localToCurrency.value = ''
     return
   }
-  
+
   const country = getCountryByCode(newCountry)
   if (!country?.currency) return
-  
+
   const defaultCurrency = country.currency.toUpperCase()
-  
+
   // Always set to country's default currency when country changes
   // The available currencies watcher will adjust if needed when the list loads
   if (localToCurrency.value !== defaultCurrency) {
@@ -495,12 +566,12 @@ watch(localToCountry, (newCountry) => {
 // Watch available currencies and update if current currency is not available
 watch(availableFromCurrenciesArray, (available) => {
   if (!localFromCountry.value) return
-  
+
   const country = getCountryByCode(localFromCountry.value)
   if (!country?.currency) return
-  
+
   const defaultCurrency = country.currency.toUpperCase()
-  
+
   // If available currencies list is empty, keep the default currency
   if (available.length === 0) {
     if (!localFromCurrency.value || localFromCurrency.value !== defaultCurrency) {
@@ -509,14 +580,15 @@ watch(availableFromCurrenciesArray, (available) => {
     }
     return
   }
-  
+
   // Update to default currency if it's available and current currency is invalid
   if (available.includes(defaultCurrency)) {
     if (!localFromCurrency.value || !available.includes(localFromCurrency.value)) {
       localFromCurrency.value = defaultCurrency
       emitUpdate()
     }
-  } else if (!localFromCurrency.value || !available.includes(localFromCurrency.value)) {
+  }
+  else if (!localFromCurrency.value || !available.includes(localFromCurrency.value)) {
     // Default currency not available, use first available
     localFromCurrency.value = available[0]
     emitUpdate()
@@ -525,12 +597,12 @@ watch(availableFromCurrenciesArray, (available) => {
 
 watch(availableToCurrenciesArray, (available) => {
   if (!localToCountry.value) return
-  
+
   const country = getCountryByCode(localToCountry.value)
   if (!country?.currency) return
-  
+
   const defaultCurrency = country.currency.toUpperCase()
-  
+
   // If available currencies list is empty, keep the default currency
   if (available.length === 0) {
     if (!localToCurrency.value || localToCurrency.value !== defaultCurrency) {
@@ -539,14 +611,15 @@ watch(availableToCurrenciesArray, (available) => {
     }
     return
   }
-  
+
   // Update to default currency if it's available and current currency is invalid
   if (available.includes(defaultCurrency)) {
     if (!localToCurrency.value || !available.includes(localToCurrency.value)) {
       localToCurrency.value = defaultCurrency
       emitUpdate()
     }
-  } else if (!localToCurrency.value || !available.includes(localToCurrency.value)) {
+  }
+  else if (!localToCurrency.value || !available.includes(localToCurrency.value)) {
     // Default currency not available, use first available
     localToCurrency.value = available[0]
     emitUpdate()
@@ -561,7 +634,8 @@ watch(() => props.methodsLoading, (loading) => {
     setTimeout(() => {
       isSearching.value = false
     }, 500)
-  } else if (loading && !isSearching.value) {
+  }
+  else if (loading && !isSearching.value) {
     // If loading starts again (e.g., after navigation), set searching state
     isSearching.value = true
   }
@@ -603,7 +677,7 @@ function emitUpdate() {
 
 function handleSearch() {
   if (!localFromCountry.value || !localToCountry.value) return
-  
+
   isSearching.value = true
   const currency = localFromCurrency.value || 'USD'
   const sanitized = sanitizeAmount(localAmount.value || props.amount, currency, amountLimits.value)

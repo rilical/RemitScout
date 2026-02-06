@@ -20,7 +20,7 @@ export const useBilling = () => {
     checkoutLoading.value = true
 
     try {
-      const response = await request<{ url?: string; session_id?: string; error?: string; message?: string }>(
+      const response = await request<{ url?: string, session_id?: string, error?: string, message?: string }>(
         '/billing/checkout-session',
         {
           method: 'POST',
@@ -35,11 +35,13 @@ export const useBilling = () => {
       }
 
       return { ok: true, url: response.url, sessionId: response.session_id }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       const message = err?.message || 'Unable to start checkout'
       error.value = message
       return { ok: false, error: message }
-    } finally {
+    }
+    finally {
       checkoutLoading.value = false
     }
   }
@@ -49,7 +51,7 @@ export const useBilling = () => {
     portalLoading.value = true
 
     try {
-      const response = await request<{ url?: string; error?: string; message?: string }>(
+      const response = await request<{ url?: string, error?: string, message?: string }>(
         '/billing/portal',
         { method: 'GET' },
       )
@@ -60,16 +62,18 @@ export const useBilling = () => {
         return { ok: false, error: message }
       }
 
-      if (process.client) {
+      if (import.meta.client) {
         window.location.href = response.url
       }
 
       return { ok: true, url: response.url }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       const message = err?.message || 'Unable to open billing portal'
       error.value = message
       return { ok: false, error: message }
-    } finally {
+    }
+    finally {
       portalLoading.value = false
     }
   }
@@ -87,7 +91,8 @@ export const useBilling = () => {
       })
       await refreshPlan()
       return { ok: true }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       const message = err?.message || 'Unable to verify checkout'
       error.value = message
       return { ok: false, error: message }

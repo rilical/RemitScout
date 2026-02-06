@@ -20,6 +20,7 @@ import { context as otelContext, trace, type Context } from '@opentelemetry/api'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import {
   createVisibilityTimeoutExtender,
   deleteMessages,
@@ -51,9 +52,13 @@ const shutdownTimeoutMs = toNumber(process.env.GOLD_LIVE_QUEUE_SHUTDOWN_TIMEOUT_
 const debounceWindowMs = toNumber(process.env.GOLD_LIVE_DEBOUNCE_WINDOW_MS, 2000)
 const loopJitterMs = resolveJitterMs(process.env.GOLD_LIVE_QUEUE_LOOP_JITTER_MS, 0)
 const messageJitterMs = resolveJitterMs(process.env.GOLD_LIVE_QUEUE_MESSAGE_JITTER_MS, 0)
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
 
 const shutdown = (signal: string) => {
   if (shutdownRequested) return
@@ -280,6 +285,21 @@ export const runGoldLiveWorker = async (): Promise<number> => {
   })
 
   try {
+    if (!isLambdaRuntime && healthEnabled) {
+      try {
+        healthServer = await startHealthServer({
+          port: healthPort,
+          logger,
+          loggerName: 'gold-live-worker',
+          enableDatabaseCheck: true,
+          enableRedisCheck: true,
+        })
+      } catch (error) {
+        logger.warn('health_server_start_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
     while (!shutdownRequested) {
       await applyJitter(logger, 'gold_live_loop', loopJitterMs)
       const messages = await receiveJsonMessages<GoldLiveMessage>(queueUrl, batchSize)
@@ -407,6 +427,13 @@ export const runGoldLiveWorker = async (): Promise<number> => {
     await goldPool.end()
     if (forceExitTimer) {
       clearTimeout(forceExitTimer)
+    }
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     }
   }
 

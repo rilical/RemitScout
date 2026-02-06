@@ -6,11 +6,20 @@
     <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
-          <NuxtLink to="/" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Home</NuxtLink>
+          <NuxtLink
+            to="/"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Home</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Learn</NuxtLink>
+          <NuxtLink
+            to="/learn"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Learn</NuxtLink>
           <span class="text-white/50">›</span>
-          <NuxtLink to="/learn/providers" class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10">Providers</NuxtLink>
+          <NuxtLink
+            to="/learn/providers"
+            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+          >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">Remitly Review</span>
         </nav>
@@ -30,7 +39,11 @@
               </div>
               <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    class="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   Provider Review
@@ -54,8 +67,18 @@
                 class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Compare Remitly Now
               </NuxtLink>
@@ -65,8 +88,18 @@
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </a>
             </div>
@@ -76,17 +109,11 @@
           <div class="flex justify-center lg:justify-end">
             <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">REMIT-SCOUT SCORE</div>
+                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  REMIT-SCOUT SCORE
+                </div>
                 <div class="flex justify-center">
-                  <div
-                    class="relative flex h-40 w-40 items-center justify-center rounded-full border-4 bg-white shadow-lg"
-                    :style="{ borderColor: scoreColor }"
-                  >
-                    <div class="text-center">
-                      <span :class="[scoreTextClass, 'text-5xl font-bold leading-none']">9.1</span>
-                      <span class="text-sm text-slate-500">/10</span>
-                    </div>
-                  </div>
+                  <RemitScoreRing :score="score" />
                 </div>
               </div>
 
@@ -97,42 +124,49 @@
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
-                  <div class="h-0.5 bg-brand-600 w-full"></div>
+                  <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
               </div>
 
               <div class="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p class="text-xs" style="color: rgba(17, 24, 39, 1);">
+                <p
+                  class="text-xs"
+                  style="color: rgba(17, 24, 39, 1);"
+                >
                   Based on our independent methodology.<br>
-                  <NuxtLink to="/methodology" class="font-semibold hover:text-brand-700" style="color: rgba(37, 99, 235, 1);">Learn how we score →</NuxtLink>
+                  <NuxtLink
+                    to="/methodology"
+                    class="font-semibold hover:text-brand-700"
+                    style="color: rgba(37, 99, 235, 1);"
+                  >Learn how we score →</NuxtLink>
                 </p>
               </div>
             </div>
@@ -146,27 +180,46 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">170+</div>
-            <div class="text-sm text-slate-600">Countries Supported</div>
+            <div class="text-3xl font-bold text-slate-900">
+              170+
+            </div>
+            <div class="text-sm text-slate-600">
+              Countries Supported
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">5M+</div>
-            <div class="text-sm text-slate-600">Active Customers</div>
+            <div class="text-3xl font-bold text-slate-900">
+              5M+
+            </div>
+            <div class="text-sm text-slate-600">
+              Active Customers
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">Express</div>
-            <div class="text-sm text-slate-600">Speed Option</div>
+            <div class="text-3xl font-bold text-emerald-600">
+              Express
+            </div>
+            <div class="text-sm text-slate-600">
+              Speed Option
+            </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">24/7</div>
-            <div class="text-sm text-slate-600">Customer Support</div>
+            <div class="text-3xl font-bold text-slate-900">
+              24/7
+            </div>
+            <div class="text-sm text-slate-600">
+              Customer Support
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Main Content -->
-    <section id="review" class="py-16 bg-white">
+    <section
+      id="review"
+      class="py-16 bg-white"
+    >
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
@@ -175,8 +228,18 @@
               <!-- Introduction -->
               <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
                 <div class="absolute top-4 right-4">
-                  <svg class="w-12 h-12 text-brand-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    class="w-12 h-12 text-brand-600/20"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                 </div>
                 <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
@@ -186,7 +249,7 @@
 
               <div class="mb-12">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full"></div>
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
                 <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
@@ -196,12 +259,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-8">
                 <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   Score Breakdown
                 </h2>
@@ -219,72 +292,120 @@
                     <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
                       Remitly
                     </h3>
-                    <p class="text-sm text-black">Remit-Score</p>
+                    <p class="text-sm text-black">
+                      Remit-Score
+                    </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Delivered Value</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Delivered Value
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">40% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Value is strong overall, but Express can cost more than Economy tier. Compare final "amount received" before committing.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      40% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Value is strong overall, but Express can cost more than Economy tier. Compare final "amount received" before committing.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Reliability</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Reliability
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">20% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Reliable execution with on-time delivery promise. Shows total cost + ETA before paying.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      20% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Reliable execution with on-time delivery promise. Shows total cost + ETA before paying.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Friction & Speed</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Friction & Speed
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">Elite</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Very fast Express option with multiple payout methods: bank, cash pickup, mobile money, home delivery.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Very fast Express option with multiple payout methods: bank, cash pickup, mobile money, home delivery.
+                    </div>
                   </div>
                   <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Support & Refunds</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Support & Refunds
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">15% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">24/7 customer care via chat/phone. Clear refund policy with 3 business day turnaround.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      15% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      24/7 customer care via chat/phone. Clear refund policy with 3 business day turnaround.
+                    </div>
                   </div>
                   <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">Trust & Safety</div>
+                      <div class="font-semibold text-slate-900 text-sm">
+                        Trust & Safety
+                      </div>
                       <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">10% weight</div>
-                    <div class="text-sm text-slate-700 leading-relaxed">Registered as Money Services Business (U.S.), licensed in multiple states, FCA registered in U.K.</div>
+                    <div class="text-xs text-slate-500 mb-2">
+                      10% weight
+                    </div>
+                    <div class="text-sm text-slate-700 leading-relaxed">
+                      Registered as Money Services Business (U.S.), licensed in multiple states, FCA registered in U.K.
+                    </div>
                   </div>
                 </div>
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">Why 9.1 (not 9.5-10):</div>
-                      <div class="text-sm text-slate-700 leading-relaxed">Express can cost more, raising effective cost. Best-value outcome depends on funding method + speed tier + corridor.</div>
+                      <div class="font-semibold text-slate-900 mb-1.5">
+                        Why 9.1 (not 9.5-10):
+                      </div>
+                      <div class="text-sm text-slate-700 leading-relaxed">
+                        Express can cost more, raising effective cost. Best-value outcome depends on funding method + speed tier + corridor.
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Delivered Value (40%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Delivered Value (40%)
+                  </h2>
                 </div>
                 <p class="text-lg text-slate-700 leading-relaxed mb-6">
                   Delivered Value is primarily about effective cost: fees + FX spread, not marketing claims. The practical question is: How much of what you pay actually arrives — and how predictable is that outcome?
@@ -315,20 +436,42 @@
                 </div>
 
                 <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">"How often is it cheapest?"</p>
+                  <p class="font-semibold text-slate-900 mb-3">
+                    "How often is it cheapest?"
+                  </p>
                   <p class="text-slate-800 leading-relaxed mb-4">
                     Without inventing corridor-by-corridor statistics, the most honest way to interpret the score + notes is:
                   </p>
                   <ul class="space-y-2 text-slate-700">
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Remitly can be a strong value option overall (it's scoring 9.1/10).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
                       </svg>
                       <span>But if you choose Express, you should assume your effective cost may rise versus Economy — and you'll want to compare the final "amount received" against at least one alternative before you commit.</span>
                     </li>
@@ -347,7 +490,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Reliability & Success (20%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Reliability & Success (20%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -362,20 +507,50 @@
                     </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>On-time delivery promise ("delivered on time, or we'll refund your fees")</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Total cost + ETA visible before paying</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Clear status tracking/notifications via email/SMS/push</span>
                       </li>
@@ -389,7 +564,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Friction & Speed (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Friction & Speed (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -401,14 +578,34 @@
                     </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Express</strong> — designed for speed (often minutes with card funding)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">Economy</strong> — designed for value (days, depending on corridor)</span>
                       </li>
@@ -418,7 +615,9 @@
                     <p class="font-semibold text-slate-900 mb-3 text-base">
                       Payout methods (a big friction driver)
                     </p>
-                    <p class="text-slate-700 mb-3">More payout options usually reduce friction because the recipient can choose what actually works locally. Remitly lists:</p>
+                    <p class="text-slate-700 mb-3">
+                      More payout options usually reduce friction because the recipient can choose what actually works locally. Remitly lists:
+                    </p>
                     <div class="flex flex-wrap gap-2">
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Bank account</span>
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Cash pickup</span>
@@ -426,7 +625,9 @@
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Home delivery</span>
                       <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Debit card deposit</span>
                     </div>
-                    <p class="text-sm text-slate-500 mt-3 mb-0">Availability depends on recipient's location.</p>
+                    <p class="text-sm text-slate-500 mt-3 mb-0">
+                      Availability depends on recipient's location.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -442,7 +643,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Support & Refunds (15%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Support & Refunds (15%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -457,20 +660,50 @@
                     </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>You can cancel and obtain a refund of all funds (including fees) as long as you cancel <strong>before</strong> funds are deposited or collected.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Refunds issued within <strong>three business days</strong> of a cancellation request, if funds have not been picked up or deposited.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span>Disputes have a process with stated timelines (contact them within a stated window for investigation/response).</span>
                       </li>
@@ -489,7 +722,9 @@
                   <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">Trust & Safety (10%)</h2>
+                  <h2 class="text-3xl font-bold text-slate-900">
+                    Trust & Safety (10%)
+                  </h2>
                 </div>
                 <div class="space-y-4 text-lg leading-relaxed text-slate-700">
                   <p>
@@ -501,14 +736,34 @@
                     </p>
                     <ul class="space-y-2.5 text-slate-700">
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">U.S.:</strong> Registered as a Money Services Business and licensed in multiple states as a money transmitter.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
-                        <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <svg
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
                         </svg>
                         <span><strong class="text-slate-900">U.K.:</strong> Remitly's entity appears on the Financial Conduct Authority (FCA) register.</span>
                       </li>
@@ -522,11 +777,21 @@
                 </p>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
-                <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  class="w-7 h-7 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 Pros and Cons
               </h2>
@@ -534,8 +799,16 @@
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
                 <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Pros
                   </h3>
@@ -560,8 +833,16 @@
                 </div>
                 <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
                   <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
-                    <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     Cons
                   </h3>
@@ -586,32 +867,72 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-12">
                 <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Best For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>People who need speed on demand (Express), especially for urgent transfers.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Senders who value accessible support if something goes wrong.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span>Recipients who benefit from multiple payout options (depending on location).</span>
                     </li>
@@ -620,21 +941,51 @@
 
                 <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
                   <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      class="w-6 h-6 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Not Ideal For
                   </h2>
                   <ul class="space-y-3 text-slate-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Senders optimizing purely for the lowest possible effective cost, especially if you're tempted by Express.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       <span>Anyone who won't compare the delivered amount across at least one other provider before sending.</span>
                     </li>
@@ -642,12 +993,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
                   </svg>
                   How to Get the Best Rate with Remitly
                 </h2>
@@ -656,35 +1017,45 @@
                 </p>
                 <div class="space-y-3">
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">1</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      1
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Compare Economy vs Express before paying:</strong>
                       <span class="text-slate-700">Express can cost more — check if the speed is worth it for this transfer.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">2</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      2
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
                       <span class="text-slate-700">Bank transfer vs debit/credit card (card routes are often faster but can be pricier).</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">3</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      3
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Watch the FX rate vs a reference (mid-market):</strong>
                       <span class="text-slate-700">This helps you spot the spread and understand true cost.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">4</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      4
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">Verify the payout method your recipient actually wants:</strong>
                       <span class="text-slate-700">Bank, cash pickup, mobile money — options vary by location.</span>
                     </div>
                   </div>
                   <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">5</div>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                      5
+                    </div>
                     <div class="flex-1">
                       <strong class="text-slate-900 block mb-1.5 text-base">If something looks off, don't wait:</strong>
                       <span class="text-slate-700">Cancellation/refund rules depend on whether funds are already deposited/collected.</span>
@@ -693,12 +1064,22 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
                   </svg>
                   Two Alternatives (and When They Beat Remitly)
                 </h2>
@@ -706,7 +1087,7 @@
                 <div class="space-y-6">
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Wise
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -719,7 +1100,7 @@
 
                   <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Western Union
                     </h3>
                     <p class="text-slate-700 mb-3">
@@ -732,24 +1113,38 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
               <div class="mb-10">
                 <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-7 h-7 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   Bottom Line
                 </h2>
                 <div class="space-y-5 text-lg leading-relaxed text-slate-700">
                   <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">Who should use Remitly?</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Who should use Remitly?
+                    </p>
                     <p class="text-slate-800 mb-0">
                       Use Remitly if you want a strong all‑around remittance option where speed (Express) and support matter, and you're willing to do a quick pre‑send check to keep effective cost low.
                     </p>
                   </div>
                   <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">Why the 9.1/10 is justified:</p>
+                    <p class="font-semibold text-slate-900 mb-3">
+                      Why the 9.1/10 is justified:
+                    </p>
                     <p class="text-slate-800 mb-0">
                       The score aligns with the rubric weighting: Delivered Value (40%) is strong overall, but with an important caveat that Express can cost more. On top of that, the audit notes point to reliable execution, very fast Express, strong support, and strong trust — which map directly to the other 60% of the rubric (reliability, speed/friction, support/refunds, and trust/safety).
                     </p>
@@ -764,7 +1159,9 @@
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
               <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">Ready to Compare?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">
+                  Ready to Compare?
+                </h3>
                 <p class="text-sm text-slate-600 mb-4">
                   See how Remitly stacks up for your specific corridor and amount.
                 </p>
@@ -776,57 +1173,114 @@
                 </NuxtLink>
               </div>
 
-              <AdSlot placement="blog_sidebar" layout="vertical" wrapper-class="rounded-xl" min-height="160px" />
+              <AdPlacement
+                placement="blog_sidebar"
+                layout="vertical"
+                wrapper-class="rounded-xl"
+                min-height="160px"
+              />
               <!-- Quick Facts -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Quick Facts</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Quick Facts
+                </h3>
                 <dl class="space-y-3 text-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Founded</dt>
-                    <dd class="font-semibold text-slate-900">2011</dd>
+                    <dt class="text-slate-600">
+                      Founded
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      2011
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Headquarters</dt>
-                    <dd class="font-semibold text-slate-900">Seattle, USA</dd>
+                    <dt class="text-slate-600">
+                      Headquarters
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Seattle, USA
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Customers</dt>
-                    <dd class="font-semibold text-slate-900">5M+</dd>
+                    <dt class="text-slate-600">
+                      Customers
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      5M+
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Countries</dt>
-                    <dd class="font-semibold text-slate-900">170+</dd>
+                    <dt class="text-slate-600">
+                      Countries
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      170+
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Speed Tiers</dt>
-                    <dd class="font-semibold text-slate-900">Express / Economy</dd>
+                    <dt class="text-slate-600">
+                      Speed Tiers
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      Express / Economy
+                    </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">Support</dt>
-                    <dd class="font-semibold text-slate-900">24/7</dd>
+                    <dt class="text-slate-600">
+                      Support
+                    </dt>
+                    <dd class="font-semibold text-slate-900">
+                      24/7
+                    </dd>
                   </div>
                 </dl>
               </div>
 
               <!-- Why Trust Us -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">Why Trust This Review?</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  Why Trust This Review?
+                </h3>
                 <ul class="space-y-3 text-sm text-slate-700">
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>100% independent - providers can't pay to rank higher</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Based on real transfer data</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                      class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     <span>Transparent methodology</span>
                   </li>
@@ -836,36 +1290,60 @@
                   class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </NuxtLink>
               </div>
 
               <!-- More Providers -->
               <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">More Provider Reviews</h3>
+                <h3 class="text-lg font-bold text-slate-900 mb-4">
+                  More Provider Reviews
+                </h3>
                 <ul class="space-y-3">
                   <li>
-                    <NuxtLink to="/learn/providers/wise" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/wise"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/worldremit" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/worldremit"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">W</div>
                       <span>WorldRemit Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers/xe-money" class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600">
+                    <NuxtLink
+                      to="/learn/providers/xe-money"
+                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                    >
                       <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/learn/providers" class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <NuxtLink
+                      to="/learn/providers"
+                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                    >
                       View all providers →
                     </NuxtLink>
                   </li>
@@ -878,12 +1356,21 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="py-16 bg-blue-600" style="background-color: rgba(37, 99, 235, 1);">
+    <section
+      class="py-16 bg-blue-600"
+      style="background-color: rgba(37, 99, 235, 1);"
+    >
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold mb-4" style="color: rgba(255, 255, 255, 1);">
+        <h2
+          class="text-3xl font-bold mb-4"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Ready to See How Remitly Compares?
         </h2>
-        <p class="text-lg mb-8" style="color: rgba(255, 255, 255, 1);">
+        <p
+          class="text-lg mb-8"
+          style="color: rgba(255, 255, 255, 1);"
+        >
           Enter your transfer details to see real-time rates from Remitly and 30+ other providers.
         </p>
         <NuxtLink
@@ -892,8 +1379,18 @@
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </NuxtLink>
       </div>
@@ -902,14 +1399,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
-
-definePageMeta({
-  alias: ['/reviews/remitly'],
-})
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
@@ -930,20 +1422,6 @@ const breadcrumbItems = [
 
 const score = 9.1
 
-const scoreColor = computed(() => {
-  if (score >= 9.0) return '#10b981'
-  if (score >= 8.0) return '#2563eb'
-  if (score >= 7.0) return '#eab308'
-  return '#6b7280'
-})
-
-const scoreTextClass = computed(() => {
-  if (score >= 9.0) return 'text-green-600'
-  if (score >= 8.0) return 'text-brand-600'
-  if (score >= 7.0) return 'text-yellow-600'
-  return 'text-neutral-600'
-})
-
 const { addReviewSchema } = useStructuredData()
 
 const reviewBody = `Remitly earns a Remit-Score of 9.1/10 based on our independent analysis. The provider offers very fast Express transfers with reliable execution and strong customer support. Delivered value is strong overall, with a tradeoff between Express (faster, potentially higher cost) and Economy (better value when speed isn't urgent). Multiple payout methods including bank transfer, cash pickup, mobile money, and home delivery. 24/7 customer support with clear refund policies.`
@@ -952,13 +1430,9 @@ addReviewSchema({
   itemReviewed: 'Remitly',
   reviewBody,
   author: 'Remit-Scout Editorial Team',
-  ratingValue: 9.1,
+  ratingValue: score,
   bestRating: 10,
   worstRating: 1,
   datePublished: '2024-01-01',
 })
 </script>
-
-
-
-

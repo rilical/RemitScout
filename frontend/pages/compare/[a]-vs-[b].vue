@@ -4,7 +4,7 @@
       <Breadcrumbs :items="breadcrumbItems" />
 
       <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
-          <h1 class="mb-4 text-4xl font-bold text-gray-900">
+        <h1 class="mb-4 text-4xl font-bold text-gray-900">
           {{ providerA?.name || 'Provider A' }} vs {{ providerB?.name || 'Provider B' }}
         </h1>
         <p class="mb-6 text-xl text-gray-600">
@@ -36,16 +36,16 @@
           id: providerA.id,
           name: providerA.name,
           slug: providerA.slug,
-          rating: providerA.rating,
-          countries: providerA.countries,
-          speed: providerA.speed,
+          rating: providerA.rating ?? 0,
+          countries: providerA.countries ?? 0,
+          speed: providerA.speed ?? '—',
         }, {
           id: providerB.id,
           name: providerB.name,
           slug: providerB.slug,
-          rating: providerB.rating,
-          countries: providerB.countries,
-          speed: providerB.speed,
+          rating: providerB.rating ?? 0,
+          countries: providerB.countries ?? 0,
+          speed: providerB.speed ?? '—',
         }]"
         :comparison="true"
       />

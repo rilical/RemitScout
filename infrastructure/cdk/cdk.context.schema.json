@@ -15,6 +15,11 @@
       "description": "ECR image tag for backend Docker image",
       "default": "latest"
     },
+    "cpuArchitecture": {
+      "type": "string",
+      "enum": ["x86_64", "arm64"],
+      "description": "CPU architecture for ECS/Lambda where configurable"
+    },
     "planeADbSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for Plane A database credentials"
@@ -183,6 +188,10 @@
     "planeBIngestDesiredCount": {
       "type": "number",
       "description": "Desired count for Plane B ingest service"
+    },
+    "planeBDisableTier1": {
+      "type": "boolean",
+      "description": "Disable Tier 1 collection (treat USD corridors as Tier 2 cadence)"
     },
     "planeBB2cRefreshDesiredCount": {
       "type": "number",

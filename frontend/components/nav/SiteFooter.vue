@@ -92,7 +92,7 @@
                 Money Transfers
               </NuxtLink>
             </li>
-            <li v-if="FEATURE_FLAGS.PULSE_ENABLED">
+            <li v-if="pulseEnabled">
               <NuxtLink
                 to="/pulse"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
@@ -227,20 +227,40 @@
       </div>
 
       <!-- Institutional Section -->
-      <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="border-t border-white/10 pt-8 mb-8">
+      <div
+        v-if="enterpriseEnabled"
+        class="border-t border-white/10 pt-8 mb-8"
+      >
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div class="flex items-center gap-3">
             <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10">
-              <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              <svg
+                class="w-5 h-5 text-white/80"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
               </svg>
             </div>
             <div>
-              <h3 class="text-sm font-semibold text-white">For Enterprise</h3>
-              <p class="text-xs text-white/60">Data products for enterprise & research</p>
+              <h3 class="text-sm font-semibold text-white">
+                For Enterprise
+              </h3>
+              <p class="text-xs text-white/60">
+                Data products for enterprise & research
+              </p>
             </div>
           </div>
-          <nav class="flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="Institutional links">
+          <nav
+            class="flex flex-wrap items-center gap-x-6 gap-y-2"
+            aria-label="Institutional links"
+          >
             <NuxtLink
               to="/institutions/data-products"
               class="text-sm text-gray-400 hover:text-white transition-colors"
@@ -278,7 +298,7 @@
 
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p class="text-sm text-white/70">
-              © {{ new Date().getFullYear() }} Remit-Scout LLC. All rights reserved.
+            © {{ new Date().getFullYear() }} Remit-Scout LLC. All rights reserved.
           </p>
         </div>
       </div>
@@ -287,9 +307,11 @@
 </template>
 
 <script setup lang="ts">
-import { FEATURE_FLAGS } from '~/utils/constants'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
 defineEmits<{
   'open-modal': []
 }>()
+
+const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
 </script>

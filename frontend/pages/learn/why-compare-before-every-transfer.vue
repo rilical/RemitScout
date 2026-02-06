@@ -5,7 +5,10 @@
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 max-w-4xl">
           <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
@@ -42,9 +45,11 @@
                     If you send money abroad more than once, it's tempting to pick a provider you like and stick with it. The problem: <strong class="font-semibold text-neutral-900">remittance pricing isn't static</strong>.
                   </p>
                 </div>
-                
+
                 <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
-                  <h3 class="font-bold text-2xl mb-4">The Bottom Line</h3>
+                  <h3 class="font-bold text-2xl mb-4">
+                    The Bottom Line
+                  </h3>
                   <p class="text-lg font-medium leading-relaxed mb-4">
                     That's why "I used them last month and it was cheap" isn't reliable. The only number that matters is what your recipient gets <strong class="font-bold">this time</strong>, for <strong class="font-bold">this exact</strong> transfer.
                   </p>
@@ -53,52 +58,70 @@
                   </p>
                 </div>
               </div>
-              
+
               <!-- Right Column -->
               <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">What Changes the Price</h3>
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                  What Changes the Price
+                </h3>
                 <div class="grid gap-4">
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Corridor Changes</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Corridor Changes
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Pricing shifts dramatically based on where you're sending from/to. A provider great for US→Mexico may be expensive for US→Kenya.
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Funding Method</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Funding Method
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Bank transfer vs debit card vs credit card can flip the winner. A provider cheap on bank funding can become expensive on card funding.
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Payout Method</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Payout Method
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Bank deposit vs cash pickup vs mobile money changes the total cost. Some providers excel at one method but struggle with others.
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        4
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Amount & Timing</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Amount & Timing
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Transfer amount and even time of day can affect rates. FX spreads widen and tighten throughout the day.
                         </p>
@@ -110,10 +133,16 @@
             </div>
           </div>
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12 rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
-            <h2 class="text-xl font-bold text-neutral-900 mb-3">Quick takeaways</h2>
+            <h2 class="text-xl font-bold text-neutral-900 mb-3">
+              Quick takeaways
+            </h2>
             <ul class="space-y-2 text-base text-neutral-700">
               <li class="flex items-start gap-2">
                 <span class="text-brand-600 mt-1">•</span>
@@ -137,31 +166,41 @@
             </h2>
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">1. FX rates move constantly</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  1. FX rates move constantly
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Providers earn money through a combination of fees and the exchange rate they offer you. Even if a provider's fee stays the same, the "spread" in their FX rate can widen or tighten throughout the day. Two providers can swap places as the best deal without any announcement.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">2. Pricing depends on the corridor and payout rails</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  2. Pricing depends on the corridor and payout rails
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Many providers are strong specialists. One may be excellent for US→Mexico bank deposits but uncompetitive for US→Kenya mobile money. Another may be great for cash pickup but weaker for bank deposits. If you change the destination country, or even the payout method inside the same country, your "best" option can change.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">3. Funding method can flip the winner</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  3. Funding method can flip the winner
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Bank transfer vs debit card vs credit card often changes the total cost. Cards are convenient and fast, but providers (and card networks) incur costs and risk. Some providers pass that on through higher fees or a worse FX rate. A provider that looks cheap on bank funding can become expensive on card funding.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">4. Promotions and tiers distort expectations</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  4. Promotions and tiers distort expectations
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   First transfer discounts, fee free thresholds, "VIP" tiers, and corridor promotions can make a provider look amazing once, and average the next time. You don't want your budgeting to depend on a promo you didn't realize was temporary.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">5. Checkout is where truth happens</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  5. Checkout is where truth happens
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Many price comparisons happen too early (homepage calculators, marketing pages, or "starting from" claims). The real price is the final screen where you confirm funding method + payout method + recipient details. That final quote can differ from earlier estimates, so comparing at checkout is what actually protects you.
                 </p>
@@ -180,9 +219,13 @@
             <div class="space-y-4">
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">1</div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">
+                    1
+                  </div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Recipient gets (the most important)</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                      Recipient gets (the most important)
+                    </h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       This is the amount your recipient actually receives in the destination currency.
                     </p>
@@ -191,9 +234,13 @@
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">2</div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">
+                    2
+                  </div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Total cost (how much leaves your pocket)</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                      Total cost (how much leaves your pocket)
+                    </h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       This includes the upfront fee and the value lost via a weaker exchange rate. If your provider shows "Total to pay," use it.
                     </p>
@@ -202,9 +249,13 @@
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">3</div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">
+                    3
+                  </div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Speed (ETA) and delivery method</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                      Speed (ETA) and delivery method
+                    </h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       A cheap bank transfer that arrives in 3 days may be worse than a slightly more expensive mobile money payout that arrives in minutes, depending on the situation.
                     </p>
@@ -213,9 +264,13 @@
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">4</div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">
+                    4
+                  </div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Payout reliability for that method</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                      Payout reliability for that method
+                    </h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       Cash pickup requires correct name + ID. Mobile money requires the right wallet network and number. Bank deposits require correct account details. Some methods fail more often if details are slightly wrong.
                     </p>
@@ -224,9 +279,13 @@
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">5</div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">
+                    5
+                  </div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Refund/cancellation reality</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                      Refund/cancellation reality
+                    </h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       If you're sending a large amount or you're not 100% sure about recipient details, check whether cancellation is possible before payout, how long refunds take, and whether fees are refundable.
                     </p>
@@ -235,9 +294,13 @@
               </div>
               <div class="rounded-xl border border-neutral-200 bg-white p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">6</div>
+                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold">
+                    6
+                  </div>
                   <div>
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">Limits and verification</h3>
+                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                      Limits and verification
+                    </h3>
                     <p class="text-base text-neutral-700 leading-relaxed">
                       If you're near a limit, you may trigger ID checks that slow the transfer. That can matter when timing is critical.
                     </p>
@@ -248,9 +311,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- Comparison Workflow -->
           <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-8 lg:p-12">
@@ -283,7 +349,9 @@
 
           <!-- Example -->
           <div class="mb-12 rounded-xl border-2 border-neutral-200 bg-neutral-50 p-6">
-            <h3 class="text-lg font-bold text-neutral-900 mb-3">A quick example (hypothetical, but realistic)</h3>
+            <h3 class="text-lg font-bold text-neutral-900 mb-3">
+              A quick example (hypothetical, but realistic)
+            </h3>
             <p class="text-base text-neutral-700 leading-relaxed mb-4">
               You're sending the equivalent of $1,000 to a relative. Provider A charges a $0 fee but offers a slightly weaker FX rate. Provider B charges a $4.99 fee but offers a better rate. The "no-fee" option can still deliver less because the FX spread is applied to the full amount. On larger transfers, that spread can outweigh a small fee very quickly.
             </p>
@@ -291,7 +359,9 @@
 
           <!-- Bottom Line -->
           <div class="mb-12 rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-            <h3 class="text-lg font-bold text-neutral-900 mb-3">Bottom line</h3>
+            <h3 class="text-lg font-bold text-neutral-900 mb-3">
+              Bottom line
+            </h3>
             <p class="text-base text-neutral-700 leading-relaxed">
               Comparing before every transfer isn't about being obsessive, it's about preventing invisible losses. The best providers are often <strong class="font-semibold text-neutral-900">specialists</strong>, and pricing is dynamic. If you compare on <strong class="font-semibold text-neutral-900">recipient gets</strong> at checkout, you'll avoid the most common (and costly) mistake: trusting a past transfer to predict today's price.
             </p>
@@ -310,8 +380,18 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
             >
               Compare Providers Now
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -338,8 +418,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -355,8 +445,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-brand-400 group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -372,8 +472,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-brand-400 group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -409,12 +519,3 @@ jsonLdBreadcrumb([
   { name: 'Why Compare', url: `${siteUrl}/learn/why-compare-before-every-transfer` },
 ])
 </script>
-
-
-
-
-
-
-
-
-

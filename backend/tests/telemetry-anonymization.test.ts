@@ -14,7 +14,7 @@ describe('telemetry-anonymization', () => {
     await anonymizeTelemetryData({} as Pool, 'user-1')
 
     const calls = vi.mocked(query).mock.calls
-    expect(calls).toHaveLength(4)
+    expect(calls).toHaveLength(6)
     for (const call of calls) {
       expect(call[1]).toEqual(['user-1'])
     }
@@ -22,5 +22,7 @@ describe('telemetry-anonymization', () => {
     expect(calls[1][0]).toContain('silver.telemetry_outbound_click')
     expect(calls[2][0]).toContain('silver.telemetry_session')
     expect(calls[3][0]).toContain('silver.telemetry_provider_visit')
+    expect(calls[4][0]).toContain('silver.telemetry_affiliate_conversion')
+    expect(calls[5][0]).toContain('silver.telemetry_marketing_event')
   })
 })

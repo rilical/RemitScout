@@ -6,14 +6,26 @@
       <!-- Hero Section -->
       <section class="mb-12 text-center">
         <div class="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-sm mb-4">
-          <span>📚</span>
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
           Complete Library
         </div>
         <h1 class="text-4xl font-bold text-neutral-900 sm:text-5xl mb-4">
           All Guides
         </h1>
         <p class="mx-auto max-w-2xl text-lg text-neutral-600 mb-8">
-          Browse our complete collection of 12 expert guides covering money transfers, banking abroad, staying connected, and health insurance.
+          Browse our complete collection of {{ guideCount }} guides covering money transfers, fees, delivery speed, and exchange rates.
         </p>
       </section>
 
@@ -41,7 +53,7 @@
                 :to="`/learn/${guide.slug}`"
                 class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors"
               >
-                {{ guide.title }}
+                <span v-html="guide.title" />
               </NuxtLink>
               <p class="text-sm text-neutral-600 leading-relaxed">
                 {{ guide.excerpt }}
@@ -65,8 +77,18 @@
                 class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
               >
                 Read
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </NuxtLink>
             </div>
@@ -87,8 +109,18 @@
           class="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all hover:scale-105"
         >
           Compare Rates Now
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          <svg
+            class="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </NuxtLink>
       </section>
@@ -97,7 +129,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { setSeo } from '~/composables/useSeo'
+import { useArticles } from '~/composables/useArticles'
+import { LEARN_STATIC_ARTICLES } from '~/lib/learnStaticArticles'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
@@ -106,130 +141,71 @@ const breadcrumbItems = [
 ]
 
 const categories = {
-  basics: 'Money transfer basics',
-  'banking-abroad': 'Banking abroad',
-  'staying-connected': 'Staying connected',
-  'health-insurance': 'Health & insurance',
+  'money-transfer-basics': 'Money Transfer Basics',
+  'fees-hidden-costs': 'Fees & Hidden Costs',
+  'speed-delivery': 'Speed & Delivery',
+  'exchange-rates-timing': 'Exchange Rates & Timing',
+  'provider-reviews': 'Provider Reviews',
 }
 
-const getCategoryLabel = (key: string) => categories[key as keyof typeof categories] || 'Guide'
+const getCategoryLabel = (key?: string) => categories[key as keyof typeof categories] || 'Guide'
 
-const guides = [
-  {
-    slug: 'how-exchange-rates-work',
-    title: 'How exchange rates work',
-    excerpt: 'Mid-market, FX spread, and how providers price your transfer.',
-    categoryKey: 'basics',
-    readTime: '5 min read',
-    level: 'Beginner',
-    tags: ['FX 101', 'Spread'],
-    updated: '2024-12-01',
-  },
-  {
-    slug: 'hidden-fees-money-transfers',
-    title: 'Hidden fees to avoid when sending money',
-    excerpt: 'Transfer fees, correspondent fees, and what "free" really means.',
-    categoryKey: 'basics',
-    readTime: '6 min read',
-    level: 'Beginner',
-    tags: ['Fees', 'Transparency'],
-    updated: '2024-11-20',
-  },
-  {
-    slug: 'best-time-to-send-money',
-    title: 'When is the best time to send money?',
-    excerpt: 'Timing around FX moves, cut-off times, and weekends.',
-    categoryKey: 'basics',
-    readTime: '4 min read',
-    level: 'Intermediate',
-    tags: ['Timing', 'FX'],
-    updated: '2024-11-10',
-  },
-  {
-    slug: 'avoid-hidden-fees',
-    title: 'Avoid hidden fees in international transfers',
-    excerpt: 'Spot exchange mark-ups and keep more in every transfer.',
-    categoryKey: 'basics',
-    readTime: '5 min read',
-    level: 'Beginner',
-    tags: ['Fees', 'Strategy'],
-    updated: '2024-11-15',
-  },
-  {
-    slug: 'cash-pickup-vs-bank-deposit',
-    title: 'Cash pickup vs bank deposit: what\'s faster?',
-    excerpt: 'When cash pickup beats bank, plus safety checks for your recipient.',
-    categoryKey: 'banking-abroad',
-    readTime: '4 min read',
-    level: 'Beginner',
-    tags: ['Payout', 'Speed'],
-    updated: '2024-10-28',
-  },
-  {
-    slug: 'send-money-us-to-india-guide',
-    title: 'How to choose the best payout method for your transfer',
-    excerpt: 'Bank deposits vs mobile wallets vs cash pickup—compare fees, speed, and safety.',
-    categoryKey: 'banking-abroad',
-    readTime: '6 min read',
-    level: 'Intermediate',
-    tags: ['Payout methods', 'Fees'],
-    updated: '2024-11-05',
-  },
-  {
-    slug: 'best-ways-send-money-philippines',
-    title: 'How to compare payout methods: bank vs cash vs mobile wallet',
-    excerpt: 'Fees, exchange margins and speed compared across different delivery options.',
-    categoryKey: 'banking-abroad',
-    readTime: '7 min read',
-    level: 'Intermediate',
-    tags: ['Payout methods', 'Comparison'],
-    updated: '2024-11-15',
-  },
-  {
-    slug: 'travel-insurance',
-    title: 'Travel insurance for frequent senders',
-    excerpt: 'Cover trips while you visit family abroad—medical, baggage, and delay.',
-    categoryKey: 'staying-connected',
-    readTime: '5 min read',
-    level: 'Beginner',
-    tags: ['Insurance', 'Travel'],
-    updated: '2024-11-02',
-  },
-  {
-    slug: 'wise-vs-remitly-vs-worldremit',
-    title: 'How to compare money transfer providers',
-    excerpt: 'Learn what to compare: fees, exchange rates, delivery speed, and reliability.',
-    categoryKey: 'banking-abroad',
-    readTime: '6 min read',
-    level: 'Beginner',
-    tags: ['Comparison', 'Providers'],
-    updated: '2024-11-18',
-  },
-  {
-    slug: 'wise-remitly-western-union-review',
-    title: 'How to evaluate money transfer providers',
-    excerpt: 'Key factors to consider when comparing fees, rates, speed, and trust scores.',
-    categoryKey: 'health-insurance',
-    readTime: '8 min read',
-    level: 'Intermediate',
-    tags: ['Evaluation', 'Providers'],
-    updated: '2024-12-02',
-  },
-  {
-    slug: 'usd-php-exchange-rate-guide',
-    title: 'How to track exchange rates and time your transfers',
-    excerpt: 'Monitor live rates, identify hidden margins, and choose the best time to send.',
-    categoryKey: 'health-insurance',
-    readTime: '5 min read',
-    level: 'Intermediate',
-    tags: ['Rates', 'Timing'],
-    updated: '2024-11-08',
-  },
-]
+type GuideCard = {
+  slug: string
+  title: string
+  excerpt: string
+  categoryKey?: string
+  readTime?: string
+  level?: string
+  tags?: string[]
+  updated?: string
+}
+
+const { data: markdownArticles } = await useArticles()
+
+type MarkdownGuide = {
+  slug: string
+  title: string
+  excerpt: string
+  categoryKey?: string
+  readTime?: string
+  tags?: string[]
+  date?: string
+  lastUpdated?: string
+}
+
+const vueGuides = computed<GuideCard[]>(() => {
+  return LEARN_STATIC_ARTICLES.map(article => ({
+    slug: article.slug,
+    title: article.title,
+    excerpt: article.excerpt,
+    categoryKey: article.categoryKey,
+    readTime: article.readTime,
+    level: article.level,
+    tags: [],
+    updated: article.lastUpdated,
+  }))
+})
+
+const markdownGuides = computed<GuideCard[]>(() => {
+  const articles = (markdownArticles.value || []) as MarkdownGuide[]
+  return articles.map(article => ({
+    slug: article.slug,
+    title: article.title,
+    excerpt: article.excerpt,
+    categoryKey: article.categoryKey,
+    readTime: article.readTime || '5 min read',
+    level: 'Guide',
+    tags: article.tags || [],
+    updated: article.lastUpdated || article.date || '',
+  }))
+})
+
+const guides = computed<GuideCard[]>(() => [...vueGuides.value, ...markdownGuides.value])
+const guideCount = computed(() => guides.value.length)
 
 setSeo({
   title: 'All Guides | Money Transfer Learning Hub | Remit-Scout',
-  description: 'Browse all 12 expert guides on international money transfers, banking abroad, staying connected, and travel insurance.',
+  description: 'Browse all Remit-Scout guides on international money transfers, fees, exchange rates, and delivery speed.',
 })
 </script>
-

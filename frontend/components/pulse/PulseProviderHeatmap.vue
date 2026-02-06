@@ -3,8 +3,12 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">Winner Timeline</h2>
-        <p class="text-sm text-neutral-400">Who led on delivered amount each day</p>
+        <h2 class="text-lg font-bold text-white">
+          Winner Timeline
+        </h2>
+        <p class="text-sm text-neutral-400">
+          Who led on delivered amount each day
+        </p>
       </div>
       <div class="flex items-center gap-4">
         <div
@@ -29,17 +33,38 @@
 
     <!-- Heatmap Timeline -->
     <div class="p-4">
-      <div v-if="loading" class="flex h-24 items-center justify-center">
+      <div
+        v-if="loading"
+        class="flex h-24 items-center justify-center"
+      >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            class="h-5 w-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Loading...
         </div>
       </div>
 
-      <div v-else class="space-y-4">
+      <div
+        v-else
+        class="space-y-4"
+      >
         <!-- Timeline Bars -->
         <div class="relative">
           <div class="flex gap-0.5 overflow-x-auto pb-2 scrollbar-hide">
@@ -55,7 +80,7 @@
                 :class="compactView ? 'w-2' : 'w-6'"
                 :style="{ backgroundColor: day.winnerColor }"
               />
-              
+
               <!-- Day Label (only show some in non-compact) -->
               <div
                 v-if="!compactView && index % 7 === 0"
@@ -71,7 +96,9 @@
             v-if="hoveredDay"
             class="absolute z-20 left-1/2 -translate-x-1/2 top-16 rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-xl"
           >
-            <div class="mb-2 text-sm font-medium text-white">{{ hoveredDay.date }}</div>
+            <div class="mb-2 text-sm font-medium text-white">
+              {{ hoveredDay.date }}
+            </div>
             <div class="flex items-center gap-2">
               <span
                 class="h-3 w-3 rounded"
@@ -91,7 +118,6 @@
           <span>{{ getStartLabel() }}</span>
           <span>Today</span>
         </div>
-
       </div>
     </div>
 
@@ -119,7 +145,10 @@
     </div>
 
     <!-- Trust Stamp -->
-    <PulseTrustStamp v-if="data" :last-updated="data.lastUpdated" />
+    <PulseTrustStamp
+      v-if="data"
+      :last-updated="data.lastUpdated"
+    />
   </div>
 </template>
 
@@ -171,9 +200,11 @@ async function loadData() {
   loading.value = true
   try {
     data.value = await getProviderHeatmapData(store.corridor, store.timeframe)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load heatmap data:', e)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -181,7 +212,7 @@ async function loadData() {
 watch(
   () => [store.corridor, store.timeframe],
   () => loadData(),
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
@@ -198,7 +229,3 @@ onMounted(() => {
   display: none;
 }
 </style>
-
-
-
-

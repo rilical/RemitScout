@@ -31,6 +31,8 @@ describe('GET /api/me', () => {
     expect(payload.success).toBe(true)
     expect(payload.user.user_id).toBe('00000000-0000-0000-0000-000000000001')
     expect(payload.plan.plan_code).toBeDefined()
+    expect(payload.plan_effective).toBeDefined()
+    expect(payload.plan_effective.plan_code).toBeDefined()
     expect(payload.entitlements).toBeDefined()
   })
 })

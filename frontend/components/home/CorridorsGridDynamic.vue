@@ -171,9 +171,15 @@
             : 'border-neutral-200 bg-white text-neutral-600',
         ]"
       >
-        <p v-if="pending">Loading corridor data...</p>
-        <p v-else-if="error">Corridor data is unavailable right now.</p>
-        <p v-else>No corridor data is available yet.</p>
+        <p v-if="pending">
+          Loading corridor data...
+        </p>
+        <p v-else-if="error">
+          Corridor data is unavailable right now.
+        </p>
+        <p v-else>
+          No corridor data is available yet.
+        </p>
       </div>
     </div>
   </section>
@@ -242,7 +248,7 @@ const corridors = computed(() => {
       }
     }).filter(c => c.from && c.to) // Filter out invalid corridors
   }
-  
+
   if (apiData?.corridors?.length) {
     return apiData.corridors.map((c) => {
       const parsed = parseRoute(c.route || '')
@@ -278,7 +284,6 @@ const handleCorridorClick = (corridor: { from: string, to: string }) => {
   const toCode = corridor.to.toUpperCase()
   router.push(getCorridorUrl(fromCode, toCode))
 }
-
 
 const scrollLeft = () => {
   if (currentSlide.value > 0) {

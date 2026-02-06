@@ -35,9 +35,9 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
   plus: {
     pulse_access: 'full',
     exports_enabled: true,
-    alerts_max: null,
+    alerts_max: 16,
     history_max_days: 365,
-    watchlist_items: null,
+    watchlist_items: 16,
     api_access: false,
     api_tier: null,
     bulk_export: false,

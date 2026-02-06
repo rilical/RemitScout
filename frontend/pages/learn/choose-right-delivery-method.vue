@@ -5,7 +5,10 @@
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 max-w-4xl">
           <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
@@ -49,7 +52,9 @@
                 </div>
 
                 <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
-                  <h3 class="font-bold text-2xl mb-4">The Bottom Line</h3>
+                  <h3 class="font-bold text-2xl mb-4">
+                    The Bottom Line
+                  </h3>
                   <p class="text-lg font-medium leading-relaxed mb-4">
                     Delivery method changes speed, cost, and success rates more than most people expect. Bank deposit favors convenience, cash pickup favors access, and mobile money favors instant delivery. Accuracy of recipient details is critical for every method.
                   </p>
@@ -61,13 +66,19 @@
 
               <!-- Right Column -->
               <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">Quick Takeaways</h3>
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                  Quick Takeaways
+                </h3>
                 <div class="grid gap-4">
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Bank deposit</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Bank deposit
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Best for convenience and recipients with bank accounts. Often lowest cost but slower (1 to 3 business days).
                         </p>
@@ -77,9 +88,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Cash pickup</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Cash pickup
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Best for speed and accessibility. Great for unbanked recipients. Fast (15 minutes to 24 hours) but requires exact name match.
                         </p>
@@ -89,9 +104,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Mobile money</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Mobile money
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Best for instant delivery in supported corridors. Often minutes-level speed, great for recipients who use mobile wallets regularly.
                         </p>
@@ -105,7 +124,11 @@
 
           <!-- Three Common Methods -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -116,8 +139,12 @@
             </p>
             <div class="grid md:grid-cols-3 gap-6 mb-8">
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">1</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-3">Bank Deposit</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  1
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-3">
+                  Bank Deposit
+                </h3>
                 <p class="text-sm text-neutral-700 mb-4">
                   Money is sent directly to the recipient's bank account. This is the traditional method for international transfers.
                 </p>
@@ -130,8 +157,12 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">2</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-3">Cash Pickup</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  2
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-3">
+                  Cash Pickup
+                </h3>
                 <p class="text-sm text-neutral-700 mb-4">
                   Recipient collects cash from an agent location (Western Union, Xoom, etc.). Widely available worldwide.
                 </p>
@@ -144,8 +175,12 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">3</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-3">Mobile Money</h3>
+                <div class="w-12 h-12 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xl mb-4">
+                  3
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-3">
+                  Mobile Money
+                </h3>
                 <p class="text-sm text-neutral-700 mb-4">
                   Money is sent to a mobile wallet (M-Pesa, Mobile Money, Airtel Money, etc.). Popular in Africa and parts of Asia.
                 </p>
@@ -170,7 +205,9 @@
             </p>
             <div class="grid gap-6 md:grid-cols-2 mb-6">
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Pros</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Pros
+                </h3>
                 <ul class="space-y-3 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -195,7 +232,9 @@
                 </ul>
               </div>
               <div class="rounded-2xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Cons</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Cons
+                </h3>
                 <ul class="space-y-3 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-red-600 mt-1">•</span>
@@ -221,12 +260,16 @@
               </div>
             </div>
             <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-              <h3 class="text-lg font-bold text-neutral-900 mb-3">Best When</h3>
+              <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                Best When
+              </h3>
               <p class="text-base text-neutral-700 leading-relaxed mb-3">
                 Recipient has a reliable bank account and you don't need instant cash. Ideal for regular transfers, large amounts, and cost optimization.
               </p>
               <div class="bg-white rounded-lg p-4 border border-brand-200">
-                <h4 class="font-bold text-neutral-900 mb-2">Avoid Mistakes</h4>
+                <h4 class="font-bold text-neutral-900 mb-2">
+                  Avoid Mistakes
+                </h4>
                 <ul class="space-y-2 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -263,7 +306,9 @@
             </p>
             <div class="grid gap-6 md:grid-cols-2 mb-6">
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Pros</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Pros
+                </h3>
                 <ul class="space-y-3 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -288,7 +333,9 @@
                 </ul>
               </div>
               <div class="rounded-2xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Cons</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Cons
+                </h3>
                 <ul class="space-y-3 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-red-600 mt-1">•</span>
@@ -314,12 +361,16 @@
               </div>
             </div>
             <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-              <h3 class="text-lg font-bold text-neutral-900 mb-3">Best When</h3>
+              <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                Best When
+              </h3>
               <p class="text-base text-neutral-700 leading-relaxed mb-3">
                 Recipient needs cash quickly and has valid ID. Ideal for urgent needs, recipients without bank accounts, and maximum accessibility.
               </p>
               <div class="bg-white rounded-lg p-4 border border-brand-200">
-                <h4 class="font-bold text-neutral-900 mb-2">Avoid Mistakes</h4>
+                <h4 class="font-bold text-neutral-900 mb-2">
+                  Avoid Mistakes
+                </h4>
                 <ul class="space-y-2 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -356,7 +407,9 @@
             </p>
             <div class="grid gap-6 md:grid-cols-2 mb-6">
               <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Pros</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Pros
+                </h3>
                 <ul class="space-y-3 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -381,7 +434,9 @@
                 </ul>
               </div>
               <div class="rounded-2xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Cons</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Cons
+                </h3>
                 <ul class="space-y-3 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-red-600 mt-1">•</span>
@@ -407,12 +462,16 @@
               </div>
             </div>
             <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6 shadow-sm">
-              <h3 class="text-lg font-bold text-neutral-900 mb-3">Best When</h3>
+              <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                Best When
+              </h3>
               <p class="text-base text-neutral-700 leading-relaxed mb-3">
                 Recipient actively uses mobile money and your corridor supports it reliably. Ideal for instant delivery needs, rural recipients, and regions where mobile money is dominant.
               </p>
               <div class="bg-white rounded-lg p-4 border border-brand-200">
-                <h4 class="font-bold text-neutral-900 mb-2">Avoid Mistakes</h4>
+                <h4 class="font-bold text-neutral-900 mb-2">
+                  Avoid Mistakes
+                </h4>
                 <ul class="space-y-2 text-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -449,7 +508,9 @@
             </p>
             <div class="grid md:grid-cols-3 gap-6 mb-6">
               <div class="bg-white rounded-lg p-6 border-2 border-brand-200 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Bank Deposit</h3>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Bank Deposit
+                </h3>
                 <ul class="space-y-2 text-sm text-neutral-700 mb-4">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-1">•</span>
@@ -471,7 +532,9 @@
                 </div>
               </div>
               <div class="bg-white rounded-lg p-6 border-2 border-brand-200 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Cash Pickup</h3>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Cash Pickup
+                </h3>
                 <ul class="space-y-2 text-sm text-neutral-700 mb-4">
                   <li class="flex items-start gap-2">
                     <span class="text-amber-600 mt-1">•</span>
@@ -493,7 +556,9 @@
                 </div>
               </div>
               <div class="bg-white rounded-lg p-6 border-2 border-brand-200 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Mobile Money</h3>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Mobile Money
+                </h3>
                 <ul class="space-y-2 text-sm text-neutral-700 mb-4">
                   <li class="flex items-start gap-2">
                     <span class="text-blue-600 mt-1">•</span>
@@ -516,7 +581,9 @@
               </div>
             </div>
             <div class="bg-brand-600 rounded-lg p-6 text-white">
-              <h4 class="font-bold mb-2">The Key Rule</h4>
+              <h4 class="font-bold mb-2">
+                The Key Rule
+              </h4>
               <p class="text-sm leading-relaxed">
                 The safest comparison method is: compare on "recipient gets" using the same payout method. Bank deposit might have a better FX rate than cash pickup, and cash pickup might have higher fees. Mobile money might be cheapest for small amounts but limited for large ones. Always compare like with like.
               </p>
@@ -524,9 +591,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- Decision Framework -->
           <div class="mb-12">
@@ -538,8 +608,12 @@
             </p>
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6 shadow-sm">
-                <div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold mb-4">1</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">What Does the Recipient Actually Want?</h3>
+                <div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold mb-4">
+                  1
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  What Does the Recipient Actually Want?
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-4">
                   Some recipients prefer cash in hand. Others prefer bank deposit for convenience. Don't assume what they want—ask. Understanding their preference and circumstances helps you choose the right method.
                 </p>
@@ -550,29 +624,49 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6 shadow-sm">
-                <div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold mb-4">2</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">How Urgent Is It?</h3>
+                <div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold mb-4">
+                  2
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  How Urgent Is It?
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-4">
                   Urgency determines which methods are viable. If you need money delivered in minutes, mobile money or cash pickup are your options. If you can wait a few days, bank deposit might offer better value.
                 </p>
                 <div class="grid md:grid-cols-3 gap-4">
                   <div class="bg-brand-50 rounded-lg p-4 border border-brand-200">
-                    <p class="text-sm font-bold text-brand-600 mb-2">Minutes</p>
-                    <p class="text-xs text-neutral-700">Mobile money or cash pickup (if available)</p>
+                    <p class="text-sm font-bold text-brand-600 mb-2">
+                      Minutes
+                    </p>
+                    <p class="text-xs text-neutral-700">
+                      Mobile money or cash pickup (if available)
+                    </p>
                   </div>
                   <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <p class="text-sm font-bold text-blue-600 mb-2">Same Day/Next Day</p>
-                    <p class="text-xs text-neutral-700">Depends on corridor and funding method</p>
+                    <p class="text-sm font-bold text-blue-600 mb-2">
+                      Same Day/Next Day
+                    </p>
+                    <p class="text-xs text-neutral-700">
+                      Depends on corridor and funding method
+                    </p>
                   </div>
                   <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                    <p class="text-sm font-bold text-purple-600 mb-2">Flexible</p>
-                    <p class="text-xs text-neutral-700">Bank deposit can be best value</p>
+                    <p class="text-sm font-bold text-purple-600 mb-2">
+                      Flexible
+                    </p>
+                    <p class="text-xs text-neutral-700">
+                      Bank deposit can be best value
+                    </p>
                   </div>
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6 shadow-sm">
-                <div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold mb-4">3</div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">How Confident Are You in the Details?</h3>
+                <div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold mb-4">
+                  3
+                </div>
+                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+                  How Confident Are You in the Details?
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-4">
                   Different methods have different accuracy requirements. If you're not 100% sure about bank details, cash pickup may reduce "wrong account" risk—assuming the recipient name and ID match.
                 </p>
@@ -606,7 +700,9 @@
             </p>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Name Mismatch (Cash Pickup)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Name Mismatch (Cash Pickup)
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   The recipient's name must match their ID exactly. Even small differences (middle name, accent, spelling variation, name order) can prevent pickup.
                 </p>
@@ -618,7 +714,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Wrong Wallet Network (Mobile Money)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Wrong Wallet Network (Mobile Money)
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Some countries have multiple wallet systems (e.g., M-Pesa vs Airtel Money in Kenya). The phone number must match the correct network.
                 </p>
@@ -630,7 +728,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Wrong Bank Code/Account Format (Bank Deposit)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Wrong Bank Code/Account Format (Bank Deposit)
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Each country has specific account number formats and routing codes. Using the wrong format (e.g., wrong IBAN length, incorrect SWIFT code) will cause failure.
                 </p>
@@ -642,7 +742,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Recipient Can't Receive That Currency</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Recipient Can't Receive That Currency
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Some accounts only accept local currency. Sending USD to an account that only accepts pesos will fail or cause issues.
                 </p>
@@ -654,7 +756,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Recipient Isn't Registered/Verified</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Recipient Isn't Registered/Verified
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Mobile wallets may require KYC (Know Your Customer) verification before receiving larger amounts. Unverified wallets may have low limits or reject transfers.
                 </p>
@@ -666,7 +770,9 @@
               </div>
 
               <div class="rounded-xl border-2 border-red-200 bg-red-50 p-6 shadow-sm">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">Account Closed or Inactive</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+                  Account Closed or Inactive
+                </h3>
                 <p class="text-sm text-neutral-700 leading-relaxed mb-3">
                   Bank accounts can be closed, and mobile wallets can be inactive. Sending to a closed account or inactive wallet will cause the transfer to fail.
                 </p>
@@ -689,8 +795,12 @@
             </p>
             <div class="grid md:grid-cols-3 gap-6">
               <div class="bg-white rounded-lg p-6 border-2 border-brand-200 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Mobile Money</h3>
-                <p class="text-sm font-medium text-brand-600 mb-2">Fastest: 15 minutes to 2 hours</p>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Mobile Money
+                </h3>
+                <p class="text-sm font-medium text-brand-600 mb-2">
+                  Fastest: 15 minutes to 2 hours
+                </p>
                 <p class="text-xs text-neutral-600 leading-relaxed mb-3">
                   Almost instant delivery once processed. Limited to supported corridors. Recipient receives notification immediately.
                 </p>
@@ -701,8 +811,12 @@
                 </div>
               </div>
               <div class="bg-white rounded-lg p-6 border-2 border-brand-200 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Cash Pickup</h3>
-                <p class="text-sm font-medium text-brand-600 mb-2">Very Fast: 15 minutes to 24 hours</p>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Cash Pickup
+                </h3>
+                <p class="text-sm font-medium text-brand-600 mb-2">
+                  Very Fast: 15 minutes to 24 hours
+                </p>
                 <p class="text-xs text-neutral-600 leading-relaxed mb-3">
                   Available once transfer is processed. Recipient can collect as soon as money is ready at location. Many locations are 24/7.
                 </p>
@@ -713,8 +827,12 @@
                 </div>
               </div>
               <div class="bg-white rounded-lg p-6 border-2 border-brand-200 shadow-sm">
-                <h3 class="font-bold text-neutral-900 mb-3">Bank Deposit</h3>
-                <p class="text-sm font-medium text-brand-600 mb-2">Standard: 1 to 3 business days</p>
+                <h3 class="font-bold text-neutral-900 mb-3">
+                  Bank Deposit
+                </h3>
+                <p class="text-sm font-medium text-brand-600 mb-2">
+                  Standard: 1 to 3 business days
+                </p>
                 <p class="text-xs text-neutral-600 leading-relaxed mb-3">
                   Depends on banking systems and cutoff times. Some corridors offer instant bank deposits. Weekends and holidays add delays.
                 </p>
@@ -737,7 +855,9 @@
             </p>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <h3 class="font-bold text-lg mb-3">Before Choosing Method</h3>
+                <h3 class="font-bold text-lg mb-3">
+                  Before Choosing Method
+                </h3>
                 <ul class="space-y-2 text-sm text-white/90">
                   <li class="flex items-start gap-2">
                     <span class="mt-1">✓</span>
@@ -758,7 +878,9 @@
                 </ul>
               </div>
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <h3 class="font-bold text-lg mb-3">Before Sending</h3>
+                <h3 class="font-bold text-lg mb-3">
+                  Before Sending
+                </h3>
                 <ul class="space-y-2 text-sm text-white/90">
                   <li class="flex items-start gap-2">
                     <span class="mt-1">✓</span>
@@ -798,8 +920,18 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
             >
               Compare Providers Now
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
@@ -826,8 +958,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -843,8 +985,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -860,8 +1012,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>

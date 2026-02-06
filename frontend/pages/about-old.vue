@@ -72,7 +72,11 @@
                     href="mailto:omar@remit-scout.com"
                     class="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700"
                   >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                       <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                     </svg>
@@ -119,7 +123,9 @@
               </p>
 
               <div class="not-prose my-6 rounded-xl border border-red-200 bg-red-50 p-4">
-                <p class="font-medium text-red-900 mb-2 text-sm">The problem got worse:</p>
+                <p class="font-medium text-red-900 mb-2 text-sm">
+                  The problem got worse:
+                </p>
                 <ul class="space-y-1 text-red-800 text-sm">
                   <li>• "Low fee" offers hiding high FX markups</li>
                   <li>• Comparison sites rearranged by sponsorships</li>
@@ -172,33 +178,49 @@
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
                   <div class="flex items-start gap-2 mb-2">
                     <span class="text-xl">👀</span>
-                    <h3 class="text-base font-semibold text-neutral-900">Transparency</h3>
+                    <h3 class="text-base font-semibold text-neutral-900">
+                      Transparency
+                    </h3>
                   </div>
-                  <p class="text-sm text-neutral-700">Clear "recipient gets" amounts and plain-language explanations.</p>
+                  <p class="text-sm text-neutral-700">
+                    Clear "recipient gets" amounts and plain-language explanations.
+                  </p>
                 </div>
 
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
                   <div class="flex items-start gap-2 mb-2">
                     <span class="text-xl">🛡️</span>
-                    <h3 class="text-base font-semibold text-neutral-900">Independence</h3>
+                    <h3 class="text-base font-semibold text-neutral-900">
+                      Independence
+                    </h3>
                   </div>
-                  <p class="text-sm text-neutral-700">No paid rankings. Revenue separated from recommendations.</p>
+                  <p class="text-sm text-neutral-700">
+                    No paid rankings. Revenue separated from recommendations.
+                  </p>
                 </div>
 
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
                   <div class="flex items-start gap-2 mb-2">
                     <span class="text-xl">✅</span>
-                    <h3 class="text-base font-semibold text-neutral-900">Accuracy</h3>
+                    <h3 class="text-base font-semibold text-neutral-900">
+                      Accuracy
+                    </h3>
                   </div>
-                  <p class="text-sm text-neutral-700">Real transfers, real receipts, real delivery times.</p>
+                  <p class="text-sm text-neutral-700">
+                    Real transfers, real receipts, real delivery times.
+                  </p>
                 </div>
 
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
                   <div class="flex items-start gap-2 mb-2">
                     <span class="text-xl">🤝</span>
-                    <h3 class="text-base font-semibold text-neutral-900">Community</h3>
+                    <h3 class="text-base font-semibold text-neutral-900">
+                      Community
+                    </h3>
                   </div>
-                  <p class="text-sm text-neutral-700">Built by expats, for expats, with constant feedback.</p>
+                  <p class="text-sm text-neutral-700">
+                    Built by expats, for expats, with constant feedback.
+                  </p>
                 </div>
               </div>
             </div>
@@ -219,7 +241,9 @@
               <div class="rounded-xl border border-slate-200 bg-white p-6">
                 <div class="flex items-start gap-3 mb-3">
                   <span class="text-2xl">👀</span>
-                  <h3 class="text-lg font-semibold text-neutral-900">Radical Transparency</h3>
+                  <h3 class="text-lg font-semibold text-neutral-900">
+                    Radical Transparency
+                  </h3>
                 </div>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   We show the total amount your recipient will receive, including transfer fees, exchange rate markups, delivery speed, and payout methods. No guessing, no surprise deductions.
@@ -229,7 +253,9 @@
               <div class="rounded-xl border border-slate-200 bg-white p-6">
                 <div class="flex items-start gap-3 mb-3">
                   <span class="text-2xl">🛡️</span>
-                  <h3 class="text-lg font-semibold text-neutral-900">Complete Independence</h3>
+                  <h3 class="text-lg font-semibold text-neutral-900">
+                    Complete Independence
+                  </h3>
                 </div>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   <strong class="font-semibold text-neutral-900">Providers cannot pay to rank higher—full stop.</strong> Our rankings are driven by data: total cost, delivery speed, reliability, and user experience. Affiliate partnerships never influence rankings.
@@ -239,7 +265,9 @@
               <div class="rounded-xl border border-slate-200 bg-white p-6">
                 <div class="flex items-start gap-3 mb-3">
                   <span class="text-2xl">✅</span>
-                  <h3 class="text-lg font-semibold text-neutral-900">Human-Verified Accuracy</h3>
+                  <h3 class="text-lg font-semibold text-neutral-900">
+                    Human-Verified Accuracy
+                  </h3>
                 </div>
                 <p class="text-sm text-neutral-700 leading-relaxed">
                   We open accounts, run test transfers, time every step, and collect receipts. Recommendations are based on actual experience, not brochures.
@@ -256,8 +284,12 @@
                   <span class="text-xl">🧪</span>
                 </div>
                 <div>
-                  <h2 class="text-2xl font-bold text-neutral-900 m-0">How We Work</h2>
-                  <p class="mt-1 text-sm text-neutral-600">Test, verify, explain</p>
+                  <h2 class="text-2xl font-bold text-neutral-900 m-0">
+                    How We Work
+                  </h2>
+                  <p class="mt-1 text-sm text-neutral-600">
+                    Test, verify, explain
+                  </p>
                 </div>
               </div>
               <NuxtLink
@@ -265,8 +297,18 @@
                 class="hidden sm:flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
               >
                 Read More
-                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+                  class="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </NuxtLink>
             </div>
@@ -276,28 +318,44 @@
                 <h3 class="text-base font-semibold text-neutral-900 mb-2">
                   <span class="text-blue-600">1.</span> Data Collection & Verification
                 </h3>
-                <p class="text-sm text-neutral-700">We start with live rates from provider APIs, cross-check with real transfers, and verify licensing with regulators like FCA, FinCEN, and ASIC.</p>
+                <p class="text-sm text-neutral-700">
+                  We start with live rates from provider APIs, cross-check with real transfers, and verify licensing with regulators like FCA, FinCEN, and ASIC.
+                </p>
               </div>
 
               <div class="rounded-xl border border-slate-200 bg-white p-5">
                 <h3 class="text-base font-semibold text-neutral-900 mb-2">
                   <span class="text-emerald-600">2.</span> Real Transfer Testing
                 </h3>
-                <p class="text-sm text-neutral-700">We put our own money on the line across different corridors, amounts, and payout methods. We also test customer support response times.</p>
+                <p class="text-sm text-neutral-700">
+                  We put our own money on the line across different corridors, amounts, and payout methods. We also test customer support response times.
+                </p>
               </div>
 
               <div class="rounded-xl border border-slate-200 bg-white p-5">
                 <h3 class="text-base font-semibold text-neutral-900 mb-2">
                   <span class="text-purple-600">3.</span> Total Cost Calculation
                 </h3>
-                <p class="text-sm text-neutral-700">We compare the real "recipient gets" amount to the mid-market rate. The difference is the hidden markup—we show it all.</p>
+                <p class="text-sm text-neutral-700">
+                  We compare the real "recipient gets" amount to the mid-market rate. The difference is the hidden markup—we show it all.
+                </p>
               </div>
 
               <div class="bg-gradient-to-r from-brand-50 to-blue-50 border border-brand-200 rounded-xl p-5">
                 <div class="flex items-start gap-3">
                   <div class="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    <svg
+                      class="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                      />
                     </svg>
                   </div>
                   <div class="flex-1">
@@ -321,7 +379,9 @@
                 <h3 class="text-base font-semibold text-neutral-900 mb-2">
                   <span class="text-slate-600">5.</span> Ongoing Monitoring
                 </h3>
-                <p class="text-sm text-neutral-700">We refresh provider data multiple times a day, revisit Remit Scores regularly, and update reviews when users report issues.</p>
+                <p class="text-sm text-neutral-700">
+                  We refresh provider data multiple times a day, revisit Remit Scores regularly, and update reviews when users report issues.
+                </p>
               </div>
             </div>
           </section>
@@ -337,7 +397,7 @@
             Ready to save on your next transfer?
           </h2>
           <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-            Compare live rates from <span v-text="providersDisplay"></span> licensed providers in seconds. See exactly how much your recipient will get - no hidden fees, no marketing fluff.
+            Compare live rates from <span v-text="providersDisplay" /> licensed providers in seconds. See exactly how much your recipient will get - no hidden fees, no marketing fluff.
           </p>
         </div>
 
@@ -561,8 +621,18 @@
             class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700"
           >
             View all FAQs
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </NuxtLink>
         </div>

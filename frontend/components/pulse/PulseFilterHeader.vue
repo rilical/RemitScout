@@ -12,7 +12,12 @@
               class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer min-w-[180px]"
               @change="updateFilters"
             >
-              <option value="global" class="bg-neutral-700">Global (All Corridors)</option>
+              <option
+                value="global"
+                class="bg-neutral-700"
+              >
+                Global (All Corridors)
+              </option>
               <option
                 v-for="corridor in corridors"
                 :key="corridor.value"
@@ -23,8 +28,18 @@
               </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <svg
+                class="h-4 w-4 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -37,14 +52,44 @@
               class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="updateFilters"
             >
-              <option :value="100" class="bg-neutral-700">$100</option>
-              <option :value="200" class="bg-neutral-700">$200</option>
-              <option :value="500" class="bg-neutral-700">$500</option>
-              <option :value="1000" class="bg-neutral-700">$1,000</option>
+              <option
+                :value="100"
+                class="bg-neutral-700"
+              >
+                $100
+              </option>
+              <option
+                :value="200"
+                class="bg-neutral-700"
+              >
+                $200
+              </option>
+              <option
+                :value="500"
+                class="bg-neutral-700"
+              >
+                $500
+              </option>
+              <option
+                :value="1000"
+                class="bg-neutral-700"
+              >
+                $1,000
+              </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <svg
+                class="h-4 w-4 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -57,13 +102,38 @@
               class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="updateFilters"
             >
-              <option value="bank" class="bg-neutral-700">Fund: Bank</option>
-              <option value="card" class="bg-neutral-700">Fund: Card</option>
-              <option value="cash" class="bg-neutral-700">Fund: Cash</option>
+              <option
+                value="bank"
+                class="bg-neutral-700"
+              >
+                Fund: Bank
+              </option>
+              <option
+                value="card"
+                class="bg-neutral-700"
+              >
+                Fund: Card
+              </option>
+              <option
+                value="cash"
+                class="bg-neutral-700"
+              >
+                Fund: Cash
+              </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <svg
+                class="h-4 w-4 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -76,13 +146,38 @@
               class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="updateFilters"
             >
-              <option value="bank" class="bg-neutral-700">Pay: Bank</option>
-              <option value="cash" class="bg-neutral-700">Pay: Cash</option>
-              <option value="wallet" class="bg-neutral-700">Pay: Wallet</option>
+              <option
+                value="bank"
+                class="bg-neutral-700"
+              >
+                Pay: Bank
+              </option>
+              <option
+                value="cash"
+                class="bg-neutral-700"
+              >
+                Pay: Cash
+              </option>
+              <option
+                value="wallet"
+                class="bg-neutral-700"
+              >
+                Pay: Wallet
+              </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <svg
+                class="h-4 w-4 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -105,8 +200,18 @@
       >
         <div class="flex items-center gap-2 text-lg font-semibold text-white">
           <span class="text-2xl">{{ corridorInfo.fromFlag }}</span>
-          <svg class="h-4 w-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            class="h-4 w-4 text-neutral-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
           <span class="text-2xl">{{ corridorInfo.toFlag }}</span>
           <span class="ml-2">{{ corridorInfo.label }}</span>
@@ -140,6 +245,8 @@ const { data: corridorData } = await useAsyncData('pulse-corridors', () => getCo
 const corridors = computed(() => corridorData.value || [])
 
 const localFilters = ref<PulseFilters>({ ...props.modelValue })
+const isSyncingFromUrl = ref(false)
+const lastCorridor = ref(localFilters.value.corridor)
 
 const corridorInfo = computed(() => {
   if (localFilters.value.corridor === 'global') return null
@@ -159,6 +266,10 @@ const lastUpdatedText = computed(() => {
 })
 
 function updateFilters() {
+  if (localFilters.value.corridor !== lastCorridor.value) {
+    localFilters.value.corridorId = undefined
+    lastCorridor.value = localFilters.value.corridor
+  }
   emit('update:modelValue', { ...localFilters.value })
   syncToUrl()
 }
@@ -167,6 +278,9 @@ function syncToUrl() {
   const query: Record<string, string> = {}
   if (localFilters.value.corridor !== 'global') {
     query.corridor = localFilters.value.corridor
+  }
+  if (localFilters.value.corridorId && localFilters.value.corridor !== 'global') {
+    query.corridor_id = localFilters.value.corridorId
   }
   if (localFilters.value.amount !== 200) {
     query.amount = String(localFilters.value.amount)
@@ -181,12 +295,17 @@ function syncToUrl() {
 }
 
 function syncFromUrl() {
+  isSyncingFromUrl.value = true
   const { corridor, amount, fund, pay } = route.query
   if (corridor && typeof corridor === 'string') {
     localFilters.value.corridor = corridor
   }
+  const corridorId = route.query.corridor_id
+  if (corridorId && typeof corridorId === 'string') {
+    localFilters.value.corridorId = corridorId
+  }
   if (amount && typeof amount === 'string') {
-    const num = parseInt(amount, 10)
+    const num = Number.parseInt(amount, 10)
     if ([100, 200, 500, 1000].includes(num)) {
       localFilters.value.amount = num as AmountBucket
     }
@@ -198,16 +317,22 @@ function syncFromUrl() {
     localFilters.value.payoutMethod = pay as PayoutMethod
   }
   emit('update:modelValue', { ...localFilters.value })
+  isSyncingFromUrl.value = false
 }
 
 watch(() => props.modelValue, (newVal) => {
   localFilters.value = { ...newVal }
+  lastCorridor.value = newVal.corridor
 }, { deep: true })
+
+watch(() => localFilters.value.corridor, (next, prev) => {
+  if (isSyncingFromUrl.value) return
+  if (next !== prev) {
+    localFilters.value.corridorId = undefined
+  }
+})
 
 onMounted(() => {
   syncFromUrl()
 })
 </script>
-
-
-

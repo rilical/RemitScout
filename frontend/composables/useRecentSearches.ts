@@ -9,8 +9,9 @@ export const useRecentSearches = (limit = 20, options: Record<string, any> = {})
     key,
     async () => {
       try {
-        return await request<{ data: RecentSearch[]; updatedAt: string }>('/recent-searches', { query: { limit } })
-      } catch (error: any) {
+        return await request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } })
+      }
+      catch (error: any) {
         // Don't crash the page if API fails - return empty data instead
         if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
           return { data: [], updatedAt: new Date().toISOString() }
@@ -18,7 +19,7 @@ export const useRecentSearches = (limit = 20, options: Record<string, any> = {})
         throw error
       }
     },
-    { watch: false, ...options },
+    { watch: [], ...options },
   )
 
   const recordSearch = async (payload: Partial<RecentSearch>) => {

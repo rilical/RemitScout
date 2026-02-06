@@ -7,7 +7,10 @@
       <p class="text-neutral-600 mb-6">
         {{ message }}
       </p>
-      <NuxtLink to="/" class="inline-flex items-center justify-center px-5 py-2 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700">
+      <NuxtLink
+        to="/"
+        class="inline-flex items-center justify-center px-5 py-2 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700"
+      >
         Back to RemitScout
       </NuxtLink>
     </div>

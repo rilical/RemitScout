@@ -112,6 +112,14 @@ aggregates into Gold, and serves customers with low-latency APIs and exports.
   - Per-index allowlists: `allowed_in_teer`, `allowed_in_rci`, `allowed_in_rvi`.
   - Default indices bucket: `500` (override via `GOLD_INDICES_AMOUNT_BUCKET`).
 
+### 2.4.2 Data health SLO job (indices readiness)
+- Scheduled Lambda `data-health-slo` reads Silver + Gold and emits SLO metrics:
+  freshness p95 (tier1/tier2), quote success rate (tier1/tier2),
+  provider coverage (tier1/tier2), indices availability/suppression ratios,
+  and `weight_confidence_p10`.
+- Tier-0 corridors come from `backend/shared/health-corridors.ts` and use
+  amount bucket `500` with `method_profile = standard_bank`.
+
 ### 2.5 Alerts and notifications
 - Alert Evaluation Scheduler Lambda enqueues alert tasks to SQS.
 - Alert Evaluation Worker consumes SQS, reads Silver, writes outputs and triggers
@@ -166,6 +174,8 @@ This section maps each diagram box to code and runtime behavior.
 - Key routes: `backend/plane-a/src/routes/**`.
 - Reads: Silver/Gold in Aurora, Redis cache.
 - Writes: Quote refresh queue, FX refresh queue, export job queue, user assets S3.
+- Readiness: `/readyz` checks DB + Redis and returns dependency status.
+- Ops: `/api/v1/ops/indices/health` (admin) summarizes indices readiness.
 
 **Lambda: Plane C**
 - Entrypoint: `backend/plane-c/src/app.ts`.
@@ -200,11 +210,12 @@ This section maps each diagram box to code and runtime behavior.
 **Plane C scheduled Lambdas**
 - gold-publisher: `backend/scripts/aws/gold-publisher-lambda.ts` -> `runGoldPublisherJob`.
 - gold-indices: `backend/scripts/aws/gold-indices-job-lambda.ts` -> `runGoldIndicesJob`.
+- data-health-slo: `backend/scripts/aws/data-health-slo-job-lambda.ts` -> `runDataHealthSloJob`.
 - gold-reconciliation: `backend/scripts/aws/gold-reconciliation-job-lambda.ts`.
 
 **Provider probe Lambdas**
 - Providers: remitly, westernunion, wise, worldremit, ria, dahabshiil, sendwave, mukuru,
-  xe, wirebarley, intermex.
+  xe, alansari, instarem, xoom, remitbee, singx, placid, koronapay, wirebarley, intermex.
 - Entrypoints: `backend/scripts/aws/<provider>-probe-lambda.ts`.
 - Function: `runGenericProbe` in `backend/scripts/lib/generic-probe.ts`.
 
@@ -214,6 +225,8 @@ This section maps each diagram box to code and runtime behavior.
 ### 3.4 ECS workers (Fargate)
 All ECS tasks are defined in `infrastructure/cdk/lib/ecs-tasks.ts` and wired
 as services in `infrastructure/cdk/lib/ecs-services.ts`.
+All workers expose a shared health server on port 8080 (`/healthz`, `/readyz`).
+ECS health checks hit `/healthz` (HTTP).
 
 - Plane B Ingest: `backend/scripts/aws/plane-b-ingest-ecs.ts` -> `runIngestion`.
 - B2C Refresh Worker: `backend/scripts/aws/b2c-refresh-worker-ecs.ts` -> `runB2cRefreshWorkerLoop`.
@@ -253,6 +266,9 @@ Defined in `infrastructure/cdk/lib/queues.ts`.
 - Topics: `alerts-critical`, `alerts-warning`, `alerts-ops` (SNS).
 - Metrics and tracing in `backend/shared/*` (metrics registry, worker metrics, tracing).
 - ECS tasks run an OTEL sidecar when `ENABLE_TELEMETRY` is enabled.
+- Probe heartbeat metric: `RemitScout/Probes:probe_run_total` with heartbeat alarms.
+- Synthetics canaries validate `/healthz`, `/quotes`, `/api/indices/latest`.
+- Data health SLO job emits indices readiness metrics (availability/suppression/confidence).
 
 ### 3.8 Cost guardrails
 - Implemented in `infrastructure/cdk/lib/budgets.ts`.
@@ -355,7 +371,8 @@ D - Database (Aurora + RDS Proxy). `infrastructure/cdk/lib/database.ts`.
 E - EventBridge schedules. `infrastructure/cdk/lib/scheduled-jobs.ts`.
 F - FX rates (queue + worker + OANDA sync). `backend/plane-b/src/fx-rate-refresh.ts`.
 G - Gold tier jobs and live updates. `backend/scripts/gold-*.ts`.
-H - Health, SLOs, and freshness checks. `backend/shared/slo-tracker.ts`.
+H - Health, SLOs, and freshness checks. `backend/shared/slo-tracker.ts`,
+    `backend/scripts/data-health-slo-job.ts`, `/readyz` dependency checks, probe heartbeats.
 I - Ingest fanout and Plane B ingest. `backend/scripts/ingest-fanout-worker.ts`.
 J - Jobs (scheduled lambdas). See Section 3.3.
 K - Keys/secrets (Secrets Manager + SSM). `infrastructure/cdk/lib/iam.ts` + `aws-params`.
@@ -407,7 +424,7 @@ This is the explicit mapping from diagram nodes to code and behavior.
   telemetry-analytics, session-cleanup, bank-vs-specialist-refresh, audit-log-cleanup, oanda-sync.
 - Plane B: gold-fx-rates, smart-alerts, gold-popular-corridors, gold-pulse-cache,
   b2c-retry-failed, b2c-queue-cleanup, stoplist-auto-resume, rights-matrix-sync-countries.
-- Plane C: gold-publisher, gold-indices, gold-reconciliation.
+- Plane C: gold-publisher, gold-indices, data-health-slo, gold-reconciliation.
 
 ### Queues
 - quote-refresh -> B2C refresh worker (ECS).
@@ -429,6 +446,8 @@ This is the explicit mapping from diagram nodes to code and behavior.
 - CloudWatch Dashboard + Alarms.
 - SNS alert topics: critical, warning, ops.
 - X-Ray / OTel tracing across Lambdas + ECS.
+- Probe heartbeat alarms and SLO alarms for indices readiness.
+- Synthetics canaries for health/quotes/indices.
 
 ### Cost guardrails
 - CUR bucket, monthly budget, anomaly monitor/subscription.

@@ -39,6 +39,8 @@ For the full end-to-end narrative, see `docs/backend-architecture-a-z.md`.
 - Entrypoint: `backend/plane-a/src/app.ts`.
 - Reads: Aurora (Silver/Gold), Redis cache.
 - Writes: SQS queues, S3 user assets, export jobs.
+- Readiness: `/readyz` checks DB + Redis and returns dependency status.
+- Ops: `/api/v1/ops/indices/health` (admin) summarizes indices readiness.
 
 ### Lambda: Plane C
 - Role: Publisher API runtime.
@@ -76,17 +78,21 @@ For the full end-to-end narrative, see `docs/backend-architecture-a-z.md`.
 - gold-publisher: `backend/scripts/aws/gold-publisher-lambda.ts`.
 - gold-indices: `backend/scripts/aws/gold-indices-job-lambda.ts`.
 - provider-weighting: `backend/scripts/aws/provider-weighting-job-lambda.ts`.
+- data-health-slo: `backend/scripts/aws/data-health-slo-job-lambda.ts`.
 - gold-reconciliation: `backend/scripts/aws/gold-reconciliation-job-lambda.ts`.
 
 ### Provider Probe Lambdas
 - Providers: remitly, westernunion, wise, worldremit, ria, dahabshiil, sendwave,
-  mukuru, xe, wirebarley, intermex.
+  mukuru, xe, alansari, instarem, xoom, remitbee, singx, placid, koronapay,
+  wirebarley, intermex.
 - Entrypoints: `backend/scripts/aws/<provider>-probe-lambda.ts`.
 
 ### ECS Scheduled Task
 - b2b-sweep-scheduler: `backend/scripts/aws/b2b-sweep-scheduler-ecs.ts`.
 
 ## ECS Workers (Fargate)
+All ECS workers expose a shared health server on port 8080 (`/healthz`, `/readyz`).
+ECS health checks call `/healthz` (HTTP) instead of `pgrep`.
 
 ### Plane B Ingest
 - Entrypoint: `backend/scripts/aws/plane-b-ingest-ecs.ts`.
@@ -153,6 +159,9 @@ Each queue is created in `infrastructure/cdk/lib/queues.ts`.
 ## Observability + Alerts
 - CloudWatch Dashboard: `remit-scout-${env}`.
 - Alarms: queue depth/DLQ, API p95/5xx, ECS CPU/Mem, RDS, Redis.
+- Probe heartbeat metric: `RemitScout/Probes:probe_run_total` with heartbeat alarms.
+- Data health SLO job emits indices readiness and freshness metrics.
+- Synthetics canaries: `/healthz`, `/quotes`, `/api/indices/latest` (env-dependent).
 - SNS topics: alerts-critical, alerts-warning, alerts-ops.
 - Tracing: X-Ray / OTel (if enabled).
 

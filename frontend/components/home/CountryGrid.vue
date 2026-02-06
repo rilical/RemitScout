@@ -104,5 +104,4 @@ const countryFlags: Record<string, string> = {
 const getCountryFlag = (code: string): string => {
   return countryFlags[code] || '🏳️'
 }
-
 </script>

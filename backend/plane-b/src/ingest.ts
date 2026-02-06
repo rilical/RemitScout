@@ -459,6 +459,19 @@ type PriorityTierPlan = {
   maxRpm: number | null
 }
 
+type PriorityTierKey = 'tier1' | 'tier2'
+
+type PriorityTierConfigEntry = {
+  label: string
+  collectorType: string
+  intervalSeconds: number
+  rpm: number
+  perCorridorRpm: number
+  sloMinutes: number
+}
+
+type PriorityTierConfig = Record<PriorityTierKey, PriorityTierConfigEntry>
+
 const loadFreshnessLagByCorridor = async (
   pool: Pool,
   providerId: string,
@@ -902,7 +915,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         const perCorridorRpmMultiplier = Number.isFinite(config.planeB.b2bPerCorridorRpmMultiplier)
           ? Math.max(config.planeB.b2bPerCorridorRpmMultiplier, 0)
           : 1
-        const priorityTierConfig = {
+        const priorityTierConfig: PriorityTierConfig = {
           tier1: {
             label: 'tier_1',
             collectorType: 'b2b_tier_1',
@@ -919,12 +932,12 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             perCorridorRpm: 6,
             sloMinutes: TIER_2_SLO_MINUTES,
           },
-        } as const
-        const priorityTierOrder = (disableTier1 ? ['tier2'] : ['tier1', 'tier2']) as const
-        const targetMinutesByTierKey = {
+        }
+        const priorityTierOrder: PriorityTierKey[] = disableTier1 ? ['tier2'] : ['tier1', 'tier2']
+        const targetMinutesByTierKey: Record<PriorityTierKey, number> = {
           tier1: Math.max(1, Math.round(priorityTierConfig.tier1.intervalSeconds / 60)),
           tier2: planMinutes,
-        } as const
+        }
 
     const rightsByProvider = await loadProviderRights(pool)
     const providers = providerRegistry
@@ -1027,7 +1040,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       const buildTierPlan = async (
         providerId: string,
         corridors: string[],
-        tierKey: typeof priorityTierOrder[number],
+        tierKey: PriorityTierKey,
         targetMinutes: number,
         amountByCorridor: Map<string, number>,
         fallbackAmount: number,

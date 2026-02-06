@@ -29,7 +29,10 @@
         </p>
       </div>
 
-      <h2 id="accuracy" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="accuracy"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Commitment to Accuracy
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -39,7 +42,10 @@
         exchange rates and provider terms can change between quote capture and checkout.
       </p>
 
-      <h2 id="scope" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="scope"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Scope
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -48,7 +54,10 @@
         pricing data, exchange rates, fees, delivery times, and other information displayed on our platform.
       </p>
 
-      <h2 id="request" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="request"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         How to Request a Correction
       </h2>
       <p class="mb-4 leading-relaxed">
@@ -87,7 +96,10 @@
         </ul>
       </div>
 
-      <h2 id="process" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="process"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         What Happens Next
       </h2>
       <p class="mb-4 leading-relaxed">
@@ -105,7 +117,10 @@
         we will explain the difference.
       </p>
 
-      <h2 id="timeline" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="timeline"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         How Quickly We Fix Errors
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -114,7 +129,10 @@
         request and provide an estimated timeline for resolution.
       </p>
 
-      <h2 id="history" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="history"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Historical Records and Past Quotes
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -123,7 +141,10 @@
         even if we correct future data. Historical corrections require additional verification and may not always be possible.
       </p>
 
-      <h2 id="sources" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="sources"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Data Sources and Verification
       </h2>
       <p class="mb-4 leading-relaxed">
@@ -139,7 +160,10 @@
         timestamped to ensure we can track when data was captured and identify potential discrepancies.
       </p>
 
-      <h2 id="reviews" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="reviews"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         User Reviews and Moderation
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -163,7 +187,10 @@
         >contact page</NuxtLink> and include the reason for removal. We review all reports and take appropriate action.
       </p>
 
-      <h2 id="updates" class="mb-4 text-2xl font-bold text-gray-900">
+      <h2
+        id="updates"
+        class="mb-4 text-2xl font-bold text-gray-900"
+      >
         Updates to This Policy
       </h2>
       <p class="mb-6 leading-relaxed">
@@ -180,7 +207,10 @@
         </h3>
         <p class="mt-2 text-sm text-blue-800 leading-relaxed">
           If you see an error or have a question about a quote, visit our
-          <NuxtLink to="/contact" class="font-semibold underline hover:text-blue-900">contact page</NuxtLink>
+          <NuxtLink
+            to="/contact"
+            class="font-semibold underline hover:text-blue-900"
+          >contact page</NuxtLink>
           and include the details listed in this policy.
         </p>
       </div>

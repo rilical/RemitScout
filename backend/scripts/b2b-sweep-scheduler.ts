@@ -19,6 +19,7 @@ import { setTimeout as sleep } from 'timers/promises'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import { getQueueAgeSeconds, getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../shared/sqs'
 import { partitionCorridors } from '../shared/sharding'
 import { parseCorridorId } from '../shared/corridor'
@@ -175,6 +176,10 @@ const toBoolean = (value: string | undefined, fallback = false) => {
 
 const loopEnabled = toBoolean(process.env.B2B_SWEEP_SCHEDULER_LOOP)
 const loopDelayMs = Math.max(1000, toNumber(process.env.B2B_SWEEP_SCHEDULER_LOOP_DELAY_MS, 60000))
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+let healthServer: { close: () => Promise<void> } | null = null
 const schedulerJitterMs = Math.max(
   0,
   toNumber(process.env.B2B_SWEEP_SCHEDULER_JITTER_MS, 0),
@@ -1253,12 +1258,38 @@ const { isShutdownRequested } = createShutdownHandler({
 })
 
 const runLoop = async () => {
-  while (!isShutdownRequested()) {
-    await runB2bSweepScheduler()
-    if (!loopEnabled) {
-      return
+  if (!isLambdaRuntime && healthEnabled) {
+    try {
+      healthServer = await startHealthServer({
+        port: healthPort,
+        logger,
+        loggerName: 'b2b-sweep-scheduler',
+        enableDatabaseCheck: true,
+        enableRedisCheck: true,
+      })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
-    await sleep(loopDelayMs)
+  }
+
+  try {
+    while (!isShutdownRequested()) {
+      await runB2bSweepScheduler()
+      if (!loopEnabled) {
+        return
+      }
+      await sleep(loopDelayMs)
+    }
+  } finally {
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
   }
 }
 

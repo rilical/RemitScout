@@ -5,7 +5,10 @@
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 max-w-4xl">
           <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
@@ -42,9 +45,11 @@
                     If you've ever checked a quote, felt good about it, and then saw a different price at checkout, you're not alone. This doesn't automatically mean you're being scammed. It usually means you're seeing how real-time pricing works in money transfers. The key is knowing <strong class="font-semibold text-neutral-900">why it happens</strong> and <strong class="font-semibold text-neutral-900">how to protect yourself</strong>.
                   </p>
                 </div>
-                
+
                 <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
-                  <h3 class="font-bold text-2xl mb-4">The Bottom Line</h3>
+                  <h3 class="font-bold text-2xl mb-4">
+                    The Bottom Line
+                  </h3>
                   <p class="text-lg font-medium leading-relaxed mb-4">
                     Rate refreshes and method changes are the top reasons checkout shifts. Lock the same amount, funding method, and payout method across quotes. Compare at the final step and verify promos and verification status.
                   </p>
@@ -56,13 +61,19 @@
 
               <!-- Right Column -->
               <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-blue-50 p-8 lg:p-10 shadow-xl">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">Quick Takeaways</h3>
+                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                  Quick Takeaways
+                </h3>
                 <div class="grid gap-4">
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Rate refresh is common</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Rate refresh is common
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Exchange rates move continuously. Many providers refresh rates every few seconds or minutes.
                         </p>
@@ -72,9 +83,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Method changes matter</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Method changes matter
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           Funding method or payout method changes can significantly affect the final price.
                         </p>
@@ -84,9 +99,13 @@
 
                   <div class="rounded-xl bg-white/90 border border-brand-100 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
                       <div>
-                        <h4 class="font-semibold text-neutral-900 mb-1.5">Compare at checkout</h4>
+                        <h4 class="font-semibold text-neutral-900 mb-1.5">
+                          Compare at checkout
+                        </h4>
                         <p class="text-sm text-neutral-600 leading-relaxed">
                           The final checkout step is the only quote that matters. Compare providers there, not earlier.
                         </p>
@@ -99,7 +118,11 @@
           </div>
           <!-- Why Price Changes -->
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
           <div class="mb-12">
             <h2 class="text-3xl font-bold text-neutral-900 mb-6">
@@ -107,7 +130,9 @@
             </h2>
             <div class="space-y-6">
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">1. <span class="text-brand-600">Rate refresh</span> (most common)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  1. <span class="text-brand-600">Rate refresh</span> (most common)
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Exchange rates move continuously. Many providers refresh rates every few seconds or minutes. If your quote isn't locked, the provider may update the rate at checkout.
                 </p>
@@ -116,7 +141,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">2. You changed the <span class="text-brand-600">funding method</span> without noticing</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  2. You changed the <span class="text-brand-600">funding method</span> without noticing
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   A provider might default to bank funding in the quote tool, but switch to card funding at checkout (or vice versa). Funding method can change: fees, FX rate, verification requirements.
                 </p>
@@ -125,7 +152,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">3. You changed the <span class="text-brand-600">payout method</span> (or it changed you)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  3. You changed the <span class="text-brand-600">payout method</span> (or it changed you)
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Selecting cash pickup vs bank deposit vs mobile money can change pricing and speed. Sometimes a payout method becomes temporarily unavailable and the app nudges you to another option.
                 </p>
@@ -134,7 +163,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">4. <span class="text-brand-600">Promotions</span> not applied (or expired)</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  4. <span class="text-brand-600">Promotions</span> not applied (or expired)
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Some promos only apply after login, only for first transfers, or only for specific payment methods.
                 </p>
@@ -143,7 +174,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">5. <span class="text-brand-600">Compliance / verification</span> triggers</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  5. <span class="text-brand-600">Compliance / verification</span> triggers
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Larger amounts, new recipients, new cards, or unusual patterns can trigger extra steps. This can delay the transfer or sometimes change what payment methods are allowed.
                 </p>
@@ -152,7 +185,9 @@
                 </div>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">6. <span class="text-brand-600">Card network / bank authorization</span> behavior</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  6. <span class="text-brand-600">Card network / bank authorization</span> behavior
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Card authorizations can behave differently than expected, especially with currency conversion and temporary holds. The provider may show one total, but your bank may temporarily show another due to authorization mechanics.
                 </p>
@@ -170,19 +205,25 @@
             </h2>
             <div class="space-y-4">
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #1: <span class="text-brand-600">Checkout is the only quote</span> that matters.</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Rule #1: <span class="text-brand-600">Checkout is the only quote</span> that matters.
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Treat earlier screens as "estimates" unless clearly rate-locked.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #2: Compare two providers <span class="text-brand-600">at the same moment</span>.</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Rule #2: Compare two providers <span class="text-brand-600">at the same moment</span>.
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed">
                   Rates move. Comparing one now and one five minutes later can mislead you.
                 </p>
               </div>
               <div class="rounded-xl border-2 border-brand-200 bg-brand-50 p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-3">Rule #3: <span class="text-brand-600">Match the same inputs</span>.</h3>
+                <h3 class="text-lg font-bold text-neutral-900 mb-3">
+                  Rule #3: <span class="text-brand-600">Match the same inputs</span>.
+                </h3>
                 <p class="text-base text-neutral-700 leading-relaxed mb-3">
                   Same:
                 </p>
@@ -209,9 +250,12 @@
           </div>
 
           <div class="my-10">
-            <AdSlot placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+              placement="blog_inline"
+              wrapper-class="rounded-xl"
+              min-height="120px"
+            />
           </div>
-
 
           <!-- What to Do When Checkout Differs -->
           <div class="mb-12">
@@ -283,7 +327,9 @@
 
           <!-- Simple Takeaway -->
           <div class="mb-12 rounded-xl border-2 border-brand-600 bg-brand-600 p-6">
-            <h3 class="text-lg font-bold text-white mb-3">The simple takeaway</h3>
+            <h3 class="text-lg font-bold text-white mb-3">
+              The simple takeaway
+            </h3>
             <p class="text-base text-white leading-relaxed">
               Checkout differs because <strong class="font-semibold">real money rails are dynamic</strong>. The fix is simple: compare at checkout with identical inputs. If the final screen isn't good anymore, don't press pay. Re-quote and compare again.
             </p>
@@ -302,12 +348,21 @@
               class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all"
             >
               Compare Providers Now
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </NuxtLink>
           </div>
-
         </div>
       </div>
     </section>
@@ -331,8 +386,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -348,8 +413,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>
@@ -365,8 +440,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </NuxtLink>

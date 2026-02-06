@@ -160,11 +160,11 @@ export const FIXED_EXCHANGE_RATES: Record<string, number> = {
   // Cryptocurrency (if supported)
   USDT: 1.0,
   USDC: 1.0,
-  BTC: 0.000014,  // 1 USD = 0.000014 BTC @ $70k/BTC
-  ETH: 0.00024,   // 1 USD = 0.00024 ETH @ $4100/ETH
+  BTC: 0.000014, // 1 USD = 0.000014 BTC @ $70k/BTC
+  ETH: 0.00024, // 1 USD = 0.00024 ETH @ $4100/ETH
   // Aliases & others (ensure these don't break forms)
   UNKNOWN: 1.0,
-};
+}
 
 /**
  * Base minimum amount in USD
@@ -198,18 +198,21 @@ const resolveAmountLimits = (currencyCode: string, overrides?: AmountLimitOverri
 export function getMinAmount(currencyCode: string): number {
   const currency = currencyCode.toUpperCase()
   const rate = FIXED_EXCHANGE_RATES[currency] || 1.0
-  
+
   // Convert $50 USD to target currency and round up to nearest reasonable number
   const minAmount = MIN_AMOUNT_USD * rate
-  
+
   // Round to reasonable precision based on currency value
   if (minAmount >= 1000) {
     return Math.ceil(minAmount / 100) * 100 // Round up to nearest 100
-  } else if (minAmount >= 100) {
+  }
+  else if (minAmount >= 100) {
     return Math.ceil(minAmount / 10) * 10 // Round up to nearest 10
-  } else if (minAmount >= 10) {
+  }
+  else if (minAmount >= 10) {
     return Math.ceil(minAmount) // Round up to nearest integer
-  } else {
+  }
+  else {
     return Math.ceil(minAmount * 10) / 10 // Round up to 1 decimal
   }
 }
@@ -221,20 +224,24 @@ export function getMinAmount(currencyCode: string): number {
 export function getMaxAmount(currencyCode: string): number {
   const currency = currencyCode.toUpperCase()
   const rate = FIXED_EXCHANGE_RATES[currency] || 1.0
-  
+
   // Convert $15,000 USD to target currency and round down to nearest reasonable number
   const maxAmount = MAX_AMOUNT_USD * rate
-  
+
   // Round to reasonable precision based on currency value
   if (maxAmount >= 1000000) {
     return Math.floor(maxAmount / 10000) * 10000 // Round down to nearest 10,000
-  } else if (maxAmount >= 100000) {
+  }
+  else if (maxAmount >= 100000) {
     return Math.floor(maxAmount / 1000) * 1000 // Round down to nearest 1,000
-  } else if (maxAmount >= 10000) {
+  }
+  else if (maxAmount >= 10000) {
     return Math.floor(maxAmount / 100) * 100 // Round down to nearest 100
-  } else if (maxAmount >= 1000) {
+  }
+  else if (maxAmount >= 1000) {
     return Math.floor(maxAmount / 10) * 10 // Round down to nearest 10
-  } else {
+  }
+  else {
     return Math.floor(maxAmount) // Round down to nearest integer
   }
 }
@@ -250,21 +257,22 @@ export function sanitizeAmount(
 ): number {
   const currency = currencyCode.toUpperCase()
   const { min: minAmount, max: maxAmount, strict } = resolveAmountLimits(currency, overrides)
-  
+
   let numAmount: number
   if (typeof amount === 'string') {
     // Remove any non-numeric characters except decimal point
     const cleaned = amount.replace(/[^\d.]/g, '')
-    numAmount = parseFloat(cleaned) || 0
-  } else {
+    numAmount = Number.parseFloat(cleaned) || 0
+  }
+  else {
     numAmount = amount || 0
   }
-  
+
   // Ensure positive number
   if (numAmount < 0 || isNaN(numAmount)) {
     return strict && minAmount !== null ? minAmount : 0
   }
-  
+
   // Clamp between min and max
   if (!strict) {
     return numAmount
@@ -289,14 +297,15 @@ export function isValidAmount(
 ): boolean {
   const currency = currencyCode.toUpperCase()
   const { min: minAmount, max: maxAmount, strict } = resolveAmountLimits(currency, overrides)
-  
+
   let numAmount: number
   if (typeof amount === 'string') {
-    numAmount = parseFloat(amount.replace(/[^\d.]/g, '')) || 0
-  } else {
+    numAmount = Number.parseFloat(amount.replace(/[^\d.]/g, '')) || 0
+  }
+  else {
     numAmount = amount || 0
   }
-  
+
   if (!Number.isFinite(numAmount) || numAmount <= 0) {
     return false
   }

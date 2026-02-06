@@ -4,8 +4,16 @@
     :class="badgeClasses"
   >
     <template v-if="isBest">
-      <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+      <svg
+        class="h-4 w-4"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clip-rule="evenodd"
+        />
       </svg>
       <span>Best Price</span>
     </template>
@@ -36,25 +44,21 @@ const badgeClasses = computed(() => {
   if (props.isBest) {
     return 'bg-brand-600 text-white'
   }
-  
+
   // All non-best options get dark blue styling to match footer
   return 'bg-gray-900 text-white'
 })
 
 const formattedDelta = computed(() => {
   if (props.delta <= 0) return 'Same price'
-  
+
   const formatted = `+$${props.delta.toFixed(2)}`
-  
+
   if (props.showPercent && props.amount > 0) {
     const percent = (props.delta / props.amount) * 100
     return `${formatted} (${percent.toFixed(1)}%)`
   }
-  
+
   return `${formatted} more than best option`
 })
 </script>
-
-
-
-

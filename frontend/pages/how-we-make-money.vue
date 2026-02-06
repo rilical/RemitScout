@@ -5,7 +5,10 @@
     <!-- Hero -->
     <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
 
         <div class="mt-12 grid gap-12 lg:grid-cols-2 lg:items-start">
           <div>
@@ -98,8 +101,18 @@
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
                   <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    <svg
+                      class="w-10 h-10 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -131,8 +144,18 @@
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
                   <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <svg
+                      class="w-10 h-10 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -194,14 +217,24 @@
 
             <!-- Data Licensing -->
             <div
-              v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED"
+              v-if="enterpriseEnabled"
               class="rounded-3xl border-2 border-neutral-200 bg-white p-10 lg:p-12 shadow-sm hover:shadow-lg transition-shadow"
             >
               <div class="flex flex-col lg:flex-row lg:items-start gap-8">
                 <div class="flex-shrink-0">
                   <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-100">
-                    <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <svg
+                      class="w-10 h-10 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -215,7 +248,10 @@
                   </p>
 
                   <div class="space-y-4 mb-6">
-                    <div v-if="FEATURE_FLAGS.PULSE_ENABLED" class="rounded-xl border border-emerald-100 bg-emerald-50 p-5">
+                    <div
+                      v-if="pulseEnabled"
+                      class="rounded-xl border border-emerald-100 bg-emerald-50 p-5"
+                    >
                       <div class="flex items-start gap-3 mb-2">
                         <ChartBarIcon class="h-6 w-6 text-emerald-700" />
                         <div class="flex-1">
@@ -267,7 +303,7 @@
                       Request widget access →
                     </NuxtLink>
                     <NuxtLink
-                      v-if="FEATURE_FLAGS.PULSE_ENABLED"
+                      v-if="pulseEnabled"
                       to="/contact?type=media&topic=pulse"
                       class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50 transition-colors"
                     >
@@ -286,7 +322,6 @@
                 </div>
               </div>
             </div>
-
           </div>
 
           <!-- Revenue Map -->
@@ -303,8 +338,18 @@
               <div class="rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-sm">
                 <div class="text-center mb-4">
                   <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 mb-3">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    <svg
+                      class="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
                     </svg>
                   </div>
                   <h4 class="text-lg font-bold text-neutral-900 mb-4">
@@ -342,8 +387,18 @@
               <div class="rounded-2xl border-2 border-brand-200 bg-white p-6 shadow-sm">
                 <div class="text-center mb-4">
                   <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 mb-3">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <svg
+                      class="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
                     </svg>
                   </div>
                   <h4 class="text-lg font-bold text-neutral-900 mb-4">
@@ -415,11 +470,24 @@
                 </div>
               </div>
 
-              <div v-if="FEATURE_FLAGS.ENTERPRISE_ENABLED" class="rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-sm">
+              <div
+                v-if="enterpriseEnabled"
+                class="rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-sm"
+              >
                 <div class="text-center mb-4">
                   <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 mb-3">
-                    <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <svg
+                      class="w-8 h-8 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
                     </svg>
                   </div>
                   <h4 class="text-lg font-bold text-neutral-900 mb-4">
@@ -453,7 +521,6 @@
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -481,7 +548,7 @@
               </h3>
               <p class="text-base leading-relaxed text-neutral-700 mb-4">
                 <strong class="font-semibold text-neutral-900">Paid placements</strong> can appear in specific content areas such as newsletters,
-                guides<span v-if="FEATURE_FLAGS.PULSE_ENABLED">, or Pulse pages</span>. These placements are labeled and are separate from comparison results.
+                guides<span v-if="pulseEnabled">, or Pulse pages</span>. These placements are labeled and are separate from comparison results.
               </p>
               <p class="text-sm leading-relaxed text-neutral-600">
                 <strong class="font-semibold text-neutral-900">Plus removes ads:</strong> Plus can remove advertising placements and sponsored
@@ -1009,7 +1076,9 @@ import {
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
-import { FEATURE_FLAGS } from '~/utils/constants'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
+
+const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },

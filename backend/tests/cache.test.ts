@@ -187,7 +187,9 @@ describe('createTtlCache', () => {
       const cache = createTtlCache<string>()
 
       await cache.set('key1', 'value1', 1000)
-      await expect(cache.get('key1')).rejects.toThrow()
+      // Cache should not throw on corrupt Redis payloads.
+      // We warn and fall back to the in-memory value (best-effort availability).
+      await expect(cache.get('key1')).resolves.toBe('value1')
     })
   })
 
@@ -276,7 +278,6 @@ describe('createTtlCache', () => {
     })
   })
 })
-
 
 
 

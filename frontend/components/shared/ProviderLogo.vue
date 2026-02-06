@@ -5,7 +5,7 @@
       :alt="alt || slug"
       :class="[logoSize, 'object-contain']"
       @error="handleImageError"
-    />
+    >
   </div>
 </template>
 

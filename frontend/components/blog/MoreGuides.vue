@@ -95,11 +95,11 @@ const { data: articles } = await useArticles()
 const guides = computed<Guide[]>(() => {
   let filtered = (articles.value || [])
     .filter(a => a.slug !== props.excludeSlug)
-  
+
   if (props.categoryKey) {
     filtered = filtered.filter(a => a.categoryKey === props.categoryKey)
   }
-  
+
   return filtered
     .slice(0, props.limit)
     .map(a => ({
@@ -111,14 +111,3 @@ const guides = computed<Guide[]>(() => {
     }))
 })
 </script>
-
-
-
-
-
-
-
-
-
-
-
