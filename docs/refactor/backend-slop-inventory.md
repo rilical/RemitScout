@@ -7,8 +7,10 @@ Goal: slop hotspot inventory (largest backend files by LOC).
 
 - Scope: tracked files under `backend/**`
 - File types counted: `.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.mts`, `.cts`
-- Excluded: `**/node_modules/**`, `**/dist/**`, `**/build/**`, `**/coverage/**`, and `**/*.d.ts`
+- Excluded: `**/node_modules/**`, `**/dist/**`, `**/build/**`, `**/coverage/**`, `**/tmp/**`, and `**/*.d.ts`
 - LOC definition: raw line count (including blanks/comments)
+
+Note: the method intentionally uses `git ls-files` so untracked local artifacts (for example provider payload snapshots under `backend/tmp/`) don’t pollute the hotspot list.
 
 Reproduce locally:
 
@@ -30,6 +32,8 @@ def allowed(p: str) -> bool:
     if '/build/' in p or p.endswith('/build'):
         return False
     if '/coverage/' in p:
+        return False
+    if '/tmp/' in p or p.endswith('/tmp'):
         return False
     if p.endswith('.d.ts'):
         return False
@@ -56,51 +60,28 @@ PY
 
 Note: there are **75** backend files over the 400-LOC “god module” threshold (per the script above). The table below focuses on the biggest 20.
 
-| Rank | Path | LOC |
-| ---: | --- | ---: |
-| 1 | `backend/plane-b/src/ingest.ts` | 1666 |
-| 2 | `backend/plane-a/src/routes/providers.ts` | 1460 |
-| 3 | `backend/scripts/b2b-sweep-scheduler.ts` | 1298 |
-| 4 | `backend/plane-b/src/repositories/implementations/pulse-cache-repository.ts` | 1292 |
-| 5 | `backend/plane-a/src/routes/alerts.ts` | 1126 |
-| 6 | `backend/plane-b/src/providers/remitbee/collector.ts` | 1062 |
-| 7 | `backend/plane-a/src/routes/pulse.ts` | 1032 |
-| 8 | `backend/plane-b/src/collectors/base.ts` | 1029 |
-| 9 | `backend/plane-b/src/providers/ria/collector.ts` | 1002 |
-| 10 | `backend/plane-b/src/providers/westernunion/collector.ts` | 959 |
-| 11 | `backend/scripts/export-worker.ts` | 958 |
-| 12 | `backend/plane-b/src/providers/sendwave/collector.ts` | 914 |
-| 13 | `backend/plane-b/src/providers/mukuru/collector.ts` | 913 |
-| 14 | `backend/scripts/ingest-fanout-worker.ts` | 907 |
-| 15 | `backend/plane-b/src/providers/dahabshiil/collector.ts` | 904 |
-| 16 | `backend/plane-a/src/repositories/implementations/analytics-repository.ts` | 891 |
-| 17 | `backend/plane-b/src/providers/koronapay/collector.ts` | 880 |
-| 18 | `backend/plane-b/src/providers/index.ts` | 877 |
-| 19 | `backend/plane-b/src/providers/remitly/collector.ts` | 865 |
-| 20 | `backend/plane-b/src/providers/worldremit/collector.ts` | 851 |
-
-## God modules (>400 LOC): quick why (top 20)
-
-- `backend/plane-b/src/ingest.ts`: Plane B entrypoint mixing runtime config validation, tracing/error tracking, queue fanout (SQS), rights-matrix filtering, provider registry dispatch, and DB writes.
-- `backend/plane-a/src/routes/providers.ts`: HTTP route module combining Fastify routes, zod validation, DB access, caching, provider weighting, and response shaping/normalization helpers.
-- `backend/scripts/b2b-sweep-scheduler.ts`: Scheduler combining DB reads, rights-matrix filtering, provider registry, shard partitioning, worker locking, queue stats, and SQS enqueueing.
-- `backend/plane-b/src/repositories/implementations/pulse-cache-repository.ts`: Repository mixing cache policy, dynamic SQL query construction, UI-oriented formatting (chart series), and provider presentation metadata (colors).
-- `backend/plane-a/src/routes/alerts.ts`: HTTP routes mixing auth/entitlements/billing checks, zod schemas, repository calls, usage snapshot updates, and audit logging.
-- `backend/plane-b/src/providers/remitbee/collector.ts`: Provider collector orchestrating proxy routing, rate limiting, circuit breaker logic, raw bronze writes, parsing, normalization, and persistence.
-- `backend/plane-a/src/routes/pulse.ts`: HTTP routes mixing entitlement gating, repo calls, cache-key derivation, and chart payload normalization/formatting.
-- `backend/plane-b/src/collectors/base.ts`: “Base” collector containing queue publishing, anomaly detection wiring, stoplist/circuit-breaker controls, repository interactions, and metrics.
-- `backend/plane-b/src/providers/ria/collector.ts`: Provider collector mixing fetch/parsing, retry/backoff, block detection, normalization, and persistence/metrics.
-- `backend/plane-b/src/providers/westernunion/collector.ts`: Provider collector mixing fetch/parsing, block detection, normalization, persistence, and rate-limit control.
-- `backend/scripts/export-worker.ts`: Worker script combining SQS consumption, DB job state, data formatting, PDF rendering, archive creation, and S3 upload.
-- `backend/plane-b/src/providers/sendwave/collector.ts`: Provider collector mixing orchestration, HTTP fetching, parsing, normalization, and persistence.
-- `backend/plane-b/src/providers/mukuru/collector.ts`: Provider collector mixing orchestration, HTTP fetching, parsing, normalization, and persistence.
-- `backend/scripts/ingest-fanout-worker.ts`: Worker script combining SQS consumption, provider registry dispatch, DB updates, tracing, and retry/visibility-extension handling.
-- `backend/plane-b/src/providers/dahabshiil/collector.ts`: Provider collector mixing orchestration, HTTP fetching, parsing, normalization, and persistence.
-- `backend/plane-a/src/repositories/implementations/analytics-repository.ts`: Monolithic analytics repository with many unrelated query shapes + in-module aggregation/shaping logic (wide surface area, hard to test incrementally).
-- `backend/plane-b/src/providers/koronapay/collector.ts`: Provider collector mixing orchestration, HTTP fetching, parsing, normalization, and persistence.
-- `backend/plane-b/src/providers/index.ts`: Central provider registry bundling all provider imports, supported corridors, rate-limit metadata, and dispatch wiring (high churn / high merge-conflict risk).
-- `backend/plane-b/src/providers/remitly/collector.ts`: Provider collector mixing orchestration, HTTP fetching, parsing, normalization, and persistence.
-- `backend/plane-b/src/providers/worldremit/collector.ts`: Provider collector mixing orchestration, HTTP fetching, parsing, normalization, and persistence.
+| Rank | Path | LOC | Category | Why it’s a hotspot |
+| ---: | --- | ---: | --- | --- |
+| 1 | `backend/plane-b/src/ingest.ts` | 1666 | Plane B ingest | Mixes config validation, tracing/error reporting, SQS fanout, rights-matrix filtering, provider dispatch, and DB writes (hard to test/change safely). |
+| 2 | `backend/plane-a/src/routes/providers.ts` | 1460 | Plane A route | Combines Fastify routes, zod validation, DB/caching, provider weighting, and response shaping; likely multiple concerns per endpoint. |
+| 3 | `backend/scripts/b2b-sweep-scheduler.ts` | 1298 | Batch scheduler | Scheduler blends DB reads, eligibility filtering, sharding/locking, queue stats, and SQS enqueueing; any ops change risks correctness. |
+| 4 | `backend/plane-b/src/repositories/implementations/pulse-cache-repository.ts` | 1292 | Repository | Repository also does cache policy + dynamic SQL + UI formatting (chart series/colors), implying an unclear domain boundary. |
+| 5 | `backend/plane-a/src/routes/alerts.ts` | 1126 | Plane A route | Routes mix entitlements/billing guards, schemas, repository calls, usage snapshot updates, and audit logging (business logic spread across HTTP layer). |
+| 6 | `backend/plane-b/src/providers/remitbee/collector.ts` | 1062 | Provider collector | Orchestrates proxy/rate-limit/circuit-breaker, raw writes, parsing, normalization, persistence, and metrics (duplicated across many providers). |
+| 7 | `backend/plane-a/src/routes/pulse.ts` | 1032 | Plane A route | Routes mix entitlement gating, cache-key derivation, repo calls, and chart payload formatting; likely a “god route module”. |
+| 8 | `backend/plane-b/src/collectors/base.ts` | 1029 | Collector base | “Base” collector contains queue publishing, stoplist/circuit-breaker controls, repository interactions, and metrics (large shared surface area). |
+| 9 | `backend/plane-b/src/providers/ria/collector.ts` | 1002 | Provider collector | Fetch/parsing, retry/backoff, block detection, normalization, persistence, and metrics bundled together (hard to reuse/standardize). |
+| 10 | `backend/plane-b/src/providers/westernunion/collector.ts` | 959 | Provider collector | Similar collector orchestration surface (fetch/parsing + detection + persistence + rate-limit control) encourages copy/paste drift. |
+| 11 | `backend/scripts/export-worker.ts` | 958 | Worker script | SQS consumption + DB job state + formatting + PDF rendering + archive + S3 upload in one file (failure handling becomes brittle). |
+| 12 | `backend/plane-b/src/providers/sendwave/collector.ts` | 914 | Provider collector | Provider-specific orchestration + parsing + normalization + persistence in one unit; likely repeated across providers. |
+| 13 | `backend/plane-b/src/providers/mukuru/collector.ts` | 913 | Provider collector | Similar to other collectors; high LOC suggests missing shared parsing/normalization utilities. |
+| 14 | `backend/scripts/ingest-fanout-worker.ts` | 907 | Worker script | Worker handles SQS consumption, provider registry dispatch, DB updates, tracing, and retry/visibility-extension logic (complex operational behavior). |
+| 15 | `backend/plane-b/src/providers/dahabshiil/collector.ts` | 904 | Provider collector | Large collector surface (fetch → parse → normalize → persist), likely includes provider quirks interleaved with platform logic. |
+| 16 | `backend/plane-a/src/repositories/implementations/analytics-repository.ts` | 891 | Repository | Wide analytics query surface + in-module aggregation/shaping; hard to evolve schemas or add tests incrementally. |
+| 17 | `backend/plane-b/src/providers/koronapay/collector.ts` | 880 | Provider collector | Similar “all-in-one” collector; growing risk of inconsistent retry/timeout/circuit-breaker policy. |
+| 18 | `backend/plane-b/src/providers/index.ts` | 877 | Provider registry | Central registry imports all providers + dispatch wiring + metadata; high churn and merge-conflict risk, encourages tight coupling. |
+| 19 | `backend/plane-b/src/providers/remitly/collector.ts` | 865 | Provider collector | Similar collector pattern; likely a good candidate for extracting shared adapter scaffolding. |
+| 20 | `backend/plane-b/src/providers/worldremit/collector.ts` | 851 | Provider collector | Similar collector pattern; suggests standard “port/adapter” interface would reduce repeated code. |
 
 ## Duplication map: cross-cutting concerns
 
