@@ -35,12 +35,24 @@ function hasFlag(args, flag) {
 function findRepoRoot(startDir = process.cwd()) {
   // Ralph defaults to looking for `ralph.yml` in the current working directory.
   // That is fragile when this script is invoked from nested folders (e.g.
-  // `frontend/`). To keep verify emissions deterministic, locate the repo root.
+  // `frontend/`).
+  //
+  // Pragmatic rule:
+  // - Prefer the *git* root if available.
+  // - Fall back to the nearest folder that has `ralph.yml`.
+  //
+  // This prevents nested `ralph.yml` files (e.g. `frontend/ralph.yml`) from
+  // hijacking the "repo root" used for emitting events.
   let dir = path.resolve(startDir);
+  let ralphCandidate = null;
 
   for (let i = 0; i < 50; i += 1) {
-    if (fs.existsSync(path.join(dir, "ralph.yml")) || fs.existsSync(path.join(dir, ".git"))) {
+    if (fs.existsSync(path.join(dir, ".git"))) {
       return dir;
+    }
+
+    if (!ralphCandidate && fs.existsSync(path.join(dir, "ralph.yml"))) {
+      ralphCandidate = dir;
     }
 
     const parent = path.dirname(dir);
@@ -48,7 +60,7 @@ function findRepoRoot(startDir = process.cwd()) {
     dir = parent;
   }
 
-  return path.resolve(startDir);
+  return ralphCandidate ?? path.resolve(startDir);
 }
 
 function main() {

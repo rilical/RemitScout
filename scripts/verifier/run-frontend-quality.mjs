@@ -4,8 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const PNPM = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(SCRIPT_DIR, "..", "..");
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -57,10 +61,12 @@ function parseArgs(args) {
 }
 
 function emitVerify({ topic, json, dryRun }) {
-  const args = ["scripts/verifier/emit-verify.mjs", topic, "--json", json];
+  const emitScript = path.join(SCRIPT_DIR, "emit-verify.mjs");
+
+  const args = [emitScript, topic, "--json", json];
   if (dryRun) args.push("--dry-run");
 
-  const result = run(process.execPath, args);
+  const result = run(process.execPath, args, { cwd: REPO_ROOT });
   if (result.exitCode !== 0) {
     throw new Error(
       `emit-verify failed (exit ${result.exitCode}): ${result.stderr || result.stdout}`,
@@ -70,11 +76,16 @@ function emitVerify({ topic, json, dryRun }) {
 }
 
 function sanitizeVerifyEvents() {
-  const result = run(process.execPath, [
-    "scripts/verifier/sanitize-verify-events.mjs",
-    "--all",
-    "--repo",
-  ]);
+  const sanitizeScript = path.join(SCRIPT_DIR, "sanitize-verify-events.mjs");
+  const result = run(
+    process.execPath,
+    [
+      sanitizeScript,
+      "--all",
+      "--repo",
+    ],
+    { cwd: REPO_ROOT },
+  );
   if (result.exitCode !== 0) {
     throw new Error(
       `sanitize-verify-events failed (exit ${result.exitCode}): ${result.stderr || result.stdout}`,

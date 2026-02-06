@@ -272,6 +272,12 @@ function main() {
   assertFilePresent("ralph.yml");
   assertFilePresent("ralph.example.yml");
 
+  // Guard against CWD drift: running Ralph from `frontend/` will not search
+  // upward for the repo config.
+  if (fs.existsSync("frontend")) {
+    assertFilePresent("frontend/ralph.yml");
+  }
+
   const passedEmpty = runEmitVerify("verify.passed", "{}");
   assertQualityShape(passedEmpty, "verify.passed:{}");
 

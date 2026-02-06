@@ -77,14 +77,19 @@ function findRepoRoot(startDir = process.cwd()) {
   // Ralph does not search upward for `ralph.yml` or `.git`.
   // The verifier scripts must be robust to being run from nested folders
   // (e.g. `frontend/`), so we locate the repo root explicitly.
+  //
+  // Prefer the git root if available, otherwise fall back to the nearest
+  // `ralph.yml`. This avoids nested `ralph.yml` files hijacking the scan.
   let dir = path.resolve(startDir);
+  let ralphCandidate = null;
 
   for (let i = 0; i < 50; i += 1) {
-    if (
-      fs.existsSync(path.join(dir, "ralph.yml")) ||
-      fs.existsSync(path.join(dir, ".git"))
-    ) {
+    if (fs.existsSync(path.join(dir, ".git"))) {
       return dir;
+    }
+
+    if (!ralphCandidate && fs.existsSync(path.join(dir, "ralph.yml"))) {
+      ralphCandidate = dir;
     }
 
     const parent = path.dirname(dir);
@@ -92,7 +97,7 @@ function findRepoRoot(startDir = process.cwd()) {
     dir = parent;
   }
 
-  return path.resolve(startDir);
+  return ralphCandidate ?? path.resolve(startDir);
 }
 
 function listRepoRalphDirs(repoRoot) {
