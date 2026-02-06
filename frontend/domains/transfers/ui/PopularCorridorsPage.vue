@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import CenteredPage from '~/shared/ui/CenteredPage.vue'
-import DataTable from '~/shared/ui/DataTable.vue'
-import type { DataTableColumn } from '~/shared/ui/DataTable.vue'
+import CenteredPage from '~/components/shared/CenteredPage.vue'
+import DataTable from '~/components/shared/DataTable.vue'
+import type { DataTableColumn } from '~/components/shared/DataTable.vue'
 import type { PopularCorridorGroup } from '~/domains/transfers/application/popularCorridorsModel'
 
 type Props = {

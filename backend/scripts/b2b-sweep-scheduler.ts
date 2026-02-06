@@ -28,7 +28,7 @@ import { createShutdownHandler } from '../shared/shutdown'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
-import { providerRegistry, type ProviderRegistryEntry } from '../plane-b/src/providers'
+import { providerRegistry as _providerRegistry, type ProviderRegistryEntry as _ProviderRegistryEntry } from '../plane-b/src/providers'
 import {
   B2bSweepRepository,
   FreshnessReportRepository,
@@ -37,7 +37,7 @@ import {
   RightsMatrixRepository,
 } from '../plane-b/src/repositories'
 import {
-  getCorridorTier,
+  getCorridorTier as _getCorridorTier,
   TIER_1_CADENCE_SECONDS,
   TIER_2_CADENCE_SECONDS,
   TIER_1_SLO_MINUTES,
@@ -45,15 +45,15 @@ import {
   type CorridorTier,
 } from '../shared/corridor-tiers'
 import { buildB2bAmountResolver } from '../plane-b/src/services/b2b-amount'
-import { filterQueuesByRightsMatrix } from '../plane-b/src/services/rights-matrix-filter'
+import { filterQueuesByRightsMatrix as _filterQueuesByRightsMatrix } from '../plane-b/src/services/rights-matrix-filter'
 import {
   getMacroLanes,
   B2B_FIXED_AMOUNT_USD,
-  isMacroCorridor,
+  isMacroCorridor as _isMacroCorridor,
   type PayoutMethod,
 } from '../shared/macro-corridors'
 
-type PriorityQueues = {
+type _PriorityQueues = {
   tier1: string[]
   tier2: string[]
   all: string[]
@@ -100,7 +100,7 @@ type IngestFanoutMessage = {
   sweepRunId?: string
 }
 
-type TierKey = 'tier1' | 'tier2'
+type _TierKey = 'tier1' | 'tier2'
 
 type IngestFanoutProviderTask = {
   providerId: string
@@ -115,7 +115,7 @@ type IngestFanoutProviderTask = {
   priorityTier?: string
 }
 
-type IngestFanoutCorridorMessage = {
+type _IngestFanoutCorridorMessage = {
   version: 'corridor_v1'
   corridorId: string
   providers: IngestFanoutProviderTask[]
@@ -160,7 +160,7 @@ const b2bAmountByProvider: Record<string, number> = {
   singx: config.planeB.singx.b2bAmount,
   placid: config.planeB.placid.b2bAmount,
 }
-const resolveB2bAmount = (providerId: string) => {
+const _resolveB2bAmount = (providerId: string) => {
   return b2bAmountByProvider[providerId] ?? config.planeB.remitly.b2bAmount
 }
 
@@ -206,7 +206,7 @@ const b2bPayoutMethodByProvider: Record<string, string> = {
 const resolveB2bPayinMethod = (providerId: string) => {
   return b2bPayinMethodByProvider[providerId] ?? defaultB2bPayinMethod
 }
-const resolveB2bPayoutMethod = (providerId: string) => {
+const _resolveB2bPayoutMethod = (providerId: string) => {
   return b2bPayoutMethodByProvider[providerId] ?? defaultB2bPayoutMethod
 }
 
@@ -480,7 +480,7 @@ const applyFreshnessSlo = async (options: {
   }
 }
 
-const buildTierPlan = async (options: {
+const _buildTierPlan = async (options: {
   pool: ReturnType<typeof createPool>
   providerId: string
   corridors: string[]
@@ -579,7 +579,7 @@ const buildTierPlan = async (options: {
   }
 }
 
-const enqueueIngestFanout = async (payload: IngestFanoutMessage): Promise<boolean> => {
+const _enqueueIngestFanout = async (payload: IngestFanoutMessage): Promise<boolean> => {
   const queueUrl = resolveIngestFanoutQueueUrl(payload.priorityTier)
   if (!queueUrl) {
     return false
@@ -621,7 +621,7 @@ const loadProviderRights = async (pool: ReturnType<typeof createPool>) => {
   return rights
 }
 
-const loadLastRuns = async (
+const _loadLastRuns = async (
   pool: ReturnType<typeof createPool>,
   providerIds: string[],
   collectorTypes: string[],
@@ -652,7 +652,7 @@ const loadLastRuns = async (
   return map
 }
 
-const loadLastSweepRunByTier = async (
+const _loadLastSweepRunByTier = async (
   pool: ReturnType<typeof createPool>,
   tierLabels: string[],
 ) => {
@@ -679,7 +679,7 @@ const loadLastSweepRunByTier = async (
   return map
 }
 
-const upsertScheduleRow = async (options: {
+const _upsertScheduleRow = async (options: {
   pool: ReturnType<typeof createPool>
   providerId: string
   priorityTier: string
@@ -701,7 +701,7 @@ const upsertScheduleRow = async (options: {
   )
 }
 
-const disableScheduleForMissingProviders = async (
+const _disableScheduleForMissingProviders = async (
   pool: ReturnType<typeof createPool>,
   providerIds: string[],
 ) => {
@@ -725,7 +725,7 @@ const disableScheduleForMissingProviders = async (
   )
 }
 
-const claimDueSchedules = async (
+const _claimDueSchedules = async (
   pool: ReturnType<typeof createPool>,
   options?: {
     providerIds?: string[]

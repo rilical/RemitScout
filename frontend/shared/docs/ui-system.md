@@ -29,7 +29,7 @@ Tailwind exposes token-backed utilities (see `frontend/tailwind.config.js`):
 
 `CenteredPage` is the golden layout wrapper for page shells.
 
-Path: `frontend/shared/ui/CenteredPage.vue`
+Path: `frontend/components/shared/CenteredPage.vue`
 
 Contract:
 - Centers content with a consistent max-width and gutters.
@@ -57,7 +57,7 @@ Usage:
 
 `DataTable` is the golden table primitive for dense, consistent data presentation.
 
-Path: `frontend/shared/ui/DataTable.vue`
+Path: `frontend/components/shared/DataTable.vue`
 
 Variants:
 - `terminal`: compact “market terminal” density (tight padding, smaller type).

@@ -15,6 +15,12 @@ if (!['dev', 'staging', 'prod'].includes(envName)) {
   process.exit(1)
 }
 
+// Keep schema/validator happy: `env` is required by `cdk.context.schema.json`.
+// If the user provided env via `REMIT_SCOUT_ENV` (or we defaulted), ensure it exists in CDK context.
+if (app.node.tryGetContext('env') === undefined) {
+  app.node.setContext('env', envName)
+}
+
 const account = process.env.CDK_DEFAULT_ACCOUNT
 const region = process.env.CDK_DEFAULT_REGION
 

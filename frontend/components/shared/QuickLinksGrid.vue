@@ -44,4 +44,3 @@ const items = computed(() => {
   return props.pulseEnabled ? base : base.filter(item => item.to !== QUICK_LINKS.pulse.to)
 })
 </script>
-

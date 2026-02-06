@@ -14,7 +14,6 @@ import { verifyAlertUnsubscribeToken } from '../services/alert-unsubscribe'
 import { AlertRepository, WatchlistRepository } from '../repositories'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 import { isMacroCorridor, getMacroCorridors } from '../../../shared/macro-corridors'
-import { parseCorridorId } from '../../../shared/corridor'
 
 const logger = createLogger('plane-a.alerts')
 const pool = getPool(config.db.planeAUrl)
@@ -263,7 +262,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/alerts/macro-corridors', async (request, reply) => {
+  app.get('/alerts/macro-corridors', async (_request, _reply) => {
     const startTime = Date.now()
 
     const macroCorridors = getMacroCorridors()

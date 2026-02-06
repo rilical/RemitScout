@@ -82,7 +82,7 @@ export type GoldLiveMessage = {
   providerId?: string
 }
 
-type ParsedMessage = {
+type _ParsedMessage = {
   messageId: string
   receiptHandle: string
   corridorId: string

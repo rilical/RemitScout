@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import DataTable from '~/shared/ui/DataTable.vue'
-import type { DataTableColumn } from '~/shared/ui/DataTable.vue'
+import DataTable from '~/components/shared/DataTable.vue'
+import type { DataTableColumn } from '~/components/shared/DataTable.vue'
 import type { FxProviderPricingRow } from '~/domains/market-data/application/fxProviderPricing'
 
 type Props = {

@@ -1,4 +1,4 @@
-import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
+import { resolveDatabaseUrl } from '../../shared/aws-params'
 
 export const handler = async (): Promise<{ status: string }> => {
   await resolveDatabaseUrl({

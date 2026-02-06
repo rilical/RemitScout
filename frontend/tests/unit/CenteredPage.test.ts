@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import CenteredPage from '~/shared/ui/CenteredPage.vue'
+import CenteredPage from '~/components/shared/CenteredPage.vue'
 
 describe('CenteredPage', () => {
   it('renders header, content, and footer slots when provided', () => {

@@ -7,6 +7,28 @@ const today = new Date().toISOString().split('T')[0]
 
 const sitePath = (path: string) => path.startsWith('/') ? path : `/${path}`
 
+// NOTE:
+// This route is bundled by Nitro (Rollup), which cannot import/parse `.vue` SFCs.
+// Avoid `import.meta.glob('~/pages/learn/*.vue')` here, or the production build fails.
+// If you add/remove top-level learn guide pages under `frontend/pages/learn/*.vue`,
+// update this list accordingly.
+const LEARN_GUIDE_SLUGS = [
+  'bank-transfer-vs-card-funding',
+  'bank-transfer-vs-card-vs-cash-pickup',
+  'best-time-to-send-money',
+  'choose-right-delivery-method',
+  'embed-remit-scout-on-your-site',
+  'hidden-exchange-rate-fees-explained',
+  'how-exchange-rates-work',
+  'how-fast-is-international-money-transfer',
+  'how-remit-score-works',
+  'how-to-read-remittance-quote',
+  'money-transfer',
+  'promo-codes-intro-rates',
+  'why-checkout-price-differs',
+  'why-compare-before-every-transfer',
+] as const
+
 const urlEntry = (siteUrl: string, path: string, changefreq = 'weekly', priority = '0.5', lastmod?: string) => {
   const lastmodDate = lastmod || today
   return `
@@ -20,10 +42,8 @@ const urlEntry = (siteUrl: string, path: string, changefreq = 'weekly', priority
 
 export default defineEventHandler((event) => {
   const { public: { siteUrl } } = useRuntimeConfig()
-  const learnPageModules = import.meta.glob('~/pages/learn/*.vue')
 
   const unique = <T>(values: T[]) => Array.from(new Set(values))
-  const slugFromPath = (path: string) => path.split('/').pop()?.replace('.vue', '')
 
   // Homepage - highest priority, updates daily
   const homepage = { path: '/', priority: '1.0', changefreq: 'daily' }
@@ -56,12 +76,12 @@ export default defineEventHandler((event) => {
     { path: '/legal/terms', priority: '0.5', changefreq: 'yearly' },
   ]
 
-  // Learn guides - include all top-level /learn pages (exclude index + dynamic)
-  const learnGuides = Object.keys(learnPageModules)
-    .map(slugFromPath)
-    .filter((slug): slug is string => Boolean(slug))
-    .filter(slug => slug !== 'index' && slug !== 'providers' && slug !== 'test' && !slug.startsWith('['))
-    .map(slug => ({ path: `/learn/${slug}`, priority: '0.7', changefreq: 'monthly' }))
+  // Learn guides - top-level /learn pages (excluding index/providers/dynamic).
+  const learnGuides = LEARN_GUIDE_SLUGS.map(slug => ({
+    path: `/learn/${slug}`,
+    priority: '0.7',
+    changefreq: 'monthly' as const,
+  }))
 
   // Provider reviews - generated from provider scores
   const providerSlugs = unique(

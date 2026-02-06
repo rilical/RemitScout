@@ -6,7 +6,6 @@ import { createLogger } from '../../../shared/logger'
 import { createTtlCache } from '../../../shared/cache'
 import { parseCorridorId, formatCorridorId } from '../../../shared/corridor'
 import {
-  getCorridorTier,
   getExportTierInfo,
   isUsdOriginCorridor,
   TIER_1_CADENCE_SECONDS,

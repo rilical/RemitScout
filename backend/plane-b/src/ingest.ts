@@ -1,6 +1,6 @@
 import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
-import { createPool, query } from '../../shared/db'
+import { createPool } from '../../shared/db'
 import { assertRuntimeConfig, config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { initErrorTracking } from '../../shared/error-tracker'
@@ -9,14 +9,13 @@ import { getQueueAgeSeconds, getQueueStats, sendBatchJsonMessages, sendJsonMessa
 import { partitionCorridors } from '../../shared/sharding'
 import { parseCorridorId } from '../../shared/corridor'
 import { getCountryByCode } from '../../shared/countries-currencies'
-import { isMacroCorridor, getMacroLanes, B2B_FIXED_AMOUNT_USD, type PayoutMethod } from '../../shared/macro-corridors'
+import { isMacroCorridor } from '../../shared/macro-corridors'
 import {
   getCorridorTier,
   TIER_1_CADENCE_SECONDS,
   TIER_2_CADENCE_SECONDS,
   TIER_1_SLO_MINUTES,
   TIER_2_SLO_MINUTES,
-  type CorridorTier,
 } from '../../shared/corridor-tiers'
 import { startHealthServerOnce, stopHealthServerOnce } from './health-server'
 import { providerRegistry, type ProviderRegistryEntry } from './providers'
@@ -63,7 +62,7 @@ const fanoutMessageMode =
   process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE === 'provider'
     ? 'provider'
     : 'corridor'
-const toPositiveInt = (value: string | undefined, fallback: number) => {
+const _toPositiveInt = (value: string | undefined, fallback: number) => {
   const parsed = Number.parseInt(value ?? '', 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }

@@ -157,7 +157,7 @@ const normalizeProviderKey = (value?: string | null) => {
   return value.trim().toLowerCase()
 }
 
-const loadIndexPermissions = async (
+const _loadIndexPermissions = async (
   providerIds: string[],
 ): Promise<Map<string, IndexPermissionFlags>> => {
   const normalized = Array.from(new Set(providerIds.map(normalizeProviderKey).filter(Boolean)))
@@ -181,7 +181,7 @@ const loadIndexPermissions = async (
   return permissions
 }
 
-const loadProviderWeights = async (
+const _loadProviderWeights = async (
   corridorId: string,
   modelVersion: string,
 ): Promise<ProviderWeightSnapshot> => {
@@ -366,7 +366,7 @@ type CorridorIndices = {
 }
 
 const providersCache = createTtlCache<ProvidersResponseBase>({ namespace: 'plane_a:providers' })
-const PROVIDER_WEIGHT_MODEL = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
+const _PROVIDER_WEIGHT_MODEL = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
 
 const querySchema = z.object({
   from: z.string().min(2).max(2).optional(),
@@ -423,7 +423,7 @@ const isCurrencyAllowedForRequest = (
     : isWiseDestinationCurrency(currency)
 }
 
-const computeCorridorIndices = (
+const _computeCorridorIndices = (
   quotes: Array<{
     id: string
     providerId?: string
@@ -1180,7 +1180,10 @@ export const providersRoutes = async (app: FastifyInstance) => {
       const providerQuotesPayload = includeProviderQuotes
         ? providerQuotes.map((pq) => ({
             psp: pq.psp,
-            quotes: pq.quotes.map(({ deliveryLabel, originalQuote, ...quotePayload }) => quotePayload),
+            quotes: pq.quotes.map(
+              ({ deliveryLabel: _deliveryLabel, originalQuote: _originalQuote, ...quotePayload }) =>
+                quotePayload,
+            ),
           }))
         : undefined
 

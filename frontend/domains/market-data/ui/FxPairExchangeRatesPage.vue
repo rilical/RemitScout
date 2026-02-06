@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CenteredPage from '~/shared/ui/CenteredPage.vue'
+import CenteredPage from '~/components/shared/CenteredPage.vue'
 import FxProviderPricingTable from '~/domains/market-data/ui/FxProviderPricingTable.vue'
 import type { FxProviderPricingRow } from '~/domains/market-data/application/fxProviderPricing'
 

@@ -53,7 +53,7 @@ type UserCorridorInfo = {
   priority: number // 1 = alert, 2 = watchlist-only
 }
 
-type ProviderInfo = {
+type _ProviderInfo = {
   providerId: string
   corridorId: string
 }

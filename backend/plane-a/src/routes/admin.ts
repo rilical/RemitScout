@@ -285,7 +285,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
 
     try {
       let targetUserId = userId
-      let targetEmail = email
+      const targetEmail = email
 
       if (!targetUserId && targetEmail) {
         const userResult = await query<{ user_id: string }>(

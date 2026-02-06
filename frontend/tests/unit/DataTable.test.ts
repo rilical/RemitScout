@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { h } from 'vue'
-import DataTable from '~/shared/ui/DataTable.vue'
+import DataTable from '~/components/shared/DataTable.vue'
 
 describe('DataTable', () => {
   const columns = [
