@@ -9,7 +9,10 @@ defineProps<Props>()
 
 <template>
   <div class="w-full" :class="rootClass">
-    <div class="mx-auto w-full max-w-page px-page-x py-page-y" :class="containerClass">
+    <div
+      class="mx-auto w-full max-w-page px-page-x py-page-y"
+      :class="containerClass"
+    >
       <div class="flex flex-col gap-y-stack">
         <header v-if="$slots.header">
           <slot name="header" />
@@ -26,4 +29,3 @@ defineProps<Props>()
     </div>
   </div>
 </template>
-

@@ -94,7 +94,7 @@ module.exports = {
 
         'page-x': 'var(--rs-space-page-x)',
         'page-y': 'var(--rs-space-page-y)',
-        stack: 'var(--rs-space-stack)',
+        'stack': 'var(--rs-space-stack)',
       },
       maxWidth: {
         960: '960px',
@@ -110,7 +110,7 @@ module.exports = {
         btn: '44px',
       },
       borderRadius: {
-        btn: '12px',
+        'btn': '12px',
         'rs-md': 'var(--rs-radius-md)',
         'rs-lg': 'var(--rs-radius-lg)',
       },

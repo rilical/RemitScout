@@ -35,4 +35,3 @@ describe('CenteredPage', () => {
     expect(wrapper.find('main').text()).toContain('Only content')
   })
 })
-
