@@ -1,24 +1,24 @@
-# Dashboard domain
+# Dashboard Domain
 
-**Purpose**: authenticated user home (saved corridors, watchlist, alerts, history).
-
-## Boundaries
-
-- Owns: dashboard query models, watchlist/alerts UX.
-- Does not own: shared UI primitives (shared/ui), auth/session primitives (platform).
+## Purpose
+User-facing dashboard experience (signed-in and signed-out). Owns dashboard page composition and dashboard-specific UI logic.
 
 ## Public exports
+Only export from `frontend/domains/dashboard/index.ts`.
 
-- Import from `frontend/domains/dashboard/index.ts`.
+## Boundaries
+- `domain/`: types + invariants only (no Vue/Nuxt, no HTTP)
+- `application/`: orchestration (may call `infrastructure/`, may expose composables)
+- `infrastructure/`: API calls / adapters
+- `ui/`: presentational components (no direct API calls)
 
-## How to add a feature
-
+## How To Add A Feature
 1. Add domain state/types in `domain/`.
 2. Add orchestration/composables in `application/`.
 3. Add API adapters in `infrastructure/`.
 4. Add UI in `ui/` and render via thin Nuxt pages.
 
-## Forbidden
+## Forbidden Imports (Policy)
+- `domain/**` must not import from `vue`, `nuxt`, `~/pages`, `~/components`, `~/composables`, `~/server`, `~/lib`.
+- `ui/**` must not call backend directly; use `application/**`.
 
-- No direct HTTP calls from `ui/`.
-- No Vue/Nuxt imports from `domain/`.

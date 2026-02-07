@@ -4,19 +4,11 @@
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-600/20">
-          <svg
-            class="h-5 w-5 text-danger-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-            />
-          </svg>
+          <Icon
+            name="building-library"
+            :size="20"
+            class="text-danger-600"
+          />
         </div>
         <div>
           <h2 class="text-lg font-bold text-white">
@@ -39,25 +31,7 @@
         class="flex h-48 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent" />
           Loading...
         </div>
       </div>
@@ -69,7 +43,7 @@
             If you send
           </p>
           <p class="text-3xl font-bold text-white">
-            ${{ store.amount.toLocaleString() }}
+            {{ amountDisplay }}
           </p>
           <p class="text-sm text-neutral-400">
             {{ store.corridor.fromCode }} → {{ store.corridor.toCode }}
@@ -81,34 +55,26 @@
           <!-- Bank Card -->
           <div class="rounded-lg border border-danger-600/30 bg-danger-600/10 p-4">
             <div class="flex items-center gap-2 mb-3">
-              <svg
-                class="h-5 w-5 text-danger-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
+              <Icon
+                name="building-library"
+                :size="20"
+                class="text-danger-600"
+              />
               <span class="text-sm font-semibold text-white">Bank Benchmark</span>
             </div>
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Hidden markup</span>
-                <span class="font-semibold text-danger-600">{{ data ? `$${data.bankMarkup.toFixed(2)}` : 'n/a' }}</span>
+                <span class="font-semibold text-danger-600">{{ money(data?.bankMarkup) }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Wire fee</span>
-                <span class="font-semibold text-white">{{ data ? `$${data.bankFee.toFixed(2)}` : 'n/a' }}</span>
+                <span class="font-semibold text-white">{{ money(data?.bankFee) }}</span>
               </div>
               <div class="border-t border-danger-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
                   <span class="text-sm font-semibold text-white">Total cost</span>
-                  <span class="text-lg font-bold text-danger-600">{{ data ? `$${data.bankTotalCost.toFixed(2)}` : 'n/a' }}</span>
+                  <span class="text-lg font-bold text-danger-600">{{ money(data?.bankTotalCost) }}</span>
                 </div>
               </div>
             </div>
@@ -117,34 +83,26 @@
           <!-- Specialist Card -->
           <div class="rounded-lg border border-brand-600/30 bg-brand-600/10 p-4">
             <div class="flex items-center gap-2 mb-3">
-              <svg
-                class="h-5 w-5 text-brand-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+              <Icon
+                name="bolt"
+                :size="20"
+                class="text-brand-600"
+              />
               <span class="text-sm font-semibold text-white">{{ data?.bestSpecialistName || 'n/a' }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Hidden markup</span>
-                <span class="font-semibold text-brand-600">{{ data ? `$${data.bestSpecialistMarkup.toFixed(2)}` : 'n/a' }}</span>
+                <span class="font-semibold text-brand-600">{{ money(data?.bestSpecialistMarkup) }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-400">Transfer fee</span>
-                <span class="font-semibold text-white">{{ data ? `$${data.bestSpecialistFee.toFixed(2)}` : 'n/a' }}</span>
+                <span class="font-semibold text-white">{{ money(data?.bestSpecialistFee) }}</span>
               </div>
               <div class="border-t border-brand-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
                   <span class="text-sm font-semibold text-white">Total cost</span>
-                  <span class="text-lg font-bold text-brand-600">{{ data ? `$${data.bestSpecialistTotalCost.toFixed(2)}` : 'n/a' }}</span>
+                  <span class="text-lg font-bold text-brand-600">{{ money(data?.bestSpecialistTotalCost) }}</span>
                 </div>
               </div>
             </div>
@@ -156,10 +114,10 @@
             Benchmark Gap
           </div>
           <div class="text-3xl font-bold text-white">
-            {{ data ? `$${data.savings.toFixed(2)}` : 'n/a' }}
+            {{ money(data?.savings) }}
           </div>
           <div class="text-xs text-neutral-400">
-            Bank all-in cost is {{ data ? data.savingsPercent : 'n/a' }}% higher than specialist leader
+            Bank all-in cost is {{ typeof data?.savingsPercent === 'number' ? data.savingsPercent : 'n/a' }}% higher than specialist leader
           </div>
         </div>
       </div>
@@ -167,28 +125,39 @@
 
     <PulseTrustStamp
       v-if="data"
-      :last-updated="lastUpdated"
+      :last-updated="store.lastUpdated || null"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { BankComparisonData } from '~/types/remit'
 import { getBankComparisonData } from '~/lib/pulseApi'
+import { Icon } from '~/shared/ui'
+import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
 const loading = ref(true)
 const data = ref<BankComparisonData | null>(null)
-const lastUpdated = ref(new Date().toISOString())
+
+const sendCurrency = computed(() => store.corridor.fromCode || 'USD')
+
+const money = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'n/a'
+  return formatMoneyUtil(value, { currency: sendCurrency.value })
+}
+
+const amountDisplay = computed(() =>
+  formatMoneyUtil(store.amount, { currency: sendCurrency.value, maximumFractionDigits: 0 }),
+)
 
 async function loadData() {
   loading.value = true
   try {
     data.value = await getBankComparisonData(store.corridor, store.timeframe, store.amount)
-    lastUpdated.value = new Date().toISOString()
   }
   catch (e) {
     console.error('Failed to load bank comparison:', e)

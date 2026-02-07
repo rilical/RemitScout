@@ -280,6 +280,7 @@ import PulseMatrixTable from './PulseMatrixTable.vue'
 import PulseTableView from './PulseTableView.vue'
 import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
 import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
+import { formatDate } from '~/shared/lib/format'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 
 interface Props {
@@ -373,7 +374,7 @@ function formatLastUpdated(timestamp: string): string {
   if (minutes < 60) return `${minutes}m ago`
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}h ago`
-  return new Date(timestamp).toLocaleDateString()
+  return formatDate(timestamp)
 }
 
 watch(() => props.filters, loadData, { deep: true })

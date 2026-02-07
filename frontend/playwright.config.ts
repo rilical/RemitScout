@@ -13,7 +13,7 @@ export default defineConfig({
     ? undefined
     : {
         // Playwright runs with `cwd` set to the frontend package; don't double `-C frontend`.
-        command: 'pnpm run preview --port 3000',
+        command: 'pnpm run build && pnpm run preview --port 3000',
         port: 3000,
         reuseExistingServer: !process.env.CI,
       },

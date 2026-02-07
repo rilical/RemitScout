@@ -28,19 +28,11 @@
               </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg
-                class="h-4 w-4 text-neutral-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <Icon
+                name="chevron-down"
+                :size="16"
+                class="text-neutral-400"
+              />
             </div>
           </div>
 
@@ -78,19 +70,11 @@
               </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg
-                class="h-4 w-4 text-neutral-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <Icon
+                name="chevron-down"
+                :size="16"
+                class="text-neutral-400"
+              />
             </div>
           </div>
 
@@ -122,19 +106,11 @@
               </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg
-                class="h-4 w-4 text-neutral-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <Icon
+                name="chevron-down"
+                :size="16"
+                class="text-neutral-400"
+              />
             </div>
           </div>
 
@@ -166,30 +142,23 @@
               </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg
-                class="h-4 w-4 text-neutral-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <Icon
+                name="chevron-down"
+                :size="16"
+                class="text-neutral-400"
+              />
             </div>
           </div>
         </div>
 
         <!-- Last Updated -->
         <div class="flex items-center gap-2 text-sm text-neutral-400">
-          <span class="relative flex h-2 w-2">
-            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
-            <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
-          </span>
-          <span>Updated {{ lastUpdatedText }}</span>
+          <span
+            class="inline-flex h-2 w-2 rounded-full"
+            :class="props.lastUpdated ? 'bg-brand-600' : 'bg-neutral-500'"
+            aria-hidden="true"
+          />
+          <span>{{ lastUpdatedLabel }}</span>
         </div>
       </div>
 
@@ -200,19 +169,11 @@
       >
         <div class="flex items-center gap-2 text-lg font-semibold text-white">
           <span class="text-2xl">{{ corridorInfo.fromFlag }}</span>
-          <svg
-            class="h-4 w-4 text-neutral-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 8l4 4m0 0l-4 4m4-4H3"
-            />
-          </svg>
+          <Icon
+            name="arrow-right"
+            :size="16"
+            class="text-neutral-500"
+          />
           <span class="text-2xl">{{ corridorInfo.toFlag }}</span>
           <span class="ml-2">{{ corridorInfo.label }}</span>
         </div>
@@ -226,6 +187,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { PulseFilters, AmountBucket, FundingMethod, PayoutMethod } from '~/types/pulse'
 import { getCorridors, getCorridorBySlug } from '~/lib/pulseApi'
+import { Icon } from '~/shared/ui'
+import { formatUpdatedLabel } from '~/shared/lib/format'
 
 interface Props {
   modelValue: PulseFilters
@@ -253,17 +216,7 @@ const corridorInfo = computed(() => {
   return getCorridorBySlug(localFilters.value.corridor)
 })
 
-const lastUpdatedText = computed(() => {
-  if (!props.lastUpdated) return 'just now'
-  const diff = Date.now() - new Date(props.lastUpdated).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes === 1) return '1 min ago'
-  if (minutes < 60) return `${minutes} min ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours === 1) return '1 hour ago'
-  return `${hours} hours ago`
-})
+const lastUpdatedLabel = computed(() => formatUpdatedLabel(props.lastUpdated ?? null))
 
 function updateFilters() {
   if (localFilters.value.corridor !== lastCorridor.value) {

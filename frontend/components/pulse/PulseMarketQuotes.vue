@@ -7,7 +7,7 @@
           Live Provider Quotes
         </h2>
         <p class="text-sm text-neutral-400">
-          Current rates for ${{ store.amount.toLocaleString() }} {{ store.corridor.fromCode }} → {{ store.corridor.toCode }}
+          Current rates for {{ amountLabel }} ({{ store.corridor.fromCode }} → {{ store.corridor.toCode }})
         </p>
       </div>
       <div class="flex items-center gap-2 text-sm">
@@ -24,25 +24,7 @@
         class="flex h-32 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent" />
           Loading quotes...
         </div>
       </div>
@@ -96,10 +78,10 @@
               class="text-lg font-bold"
               :class="index === 0 ? 'text-brand-600' : 'text-white'"
             >
-              {{ getCurrencySymbol(store.corridor.toCode) }}{{ formatNumber(quote.recipientGets) }}
+              {{ formatMoney(quote.recipientGets, { currency: store.corridor.toCode, maximumFractionDigits: 0 }) }}
             </div>
             <div class="flex items-center justify-end gap-2 text-xs">
-              <span class="text-neutral-500">Fee: ${{ quote.fee.toFixed(2) }}</span>
+              <span class="text-neutral-500">Fee: {{ formatMoney(quote.fee, { currency: store.corridor.fromCode, maximumFractionDigits: 2 }) }}</span>
               <span class="text-neutral-600">•</span>
               <span
                 class="rounded px-1.5 py-0.5"
@@ -129,7 +111,7 @@
               Best vs Worst
             </div>
             <div class="font-semibold text-brand-600">
-              {{ getCurrencySymbol(store.corridor.toCode) }}{{ formatNumber(bestWorstDiff) }} more
+              {{ formatMoney(bestWorstDiff, { currency: store.corridor.toCode, maximumFractionDigits: 0 }) }} more
             </div>
           </div>
           <div>
@@ -158,19 +140,11 @@
         :to="compareCorridorUrl"
         class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
       >
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        <Icon
+          name="arrow-right"
+          :size="16"
+          class="text-current"
+        />
         Compare All Providers
       </NuxtLink>
     </div>
@@ -186,8 +160,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getMarketSnapshot, getCurrencySymbol, type MarketSnapshotData } from '~/lib/pulseApi'
+import { getMarketSnapshot, type MarketSnapshotData } from '~/lib/pulseApi'
 import { getCorridorUrl } from '~/utils/country-slugs'
+import { Icon } from '~/shared/ui'
+import { formatMoney, formatNumber as formatNumberValue } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
@@ -212,10 +188,6 @@ const promoCount = computed(() => {
   return data.value.quotes.filter(q => q.isPromo).length
 })
 
-function formatNumber(value: number): string {
-  return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
-}
-
 function getMarkupClass(bps: number): string {
   if (bps < 50) return 'bg-brand-600/20 text-brand-600'
   if (bps < 100) return 'bg-brand-600/10 text-brand-600'
@@ -225,8 +197,10 @@ function getMarkupClass(bps: number): string {
 
 const midMarketRateDisplay = computed(() => {
   if (!data.value) return 'n/a'
-  return data.value.midMarketRate.toFixed(4)
+  return formatNumberValue(data.value.midMarketRate, { minimumFractionDigits: 4, maximumFractionDigits: 4 })
 })
+
+const amountLabel = computed(() => formatMoney(store.amount, { currency: store.corridor.fromCode, maximumFractionDigits: 0 }))
 
 const compareCorridorUrl = computed(() => {
   const id = store.corridor.corridorId

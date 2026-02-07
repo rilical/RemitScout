@@ -1,94 +1,60 @@
 <template>
-  <div class="overflow-hidden rounded-lg bg-white shadow-md">
-    <div class="border-b bg-gray-50 px-6 py-4">
-      <h2 class="text-lg font-semibold text-gray-900">
-        Provider Comparison
-      </h2>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Provider
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Rating
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Fees
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Speed
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 bg-white">
-          <tr
-            v-for="provider in providers"
-            :key="provider.id"
-          >
-            <td class="whitespace-nowrap px-6 py-4">
-              <div class="flex items-center">
-                <ProviderLogo
-                  :slug="provider.slug"
-                  :alt="provider.name"
-                  class="mr-3 h-8 w-8"
-                />
-                <div>
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ provider.name }}
-                  </div>
-                  <div class="text-sm text-gray-500">
-                    {{ provider.countries }} countries
-                  </div>
-                </div>
-              </div>
-            </td>
-            <td class="whitespace-nowrap px-6 py-4">
-              <div class="flex items-center">
-                <Stars
-                  :rating="provider.rating"
-                  size="sm"
-                />
-                <span class="ml-2 text-sm text-gray-900">{{ provider.rating }}/5</span>
-              </div>
-            </td>
-            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-              {{ provider.fees || 'N/A' }}
-            </td>
-            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-              {{ provider.speed }}
-            </td>
-            <td class="whitespace-nowrap px-6 py-4">
-              <NuxtLink
-                :to="`/learn/providers/${provider.slug}`"
-                class="font-medium text-primary-600 hover:text-primary-900"
-              >
-                View Details
-              </NuxtLink>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <DataTable
+    variant="consumer"
+    caption="Provider comparison"
+    :columns="columns"
+    :rows="providers"
+    :row-key="row => asProvider(row).id"
+    :empty="{ title: 'No providers to compare' }"
+  >
+    <template #cell-provider="{ row }">
+      <div class="flex items-center">
+        <ProviderLogo
+          :slug="asProvider(row).slug"
+          :alt="asProvider(row).name"
+          class="mr-3 h-8 w-8"
+        />
+        <div>
+          <div class="text-sm font-medium text-slate-900">
+            {{ asProvider(row).name }}
+          </div>
+          <div class="text-sm text-slate-600">
+            {{ asProvider(row).countries }} countries
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template #cell-rating="{ row }">
+      <div class="flex items-center">
+        <Stars
+          :rating="asProvider(row).rating"
+          size="sm"
+        />
+        <span class="ml-2 text-sm text-slate-900">{{ asProvider(row).rating }}/5</span>
+      </div>
+    </template>
+
+    <template #cell-fees="{ row }">
+      <span class="text-sm text-slate-700">{{ asProvider(row).fees || 'N/A' }}</span>
+    </template>
+
+    <template #cell-action="{ row }">
+      <NuxtLink
+        :to="`/learn/providers/${asProvider(row).slug}`"
+        class="font-medium text-primary-600 hover:text-primary-900"
+      >
+        View Details
+      </NuxtLink>
+    </template>
+  </DataTable>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { DataTable } from '~/shared/ui'
+import type { DataTableColumn } from '~/shared/ui'
+
 interface Provider {
   id: string
   name: string
@@ -105,7 +71,38 @@ interface Props {
   comparison?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
+  providers: () => [],
   comparison: false,
 })
+
+const columns: DataTableColumn[] = [
+  {
+    key: 'provider',
+    label: 'Provider',
+  },
+  {
+    key: 'rating',
+    label: 'Rating',
+  },
+  {
+    key: 'fees',
+    label: 'Fees',
+  },
+  {
+    key: 'speed',
+    label: 'Speed',
+  },
+  {
+    key: 'action',
+    label: 'Action',
+    align: 'right',
+  },
+]
+
+const providers = computed(() => props.providers)
+
+function asProvider(row: unknown): Provider {
+  return row as Provider
+}
 </script>

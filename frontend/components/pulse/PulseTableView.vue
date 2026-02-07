@@ -1,109 +1,68 @@
 <template>
   <div>
-    <!-- Table -->
-    <div class="overflow-x-auto rounded-lg border border-neutral-700">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-neutral-800">
-            <th
-              v-for="col in columns"
-              :key="col.key"
-              class="py-3 px-4 text-xs font-semibold uppercase tracking-wider transition-colors"
-              :class="[
-                col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-                col.sortable ? 'cursor-pointer hover:bg-neutral-700' : '',
-              ]"
-              @click="col.sortable && toggleSort(col.key)"
-            >
-              <div
-                class="flex items-center gap-1"
-                :class="col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''"
-              >
-                <span class="text-neutral-400">{{ col.label }}</span>
-                <svg
-                  v-if="col.sortable"
-                  class="h-4 w-4 text-neutral-500"
-                  :class="{ 'text-brand-600': sortKey === col.key }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    v-if="sortKey === col.key && sortDirection === 'asc'"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 15l7-7 7 7"
-                  />
-                  <path
-                    v-else-if="sortKey === col.key && sortDirection === 'desc'"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                  <path
-                    v-else
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 9l4-4 4 4m0 6l-4 4-4-4"
-                  />
-                </svg>
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(row, idx) in displayRows"
-            :key="idx"
-            class="border-t border-neutral-700 transition-colors hover:bg-neutral-700/50"
-          >
-            <td class="py-3 px-4 text-sm text-neutral-300">
-              {{ formatTimestamp(row.timestamp) }}
-            </td>
-            <td class="py-3 px-4">
-              <div class="flex items-center gap-2">
-                <div class="flex h-6 w-6 items-center justify-center rounded bg-neutral-700 text-xs font-bold text-white">
-                  {{ row.provider.charAt(0) }}
-                </div>
-                <span class="text-sm font-medium text-white">{{ row.provider }}</span>
-              </div>
-            </td>
-            <td class="py-3 px-4 text-right text-sm font-semibold text-brand-600">
-              {{ formatCurrency(row.deliveredAmount, row.deliveredCurrency) }}
-            </td>
-            <td class="py-3 px-4 text-right text-sm text-neutral-300">
-              {{ formatCurrency(row.fee, row.feeCurrency) }}
-            </td>
-            <td class="py-3 px-4 text-right text-sm text-neutral-300">
-              {{ row.rate.toFixed(4) }}
-            </td>
-            <td class="py-3 px-4 text-right">
-              <span
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="getMarkupClass(row.markupBps)"
-              >
-                {{ row.markupBps }} bps
-              </span>
-            </td>
-            <td class="py-3 px-4 text-center">
-              <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="getProvenanceClass(row.provenance)"
-              >
-                <span
-                  class="h-1.5 w-1.5 rounded-full"
-                  :class="getProvenanceDotClass(row.provenance)"
-                />
-                {{ row.provenance }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      variant="terminal"
+      caption="Pulse chart table"
+      :columns="columns"
+      :rows="displayRows"
+      :row-key="rowKey"
+      :loading="loading"
+      :error="errorState"
+      :empty="{ title: 'No rows yet', message: 'No data is available for this filter and time range.' }"
+      :sort="{ key: sortKey, direction: sortDirection }"
+      :on-sort-change="onSortChange"
+    >
+      <template #cell-timestamp="{ row }">
+        <span class="text-neutral-200">{{ formatTimestamp((row as TableRow).timestamp) }}</span>
+      </template>
+
+      <template #cell-provider="{ row }">
+        <div class="flex items-center gap-2">
+          <div class="flex h-6 w-6 items-center justify-center rounded bg-neutral-700 text-xs font-bold text-white">
+            {{ (row as TableRow).provider.charAt(0) }}
+          </div>
+          <span class="text-sm font-medium text-white">{{ (row as TableRow).provider }}</span>
+        </div>
+      </template>
+
+      <template #cell-deliveredAmount="{ row }">
+        <span class="text-brand-600 font-semibold">
+          {{ formatCurrency((row as TableRow).deliveredAmount, (row as TableRow).deliveredCurrency) }}
+        </span>
+      </template>
+
+      <template #cell-fee="{ row }">
+        <span class="text-neutral-200">
+          {{ formatCurrency((row as TableRow).fee, (row as TableRow).feeCurrency) }}
+        </span>
+      </template>
+
+      <template #cell-rate="{ row }">
+        <span class="text-neutral-200">{{ formatRate((row as TableRow).rate) }}</span>
+      </template>
+
+      <template #cell-markupBps="{ row }">
+        <span
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+          :class="getMarkupClass((row as TableRow).markupBps)"
+        >
+          {{ (row as TableRow).markupBps }} bps
+        </span>
+      </template>
+
+      <template #cell-provenance="{ row }">
+        <span
+          class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+          :class="getProvenanceClass((row as TableRow).provenance)"
+        >
+          <span
+            class="h-1.5 w-1.5 rounded-full"
+            :class="getProvenanceDotClass((row as TableRow).provenance)"
+          />
+          {{ (row as TableRow).provenance }}
+        </span>
+      </template>
+    </DataTable>
 
     <!-- Pagination & Export -->
     <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -125,19 +84,11 @@
           :disabled="currentPage === 1"
           @click="currentPage--"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <Icon
+            name="chevron-left"
+            :size="16"
+            class="text-current"
+          />
         </button>
 
         <div class="flex items-center gap-1">
@@ -157,19 +108,11 @@
           :disabled="currentPage >= totalPages"
           @click="currentPage++"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          <Icon
+            name="chevron-right"
+            :size="16"
+            class="text-current"
+          />
         </button>
       </div>
 
@@ -180,34 +123,18 @@
         :disabled="!isPlus"
         @click="isPlus && exportCsv()"
       >
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-          />
-        </svg>
+        <Icon
+          name="arrow-down-tray"
+          :size="16"
+          class="text-current"
+        />
         Export CSV
-        <svg
+        <Icon
           v-if="!isPlus"
-          class="h-3 w-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
+          name="lock"
+          :size="16"
+          class="text-current"
+        />
       </button>
     </div>
 
@@ -217,19 +144,11 @@
       class="mt-4 rounded-lg border border-brand-600/30 bg-brand-600/10 p-4"
     >
       <div class="flex items-start gap-3">
-        <svg
-          class="h-5 w-5 text-brand-600 flex-shrink-0 mt-0.5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
+        <Icon
+          name="lock"
+          :size="20"
+          class="text-brand-600 flex-shrink-0 mt-0.5"
+        />
         <div>
           <p class="font-semibold text-brand-600">
             Unlock full history with Plus
@@ -242,19 +161,11 @@
             class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700"
           >
             Learn more
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <Icon
+              name="chevron-right"
+              :size="16"
+              class="text-current"
+            />
           </NuxtLink>
         </div>
       </div>
@@ -264,8 +175,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import type { TableData, TableRow, TableColumn, PulseFilters, TimeRange } from '~/types/pulse'
+import type { TableData, TableRow, PulseFilters, TimeRange } from '~/types/pulse'
 import { getTableData, formatCurrency as formatCurrencyUtil } from '~/lib/pulseApi'
+import { DataTable, Icon } from '~/shared/ui'
+import type { DataTableColumn, DataTableSort } from '~/shared/ui'
+import { formatNumber, formatShortDateTime } from '~/shared/lib/format'
 
 interface Props {
   chartId: string
@@ -280,19 +194,20 @@ const props = withDefaults(defineProps<Props>(), {
 
 const loading = ref(true)
 const tableData = ref<TableData | null>(null)
+const errorMessage = ref<string | null>(null)
 const currentPage = ref(1)
 const pageSize = 20
 const freeRowLimit = 50
 const sortKey = ref<keyof TableRow>('timestamp')
 const sortDirection = ref<'asc' | 'desc'>('desc')
 
-const columns = computed<TableColumn[]>(() => [
-  { key: 'timestamp', label: 'Timestamp', sortable: true, align: 'left', format: 'date' },
+const columns = computed<DataTableColumn[]>(() => [
+  { key: 'timestamp', label: 'Timestamp', sortable: true, align: 'left' },
   { key: 'provider', label: 'Provider', sortable: true, align: 'left' },
-  { key: 'deliveredAmount', label: 'Delivered', sortable: true, align: 'right', format: 'currency' },
-  { key: 'fee', label: 'Fee', sortable: true, align: 'right', format: 'currency' },
-  { key: 'rate', label: 'Rate', sortable: true, align: 'right', format: 'number' },
-  { key: 'markupBps', label: 'Markup', sortable: true, align: 'right', format: 'bps' },
+  { key: 'deliveredAmount', label: 'Delivered', sortable: true, align: 'right' },
+  { key: 'fee', label: 'Fee', sortable: true, align: 'right' },
+  { key: 'rate', label: 'Rate', sortable: true, align: 'right' },
+  { key: 'markupBps', label: 'Markup', sortable: true, align: 'right' },
   { key: 'provenance', label: 'Source', sortable: false, align: 'center' },
 ])
 
@@ -351,6 +266,7 @@ const displayRows = computed(() => {
 
 async function loadData() {
   loading.value = true
+  errorMessage.value = null
   try {
     tableData.value = await getTableData(
       props.chartId,
@@ -362,33 +278,38 @@ async function loadData() {
   }
   catch (e) {
     console.error('Failed to load table data:', e)
+    errorMessage.value = 'Failed to load table data. Please try again.'
   }
   finally {
     loading.value = false
   }
 }
 
-function toggleSort(key: keyof TableRow) {
-  if (sortKey.value === key) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  }
-  else {
-    sortKey.value = key
-    sortDirection.value = 'desc'
-  }
+function onSortChange(next: DataTableSort) {
+  sortKey.value = next.key as keyof TableRow
+  sortDirection.value = next.direction
 }
 
 function formatTimestamp(ts: number): string {
-  return new Date(ts).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatShortDateTime(new Date(ts), { locale: 'en-US' })
 }
 
 function formatCurrency(value: number, currency: string): string {
   return formatCurrencyUtil(value, currency)
+}
+
+function formatRate(value: number): string {
+  return formatNumber(value, { locale: 'en-US', minimumFractionDigits: 4, maximumFractionDigits: 4 })
+}
+
+const errorState = computed(() => {
+  if (!errorMessage.value) return null
+  return { title: 'Could not load rows', message: errorMessage.value }
+})
+
+const rowKey = (row: unknown, rowIndex: number) => {
+  const r = row as Partial<TableRow>
+  return `${String(r.timestamp ?? 't')}:${String(r.provider ?? 'p')}:${rowIndex}`
 }
 
 function getMarkupClass(bps: number): string {

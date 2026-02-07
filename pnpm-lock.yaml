@@ -195,9 +195,6 @@ importers:
       '@heroicons/vue':
         specifier: ^2.2.0
         version: 2.2.0(vue@3.5.26(typescript@5.9.3))
-      '@nuxt/kit':
-        specifier: ^4.2.2
-        version: 4.2.2(magicast@0.5.1)
       '@nuxtjs/i18n':
         specifier: ^8.5.6
         version: 8.5.6(magicast@0.5.1)(rollup@4.54.0)(vue@3.5.26(typescript@5.9.3))

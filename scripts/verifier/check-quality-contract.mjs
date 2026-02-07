@@ -245,6 +245,49 @@ function assertQualityShape(payload, label) {
     fail(`${label}: quality.lint.warnings not a number`);
 }
 
+function assertCorrelationAndAliases(payload, label, expectedTaskId) {
+  if (payload.taskId !== expectedTaskId) {
+    fail(`${label}: taskId mismatch (got ${JSON.stringify(payload.taskId)})`);
+  }
+  if (payload.task_id !== expectedTaskId) {
+    fail(`${label}: task_id mismatch (got ${JSON.stringify(payload.task_id)})`);
+  }
+
+  if (!isPlainObject(payload.payload)) {
+    fail(`${label}: payload.payload missing or not an object`);
+  }
+  if (payload.payload.taskId !== expectedTaskId) {
+    fail(
+      `${label}: payload.payload.taskId mismatch (got ${JSON.stringify(payload.payload.taskId)})`,
+    );
+  }
+  if (payload.payload.task_id !== expectedTaskId) {
+    fail(
+      `${label}: payload.payload.task_id mismatch (got ${JSON.stringify(payload.payload.task_id)})`,
+    );
+  }
+
+  if (!isPlainObject(payload.qualityReport)) {
+    fail(`${label}: qualityReport missing or not an object`);
+  }
+  if (!isPlainObject(payload.quality_report)) {
+    fail(`${label}: quality_report missing or not an object`);
+  }
+  if (JSON.stringify(payload.qualityReport) !== JSON.stringify(payload.quality)) {
+    fail(`${label}: qualityReport does not match quality`);
+  }
+  if (JSON.stringify(payload.quality_report) !== JSON.stringify(payload.quality)) {
+    fail(`${label}: quality_report does not match quality`);
+  }
+
+  if (!isPlainObject(payload.payload.quality)) {
+    fail(`${label}: payload.payload.quality missing or not an object`);
+  }
+  if (JSON.stringify(payload.payload.quality) !== JSON.stringify(payload.quality)) {
+    fail(`${label}: payload.payload.quality does not match quality`);
+  }
+}
+
 function* walkFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -461,6 +504,13 @@ function main() {
     JSON.stringify({ quality: { lint: { errors: "3", warnings: "2" } } }),
   );
   assertQualityShape(weird, "verify.passed:lint coercion");
+
+  const correlation = runEmitVerify(
+    "verify.passed",
+    JSON.stringify({ taskId: "task-123", quality: { lint: { errors: 0, warnings: 0 } } }),
+  );
+  assertQualityShape(correlation, "verify.passed:correlation");
+  assertCorrelationAndAliases(correlation, "verify.passed:correlation", "task-123");
 
   assertNoDirectVerifyEmits();
 

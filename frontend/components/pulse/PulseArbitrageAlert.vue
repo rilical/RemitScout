@@ -13,20 +13,11 @@
           class="flex h-10 w-10 items-center justify-center rounded-lg"
           :class="hasOpportunity ? 'bg-brand-600' : 'bg-neutral-700'"
         >
-          <svg
-            class="h-5 w-5"
+          <Icon
+            name="bolt"
+            :size="20"
             :class="hasOpportunity ? 'text-white' : 'text-neutral-400'"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 10V3L4 14h7v7l9-11h-7z"
-            />
-          </svg>
+          />
         </div>
         <div>
           <h2 class="text-lg font-bold text-white">
@@ -41,10 +32,10 @@
         v-if="hasOpportunity"
         class="flex items-center gap-2"
       >
-        <span class="relative flex h-3 w-3">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
-          <span class="relative inline-flex h-3 w-3 rounded-full bg-brand-600" />
-        </span>
+        <span
+          class="inline-flex h-2.5 w-2.5 rounded-full bg-brand-600"
+          aria-hidden="true"
+        />
         <span class="text-xs font-bold text-brand-600 uppercase">Active</span>
       </div>
     </div>
@@ -56,25 +47,7 @@
         class="flex h-32 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent" />
           Scanning market...
         </div>
       </div>
@@ -86,19 +59,11 @@
         <!-- Opportunity Detected -->
         <div class="text-center mb-6">
           <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/20 border border-brand-600/30 px-4 py-2 mb-4">
-            <svg
-              class="h-5 w-5 text-brand-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Icon
+              name="check"
+              :size="20"
+              class="text-brand-600"
+            />
             <span class="text-sm font-bold text-brand-600">ANOMALY DETECTED</span>
           </div>
           <h3 class="text-2xl font-bold text-white mb-2">
@@ -181,19 +146,11 @@
         <!-- No Opportunity -->
         <div class="flex-1 flex flex-col items-center justify-center text-center py-8">
           <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-neutral-700 mb-6">
-            <svg
-              class="h-10 w-10 text-neutral-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <Icon
+              name="magnifying-glass"
+              :size="24"
+              class="text-neutral-400"
+            />
           </div>
           <h3 class="text-xl font-semibold text-white mb-3">
             No Anomalies Detected
@@ -222,19 +179,11 @@
             type="button"
             class="flex items-center justify-center gap-2 w-full rounded-lg border border-neutral-600 bg-neutral-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-600"
           >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
+            <Icon
+              name="bell-alert"
+              :size="16"
+              class="text-current"
+            />
             <span>Create Monitor</span>
           </button>
         </div>
@@ -248,6 +197,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { ArbitrageOpportunity } from '~/types/remit'
 import { getArbitrageOpportunities } from '~/lib/pulseApi'
+import { Icon } from '~/shared/ui'
 
 const store = usePulseStore()
 

@@ -1,103 +1,118 @@
-# UI System (Tokens + Layout Primitives)
+# UI System (Golden Patterns)
 
-This is the frontend UI foundation layer: a small set of semantic tokens and a few reusable layout primitives.
+This is the Phase 2 UI system for Remit-Scout. The goal is a consistent, production-grade UI:
 
-Goals:
-- Keep styling consistent and predictable across routes.
-- Avoid page-by-page Tailwind “inventing spacing”.
-- Enable incremental migrations without breaking existing pages.
+- One layout wrapper: `CenteredPage`
+- One icon system: `Icon` (no direct Heroicons imports in Phase 2 pages/domains)
+- One table system: `DataTable` (terminal + consumer variants)
+- One set of states: `EmptyState`, `LoadingState`, `ErrorState`
+- One formatting surface: `shared/lib/format/*` (no inline `Intl.NumberFormat` in migrated UI)
 
-## Design tokens
+## CenteredPage
 
-Tokens live in `frontend/assets/css/tokens.css` as CSS variables.
-
-Currently provided tokens:
-- Layout: `--rs-page-max-width`, `--rs-space-page-x`, `--rs-space-page-y`, `--rs-space-stack`
-- Color: `--rs-color-bg`, `--rs-color-surface`, `--rs-color-fg`, `--rs-color-muted`, `--rs-color-border`, `--rs-color-brand`
-- Radii: `--rs-radius-md`, `--rs-radius-lg`
-
-### Tailwind wiring
-
-Tailwind exposes token-backed utilities (see `frontend/tailwind.config.js`):
-- `max-w-page`
-- `px-page-x`, `py-page-y`
-- `gap-y-stack`
-- `text-rs-fg`, `bg-rs-bg`, `bg-rs-surface`, `text-rs-muted`, `border-rs-border`
-- `rounded-rs-md`, `rounded-rs-lg`
-
-## `CenteredPage`
-
-`CenteredPage` is the golden layout wrapper for page shells.
-
-Path: `frontend/components/shared/CenteredPage.vue`
-
-Contract:
-- Centers content with a consistent max-width and gutters.
-- Provides consistent vertical rhythm via a default stack gap.
-- Slots:
-  - `header`
-  - default (page content)
-  - `footer`
-
-Usage:
+Use for every product page container.
 
 ```vue
-<CenteredPage>
-  <template #header>
-    <h1 class="text-scale-6 font-semibold">Page title</h1>
+<CenteredPage
+  title="Your transfer dashboard"
+  subtitle="Track rates, set alerts, and compare providers."
+>
+  <template #actions>
+    <button class="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white">
+      New alert
+    </button>
   </template>
 
-  <div class="rounded-rs-lg bg-rs-surface border border-rs-border p-6">
+  <section class="space-y-4">
     ...
-  </div>
+  </section>
 </CenteredPage>
 ```
 
-## `DataTable`
+## Icon
 
-`DataTable` is the golden table primitive for dense, consistent data presentation.
+Use `Icon` for any iconography in Phase 2 pages/domains.
 
-Path: `frontend/components/shared/DataTable.vue`
+```vue
+<Icon name="bolt" :size="20" />
+<Icon name="lock" :size="16" class="text-slate-500" />
+```
 
-Variants:
-- `terminal`: compact “market terminal” density (tight padding, smaller type).
-- `dashboard`: roomier “consumer dashboard” default (card container, larger type).
+Rules:
+- Do not import `@heroicons/vue/**` in Phase 2 pages/domains. Use the wrapper.
+- Sizes are fixed: `16`, `20`, `24`.
 
-Contract:
-- Table semantics first: renders a real `<table>` with `<thead>` + `<th scope="col">`.
-- A11y: `aria-busy` is set when `loading=true`; optionally provide `caption`.
-- No page-specific logic: consumers provide `columns` + `rows` and optionally override rendering via slots.
+## States
 
-Props (core):
-- `variant?: 'terminal' | 'dashboard'` (default: `dashboard`)
-- `caption?: string` (rendered as screen-reader-only)
-- `columns: { key, header, align?, formatter?, ... }[]`
-- `rows?: Record<string, unknown>[]`
-- `loading?: boolean`
-- `emptyText?: string`
+Standard primitives:
+- `EmptyState` (neutral “nothing here yet”)
+- `LoadingState`
+- `ErrorState`
 
-Slots:
-- `header-<columnKey>`: override a specific column header.
-- `cell-<columnKey>`: override a specific column cell.
-- `loading`: override the loading row.
-- `empty`: override the empty row.
+```vue
+<EmptyState title="No watchlist yet" message="Save a corridor to track it here." />
+<LoadingState message="Loading dashboard…" />
+<ErrorState title="Could not load" message="Please refresh and try again." />
+```
 
-Usage:
+Use `variant="terminal"` when rendering inside dark/terminal surfaces.
+
+## DataTable
+
+Two variants:
+- `terminal`: dense, minimal chrome, dark
+- `consumer`: airy, white cards
 
 ```vue
 <DataTable
-  variant="terminal"
-  caption="Corridor search results"
+  variant="consumer"
   :columns="[
-    { key: 'corridor', header: 'Corridor' },
-    { key: 'rate', header: 'Rate', align: 'right' },
+    { key: 'provider', label: 'Provider' },
+    { key: 'fee', label: 'Fee', align: 'right' },
   ]"
   :rows="rows"
-  :loading="pending"
-  emptyText="No matches"
->
-  <template #cell-rate="{ value }">
-    <span class="font-mono">{{ value }}</span>
-  </template>
-</DataTable>
+  :row-key="(row, i) => String((row as any).id ?? i)"
+  :empty="{ title: 'No results', message: 'Try a different filter.' }"
+/>
 ```
+
+Sorting and pagination are controlled:
+- `:sort` + `:on-sort-change`
+- `:pagination` + `:on-page-change`
+
+## Charts
+
+Use `ChartCard` as the wrapper for chart + optional table surfaces. It enforces:
+- consistent header/title/subtitle layout
+- consistent Empty/Loading/Error states
+- honest freshness label via `formatUpdatedLabel(updatedAt)` (no `new Date()` fallbacks)
+
+```vue
+<ChartCard
+  variant="terminal"
+  title="FX markup"
+  subtitle="Best provider vs bank benchmark"
+  range-label="Last 30 days"
+  :updated-at="updatedAt"
+  :loading="loading"
+  :error="error"
+  :data-available="series.length > 0"
+>
+  <template #chart>
+    <MyChart :series="series" />
+  </template>
+  <template #table>
+    <DataTable ... />
+  </template>
+</ChartCard>
+```
+
+## Formatting
+
+Use `shared/lib/format/*` helpers:
+- `formatMoney`
+- `formatNumber`, `formatCompactNumber`, `formatPercent`
+- `formatDate`, `formatDateTime`, `formatShortDateTime`, `formatRelativeTime`
+- `formatUpdatedLabel`
+
+Rule: for migrated product UI, do not format numbers with inline `toLocaleString()`/`Intl.NumberFormat`.

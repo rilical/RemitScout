@@ -14,6 +14,66 @@ export default createConfigForNuxt({
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
   },
+}).append({
+  name: 'phase2/icon-discipline',
+  files: [
+    'pages/dashboard.vue',
+    'pages/plus.vue',
+    'pages/pulse.vue',
+    'domains/**/*.{ts,vue}',
+  ],
+  rules: {
+    // Phase 2 rule: callers must use the shared Icon wrapper (not direct heroicon imports).
+    'no-restricted-imports': ['error', {
+      patterns: [
+        {
+          group: ['@heroicons/vue/**'],
+          message: 'Use `~/shared/ui/Icon` (Icon wrapper) instead of importing heroicons directly.',
+        },
+      ],
+    }],
+  },
+}).append({
+  name: 'phase2/domain-purity',
+  files: [
+    'domains/*/domain/**/*.{ts,vue}',
+  ],
+  rules: {
+    'no-restricted-imports': ['error', {
+      paths: [
+        { name: 'vue', message: 'Domain layer must be framework-agnostic (no Vue imports).' },
+        { name: 'nuxt/app', message: 'Domain layer must be framework-agnostic (no Nuxt imports).' },
+        { name: 'nuxt', message: 'Domain layer must be framework-agnostic (no Nuxt imports).' },
+        { name: '#imports', message: 'Domain layer must be framework-agnostic (no Nuxt auto-imports).' },
+      ],
+      patterns: [
+        { group: ['~/pages/**', '~/components/**', '~/composables/**', '~/server/**', '~/lib/**'], message: 'Domain layer must not depend on app/UI/infrastructure modules.' },
+      ],
+    }],
+  },
+}).append({
+  name: 'phase2/pulse-ui-boundaries',
+  files: [
+    'domains/pulse/ui/**/*.{ts,vue}',
+  ],
+  rules: {
+    'no-restricted-imports': ['error', {
+      paths: [
+        { name: '~/lib/pulseApi', message: 'Pulse UI must not import `~/lib/pulseApi` directly. Use `domains/pulse/infrastructure`.' },
+      ],
+    }],
+  },
+}).append({
+  name: 'phase2/legacy-dashboard-tabs',
+  files: [
+    'domains/dashboard/ui/DashboardSignedIn.vue',
+  ],
+  rules: {
+    // Legacy file: disable tab-related rules to keep the gate unblocked.
+    // Remove this override when DashboardSignedIn is refactored.
+    '@stylistic/no-tabs': 'off',
+    '@stylistic/no-mixed-spaces-and-tabs': 'off',
+  },
 }).overrideRules({
   // The current codebase still contains explicit `any` and intentionally-unused values.
   // Treat these as warnings so `pnpm lint` stays usable while we incrementally tighten.

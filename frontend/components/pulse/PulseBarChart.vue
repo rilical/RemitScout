@@ -135,6 +135,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { ChartSeries } from '~/types/pulse'
+import { formatMonthDay } from '~/shared/lib/format'
 
 interface Props {
   series: ChartSeries[]
@@ -264,9 +265,6 @@ function formatValue(value: number): string {
 }
 
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatMonthDay(new Date(timestamp))
 }
 </script>
