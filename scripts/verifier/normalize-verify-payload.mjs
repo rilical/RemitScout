@@ -4,6 +4,23 @@ export function normalizeVerifyPayload(input) {
   const safeInput =
     input && typeof input === "object" && !Array.isArray(input) ? input : {};
 
+  const safeInnerPayload =
+    safeInput.payload &&
+    typeof safeInput.payload === "object" &&
+    !Array.isArray(safeInput.payload)
+      ? safeInput.payload
+      : null;
+
+  const taskIdFromValue = (value) =>
+    typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+
+  const taskId =
+    taskIdFromValue(safeInput.taskId) ??
+    taskIdFromValue(safeInput.task_id) ??
+    taskIdFromValue(safeInnerPayload?.taskId) ??
+    taskIdFromValue(safeInnerPayload?.task_id) ??
+    null;
+
   const nodeVersion = safeInput.node ?? process.version.replace(/^v/, "");
 
   const inputQuality =
@@ -67,18 +84,27 @@ export function normalizeVerifyPayload(input) {
     tool: "n/a",
   });
 
+  const quality = {
+    ...inputQuality,
+    tests,
+    coverage,
+    lint,
+    audit,
+    mutation,
+    complexity,
+  };
+
   return {
     ...safeInput,
     node: nodeVersion,
-    quality: {
-      ...inputQuality,
-      tests,
-      coverage,
-      lint,
-      audit,
-      mutation,
-      complexity,
+    ...(taskId ? { taskId, task_id: taskId } : {}),
+    payload: {
+      ...(safeInnerPayload ?? {}),
+      ...(taskId ? { taskId, task_id: taskId } : {}),
+      quality,
     },
+    quality,
+    qualityReport: quality,
+    quality_report: quality,
   };
 }
-
