@@ -52,8 +52,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { DataTable } from '~/shared/ui'
-import type { DataTableColumn } from '~/shared/ui'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 
 interface Provider {
   id: string

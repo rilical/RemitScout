@@ -187,7 +187,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { PulseFilters, AmountBucket, FundingMethod, PayoutMethod } from '~/types/pulse'
 import { getCorridors, getCorridorBySlug } from '~/lib/pulseApi'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 import { formatUpdatedLabel } from '~/shared/lib/format'
 
 interface Props {

@@ -198,7 +198,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { getChartById } from '~/lib/pulseChartRegistry'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 
 interface Props {
   chartId?: string

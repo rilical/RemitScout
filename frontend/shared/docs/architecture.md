@@ -9,7 +9,7 @@ This doc proposes a **bounded-context map** and a pragmatic module layout for th
 
 - **Business**: reduce UI regressions + speed up feature delivery by cutting duplication and making ownership obvious.
 - **Engineering**: stop “god pages” (e.g. `frontend/pages/dashboard.vue`) from accumulating mixed responsibilities.
-- **UX**: enforce consistent layout + table patterns (via `shared/ui/CenteredPage` + `shared/ui/DataTable`).
+- **UX**: enforce consistent layout + table patterns (via `ui/CenteredPage` + `ui/DataTable`).
 
 ## Nuxt constraint (important)
 
@@ -147,7 +147,7 @@ Rules:
 
 ## Recommended first 2 page migrations (practical)
 
-Pick pages with high table duplication so `shared/ui/DataTable` pays for itself immediately.
+Pick pages with high table duplication so `ui/DataTable` pays for itself immediately.
 
 1) `frontend/pages/enterprise/exports.vue`
    - Multiple `<table>` blocks; easy win to adopt `CenteredPage` + `DataTable` “dashboard” variant.

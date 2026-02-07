@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { CenteredPage, Icon } from '~/shared/ui'
+import { CenteredPage, Icon } from '~/ui'
 
 const previewFailed = ref(false)
 

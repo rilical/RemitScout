@@ -51,7 +51,7 @@
 import { computed } from 'vue'
 import type { ChartCategory, ChartData, PulseFilters } from '~/types/pulse'
 import { getAllCategories, isRangeGated } from '~/lib/pulseChartRegistry'
-import { Icon, type IconName } from '~/shared/ui'
+import { Icon, type IconName } from '~/ui'
 
 interface Props {
   chartData: Record<string, ChartData | null>

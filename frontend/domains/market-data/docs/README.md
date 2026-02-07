@@ -5,7 +5,7 @@
 ## Boundaries
 
 - Owns: market/rates query models, domain-specific formatting and presentation logic.
-- Does not own: generic table/layout primitives (shared/ui), auth (platform), HTTP client (platform/http).
+- Does not own: generic table/layout primitives (ui), auth (platform), HTTP client (platform/http).
 
 ## Public exports
 

@@ -28,7 +28,7 @@ export default createConfigForNuxt({
       patterns: [
         {
           group: ['@heroicons/vue/**'],
-          message: 'Use `~/shared/ui/Icon` (Icon wrapper) instead of importing heroicons directly.',
+          message: 'Use `~/ui/Icon` (Icon wrapper) instead of importing heroicons directly.',
         },
       ],
     }],

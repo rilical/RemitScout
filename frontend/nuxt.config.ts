@@ -387,11 +387,6 @@ export default defineNuxtConfig({
 
   // Vite Configuration
   vite: {
-    ssr: {
-      // Ensure Nitro never sees raw `.vue` files during prerender bundling.
-      // Without this, Vite SSR can externalize these SFC imports, leaving Nitro/Rollup to parse them as JS.
-      noExternal: [/\/shared\/ui\/.*\.vue$/],
-    },
     server: {
       fs: {
         allow: [workspaceRoot],

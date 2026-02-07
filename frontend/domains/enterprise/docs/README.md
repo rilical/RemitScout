@@ -5,7 +5,7 @@
 ## Boundaries
 
 - Owns: enterprise UX flows, exports/institutions presentation.
-- Does not own: shared UI primitives (shared/ui), auth primitives (platform), HTTP client (platform/http).
+- Does not own: shared UI primitives (ui), auth primitives (platform), HTTP client (platform/http).
 
 ## Public exports
 

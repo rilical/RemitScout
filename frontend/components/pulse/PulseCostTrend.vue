@@ -210,7 +210,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getCostTrendData } from '~/lib/pulseApi'
 import type { CostTrendData } from '~/types/remit'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil, formatMonthDay, formatPercent } from '~/shared/lib/format'
 
 const store = usePulseStore()

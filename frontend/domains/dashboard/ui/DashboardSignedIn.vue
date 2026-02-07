@@ -4197,7 +4197,7 @@ import type { LocationQueryRaw } from 'vue-router'
 import AdPlacement from '~/components/ads/AdPlacement.vue'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
-import { CenteredPage, DataTable, type DataTableColumn, Icon, type IconName } from '~/shared/ui'
+import { CenteredPage, DataTable, type DataTableColumn, Icon, type IconName } from '~/ui'
 import {
   formatDate,
   formatDateTime,

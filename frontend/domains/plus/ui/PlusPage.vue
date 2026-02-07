@@ -763,7 +763,7 @@
 <script setup lang="ts">
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
-import { CenteredPage, Icon } from '~/shared/ui'
+import { CenteredPage, Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
 const { isAuthenticated } = useAuth()

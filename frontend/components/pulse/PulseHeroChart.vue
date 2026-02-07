@@ -127,7 +127,7 @@ import {
 import VChart from 'vue-echarts'
 import { usePulseStore } from '~/stores/pulse'
 import { getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
-import { ChartCard, Icon } from '~/shared/ui'
+import { ChartCard, Icon } from '~/ui'
 import { formatDateTime, formatMoney, formatNumber } from '~/shared/lib/format'
 
 use([

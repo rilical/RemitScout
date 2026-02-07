@@ -5,7 +5,7 @@
 ## Boundaries
 
 - Owns: provider list/profile/review presentation + outbound tracking UX.
-- Does not own: shared UI primitives (shared/ui), generic formatting (shared/lib).
+- Does not own: shared UI primitives (ui), generic formatting (shared/lib).
 
 ## Public exports
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import DataTable from '~/shared/ui/DataTable/DataTable.vue'
+import DataTable from '~/ui/DataTable/DataTable.vue'
 
 describe('DataTable', () => {
   it('renders columns and rows', () => {

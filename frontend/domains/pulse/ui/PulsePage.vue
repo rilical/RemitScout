@@ -1055,7 +1055,7 @@ import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, Pul
 import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary } from '~/domains/pulse/infrastructure/pulseApi'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 import { formatNumber as formatCount, formatUpdatedLabel } from '~/shared/lib/format'
 import { COUNTRIES, getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies'
 import { useEntitlements } from '~/composables/useEntitlements'

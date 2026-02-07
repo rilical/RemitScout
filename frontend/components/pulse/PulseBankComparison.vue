@@ -135,7 +135,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import type { BankComparisonData } from '~/types/remit'
 import { getBankComparisonData } from '~/lib/pulseApi'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
 const store = usePulseStore()

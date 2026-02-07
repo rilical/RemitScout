@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
-import { formatUpdatedLabel } from '../../lib/format'
 import EmptyState from '../states/EmptyState.vue'
 import ErrorState from '../states/ErrorState.vue'
 import LoadingState from '../states/LoadingState.vue'
+import { formatUpdatedLabel } from '~/shared/lib/format'
 
 type ChartCardVariant = 'terminal' | 'consumer'
 

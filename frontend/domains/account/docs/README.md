@@ -5,7 +5,7 @@
 ## Boundaries
 
 - Owns: sign-in/up flows, password reset, subscription UX (pages/components).
-- Does not own: low-level auth/session primitives (platform), shared UI (shared/ui).
+- Does not own: low-level auth/session primitives (platform), shared UI (ui).
 
 ## Public exports
 

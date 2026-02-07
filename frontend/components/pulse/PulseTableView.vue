@@ -177,8 +177,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import type { TableData, TableRow, PulseFilters, TimeRange } from '~/types/pulse'
 import { getTableData, formatCurrency as formatCurrencyUtil } from '~/lib/pulseApi'
-import { DataTable, Icon } from '~/shared/ui'
-import type { DataTableColumn, DataTableSort } from '~/shared/ui'
+import { DataTable, Icon } from '~/ui'
+import type { DataTableColumn, DataTableSort } from '~/ui'
 import { formatNumber, formatShortDateTime } from '~/shared/lib/format'
 
 interface Props {

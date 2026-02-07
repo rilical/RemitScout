@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 import { formatRelativeTime } from '~/shared/lib/format'
 
 interface Props {

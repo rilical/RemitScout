@@ -200,7 +200,7 @@ import { usePulseStore } from '~/stores/pulse'
 import { getChartData } from '~/lib/pulseApi'
 import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
 import type { ChartSeries } from '~/types/pulse'
-import { EmptyState, Icon } from '~/shared/ui'
+import { EmptyState, Icon } from '~/ui'
 
 const store = usePulseStore()
 

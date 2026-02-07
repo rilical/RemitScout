@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import CenteredPage from '~/shared/ui/CenteredPage/CenteredPage.vue'
+import CenteredPage from '~/ui/CenteredPage/CenteredPage.vue'
 
 describe('CenteredPage', () => {
   it('renders title and subtitle via props', () => {

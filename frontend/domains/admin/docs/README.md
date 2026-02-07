@@ -5,7 +5,7 @@
 ## Boundaries
 
 - Owns: internal admin query models + dense console UI.
-- Does not own: shared UI primitives (shared/ui), generic platform logging/telemetry primitives (platform).
+- Does not own: shared UI primitives (ui), generic platform logging/telemetry primitives (platform).
 
 ## Public exports
 

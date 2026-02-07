@@ -162,7 +162,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getMarketSnapshot, type MarketSnapshotData } from '~/lib/pulseApi'
 import { getCorridorUrl } from '~/utils/country-slugs'
-import { Icon } from '~/shared/ui'
+import { Icon } from '~/ui'
 import { formatMoney, formatNumber as formatNumberValue } from '~/shared/lib/format'
 
 const store = usePulseStore()
