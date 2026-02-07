@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "engines": {
-    "node": "20.18.x"
+    "node": ">=20.19.0 <21"
   },
   "volta": {
-    "node": "20.18.1",
+    "node": "20.19.0",
     "pnpm": "10.19.0"
   },
   "scripts": {
@@ -18,7 +18,7 @@
     "start:plane-c": "node dist/plane-c/server.js",
     "start:plane-b": "node dist/plane-b/ingest.js",
     "lint": "eslint . --ignore-path ../.eslintignore",
-    "pretest": "node -e \"const [major, minor] = process.versions.node.split('.').map(Number); if (!(major === 20 && minor === 18)) { console.error('ERROR: backend tests require Node 20.18.x (current: ' + process.versions.node + '). Run: nvm use'); process.exit(1); }\"",
+    "pretest": "node -e \"const [major, minor] = process.versions.node.split('.').map(Number); if (!(major === 20 && minor >= 19)) { console.error('ERROR: backend tests require Node 20.19+ (current: ' + process.versions.node + '). Run: nvm use'); process.exit(1); }\"",
     "test": "vitest run --coverage",
     "test:watch": "vitest watch",
     "test:ui": "vitest --ui",

@@ -12,7 +12,7 @@ Goal: establish a repo-specific baseline of the frontend stack (framework/build 
 ## Runtime + build tooling
 
 - **Node / pnpm**:
-  - Root pins Node 20.18.x via `package.json` (`engines.node`) + Volta (`volta.node`) and `.nvmrc`.
+- Root pins Node 20.19.x via `package.json` (`engines.node`) + Volta (`volta.node`) and `.nvmrc`.
   - Frontend pins Node via `frontend/.nvmrc` and also enforces `engines.node` in `frontend/package.json`.
   - Package manager: `pnpm@10.19.0` (`frontend/package.json`, root `package.json`).
 
@@ -134,4 +134,3 @@ This frontend acts as a small BFF (backend-for-frontend) in front of Plane A.
 
 - Suspicious directories: `frontend/--host/` and `frontend/--port/` exist (likely accidental local-dev artifacts; verify and remove when safe).
 - Nuxt env detection uses `NODE_ENV === 'staging'` in `frontend/nuxt.config.ts`; Node’s conventional values are usually `development|production` and staging is often signaled via a separate `ENVIRONMENT` variable. This is easy to misconfigure and can change ISR/ads/analytics behavior.
-

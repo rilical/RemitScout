@@ -49,6 +49,15 @@ node scripts/verifier/run-frontend-quality.mjs --emit verify.passed --dry-run \
 node scripts/verifier/run-frontend-quality.mjs --emit verify.passed
 ```
 
+### Correlate quality reports to tasks
+
+If the orchestration loop needs to associate a `verify.*` event with a specific
+task, pass the task id through so it lands on the emitted payload:
+
+```bash
+node scripts/verifier/run-frontend-quality.mjs --full --task-id task-123 --emit verify.passed
+```
+
 ## Frontend-scoped verifier (recommended during frontend polish loops)
 
 To avoid backend lint debt blocking frontend audit iterations, default behavior is

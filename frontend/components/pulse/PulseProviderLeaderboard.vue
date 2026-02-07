@@ -5,7 +5,7 @@
         Provider Leaderboard
       </h2>
       <p class="text-sm text-neutral-400">
-        Ranked by delivered amount for {{ store.corridor.label }} | {{ store.amount.toLocaleString() }} {{ store.corridor.fromCode }}
+        Ranked by delivered amount for {{ store.corridor.label }} | {{ amountDisplay }}
       </p>
     </div>
 
@@ -15,25 +15,7 @@
         class="flex h-32 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent" />
           Loading benchmark data...
         </div>
       </div>
@@ -88,18 +70,18 @@
                 {{ row.provider }}
               </td>
               <td class="px-3 py-3 text-right font-semibold text-white">
-                {{ currencySymbol }}{{ formatNumber(row.deliveredAmount) }}
+                {{ deliveredMoney(row.deliveredAmount) }}
               </td>
               <td class="px-3 py-3 text-right">
                 <div class="font-semibold text-white">
-                  ${{ row.totalCost.toFixed(2) }}
+                  {{ sendMoney(row.totalCost) }}
                 </div>
                 <div class="text-xs text-neutral-500">
                   {{ row.totalCostBps }} bps
                 </div>
               </td>
               <td class="px-3 py-3 text-right text-neutral-300">
-                ${{ row.fee.toFixed(2) }}
+                {{ sendMoney(row.fee) }}
               </td>
               <td class="px-3 py-3 text-right text-neutral-300">
                 {{ row.markupBps }} bps
@@ -108,10 +90,10 @@
                 {{ row.speed }}
               </td>
               <td class="px-3 py-3 text-right text-neutral-300">
-                {{ row.winRate }}%
+                {{ formatPercent(row.winRate, { digits: 0 }) }}
               </td>
               <td class="px-3 py-3 text-right text-neutral-300">
-                {{ row.reliability.toFixed(1) }}%
+                {{ formatPercent(row.reliability, { digits: 1 }) }}
               </td>
             </tr>
           </tbody>
@@ -124,8 +106,7 @@
     </div>
 
     <PulseTrustStamp
-      v-if="lastUpdated"
-      :last-updated="lastUpdated"
+      :last-updated="store.lastUpdated || null"
     />
   </div>
 </template>
@@ -133,26 +114,26 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
-import { getProviderBenchmarkingData, getCurrencySymbol } from '~/lib/pulseApi'
+import { getProviderBenchmarkingData } from '~/lib/pulseApi'
 import type { PulseProviderBenchmarkRow } from '~/types/pulse'
+import { formatMoney, formatPercent } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
 const loading = ref(true)
 const rows = ref<PulseProviderBenchmarkRow[]>([])
-const lastUpdated = ref<string | null>(null)
 
-const currencySymbol = computed(() => getCurrencySymbol(store.corridor.toCode))
+const sendCurrency = computed(() => store.corridor.fromCode || 'USD')
+const recvCurrency = computed(() => store.corridor.toCode || 'USD')
 
-function formatNumber(value: number): string {
-  return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
-}
+const amountDisplay = computed(() => formatMoney(store.amount, { currency: sendCurrency.value, maximumFractionDigits: 0 }))
+const sendMoney = (amount: number) => formatMoney(amount, { currency: sendCurrency.value })
+const deliveredMoney = (amount: number) => formatMoney(amount, { currency: recvCurrency.value, maximumFractionDigits: 0 })
 
 async function loadData() {
   loading.value = true
   try {
     rows.value = await getProviderBenchmarkingData(store.corridor, store.timeframe, store.amount)
-    lastUpdated.value = new Date().toISOString()
   }
   catch (e) {
     console.error('Failed to load provider benchmarking data:', e)

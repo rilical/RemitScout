@@ -124,4 +124,3 @@ const toFlagEmoji = (code: string) => {
     </div>
   </div>
 </template>
-

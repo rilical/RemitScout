@@ -34,16 +34,36 @@ function normalizeVerifyPayload(input) {
   const safeInput =
     input && typeof input === "object" && !Array.isArray(input) ? input : {};
 
+  const safeInnerPayload =
+    safeInput.payload &&
+    typeof safeInput.payload === "object" &&
+    !Array.isArray(safeInput.payload)
+      ? safeInput.payload
+      : null;
+
+  const taskIdFromValue = (value) =>
+    typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+
+  const taskId =
+    taskIdFromValue(safeInput.taskId) ??
+    taskIdFromValue(safeInput.task_id) ??
+    taskIdFromValue(safeInnerPayload?.taskId) ??
+    taskIdFromValue(safeInnerPayload?.task_id) ??
+    null;
+
   const nodeVersion =
     safeInput.node ??
     process.version.replace(/^v/, "");
 
+  const plainObjectOrNull = (value) =>
+    value && typeof value === "object" && !Array.isArray(value) ? value : null;
+
   const inputQuality =
-    safeInput.quality &&
-    typeof safeInput.quality === "object" &&
-    !Array.isArray(safeInput.quality)
-      ? safeInput.quality
-      : {};
+    plainObjectOrNull(safeInput.quality) ??
+    plainObjectOrNull(safeInnerPayload?.quality) ??
+    plainObjectOrNull(safeInput.qualityReport) ??
+    plainObjectOrNull(safeInput.quality_report) ??
+    {};
 
   const normalizeObject = (value, defaults) => {
     if (!value || typeof value !== "object" || Array.isArray(value)) return defaults;
@@ -102,6 +122,7 @@ function normalizeVerifyPayload(input) {
   const normalized = {
     ...safeInput,
     node: nodeVersion,
+    ...(taskId ? { taskId, task_id: taskId } : {}),
     quality: {
       ...inputQuality,
       tests,
@@ -112,6 +133,21 @@ function normalizeVerifyPayload(input) {
       complexity,
     },
   };
+
+  // Backwards/forwards compatibility for workflow consumers that expect
+  // different nesting or field naming.
+  if (taskId) {
+    const innerPayload = plainObjectOrNull(normalized.payload) ?? {};
+    normalized.payload = { ...innerPayload, taskId, task_id: taskId };
+  }
+
+  // Some consumers look for quality under alternative keys.
+  normalized.qualityReport = normalized.quality;
+  normalized.quality_report = normalized.quality;
+  {
+    const innerPayload = plainObjectOrNull(normalized.payload) ?? {};
+    normalized.payload = { ...innerPayload, quality: normalized.quality };
+  }
 
   return normalized;
 }

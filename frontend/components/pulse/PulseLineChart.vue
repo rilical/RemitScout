@@ -198,6 +198,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
 import type { ChartSeries, ChartPoint } from '~/types/pulse'
+import { formatDate as formatFullDate, formatMonthDay, formatNumber } from '~/shared/lib/format'
 
 interface Props {
   series: ChartSeries[]
@@ -303,7 +304,7 @@ const xAxisLabels = computed(() => {
     const point = points[idx]
     return {
       x: point.x,
-      text: formatDate(point.timestamp),
+      text: formatAxisDate(point.timestamp),
     }
   })
 })
@@ -326,11 +327,7 @@ const tooltipData = computed(() => {
   if (!point) return null
 
   return {
-    date: new Date(point.timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }),
+    date: formatFullDate(new Date(point.timestamp)),
     values: renderedSeries.value.map(s => ({
       label: s.label,
       color: s.color,
@@ -358,7 +355,7 @@ function formatValue(value: number): string {
     case 'bps':
       return `${Math.round(value)} bps`
     case 'currency':
-      return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+      return formatNumber(value, { maximumFractionDigits: 0 })
     case 'rate':
       return value.toFixed(4)
     case 'minutes':
@@ -371,11 +368,8 @@ function formatValue(value: number): string {
   }
 }
 
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
+function formatAxisDate(timestamp: number): string {
+  return formatMonthDay(new Date(timestamp))
 }
 
 function getLinePath(points: { x: number, y: number }[]): string {

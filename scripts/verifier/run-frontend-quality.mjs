@@ -48,11 +48,27 @@ function parseArgs(args) {
         ? args[emitIdx + 1]
         : null;
 
+  const taskIdIdx = args.indexOf("--task-id");
+  const taskId =
+    taskIdIdx === -1
+      ? null
+      : taskIdIdx + 1 < args.length
+        ? args[taskIdIdx + 1]
+        : null;
+
+  if (taskIdIdx !== -1 && (!taskId || taskId.startsWith("--"))) {
+    // Missing value (or next token is another flag).
+    // eslint-disable-next-line no-console
+    console.error("Missing value for --task-id <id>");
+    process.exit(2);
+  }
+
   return {
     runUnitTests: args.includes("--run-unit-tests"),
     full: args.includes("--full"),
     dryRun: args.includes("--dry-run"),
     emitTopic,
+    taskId,
   };
 }
 
@@ -101,7 +117,9 @@ function getFrontendLintTargets({ full }) {
 }
 
 function main() {
-  const { runUnitTests, full, emitTopic, dryRun } = parseArgs(process.argv.slice(2));
+  const { runUnitTests, full, emitTopic, dryRun, taskId } = parseArgs(
+    process.argv.slice(2),
+  );
 
   if (emitTopic && emitTopic !== "verify.passed" && emitTopic !== "verify.failed") {
     // eslint-disable-next-line no-console
@@ -173,6 +191,7 @@ function main() {
 
   const payload = {
     scope: "frontend",
+    ...(taskId ? { taskId } : {}),
     node: process.version.replace(/^v/, ""),
     quality: {
       tests: {
@@ -229,6 +248,17 @@ function main() {
   };
 
   const payloadJson = JSON.stringify(payload);
+
+  const checksPassing =
+    payload.quality.tests.status !== "fail" && payload.quality.lint.status !== "fail";
+
+  if (emitTopic === "verify.passed" && !dryRun && !checksPassing) {
+    // eslint-disable-next-line no-console
+    console.error(
+      "Refusing to emit verify.passed: one or more quality checks failed. Run with --emit verify.failed.",
+    );
+    process.exit(1);
+  }
 
   if (emitTopic) {
     // Always normalize through the single choke-point, so quality.* keys are stable.

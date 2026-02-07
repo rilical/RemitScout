@@ -15,25 +15,7 @@
         class="flex h-32 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent" />
           Scanning events...
         </div>
       </div>
@@ -94,6 +76,7 @@ import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getPulseEventFeed } from '~/lib/pulseApi'
 import type { PulseEventItem } from '~/types/pulse'
+import { formatShortDateTime } from '~/shared/lib/format'
 
 const store = usePulseStore()
 const events = ref<PulseEventItem[]>([])
@@ -116,12 +99,7 @@ function getSeverityText(level: PulseEventItem['severity']) {
 }
 
 function formatTimestamp(value: string): string {
-  return new Date(value).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatShortDateTime(value)
 }
 
 async function loadData() {

@@ -4,10 +4,10 @@
   "private": true,
   "license": "MIT",
   "engines": {
-    "node": "20.18.x"
+    "node": ">=20.19.0 <21"
   },
   "volta": {
-    "node": "20.18.1",
+    "node": "20.19.0",
     "pnpm": "10.19.0"
   },
   "scripts": {
@@ -15,7 +15,8 @@
     "lint:compliance": "eslint backend",
     "dev:all": "bash scripts/dev/start-local.sh",
     "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh",
-    "verifier:contract": "node scripts/verifier/check-quality-contract.mjs"
+    "verifier:contract": "node scripts/verifier/check-quality-contract.mjs",
+    "verifier:workflow-consumer-contract": "node scripts/verifier/check-workflow-consumer.mjs"
   },
   "devDependencies": {
     "eslint": "^8.50.0",

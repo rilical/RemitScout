@@ -41,7 +41,7 @@ export const TRANSPARENCY_TILES: readonly MarketingTile[] = [
 export const TRUST_BADGES = {
   noPayToRank: { label: 'No pay-to-rank', icon: ShieldCheckIcon },
   quotesTimestamped: { label: 'Timestamped quotes', icon: ClockIcon },
-  weDontMoveMoney: { label: "We don't move money", icon: LockClosedIcon },
+  weDontMoveMoney: { label: 'We don\'t move money', icon: LockClosedIcon },
   reportAProblem: { label: 'Report a problem', icon: EnvelopeIcon },
 } as const
 
@@ -51,4 +51,3 @@ export const QUICK_LINKS = {
   founder: { title: 'About the founder', description: 'Our story and mission', icon: UserCircleIcon, to: '/about' },
   report: { title: 'Report a problem', description: 'Help us improve accuracy', icon: EnvelopeIcon, to: '/contact' },
 } as const
-

@@ -4,19 +4,11 @@
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-          <svg
-            class="h-5 w-5 text-brand-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-            />
-          </svg>
+          <Icon
+            name="arrow-trending-up"
+            :size="20"
+            class="text-brand-600"
+          />
         </div>
         <div>
           <h2 class="text-lg font-bold text-white">
@@ -47,25 +39,7 @@
         class="flex h-48 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent" />
           Loading trend data...
         </div>
       </div>
@@ -80,12 +54,12 @@
                 class="text-xs font-semibold"
                 :class="trendDirection === 'down' ? 'text-brand-600' : 'text-danger-600'"
               >
-                {{ trendDirection === 'down' ? '↓' : '↑' }} {{ Math.abs(trendPercent).toFixed(1) }}%
+                {{ trendDirection === 'down' ? '↓' : '↑' }} {{ formatPercent(Math.abs(trendPercent), { digits: 1 }) }}
               </span>
             </div>
             <div class="flex items-baseline gap-2">
-              <span class="text-xl font-bold text-white">${{ currentAvgCost.toFixed(2) }}</span>
-              <span class="text-sm text-neutral-500">from ${{ previousAvgCost.toFixed(2) }}</span>
+              <span class="text-xl font-bold text-white">{{ money(currentAvgCost) }}</span>
+              <span class="text-sm text-neutral-500">from {{ money(previousAvgCost) }}</span>
             </div>
           </div>
           <div class="rounded-lg bg-neutral-900 p-4">
@@ -236,13 +210,18 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getCostTrendData } from '~/lib/pulseApi'
 import type { CostTrendData } from '~/types/remit'
+import { Icon } from '~/shared/ui'
+import { formatMoney as formatMoneyUtil, formatMonthDay, formatPercent } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
 const loading = ref(true)
 const ranges = ['7D', '30D', '90D']
 const selectedRange = ref('7D')
-const lastUpdated = ref(new Date().toISOString())
+const lastUpdated = ref<string | null>(null)
+
+const sendCurrency = computed(() => store.corridor.fromCode || 'USD')
+const money = (amount: number) => formatMoneyUtil(amount, { currency: sendCurrency.value })
 
 const trendData = ref<number[]>([])
 const costTrendRows = ref<CostTrendData[]>([])
@@ -292,7 +271,7 @@ const startLabel = computed(() => {
   const days = selectedDays.value
   const date = new Date()
   date.setDate(date.getDate() - days)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return formatMonthDay(date)
 })
 
 const linePath = computed(() => {
@@ -337,7 +316,7 @@ async function loadData() {
       .sort((a, b) => b.winDays - a.winDays)
 
     const lastDate = windowed[windowed.length - 1]?.date
-    lastUpdated.value = lastDate ? new Date(lastDate).toISOString() : new Date().toISOString()
+    lastUpdated.value = lastDate ? new Date(lastDate).toISOString() : (store.lastUpdated || null)
   }
   catch (e) {
     console.error('Failed to load cost trend:', e)

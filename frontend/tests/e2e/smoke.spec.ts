@@ -24,9 +24,13 @@ test('legal + legacy redirects exist', async ({ page }) => {
   await expect(page).toHaveURL(/\/learn\/providers/)
 })
 
-test('plus + pulse surfaces load (logged out)', async ({ page }) => {
+test('dashboard + plus + pulse surfaces load (logged out)', async ({ page }) => {
+  await page.goto('/dashboard')
+  await expect(page.getByRole('heading', { name: /your transfer dashboard/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /create free account/i })).toBeVisible()
+
   await page.goto('/plus')
-  await expect(page.getByRole('heading', { name: /never miss the perfect rate/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /never miss a great rate/i })).toBeVisible()
   await expect(page.getByRole('heading', { name: /choose your plan/i })).toBeVisible()
 
   await page.goto('/pulse')

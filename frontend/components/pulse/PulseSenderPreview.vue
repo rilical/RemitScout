@@ -69,7 +69,7 @@
             Live Provider Quotes
           </h2>
           <p class="text-sm text-neutral-400">
-            Example rates for ${{ amount.toLocaleString() }} {{ fromCurrency }} → {{ toCurrency }}
+            Example rates for {{ amountLabel }} ({{ fromCurrency }} → {{ toCurrency }})
           </p>
         </div>
         <div class="text-sm">
@@ -115,10 +115,10 @@
                 class="text-lg font-bold"
                 :class="index === 0 ? 'text-brand-600' : 'text-white'"
               >
-                {{ toSymbol }}{{ quote.recipientGets.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}
+                {{ formatMoney(quote.recipientGets, { currency: toCurrency, maximumFractionDigits: 0 }) }}
               </div>
               <div class="flex items-center justify-end gap-2 text-xs">
-                <span class="text-neutral-500">Fee: ${{ quote.fee.toFixed(2) }}</span>
+                <span class="text-neutral-500">Fee: {{ formatMoney(quote.fee, { currency: fromCurrency, maximumFractionDigits: 2 }) }}</span>
                 <span class="text-neutral-600">•</span>
                 <span class="rounded bg-neutral-700 px-1.5 py-0.5 text-neutral-300">
                   {{ quote.markupBps }} bps
@@ -145,6 +145,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatMoney } from '~/shared/lib/format'
 
 const sendScore = 86
 const amount = 1000
@@ -152,7 +153,8 @@ const fromCurrency = 'USD'
 const toCurrency = 'PHP'
 const corridorLabel = 'US → PH'
 const midMarket = 56.1234
-const toSymbol = '₱'
+
+const amountLabel = computed(() => formatMoney(amount, { currency: fromCurrency, maximumFractionDigits: 0 }))
 
 const quotes = [
   { provider: 'Wise', recipientGets: 55600, fee: 3.99, markupBps: 42, speed: 'Minutes', color: '#10B981' },

@@ -68,6 +68,7 @@ hats:
       - Default mode is diff-scoped (only checks changed `frontend/` files).
       - Use `--full` to force full frontend lint/typecheck.
       - Use `--run-unit-tests` to attempt Vitest.
+      - If the triggering event includes `payload.taskId`, pass it through via `--task-id <id>`.
       - Use `--dry-run` to print the normalized JSON payload without emitting.
 
       ### Suggested commands (repo default)
@@ -106,4 +107,10 @@ hats:
       node scripts/verifier/run-frontend-quality.mjs --emit verify.passed
       # or, if checks did not pass
       node scripts/verifier/run-frontend-quality.mjs --emit verify.failed
+      ```
+
+      Task correlation example:
+
+      ```bash
+      node scripts/verifier/run-frontend-quality.mjs --full --task-id task-123 --emit verify.passed
       ```

@@ -2,19 +2,11 @@
   <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
     <div class="border-b border-neutral-700 px-6 py-4">
       <div class="flex items-center gap-3 mb-2">
-        <svg
-          class="h-5 w-5 text-brand-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
+        <Icon
+          name="chart-bar"
+          :size="20"
+          class="text-brand-600"
+        />
         <h2 class="text-lg font-bold text-white">
           OPERATIONAL COVERAGE
         </h2>
@@ -49,12 +41,13 @@
             unit="percent"
             :show-area="false"
           />
-          <div
+          <EmptyState
             v-else
-            class="text-xs text-neutral-500"
-          >
-            No data yet
-          </div>
+            title="No data yet"
+            description="No samples available for the selected range."
+            variant="terminal"
+            mode="inline"
+          />
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
@@ -91,12 +84,13 @@
             :series="availabilitySeries"
             :show-area="false"
           />
-          <div
+          <EmptyState
             v-else
-            class="text-xs text-neutral-500"
-          >
-            No data yet
-          </div>
+            title="No data yet"
+            description="No samples available for the selected range."
+            variant="terminal"
+            mode="inline"
+          />
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
@@ -133,12 +127,13 @@
             :series="freshnessSeries"
             :show-area="false"
           />
-          <div
+          <EmptyState
             v-else
-            class="text-xs text-neutral-500"
-          >
-            No data yet
-          </div>
+            title="No data yet"
+            description="No samples available for the selected range."
+            variant="terminal"
+            mode="inline"
+          />
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
@@ -175,12 +170,13 @@
             :series="liquiditySeries"
             :show-area="false"
           />
-          <div
+          <EmptyState
             v-else
-            class="text-xs text-neutral-500"
-          >
-            No data yet
-          </div>
+            title="No data yet"
+            description="No samples available for the selected range."
+            variant="terminal"
+            mode="inline"
+          />
         </div>
         <div class="mt-3 flex gap-2">
           <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
@@ -204,6 +200,7 @@ import { usePulseStore } from '~/stores/pulse'
 import { getChartData } from '~/lib/pulseApi'
 import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
 import type { ChartSeries } from '~/types/pulse'
+import { EmptyState, Icon } from '~/shared/ui'
 
 const store = usePulseStore()
 

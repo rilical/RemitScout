@@ -200,6 +200,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { usePulseStore, POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
 import { getPulseCoverageSummary } from '~/lib/pulseApi'
 import type { PulseCoverageSummary } from '~/types/pulse'
+import { formatDateTime, formatNumber as formatNumberValue } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
@@ -228,11 +229,11 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function formatNumber(value: number): string {
-  return value.toLocaleString('en-US')
+  return formatNumberValue(value)
 }
 
 function formatTimestamp(value: string): string {
-  return new Date(value).toISOString().replace('T', ' ').slice(0, 16)
+  return formatDateTime(value)
 }
 
 function formatMethods(methods: string[]): string {

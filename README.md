@@ -13,7 +13,7 @@ This repo uses lint rules, CI checks, and contribution guidelines to enforce the
 
 ## Local Development (Docker)
 Prereqs:
-- Node `20.18.x` (repo pin: `.nvmrc`; optional: Volta via `package.json`)
+- Node `20.19.x` (repo pin: `.nvmrc`; optional: Volta via `package.json`)
 - pnpm (repo pin: `package.json#packageManager`)
 
 1) Start Postgres + Redis:

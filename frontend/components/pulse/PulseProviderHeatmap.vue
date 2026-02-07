@@ -157,6 +157,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getProviderHeatmapData, type ProviderHeatmapData, type ProviderHeatmapDay } from '~/lib/pulseApi'
 import { PROVIDER_COLORS } from '~/lib/pulseChartRegistry'
+import { formatMonthDay } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
@@ -187,13 +188,13 @@ function getProviderColor(provider: string): string {
 }
 
 function formatDayLabel(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return formatMonthDay(new Date(timestamp))
 }
 
 function getStartLabel(): string {
   if (!data.value || data.value.days.length === 0) return ''
   const firstDay = data.value.days[0]
-  return new Date(firstDay.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return formatMonthDay(new Date(firstDay.timestamp))
 }
 
 async function loadData() {
