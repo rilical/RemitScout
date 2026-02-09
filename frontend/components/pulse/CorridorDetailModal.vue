@@ -34,7 +34,7 @@
                 {{ corridorData.from }} → {{ corridorData.to }}
               </h2>
               <p class="text-sm text-slate-400">
-                Live corridor data
+                Corridor snapshot
               </p>
             </div>
           </div>

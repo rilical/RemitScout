@@ -55,7 +55,7 @@
           </div>
 
           <p class="mt-4 max-w-xs text-center text-sm text-neutral-300">
-            Example preview. Plus unlocks real corridor timing signals and live provider quotes.
+            Example preview. Plus unlocks corridor timing signals and deeper history.
           </p>
         </div>
       </div>
@@ -66,7 +66,7 @@
       <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
         <div>
           <h2 class="text-lg font-bold text-white">
-            Live Provider Quotes
+            Sample Provider Quotes
           </h2>
           <p class="text-sm text-neutral-400">
             Example rates for {{ amountLabel }} ({{ fromCurrency }} → {{ toCurrency }})
@@ -131,7 +131,7 @@
         <div class="mt-4 border-t border-neutral-700 pt-4">
           <div class="flex items-center justify-between gap-3">
             <div class="text-xs text-neutral-500">
-              Preview only. Real quotes update live with Plus.
+              Preview only. Quotes are shown as an example.
             </div>
             <div class="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-semibold text-neutral-300">
               Compare all providers

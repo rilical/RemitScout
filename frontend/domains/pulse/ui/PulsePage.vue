@@ -393,7 +393,7 @@
                     :to="compareCorridorUrl"
                     class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-700 transition-colors"
                   >
-                    Compare live quotes
+                    Compare quotes
                   </NuxtLink>
                   <button
                     type="button"
@@ -742,7 +742,7 @@
                   Risk & Anomalies
                 </h2>
                 <p class="text-sm text-neutral-400">
-                  Live event feed with anomaly signals and recommended actions.
+                  Event feed with anomaly signals and recommended actions.
                 </p>
               </div>
               <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">

@@ -22,7 +22,7 @@
     </button>
 
     <div class="flex flex-wrap items-center gap-2 px-6 pb-4 text-xs text-neutral-400">
-      <span>Updated every 15 min</span>
+      <span>Updated periodically</span>
       <span class="text-neutral-600">|</span>
       <span>All-in cost = fee + FX markup</span>
       <span class="text-neutral-600">|</span>
