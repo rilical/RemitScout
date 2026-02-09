@@ -75,6 +75,9 @@ tools/aws-cli/
 .cache/
 .temp/
 
+# CI/contract artifacts (local-only)
+artifacts/
+
 # Codex/agent artifacts (local-only)
 codex-aarch64-apple-darwin.dmg
 
