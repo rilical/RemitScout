@@ -31,7 +31,7 @@
 
       <!-- Charts Grid -->
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <PulseChartCard
+        <ChartPreviewCard
           v-for="chart in category.charts"
           :key="chart.id"
           :metadata="chart"
@@ -52,6 +52,7 @@ import { computed } from 'vue'
 import type { ChartCategory, ChartData, PulseFilters } from '~/types/pulse'
 import { getAllCategories, isRangeGated } from '~/lib/pulseChartRegistry'
 import { Icon, type IconName } from '~/ui'
+import ChartPreviewCard from '~/domains/pulse/ui/ChartPreviewCard.vue'
 
 interface Props {
   chartData: Record<string, ChartData | null>
