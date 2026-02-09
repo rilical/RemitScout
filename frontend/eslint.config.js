@@ -74,7 +74,20 @@ export default createConfigForNuxt({
     '@stylistic/no-tabs': 'off',
     '@stylistic/no-mixed-spaces-and-tabs': 'off',
   },
-}).overrideRules({
+}).append({
+  name: 'scripts/relaxed',
+  files: ['scripts/**/*.mjs'],
+  rules: {
+    '@stylistic/arrow-parens': 'off',
+  },
+}).append({
+  name: 'generated/ignore',
+  ignores: [
+    'shared/lib/api/**',
+    'tmp/**',
+  ],
+})
+.overrideRules({
   // The current codebase still contains explicit `any` and intentionally-unused values.
   // Treat these as warnings so `pnpm lint` stays usable while we incrementally tighten.
   '@typescript-eslint/no-explicit-any': 'warn',

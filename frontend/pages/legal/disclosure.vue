@@ -61,7 +61,7 @@
         To keep <strong class="text-blue-600">Remit-Scout</strong> free for users, we generate revenue through
         clearly disclosed partnerships. For complete details, see our
         <NuxtLink
-          to="/how-we-make-money"
+          to="/legal/how-we-make-money"
           class="text-blue-600 hover:text-blue-700 underline font-semibold"
         >How We Make Money</NuxtLink> page.
       </p>
@@ -352,7 +352,7 @@ const relatedLinks = [
   {
     title: 'How We Make Money',
     description: 'Revenue sources and guardrails.',
-    to: '/how-we-make-money',
+    to: '/legal/how-we-make-money',
   },
   {
     title: 'Methodology',

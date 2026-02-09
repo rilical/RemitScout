@@ -168,7 +168,7 @@
             Full Methodology
           </NuxtLink>
           <NuxtLink
-            to="/how-we-make-money"
+            to="/legal/how-we-make-money"
             class="flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 transition-colors"
           >
             <Icon

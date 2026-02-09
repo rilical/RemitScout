@@ -593,7 +593,7 @@
                 Sorted by {{ sortLabels[sortBy] }}
               </span>
               <NuxtLink
-                to="/how-we-make-money"
+                to="/legal/how-we-make-money"
                 class="text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors underline underline-offset-2"
               >
                 How we rank
@@ -1670,7 +1670,7 @@
               Read our methodology →
             </NuxtLink>
             <NuxtLink
-              to="/how-we-make-money"
+              to="/legal/how-we-make-money"
               class="text-sm text-slate-400 hover:text-white transition-colors"
             >
               How we make money

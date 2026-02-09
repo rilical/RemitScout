@@ -620,8 +620,6 @@ const currentMobileStep = ref(1)
 const { recordSearch, useRecentSearches } = useRemittanceApi()
 const { request } = useApi()
 
-const familiesHelped = ref(1250)
-
 const fromCurrencyRef = computed({
   get: () => moneyForm.value.fromCurrency,
   set: (value) => { moneyForm.value.fromCurrency = value },
@@ -1216,35 +1214,15 @@ const handleMoneySubmit = async () => {
   }
 }
 
-// Update families helped based on recent searches
-const updateFamiliesHelped = () => {
-  const data = recentData.value as unknown as { data?: Array<{ createdAt: string }> } | null
-  if (data?.data && Array.isArray(data.data)) {
-    const today = new Date().toDateString()
-    const todaySearches = data.data.filter(
-      s => new Date(s.createdAt).toDateString() === today,
-    )
-    familiesHelped.value = 1250 + todaySearches.length
-  }
-}
-
 onMounted(() => {
   detectUserLocation()
-  updateFamiliesHelped()
   updateMapPreserveAspectRatio()
 
   const mediaQuery = window.matchMedia('(min-width: 640px)')
   const onMediaQueryChange = () => updateMapPreserveAspectRatio()
   mediaQuery.addEventListener('change', onMediaQueryChange)
 
-  // Update counter periodically
-  const interval = setInterval(() => {
-    familiesHelped.value += Math.floor(Math.random() * 3) + 1
-    updateFamiliesHelped()
-  }, 30000)
-
   onBeforeUnmount(() => {
-    clearInterval(interval)
     mediaQuery.removeEventListener('change', onMediaQueryChange)
   })
 })

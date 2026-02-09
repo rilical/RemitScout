@@ -26,7 +26,10 @@
     "test:unit:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "lint:debt": "node scripts/lint-debt.mjs",
+    "api:types:generate": "node scripts/gen-api-types.mjs",
+    "api:types:check": "pnpm api:types:generate && git diff --exit-code -- shared/lib/api/types.ts"
   },
   "keywords": [
     "nuxt",
@@ -55,6 +58,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "jsdom": "^25.0.1",
     "nuxt": "^3.20.2",
+    "openapi-typescript": "^7.12.0",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "typescript": "^5.9.3",

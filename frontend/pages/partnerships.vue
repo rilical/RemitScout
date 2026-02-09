@@ -1643,7 +1643,7 @@
           </p>
           <div class="flex flex-wrap items-center justify-center gap-3">
             <NuxtLink
-              to="/how-we-make-money"
+              to="/legal/how-we-make-money"
               class="text-sm text-white/90 hover:text-white underline"
             >
               How we make money
@@ -1704,15 +1704,6 @@ jsonLdBreadcrumb([
   { name: 'Partnerships', url: canonicalUrl },
 ])
 
-const hostname = (() => {
-  try {
-    return new URL(siteUrl).hostname
-  }
-  catch {
-    return 'Remit-Scout.com'
-  }
-})()
-
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
@@ -1722,13 +1713,10 @@ const organizationSchema = {
   'contactPoint': [
     {
       '@type': 'ContactPoint',
-      'contactType': 'customer support',
-      'email': `support@${hostname}`,
+      'contactType': 'partnerships',
+      'email': `partnership@remit-scout.com`,
       'url': `${siteUrl}/contact`,
     },
-  ],
-  'sameAs': [
-    'https://linkedin.com/company/Remit-Scout',
   ],
 }
 

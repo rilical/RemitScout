@@ -428,7 +428,7 @@ onMounted(() => {
         resizeObserver = new ResizeObserver(() => {
           handleScroll()
         })
-        resizeObserver.observe(scrollContainer.value)
+        resizeObserver.observe(scrollContainer.value as unknown as Element)
       }
     }
   })

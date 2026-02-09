@@ -343,6 +343,9 @@ export const buildApp = async () => {
     }
   })
 
+  // Register Swagger before routes so it captures OpenAPI paths.
+  await swaggerPlugin(app)
+
   app.register(quotesRoutes, { prefix: '/api/v1' })
   app.register(providersRoutes, { prefix: '/api/v1' })
   app.register(providerMetadataRoutes, { prefix: '/api/v1' })
@@ -412,9 +415,6 @@ export const buildApp = async () => {
   app.register(marketingRoutes, { prefix: '/api' })
   app.register(bankVsSpecialistRoutes, { prefix: '/api' })
   app.register(geoRoutes, { prefix: '/api' })
-
-  // Register Swagger plugin last to ensure all routes are registered
-  await app.register(swaggerPlugin)
 
   return app
 }

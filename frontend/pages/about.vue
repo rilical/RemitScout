@@ -890,7 +890,7 @@ const faqs = [
     question: 'How does Remit-Scout make money?',
     answer: `
       <p>We may earn an affiliate commission when you click a provider link and complete a purchase. These partnerships never influence rankings: providers cannot pay to rank higher.</p>
-      <p>Read our <a href="/how-we-make-money" class="font-semibold text-brand-600 hover:text-brand-700 underline">revenue disclosure</a>.</p>
+      <p>Read our <a href="/legal/how-we-make-money" class="font-semibold text-brand-600 hover:text-brand-700 underline">revenue disclosure</a>.</p>
     `,
   },
   {

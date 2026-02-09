@@ -1,6 +1,7 @@
 import { useHead } from '#app'
 import type { Author } from '~/utils/authors'
 import type { EsimPlan } from '~/utils/esim-data'
+import { BRAND } from '~/content/brand'
 
 interface BreadcrumbItem {
   name: string
@@ -26,6 +27,9 @@ export const useStructuredData = () => {
 
   // Organization schema
   const addOrganizationSchema = () => {
+    const sameAs = Object.values(BRAND.social)
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
@@ -33,15 +37,11 @@ export const useStructuredData = () => {
       'url': siteUrl,
       'logo': `${siteUrl}/logo.png`,
       'description': 'Independent comparison service for international money transfers and travel connectivity',
-      'sameAs': [
-        'https://twitter.com/Remit-Scout',
-        'https://facebook.com/Remit-Scout',
-        'https://linkedin.com/company/Remit-Scout',
-      ],
+      ...(sameAs.length ? { sameAs } : {}),
       'contactPoint': {
         '@type': 'ContactPoint',
         'contactType': 'customer service',
-        'email': 'support@Remit-Scout.com',
+        'email': BRAND.emails.support,
         'availableLanguage': ['English', 'Spanish', 'French'],
       },
       'address': {
@@ -231,11 +231,6 @@ export const useStructuredData = () => {
           '@type': 'Organization',
           'name': plan.provider,
         },
-      },
-      'aggregateRating': {
-        '@type': 'AggregateRating',
-        'ratingValue': 4.5,
-        'reviewCount': Math.floor(Math.random() * 1000) + 100,
       },
     }
 

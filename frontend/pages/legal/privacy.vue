@@ -589,9 +589,9 @@
           <p class="text-xs text-slate-500">
             For enterprise data processing agreements (DPA) or custom compliance documentation, contact
             <a
-              href="mailto:compliance@remitscout.com"
+              href="mailto:support@remit-scout.com"
               class="text-blue-400 hover:text-blue-300"
-            >compliance@remitscout.com</a>
+            >support@remit-scout.com</a>
           </p>
         </div>
       </div>

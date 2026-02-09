@@ -96,7 +96,8 @@
     "ci:integration-smoke": "tsx scripts/ci/integration-smoke.ts",
     "ci:seed-sanity": "tsx scripts/ci/seed-sanity.ts",
     "ci:config-validate": "tsx scripts/ci/validate-runtime-config.ts",
-    "ci:observability": "tsx scripts/ci/observability-check.ts"
+    "ci:observability": "tsx scripts/ci/observability-check.ts",
+    "ci:export-openapi": "tsx scripts/ci/export-openapi.ts --out ../artifacts/openapi.json --pretty"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.620.0",
@@ -129,6 +130,7 @@
     "archiver": "^7.0.1",
     "dotenv": "^17.2.3",
     "fastify": "^5.0.0",
+    "fastify-plugin": "^5.1.0",
     "jose": "^6.1.3",
     "nodemailer": "^7.0.12",
     "pdfkit": "^0.14.0",

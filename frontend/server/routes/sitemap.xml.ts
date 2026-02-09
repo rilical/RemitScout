@@ -61,7 +61,8 @@ export default defineEventHandler((event) => {
     { path: '/about', priority: '0.7', changefreq: 'monthly' },
     { path: '/faq', priority: '0.7', changefreq: 'monthly' },
     { path: '/methodology', priority: '0.7', changefreq: 'monthly' },
-    { path: '/how-we-make-money', priority: '0.7', changefreq: 'monthly' },
+    // Canonical legal route (legacy /how-we-make-money redirects here).
+    { path: '/legal/how-we-make-money', priority: '0.7', changefreq: 'monthly' },
     { path: '/contact', priority: '0.6', changefreq: 'monthly' },
     { path: '/media-kit', priority: '0.6', changefreq: 'monthly' },
     { path: '/partnerships', priority: '0.6', changefreq: 'monthly' },
@@ -69,11 +70,12 @@ export default defineEventHandler((event) => {
 
   // Legal pages
   const legalPages = [
-    { path: '/affiliate-disclosure', priority: '0.5', changefreq: 'yearly' },
+    // NOTE: Do not include redirect-only legacy routes in the sitemap.
     { path: '/corrections', priority: '0.5', changefreq: 'monthly' },
     { path: '/legal/disclosure', priority: '0.5', changefreq: 'yearly' },
     { path: '/legal/privacy', priority: '0.5', changefreq: 'yearly' },
     { path: '/legal/terms', priority: '0.5', changefreq: 'yearly' },
+    { path: '/cookies', priority: '0.5', changefreq: 'yearly' },
   ]
 
   // Learn guides - top-level /learn pages (excluding index/providers/dynamic).

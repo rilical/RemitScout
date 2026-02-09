@@ -159,7 +159,7 @@ export const jsonLdOrganization = (siteUrl: string) => {
           'contactPoint': {
             '@type': 'ContactPoint',
             'contactType': 'customer service',
-            'email': 'support@Remit-Scout.com',
+            'email': 'support@remit-scout.com',
           },
         }),
       },

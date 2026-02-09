@@ -23,7 +23,7 @@
         <div
           class="p-4 text-sm text-neutral-500 border-b border-neutral-200 bg-neutral-50"
         >
-          <strong>From:</strong> Remit-Scout Alerts &lt;alerts@remitscout.com&gt; · <strong>Subject:</strong> Rate Alert: {{ sampleMessage }}
+          <strong>From:</strong> Remit-Scout Alerts &lt;support@remit-scout.com&gt; · <strong>Subject:</strong> Rate Alert: {{ sampleMessage }}
         </div>
 
         <div

@@ -321,7 +321,7 @@ type FrontendProviderQuote = {
 
 type ProvidersResponseBase = {
   data: FrontendProviderQuote[]
-  updatedAt: string
+  updatedAt: string | null
   corridor: string
   amount: number
   method: string
@@ -835,8 +835,95 @@ const selectBestQuote = (quotes: TransformedQuote[]) => {
   })
 }
 
+const providersGetSchema = {
+  tags: ['Providers'],
+  summary: 'Compare provider quotes for a corridor and amount bucket',
+  querystring: {
+    type: 'object',
+    properties: {
+      from: { type: 'string' },
+      to: { type: 'string' },
+      fromCurrency: { type: 'string' },
+      toCurrency: { type: 'string' },
+      amount: { type: 'number' },
+      method: { type: 'string' },
+      corridor_id: { type: 'string' },
+      amount_bucket: { type: 'number' },
+      payout: { type: 'string' },
+      live: { type: 'boolean' },
+      include_provider_quotes: { type: 'boolean' },
+      // Historical param; tolerated.
+      include_provider_quotes_v2: { type: 'boolean' },
+    },
+    additionalProperties: true,
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        comparisonId: { type: 'string' },
+        start: { type: 'string' },
+        updatedAt: { type: ['string', 'null'] },
+        corridor: { type: 'string' },
+        amount: { type: 'number' },
+        method: { type: ['string', 'null'] },
+        bucketUsed: { type: 'number' },
+        approximate: { type: 'boolean' },
+        bucketDeltaPct: { type: ['number', 'null'] },
+        midMarketRate: { type: ['number', 'null'] },
+        midMarketSource: { type: ['string', 'null'] },
+        midMarketUpdatedAt: { type: ['string', 'null'] },
+        cache: {
+          type: 'object',
+          properties: {
+            ttl_seconds: { type: 'number' },
+            age_seconds: { type: 'number' },
+            fresh: { type: 'boolean' },
+          },
+          required: ['ttl_seconds', 'age_seconds', 'fresh'],
+        },
+        availableMethods: { type: 'array', items: { type: 'string' } },
+        indices: {},
+        indicesReason: { type: ['string', 'null'] },
+        data: { type: 'array', items: { type: 'object', additionalProperties: true } },
+        providerQuotes: { type: 'array', items: { type: 'object', additionalProperties: true } },
+      },
+      required: ['comparisonId', 'start', 'updatedAt', 'corridor', 'amount', 'bucketUsed', 'approximate', 'data', 'cache', 'availableMethods'],
+      additionalProperties: true,
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' },
+        details: { type: 'array', items: { type: 'object', additionalProperties: true } },
+      },
+      required: ['error'],
+      additionalProperties: true,
+    },
+    404: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' },
+        message: { type: 'string' },
+        corridor: { type: 'string' },
+      },
+      required: ['error', 'message'],
+      additionalProperties: true,
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' },
+        message: { type: 'string' },
+      },
+      required: ['error', 'message'],
+      additionalProperties: true,
+    },
+  },
+} as const
+
 export const providersRoutes = async (app: FastifyInstance) => {
-  app.get('/providers', async (request, reply) => {
+  app.get('/providers', { schema: providersGetSchema }, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
       reply.code(400)
@@ -1388,7 +1475,7 @@ export const providersRoutes = async (app: FastifyInstance) => {
 
       const responseBase: ProvidersResponseBase = {
         data: flattenedQuotes,
-        updatedAt: latestCollectedAt ?? new Date().toISOString(),
+        updatedAt: latestCollectedAt ?? null,
         corridor: corridorId,
         amount: requestedAmount || amountBucket,
         method: requestedMethod,

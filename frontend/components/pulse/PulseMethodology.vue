@@ -210,7 +210,7 @@
         </NuxtLink>
         <span class="text-slate-600">•</span>
         <NuxtLink
-          to="/how-we-make-money"
+          to="/legal/how-we-make-money"
           class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
         >
           How we make money

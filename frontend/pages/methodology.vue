@@ -620,7 +620,7 @@
                 </div>
                 <div class="flex flex-wrap gap-4">
                   <NuxtLink
-                    to="/how-we-make-money"
+                    to="/legal/how-we-make-money"
                     class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-700"
                   >
                     <BanknotesIcon class="h-5 w-5" />

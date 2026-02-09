@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
+import fp from 'fastify-plugin'
 import { config } from '../../../shared/config'
 
 /**
@@ -69,13 +70,26 @@ export const swaggerPlugin = async (app: FastifyInstance) => {
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
     process.env.AWS_REGION,
   )
+
   if (isAwsRuntime && process.env.SWAGGER_ENABLED !== '1') {
     app.log.info('Swagger UI disabled in AWS runtime')
     return
   }
 
   try {
-    await app.register(swagger, {
+    // Force swagger to run in the parent scope so it captures all routes registered on `app`.
+    // Without this, Fastify encapsulation can lead to empty OpenAPI `paths`.
+    const swaggerNoEncap = fp(swagger as any, {
+      name: 'remit-scout-swagger',
+      encapsulate: false,
+    }) as any
+
+    const swaggerUiNoEncap = fp(swaggerUi as any, {
+      name: 'remit-scout-swagger-ui',
+      encapsulate: false,
+    }) as any
+
+    await app.register(swaggerNoEncap, {
       openapi: {
         openapi: '3.0.3',
         info: {
@@ -108,7 +122,7 @@ export const swaggerPlugin = async (app: FastifyInstance) => {
       },
     })
 
-    await app.register(swaggerUi, {
+    await app.register(swaggerUiNoEncap, {
       routePrefix: '/api-docs',
       uiConfig: {
         docExpansion: 'list',
