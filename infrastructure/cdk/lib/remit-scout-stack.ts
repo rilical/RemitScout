@@ -981,6 +981,7 @@ export class RemitScoutStack extends Stack {
     const opsAlertsBaseline =
       opsAlertsMode === 'queue' ? (opsAlertsDesiredCount ?? queueWorkerBaseline) : 0
     const b2cRefreshBaseline = b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0
+    const fxRateRefreshBaseline = fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0
     const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
 
     createOpsPause(this, {
@@ -989,6 +990,7 @@ export class RemitScoutStack extends Stack {
       ecsServiceNames: [
         ecsServices.planeBIngestService.serviceName,
         ecsServices.b2cRefreshService.serviceName,
+        ecsServices.fxRateRefreshService.serviceName,
         ecsServices.ingestFanoutTier1Service.serviceName,
         ecsServices.ingestFanoutTier2Service.serviceName,
         ecsServices.goldLiveService.serviceName,
@@ -998,6 +1000,7 @@ export class RemitScoutStack extends Stack {
       ecsBaselineDesired: {
         [ecsServices.planeBIngestService.serviceName]: planeBIngestBaseline,
         [ecsServices.b2cRefreshService.serviceName]: b2cRefreshBaseline,
+        [ecsServices.fxRateRefreshService.serviceName]: fxRateRefreshBaseline,
         [ecsServices.ingestFanoutTier1Service.serviceName]: ingestFanoutTier1Baseline,
         [ecsServices.ingestFanoutTier2Service.serviceName]: ingestFanoutTier2Baseline,
         [ecsServices.goldLiveService.serviceName]: goldLiveBaseline,

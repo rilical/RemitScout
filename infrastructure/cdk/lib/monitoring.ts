@@ -251,6 +251,7 @@ export const createMonitoring = (
 
   const dlqAlarms = [
     options.queues.quoteRefreshDlq,
+    options.queues.fxRateRefreshDlq,
     options.queues.exportJobDlq,
     options.queues.ingestFanoutDlq,
     options.queues.ingestFanoutTier2Dlq,
@@ -260,7 +261,9 @@ export const createMonitoring = (
     options.queues.goldLiveDlq,
   ].map((queue, index) =>
     new Alarm(scope, `DlqAlarm${index}`, {
-      alarmName: `remit-scout-${options.envName}-${queue.queueName}-dlq-managed`,
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-${queue.queueName}-dlq-managed`
+        : undefined,
       metric: queue.metricApproximateNumberOfMessagesVisible({
         period: Duration.minutes(5),
       }),
@@ -404,6 +407,7 @@ export const createMonitoring = (
   const queueDepthThreshold = isProd ? 1000 : (isStaging ? 500 : 200)
   const queueDepthAlarms = [
     { name: 'QuoteRefresh', queue: options.queues.quoteRefreshQueue },
+    { name: 'FxRateRefresh', queue: options.queues.fxRateRefreshQueue },
     { name: 'ExportJob', queue: options.queues.exportJobQueue },
     { name: 'AlertEvaluation', queue: options.queues.alertEvaluationQueue },
     { name: 'IngestFanout', queue: options.queues.ingestFanoutQueue },
@@ -437,6 +441,11 @@ export const createMonitoring = (
     {
       name: 'QuoteRefresh',
       queue: options.queues.quoteRefreshQueue,
+      thresholdSeconds: standardQueueAgeThresholdSeconds,
+    },
+    {
+      name: 'FxRateRefresh',
+      queue: options.queues.fxRateRefreshQueue,
       thresholdSeconds: standardQueueAgeThresholdSeconds,
     },
     {
