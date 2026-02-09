@@ -27,7 +27,7 @@ test('legal + legacy redirects exist', async ({ page }) => {
 test('dashboard + plus + pulse surfaces load (logged out)', async ({ page }) => {
   await page.goto('/dashboard')
   await expect(page.getByRole('heading', { name: /your transfer dashboard/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /create free account/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /create free account/i }).first()).toBeVisible()
 
   await page.goto('/plus')
   await expect(page.getByRole('heading', { name: /never miss a great rate/i })).toBeVisible()

@@ -16,5 +16,7 @@ export default defineConfig({
         command: 'pnpm run build && pnpm run preview --port 3000',
         port: 3000,
         reuseExistingServer: !process.env.CI,
+        // `pnpm run build` is the slow part; allow enough time for cold caches.
+        timeout: 10 * 60 * 1000,
       },
 })
