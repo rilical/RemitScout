@@ -262,7 +262,7 @@
                 <div>
                   <span class="text-white font-semibold">Pulse access</span>
                   <p class="text-xs text-white/80 mt-1">
-                    Best time to send + live provider quotes
+                    Best time to send + latest provider quotes
                   </p>
                 </div>
               </li>
@@ -474,7 +474,7 @@
             Pulse is Included with Plus
           </h2>
           <p class="text-lg text-neutral-300 max-w-3xl mx-auto">
-            Stop guessing. See send timing signals and live provider quotes for your corridor.
+            Stop guessing. See send timing signals and the latest provider quotes for your corridor.
           </p>
         </div>
 
