@@ -74,6 +74,7 @@ export class UserAccountRepository implements IUserAccountRepository {
     const result = await query<UserPrivacySettings>(
       `
       SELECT privacy_analytics_enabled AS analytics_enabled,
+             FALSE AS marketing_enabled,
              privacy_personalization_enabled AS personalization_enabled,
              privacy_updated_at AS updated_at
       FROM silver.user_account
@@ -95,6 +96,7 @@ export class UserAccountRepository implements IUserAccountRepository {
           last_seen_at = NOW()
       WHERE user_id = $1
       RETURNING privacy_analytics_enabled AS analytics_enabled,
+                FALSE AS marketing_enabled,
                 privacy_personalization_enabled AS personalization_enabled,
                 privacy_updated_at AS updated_at
       `,

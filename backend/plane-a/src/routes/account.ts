@@ -18,6 +18,8 @@ const deleteAccountSchema = z.object({
 
 const privacySchema = z.object({
   analytics: z.boolean(),
+  // Optional for backwards compatibility with older clients.
+  marketing: z.boolean().optional(),
   personalization: z.boolean(),
 })
 
@@ -32,7 +34,9 @@ export const accountRoutes = async (app: FastifyInstance) => {
       const settings = await userAccountRepository.getPrivacySettings(user.user_id)
       return {
         settings: {
+          // Default to opt-in when unset to preserve existing behavior.
           analytics: settings?.analytics_enabled ?? true,
+          marketing: settings?.marketing_enabled ?? false,
           personalization: settings?.personalization_enabled ?? true,
           updated_at: settings?.updated_at ?? null,
         },
@@ -64,13 +68,16 @@ export const accountRoutes = async (app: FastifyInstance) => {
       const settings = await userAccountRepository.updatePrivacySettings({
         user_id: user.user_id,
         analytics_enabled: parsed.data.analytics,
+        marketing_enabled: parsed.data.marketing ?? false,
         personalization_enabled: parsed.data.personalization,
       })
       return {
         settings: {
           analytics: settings?.analytics_enabled ?? parsed.data.analytics,
+          marketing: settings?.marketing_enabled ?? (parsed.data.marketing ?? false),
           personalization: settings?.personalization_enabled ?? parsed.data.personalization,
-          updated_at: settings?.updated_at ?? new Date().toISOString(),
+          // Never fabricate timestamps; use DB value when available.
+          updated_at: settings?.updated_at ?? null,
         },
       }
     } catch (error) {
