@@ -7,19 +7,11 @@
       v-if="isGated"
       class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-xs font-semibold text-brand-600"
     >
-      <svg
-        class="h-3 w-3"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-        />
-      </svg>
+      <Icon
+        name="lock"
+        :size="16"
+        class="text-current"
+      />
       Plus
     </div>
 
@@ -43,7 +35,7 @@
         v-if="isGoldIndexChart"
         class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-emerald-400"
       >
-        Gold indices · $500 bank bucket · updated daily
+        Gold indices · $500 bank bucket
       </p>
 
       <!-- Sparkline -->
@@ -100,25 +92,11 @@
         class="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
         @click="$emit('view', metadata.id)"
       >
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-        </svg>
+        <Icon
+          name="eye"
+          :size="16"
+          class="text-current"
+        />
         View
       </button>
       <div class="flex items-center gap-3">
@@ -142,6 +120,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ChartMetadata, ChartPoint } from '~/types/pulse'
+import { Icon } from '~/ui'
 
 interface Props {
   metadata: ChartMetadata
