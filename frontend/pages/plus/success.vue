@@ -153,6 +153,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '~/composables/useApi'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { formatDate, formatMoney as formatMoneyValue } from '~/shared/lib/format'
 
 type BillingPricingResponse = {
   success: true
@@ -205,14 +206,9 @@ if (_sessionId) {
 const billing = computed(() => me.value?.billing ?? null)
 const trialDays = computed(() => pricing.value?.trialDays ?? 0)
 
-const formatMoney = (amount: number | null | undefined, currency: string | null | undefined) => {
+function formatMoney(amount: number | null | undefined, currency: string | null | undefined): string {
   if (amount === null || amount === undefined || !currency) return '—'
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
-  }
-  catch {
-    return `${currency.toUpperCase()} ${amount.toFixed(2)}`
-  }
+  return formatMoneyValue(amount, { currency })
 }
 
 const billingAmountDisplay = computed(() => formatMoney(billing.value?.amount, billing.value?.currency))
@@ -222,7 +218,7 @@ const nextBillingDateDisplay = computed(() => {
   if (!value) return '—'
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return '—'
-  return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  return formatDate(parsed, { style: 'long' })
 })
 
 const billingStatusDisplay = computed(() => billing.value?.status ?? null)
