@@ -1,6 +1,9 @@
 <template>
-  <div class="min-h-screen bg-slate-900 py-12">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-slate-900">
+    <CenteredPage
+      max-width="5xl"
+      padding-y="md"
+    >
       <!-- Header -->
       <div class="text-center mb-8">
         <NuxtLink
@@ -183,7 +186,7 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-sm text-slate-300">Pulse access (send timing + live quotes)</span>
+                <span class="text-sm text-slate-300">Pulse access (send timing + provider quotes)</span>
               </div>
               <div class="flex items-start gap-2">
                 <svg
@@ -244,13 +247,15 @@
           </div>
         </div>
       </div>
-    </div>
+    </CenteredPage>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { CenteredPage } from '~/ui'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { formatMoney as formatMoneyValue } from '~/shared/lib/format'
 
 const processing = ref(false)
 const { isAuthenticated, user } = useAuth()
@@ -283,14 +288,9 @@ const selectedPrice = computed(() => (
   billingInterval.value === 'year' ? pricing.value?.plus.year : pricing.value?.plus.month
 ))
 
-const formatMoney = (amount: number | null | undefined, currency: string | null | undefined) => {
+function formatMoney(amount: number | null | undefined, currency: string | null | undefined): string | null {
   if (amount === null || amount === undefined || !currency) return null
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
-  }
-  catch {
-    return `${currency.toUpperCase()} ${amount.toFixed(2)}`
-  }
+  return formatMoneyValue(amount, { currency })
 }
 
 const plusPriceValue = computed(() => selectedPrice.value?.amount ?? null)
