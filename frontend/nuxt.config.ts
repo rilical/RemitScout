@@ -306,6 +306,9 @@ export default defineNuxtConfig({
           ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
           : 'https://Remit-Scout.com'),
       apiBase: resolvePublicApiBase(),
+      mediaKitPressKitUrl: process.env.PUBLIC_MEDIA_KIT_PRESS_KIT_URL || '',
+      mediaKitBrandAssetsUrl: process.env.PUBLIC_MEDIA_KIT_BRAND_ASSETS_URL || '',
+      mediaKitFactSheetUrl: process.env.PUBLIC_MEDIA_KIT_FACT_SHEET_URL || '',
       b2cRefreshPollMs: Number(process.env.PUBLIC_B2C_REFRESH_POLL_MS) || 2500,
       b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 2500,
       b2cBackgroundRefreshEnabled: process.env.PUBLIC_B2C_BACKGROUND_REFRESH_ENABLED === '1',
@@ -353,6 +356,8 @@ export default defineNuxtConfig({
     ...isrRouteRules,
     '/ads.txt': { redirect: { to: 'https://srv.adstxtmanager.com/19390/remit-scout.com', statusCode: 301 } },
     '/legal/methodology': { redirect: '/methodology' },
+    '/how-we-make-money': { redirect: { to: '/legal/how-we-make-money', statusCode: 301 } },
+    '/about-old': { redirect: { to: '/about', statusCode: 301 } },
   },
 
   watchers: {

@@ -6,8 +6,8 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between py-2 text-xs sm:text-sm">
         <div class="flex items-center gap-4 text-slate-600">
-          <span class="hidden sm:inline">💸 Compare live rates from 30+ providers</span>
-          <span class="sm:hidden">💸 Live rates • 30+ providers</span>
+          <span class="hidden sm:inline">💸 Compare current provider quotes from 30+ providers</span>
+          <span class="sm:hidden">💸 Current quotes • 30+ providers</span>
         </div>
 
         <div class="flex items-center gap-3">

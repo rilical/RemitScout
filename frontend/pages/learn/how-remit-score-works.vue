@@ -387,7 +387,7 @@
             </p>
           </NuxtLink>
           <NuxtLink
-            to="/how-we-make-money"
+            to="/legal/how-we-make-money"
             class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
           >
             <h3 class="text-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">

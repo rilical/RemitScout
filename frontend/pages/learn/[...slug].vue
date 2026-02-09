@@ -347,7 +347,7 @@
               Rankings are determined by our proprietary scoring system. Providers cannot pay for placement or influence scores.
             </p>
             <NuxtLink
-              to="/how-we-make-money"
+              to="/legal/how-we-make-money"
               class="text-xs font-medium text-brand-600 hover:text-brand-700"
             >
               How we make money →

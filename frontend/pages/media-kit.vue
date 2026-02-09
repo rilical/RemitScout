@@ -20,6 +20,7 @@
 
           <div class="mt-8 flex flex-wrap gap-3">
             <a
+              v-if="pressKitUrl"
               :href="pressKitUrl"
               target="_blank"
               rel="noopener noreferrer"
@@ -142,6 +143,7 @@
             </div>
             <div class="mt-6 flex flex-wrap gap-3">
               <a
+                v-if="companyFactSheetUrl"
                 :href="companyFactSheetUrl"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -240,6 +242,7 @@
                     </p>
                   </div>
                   <a
+                    v-if="brandAssetsUrl"
                     :href="brandAssetsUrl"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -476,7 +479,21 @@
                 Quick Downloads
               </h3>
               <div class="space-y-3">
+                <div
+                  v-if="!hasDownloads"
+                  class="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <p class="text-sm text-slate-700 font-medium">Downloads are available on request.</p>
+                  <p class="text-xs text-slate-500 mt-1">Email us and we'll send the latest press kit and brand assets.</p>
+                  <a
+                    :href="`mailto:${pressEmail}`"
+                    class="mt-3 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    {{ pressEmail }}
+                  </a>
+                </div>
                 <a
+                  v-if="pressKitUrl"
                   :href="pressKitUrl"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -503,6 +520,7 @@
                   </div>
                 </a>
                 <a
+                  v-if="brandAssetsUrl"
                   :href="brandAssetsUrl"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -529,6 +547,7 @@
                   </div>
                 </a>
                 <a
+                  v-if="companyFactSheetUrl"
                   :href="companyFactSheetUrl"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -576,7 +595,7 @@
                   Methodology →
                 </NuxtLink>
                 <NuxtLink
-                  to="/how-we-make-money"
+                  to="/legal/how-we-make-money"
                   class="block text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   How We Make Money →
@@ -647,20 +666,13 @@ jsonLdBreadcrumb([
   { name: 'Media Kit', url: canonicalUrl },
 ])
 
-const hostname = (() => {
-  try {
-    return new URL(siteUrl).hostname
-  }
-  catch {
-    return 'remitscout.com'
-  }
-})()
+const pressEmail = 'support@remit-scout.com'
 
-const pressEmail = `press@${hostname}`
+const pressKitUrl = runtimeConfig.public?.mediaKitPressKitUrl || ''
+const brandAssetsUrl = runtimeConfig.public?.mediaKitBrandAssetsUrl || ''
+const companyFactSheetUrl = runtimeConfig.public?.mediaKitFactSheetUrl || ''
 
-const pressKitUrl = 'https://docs.google.com/document/d/YOUR_PRESS_KIT_DOC_ID/edit?usp=sharing'
-const brandAssetsUrl = 'https://drive.google.com/drive/folders/YOUR_BRAND_ASSETS_FOLDER_ID?usp=sharing'
-const companyFactSheetUrl = 'https://docs.google.com/document/d/YOUR_FACT_SHEET_DOC_ID/edit?usp=sharing'
+const hasDownloads = computed(() => Boolean(pressKitUrl || brandAssetsUrl || companyFactSheetUrl))
 
 const organizationSchema = {
   '@context': 'https://schema.org',

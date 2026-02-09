@@ -83,9 +83,9 @@
       </h2>
       <p>
         Email <a
-          href="mailto:transparency@Remit-Scout.com"
+          href="mailto:support@remit-scout.com"
           class="text-primary-600 hover:text-primary-700"
-        >transparency@Remit-Scout.com</a>
+        >support@remit-scout.com</a>
         if you want more detail about any partnership, ad placement, or ranking decision.
       </p>
     </div>

@@ -1416,12 +1416,12 @@ class="text-xs text-blue-600 hover:text-blue-700"
                 <h4 class="font-semibold text-slate-900 text-sm">Wise - Send Money Abroad</h4>
                 <p class="text-xs text-slate-500">Low fees, real exchange rate. Trusted by 16M+ people.</p>
               </div>
-              <a
-href="#"
-class="flex-shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
->
+              <NuxtLink
+                to="/learn/providers/wise"
+                class="flex-shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+              >
                 Compare
-              </a>
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -4552,18 +4552,20 @@ const embedSiteOrigin = computed(() => {
   return ''
 })
 
-const embedApiKeyValue = computed(() => embedApiKey.value.trim() || 'YOUR_API_KEY')
+const embedApiKeyValue = computed(() => embedApiKey.value.trim())
 
 const buildEmbedUrl = (indexKey: EmbedIndexKey) => {
   const baseUrl = embedSiteOrigin.value
   if (!baseUrl) return ''
+  const apiKey = embedApiKeyValue.value
+  if (!apiKey) return ''
   const params = new URLSearchParams({
     corridor_id: embedCorridorId.value.toUpperCase(),
     amount_bucket: String(embedAmountBucket.value || 500),
     method_profile: embedMethodProfile.value,
     days: String(embedDays.value || 30),
     theme: embedTheme.value,
-    api_key: embedApiKeyValue.value,
+    api_key: apiKey,
   })
   return `${baseUrl}/embed/indices/${indexKey}?${params.toString()}`
 }
