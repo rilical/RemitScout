@@ -21,7 +21,7 @@
             Quick Compare
           </h2>
           <p class="text-sm text-slate-400 mt-1">
-            Get live rates for any corridor in seconds
+            Get quotes for any corridor in seconds
           </p>
         </div>
         <button

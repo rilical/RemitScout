@@ -18,7 +18,7 @@
         All Corridors
       </h2>
       <p class="text-slate-400">
-        View live market data for {{ corridors.length }} corridors
+        View quote snapshots for {{ corridors.length }} corridors
       </p>
     </div>
 

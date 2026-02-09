@@ -4,10 +4,10 @@
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
         <h2 class="text-lg font-bold text-white">
-          Live Provider Quotes
+          Provider Quotes
         </h2>
         <p class="text-sm text-neutral-400">
-          Current rates for {{ amountLabel }} ({{ store.corridor.fromCode }} → {{ store.corridor.toCode }})
+          Quote snapshot for {{ amountLabel }} ({{ store.corridor.fromCode }} → {{ store.corridor.toCode }})
         </p>
       </div>
       <div class="flex items-center gap-2 text-sm">
@@ -97,7 +97,7 @@
         v-else
         class="flex h-24 items-center justify-center text-sm text-neutral-500"
       >
-        No live quotes yet.
+        No quotes available yet.
       </div>
 
       <!-- Analyst View: Additional Details -->

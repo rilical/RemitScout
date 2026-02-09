@@ -95,7 +95,7 @@
           Watchlist
         </h3>
         <p class="text-sm text-slate-400 leading-relaxed">
-          Save your most-used corridors and see live updates in one place. Quick access to trends and changes at a glance.
+          Save your most-used corridors and see the latest quote snapshots in one place. Quick access to trends and changes at a glance.
         </p>
       </div>
 
@@ -267,7 +267,7 @@
 
 <script setup lang="ts">
 const freeFeatures = [
-  'Live market data',
+  'Latest market quotes',
   'Provider comparisons',
   '7-day history',
   'Market insights',

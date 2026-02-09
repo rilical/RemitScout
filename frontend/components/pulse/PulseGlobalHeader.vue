@@ -165,13 +165,16 @@
           </button>
         </div>
 
-        <!-- Right: Live Status -->
+        <!-- Right: Freshness -->
         <div class="flex items-center gap-2 text-sm text-neutral-400">
-          <span class="relative flex h-2 w-2">
+          <span
+            v-if="hasLastUpdated"
+            class="relative flex h-2 w-2"
+          >
             <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
             <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
           </span>
-          <span>Updated {{ store.lastUpdatedRelative }}</span>
+          <span>{{ updatedLabel }}</span>
         </div>
       </div>
 
@@ -182,7 +185,7 @@
         <span class="text-neutral-600">|</span>
         <span>{{ summary ? `Methods: ${formatMethods(summary.methodsIncluded)}` : 'Methods: Bank' }}</span>
         <span class="text-neutral-600">|</span>
-        <span>As of {{ summary ? formatTimestamp(summary.lastUpdated) : '-' }} UTC</span>
+        <span>As of {{ summary ? formatTimestamp(summary.lastUpdated) : '—' }} UTC</span>
       </div>
     </div>
 
@@ -196,11 +199,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { usePulseStore, POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
 import { getPulseCoverageSummary } from '~/lib/pulseApi'
 import type { PulseCoverageSummary } from '~/types/pulse'
-import { formatDateTime, formatNumber as formatNumberValue } from '~/shared/lib/format'
+import { formatDateTime, formatNumber as formatNumberValue, formatUpdatedLabel } from '~/shared/lib/format'
 
 const store = usePulseStore()
 
@@ -211,6 +214,17 @@ const corridors = POPULAR_CORRIDORS
 const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
 
 const summary = ref<PulseCoverageSummary | null>(null)
+
+const hasLastUpdated = computed(() => {
+  if (!store.lastUpdated) return false
+  const time = new Date(store.lastUpdated).getTime()
+  return !Number.isNaN(time)
+})
+
+const updatedLabel = computed(() => {
+  // Centralize the "no fabricated freshness" contract.
+  return formatUpdatedLabel(hasLastUpdated.value ? store.lastUpdated : null)
+})
 
 function selectCorridor(corridor: PulseCorridor) {
   store.setCorridor(corridor)
