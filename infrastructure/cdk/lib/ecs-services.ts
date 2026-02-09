@@ -143,6 +143,7 @@ export const createEcsServices = (
     minHealthyPercent,
     maxHealthyPercent,
   })
+  tagManaged(b2cRefreshService)
 
   const fxRateRefreshService = new FargateService(scope, 'FxRateRefreshWorkerService', {
     cluster: options.cluster,
@@ -157,7 +158,7 @@ export const createEcsServices = (
     minHealthyPercent,
     maxHealthyPercent,
   })
-  tagManaged(b2cRefreshService)
+  tagManaged(fxRateRefreshService)
 
   const ingestFanoutTier1Service = new FargateService(scope, 'IngestFanoutTier1WorkerService', {
     cluster: options.cluster,

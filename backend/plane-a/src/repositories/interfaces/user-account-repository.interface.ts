@@ -14,6 +14,7 @@ export type UserAccountProfileUpdateInput = {
 
 export type UserPrivacySettings = {
   analytics_enabled: boolean
+  marketing_enabled: boolean
   personalization_enabled: boolean
   updated_at: string | null
 }
@@ -21,6 +22,8 @@ export type UserPrivacySettings = {
 export type UserPrivacyUpdateInput = {
   user_id: string
   analytics_enabled: boolean
+  // Optional until the DB column exists; safe no-op in repository implementation.
+  marketing_enabled?: boolean
   personalization_enabled: boolean
 }
 
