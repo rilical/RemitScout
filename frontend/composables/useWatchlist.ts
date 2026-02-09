@@ -93,6 +93,7 @@ export const useWatchlist = () => {
     () => [],
     {
       validate: (value): value is WatchlistItem[] => Array.isArray(value),
+      requiredConsent: 'functional',
     },
   )
 

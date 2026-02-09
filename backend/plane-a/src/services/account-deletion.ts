@@ -134,22 +134,56 @@ export const deleteUserAccount = async (
     })
   }
 
-  const deletionResult = await query<{ user_id: string }>(
-    `DELETE FROM silver.user_account
-     WHERE user_id = $1
-     RETURNING user_id`,
-    [userId],
-    pool,
-  )
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
 
-  if (!deletionResult.rowCount) {
+    await client.query(
+      `INSERT INTO silver.account_deletion_tombstone (user_id, deleted_at)
+       VALUES ($1, NOW())
+       ON CONFLICT (user_id)
+       DO UPDATE SET deleted_at = EXCLUDED.deleted_at`,
+      [userId],
+    )
+
+    const deletionResult = await client.query<{ user_id: string }>(
+      `DELETE FROM silver.user_account
+       WHERE user_id = $1
+       RETURNING user_id`,
+      [userId],
+    )
+
+    if (!deletionResult.rowCount) {
+      await client.query('ROLLBACK')
+      errors.push('user_delete_failed')
+      return {
+        deleted: false,
+        anonymized,
+        errors,
+        warnings,
+      }
+    }
+
+    await client.query('COMMIT')
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK')
+    } catch {
+      // ignore rollback errors
+    }
     errors.push('user_delete_failed')
+    logger.warn('account_delete_transaction_failed', {
+      user_id: userId,
+      error: getErrorMessage(error),
+    })
     return {
       deleted: false,
       anonymized,
       errors,
       warnings,
     }
+  } finally {
+    client.release()
   }
 
   try {

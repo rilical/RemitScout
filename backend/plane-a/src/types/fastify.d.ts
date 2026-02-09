@@ -6,6 +6,7 @@ declare module 'fastify' {
   interface FastifyRequest {
     user?: AuthUser
     authError?: AuthError
+    accountDeleted?: boolean
     apiKey?: ApiKeyContext
     apiKeyError?: { code: string; message: string }
     traceId?: string

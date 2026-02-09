@@ -1761,9 +1761,7 @@ import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
 import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useTelemetry } from '~/composables/useTelemetry'
-import { useProviderVisits } from '~/composables/useProviderVisits'
 import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
-import { useSession } from '~/composables/useSession'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
 import { BASE_CURRENCIES } from '~/utils/countries-currencies'
 import { getCorridorUrl,
@@ -1788,8 +1786,6 @@ const { request } = useApi()
 const { attachRatings, formatMoney, formatRate, getRelativeTime, useProviders } = useRemittanceApi()
 const { trackClick } = useTelemetry()
 const { trackSendMoneyView } = useMarketingAnalytics()
-const { fetchPendingFeedback } = useProviderVisits()
-const { ensureSession } = useSession()
 const currentRoute = useRoute()
 const sendMoneyTracked = ref(false)
 
@@ -3355,10 +3351,6 @@ const handleProviderOutbound = async (row: TableRow) => {
       quoted_fee: row.feeAmount,
       is_affiliate: row.isAffiliate ?? false,
     })
-
-    setTimeout(async () => {
-      await fetchPendingFeedback(1)
-    }, 1000)
   }
 
   const providerId = row.providerId || row.provider

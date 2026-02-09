@@ -4,11 +4,12 @@ import { createHash, randomUUID } from 'crypto'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { requireAdmin } from '../plugins/auth-plugin'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
+import { UserAccountRepository } from '../repositories'
 
 const logger = createLogger('plane-a.marketing')
 const pool = getPool(config.db.planeAUrl)
+const userAccountRepository = new UserAccountRepository(pool)
 
 const eventSchema = z.object({
   event_name: z.string().min(2).max(64),
@@ -170,8 +171,23 @@ const sendToMeta = async (payload: {
   }
 }
 
+const shouldSkipMarketing = async (userId?: string | null): Promise<boolean> => {
+  if (!userId) return false
+  try {
+    const settings = await userAccountRepository.getPrivacySettings(userId)
+    if (!settings?.updated_at) return true
+    return settings.marketing_enabled === false
+  } catch (error) {
+    logger.warn('marketing_privacy_lookup_failed', {
+      user_id: userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
+
 export const marketingRoutes = async (app: FastifyInstance) => {
-  app.post('/marketing/meta', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/marketing/meta', async (request, reply) => {
     const parsed = eventSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
       reply.code(400)
@@ -193,6 +209,10 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       : undefined
 
     try {
+      if (await shouldSkipMarketing(user?.user_id)) {
+        return { success: true, skipped: 'opt_out' }
+      }
+
       const inserted = await insertEvent({
         event_name: input.event_name,
         event_id: eventId,

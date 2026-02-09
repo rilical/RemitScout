@@ -68,6 +68,15 @@ const loadModule = async (overrides?: Partial<any>) => {
   return await import('../plane-a/src/services/account-deletion')
 }
 
+const makePool = (): Pool => {
+  return {
+    connect: vi.fn().mockResolvedValue({
+      query: (sql: string, params?: any[]) => mockQuery(sql, params),
+      release: vi.fn(),
+    }),
+  } as any as Pool
+}
+
 describe('account-deletion', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -86,7 +95,7 @@ describe('account-deletion', () => {
       return { rows: [], rowCount: 0 }
     })
 
-    const result = await deleteUserAccount({} as Pool, 'user-1')
+    const result = await deleteUserAccount(makePool(), 'user-1')
 
     expect(result.deleted).toBe(false)
     expect(result.errors).toContain('user_not_found')
@@ -114,7 +123,7 @@ describe('account-deletion', () => {
       return { rows: [], rowCount: 0 }
     })
 
-    const result = await deleteUserAccount({} as Pool, 'user-1')
+    const result = await deleteUserAccount(makePool(), 'user-1')
 
     expect(result.deleted).toBe(true)
     expect(result.warnings).toEqual(expect.arrayContaining([
@@ -166,7 +175,7 @@ describe('account-deletion', () => {
       return { rows: [], rowCount: 0 }
     })
 
-    const result = await deleteUserAccount({} as Pool, 'user-1')
+    const result = await deleteUserAccount(makePool(), 'user-1')
 
     expect(result.deleted).toBe(true)
     expect(mockDeleteStripeCustomer).toHaveBeenCalledWith('cus_123')

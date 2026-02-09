@@ -80,6 +80,7 @@ import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { useApi } from '~/composables/useApi'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { useSession } from '~/composables/useSession'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import { useProviderVisits } from '~/composables/useProviderVisits'
 import { extractUtmParams } from '~/lib/outbound'
 
@@ -89,6 +90,7 @@ const route = useRoute()
 const { request } = useApi()
 const { trackClick } = useTelemetry()
 const { ensureSession } = useSession()
+const { marketingConsent } = usePrivacySettings()
 const { trackProviderVisit } = useProviderVisits()
 
 const providerParam = computed(() => {
@@ -122,6 +124,7 @@ const toNumber = (value?: string) => {
 
 const readAttribution = () => {
   if (!import.meta.client) return {}
+  if (!marketingConsent.value) return {}
   try {
     const raw = window.localStorage.getItem('rs:attribution')
     if (!raw) return {}
@@ -204,12 +207,6 @@ const progressPct = computed(() => {
   const pct = (elapsed / totalSeconds) * 100
   return Math.min(100, Math.max(0, pct))
 })
-const redirectStatus = computed(() => (hasRedirected.value ? 'Redirected' : 'Queued'))
-const sessionLabel = computed(() => {
-  if (import.meta.server) return 'anonymous'
-  const ids = ensureSession()
-  return ids.session_id?.slice(0, 8) || 'anonymous'
-})
 
 const hasTracked = ref(false)
 const hasRedirected = ref(false)
@@ -234,6 +231,8 @@ const trackOutbound = async () => {
     quoted_fee: quotedFee.value ?? undefined,
     is_affiliate: affiliateFlag.value,
   })
+
+  if (!marketingConsent.value) return
 
   const sessionIds = ensureSession()
   const attribution = readAttribution()

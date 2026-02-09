@@ -82,15 +82,14 @@ const persistAttribution = (next: Attribution) => {
 export const useTelemetry = () => {
   const { request } = useApi()
   const { ensureSession, trackSession } = useSession()
-  const { settings: privacySettings, hasConsent } = usePrivacySettings()
+  const { analyticsConsent, marketingConsent } = usePrivacySettings()
   const marketing = useMarketingAnalytics()
   const route = useRoute()
   const sessionInitialized = useState<boolean>('telemetry:session:initialized', () => false)
-  const shouldSkip = () =>
-    privacySettings.value.analytics === false || !hasConsent.value
 
   const getAttribution = (): Attribution => {
     if (!import.meta.client) return {}
+    if (!marketingConsent.value) return {}
     const stored = readAttribution()
     const query = route.query as Record<string, unknown>
     const next: Attribution = {
@@ -105,30 +104,35 @@ export const useTelemetry = () => {
   }
 
   const buildBasePayload = () => {
-    const ids = ensureSession()
-    const attribution = getAttribution()
     const pagePath = route.fullPath
+    const ids = ensureSession()
+    const attribution = marketingConsent.value ? getAttribution() : {}
 
-    return {
-      ...ids,
-      utm: attribution.utm,
-      gclid: attribution.gclid,
-      fbclid: attribution.fbclid,
-      msclkid: attribution.msclkid,
-      page_path: pagePath,
-    }
+    return marketingConsent.value
+      ? {
+          ...ids,
+          utm: attribution.utm,
+          gclid: attribution.gclid,
+          fbclid: attribution.fbclid,
+          msclkid: attribution.msclkid,
+          page_path: pagePath,
+        }
+      : {
+          ...ids,
+          page_path: pagePath,
+        }
   }
 
   const initSession = async () => {
     if (import.meta.server) return
-    if (shouldSkip()) return
+    if (!analyticsConsent.value) return
     if (sessionInitialized.value) return
     const ids = ensureSession()
     const payload = {
       ...ids,
       referrer: document.referrer || undefined,
       first_page: route.fullPath,
-      ...getAttribution(),
+      ...(marketingConsent.value ? getAttribution() : {}),
     }
 
     try {
@@ -146,7 +150,16 @@ export const useTelemetry = () => {
   }
 
   const trackSearch = async (payload: SearchPayload) => {
-    if (shouldSkip()) return
+    void marketing.trackSearch({
+      corridorId: payload.corridor_id,
+      amount: payload.amount,
+      amountBucket: payload.amount_bucket,
+      payin: payload.payin,
+      payout: payload.payout,
+      pagePath: route.fullPath,
+    })
+
+    if (!analyticsConsent.value) return
     const base = buildBasePayload()
     try {
       await request('/telemetry/search', {
@@ -161,18 +174,19 @@ export const useTelemetry = () => {
     catch {
       // ignore telemetry errors
     }
-    void marketing.trackSearch({
-      corridorId: payload.corridor_id,
-      amount: payload.amount,
-      amountBucket: payload.amount_bucket,
-      payin: payload.payin,
-      payout: payload.payout,
-      pagePath: base.page_path,
-    })
   }
 
   const trackClick = async (payload: ClickPayload) => {
-    if (shouldSkip()) return
+    void marketing.trackProviderClick({
+      providerId: payload.provider_id,
+      corridorId: payload.corridor_id,
+      targetUrl: payload.target_url,
+      quotedRate: payload.quoted_rate,
+      quotedFee: payload.quoted_fee,
+      pagePath: route.fullPath,
+    })
+
+    if (!analyticsConsent.value) return
     const base = buildBasePayload()
     try {
       await request('/telemetry/click', {
@@ -187,18 +201,19 @@ export const useTelemetry = () => {
     catch {
       // ignore telemetry errors
     }
-    void marketing.trackProviderClick({
-      providerId: payload.provider_id,
-      corridorId: payload.corridor_id,
-      targetUrl: payload.target_url,
-      quotedRate: payload.quoted_rate,
-      quotedFee: payload.quoted_fee,
-      pagePath: base.page_path,
-    })
   }
 
   const trackConversion = async (payload: ConversionPayload) => {
-    if (shouldSkip()) return
+    void marketing.trackAffiliateConversion({
+      providerId: payload.provider_id,
+      corridorId: payload.corridor_id,
+      value: payload.conversion_value,
+      currency: payload.conversion_currency,
+      pagePath: route.fullPath,
+      source: payload.source,
+    })
+
+    if (!analyticsConsent.value) return
     const base = buildBasePayload()
     try {
       await request('/telemetry/conversion', {
@@ -213,18 +228,10 @@ export const useTelemetry = () => {
     catch {
       // ignore telemetry errors
     }
-    void marketing.trackAffiliateConversion({
-      providerId: payload.provider_id,
-      corridorId: payload.corridor_id,
-      value: payload.conversion_value,
-      currency: payload.conversion_currency,
-      pagePath: base.page_path,
-      source: payload.source,
-    })
   }
 
   watch(
-    () => privacySettings.value.analytics,
+    () => analyticsConsent.value,
     (enabled) => {
       if (enabled) {
         void initSession()

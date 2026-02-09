@@ -59,7 +59,7 @@ export const useAlerts = () => {
   const { state: alerts, hydrated: localStorageHydrated, reset: resetLocalStorage } = usePersistedState<Alert[]>(
     'alerts:items',
     () => [],
-    { validate: (value): value is Alert[] => Array.isArray(value) },
+    { validate: (value): value is Alert[] => Array.isArray(value), requiredConsent: 'functional' },
   )
 
   const hydrated = useState<boolean>('alerts:api:hydrated', () => false)
@@ -68,7 +68,7 @@ export const useAlerts = () => {
   const { state: historyByAlertId } = usePersistedState<Record<string, AlertHistoryEvent[]>>(
     'alerts:history',
     () => ({}),
-    { validate: (value): value is Record<string, AlertHistoryEvent[]> => !!value && typeof value === 'object' },
+    { validate: (value): value is Record<string, AlertHistoryEvent[]> => !!value && typeof value === 'object', requiredConsent: 'functional' },
   )
 
   const count = computed(() => alerts.value.length)

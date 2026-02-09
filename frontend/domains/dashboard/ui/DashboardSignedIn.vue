@@ -294,6 +294,39 @@ class="text-xs text-white/70"
             </div>
           </div>
 
+          <!-- Provider Feedback (non-blocking) -->
+          <div
+            v-if="pendingProviderFeedbackCount > 0"
+            class="mb-8 rounded-xl border border-slate-200 bg-white p-6"
+          >
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-start gap-4">
+                <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <Icon
+                    name="check-circle"
+                    :size="24"
+                    class="text-current"
+                  />
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-slate-900">
+                    Help improve provider accuracy
+                  </h3>
+                  <p class="mt-1 text-sm text-slate-600">
+                    You have {{ pendingProviderFeedbackCount }} pending transfer check{{ pendingProviderFeedbackCount === 1 ? '' : 's' }}.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                @click="openProviderFeedback"
+              >
+                Give feedback
+              </button>
+            </div>
+          </div>
+
           <!-- Two Column Layout -->
           <div class="grid lg:grid-cols-3 gap-8">
             <!-- Left Column (2/3) -->
@@ -3991,6 +4024,17 @@ class="space-y-6"
                         class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       >
                     </label>
+                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                      <div>
+                        <div class="text-sm font-medium text-slate-900">Marketing</div>
+                        <div class="text-xs text-slate-500">Support Remit-Scout with personalized ads and attribution</div>
+                      </div>
+                      <input
+                        v-model="privacySettings.marketing"
+                        type="checkbox"
+                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      >
+                    </label>
                   </div>
                 </div>
 
@@ -4042,10 +4086,24 @@ class="text-xs text-red-600"
                   <button
                     type="button"
                     class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    :disabled="privacyLoading"
+                    @click="handleSavePrivacySettings"
                   >
-                    Save Preferences
+                    {{ privacyLoading ? 'Saving…' : 'Save Preferences' }}
                   </button>
                 </div>
+                <p
+                  v-if="privacySaveSuccess"
+                  class="text-xs text-emerald-700"
+                >
+                  Preferences saved.
+                </p>
+                <p
+                  v-else-if="privacySaveError"
+                  class="text-xs text-red-600"
+                >
+                  {{ privacySaveError }}
+                </p>
               </div>
 
               <!-- Compliance Section -->
@@ -4188,6 +4246,11 @@ class="space-y-6"
           </div>
         </div>
       </CenteredPage>
+
+      <ProviderVisitPrompt
+        ref="providerVisitPromptRef"
+        :auto-open="false"
+      />
     </div>
 </template>
 
@@ -4197,6 +4260,7 @@ import type { LocationQueryRaw } from 'vue-router'
 import AdPlacement from '~/components/ads/AdPlacement.vue'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
 import { CenteredPage, DataTable, type DataTableColumn, Icon, type IconName } from '~/ui'
 import {
   formatDate,
@@ -4236,6 +4300,13 @@ const accountSections: { id: AccountSection, label: string, icon: IconName }[] =
 
 const route = useRoute()
 const { user, isAuthenticated, updatePasswordWithCurrent } = useAuth()
+const { pendingVisits } = useProviderVisits()
+const providerVisitPromptRef = ref<{ open: () => void } | null>(null)
+const pendingProviderFeedbackCount = computed(() => pendingVisits.value.length)
+
+const openProviderFeedback = () => {
+  providerVisitPromptRef.value?.open()
+}
 const {
   sessions,
   loading: sessionsLoading,
@@ -4245,7 +4316,7 @@ const {
   revokeAllSessions,
 } = useSessions()
 const { updateProfile } = useMe()
-const { isPlus, isEnterprise, apiAccess, apiTier, apiCadenceHours, limits, billing, refreshPlan } = useEntitlements()
+const { isPlus, isEnterprise, apiAccess, apiTier, limits, billing, refreshPlan } = useEntitlements()
 const billingActions = useBilling()
 const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.value)
 const billingPortalLoading = computed(() => billingActions.portalLoading.value)
@@ -4543,7 +4614,7 @@ const embedIndices = [
 
 type EmbedIndexKey = typeof embedIndices[number]['key']
 
-const tier2CadenceLabel = computed(() => apiCadenceHours.value ?? 6)
+const tier2CadenceLabel = computed(() => 3)
 const tier3CadenceLabel = computed(() => 24)
 
 const embedSiteOrigin = computed(() => {
@@ -6099,6 +6170,7 @@ const exportStatusMessage = ref<string | null>(null)
 const exportErrorMessage = ref<string | null>(null)
 const exportJobId = ref<string | null>(null)
 let exportPollTimer: ReturnType<typeof setInterval> | null = null
+let gdprExportPollTimer: ReturnType<typeof setInterval> | null = null
 
 const clearExportPolling = () => {
   if (exportPollTimer) {
@@ -6107,8 +6179,16 @@ const clearExportPolling = () => {
   }
 }
 
+const clearGdprExportPolling = () => {
+  if (gdprExportPollTimer) {
+    clearInterval(gdprExportPollTimer)
+    gdprExportPollTimer = null
+  }
+}
+
 onBeforeUnmount(() => {
   clearExportPolling()
+  clearGdprExportPolling()
   stopOpsAutoRefresh()
 })
 
@@ -6226,6 +6306,7 @@ function handleExportSelected() {
 
 const gdprExportStatus = ref<string | null>(null)
 const gdprExportError = ref<string | null>(null)
+const gdprExportJobId = ref<string | null>(null)
 const showDeleteAccountModal = ref(false)
 const deleteAccountConfirmText = ref('')
 const deleteAccountConfirmed = ref(false)
@@ -6244,7 +6325,39 @@ const requestGdprExport = async () => {
   gdprExportError.value = null
   try {
     const response = await dataExportApi.requestExport()
-    gdprExportStatus.value = `Export requested (job ${response.job.id}). We'll notify you when it's ready.`
+    gdprExportJobId.value = response.job.id
+    gdprExportStatus.value = `Export requested (job ${response.job.id}). Preparing your download...`
+
+    clearGdprExportPolling()
+    gdprExportPollTimer = setInterval(async () => {
+      try {
+        const status = await dataExportApi.getExportStatus(response.job.id)
+        const jobStatus = status.job.status
+        if (jobStatus === 'failed') {
+          gdprExportStatus.value = null
+          gdprExportError.value = status.job.error || 'Export failed. Please try again.'
+          clearGdprExportPolling()
+          return
+        }
+        if (jobStatus === 'done') {
+          const download = await dataExportApi.getExportDownloadUrl(response.job.id)
+          gdprExportStatus.value = 'Export ready. Downloading...'
+          triggerDownload(download.url)
+          clearGdprExportPolling()
+          return
+        }
+        if (jobStatus === 'running') {
+          gdprExportStatus.value = 'Export is running...'
+          return
+        }
+        gdprExportStatus.value = 'Export queued...'
+      }
+      catch (error: any) {
+        gdprExportStatus.value = null
+        gdprExportError.value = error?.message || 'Failed to check export status.'
+        clearGdprExportPolling()
+      }
+    }, 2500)
   }
  catch (error: any) {
     gdprExportError.value = error?.message || 'Failed to request GDPR export.'

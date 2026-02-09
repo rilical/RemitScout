@@ -110,8 +110,9 @@
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
         <li><strong class="text-blue-600">Essential cookies:</strong> Required for the website to function properly</li>
-        <li><strong class="text-blue-600">Analytics cookies:</strong> Help us understand usage patterns and improve the service</li>
-        <li><strong class="text-blue-600">Advertising cookies:</strong> Used to deliver and measure ads when permitted</li>
+        <li><strong class="text-blue-600">Functional cookies:</strong> Remember preferences like your last corridor (opt-in where required)</li>
+        <li><strong class="text-blue-600">Analytics cookies:</strong> Help us understand usage patterns and improve the service (opt-in where required)</li>
+        <li><strong class="text-blue-600">Marketing/Advertising cookies:</strong> Used to deliver and measure ads and attribution (opt-in where required)</li>
       </ul>
       <p class="mb-6 leading-relaxed">
         You may control or delete cookies through your browser settings. Where required, we will provide notice and choices
@@ -133,8 +134,8 @@
       </h3>
       <p class="mb-4 leading-relaxed">
         We may show clearly labeled ads on free pages. We use <strong class="text-blue-600">Ezoic</strong> to serve and
-        measure ads and to manage consent choices where required. Ezoic may collect device and usage data and set cookies
-        or similar technologies in line with your consent preferences.
+        measure ads. We manage consent choices through our cookie banner and preferences settings; ads and marketing
+        attribution that require cookies/identifiers only run after you opt in where required by law.
       </p>
       <p class="mb-6 leading-relaxed">
         <strong class="text-blue-600">Remit-Scout Plus</strong> subscribers receive an ad-free experience, and ad
@@ -191,7 +192,7 @@
         <li>Payment processing (Stripe)</li>
         <li>Email/newsletter delivery (Mailchimp)</li>
         <li>Phone/SMS service providers (Quo, if used)</li>
-        <li>Advertising and consent management (Ezoic)</li>
+        <li>Advertising (Ezoic)</li>
         <li>Analytics, performance monitoring, and error logging</li>
       </ul>
       <p class="mb-6 leading-relaxed">

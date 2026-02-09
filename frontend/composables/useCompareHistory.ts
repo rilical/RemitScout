@@ -30,7 +30,7 @@ export const useCompareHistory = () => {
   const { state: runs, hydrated, reset } = usePersistedState<CompareRun[]>(
     'compare:history',
     () => [],
-    { validate: (value): value is CompareRun[] => Array.isArray(value) },
+    { validate: (value): value is CompareRun[] => Array.isArray(value), requiredConsent: 'functional' },
   )
 
   const count = computed(() => runs.value.length)

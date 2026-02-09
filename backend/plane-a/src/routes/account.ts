@@ -18,6 +18,8 @@ const deleteAccountSchema = z.object({
 
 const privacySchema = z.object({
   analytics: z.boolean(),
+  // Optional for backwards compatibility with older clients.
+  marketing: z.boolean().optional(),
   personalization: z.boolean(),
 })
 
@@ -30,10 +32,26 @@ export const accountRoutes = async (app: FastifyInstance) => {
         email: user.email || null,
       })
       const settings = await userAccountRepository.getPrivacySettings(user.user_id)
+
+      // Fail closed: until the user makes an explicit choice (updated_at set),
+      // treat all non-essential categories as disabled.
+      const hasDecision = Boolean(settings?.updated_at)
+      if (!hasDecision) {
+        return {
+          settings: {
+            analytics: false,
+            marketing: false,
+            personalization: false,
+            updated_at: null,
+          },
+        }
+      }
+
       return {
         settings: {
-          analytics: settings?.analytics_enabled ?? true,
-          personalization: settings?.personalization_enabled ?? true,
+          analytics: settings?.analytics_enabled ?? false,
+          marketing: settings?.marketing_enabled ?? false,
+          personalization: settings?.personalization_enabled ?? false,
           updated_at: settings?.updated_at ?? null,
         },
       }
@@ -64,13 +82,16 @@ export const accountRoutes = async (app: FastifyInstance) => {
       const settings = await userAccountRepository.updatePrivacySettings({
         user_id: user.user_id,
         analytics_enabled: parsed.data.analytics,
+        marketing_enabled: parsed.data.marketing,
         personalization_enabled: parsed.data.personalization,
       })
       return {
         settings: {
           analytics: settings?.analytics_enabled ?? parsed.data.analytics,
+          marketing: settings?.marketing_enabled ?? (parsed.data.marketing ?? false),
           personalization: settings?.personalization_enabled ?? parsed.data.personalization,
-          updated_at: settings?.updated_at ?? new Date().toISOString(),
+          // Never fabricate timestamps; use DB value when available.
+          updated_at: settings?.updated_at ?? null,
         },
       }
     } catch (error) {

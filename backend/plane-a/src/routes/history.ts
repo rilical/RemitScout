@@ -29,6 +29,10 @@ const historyCreateSchema = z.object({
   path: z.string().optional(),
 })
 
+const recentQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(10).optional(),
+})
+
 const parseDate = (value?: string | null) => {
   if (!value) return null
   const date = new Date(value)
@@ -50,6 +54,40 @@ const resolveUserId = (request: FastifyRequest, reply: FastifyReply): string | n
 }
 
 export const historyRoutes = async (app: FastifyInstance) => {
+  app.get('/history/recent', { preHandler: requireAuth() }, async (request, reply) => {
+    const parsed = recentQuerySchema.safeParse(request.query ?? {})
+    if (!parsed.success) {
+      reply.code(400)
+      return { error: 'bad_request', details: parsed.error.issues }
+    }
+
+    const user = request.user!
+    const limit = parsed.data.limit ?? 1
+
+    try {
+      const records = await historyRepository.listByUserId(user.user_id, limit, 0)
+      return {
+        success: true,
+        records: records.map((record) => ({
+          id: record.id,
+          from_country: record.from_country,
+          to_country: record.to_country,
+          amount: record.amount,
+          method: record.method,
+          path: record.path,
+          created_at: record.created_at.toISOString(),
+        })),
+      }
+    } catch (error) {
+      logger.error('history_recent_failed', {
+        user_id: user.user_id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
   app.get('/history/corridor', { preHandler: requireEntitlement('history') }, async (request, reply) => {
     const parsed = historyQuerySchema.safeParse(request.query)
     if (!parsed.success) {

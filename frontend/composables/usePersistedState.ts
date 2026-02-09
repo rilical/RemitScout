@@ -8,6 +8,7 @@ type PersistedStateOptions<T> = {
   serializer?: Serializer<T>
   validate?: (value: unknown) => value is T
   listenToStorage?: boolean
+  requiredConsent?: 'functional' | 'analytics' | 'marketing'
 }
 
 const defaultJsonSerializer = <T>(): Serializer<T> => ({
@@ -45,12 +46,44 @@ export function usePersistedState<T>(
   const serializer = options.serializer ?? defaultJsonSerializer<T>()
   const validate = options.validate
   const listenToStorage = options.listenToStorage ?? true
+  const requiredConsent = options.requiredConsent
+
+  const { functionalConsent, analyticsConsent, marketingConsent } = usePrivacySettings()
+  const allowStorage = computed(() => {
+    switch (requiredConsent) {
+      case 'functional':
+        return functionalConsent.value
+      case 'analytics':
+        return analyticsConsent.value
+      case 'marketing':
+        return marketingConsent.value
+      default:
+        return true
+    }
+  })
 
   const state = useState<T>(`persisted:${storageKey}`, initial)
   const hydrated = useState<boolean>(`persisted:${storageKey}:hydrated`, () => false)
 
+  const clearStorage = () => {
+    if (!import.meta.client) return
+    try {
+      globalThis.localStorage?.removeItem(storageKey)
+    }
+    catch {
+      // ignore storage failures
+    }
+  }
+
   function hydrateFromStorage() {
     if (!import.meta.client) return
+
+    if (!allowStorage.value) {
+      clearStorage()
+      state.value = initial()
+      hydrated.value = true
+      return
+    }
 
     const loaded = safeRead<T>(storageKey, serializer)
     if (!loaded.ok) {
@@ -70,6 +103,10 @@ export function usePersistedState<T>(
   function persistToStorage() {
     if (!import.meta.client) return
     if (!hydrated.value) return
+    if (!allowStorage.value) {
+      clearStorage()
+      return
+    }
     safeWrite(storageKey, state.value, serializer)
   }
 
@@ -96,6 +133,26 @@ export function usePersistedState<T>(
       persistToStorage()
     },
     { deep: true },
+  )
+
+  watch(
+    () => allowStorage.value,
+    (enabled, prevEnabled) => {
+      if (!import.meta.client) return
+      if (enabled) {
+        if (!prevEnabled) {
+          hydrateFromStorage()
+        }
+        return
+      }
+
+      if (prevEnabled) {
+        clearStorage()
+        state.value = initial()
+        hydrated.value = true
+      }
+    },
+    { immediate: false },
   )
 
   function reset() {

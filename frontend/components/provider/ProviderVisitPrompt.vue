@@ -174,6 +174,14 @@ import { useProviderVisits } from '~/composables/useProviderVisits'
 import { useAffiliate } from '~/composables/useAffiliate'
 import { useAuth } from '~/composables/useAuth'
 
+type Props = {
+  autoOpen?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  autoOpen: true,
+})
+
 const { isAuthenticated } = useAuth()
 const { pendingVisits, fetchPendingFeedback, submitFeedback } = useProviderVisits()
 const { trackConversion } = useAffiliate()
@@ -213,6 +221,11 @@ const resetForm = () => {
 const dismissPrompt = () => {
   showPrompt.value = false
   resetForm()
+}
+
+const open = () => {
+  if (pendingVisits.value.length === 0) return
+  showPrompt.value = true
 }
 
 const setCompleted = (value: boolean) => {
@@ -262,7 +275,7 @@ const submit = async () => {
 onMounted(async () => {
   if (!isAuthenticated.value) return
   await fetchPendingFeedback(3)
-  showPrompt.value = pendingVisits.value.length > 0
+  showPrompt.value = props.autoOpen && pendingVisits.value.length > 0
   hasFetched.value = true
 })
 
@@ -281,8 +294,12 @@ watch(isAuthenticated, async (value) => {
   }
   if (!hasFetched.value) {
     await fetchPendingFeedback(3)
-    showPrompt.value = pendingVisits.value.length > 0
+    showPrompt.value = props.autoOpen && pendingVisits.value.length > 0
     hasFetched.value = true
   }
+})
+
+defineExpose({
+  open,
 })
 </script>

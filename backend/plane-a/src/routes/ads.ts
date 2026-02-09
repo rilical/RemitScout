@@ -169,28 +169,30 @@ export const adsRoutes = async (app: FastifyInstance) => {
       const seed = input.session_id || input.anon_id || input.placement
       const picked = pickWeighted(result.rows, seed)
 
-      await query(
-        `INSERT INTO silver.ad_impression (
-           ad_id,
-           placement,
-           session_id,
-           anon_id,
-           user_id,
-           corridor_id,
-           page_path,
-           served_at
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-        [
-          picked.id,
-          picked.placement,
-          input.session_id ?? null,
-          input.anon_id ?? null,
-          request.user?.user_id ?? null,
-          input.corridor_id ?? null,
-          input.page_path ?? null,
-        ],
-        pool,
-      )
+      if (input.session_id || input.anon_id) {
+        await query(
+          `INSERT INTO silver.ad_impression (
+             ad_id,
+             placement,
+             session_id,
+             anon_id,
+             user_id,
+             corridor_id,
+             page_path,
+             served_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+          [
+            picked.id,
+            picked.placement,
+            input.session_id ?? null,
+            input.anon_id ?? null,
+            request.user?.user_id ?? null,
+            input.corridor_id ?? null,
+            input.page_path ?? null,
+          ],
+          pool,
+        )
+      }
 
       return {
         ad: {
@@ -229,6 +231,10 @@ export const adsRoutes = async (app: FastifyInstance) => {
 
     const input = parsed.data
     try {
+      if (!input.session_id && !input.anon_id) {
+        return { success: true, skipped: 'missing_ids' }
+      }
+
       await query(
         `INSERT INTO silver.ad_click (
            ad_id,
