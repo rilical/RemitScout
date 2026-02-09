@@ -36,7 +36,7 @@
 
       <div class="mb-4 h-16 w-full">
         <svg
-          v-if="sparklinePoints.length > 0"
+          v-if="sparklinePoints.length >= 2"
           viewBox="0 0 200 60"
           class="h-full w-full"
           preserveAspectRatio="none"
@@ -72,11 +72,24 @@
             stroke-linejoin="round"
           />
         </svg>
-        <EmptyState
+        <div
           v-else
-          title="No data"
-          message="No data available for this chart yet."
-        />
+          class="flex h-full items-center justify-center"
+        >
+          <EmptyState
+            mode="inline"
+            variant="terminal"
+            title="No data yet"
+          >
+            <template #icon>
+              <Icon
+                name="info"
+                :size="16"
+                class="text-neutral-500"
+              />
+            </template>
+          </EmptyState>
+        </div>
       </div>
     </div>
 
