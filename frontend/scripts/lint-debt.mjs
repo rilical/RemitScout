@@ -21,6 +21,8 @@ const gitFiles = () => {
     .filter(Boolean)
     .map(rel => path.join(REPO_ROOT, rel))
     .filter(abs => abs.includes(`${path.sep}frontend${path.sep}`))
+    // Don't lint the linter (or other internal scripts) for product policy.
+    .filter(abs => !abs.includes(`${path.sep}frontend${path.sep}scripts${path.sep}`))
 }
 
 const readText = filePath => fs.readFileSync(filePath, 'utf8')
