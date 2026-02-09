@@ -2,7 +2,7 @@
   <ClientOnly>
     <div v-if="shouldRender">
       <AdSlot
-        v-if="adsEnabled"
+        v-if="allowEzoic"
         :placement="placement"
         :layout="resolvedLayout"
         :corridor-id="corridorId"
@@ -42,6 +42,7 @@ import AdSlot from '~/components/ads/AdSlot.vue'
 import SponsoredAd, { type SponsoredAdData } from '~/components/shared/SponsoredAd.vue'
 import { useAds } from '~/composables/useAds'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import type { AdLayout, AdPlacement } from '~/lib/ads'
 import { getPlacementConfig, pickAdForPlacement } from '~/lib/ads'
 
@@ -77,9 +78,10 @@ const props = withDefaults(defineProps<Props>(), {
 const route = useRoute()
 const runtimeConfig = useRuntimeConfig()
 const { isPlus, hydrated } = useEntitlements()
+const { marketingConsent } = usePrivacySettings()
 const { fetchAdForPlacement, trackAdClick } = useAds()
 
-const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
+const allowEzoic = computed(() => runtimeConfig.public?.adsEnabled === true && marketingConsent.value)
 
 const placementConfig = computed(() => getPlacementConfig(props.placement))
 const resolvedLayout = computed<AdLayout>(() => props.layout || placementConfig.value.layout)
@@ -114,7 +116,7 @@ const creativeLayout = computed<AdLayout>(() => {
 const loadCreative = async () => {
   if (!import.meta.client) return
   if (!shouldRender.value) return
-  if (adsEnabled.value) return
+  if (allowEzoic.value) return
 
   const seed = `${route.fullPath}:${props.corridorId || ''}`
   try {
@@ -184,7 +186,7 @@ onMounted(() => {
 })
 
 watch(
-  () => [props.placement, props.corridorId, props.allowHouseAds, shouldRender.value, adsEnabled.value, route.fullPath] as const,
+  () => [props.placement, props.corridorId, props.allowHouseAds, shouldRender.value, allowEzoic.value, route.fullPath] as const,
   () => {
     void loadCreative()
   },

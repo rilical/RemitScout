@@ -61,11 +61,40 @@ export const authPlugin = (app: FastifyInstance) => {
       }
       return
     }
+
+    try {
+      const tombstone = await query<{ user_id: string }>(
+        `SELECT user_id
+         FROM silver.account_deletion_tombstone
+         WHERE user_id = $1`,
+        [result.user_id],
+        planeAPool,
+      )
+      if (tombstone.rowCount && tombstone.rowCount > 0) {
+        request.accountDeleted = true
+        return
+      }
+    } catch (error) {
+      logger.warn('account_deletion_tombstone_lookup_failed', {
+        user_id: result.user_id,
+        error: getErrorMessage(error),
+      })
+    }
+
     request.user = result
   })
 }
 
 export const requireAuth = () => async (request: FastifyRequest, reply: FastifyReply) => {
+  if (request.accountDeleted) {
+    reply.code(403)
+    return reply.send({
+      error: 'account_deleted',
+      code: 'account_deleted',
+      message: 'This account has been deleted.',
+    })
+  }
+
   if (request.authError) {
     const errorCode = request.authError.code
     const statusCode = errorCode === 'missing_token' ? 401 : 401
@@ -92,6 +121,11 @@ export const requireAuth = () => async (request: FastifyRequest, reply: FastifyR
 }
 
 export const requireAdmin = () => async (request: FastifyRequest, reply: FastifyReply) => {
+  if (request.accountDeleted) {
+    reply.code(403)
+    return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
+  }
+
   if (!request.user) {
     reply.code(401)
     return reply.send({ error: 'unauthorized' })
@@ -250,6 +284,11 @@ const applyApiKeyRateLimit = async (
 }
 
 export const requireEntitlement = (entitlement: EntitlementType) => async (request: FastifyRequest, reply: FastifyReply) => {
+  if (request.accountDeleted) {
+    reply.code(403)
+    return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
+  }
+
   const userId = request.user?.user_id ?? request.apiKey?.user_id
   if (!userId) {
     if (request.apiKeyError) {

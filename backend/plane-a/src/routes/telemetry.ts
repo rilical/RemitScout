@@ -111,7 +111,8 @@ const shouldSkipTelemetry = async (userId?: string | null): Promise<boolean> => 
   if (!userId) return false
   try {
     const settings = await userAccountRepository.getPrivacySettings(userId)
-    return settings?.analytics_enabled === false
+    if (!settings?.updated_at) return true
+    return settings.analytics_enabled === false
   } catch (error) {
     logger.warn('telemetry_privacy_lookup_failed', {
       user_id: userId,

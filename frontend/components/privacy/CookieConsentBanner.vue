@@ -6,10 +6,10 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div class="text-sm text-slate-700">
         <p class="font-semibold text-slate-900">
-          We use cookies for analytics
+          Ads keep the free plan free
         </p>
         <p class="mt-1 text-slate-600">
-          Help us improve Remit-Scout by allowing analytics cookies. You can change this anytime in your privacy settings.
+          We only use non-essential cookies (functional, analytics, marketing) if you opt in. You can change this anytime.
         </p>
         <div class="mt-2 flex gap-3 text-xs">
           <NuxtLink
@@ -32,10 +32,17 @@
         </button>
         <button
           type="button"
+          class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          @click="openCookiePreferences"
+        >
+          Manage cookies
+        </button>
+        <button
+          type="button"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           @click="acceptAll"
         >
-          Accept all
+          Accept &amp; support Remit-Scout
         </button>
       </div>
     </div>
@@ -44,14 +51,20 @@
 
 <script setup lang="ts">
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
+import { useCookiePreferencesModal } from '~/composables/useCookiePreferencesModal'
 
 const { hasConsent, saveSettings } = usePrivacySettings()
+const { open } = useCookiePreferencesModal()
 
 const acceptAll = async () => {
-  await saveSettings({ analytics: true, personalization: true })
+  await saveSettings({ personalization: true, analytics: true, marketing: true })
 }
 
 const rejectAll = async () => {
-  await saveSettings({ analytics: false, personalization: false })
+  await saveSettings({ personalization: false, analytics: false, marketing: false })
+}
+
+const openCookiePreferences = () => {
+  open()
 }
 </script>

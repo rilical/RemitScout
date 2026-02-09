@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 
 const storageKeySession = 'rs:telemetry:session_id'
 const storageKeyAnon = 'rs:telemetry:anon_id'
@@ -30,25 +31,48 @@ const writeStorage = (key: string, value: string) => {
   }
 }
 
+const removeStorage = (key: string) => {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(key)
+  }
+  catch {
+    // ignore storage failures
+  }
+}
+
 export const useSession = () => {
   const { request } = useApi()
+  const { analyticsConsent, marketingConsent } = usePrivacySettings()
   const sessionId = useState<string | null>('telemetry:session_id', () => null)
   const anonId = useState<string | null>('telemetry:anon_id', () => null)
 
+  const canPersist = computed(() => analyticsConsent.value || marketingConsent.value)
+
   const ensureSession = () => {
     if (!sessionId.value) {
-      const stored = readStorage(storageKeySession)
-      sessionId.value = stored || makeId()
-      if (!stored) {
-        writeStorage(storageKeySession, sessionId.value)
+      if (canPersist.value) {
+        const stored = readStorage(storageKeySession)
+        sessionId.value = stored || makeId()
+        if (!stored) {
+          writeStorage(storageKeySession, sessionId.value)
+        }
+      }
+      else {
+        sessionId.value = makeId()
       }
     }
 
     if (!anonId.value) {
-      const stored = readStorage(storageKeyAnon)
-      anonId.value = stored || makeId()
-      if (!stored) {
-        writeStorage(storageKeyAnon, anonId.value)
+      if (canPersist.value) {
+        const stored = readStorage(storageKeyAnon)
+        anonId.value = stored || makeId()
+        if (!stored) {
+          writeStorage(storageKeyAnon, anonId.value)
+        }
+      }
+      else {
+        anonId.value = makeId()
       }
     }
 
@@ -63,13 +87,22 @@ export const useSession = () => {
     anon_id: anonId.value,
   }))
 
+  const clearSession = () => {
+    sessionId.value = null
+    anonId.value = null
+    removeStorage(storageKeySession)
+    removeStorage(storageKeyAnon)
+  }
+
   return {
     sessionId,
     anonId,
     ids,
     ensureSession,
+    clearSession,
     trackSession: async () => {
       if (import.meta.server) return
+      if (!analyticsConsent.value) return
       const ids = ensureSession()
       try {
         await request('/sessions/track', {

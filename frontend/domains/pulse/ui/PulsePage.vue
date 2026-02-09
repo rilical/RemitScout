@@ -1136,7 +1136,7 @@ const setupDeepDivesObserver = async () => {
     { root: null, rootMargin: '200px 0px', threshold: 0.01 },
   )
 
-  deepDivesObserver.observe(el)
+  deepDivesObserver.observe(el as unknown as Element)
 }
 
 const actionStatus = ref<string | null>(null)

@@ -18,9 +18,15 @@ export class UserAccountRepository implements IUserAccountRepository {
     await query(
       `
       INSERT INTO silver.user_account (user_id, email, last_seen_at)
-      VALUES ($1, $2, NOW())
+      SELECT $1, $2, NOW()
+      WHERE NOT EXISTS (
+        SELECT 1 FROM silver.account_deletion_tombstone WHERE user_id = $1
+      )
       ON CONFLICT (user_id)
       DO UPDATE SET email = EXCLUDED.email, last_seen_at = NOW()
+      WHERE NOT EXISTS (
+        SELECT 1 FROM silver.account_deletion_tombstone WHERE user_id = $1
+      )
       `,
       [input.user_id, input.email],
       this.pool,
@@ -74,7 +80,7 @@ export class UserAccountRepository implements IUserAccountRepository {
     const result = await query<UserPrivacySettings>(
       `
       SELECT privacy_analytics_enabled AS analytics_enabled,
-             FALSE AS marketing_enabled,
+             privacy_marketing_enabled AS marketing_enabled,
              privacy_personalization_enabled AS personalization_enabled,
              privacy_updated_at AS updated_at
       FROM silver.user_account
@@ -92,15 +98,16 @@ export class UserAccountRepository implements IUserAccountRepository {
       UPDATE silver.user_account
       SET privacy_analytics_enabled = $2,
           privacy_personalization_enabled = $3,
+          privacy_marketing_enabled = COALESCE($4, privacy_marketing_enabled),
           privacy_updated_at = NOW(),
           last_seen_at = NOW()
       WHERE user_id = $1
       RETURNING privacy_analytics_enabled AS analytics_enabled,
-                FALSE AS marketing_enabled,
+                privacy_marketing_enabled AS marketing_enabled,
                 privacy_personalization_enabled AS personalization_enabled,
                 privacy_updated_at AS updated_at
       `,
-      [input.user_id, input.analytics_enabled, input.personalization_enabled],
+      [input.user_id, input.analytics_enabled, input.personalization_enabled, input.marketing_enabled ?? null],
       this.pool,
     )
     return result.rows[0] ?? null

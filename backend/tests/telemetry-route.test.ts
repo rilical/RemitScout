@@ -21,7 +21,7 @@ vi.mock('../plane-a/src/repositories', () => ({
     getAnalyticsAggregate: vi.fn(),
   })),
   UserAccountRepository: vi.fn().mockImplementation(() => ({
-    getPrivacySettings: vi.fn().mockResolvedValue({ analytics_enabled: true }),
+    getPrivacySettings: vi.fn().mockResolvedValue({ analytics_enabled: true, updated_at: new Date().toISOString() }),
   })),
 }))
 

@@ -141,14 +141,16 @@ const metaStandardEvents = new Set([
 
 export const useMarketingAnalytics = () => {
   const { request } = useApi()
-  const { settings, hasConsent } = usePrivacySettings()
+  const { analyticsConsent, marketingConsent } = usePrivacySettings()
   const route = useRoute()
   const runtimeConfig = useRuntimeConfig()
   const ga4Id = runtimeConfig.public.ga4MeasurementId
   const metaPixelId = runtimeConfig.public.metaPixelId
 
   const updateAttribution = () => {
-    if (!import.meta.client) return readStored()
+    if (!import.meta.client) return {}
+    if (!marketingConsent.value) return {}
+
     const stored = readStored()
     const query = route.query as Record<string, unknown>
     const next: Attribution = {
@@ -165,7 +167,7 @@ export const useMarketingAnalytics = () => {
 
   const ensureAttribution = () => updateAttribution()
 
-  const shouldSkip = () => settings.value.analytics === false || !hasConsent.value
+  const shouldSkipAll = () => !analyticsConsent.value && !marketingConsent.value
 
   const generateEventId = () => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -176,6 +178,7 @@ export const useMarketingAnalytics = () => {
 
   const sendGa4Event = (eventName: string, params?: Record<string, unknown>) => {
     if (!import.meta.client || !ga4Id || typeof window === 'undefined') return
+    if (!analyticsConsent.value) return
     const gtag = (window as any).gtag as ((...args: any[]) => void) | undefined
     if (!gtag) return
     gtag('event', eventName, params || {})
@@ -183,6 +186,7 @@ export const useMarketingAnalytics = () => {
 
   const sendMetaPixelEvent = (eventName: string, params: Record<string, unknown>, eventId: string) => {
     if (!import.meta.client || !metaPixelId || typeof window === 'undefined') return
+    if (!marketingConsent.value) return
     const fbq = (window as any).fbq as ((...args: any[]) => void) | undefined
     if (!fbq) return
     const trackType = metaStandardEvents.has(eventName) ? 'track' : 'trackCustom'
@@ -194,6 +198,7 @@ export const useMarketingAnalytics = () => {
     attribution: Attribution,
     eventId: string,
   ) => {
+    if (!marketingConsent.value) return
     if (!metaPixelId) return
     try {
       await request('/marketing/meta', {
@@ -229,13 +234,15 @@ export const useMarketingAnalytics = () => {
     ga4Params?: Record<string, unknown>,
     metaParams?: Record<string, unknown>,
   ) => {
-    if (shouldSkip()) return
-    const attribution = ensureAttribution()
+    if (shouldSkipAll()) return
+    const attribution = marketingConsent.value ? ensureAttribution() : {}
     const eventId = input.eventId || generateEventId()
 
     sendGa4Event(names.ga4, ga4Params)
-    sendMetaPixelEvent(names.meta, metaParams || ga4Params || {}, eventId)
-    await sendMetaCapiEvent({ ...input, eventName: names.meta }, attribution, eventId)
+    if (marketingConsent.value) {
+      sendMetaPixelEvent(names.meta, metaParams || ga4Params || {}, eventId)
+      await sendMetaCapiEvent({ ...input, eventName: names.meta }, attribution, eventId)
+    }
   }
 
   const trackSearch = async (input: SearchEventInput) => {
@@ -397,20 +404,21 @@ export const useMarketingAnalytics = () => {
   }
 
   const trackPageView = async () => {
-    if (shouldSkip()) return
     if (!import.meta.client) return
     const gtag = (window as any).gtag as ((...args: any[]) => void) | undefined
-    if (ga4Id && gtag) {
+    if (analyticsConsent.value && ga4Id && gtag) {
       gtag('event', 'page_view', { page_path: route.fullPath })
     }
-    if (metaPixelId) {
+    if (marketingConsent.value && metaPixelId) {
       sendMetaPixelEvent('PageView', { page_path: route.fullPath }, generateEventId())
     }
   }
 
   const initMarketing = async () => {
-    if (shouldSkip()) return
-    ensureAttribution()
+    if (shouldSkipAll()) return
+    if (marketingConsent.value) {
+      ensureAttribution()
+    }
     await trackPageView()
   }
 

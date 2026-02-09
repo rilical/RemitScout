@@ -23,9 +23,9 @@
         </h3>
         <p class="text-blue-800 leading-relaxed">
           <strong class="text-blue-600">Remit-Scout</strong> uses cookies to enhance your experience, ensure security, and improve our platform.
-          We only use essential cookies that are necessary for the website to function, and analytics cookies that help us understand
-          how visitors use our service. We do not use cookies to sell personal data or for advertising purposes. You can control
-          cookie preferences through your browser settings or our cookie banner if displayed.
+          We use essential cookies for core functionality, and (with your consent) functional, analytics, and marketing cookies.
+          Marketing cookies may be used for ads and attribution to help keep the free plan free. You can control cookie preferences
+          through your browser settings, our cookie banner, or the “Manage cookies” link in the footer.
         </p>
       </div>
 
@@ -53,7 +53,9 @@
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
         <li><strong class="text-blue-600">Essential operations:</strong> Enable core features like session security and site stability.</li>
+        <li><strong class="text-blue-600">Functional:</strong> Remember preferences like your last corridor.</li>
         <li><strong class="text-blue-600">Analytics:</strong> Understand how people use Remit-Scout so we can improve accuracy and performance.</li>
+        <li><strong class="text-blue-600">Marketing:</strong> Ads and attribution (only after opt-in where required by law).</li>
         <li><strong class="text-blue-600">Security:</strong> Detect abuse, prevent fraud, and protect the service.</li>
       </ul>
 
@@ -68,7 +70,9 @@
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
         <li><strong class="text-blue-600">Essential cookies:</strong> Required for the website to function properly. These cookies cannot be disabled.</li>
-        <li><strong class="text-blue-600">Analytics cookies:</strong> Help us measure usage patterns and improve the experience. These may require consent depending on your location.</li>
+        <li><strong class="text-blue-600">Functional cookies:</strong> Remember local preferences like your corridor and UI choices.</li>
+        <li><strong class="text-blue-600">Analytics cookies:</strong> Help us measure usage patterns and improve the experience (opt-in where required).</li>
+        <li><strong class="text-blue-600">Marketing cookies:</strong> Used for ads and attribution (opt-in where required).</li>
       </ul>
       <p class="mb-6 leading-relaxed">
         We do not use cookies to sell personal data. If we introduce new categories in the future,
@@ -95,9 +99,9 @@
         Third-party services
       </h2>
       <p class="mb-6 leading-relaxed">
-        Some analytics or infrastructure providers may set cookies to help us operate the platform.
-        These providers are contractually required to protect data and use it only for our purposes.
-        We do not allow third-party advertising cookies or tracking cookies for marketing purposes.
+        Some infrastructure, analytics, and advertising partners may set cookies or use similar technologies.
+        Where required by law, marketing/ads and analytics will only run after you opt in. Providers are contractually required
+        to protect data and use it only for the configured purposes.
       </p>
 
       <h2
@@ -140,13 +144,13 @@ import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
 
-const lastUpdatedIso = '2026-01-17'
-const lastUpdatedLabel = 'January 17, 2026'
+const lastUpdatedIso = '2026-02-09'
+const lastUpdatedLabel = 'February 9, 2026'
 
 const highlights = [
   {
-    title: 'Essential + analytics',
-    body: 'We use cookies for core functionality and product improvement.',
+    title: 'Clear categories',
+    body: 'Essential, functional, analytics, and marketing cookies.',
   },
   {
     title: 'Consent first',
@@ -188,7 +192,7 @@ const relatedLinks = [
 setSeo({
   title: 'Cookie Policy | Remit-Scout',
   description:
-    'Learn how Remit-Scout uses essential and analytics cookies, and how you can manage your cookie preferences.',
+    'Learn how Remit-Scout uses essential, functional, analytics, and marketing cookies, and how you can manage your preferences.',
   canonical: `${siteUrl}/cookies`,
   ogType: 'article',
   publishedTime: lastUpdatedIso,

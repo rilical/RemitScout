@@ -129,33 +129,6 @@ const analyticsEnabled = (() => {
   // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
   return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
 })()
-const ezoicScripts = adsEnabled
-  ? [
-      {
-        'key': 'ezoic-privacy-cmp',
-        'data-cfasync': 'false',
-        'src': 'https://cmp.gatekeeperconsent.com/min.js',
-        'tagPriority': -10,
-      },
-      {
-        'key': 'ezoic-privacy-gatekeeper',
-        'data-cfasync': 'false',
-        'src': 'https://the.gatekeeperconsent.com/cmp.min.js',
-        'tagPriority': -10,
-      },
-      {
-        key: 'ezoic-header',
-        async: true,
-        src: 'https://www.ezojs.com/ezoic/sa.min.js',
-        tagPriority: -10,
-      },
-      {
-        key: 'ezoic-init',
-        innerHTML: 'window.ezstandalone=window.ezstandalone||{};ezstandalone.cmd=ezstandalone.cmd||[];',
-        tagPriority: -10,
-      },
-    ]
-  : []
 
 const ensureClientPrecomputed = async () => {
   const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
@@ -228,9 +201,7 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en',
       },
-      script: [
-        ...ezoicScripts,
-      ],
+      script: [],
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

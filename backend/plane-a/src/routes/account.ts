@@ -32,12 +32,26 @@ export const accountRoutes = async (app: FastifyInstance) => {
         email: user.email || null,
       })
       const settings = await userAccountRepository.getPrivacySettings(user.user_id)
+
+      // Fail closed: until the user makes an explicit choice (updated_at set),
+      // treat all non-essential categories as disabled.
+      const hasDecision = Boolean(settings?.updated_at)
+      if (!hasDecision) {
+        return {
+          settings: {
+            analytics: false,
+            marketing: false,
+            personalization: false,
+            updated_at: null,
+          },
+        }
+      }
+
       return {
         settings: {
-          // Default to opt-in when unset to preserve existing behavior.
-          analytics: settings?.analytics_enabled ?? true,
+          analytics: settings?.analytics_enabled ?? false,
           marketing: settings?.marketing_enabled ?? false,
-          personalization: settings?.personalization_enabled ?? true,
+          personalization: settings?.personalization_enabled ?? false,
           updated_at: settings?.updated_at ?? null,
         },
       }
@@ -68,7 +82,7 @@ export const accountRoutes = async (app: FastifyInstance) => {
       const settings = await userAccountRepository.updatePrivacySettings({
         user_id: user.user_id,
         analytics_enabled: parsed.data.analytics,
-        marketing_enabled: parsed.data.marketing ?? false,
+        marketing_enabled: parsed.data.marketing,
         personalization_enabled: parsed.data.personalization,
       })
       return {

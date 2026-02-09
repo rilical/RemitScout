@@ -1,10 +1,39 @@
 type PrivacySettings = {
   analytics: boolean
+  marketing: boolean
   personalization: boolean
   updated_at: string | null
 }
 
+type PrivacySettingsWire = {
+  analytics?: boolean
+  marketing?: boolean
+  personalization?: boolean
+  updated_at?: string | null
+}
+
 const storageKey = 'rs:privacy:settings'
+
+const normalizeSettings = (input: PrivacySettingsWire | null | undefined): PrivacySettings | null => {
+  if (!input) return null
+
+  const updated_at = input.updated_at ?? null
+  if (!updated_at) {
+    return {
+      analytics: false,
+      marketing: false,
+      personalization: false,
+      updated_at: null,
+    }
+  }
+
+  return {
+    analytics: input.analytics ?? false,
+    marketing: input.marketing ?? false,
+    personalization: input.personalization ?? false,
+    updated_at,
+  }
+}
 
 const readStored = (): PrivacySettings | null => {
   if (!import.meta.client) {
@@ -13,12 +42,8 @@ const readStored = (): PrivacySettings | null => {
   try {
     const raw = window.localStorage.getItem(storageKey)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<PrivacySettings>
-    return {
-      analytics: parsed.analytics ?? true,
-      personalization: parsed.personalization ?? true,
-      updated_at: parsed.updated_at ?? null,
-    }
+    const parsed = JSON.parse(raw) as PrivacySettingsWire
+    return normalizeSettings(parsed)
   }
   catch {
     return null
@@ -42,6 +67,7 @@ export const usePrivacySettings = () => {
   const settings = useState<PrivacySettings>('privacy:settings', () => (
     readStored() ?? {
       analytics: false,
+      marketing: false,
       personalization: false,
       updated_at: null,
     }
@@ -50,6 +76,9 @@ export const usePrivacySettings = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const hasConsent = computed(() => Boolean(settings.value.updated_at))
+  const functionalConsent = computed(() => hasConsent.value && settings.value.personalization)
+  const analyticsConsent = computed(() => hasConsent.value && settings.value.analytics)
+  const marketingConsent = computed(() => hasConsent.value && settings.value.marketing)
 
   const hydrateFromStorage = () => {
     const stored = readStored()
@@ -63,14 +92,10 @@ export const usePrivacySettings = () => {
     loading.value = true
     error.value = null
     try {
-      const response = await request<{ settings: PrivacySettings }>('/account/privacy', {
+      const response = await request<{ settings: PrivacySettingsWire }>('/account/privacy', {
         method: 'GET',
       })
-      settings.value = {
-        analytics: response.settings.analytics ?? true,
-        personalization: response.settings.personalization ?? true,
-        updated_at: response.settings.updated_at ?? null,
-      }
+      settings.value = normalizeSettings(response.settings) ?? settings.value
       persistStored(settings.value)
       loaded.value = true
     }
@@ -87,12 +112,14 @@ export const usePrivacySettings = () => {
     error.value = null
     const payload = {
       analytics: next?.analytics ?? settings.value.analytics,
+      marketing: next?.marketing ?? settings.value.marketing,
       personalization: next?.personalization ?? settings.value.personalization,
     }
     try {
       if (!isLoggedIn.value) {
         settings.value = {
           analytics: payload.analytics,
+          marketing: payload.marketing,
           personalization: payload.personalization,
           updated_at: new Date().toISOString(),
         }
@@ -100,14 +127,15 @@ export const usePrivacySettings = () => {
         loaded.value = true
         return
       }
-      const response = await request<{ settings: PrivacySettings }>('/account/privacy', {
+      const response = await request<{ settings: PrivacySettingsWire }>('/account/privacy', {
         method: 'PUT',
         body: payload,
       })
-      settings.value = {
-        analytics: response.settings.analytics ?? payload.analytics,
-        personalization: response.settings.personalization ?? payload.personalization,
-        updated_at: response.settings.updated_at ?? new Date().toISOString(),
+      settings.value = normalizeSettings(response.settings) ?? {
+        analytics: payload.analytics,
+        marketing: payload.marketing,
+        personalization: payload.personalization,
+        updated_at: null,
       }
       persistStored(settings.value)
       loaded.value = true
@@ -148,5 +176,8 @@ export const usePrivacySettings = () => {
     fetchSettings,
     saveSettings,
     hasConsent,
+    functionalConsent,
+    analyticsConsent,
+    marketingConsent,
   }
 }

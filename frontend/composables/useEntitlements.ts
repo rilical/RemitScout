@@ -46,7 +46,6 @@ type MeResponse = {
     watchlist_items: number | null
     api_access: boolean
     api_tier: number | null
-    api_cadence_hours: number | null
   }
   usage: {
     alerts_count?: number
@@ -76,7 +75,6 @@ export const useEntitlements = () => {
   }))
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
-  const apiCadenceHours = useState<number | null>('entitlements:api-cadence', () => null)
   const billing = useState<MeResponse['billing'] | null>('entitlements:billing', () => null)
   const loading = useState<boolean>('entitlements:loading', () => false)
   const error = useState<string | null>('entitlements:error', () => null)
@@ -102,7 +100,6 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
-      apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
       return
@@ -124,7 +121,6 @@ export const useEntitlements = () => {
         limits.value = mapEntitlementsToLimits(data.entitlements)
         apiAccess.value = Boolean(data.entitlements.api_access)
         apiTier.value = data.entitlements.api_tier
-        apiCadenceHours.value = data.entitlements.api_cadence_hours
         billing.value = data.billing ?? null
         if (data.user) {
           applyBackendProfile(data.user)
@@ -147,7 +143,6 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
-      apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
     }
@@ -192,7 +187,6 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
-      apiCadenceHours.value = null
       billing.value = null
       hydrated.value = true
     }
@@ -209,7 +203,6 @@ export const useEntitlements = () => {
     isEnterprise,
     apiAccess: readonly(apiAccess),
     apiTier: readonly(apiTier),
-    apiCadenceHours: readonly(apiCadenceHours),
     refreshPlan,
   }
 }

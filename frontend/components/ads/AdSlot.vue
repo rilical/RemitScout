@@ -29,6 +29,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { AdPlacement, AdLayout } from '~/lib/ads'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import { claimEzoicPlaceholderId, getEzoicPlaceholderId, releaseEzoicPlaceholderId } from '~/lib/ezoic'
 
 interface Props {
@@ -57,11 +58,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { isPlus, hydrated } = useEntitlements()
+const { marketingConsent } = usePrivacySettings()
 const runtimeConfig = useRuntimeConfig()
 const activeId = ref<number | null>(null)
 const placeholderId = computed(() => getEzoicPlaceholderId(props.placement, props.slotIndex, props.placeholderId))
 const placeholderDomId = computed(() => (activeId.value ? `ezoic-pub-ad-placeholder-${activeId.value}` : ''))
 const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
+const allowEzoic = computed(() => adsEnabled.value && marketingConsent.value)
 
 const containerClasses = computed(() => {
   return [
@@ -82,11 +85,11 @@ const wrapperStyle = computed(() => {
   return style
 })
 
-const shouldRender = computed(() => adsEnabled.value && hydrated.value && !isPlus.value && activeId.value !== null)
+const shouldRender = computed(() => allowEzoic.value && hydrated.value && !isPlus.value && activeId.value !== null)
 
 const pushShowAds = (id: number) => {
   if (!import.meta.client) return
-  if (!adsEnabled.value) return
+  if (!allowEzoic.value) return
   const win = window as typeof window & { ezstandalone?: any }
   win.ezstandalone = win.ezstandalone || {}
   win.ezstandalone.cmd = win.ezstandalone.cmd || []
@@ -99,7 +102,7 @@ const pushShowAds = (id: number) => {
 
 const pushDestroy = (id: number) => {
   if (!import.meta.client) return
-  if (!adsEnabled.value) return
+  if (!allowEzoic.value) return
   const win = window as typeof window & { ezstandalone?: any }
   if (!win.ezstandalone?.cmd) return
   win.ezstandalone.cmd.push(() => {
@@ -110,7 +113,7 @@ const pushDestroy = (id: number) => {
 }
 
 const activateAd = async () => {
-  if (!import.meta.client || !adsEnabled.value || !hydrated.value || isPlus.value || activeId.value !== null) return
+  if (!import.meta.client || !allowEzoic.value || !hydrated.value || isPlus.value || activeId.value !== null) return
   const id = placeholderId.value
   if (!id) return
   if (!claimEzoicPlaceholderId(id)) return
@@ -132,7 +135,7 @@ onMounted(() => {
 })
 
 watch(
-  () => [adsEnabled.value, hydrated.value, isPlus.value, placeholderId.value] as const,
+  () => [allowEzoic.value, hydrated.value, isPlus.value, placeholderId.value] as const,
   ([enabled, isHydrated, plus, id]) => {
     if (!import.meta.client) return
     if (!enabled || !isHydrated || plus || !id) {

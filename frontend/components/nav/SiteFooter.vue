@@ -199,6 +199,15 @@
               </NuxtLink>
             </li>
             <li>
+              <button
+                type="button"
+                class="text-gray-400 hover:text-white transition-colors text-sm"
+                @click="openCookiePreferences"
+              >
+                Manage cookies
+              </button>
+            </li>
+            <li>
               <NuxtLink
                 to="/legal/disclosure"
                 class="text-gray-400 hover:text-white transition-colors text-sm"
@@ -308,10 +317,16 @@
 
 <script setup lang="ts">
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { useCookiePreferencesModal } from '~/composables/useCookiePreferencesModal'
 
 defineEmits<{
   'open-modal': []
 }>()
 
 const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
+const { open } = useCookiePreferencesModal()
+
+const openCookiePreferences = () => {
+  open()
+}
 </script>
