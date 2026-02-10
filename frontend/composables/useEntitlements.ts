@@ -7,6 +7,7 @@ export type PlanLimits = {
   alerts: Limit
   historyDays: Limit
   exports: boolean
+  exportsMaxDays: Limit
 }
 
 type MeResponse = {
@@ -41,6 +42,7 @@ type MeResponse = {
   entitlements: {
     pulse_access: 'none' | 'full'
     exports_enabled: boolean
+    exports_max_days: number | null
     alerts_max: number | null
     history_max_days: number | null
     watchlist_items: number | null
@@ -59,6 +61,7 @@ const mapEntitlementsToLimits = (entitlements: MeResponse['entitlements']): Plan
     alerts: entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max,
     historyDays: entitlements.history_max_days === null ? 'unlimited' : entitlements.history_max_days,
     exports: entitlements.exports_enabled,
+    exportsMaxDays: entitlements.exports_max_days === null ? 'unlimited' : entitlements.exports_max_days,
   }
 }
 
@@ -72,6 +75,7 @@ export const useEntitlements = () => {
     alerts: 1,
     historyDays: 30,
     exports: false,
+    exportsMaxDays: 0,
   }))
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
@@ -97,6 +101,7 @@ export const useEntitlements = () => {
         alerts: 1,
         historyDays: 30,
         exports: false,
+        exportsMaxDays: 0,
       }
       apiAccess.value = false
       apiTier.value = null
@@ -140,6 +145,7 @@ export const useEntitlements = () => {
         alerts: 1,
         historyDays: 30,
         exports: false,
+        exportsMaxDays: 0,
       }
       apiAccess.value = false
       apiTier.value = null
@@ -184,6 +190,7 @@ export const useEntitlements = () => {
         alerts: 1,
         historyDays: 30,
         exports: false,
+        exportsMaxDays: 0,
       }
       apiAccess.value = false
       apiTier.value = null

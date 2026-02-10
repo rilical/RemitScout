@@ -10,19 +10,11 @@
               @click="showCorridorDropdown = !showCorridorDropdown"
             >
               <span class="text-2xl">{{ store.corridor.fromFlag }}</span>
-              <svg
-                class="h-4 w-4 text-neutral-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
+              <Icon
+                name="arrow-right"
+                :size="16"
+                class="text-neutral-500"
+              />
               <span class="text-2xl">{{ store.corridor.toFlag }}</span>
               <div class="ml-2">
                 <div class="text-sm font-semibold text-white">
@@ -32,20 +24,12 @@
                   {{ store.corridor.from }} to {{ store.corridor.to }}
                 </div>
               </div>
-              <svg
-                class="ml-2 h-4 w-4 text-neutral-400 transition-transform"
+              <Icon
+                name="chevron-down"
+                :size="16"
+                class="ml-2 text-neutral-400 transition-transform"
                 :class="{ 'rotate-180': showCorridorDropdown }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              />
             </button>
 
             <!-- Corridor Dropdown -->
@@ -55,7 +39,7 @@
             >
               <div class="p-2">
                 <div class="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                  Popular Corridors
+                  Tracked Corridors
                 </div>
                 <button
                   v-for="corridor in corridors"
@@ -65,19 +49,11 @@
                   @click="selectCorridor(corridor)"
                 >
                   <span class="text-xl">{{ corridor.fromFlag }}</span>
-                  <svg
-                    class="h-3 w-3 text-neutral-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
+                  <Icon
+                    name="arrow-right"
+                    :size="16"
+                    class="text-neutral-500"
+                  />
                   <span class="text-xl">{{ corridor.toFlag }}</span>
                   <div class="flex-1">
                     <div class="text-sm font-medium text-white">
@@ -87,20 +63,12 @@
                       {{ corridor.from }}
                     </div>
                   </div>
-                  <svg
+                  <Icon
                     v-if="corridor.slug === store.corridor.slug"
-                    class="h-4 w-4 text-brand-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                    name="check"
+                    :size="16"
+                    class="text-brand-600"
+                  />
                 </button>
               </div>
             </div>
@@ -133,19 +101,11 @@
               </option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg
-                class="h-4 w-4 text-neutral-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <Icon
+                name="chevron-down"
+                :size="16"
+                class="text-neutral-400"
+              />
             </div>
           </div>
         </div>
@@ -185,7 +145,7 @@
         <span class="text-neutral-600">|</span>
         <span>{{ summary ? `Methods: ${formatMethods(summary.methodsIncluded)}` : 'Methods: Bank' }}</span>
         <span class="text-neutral-600">|</span>
-        <span>As of {{ summary ? formatTimestamp(summary.lastUpdated) : '—' }} UTC</span>
+        <span>{{ summary ? formatUpdatedLabel(summary.lastUpdated || null) : 'Updated —' }}</span>
       </div>
     </div>
 
@@ -200,20 +160,58 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { usePulseStore, POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
-import { getPulseCoverageSummary } from '~/lib/pulseApi'
-import type { PulseCoverageSummary } from '~/types/pulse'
-import { formatDateTime, formatNumber as formatNumberValue, formatUpdatedLabel } from '~/shared/lib/format'
+import { usePulseStore, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
+import { getCorridors, getPulseCoverageSummary } from '~/lib/pulseApi'
+import type { CorridorOption, PulseCoverageSummary } from '~/types/pulse'
+import { formatNumber as formatNumberValue, formatUpdatedLabel } from '~/shared/lib/format'
+import { Icon } from '~/ui'
+import { COUNTRIES } from '~/utils/countries-currencies'
 
 const store = usePulseStore()
 
 const showCorridorDropdown = ref(false)
 
-const corridors = POPULAR_CORRIDORS
-
 const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
 
 const summary = ref<PulseCoverageSummary | null>(null)
+
+const { data: corridorData } = await useAsyncData('pulse-corridors', () => getCorridors())
+
+const toCountryName = (code?: string | null): string => {
+  if (!code) return ''
+  const normalized = code.trim().toUpperCase()
+  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized)
+  return found?.name || normalized
+}
+
+const toPulseCorridor = (option: CorridorOption): PulseCorridor => {
+  const corridorId = option.corridorId
+  const parts = corridorId ? corridorId.split('-') : []
+  const sourceCountry = (option.sourceCountry || parts[0] || '').toUpperCase()
+  const destCountry = (option.destCountry || parts[1] || '').toUpperCase()
+
+  const fromCode = (option.fromCode || option.sourceCurrency || parts[2] || '').toUpperCase()
+  const toCode = (option.toCode || option.destCurrency || parts[3] || '').toUpperCase()
+
+  const slug = String(option.slug || option.value || `${fromCode.toLowerCase()}-${toCode.toLowerCase()}`).trim().toLowerCase()
+  const label = option.label || `${fromCode} → ${toCode}`
+
+  return {
+    from: toCountryName(sourceCountry) || sourceCountry || fromCode,
+    to: toCountryName(destCountry) || destCountry || toCode,
+    fromCode,
+    toCode,
+    fromFlag: option.fromFlag,
+    toFlag: option.toFlag,
+    label,
+    slug,
+    corridorId,
+  }
+}
+
+const corridors = computed<PulseCorridor[]>(() => {
+  return (corridorData.value || []).map(toPulseCorridor)
+})
 
 const hasLastUpdated = computed(() => {
   if (!store.lastUpdated) return false
@@ -246,10 +244,6 @@ function formatNumber(value: number): string {
   return formatNumberValue(value)
 }
 
-function formatTimestamp(value: string): string {
-  return formatDateTime(value)
-}
-
 function formatMethods(methods: string[]): string {
   return methods.map(method => method.charAt(0).toUpperCase() + method.slice(1)).join(', ')
 }
@@ -257,6 +251,9 @@ function formatMethods(methods: string[]): string {
 async function loadSummary() {
   try {
     summary.value = await getPulseCoverageSummary(store.corridor, store.timeframe)
+    if (summary.value?.lastUpdated) {
+      store.setLastUpdated(summary.value.lastUpdated)
+    }
   }
   catch (e) {
     console.error('Failed to load coverage summary:', e)

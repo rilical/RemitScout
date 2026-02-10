@@ -37,87 +37,6 @@ const DEFAULT_CORRIDOR: PulseCorridor = {
   corridorId: 'US-PH-USD-PHP',
 }
 
-export const POPULAR_CORRIDORS: PulseCorridor[] = [
-  DEFAULT_CORRIDOR,
-  {
-    from: 'United States',
-    to: 'Mexico',
-    fromCode: 'USD',
-    toCode: 'MXN',
-    fromFlag: '🇺🇸',
-    toFlag: '🇲🇽',
-    label: 'USD → MXN',
-    slug: 'usd-mxn',
-    corridorId: 'US-MX-USD-MXN',
-  },
-  {
-    from: 'United States',
-    to: 'India',
-    fromCode: 'USD',
-    toCode: 'INR',
-    fromFlag: '🇺🇸',
-    toFlag: '🇮🇳',
-    label: 'USD → INR',
-    slug: 'usd-inr',
-    corridorId: 'US-IN-USD-INR',
-  },
-  {
-    from: 'United Kingdom',
-    to: 'India',
-    fromCode: 'GBP',
-    toCode: 'INR',
-    fromFlag: '🇬🇧',
-    toFlag: '🇮🇳',
-    label: 'GBP → INR',
-    slug: 'gbp-inr',
-    corridorId: 'GB-IN-GBP-INR',
-  },
-  {
-    from: 'United States',
-    to: 'Nigeria',
-    fromCode: 'USD',
-    toCode: 'NGN',
-    fromFlag: '🇺🇸',
-    toFlag: '🇳🇬',
-    label: 'USD → NGN',
-    slug: 'usd-ngn',
-    corridorId: 'US-NG-USD-NGN',
-  },
-  {
-    from: 'Canada',
-    to: 'Philippines',
-    fromCode: 'CAD',
-    toCode: 'PHP',
-    fromFlag: '🇨🇦',
-    toFlag: '🇵🇭',
-    label: 'CAD → PHP',
-    slug: 'cad-php',
-    corridorId: 'CA-PH-CAD-PHP',
-  },
-  {
-    from: 'Australia',
-    to: 'Philippines',
-    fromCode: 'AUD',
-    toCode: 'PHP',
-    fromFlag: '🇦🇺',
-    toFlag: '🇵🇭',
-    label: 'AUD → PHP',
-    slug: 'aud-php',
-    corridorId: 'AU-PH-AUD-PHP',
-  },
-  {
-    from: 'United Kingdom',
-    to: 'Nigeria',
-    fromCode: 'GBP',
-    toCode: 'NGN',
-    fromFlag: '🇬🇧',
-    toFlag: '🇳🇬',
-    label: 'GBP → NGN',
-    slug: 'gbp-ngn',
-    corridorId: 'GB-NG-GBP-NGN',
-  },
-]
-
 export const usePulseStore = defineStore('pulse', {
   state: (): PulseState => ({
     corridor: DEFAULT_CORRIDOR,
@@ -139,7 +58,7 @@ export const usePulseStore = defineStore('pulse', {
         '7D': 7,
         '30D': 30,
         '1Y': 365,
-        'MAX': 730,
+        'MAX': 365,
       }
       return map[state.timeframe]
     },
@@ -150,7 +69,7 @@ export const usePulseStore = defineStore('pulse', {
         '7D': 168,
         '30D': 720,
         '1Y': 8760,
-        'MAX': 17520,
+        'MAX': 8760,
       }
       return map[state.timeframe]
     },
@@ -185,13 +104,6 @@ export const usePulseStore = defineStore('pulse', {
       this.corridor = corridor
     },
 
-    setCorridorBySlug(slug: string) {
-      const corridor = POPULAR_CORRIDORS.find(c => c.slug === slug)
-      if (corridor) {
-        this.corridor = corridor
-      }
-    },
-
     setTimeframe(timeframe: PulseTimeframe) {
       this.timeframe = timeframe
     },
@@ -217,9 +129,6 @@ export const usePulseStore = defineStore('pulse', {
     },
 
     async initFromRoute(query: Record<string, string | undefined>) {
-      if (query.corridor) {
-        this.setCorridorBySlug(query.corridor)
-      }
       if (query.timeframe && ['24H', '7D', '30D', '1Y', 'MAX'].includes(query.timeframe)) {
         this.timeframe = query.timeframe as PulseTimeframe
       }
@@ -238,6 +147,9 @@ export const usePulseStore = defineStore('pulse', {
       const params: Record<string, string> = {}
       if (this.corridor.slug !== 'usd-php') {
         params.corridor = this.corridor.slug
+        if (this.corridor.corridorId) {
+          params.corridor_id = this.corridor.corridorId
+        }
       }
       if (this.timeframe !== '7D') {
         params.timeframe = this.timeframe

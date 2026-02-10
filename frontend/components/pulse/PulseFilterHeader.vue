@@ -220,7 +220,10 @@ const lastUpdatedLabel = computed(() => formatUpdatedLabel(props.lastUpdated ?? 
 
 function updateFilters() {
   if (localFilters.value.corridor !== lastCorridor.value) {
-    localFilters.value.corridorId = undefined
+    const info = localFilters.value.corridor === 'global'
+      ? null
+      : getCorridorBySlug(localFilters.value.corridor)
+    localFilters.value.corridorId = info?.corridorId
     lastCorridor.value = localFilters.value.corridor
   }
   emit('update:modelValue', { ...localFilters.value })
@@ -257,6 +260,11 @@ function syncFromUrl() {
   if (corridorId && typeof corridorId === 'string') {
     localFilters.value.corridorId = corridorId
   }
+
+  if (localFilters.value.corridor !== 'global' && !localFilters.value.corridorId) {
+    const info = getCorridorBySlug(localFilters.value.corridor)
+    localFilters.value.corridorId = info?.corridorId
+  }
   if (amount && typeof amount === 'string') {
     const num = Number.parseInt(amount, 10)
     if ([100, 200, 500, 1000].includes(num)) {
@@ -281,7 +289,8 @@ watch(() => props.modelValue, (newVal) => {
 watch(() => localFilters.value.corridor, (next, prev) => {
   if (isSyncingFromUrl.value) return
   if (next !== prev) {
-    localFilters.value.corridorId = undefined
+    const info = next === 'global' ? null : getCorridorBySlug(next)
+    localFilters.value.corridorId = info?.corridorId
   }
 })
 

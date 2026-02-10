@@ -3,6 +3,9 @@
 
 export {
   getChartData,
+  getCorridors,
+  getCorridorById,
+  getCorridorBySlug,
   getPulseCoverageSummary,
   getPulseSnapshotSummary,
 } from '~/lib/pulseApi'

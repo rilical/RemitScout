@@ -45,7 +45,11 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <span class="relative flex h-2 w-2">
+          <span
+            v-if="heroData?.lastUpdated"
+            class="relative flex h-2 w-2"
+            aria-hidden="true"
+          >
             <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
             <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
           </span>
@@ -53,7 +57,7 @@
             class="text-xs"
             :class="isDark ? 'text-neutral-400' : 'text-gray-500'"
           >
-            Live
+            {{ updatedLabel }}
           </span>
         </div>
       </div>
@@ -157,7 +161,7 @@
           class="text-xs"
           :class="isDark ? 'text-neutral-400' : 'text-gray-500'"
         >
-          Data sourced {{ relativeTime }}
+          {{ updatedLabel }}
         </div>
         <a
           :href="pulseUrl"
@@ -194,8 +198,10 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
-import { POPULAR_CORRIDORS, type PulseCorridor, type PulseTimeframe } from '~/stores/pulse'
+import { getCorridors, getCorridorBySlug, getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
+import type { PulseCorridor, PulseTimeframe } from '~/stores/pulse'
+import type { CorridorOption } from '~/types/pulse'
+import { formatUpdatedLabel } from '~/shared/lib/format'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
 const { pulseEnabled } = useFeatureFlags()
@@ -228,8 +234,34 @@ const timeframe = computed<PulseTimeframe>(() => {
   return '7D'
 })
 
-const corridorData = computed<PulseCorridor | undefined>(() => {
-  return POPULAR_CORRIDORS.find(c => c.slug === corridorSlug.value)
+const { data: corridorList } = await useAsyncData('pulse-corridors', () => getCorridors())
+
+const corridorOption = computed<CorridorOption | undefined>(() => {
+  const byCache = getCorridorBySlug(corridorSlug.value)
+  if (byCache) return byCache
+  return (corridorList.value || []).find(c => (c.slug || c.value) === corridorSlug.value || c.value === corridorSlug.value)
+})
+
+const corridorData = computed<PulseCorridor | null>(() => {
+  const option = corridorOption.value
+  if (!option) return null
+
+  const corridorId = option.corridorId
+  const parts = corridorId ? corridorId.split('-') : []
+  const fromCountry = (option.sourceCountry || parts[0] || 'US').toUpperCase()
+  const toCountry = (option.destCountry || parts[1] || 'PH').toUpperCase()
+
+  return {
+    from: fromCountry,
+    to: toCountry,
+    fromCode: option.fromCode,
+    toCode: option.toCode,
+    fromFlag: option.fromFlag,
+    toFlag: option.toFlag,
+    label: option.label,
+    slug: String(option.slug || option.value || corridorSlug.value),
+    corridorId,
+  }
 })
 
 const pulseUrl = computed(() => {
@@ -237,17 +269,7 @@ const pulseUrl = computed(() => {
   return base ? `${base}/pulse` : '/pulse'
 })
 
-const relativeTime = computed(() => {
-  if (!heroData.value?.lastUpdated) return 'recently'
-  const diff = Date.now() - new Date(heroData.value.lastUpdated).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes === 1) return '1 min ago'
-  if (minutes < 60) return `${minutes} mins ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours === 1) return '1 hour ago'
-  return `${hours} hours ago`
-})
+const updatedLabel = computed(() => formatUpdatedLabel(heroData.value?.lastUpdated ?? null))
 
 const chartOption = computed(() => {
   if (!heroData.value) return {}

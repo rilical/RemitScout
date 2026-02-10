@@ -1975,7 +1975,13 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
                   >
                     <option value="7d">Last 7 days</option>
                     <option value="30d">Last 30 days</option>
-                    <option value="90d">Last 90 days</option>
+                    <option v-if="isEnterprise" value="90d">Last 90 days</option>
+                    <option
+                      v-if="isEnterprise && exportSettings.dataType === 'history' && exportSettings.includeCorridorHistory && exportCorridorIds.length > 0"
+                      value="all"
+                    >
+                      All available index history
+                    </option>
                   </select>
                 </div>
 
@@ -4275,6 +4281,8 @@ import {
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { COUNTRIES } from '~/utils/countries-currencies'
 import type { AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
+import { getCorridors } from '~/lib/pulseApi'
+import type { CorridorOption } from '~/types/pulse'
 
 type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'enterprise' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
@@ -6134,15 +6142,28 @@ const showExportModal = ref(false)
 const isExporting = ref(false)
 const selectedExportItems = ref<string[]>([])
 
+watch(
+  () => route.query.openExport,
+  (value) => {
+    if (value === '1') {
+      showExportModal.value = true
+    }
+  },
+  { immediate: true },
+)
+
+type ExportDateRange = '7d' | '30d' | '90d' | 'all'
+
 const getDefaultDateFrom = () => {
   const date = new Date()
-  date.setDate(date.getDate() - 30)
+  // Inclusive window: last 30 days means today + previous 29 days.
+  date.setDate(date.getDate() - 29)
   return date.toISOString().split('T')[0]
 }
 
 const exportSettings = ref({
   dataType: 'history' as 'history' | 'watchlist' | 'alerts' | 'all',
-  dateRange: '30d' as '7d' | '30d' | '90d',
+  dateRange: '30d' as ExportDateRange,
   dateFrom: getDefaultDateFrom(),
   dateTo: new Date().toISOString().split('T')[0],
   format: 'csv' as 'csv' | 'pdf',
@@ -6165,6 +6186,32 @@ const exportCorridorIds = computed<string[]>(() => {
   const unique = Array.from(new Set(ids))
   return unique.slice(0, 16)
 })
+
+const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
+
+const resolveAllAvailableGoldHistoryRange = (): { dateFrom: string, dateTo: string } | null => {
+  // Only meaningful when exporting corridor history (Gold indices).
+  const byId = new Map<string, CorridorOption>()
+  for (const c of trackedCorridorsData.value || []) {
+    if (c.corridorId) byId.set(c.corridorId, c)
+  }
+
+  let minDate: string | null = null
+  let maxDate: string | null = null
+  for (const id of exportCorridorIds.value) {
+    const c = byId.get(id)
+    if (!c?.minDate || !c?.maxDate) continue
+    if (minDate === null || c.minDate < minDate) {
+      minDate = c.minDate
+    }
+    if (maxDate === null || c.maxDate > maxDate) {
+      maxDate = c.maxDate
+    }
+  }
+
+  if (!minDate || !maxDate) return null
+  return { dateFrom: minDate, dateTo: maxDate }
+}
 
 const exportStatusMessage = ref<string | null>(null)
 const exportErrorMessage = ref<string | null>(null)
@@ -6229,13 +6276,26 @@ const pollExportStatus = async (jobId: string) => {
   }, 2000)
 }
 
-function setExportDateRange(range: '7d' | '30d' | '90d') {
+function setExportDateRange(range: ExportDateRange) {
   const today = new Date()
   exportSettings.value.dateTo = today.toISOString().split('T')[0]
 
+  if (range === 'all') {
+    const resolved = resolveAllAvailableGoldHistoryRange()
+    if (resolved) {
+      exportSettings.value.dateFrom = resolved.dateFrom
+      exportSettings.value.dateTo = resolved.dateTo
+      exportSettings.value.dateRange = range
+      return
+    }
+    // Fallback if corridor metadata is unavailable.
+    range = '30d'
+  }
+
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
   const fromDate = new Date()
-  fromDate.setDate(fromDate.getDate() - days)
+  // Inclusive window: subtract (days-1).
+  fromDate.setDate(fromDate.getDate() - (days - 1))
   exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
   exportSettings.value.dateRange = range
 }
@@ -6243,7 +6303,12 @@ function setExportDateRange(range: '7d' | '30d' | '90d') {
 // Initialize date range when modal opens
 watch(() => showExportModal.value, (isOpen) => {
   if (isOpen) {
-    setExportDateRange(exportSettings.value.dateRange || '30d')
+    const range = exportSettings.value.dateRange || '30d'
+    if (!isEnterprise.value && range !== '7d' && range !== '30d') {
+      setExportDateRange('30d')
+      return
+    }
+    setExportDateRange(range)
   }
 })
 
@@ -6252,6 +6317,15 @@ watch(
   (dataType) => {
     if (dataType !== 'history') {
       exportSettings.value.includeCorridorHistory = false
+    }
+  },
+)
+
+watch(
+  () => exportSettings.value.includeCorridorHistory,
+  (enabled) => {
+    if (!enabled && exportSettings.value.dateRange === 'all') {
+      setExportDateRange('30d')
     }
   },
 )

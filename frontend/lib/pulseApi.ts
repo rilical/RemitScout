@@ -95,14 +95,88 @@ const buildPulseQuery = (filters: PulseFilters, extra: Record<string, unknown> =
   ...extra,
 })
 
+const normalizeSlug = (value: string) => value.trim().toLowerCase()
+
+const getCorridorSlug = (corridor: CorridorOption): string => {
+  if (typeof corridor.slug === 'string' && corridor.slug.trim()) return corridor.slug
+  return corridor.value
+}
+
+const pickBestCorridor = (candidates: CorridorOption[]): CorridorOption | undefined => {
+  if (candidates.length === 0) return undefined
+
+  let best: CorridorOption = candidates[0]
+  let bestRank: [number, number, number] = [
+    best.isUsdOrigin ? 1 : 0,
+    typeof best.dataPoints === 'number' ? best.dataPoints : 0,
+    best.lastUpdated ? new Date(best.lastUpdated).getTime() : 0,
+  ]
+
+  for (const entry of candidates) {
+    const usBias = entry.isUsdOrigin ? 1 : 0
+    const points = typeof entry.dataPoints === 'number' ? entry.dataPoints : 0
+    const updatedAt = entry.lastUpdated ? new Date(entry.lastUpdated).getTime() : 0
+    const rank: [number, number, number] = [usBias, points, updatedAt]
+
+    if (rank[0] !== bestRank[0]) {
+      if (rank[0] > bestRank[0]) {
+        best = entry
+        bestRank = rank
+      }
+      continue
+    }
+    if (rank[1] !== bestRank[1]) {
+      if (rank[1] > bestRank[1]) {
+        best = entry
+        bestRank = rank
+      }
+      continue
+    }
+    if (rank[2] !== bestRank[2]) {
+      if (rank[2] > bestRank[2]) {
+        best = entry
+        bestRank = rank
+      }
+    }
+  }
+
+  return best
+}
+
 export async function getCorridors(): Promise<CorridorOption[]> {
   const { request } = useApi()
-  corridorCache = await request<CorridorOption[]>('/pulse/corridors')
-  return corridorCache
+
+  try {
+    corridorCache = await request<CorridorOption[]>('/pulse/corridors')
+    return corridorCache
+  }
+  catch (error: any) {
+    const code = error?.statusCode
+    if (code === 401 || code === 403) {
+      corridorCache = []
+      return []
+    }
+    throw error
+  }
+}
+
+export function getCorridorById(corridorId: string): CorridorOption | undefined {
+  if (!corridorCache) return undefined
+  const normalized = corridorId.trim()
+  return corridorCache.find(c => c.corridorId === normalized)
 }
 
 export function getCorridorBySlug(slug: string): CorridorOption | undefined {
-  return corridorCache?.find(c => c.value === slug)
+  if (!corridorCache) return undefined
+
+  const normalized = normalizeSlug(slug)
+  const candidates = corridorCache.filter((c) => {
+    const value = normalizeSlug(c.value)
+    const key = normalizeSlug(getCorridorSlug(c))
+    return value === normalized || key === normalized
+  })
+
+  return pickBestCorridor(candidates)
 }
 
 export async function getPulseOverview(filters: PulseFilters): Promise<PulseOverview> {

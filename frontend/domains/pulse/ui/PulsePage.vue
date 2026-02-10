@@ -237,76 +237,52 @@
                   Configure Your Analysis
                 </h2>
                 <p class="text-sm text-neutral-400">
-                  Select source and destination countries, currencies, amount, and timeframe
+                  Select a tracked corridor, amount, and timeframe
                 </p>
               </div>
 
               <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
-                <!-- Source Country -->
-                <div class="lg:col-span-3">
+                <!-- Tracked Corridor -->
+                <div class="lg:col-span-10">
                   <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                    Sending from
+                    Tracked corridor
                   </label>
-                  <CountrySelect
-                    id="pulse-from-country"
-                    v-model="fromCountry"
-                    label="Sending from"
-                    :exclude-country="toCountry"
-                    placeholder="Select country"
-                    theme="dark"
-                    :select-class="'!border-neutral-600 !bg-neutral-900 !text-white placeholder:text-neutral-500 focus:!border-brand-600 focus:!ring-brand-600 disabled:!bg-neutral-800 disabled:!text-neutral-500'"
-                    @country-selected="handleFromCountryChange"
-                  />
-                </div>
-
-                <!-- Source Currency -->
-                <div class="lg:col-span-2">
-                  <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                    From currency
-                  </label>
-                  <CurrencySelect
-                    id="pulse-from-currency"
-                    v-model="fromCurrency"
-                    :country-code="fromCountry"
-                    :exclude-currency="toCurrency"
-                    placeholder="USD"
-                    theme="dark"
-                    :select-class="'!border-neutral-600 !bg-neutral-900 !text-white placeholder:text-neutral-500 focus:!border-brand-600 focus:!ring-brand-600 disabled:!bg-neutral-800 disabled:!text-neutral-500'"
-                  />
-                </div>
-
-                <!-- Destination Country -->
-                <div class="lg:col-span-3">
-                  <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                    Receiving in
-                  </label>
-                  <CountrySelect
-                    id="pulse-to-country"
-                    v-model="toCountry"
-                    label="Receiving in"
-                    :exclude-country="fromCountry"
-                    placeholder="Select country"
-                    theme="dark"
-                    :select-class="'!border-neutral-600 !bg-neutral-900 !text-white placeholder:text-neutral-500 focus:!border-brand-600 focus:!ring-brand-600 disabled:!bg-neutral-800 disabled:!text-neutral-500'"
-                    @country-selected="handleToCountryChange"
-                  />
-                </div>
-
-                <!-- Destination Currency -->
-                <div class="lg:col-span-2">
-                  <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                    To currency
-                  </label>
-                  <CurrencySelect
-                    id="pulse-to-currency"
-                    v-model="toCurrency"
-                    :country-code="toCountry"
-                    :exclude-currency="fromCurrency"
-                    :placeholder="toCountry ? 'Select currency' : 'Select country first'"
-                    :disabled="!toCountry"
-                    theme="dark"
-                    :select-class="'!border-neutral-600 !bg-neutral-900 !text-white placeholder:text-neutral-500 focus:!border-brand-600 focus:!ring-brand-600 disabled:!bg-neutral-800 disabled:!text-neutral-500'"
-                  />
+                  <div class="relative">
+                    <select
+                      v-model="selectedCorridorKey"
+                      class="h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-10 text-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="trackedCorridors.length === 0"
+                      @change="handleCorridorSelect"
+                    >
+                      <option
+                        v-for="corridor in trackedCorridors"
+                        :key="corridor.corridorId || corridor.value"
+                        :value="corridor.corridorId || corridor.value"
+                        class="bg-neutral-900"
+                      >
+                        {{ corridor.fromFlag }} {{ corridor.label }}
+                      </option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <Icon
+                        name="chevron-down"
+                        :size="16"
+                        class="text-neutral-400"
+                      />
+                    </div>
+                  </div>
+                  <p
+                    v-if="trackedCorridors.length === 0"
+                    class="mt-2 text-xs text-neutral-400"
+                  >
+                    No tracked corridors are available right now.
+                  </p>
+                  <p
+                    v-else-if="corridorCoverageLabel"
+                    class="mt-2 text-xs text-neutral-400"
+                  >
+                    {{ corridorCoverageLabel }}
+                  </p>
                 </div>
 
                 <!-- Amount Input -->
@@ -357,11 +333,15 @@
                 <span>{{ summary ? `Methods: ${formatMethods(summary.methodsIncluded)}` : 'Methods: Bank' }}</span>
                 <span class="text-neutral-600">|</span>
                 <div class="flex items-center gap-2">
-                  <span class="relative flex h-2 w-2">
+                  <span
+                    v-if="summary?.lastUpdated"
+                    class="relative flex h-2 w-2"
+                    aria-hidden="true"
+                  >
                     <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
                     <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
                   </span>
-                  <span>{{ summary?.lastUpdated ? `Updated ${formatTimestamp(summary.lastUpdated)} UTC` : 'Updated —' }}</span>
+                  <span>{{ formatUpdatedLabel(summary?.lastUpdated || null) }}</span>
                 </div>
               </div>
             </div>
@@ -572,7 +552,7 @@
                       <option value="markup">FX Markup (bps)</option>
                     </select>
                   </label>
-                  <span>{{ snapshotSummary ? `Updated ${formatTimestamp(snapshotSummary.lastUpdated)} UTC` : 'Loading snapshot...' }}</span>
+                  <span>{{ snapshotSummary ? formatUpdatedLabel(snapshotSummary.lastUpdated || null) : 'Loading snapshot...' }}</span>
                 </div>
               </div>
 
@@ -809,7 +789,7 @@
                       Download Snapshot
                     </div>
                     <p class="mt-1 text-xs text-neutral-400">
-                      CSV export for the current corridor and timeframe. Includes Pulse corridor indices history (RCI/volatility) when available.
+                      CSV export for the selected corridor. Plus exports are capped at 30 days.
                     </p>
                     <button
                       type="button"
@@ -888,7 +868,7 @@
                       </div>
                     </div>
                     <p class="text-xs text-neutral-400">
-                      RESTful API for programmatic access to real-time and historical pricing data
+                      RESTful API for programmatic access to current and historical pricing data
                     </p>
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
@@ -903,7 +883,7 @@
                       </div>
                     </div>
                     <p class="text-xs text-neutral-400">
-                      Real-time event notifications for price changes, anomalies, and market shifts
+                      Event notifications for price changes, anomalies, and market shifts
                     </p>
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
@@ -1051,19 +1031,17 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary } from '~/domains/pulse/infrastructure/pulseApi'
+import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption } from '~/types/pulse'
+import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
 import { Icon } from '~/ui'
 import { formatNumber as formatCount, formatUpdatedLabel } from '~/shared/lib/format'
-import { COUNTRIES, getCountryByCode, getAvailableCurrencies } from '~/utils/countries-currencies'
+import { COUNTRIES } from '~/utils/countries-currencies'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useWatchlist } from '~/composables/useWatchlist'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 import { useExports } from '~/composables/useExports'
-import CountrySelect from '~/components/shared/CountrySelect.vue'
-import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { getCorridorUrl } from '~/utils/country-slugs'
@@ -1091,11 +1069,109 @@ const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
 const summary = ref<PulseCoverageSummary | null>(null)
 const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdated || null))
 
-const fromCountry = ref(store.corridor.fromCode === 'USD' ? 'US' : '')
-const toCountry = ref(store.corridor.toCode === 'PHP' ? 'PH' : '')
-const fromCurrency = ref(store.corridor.fromCode || 'USD')
-const toCurrency = ref(store.corridor.toCode || 'PHP')
 const amountInput = ref(store.amount || 1000)
+
+const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
+const trackedCorridors = computed<CorridorOption[]>(() => trackedCorridorsData.value || [])
+const selectedCorridorKey = ref<string>('')
+
+const selectedCorridorOption = computed<CorridorOption | null>(() => {
+  const key = selectedCorridorKey.value
+  if (!key) return null
+  return trackedCorridors.value.find(c => c.corridorId === key || c.value === key) || null
+})
+
+const toCountryName = (code?: string | null): string => {
+  if (!code) return ''
+  const normalized = code.trim().toUpperCase()
+  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized)
+  return found?.name || normalized
+}
+
+const toCountryFlag = (code?: string | null, fallback?: string): string => {
+  if (fallback) return fallback
+  if (!code) return '🌍'
+  const normalized = code.trim().toUpperCase()
+  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized)
+  return found?.flag || '🌍'
+}
+
+const toPulseCorridor = (option: CorridorOption): PulseCorridor => {
+  const corridorId = option.corridorId
+  const parts = corridorId ? corridorId.split('-') : []
+  const sourceCountry = (option.sourceCountry || parts[0] || '').toUpperCase()
+  const destCountry = (option.destCountry || parts[1] || '').toUpperCase()
+
+  const fromCode = (option.fromCode || option.sourceCurrency || parts[2] || '').toUpperCase()
+  const toCode = (option.toCode || option.destCurrency || parts[3] || '').toUpperCase()
+
+  const slug = String(option.slug || option.value || `${fromCode.toLowerCase()}-${toCode.toLowerCase()}`).trim().toLowerCase()
+  const label = option.label || `${fromCode} → ${toCode}`
+
+  return {
+    from: toCountryName(sourceCountry) || sourceCountry || fromCode,
+    to: toCountryName(destCountry) || destCountry || toCode,
+    fromCode,
+    toCode,
+    fromFlag: option.fromFlag || toCountryFlag(sourceCountry),
+    toFlag: option.toFlag || toCountryFlag(destCountry),
+    label,
+    slug,
+    corridorId,
+  }
+}
+
+const setCorridorFromOption = (option: CorridorOption) => {
+  store.setCorridor(toPulseCorridor(option))
+  selectedCorridorKey.value = option.corridorId || option.value
+}
+
+const corridorCoverageLabel = computed(() => {
+  const c = selectedCorridorOption.value
+  if (!c?.minDate || !c?.maxDate) return ''
+  const min = new Date(`${c.minDate}T00:00:00.000Z`)
+  const max = new Date(`${c.maxDate}T00:00:00.000Z`)
+  if (Number.isNaN(min.getTime()) || Number.isNaN(max.getTime())) return ''
+  const daysAvailable = Math.floor((max.getTime() - min.getTime()) / (24 * 60 * 60 * 1000)) + 1
+  if (!Number.isFinite(daysAvailable) || daysAvailable <= 0) return ''
+  const desiredDays = store.timeframeDays
+  const cappedNote = desiredDays > daysAvailable ? ` • Only ${daysAvailable}d available for this corridor` : ''
+  return `Coverage: ${c.minDate} to ${c.maxDate} (${formatCount(daysAvailable)} days available)${cappedNote}`
+})
+
+function handleCorridorSelect() {
+  const key = selectedCorridorKey.value
+  const option = trackedCorridors.value.find(c => c.corridorId === key || c.value === key)
+  if (!option) return
+  setCorridorFromOption(option)
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+}
+
+const initializeCorridorSelection = () => {
+  if (trackedCorridors.value.length === 0) return
+
+  const corridorIdFromUrl = typeof route.query.corridor_id === 'string' ? route.query.corridor_id : undefined
+  const corridorSlugFromUrl = typeof route.query.corridor === 'string' ? route.query.corridor : undefined
+
+  let option: CorridorOption | undefined
+
+  if (corridorIdFromUrl) {
+    option = getCorridorById(corridorIdFromUrl) || trackedCorridors.value.find(c => c.corridorId === corridorIdFromUrl)
+  }
+  if (!option && corridorSlugFromUrl) {
+    option = getCorridorBySlug(corridorSlugFromUrl) || trackedCorridors.value.find(c => (c.slug || c.value) === corridorSlugFromUrl)
+  }
+  if (!option && store.corridor.corridorId) {
+    option = getCorridorById(store.corridor.corridorId) || trackedCorridors.value.find(c => c.corridorId === store.corridor.corridorId)
+  }
+  if (!option) {
+    option = trackedCorridors.value[0]
+  }
+
+  if (option) {
+    setCorridorFromOption(option)
+  }
+}
 
 const deepDivesRef = ref<HTMLElement | null>(null)
 const deepDivesVisible = ref(false)
@@ -1213,9 +1289,12 @@ function handleCreateAlert() {
 }
 
 const resolveExportDays = () => {
-  const limit = limits.value.historyDays
-  const maxDays = limit === 'unlimited' ? 730 : (typeof limit === 'number' && limit > 0 ? limit : 30)
-  return Math.max(1, Math.min(store.timeframeDays, maxDays))
+  if (!limits.value.exports) return 0
+  const max = limits.value.exportsMaxDays
+  // Plus is capped at 30d exports. Enterprise full history export is handled via Dashboard.
+  if (max === 'unlimited') return 30
+  if (typeof max === 'number' && max > 0) return Math.min(30, max)
+  return 0
 }
 
 const pollExportStatus = async (jobId: string) => {
@@ -1265,9 +1344,13 @@ async function downloadSnapshotCsv() {
 
   try {
     const days = resolveExportDays()
-    const now = new Date()
-    const dateTo = now.toISOString()
-    const dateFrom = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString()
+    if (days <= 0) {
+      throw new Error('Exports are not available on your plan.')
+    }
+
+    const toDateOnlyUtc = (date: Date) => date.toISOString().split('T')[0]
+    const dateTo = toDateOnlyUtc(new Date())
+    const dateFrom = toDateOnlyUtc(new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000))
     const corridorId = store.corridor.corridorId
     const response = await exportsApi.createExport({
       dataType: 'history',
@@ -1291,88 +1374,12 @@ async function downloadSnapshotCsv() {
   }
 }
 
-function buildCorridorFromCountries(): PulseCorridor | null {
-  if (!fromCountry.value || !toCountry.value || !fromCurrency.value || !toCurrency.value) {
-    return null
-  }
-
-  const fromCountryData = getCountryByCode(fromCountry.value)
-  const toCountryData = getCountryByCode(toCountry.value)
-
-  if (!fromCountryData || !toCountryData) {
-    return null
-  }
-
-  return {
-    from: fromCountryData.name,
-    to: toCountryData.name,
-    fromCode: fromCurrency.value,
-    toCode: toCurrency.value,
-    fromFlag: fromCountryData.flag,
-    toFlag: toCountryData.flag,
-    label: `${fromCurrency.value} → ${toCurrency.value}`,
-    slug: `${fromCurrency.value.toLowerCase()}-${toCurrency.value.toLowerCase()}`,
-    corridorId: `${fromCountry.value}-${toCountry.value}-${fromCurrency.value}-${toCurrency.value}`,
-  }
-}
-
-function handleFromCountryChange(countryCode: string, currency: string) {
-  fromCountry.value = countryCode
-  if (currency && !fromCurrency.value) {
-    fromCurrency.value = currency
-  }
-  updateCorridor()
-}
-
-function handleToCountryChange(countryCode: string, currency: string) {
-  toCountry.value = countryCode
-  if (currency && !toCurrency.value) {
-    toCurrency.value = currency
-  }
-  updateCorridor()
-}
-
 function handleAmountInput() {
   const amount = Number.parseInt(String(amountInput.value), 10)
-  if (!isNaN(amount) && amount > 0) {
+  if (!Number.isNaN(amount) && amount > 0) {
     store.setAmount(amount)
   }
 }
-
-function updateCorridor() {
-  const corridor = buildCorridorFromCountries()
-  if (corridor) {
-    store.setCorridor(corridor)
-  }
-}
-
-watch([fromCurrency, toCurrency], () => {
-  updateCorridor()
-})
-
-watch(fromCountry, (newCountry) => {
-  if (newCountry) {
-    const country = getCountryByCode(newCountry)
-    if (country) {
-      const availableCurrencies = getAvailableCurrencies(newCountry)
-      if (!availableCurrencies.includes(fromCurrency.value)) {
-        fromCurrency.value = country.currency
-      }
-    }
-  }
-})
-
-watch(toCountry, (newCountry) => {
-  if (newCountry) {
-    const country = getCountryByCode(newCountry)
-    if (country) {
-      const availableCurrencies = getAvailableCurrencies(newCountry)
-      if (!availableCurrencies.includes(toCurrency.value)) {
-        toCurrency.value = country.currency
-      }
-    }
-  }
-})
 
 const legacyFilters = computed<PulseFilters>(() => ({
   corridor: store.corridor.slug,
@@ -1456,10 +1463,6 @@ function handleShare(chartId: string) {
 
 function handleEmbed(chartId: string) {
   embedModalChart.value = chartId
-}
-
-function formatTimestamp(value: string): string {
-  return new Date(value).toISOString().replace('T', ' ').slice(0, 16)
 }
 
 function getDeltaClass(deltaType: PulseDeltaType) {
@@ -1549,41 +1552,24 @@ watch(
   },
 )
 
+watch(
+  () => trackedCorridors.value.length,
+  (len) => {
+    if (!import.meta.client) return
+    if (len === 0) return
+    if (!selectedCorridorKey.value) {
+      initializeCorridorSelection()
+    }
+  },
+  { immediate: true },
+)
+
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyDown)
   await store.initFromRoute(route.query as Record<string, string>)
-
-  // Initialize form fields from store corridor
-  const fromCountryData = COUNTRIES.find(c => c.name === store.corridor.from || c.currency === store.corridor.fromCode)
-  const toCountryData = COUNTRIES.find(c => c.name === store.corridor.to || c.currency === store.corridor.toCode)
-
-  if (fromCountryData) {
-    fromCountry.value = fromCountryData.code
-    fromCurrency.value = store.corridor.fromCode
-  }
-  else {
-    // Fallback: try to find by currency
-    const fallback = COUNTRIES.find(c => c.currency === store.corridor.fromCode)
-    if (fallback) {
-      fromCountry.value = fallback.code
-      fromCurrency.value = store.corridor.fromCode
-    }
-  }
-
-  if (toCountryData) {
-    toCountry.value = toCountryData.code
-    toCurrency.value = store.corridor.toCode
-  }
-  else {
-    // Fallback: try to find by currency
-    const fallback = COUNTRIES.find(c => c.currency === store.corridor.toCode)
-    if (fallback) {
-      toCountry.value = fallback.code
-      toCurrency.value = store.corridor.toCode
-    }
-  }
-
   amountInput.value = store.amount
+
+  initializeCorridorSelection()
 
   // Avoid expensive Pulse API calls for non-Plus users (they see the upgrade gate).
   if (isPlus.value) {

@@ -127,12 +127,30 @@ export interface ProviderWinner {
 }
 
 export interface CorridorOption {
+  // Backwards-compatible with legacy Pulse corridor payloads.
   value: string
   label: string
   fromFlag: string
   toFlag: string
   fromCode: string
   toCode: string
+
+  // Gold-truth fields (preferred).
+  corridorId?: string
+  slug?: string
+  sourceCountry?: string
+  destCountry?: string
+  sourceCurrency?: string
+  destCurrency?: string
+  minDate?: string | null
+  maxDate?: string | null
+  lastUpdated?: string | null
+  dataPoints?: number
+  dataTier?: string
+  collectionTier?: string
+  collectionCadenceMinutes?: number
+  exportCadenceMinutes?: number
+  isUsdOrigin?: boolean
 }
 
 export type PulseDeltaType = 'positive' | 'negative' | 'neutral'
