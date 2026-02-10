@@ -35,11 +35,30 @@ const exportListSchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 })
 
-const toDateOrNull = (value?: string) => {
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
+const DAY_MS = 24 * 60 * 60 * 1000
+
+const toDateFromOrNull = (value?: string) => {
   if (!value) return null
-  const parsed = new Date(value)
+  const parsed = DATE_ONLY_RE.test(value)
+    ? new Date(`${value}T00:00:00.000Z`)
+    : new Date(value)
   if (Number.isNaN(parsed.getTime())) return null
   return parsed
+}
+
+const toDateToOrNull = (value?: string) => {
+  if (!value) return null
+  const parsed = DATE_ONLY_RE.test(value)
+    ? new Date(`${value}T23:59:59.999Z`)
+    : new Date(value)
+  if (Number.isNaN(parsed.getTime())) return null
+  return parsed
+}
+
+const getInclusiveWindowDays = (dateFrom: Date, dateTo: Date): number => {
+  const diff = dateTo.getTime() - dateFrom.getTime()
+  return Math.floor(diff / DAY_MS) + 1
 }
 
 const exportJobTypeMap: Record<string, Record<string, ExportJobType>> = {
@@ -151,8 +170,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
     const { dataType, format } = parsed.data
     const jobType = exportJobTypeMap[dataType][format]
-    const dateFrom = toDateOrNull(parsed.data.dateFrom)
-    const dateTo = toDateOrNull(parsed.data.dateTo)
+
+    const exportMaxDays = request.entitlementsContext?.entitlements.exports_max_days ?? null
+    const finiteExportMaxDays = typeof exportMaxDays === 'number' && exportMaxDays > 0
+      ? exportMaxDays
+      : null
+
+    const dateFrom = toDateFromOrNull(parsed.data.dateFrom)
+    const dateTo = toDateToOrNull(parsed.data.dateTo)
 
     if (parsed.data.dateFrom && !dateFrom) {
       reply.code(400)
@@ -161,6 +186,33 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     if (parsed.data.dateTo && !dateTo) {
       reply.code(400)
       return { error: 'invalid_date', field: 'dateTo' }
+    }
+
+    const requiresDateRange = dataType === 'history' || dataType === 'all'
+    if (finiteExportMaxDays && requiresDateRange) {
+      if (!dateFrom || !dateTo) {
+        reply.code(400)
+        return { error: 'export_date_range_required', allowedDays: finiteExportMaxDays }
+      }
+    }
+
+    if (dateFrom && dateTo) {
+      if (dateFrom.getTime() > dateTo.getTime()) {
+        reply.code(400)
+        return { error: 'invalid_date_range' }
+      }
+
+      if (finiteExportMaxDays) {
+        const windowDays = getInclusiveWindowDays(dateFrom, dateTo)
+        if (windowDays > finiteExportMaxDays) {
+          reply.code(400)
+          return {
+            error: 'export_window_exceeds_plan_limit',
+            allowedDays: finiteExportMaxDays,
+            windowDays,
+          }
+        }
+      }
     }
 
     const params: Record<string, unknown> = {

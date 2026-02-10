@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { createTtlCache } from '../../../shared/cache'
@@ -19,6 +19,7 @@ const planeAPool = getPool(config.db.planeAUrl)
 const pulseCacheRepository = new PulseCacheRepository(planeAPool)
 const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
 const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
+const pulseCorridorsCache = createTtlCache({ namespace: 'plane_a:pulse_corridors' })
 const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
 const INDEX_CHART_IDS = new Set(['all-in-cost', 'fx-markup', 'volatility-pulse'])
 
@@ -390,21 +391,36 @@ const mapCorridors = (payload: unknown) => {
       (row) => isObject(row) && typeof row.value === 'string' && typeof row.label === 'string',
     )
     if (isOption) return payload
-    return payload.map((row) => {
-      if (!isObject(row)) return null
-      const sendCurrency = String(row.send_currency || '').toUpperCase()
-      const recvCurrency = String(row.recv_currency || '').toUpperCase()
-      if (!sendCurrency || !recvCurrency) return null
-      const value = `${sendCurrency.toLowerCase()}-${recvCurrency.toLowerCase()}`
-      return {
-        value,
-        label: `${sendCurrency} ${arrow} ${recvCurrency}`,
-        fromFlag: toFlagEmoji(String(row.from_country || '')),
-        toFlag: toFlagEmoji(String(row.to_country || '')),
-        fromCode: sendCurrency,
-        toCode: recvCurrency,
-      }
-    }).filter(Boolean)
+
+    return payload
+      .map((row) => {
+        if (!isObject(row)) return null
+        const sendCurrency = String(row.send_currency || '').toUpperCase()
+        const recvCurrency = String(row.recv_currency || '').toUpperCase()
+        if (!sendCurrency || !recvCurrency) return null
+        const value = `${sendCurrency.toLowerCase()}-${recvCurrency.toLowerCase()}`
+        const corridorId = typeof row.corridor_id === 'string' ? row.corridor_id : undefined
+        const sourceCountry = typeof row.from_country === 'string' ? row.from_country.toUpperCase() : ''
+        const destCountry = typeof row.to_country === 'string' ? row.to_country.toUpperCase() : ''
+        const lastUpdated = toIsoString(row.last_updated) || null
+
+        return {
+          corridorId,
+          slug: value,
+          value,
+          label: `${sendCurrency} ${arrow} ${recvCurrency}`,
+          sourceCountry: sourceCountry || undefined,
+          destCountry: destCountry || undefined,
+          sourceCurrency: sendCurrency,
+          destCurrency: recvCurrency,
+          fromFlag: toFlagEmoji(sourceCountry),
+          toFlag: toFlagEmoji(destCountry),
+          fromCode: sendCurrency,
+          toCode: recvCurrency,
+          lastUpdated,
+        }
+      })
+      .filter(Boolean)
   }
   return pulseDefaults.corridors
 }
@@ -685,7 +701,7 @@ const mapOverview = (
       },
       {
         id: 'corridors-live',
-        label: 'Corridors Live',
+        label: 'Active Corridors',
         value: `${corridorsLive}`,
         delta: 'n/a',
         deltaType: 'neutral',
@@ -712,12 +728,160 @@ const mapOverview = (
   }
 }
 
+
+const toDateOnly = (value: Date) => value.toISOString().split('T')[0]
+
+type GoldTrackedCorridorRow = {
+  corridor_id: string
+  source_country: string
+  dest_country: string
+  source_currency: string
+  dest_currency: string
+  data_points: number
+  last_updated: Date | null
+  min_date: Date | null
+  max_date: Date | null
+}
+
+const loadTrackedCorridorsFromGold = async () => {
+  const result = await query<GoldTrackedCorridorRow>(
+    `SELECT
+       corridor_id,
+       SPLIT_PART(corridor_id, '-', 1) AS source_country,
+       SPLIT_PART(corridor_id, '-', 2) AS dest_country,
+       SPLIT_PART(corridor_id, '-', 3) AS source_currency,
+       SPLIT_PART(corridor_id, '-', 4) AS dest_currency,
+       COUNT(*)::int AS data_points,
+       MAX(created_at) AS last_updated,
+       MIN(date) AS min_date,
+       MAX(date) AS max_date
+     FROM gold_export.cdp_daily
+     WHERE amount_bucket = $1
+     GROUP BY corridor_id
+     ORDER BY corridor_id`,
+    [INDICES_AMOUNT_BUCKET],
+    planeAPool,
+  )
+
+  const mapped = result.rows.map((row) => {
+    const sourceCountry = row.source_country?.toUpperCase() || ''
+    const destCountry = row.dest_country?.toUpperCase() || ''
+    const sourceCurrency = row.source_currency?.toUpperCase() || ''
+    const destCurrency = row.dest_currency?.toUpperCase() || ''
+    const slug = `${sourceCurrency.toLowerCase()}-${destCurrency.toLowerCase()}`
+
+    const tierInfo = getExportTierInfo(row.corridor_id, 2)
+    const collectionCadenceMinutes = Math.round(
+      ((tierInfo.collectionTier === 'tier_1' && !config.planeB?.disableTier1)
+        ? TIER_1_CADENCE_SECONDS
+        : TIER_2_CADENCE_SECONDS) / 60,
+    )
+
+    return {
+      corridorId: row.corridor_id,
+      slug,
+      value: slug,
+      label: `${sourceCurrency} ${arrow} ${destCurrency}`,
+      sourceCountry: sourceCountry || undefined,
+      destCountry: destCountry || undefined,
+      sourceCurrency,
+      destCurrency,
+      fromFlag: toFlagEmoji(sourceCountry),
+      toFlag: toFlagEmoji(destCountry),
+      fromCode: sourceCurrency,
+      toCode: destCurrency,
+      minDate: row.min_date ? toDateOnly(row.min_date) : null,
+      maxDate: row.max_date ? toDateOnly(row.max_date) : null,
+      lastUpdated: row.last_updated ? row.last_updated.toISOString() : null,
+      dataPoints: row.data_points ?? 0,
+      dataTier: tierInfo.exportTier,
+      collectionTier: tierInfo.collectionTier,
+      collectionCadenceMinutes,
+      exportCadenceMinutes: tierInfo.cadenceMinutes,
+      isUsdOrigin: sourceCurrency === 'USD',
+    }
+  })
+
+  // Dedupe by currency slug if multiple corridor_ids share a currency pair.
+  type TrackedCorridor = (typeof mapped)[number]
+
+  const bySlug = new Map<string, TrackedCorridor>()
+
+  const getRank = (entry: TrackedCorridor) => {
+    const usBias = entry.sourceCountry === 'US' ? 1 : 0
+    const points = typeof entry.dataPoints == 'number' ? entry.dataPoints : 0
+    const updatedAt = entry.lastUpdated ? new Date(entry.lastUpdated).getTime() : 0
+    return [usBias, points, updatedAt]
+  }
+
+  for (const entry of mapped) {
+    const existing = bySlug.get(entry.slug)
+    if (!existing) {
+      bySlug.set(entry.slug, entry)
+      continue
+    }
+
+    const [usA, pointsA, updatedA] = getRank(entry)
+    const [usB, pointsB, updatedB] = getRank(existing)
+
+    if (usA != usB) {
+      if (usA > usB) bySlug.set(entry.slug, entry)
+      continue
+    }
+    if (pointsA != pointsB) {
+      if (pointsA > pointsB) bySlug.set(entry.slug, entry)
+      continue
+    }
+    if (updatedA > updatedB) {
+      bySlug.set(entry.slug, entry)
+    }
+  }
+
+  return Array.from(bySlug.values()).sort((a, b) => {
+    const pointsA = typeof a.dataPoints == 'number' ? a.dataPoints : 0
+    const pointsB = typeof b.dataPoints == 'number' ? b.dataPoints : 0
+    if (pointsA != pointsB) return pointsB - pointsA
+
+    const updatedA = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0
+    const updatedB = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0
+    if (updatedA != updatedB) return updatedB - updatedA
+
+    return String(a.slug).localeCompare(String(b.slug))
+  })
+}
+
 export const pulseRoutes = async (app: FastifyInstance) => {
   const guard = { preHandler: requireEntitlement('pulse') }
 
   app.get('/pulse/corridors', guard, async () => {
-    const { payload } = await loadPulseEntry('corridors', {}, pulseDefaults.corridors)
-    return mapCorridors(payload)
+    const cacheKey = [
+      'bucket',
+      INDICES_AMOUNT_BUCKET,
+      config.planeB?.disableTier1 ? 'tier1_off' : 'tier1_on',
+    ].join(':')
+
+    const cached = await pulseCorridorsCache.get(cacheKey)
+    if (cached) {
+      return cached
+    }
+
+    try {
+      const tracked = await loadTrackedCorridorsFromGold()
+      if (tracked.length > 0) {
+        await pulseCorridorsCache.set(cacheKey, tracked, 60 * 60 * 1000)
+        return tracked
+      }
+      throw new Error('no_gold_corridors')
+    } catch (error) {
+      logger.warn('pulse_corridors_gold_load_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      const { payload } = await loadPulseEntry('corridors', {}, pulseDefaults.corridors)
+      const fallback = mapCorridors(payload)
+      await pulseCorridorsCache.set(cacheKey, fallback, 10 * 60 * 1000)
+      return fallback
+    }
   })
 
   app.get('/pulse/overview', guard, async (request) => {

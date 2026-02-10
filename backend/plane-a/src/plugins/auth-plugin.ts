@@ -5,7 +5,7 @@ import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { validateApiKey } from '../services/api-keys'
-import { getEntitlementsForPlan } from '../services/entitlements'
+import { getEntitlementsForPlan, type Entitlements, type PlanCode } from '../services/entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
@@ -324,11 +324,19 @@ export const requireEntitlement = (entitlement: EntitlementType) => async (reque
       return reply.send({ error: 'plan_inactive' })
     }
 
-    const effectivePlanCode = isPlanActive(plan.status) ? plan.plan_code : 'free'
-    const entitlements = getEntitlementsForPlan(effectivePlanCode)
+    const normalizedPlanCode: PlanCode = plan.plan_code === 'plus' || plan.plan_code === 'enterprise' || plan.plan_code === 'free'
+      ? plan.plan_code
+      : 'free'
+    const effectivePlanCode: PlanCode = isPlanActive(plan.status) ? normalizedPlanCode : 'free'
+    const entitlements: Entitlements = getEntitlementsForPlan(effectivePlanCode)
     if (!isEntitled(entitlement, entitlements)) {
       reply.code(403)
       return reply.send({ error: 'forbidden', entitlement })
+    }
+
+    request.entitlementsContext = {
+      planCode: effectivePlanCode,
+      entitlements,
     }
 
     if (request.apiKey) {
