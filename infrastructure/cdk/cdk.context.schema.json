@@ -20,6 +20,10 @@
       "enum": ["x86_64", "arm64"],
       "description": "CPU architecture for ECS/Lambda where configurable"
     },
+    "devNatGateways": {
+      "type": "number",
+      "description": "Dev-only override for number of NAT gateways (0/1). Useful for repairing NAT drift without code changes."
+    },
     "planeADbSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for Plane A database credentials"
@@ -158,6 +162,14 @@
     "devPaused": {
       "type": "boolean",
       "description": "Pause dev ECS services and EventBridge schedules when true"
+    },
+    "goldIndicesLookbackDays": {
+      "type": "string",
+      "description": "Lookback window days for the gold indices job (GOLD_INDICES_LOOKBACK_DAYS override)"
+    },
+    "providerWeightWindowDays": {
+      "type": "string",
+      "description": "Lookback window days for the provider-weighting job (PROVIDER_WEIGHT_WINDOW_DAYS override)"
     },
     "costGuardrailsCreateCur": {
       "type": "boolean",

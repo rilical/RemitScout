@@ -1,4 +1,6 @@
 import { setTimeout as sleep } from 'timers/promises'
+
+import '../../../../shared/node-polyfills'
 import { ProxyAgent, fetch as undiciFetch, type Dispatcher } from 'undici'
 
 import type { CollectorRequest, FetchResult } from '../../collectors/types'

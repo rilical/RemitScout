@@ -160,6 +160,16 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
     return
   }
 
+  const perCorridorBase =
+    Number.isFinite(rates.perCorridorRpm) && rates.perCorridorRpm > 0 ? rates.perCorridorRpm : 1
+  if (perCorridorBase !== rates.perCorridorRpm) {
+    logger.warn('rpm_ramp_invalid_per_corridor_rpm', {
+      provider_id: providerId,
+      per_corridor_rpm: rates.perCorridorRpm,
+      clamped: perCorridorBase,
+    })
+  }
+
   const blockRate = stats.blockCount / stats.attemptCount
   const rateLimitRate = stats.rateLimitCount / stats.attemptCount
   const http2xxRate = stats.http2xxCount / stats.attemptCount
@@ -168,7 +178,7 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
 
   let decision: 'increase' | 'decrease' | 'hold' = 'hold'
   let nextRpm = rates.rpm
-  let nextPerCorridorRpm = rates.perCorridorRpm
+  let nextPerCorridorRpm = perCorridorBase
   let changePercent = 0
   let reason = 'stable'
 
@@ -251,9 +261,7 @@ export const applyRpmRamp = async (options: RampOptions): Promise<void> => {
   }
 
   const rpmRatio = nextRpm / rates.rpm
-  if (rates.perCorridorRpm > 0) {
-    nextPerCorridorRpm = Math.max(1, Math.round(rates.perCorridorRpm * rpmRatio))
-  }
+  nextPerCorridorRpm = Math.max(1, Math.round(perCorridorBase * rpmRatio))
 
   try {
     await persistProviderRates(pool, providerId, {

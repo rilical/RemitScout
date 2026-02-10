@@ -1,6 +1,13 @@
-import { Stack, type StackProps, Tags, CfnOutput } from 'aws-cdk-lib'
+import { Stack, type StackProps, Tags, CfnOutput, Duration } from 'aws-cdk-lib'
+import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch'
+import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
+import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { Architecture } from 'aws-cdk-lib/aws-lambda'
+import { Topic } from 'aws-cdk-lib/aws-sns'
+import { LambdaSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
 import { CpuArchitecture } from 'aws-cdk-lib/aws-ecs'
+import { CfnSchedule } from 'aws-cdk-lib/aws-scheduler'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
 import type { Construct } from 'constructs'
 
 import { createNetworking } from './vpc'
@@ -149,7 +156,14 @@ export class RemitScoutStack extends Stack {
           process.env.COST_GUARDRAILS_CREATE_CUR,
       ) ?? envName === 'prod'
 
-    const networking = createNetworking(this, { envName })
+    const devNatGateways = envName === 'dev'
+      ? toOptionalNumber(
+          this.node.tryGetContext('devNatGateways') ??
+            process.env.DEV_NAT_GATEWAYS,
+        )
+      : undefined
+
+    const networking = createNetworking(this, { envName, natGateways: devNatGateways })
     const iam = createIam(this, {
       envName,
       sharedSecretArns: devSharedSecretArn ? [devSharedSecretArn] : [],
@@ -332,7 +346,11 @@ export class RemitScoutStack extends Stack {
     const goldIndicesLookbackDays =
       this.node.tryGetContext('goldIndicesLookbackDays') ??
       process.env.GOLD_INDICES_LOOKBACK_DAYS ??
-      (envName === 'dev' ? '30' : undefined)
+      (envName === 'dev' ? '3' : undefined)
+    const providerWeightWindowDays =
+      this.node.tryGetContext('providerWeightWindowDays') ??
+      process.env.PROVIDER_WEIGHT_WINDOW_DAYS ??
+      (envName === 'dev' ? '7' : undefined)
     const planeBDisableTier1 = toOptionalBool(
       this.node.tryGetContext('planeBDisableTier1') ??
         process.env.PLANE_B_DISABLE_TIER1,
@@ -804,10 +822,40 @@ export class RemitScoutStack extends Stack {
       enabled: enableBackup,
     })
 
+    const costGuardrailTopic =
+      envName === 'dev' && enableCostGuardrails
+        ? new Topic(this, 'DevCostGuardrailTopic', {
+            topicName: `remit-scout-${envName}-cost-guardrail`,
+          })
+        : undefined
+
+    if (costGuardrailTopic) {
+      const costPublishCondition = {
+        StringEquals: { 'AWS:SourceOwner': this.account },
+      }
+      costGuardrailTopic.addToResourcePolicy(
+        new PolicyStatement({
+          principals: [new ServicePrincipal('budgets.amazonaws.com')],
+          actions: ['sns:Publish'],
+          resources: [costGuardrailTopic.topicArn],
+          conditions: costPublishCondition,
+        }),
+      )
+      costGuardrailTopic.addToResourcePolicy(
+        new PolicyStatement({
+          principals: [new ServicePrincipal('costalerts.amazonaws.com')],
+          actions: ['sns:Publish'],
+          resources: [costGuardrailTopic.topicArn],
+          conditions: costPublishCondition,
+        }),
+      )
+    }
+
     const costGuardrails = createCostGuardrails(this, {
       envName,
       enabled: enableCostGuardrails,
       costAlertEmails: resolvedCostAlertEmails,
+      costAlertSnsTopicArn: costGuardrailTopic?.topicArn,
       monthlyBudgetAmountUsd: costBudgetAmountUsd,
       anomalyThresholdUsd: costAnomalyThresholdUsd,
       createCur: costGuardrailsCreateCur,
@@ -927,6 +975,7 @@ export class RemitScoutStack extends Stack {
       fxRateRefreshServiceEnabled,
       fxRateRefreshDesiredCount,
       goldIndicesLookbackDays,
+      providerWeightWindowDays,
       paused: devPaused,
       vpc: networking.vpc,
       planeASecurityGroup: networking.planeASecurityGroup,
@@ -984,7 +1033,7 @@ export class RemitScoutStack extends Stack {
     const fxRateRefreshBaseline = fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0
     const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
 
-    createOpsPause(this, {
+    const opsPause = createOpsPause(this, {
       envName,
       clusterName: compute.cluster.clusterName,
       ecsServiceNames: [
@@ -1025,6 +1074,53 @@ export class RemitScoutStack extends Stack {
       redisAutoMinorVersionUpgrade: true,
       role: iam.opsPauseLambdaRole,
     })
+
+    if (envName === 'dev') {
+      const nightlyPauseDlq = new Queue(this, 'DevNightlyPauseSchedulerDlq', {
+        queueName: `remit-scout-${envName}-nightly-pause-scheduler-dlq`,
+        retentionPeriod: Duration.days(14),
+      })
+
+      const schedulerInvokeRole = new Role(this, 'DevNightlyPauseSchedulerRole', {
+        assumedBy: new ServicePrincipal('scheduler.amazonaws.com'),
+      })
+      opsPause.controllerFunction.grantInvoke(schedulerInvokeRole)
+      nightlyPauseDlq.grantSendMessages(schedulerInvokeRole)
+
+      new CfnSchedule(this, 'DevNightlyPauseSchedule', {
+        name: `remit-scout-${envName}-nightly-pause`,
+        scheduleExpression: 'cron(0 0 * * ? *)',
+        scheduleExpressionTimezone: 'America/New_York',
+        flexibleTimeWindow: { mode: 'OFF' },
+        state: 'ENABLED',
+        target: {
+          arn: opsPause.controllerFunction.functionArn,
+          roleArn: schedulerInvokeRole.roleArn,
+          input: JSON.stringify({ paused: true }),
+          deadLetterConfig: { arn: nightlyPauseDlq.queueArn },
+          retryPolicy: {
+            maximumRetryAttempts: 2,
+            maximumEventAgeInSeconds: 60 * 60,
+          },
+        },
+      })
+
+      const dlqAlarm = new Alarm(this, 'DevNightlyPauseSchedulerDlqAlarm', {
+        alarmName: `remit-scout-${envName}-nightly-pause-scheduler-dlq`,
+        metric: nightlyPauseDlq.metricApproximateNumberOfMessagesVisible({
+          period: Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: TreatMissingData.NOT_BREACHING,
+      })
+      dlqAlarm.addAlarmAction(new SnsAction(snsSubscriptions.opsTopic))
+
+      if (costGuardrailTopic) {
+        costGuardrailTopic.addSubscription(new LambdaSubscription(opsPause.controllerFunction))
+      }
+    }
 
     storage.bronzeBucket.grantReadWrite(iam.planeBEcsTaskRole)
     storage.exportsBucket.grantReadWrite(iam.planeALambdaRole)

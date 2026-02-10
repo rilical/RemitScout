@@ -14,6 +14,7 @@ export interface IFxRateRefreshRepository {
     maxRetries: number,
     retryCount?: number,
   ): Promise<FxRateRefreshRequestRecord | null>
+  markRequestClaimed(requestId: string, retryCount?: number): Promise<void>
   markRequestStatus(
     requestId: string,
     status: FxRateRefreshStatusValue,

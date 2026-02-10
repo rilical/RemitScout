@@ -78,6 +78,9 @@ tools/aws-cli/
 # CI/contract artifacts (local-only)
 artifacts/
 
+# Local audit artifacts (often contain sensitive AWS details)
+docs/audits/
+
 # Codex/agent artifacts (local-only)
 codex-aarch64-apple-darwin.dmg
 

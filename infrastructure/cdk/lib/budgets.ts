@@ -18,6 +18,7 @@ export type CostGuardrailsOptions = {
   envName: string
   enabled?: boolean
   costAlertEmails?: string[]
+  costAlertSnsTopicArn?: string
   monthlyBudgetAmountUsd?: number
   anomalyThresholdUsd?: number
   createCur?: boolean
@@ -89,6 +90,41 @@ export const createCostGuardrails = (
   }
 
   const costAlertEmails = (options.costAlertEmails ?? []).filter(Boolean)
+  const costAlertSnsTopicArn = options.costAlertSnsTopicArn
+  const hasAlertSubscribers = costAlertEmails.length > 0 || Boolean(costAlertSnsTopicArn)
+
+  // NOTE:
+  // - Cost Explorer Anomaly Subscriptions only allow SNS subscribers when frequency is IMMEDIATE.
+  // - DAILY/WEEKLY only support EMAIL.
+  // Ref: Error seen in CloudFormation deploy: "Daily or weekly frequencies only support Email subscriptions".
+  const anomalyFrequency = costAlertSnsTopicArn ? 'IMMEDIATE' : 'DAILY'
+  const budgetSubscribers = [
+    ...costAlertEmails.map((email) => ({
+      address: email,
+      subscriptionType: 'EMAIL' as const,
+    })),
+    ...(costAlertSnsTopicArn
+      ? [{
+          address: costAlertSnsTopicArn,
+          subscriptionType: 'SNS' as const,
+        }]
+      : []),
+  ]
+  // Cost Explorer Anomaly Subscription constraints:
+  // - DAILY/WEEKLY only support EMAIL
+  // - IMMEDIATE supports SNS but max 1 subscriber
+  // We prefer SNS (auto-pause) when configured.
+  const anomalySubscribers = costAlertSnsTopicArn
+    ? [
+        {
+          address: costAlertSnsTopicArn,
+          type: 'SNS' as const,
+        },
+      ]
+    : costAlertEmails.map((email) => ({
+        address: email,
+        type: 'EMAIL' as const,
+      }))
   const budgetAmount = toNumber(
     options.monthlyBudgetAmountUsd,
     options.envName === 'prod' ? 500 : (options.envName === 'staging' ? 300 : 100),
@@ -102,10 +138,12 @@ export const createCostGuardrails = (
   let anomalyMonitor: CfnAnomalyMonitor | undefined
   let anomalySubscription: CfnAnomalySubscription | undefined
 
-  if (costAlertEmails.length > 0) {
+  if (hasAlertSubscribers) {
+    const nameSuffix = options.envName === 'dev' ? '-guardrail' : ''
+
     budget = new CfnBudget(scope, 'MonthlyCostBudget', {
       budget: {
-        budgetName: `remit-scout-${options.envName}-monthly`,
+        budgetName: `remit-scout-${options.envName}-monthly${nameSuffix}`,
         budgetType: 'COST',
         timeUnit: 'MONTHLY',
         budgetLimit: {
@@ -121,10 +159,7 @@ export const createCostGuardrails = (
             threshold: 80,
             thresholdType: 'PERCENTAGE',
           },
-          subscribers: costAlertEmails.map((email) => ({
-            address: email,
-            subscriptionType: 'EMAIL',
-          })),
+          subscribers: budgetSubscribers,
         },
         {
           notification: {
@@ -133,29 +168,23 @@ export const createCostGuardrails = (
             threshold: 100,
             thresholdType: 'PERCENTAGE',
           },
-          subscribers: costAlertEmails.map((email) => ({
-            address: email,
-            subscriptionType: 'EMAIL',
-          })),
+          subscribers: budgetSubscribers,
         },
       ],
     })
 
     anomalyMonitor = new CfnAnomalyMonitor(scope, 'CostAnomalyMonitor', {
-      monitorName: `remit-scout-${options.envName}-service-anomalies`,
+      monitorName: `remit-scout-${options.envName}-service-anomalies${nameSuffix}`,
       monitorType: 'DIMENSIONAL',
       monitorDimension: 'SERVICE',
     })
 
     anomalySubscription = new CfnAnomalySubscription(scope, 'CostAnomalySubscription', {
-      subscriptionName: `remit-scout-${options.envName}-anomaly-subscription`,
-      frequency: 'DAILY',
+      subscriptionName: `remit-scout-${options.envName}-anomaly-subscription${nameSuffix}`,
+      frequency: anomalyFrequency,
       threshold: anomalyThreshold,
       monitorArnList: [anomalyMonitor.attrMonitorArn],
-      subscribers: costAlertEmails.map((email) => ({
-        address: email,
-        type: 'EMAIL',
-      })),
+      subscribers: anomalySubscribers,
     })
   }
 

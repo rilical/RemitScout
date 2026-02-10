@@ -280,18 +280,32 @@ export const sendToDLQ = async <T>(
       return
     }
 
-    const dlqPayload = {
+    // Redrive-friendly DLQ payload:
+    // - Preserve the original payload as top-level keys when it's an object.
+    // - Attach failure metadata under a reserved key to avoid breaking consumers.
+    const dlqMeta = {
       originalQueueUrl: queueUrl,
       originalMessageId: originalMessage.messageId,
-      originalPayload: originalMessage.payload,
+      receiptHandle: originalMessage.receiptHandle,
       error: {
         message: error.message,
         name: error.name,
         stack: error.stack,
       },
       failedAt: new Date().toISOString(),
-      receiptHandle: originalMessage.receiptHandle,
     }
+
+    const originalPayload = originalMessage.payload as unknown
+    const dlqPayload: unknown =
+      originalPayload && typeof originalPayload === 'object' && !Array.isArray(originalPayload)
+        ? {
+          ...(originalPayload as Record<string, unknown>),
+          __rs_dlq: dlqMeta,
+        }
+        : {
+          payload: originalPayload,
+          __rs_dlq: dlqMeta,
+        }
 
     await sendJsonMessage(dlqUrl, dlqPayload)
     logger.info('message_sent_to_dlq', {
@@ -442,7 +456,23 @@ export const receiveJsonMessages = async <T>(
       let payload: T | null = null
       if (body) {
         try {
-          payload = JSON.parse(body) as T
+          const parsed = JSON.parse(body) as unknown
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            !Array.isArray(parsed) &&
+            'originalPayload' in parsed &&
+            ('originalQueueUrl' in parsed || 'originalMessageId' in parsed || 'error' in parsed)
+          ) {
+            const originalPayload = (parsed as { originalPayload?: unknown }).originalPayload
+            if (originalPayload !== undefined) {
+              payload = originalPayload as T
+            } else {
+              payload = parsed as T
+            }
+          } else {
+            payload = parsed as T
+          }
         } catch (error) {
           logger.warn('invalid_message_body', {
             queue_url: queueUrl,

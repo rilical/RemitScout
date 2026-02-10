@@ -268,19 +268,34 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const rds = new RDSClient({})
   const elasticache = new ElastiCacheClient({})
 
-  const resolvedPaused = typeof event.paused === 'boolean'
-    ? event.paused
-    : await (async () => {
-        try {
-          const response = await ssm.send(
-            new GetParameterCommand({ Name: pauseParamName }),
-          )
-          return response.Parameter?.Value === 'true'
-        } catch (error) {
-          logger.warn('pause_param_missing', { pauseParamName, error: String(error) })
-          return false
-        }
-      })()
+  const snsRecords = Array.isArray((event as { Records?: unknown }).Records)
+    ? (event as { Records?: Array<{ Sns?: { Subject?: string; Message?: string } }> }).Records
+    : null
+  const snsRecord = snsRecords?.[0]?.Sns
+  const isSnsTrigger = Boolean(snsRecord)
+  if (isSnsTrigger) {
+    logger.warn('pause_triggered_by_sns', {
+      envName,
+      record_count: snsRecords?.length ?? 0,
+      subject: snsRecord?.Subject,
+    })
+  }
+
+  const resolvedPaused = isSnsTrigger
+    ? true
+    : typeof event.paused === 'boolean'
+      ? event.paused
+      : await (async () => {
+          try {
+            const response = await ssm.send(
+              new GetParameterCommand({ Name: pauseParamName }),
+            )
+            return response.Parameter?.Value === 'true'
+          } catch (error) {
+            logger.warn('pause_param_missing', { pauseParamName, error: String(error) })
+            return false
+          }
+        })()
 
   const shouldPause = resolvedPaused
   logger.info('pause_state', { envName, shouldPause, hardStopEnabled })

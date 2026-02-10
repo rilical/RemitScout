@@ -44,19 +44,10 @@ const getConnectionErrorHelp = (error: unknown): string => {
   return ''
 }
 
-const run = async () => {
-  const dbUrl = config.db.planeBUrl
-  if (!dbUrl) {
-    console.error('\n❌ Database connection string is not configured\n')
-    console.error('Please set one of the following environment variables:')
-    console.error('  - DATABASE_URL_PLANE_B (recommended)')
-    console.error('  - DATABASE_URL (fallback)')
-    console.error('\nExample:')
-    console.error('  export DATABASE_URL_PLANE_B="postgres://user:pass@localhost:5432/dbname"\n')
-    process.exit(1)
-  }
+type MigrationTarget = { label: string; dbUrl: string }
 
-  const db = createPool(dbUrl)
+export const applyMigrations = async (target: MigrationTarget): Promise<number> => {
+  const db = createPool(target.dbUrl)
   try {
     await db.query(
       `CREATE TABLE IF NOT EXISTS public.schema_migrations (
@@ -66,10 +57,10 @@ const run = async () => {
     )
 
     const appliedResult = await db.query('SELECT id FROM public.schema_migrations')
-    const applied = new Set(appliedResult.rows.map(row => row.id))
+    const applied = new Set(appliedResult.rows.map((row) => row.id))
 
     const files = (await readdir(migrationsDir))
-      .filter(file => file.endsWith('.sql'))
+      .filter((file) => file.endsWith('.sql'))
       .sort()
 
     let appliedCount = 0
@@ -81,25 +72,49 @@ const run = async () => {
         await db.query(sql)
         await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
         await db.query('COMMIT')
-        console.log(`✅ Applied migration: ${file}`)
+        console.log(`[${target.label}] ✅ Applied migration: ${file}`)
         appliedCount++
       } catch (error) {
         await db.query('ROLLBACK')
         throw error
       }
     }
-    
+
     if (appliedCount === 0) {
-      console.log('✅ All migrations are already applied')
+      console.log(`[${target.label}] ✅ All migrations are already applied`)
     } else {
-      console.log(`\n✅ Successfully applied ${appliedCount} migration(s)`)
+      console.log(`\n[${target.label}] ✅ Successfully applied ${appliedCount} migration(s)`)
     }
+    return appliedCount
   } finally {
     await db.end()
   }
 }
 
-run().catch((error) => {
+export const runMigrations = async (): Promise<void> => {
+  const planeBUrl = config.db.planeBUrl
+  if (!planeBUrl) {
+    console.error('\n❌ Database connection string is not configured\n')
+    console.error('Please set one of the following environment variables:')
+    console.error('  - DATABASE_URL_PLANE_B (recommended)')
+    console.error('  - DATABASE_URL (fallback)')
+    console.error('\nExample:')
+    console.error('  export DATABASE_URL_PLANE_B="postgres://user:pass@localhost:5432/dbname"\n')
+    process.exit(1)
+  }
+
+  const targets: MigrationTarget[] = [{ label: 'plane-b', dbUrl: planeBUrl }]
+  const planeCUrl = config.db.planeCUrl
+  if (planeCUrl && planeCUrl !== planeBUrl) {
+    targets.push({ label: 'plane-c', dbUrl: planeCUrl })
+  }
+
+  for (const target of targets) {
+    await applyMigrations(target)
+  }
+}
+
+const handleError = (error: unknown) => {
   // Handle AggregateError (common with pg-pool connection errors)
   let errorMessage = ''
   let errorString = ''
@@ -131,4 +146,8 @@ run().catch((error) => {
     console.error('\nFor more information, see: README.md (or the internal runbook).\n')
   }
   process.exit(1)
-})
+}
+
+if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  runMigrations().catch(handleError)
+}

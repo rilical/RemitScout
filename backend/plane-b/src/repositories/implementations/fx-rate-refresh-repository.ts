@@ -74,12 +74,12 @@ export class FxRateRefreshRepository implements IFxRateRefreshRepository {
             )
           FOR UPDATE
        )
-       UPDATE silver.fx_rate_refresh_request AS req
-          SET status = $5,
+      UPDATE silver.fx_rate_refresh_request AS req
+         SET status = $5,
               locked_at = NOW(),
               retry_count = CASE
-                WHEN $6 IS NULL THEN req.retry_count
-                ELSE GREATEST(req.retry_count, $6)
+                WHEN $6::int IS NULL THEN req.retry_count
+                ELSE GREATEST(req.retry_count, $6::int)
               END
         FROM next
         WHERE req.request_id = next.request_id
@@ -98,6 +98,31 @@ export class FxRateRefreshRepository implements IFxRateRefreshRepository {
       this.pool,
     )
     return result.rows[0] ?? null
+  }
+
+  async markRequestClaimed(
+    requestId: string,
+    retryCount?: number,
+  ): Promise<void> {
+    await query(
+      `UPDATE silver.fx_rate_refresh_request
+          SET status = $1,
+              locked_at = NOW(),
+              retry_count = CASE
+                WHEN $2::int IS NULL THEN retry_count
+                ELSE GREATEST(retry_count, $2::int)
+              END
+        WHERE request_id = $3
+          AND status IN ($4, $5)`,
+      [
+        FxRateRefreshStatus.PROCESSING,
+        retryCount ?? null,
+        requestId,
+        FxRateRefreshStatus.PENDING,
+        FxRateRefreshStatus.FAILED,
+      ],
+      this.pool,
+    )
   }
 
   async markRequestStatus(

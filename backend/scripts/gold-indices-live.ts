@@ -222,6 +222,9 @@ weighted_inputs AS (
     l.amount_bucket,
     l.method_profile,
     l.provider_id,
+    l.allowed_in_teer,
+    l.allowed_in_rci,
+    l.allowed_in_rvi,
     l.send_amount,
     l.fee_amount,
     l.implied_fx_rate,
@@ -368,13 +371,18 @@ prepared_base AS (
     ON wmeta.corridor_id = wv.corridor_id
 )
 ,
-prepared AS (
+prepared_with_prev AS (
   SELECT
     *,
     LAG(teer_rate) OVER (
       PARTITION BY corridor_id, amount_bucket, method_profile
       ORDER BY date
-    ) AS prev_teer_rate,
+    ) AS prev_teer_rate
+  FROM prepared_base
+),
+prepared AS (
+  SELECT
+    *,
     CASE
       WHEN teer_rate IS NOT NULL
         AND prev_teer_rate IS NOT NULL
@@ -388,7 +396,7 @@ prepared AS (
         THEN true
       ELSE false
     END AS is_outlier
-  FROM prepared_base
+  FROM prepared_with_prev
 ),
 final AS (
   SELECT
