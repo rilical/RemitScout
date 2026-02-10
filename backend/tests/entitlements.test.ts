@@ -9,6 +9,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
+        exports_max_days: 0,
         alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
@@ -25,6 +26,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'full',
         exports_enabled: true,
+        exports_max_days: 30,
         alerts_max: 16,
         history_max_days: 365,
         watchlist_items: 16,
@@ -41,6 +43,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'full',
         exports_enabled: true,
+        exports_max_days: null,
         alerts_max: null,
         history_max_days: null,
         watchlist_items: null,
@@ -57,6 +60,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
+        exports_max_days: 0,
         alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
@@ -73,6 +77,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
+        exports_max_days: 0,
         alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
@@ -89,6 +94,7 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'none',
         exports_enabled: false,
+        exports_max_days: 0,
         alerts_max: 1,
         history_max_days: 30,
         watchlist_items: 3,
@@ -157,6 +163,7 @@ describe('entitlements', () => {
       expect(Object.keys(free)).toEqual([
         'pulse_access',
         'exports_enabled',
+        'exports_max_days',
         'alerts_max',
         'history_max_days',
         'watchlist_items',
@@ -168,6 +175,7 @@ describe('entitlements', () => {
       expect(Object.keys(plus)).toEqual([
         'pulse_access',
         'exports_enabled',
+        'exports_max_days',
         'alerts_max',
         'history_max_days',
         'watchlist_items',
@@ -179,6 +187,7 @@ describe('entitlements', () => {
       expect(Object.keys(enterprise)).toEqual([
         'pulse_access',
         'exports_enabled',
+        'exports_max_days',
         'alerts_max',
         'history_max_days',
         'watchlist_items',
