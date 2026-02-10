@@ -194,7 +194,7 @@ const processRequest = async (
         status = FxRateRefreshStatus.FAILED
         const errorMessage = result.error || 'oanda_fetch_failed'
         if (writeDb) {
-          await repo.markRequestFailed(request.request_id, errorMessage, maxRetries)
+          await repo.markRequestFailed(request.request_id, errorMessage)
         }
         logger.warn('queue_item_failed', {
           request_id: request.request_id,
@@ -368,6 +368,11 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
           continue
         }
 
+        // Ensure the DB row is in a claimable state (pending/failed) before doing work.
+        // Some producers enqueue directly to SQS without creating a DB row; those should
+        // be dropped to avoid infinite reprocessing loops.
+        await repo.markRequestClaimed(request.request_id, retryCount)
+
         if (retryCount >= maxRetries) {
           preTasks.push((async () => {
             if (writeDb) {
@@ -431,17 +436,11 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
 
             const requestStart = Date.now()
             const retryCount = item.retryCount
-            const request = await repo.claimRequestById(
-              item.requestId,
-              maxRetries,
-              retryCount,
-            )
-
+            const request = buildRequestFromMessage(item.payload, retryCount)
             if (!request) {
-              logger.info('queue_item_unclaimed', {
-                request_id: item.requestId,
-                retry_count: retryCount,
-                source: 'sqs',
+              logger.warn('queue_item_invalid', {
+                message_id: item.messageId,
+                payload: item.payload,
               })
               deleteHandles.push(item.receiptHandle)
               return

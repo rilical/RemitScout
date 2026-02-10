@@ -287,7 +287,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const planeCFunction = new NodejsFunction(scope, 'PlaneCApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-c', 'src', 'lambda.ts'),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.seconds(30),
@@ -378,7 +378,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const planeAFunction = new NodejsFunction(scope, 'PlaneAApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-a', 'src', 'lambda.ts'),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.seconds(30),

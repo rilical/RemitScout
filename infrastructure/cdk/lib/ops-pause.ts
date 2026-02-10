@@ -66,7 +66,7 @@ export const createOpsPause = (
       'ops-pause-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     memorySize: 256,
     timeout: Duration.minutes(2),
     role: options.role,

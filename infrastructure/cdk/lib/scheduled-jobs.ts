@@ -109,6 +109,7 @@ export type ScheduledJobsOptions = {
   fxRateRefreshDesiredCount?: number
   paused?: boolean
   goldIndicesLookbackDays?: string
+  providerWeightWindowDays?: string
   planeASecurityGroup: SecurityGroup
   planeBSecurityGroup: SecurityGroup
   planeCSecurityGroup: SecurityGroup
@@ -342,7 +343,7 @@ export const createScheduledJobs = (
       'gold-fx-rates-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
@@ -387,7 +388,7 @@ export const createScheduledJobs = (
     ruleName: ruleName('gold-fx-rates'),
     schedule: Schedule.rate(Duration.minutes(15)),
     description: 'Runs gold-fx-rates job every 15 minutes.',
-    enabled: rulesEnabled || options.envName === 'dev',
+    enabled: rulesEnabled,
   })
   tagManagedRule(goldFxRatesRule, options.envName)
 
@@ -439,7 +440,7 @@ export const createScheduledJobs = (
       'export-worker-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.minutes(15),
@@ -520,7 +521,7 @@ export const createScheduledJobs = (
         'alert-evaluation-scheduler-lambda.ts',
       ),
       handler: 'handler',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: options.lambdaArchitecture,
       memorySize: 256,
       timeout: Duration.minutes(1),
@@ -611,7 +612,7 @@ export const createScheduledJobs = (
       'alert-evaluation-worker-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.minutes(15),
@@ -709,7 +710,7 @@ export const createScheduledJobs = (
       'alert-corridor-refresh-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(10),
@@ -802,7 +803,7 @@ export const createScheduledJobs = (
       'smart-alerts-job-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: smartAlertsMemory,
     timeout: smartAlertsTimeout,
@@ -889,7 +890,7 @@ export const createScheduledJobs = (
       'telemetry-analytics-job-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
@@ -974,7 +975,7 @@ export const createScheduledJobs = (
       'session-cleanup-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
@@ -1060,7 +1061,7 @@ export const createScheduledJobs = (
         'bank-vs-specialist-refresh-lambda.ts',
       ),
       handler: 'handler',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: options.lambdaArchitecture,
       memorySize: 512,
       timeout: Duration.minutes(5),
@@ -1154,7 +1155,7 @@ export const createScheduledJobs = (
       'audit-log-cleanup-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(10),
@@ -1238,7 +1239,7 @@ export const createScheduledJobs = (
       'oanda-sync-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
@@ -1384,7 +1385,7 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
-  const goldIndicesIntervalHours = options.envName === 'dev' ? 1 : 4
+  const goldIndicesIntervalHours = 4
   const goldIndicesRule = createPlaneCLambdaJob({
     scope,
     options,
@@ -1401,7 +1402,7 @@ export const createScheduledJobs = (
       'gold-indices-job-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(goldIndicesIntervalHours)),
-    enabled: rulesEnabled || options.envName === 'dev',
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeCLambdaNetworking,
@@ -1414,7 +1415,7 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
-  const providerWeightsIntervalHours = options.envName === 'dev' ? 1 : 6
+  const providerWeightsIntervalHours = options.envName === 'dev' ? 24 : 6
   const providerWeightsRule = createPlaneCLambdaJob({
     scope,
     options,
@@ -1431,7 +1432,7 @@ export const createScheduledJobs = (
       'provider-weighting-job-lambda.ts',
     ),
     schedule: Schedule.rate(Duration.hours(providerWeightsIntervalHours)),
-    enabled: rulesEnabled || options.envName === 'dev',
+    enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
     lambdaNetworking: planeCLambdaNetworking,
@@ -1497,7 +1498,7 @@ export const createScheduledJobs = (
       'data-health-slo-job-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
@@ -1596,7 +1597,7 @@ export const createScheduledJobs = (
       'gold-reconciliation-job-lambda.ts',
     ),
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(10),
@@ -1871,7 +1872,7 @@ export const createScheduledJobs = (
         `${providerId}-probe-lambda.ts`,
       ),
       handler: 'handler',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: options.lambdaArchitecture,
       memorySize: 512,
       timeout: Duration.minutes(5),
@@ -2093,7 +2094,7 @@ const createPlaneBLambdaJob = ({
   const fn = new NodejsFunction(scope, `${id}Function`, {
     entry,
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),
@@ -2183,9 +2184,15 @@ const createPlaneCLambdaJob = ({
   }
   if (jobName === 'gold-indices') {
     const lookbackOverride =
-      options.goldIndicesLookbackDays ?? (options.envName === 'dev' ? '30' : undefined)
+      options.goldIndicesLookbackDays ?? (options.envName === 'dev' ? '3' : undefined)
     if (lookbackOverride) {
       environment.GOLD_INDICES_LOOKBACK_DAYS = lookbackOverride
+    }
+  }
+  if (jobName === 'provider-weighting') {
+    const windowOverride = options.providerWeightWindowDays ?? (isDev ? '7' : undefined)
+    if (windowOverride) {
+      environment.PROVIDER_WEIGHT_WINDOW_DAYS = windowOverride
     }
   }
   if (planeCDbHost) {
@@ -2201,7 +2208,7 @@ const createPlaneCLambdaJob = ({
   const fn = new NodejsFunction(scope, `${id}Function`, {
     entry,
     handler: 'handler',
-    runtime: Runtime.NODEJS_18_X,
+    runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
     memorySize: 512,
     timeout: Duration.minutes(5),

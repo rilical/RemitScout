@@ -47,16 +47,33 @@ const validateContextValue = (
     errors.push(`Context variable '${key}' must be a string, got ${typeof value}`)
   }
 
-  if (schemaProperty.type === 'number' && typeof value !== 'number' && value !== undefined) {
-    errors.push(`Context variable '${key}' must be a number, got ${typeof value}`)
+  if (schemaProperty.type === 'number' && value !== undefined) {
+    const isNumber = typeof value === 'number' && Number.isFinite(value)
+    const isNumberString =
+      typeof value === 'string' && value.trim().length > 0 && Number.isFinite(Number(value))
+    if (!isNumber && !isNumberString) {
+      errors.push(`Context variable '${key}' must be a number, got ${typeof value}`)
+    }
   }
 
-  if (schemaProperty.type === 'boolean' && typeof value !== 'boolean' && value !== undefined) {
-    errors.push(`Context variable '${key}' must be a boolean, got ${typeof value}`)
+  if (schemaProperty.type === 'boolean' && value !== undefined) {
+    const isBoolean = typeof value === 'boolean'
+    const isBooleanString =
+      typeof value === 'string' &&
+      ['true', 'false', '1', '0'].includes(value.trim().toLowerCase())
+    if (!isBoolean && !isBooleanString) {
+      errors.push(`Context variable '${key}' must be a boolean, got ${typeof value}`)
+    }
   }
 
-  if (schemaProperty.type === 'array' && !Array.isArray(value) && value !== undefined) {
-    errors.push(`Context variable '${key}' must be an array, got ${typeof value}`)
+  if (schemaProperty.type === 'array' && value !== undefined) {
+    // CDK context from CLI (`-c key=value`) arrives as a string. We accept
+    // comma-separated strings here because stack code normalizes both forms.
+    const isArray = Array.isArray(value)
+    const isCsvString = typeof value === 'string'
+    if (!isArray && !isCsvString) {
+      errors.push(`Context variable '${key}' must be an array, got ${typeof value}`)
+    }
   }
 
   if (

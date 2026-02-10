@@ -308,7 +308,9 @@ export const createMonitoring = (
   })
   rdsCpuAlarm.addAlarmAction(warningAction)
 
-  const sloMissingDataBehavior = isProd ? TreatMissingData.BREACHING : TreatMissingData.NOT_BREACHING
+  const sloMissingDataBehavior = isProd || isStaging
+    ? TreatMissingData.BREACHING
+    : TreatMissingData.NOT_BREACHING
   const sloAlarmConfigs = [
     { sloName: 'freshness_p95', timeWindow: '1h', alarmSuffix: 'freshness-slo-breach' },
     { sloName: 'freshness_p95_tier2', timeWindow: '1h', alarmSuffix: 'freshness-tier2-slo-breach' },

@@ -177,7 +177,7 @@ export const createSynthetics = (
       script: createCanaryCode('HealthCheck', healthCheckUrl),
     },
     executionRoleArn: syntheticsRole.roleArn,
-    runtimeVersion: 'syn-nodejs-puppeteer-7.0',
+    runtimeVersion: 'syn-nodejs-puppeteer-13.1',
     schedule: {
       expression: isDev ? 'rate(15 minutes)' : 'rate(1 minute)',
     },
@@ -200,7 +200,7 @@ export const createSynthetics = (
           script: createCanaryCode('Quotes', quotesUrl),
         },
         executionRoleArn: syntheticsRole.roleArn,
-        runtimeVersion: 'syn-nodejs-puppeteer-7.0',
+        runtimeVersion: 'syn-nodejs-puppeteer-13.1',
         schedule: {
           expression: 'rate(5 minutes)',
         },
@@ -223,7 +223,7 @@ export const createSynthetics = (
           script: createIndicesCanaryCode('Indices', indicesUrl),
         },
         executionRoleArn: syntheticsRole.roleArn,
-        runtimeVersion: 'syn-nodejs-puppeteer-7.0',
+        runtimeVersion: 'syn-nodejs-puppeteer-13.1',
         schedule: {
           expression: 'rate(5 minutes)',
         },

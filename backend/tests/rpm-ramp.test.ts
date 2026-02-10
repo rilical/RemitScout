@@ -526,7 +526,8 @@ describe('applyRpmRamp', () => {
 
       const call = persistSpy.mock.calls[0]
       const newRates = call[2]
-      expect(newRates.perCorridorRpm).toBe(0)
+      // perCorridorRpm must be persisted as a positive integer; clamp invalid 0 to 1.
+      expect(newRates.perCorridorRpm).toBe(1)
     })
   })
 

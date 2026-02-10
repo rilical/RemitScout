@@ -347,9 +347,17 @@ export const penalizeRpmImmediately = async (
 
   const factor = Math.min(1, penaltyFactor)
   const nextRpm = Math.max(1, Math.round(currentRates.rpm * factor))
-  const nextPerCorridorRpm = currentRates.perCorridorRpm > 0
-    ? Math.max(1, Math.round(currentRates.perCorridorRpm * factor))
-    : currentRates.perCorridorRpm
+  const perCorridorBase =
+    Number.isFinite(currentRates.perCorridorRpm) && currentRates.perCorridorRpm > 0
+      ? currentRates.perCorridorRpm
+      : 1
+  if (perCorridorBase !== currentRates.perCorridorRpm) {
+    logger.warn('penalize_rpm_invalid_current_per_corridor_rpm', {
+      provider_id: providerId,
+      current_per_corridor_rpm: currentRates.perCorridorRpm,
+    })
+  }
+  const nextPerCorridorRpm = Math.max(1, Math.round(perCorridorBase * factor))
 
   const redis = await getRedisClient()
   const key = `rpm_penalty:${providerId}`

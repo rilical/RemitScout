@@ -168,7 +168,8 @@ See below for canonical definitions; treat this as a high-level summary.
   (treat missing data as breaching).
 - **Synthetics**: canaries for `/healthz`, `/quotes`, and `/api/indices/latest`
   (dev: health only; staging/prod: health + quotes + indices).
-- **Runbooks**: `docs/runbooks/provider-outage.md`, `docs/runbooks/indices-readiness.md`.
+- **Runbooks**: `docs/runbooks/provider-outage.md`, `docs/runbooks/indices-readiness.md`,
+  `docs/runbooks/dev-pause-resume.md`, `docs/runbooks/cost-spike.md`.
 
 ## Volatility computation
 - Volatility is derived from FX history (OANDA or Gold sources); not directly provided.
@@ -193,7 +194,7 @@ See below for canonical definitions; treat this as a high-level summary.
   - Plane A & C URLs (API Gateway endpoints)
   - VPC and subnet IDs
   - RDS proxy, Redis, S3 buckets for various data/exposed artifacts
-  - ECS services run in private subnets; verify `*_COMPLETE` before use.
+  - Dev ECS services run in public subnets (no NAT); staging/prod use private with egress.
 
 ## Deployment flow (dev/staging/prod)
 - Build backend image (docker)

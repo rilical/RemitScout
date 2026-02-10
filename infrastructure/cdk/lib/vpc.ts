@@ -20,17 +20,23 @@ export type NetworkingResources = {
 
 export type NetworkingOptions = {
   envName: string
+  natGateways?: number
 }
 
 export const createNetworking = (
   scope: Construct,
   options: NetworkingOptions,
 ): NetworkingResources => {
+  const isDev = options.envName === 'dev'
   const isProd = options.envName === 'prod'
+  const natGateways =
+    typeof options.natGateways === 'number' && Number.isFinite(options.natGateways)
+      ? options.natGateways
+      : (isProd ? 2 : 1)
 
   const vpc = new Vpc(scope, 'RemitScoutVpc', {
     maxAzs: 2,
-    natGateways: isProd ? 2 : 1,
+    natGateways,
     subnetConfiguration: [
       {
         name: 'public',
@@ -48,48 +54,55 @@ export const createNetworking = (
     subnets: [{ subnetType: SubnetType.PRIVATE_WITH_EGRESS }],
   })
 
-  const endpointSecurityGroup = new SecurityGroup(scope, 'VpcEndpointSecurityGroup', {
-    vpc,
-    description: 'Security group for VPC interface endpoints.',
-    allowAllOutbound: true,
-  })
-  endpointSecurityGroup.addIngressRule(
-    Peer.ipv4(vpc.vpcCidrBlock),
-    Port.tcp(443),
-    'Allow VPC access to interface endpoints',
-  )
-  const endpointSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+  // Dev cost optimization:
+  // - We rely on NAT for AWS service access (SecretsManager/SSM/etc) and external provider access.
+  // - Avoid interface VPC endpoints in dev, as they incur hourly costs and add drift risk.
+  //
+  // Staging/prod keep interface endpoints for tighter egress and lower NAT data usage.
+  if (!isDev) {
+    const endpointSecurityGroup = new SecurityGroup(scope, 'VpcEndpointSecurityGroup', {
+      vpc,
+      description: 'Security group for VPC interface endpoints.',
+      allowAllOutbound: true,
+    })
+    endpointSecurityGroup.addIngressRule(
+      Peer.ipv4(vpc.vpcCidrBlock),
+      Port.tcp(443),
+      'Allow VPC access to interface endpoints',
+    )
+    const endpointSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
 
-  vpc.addInterfaceEndpoint('EcrApiEndpoint', {
-    service: InterfaceVpcEndpointAwsService.ECR,
-    subnets: endpointSubnets,
-    securityGroups: [endpointSecurityGroup],
-  })
-  vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
-    service: InterfaceVpcEndpointAwsService.ECR_DOCKER,
-    subnets: endpointSubnets,
-    securityGroups: [endpointSecurityGroup],
-  })
-  vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
-    service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-    subnets: endpointSubnets,
-    securityGroups: [endpointSecurityGroup],
-  })
-  vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
-    service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-    subnets: endpointSubnets,
-    securityGroups: [endpointSecurityGroup],
-  })
-  vpc.addInterfaceEndpoint('SsmEndpoint', {
-    service: InterfaceVpcEndpointAwsService.SSM,
-    subnets: endpointSubnets,
-    securityGroups: [endpointSecurityGroup],
-  })
-  vpc.addInterfaceEndpoint('StsEndpoint', {
-    service: InterfaceVpcEndpointAwsService.STS,
-    subnets: endpointSubnets,
-    securityGroups: [endpointSecurityGroup],
-  })
+    vpc.addInterfaceEndpoint('EcrApiEndpoint', {
+      service: InterfaceVpcEndpointAwsService.ECR,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+    vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
+      service: InterfaceVpcEndpointAwsService.ECR_DOCKER,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+    vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
+      service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+    vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+      service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+    vpc.addInterfaceEndpoint('SsmEndpoint', {
+      service: InterfaceVpcEndpointAwsService.SSM,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+    vpc.addInterfaceEndpoint('StsEndpoint', {
+      service: InterfaceVpcEndpointAwsService.STS,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+  }
 
   const planeASecurityGroup = new SecurityGroup(scope, 'PlaneASecurityGroup', {
     vpc,

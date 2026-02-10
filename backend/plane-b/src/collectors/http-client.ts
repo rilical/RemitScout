@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
 import { setTimeout as sleep } from 'timers/promises'
+
+import '../../../shared/node-polyfills'
 import { ProxyAgent, fetch as undiciFetch } from 'undici'
 
 import { createLogger } from '../../../shared/logger'
