@@ -14,8 +14,8 @@ import type {
 export class UserAccountRepository implements IUserAccountRepository {
   constructor(private readonly pool: Pool) {}
 
-  async upsertUserAccount(input: UserAccountUpsertInput): Promise<void> {
-    await query(
+  async upsertUserAccount(input: UserAccountUpsertInput): Promise<{ created: boolean }> {
+    const result = await query<{ created: boolean }>(
       `
       INSERT INTO silver.user_account (user_id, email, last_seen_at)
       SELECT $1, $2, NOW()
@@ -27,10 +27,12 @@ export class UserAccountRepository implements IUserAccountRepository {
       WHERE NOT EXISTS (
         SELECT 1 FROM silver.account_deletion_tombstone WHERE user_id = $1
       )
+      RETURNING (xmax = 0) AS created
       `,
       [input.user_id, input.email],
       this.pool,
     )
+    return { created: result.rows[0]?.created === true }
   }
 
   async getProfile(userId: string): Promise<UserAccountProfile | null> {

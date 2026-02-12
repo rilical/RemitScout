@@ -1,16 +1,12 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { AppError, NotFoundError, ValidationError } from '../../../shared/errors'
 import { requireAuth } from '../plugins/auth-plugin'
 import { deleteUserAccount } from '../services/account-deletion'
 import { getErrorMessage, getErrorStack } from '../types/errors'
-import { UserAccountRepository } from '../repositories'
 
 const logger = createLogger('plane-a.account')
-const planeAPool = getPool(config.db.planeAUrl)
-const userAccountRepository = new UserAccountRepository(planeAPool)
 
 const deleteAccountSchema = z.object({
   confirm: z.literal(true),
@@ -24,7 +20,10 @@ const privacySchema = z.object({
 })
 
 export const accountRoutes = async (app: FastifyInstance) => {
-  app.get('/account/privacy', { preHandler: requireAuth() }, async (request, reply) => {
+  const planeAPool = app.container.pool
+  const userAccountRepository = app.container.repositories.userAccount
+
+  app.get('/account/privacy', { preHandler: requireAuth() }, async (request, _reply) => {
     const user = request.user!
     try {
       await userAccountRepository.upsertUserAccount({
@@ -61,16 +60,14 @@ export const accountRoutes = async (app: FastifyInstance) => {
         error: getErrorMessage(error),
         stack: getErrorStack(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 
-  app.put('/account/privacy', { preHandler: requireAuth() }, async (request, reply) => {
+  app.put('/account/privacy', { preHandler: requireAuth() }, async (request, _reply) => {
     const parsed = privacySchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
     }
 
     const user = request.user!
@@ -100,16 +97,14 @@ export const accountRoutes = async (app: FastifyInstance) => {
         error: getErrorMessage(error),
         stack: getErrorStack(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 
-  app.delete('/account', { preHandler: requireAuth() }, async (request, reply) => {
+  app.delete('/account', { preHandler: requireAuth() }, async (request, _reply) => {
     const parsed = deleteAccountSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'confirmation_required', message: 'Account deletion requires confirmation.' }
+      throw new ValidationError('Account deletion requires confirmation.')
     }
 
     const user = request.user!
@@ -122,15 +117,13 @@ export const accountRoutes = async (app: FastifyInstance) => {
       })
       if (!result.deleted) {
         if (result.errors.includes('user_not_found')) {
-          reply.code(404)
-          return { error: 'not_found', message: 'User not found.' }
+          throw new NotFoundError('User not found.')
         }
-        reply.code(500)
-        return {
-          error: 'account_deletion_failed',
-          errors: result.errors,
-          warnings: result.warnings,
-        }
+        throw new AppError('Account deletion failed', {
+          statusCode: 500,
+          code: 'account_deletion_failed',
+          details: { errors: result.errors, warnings: result.warnings },
+        })
       }
 
       return {
@@ -146,8 +139,7 @@ export const accountRoutes = async (app: FastifyInstance) => {
         error: getErrorMessage(error),
         stack: getErrorStack(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 }

@@ -1262,7 +1262,11 @@ export class PulseCacheRepository implements IPulseCacheRepository {
       let parsed: unknown
       try {
         parsed = JSON.parse(payload)
-      } catch {
+      } catch (error) {
+        logger.debug('pulse_cache_payload_parse_failed', {
+          key,
+          error: error instanceof Error ? error.message : String(error),
+        })
         parsed = payload
       }
 

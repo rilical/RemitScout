@@ -83,14 +83,17 @@ describe('quote-refresh', () => {
   it('deletes invalid SQS messages', async () => {
     const { processQuoteRefreshQueue } = await loadModule('queue')
 
-    mockReceiveMessages.mockResolvedValue([
-      {
-        messageId: 'msg-1',
-        receiptHandle: 'rh-1',
-        payload: null,
-        attributes: { ApproximateReceiveCount: '1' },
-      },
-    ])
+    mockReceiveMessages.mockResolvedValue({
+      messages: [
+        {
+          messageId: 'msg-1',
+          receiptHandle: 'rh-1',
+          payload: null,
+          attributes: { ApproximateReceiveCount: '1' },
+        },
+      ],
+    })
+    mockDeleteMessages.mockResolvedValue({ succeeded: ['rh-1'], failed: [] })
 
     await processQuoteRefreshQueue({ pool: {} as Pool })
 
@@ -100,21 +103,24 @@ describe('quote-refresh', () => {
   it('sends max-retry items to DLQ', async () => {
     const { processQuoteRefreshQueue } = await loadModule('queue')
 
-    mockReceiveMessages.mockResolvedValue([
-      {
-        messageId: 'msg-2',
-        receiptHandle: 'rh-2',
-        payload: {
-          requestId: 'req-2',
-          providerId: 'wise',
-          corridorId: 'US-MX-USD-MXN',
-          amountBucket: 500,
-          payinMethod: 'bank',
-          payoutMethod: 'bank',
+    mockReceiveMessages.mockResolvedValue({
+      messages: [
+        {
+          messageId: 'msg-2',
+          receiptHandle: 'rh-2',
+          payload: {
+            requestId: 'req-2',
+            providerId: 'wise',
+            corridorId: 'US-MX-USD-MXN',
+            amountBucket: 500,
+            payinMethod: 'bank',
+            payoutMethod: 'bank',
+          },
+          attributes: { ApproximateReceiveCount: '3' },
         },
-        attributes: { ApproximateReceiveCount: '3' },
-      },
-    ])
+      ],
+    })
+    mockDeleteMessages.mockResolvedValue({ succeeded: ['rh-2'], failed: [] })
 
     await processQuoteRefreshQueue({ pool: {} as Pool })
 

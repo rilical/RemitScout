@@ -73,15 +73,18 @@ describe('alert-evaluation-worker', () => {
   })
 
   it('processes a message and deletes it', async () => {
-    mockReceiveJsonMessages.mockResolvedValue([
-      {
-        messageId: 'msg-1',
-        receiptHandle: 'receipt-1',
-        payload: { frequency: 'weekly' },
-        attributes: {},
-        raw: {},
-      },
-    ])
+    mockReceiveJsonMessages.mockResolvedValue({
+      messages: [
+        {
+          messageId: 'msg-1',
+          receiptHandle: 'receipt-1',
+          payload: { frequency: 'weekly' },
+          attributes: {},
+          raw: {},
+        },
+      ],
+    })
+    mockDeleteMessages.mockResolvedValue({ succeeded: ['receipt-1'], failed: [] })
 
     const { runAlertEvaluationWorker } = await import('../scripts/alert-evaluation-worker')
     await runAlertEvaluationWorker({ once: true })

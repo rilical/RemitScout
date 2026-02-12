@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { config } from '../../../shared/config'
 
 /**
  * AWS-native notification configuration using SES (email) and SNS (SMS).
@@ -66,20 +67,25 @@ export const NOTIFICATION_CONFIG_SCHEMA = z.object({
 
 export type NotificationConfig = z.infer<typeof NOTIFICATION_CONFIG_SCHEMA>
 
+const asOptionalString = (value: string): string | undefined => {
+  const trimmed = value.trim()
+  return trimmed ? trimmed : undefined
+}
+
 /**
  * Validates and returns email configuration.
  */
 export const getEmailConfig = (): EmailConfig => {
   const result = EMAIL_CONFIG_SCHEMA.safeParse({
-    PROVIDER: process.env.EMAIL_PROVIDER,
-    SES_REGION: process.env.SES_REGION,
-    SES_FROM_ADDRESS: process.env.SES_FROM_ADDRESS,
-    SES_FROM_NAME: process.env.SES_FROM_NAME,
-    SES_REPLY_TO: process.env.SES_REPLY_TO,
-    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-    EMAIL_FROM_ADDRESS: process.env.EMAIL_FROM_ADDRESS,
-    EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME,
-    MAX_RETRIES: process.env.EMAIL_MAX_RETRIES,
+    PROVIDER: asOptionalString(config.communications.email.provider),
+    SES_REGION: asOptionalString(config.communications.email.sesRegion),
+    SES_FROM_ADDRESS: asOptionalString(config.communications.email.sesFromAddress),
+    SES_FROM_NAME: asOptionalString(config.communications.email.sesFromName),
+    SES_REPLY_TO: asOptionalString(config.communications.email.sesReplyTo),
+    SENDGRID_API_KEY: asOptionalString(config.communications.email.sendgridApiKey),
+    EMAIL_FROM_ADDRESS: asOptionalString(config.communications.email.legacyFromAddress),
+    EMAIL_FROM_NAME: asOptionalString(config.communications.email.legacyFromName),
+    MAX_RETRIES: config.communications.email.maxRetries,
   })
 
   if (!result.success) {
@@ -94,13 +100,13 @@ export const getEmailConfig = (): EmailConfig => {
  */
 export const getSmsConfig = (): SmsConfig => {
   const result = SMS_CONFIG_SCHEMA.safeParse({
-    PROVIDER: process.env.SMS_PROVIDER,
-    SNS_REGION: process.env.SNS_REGION,
-    SNS_TOPIC_ARN: process.env.SNS_TOPIC_ARN,
-    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
-    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
-    TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,
-    MAX_RETRIES: process.env.SMS_MAX_RETRIES,
+    PROVIDER: asOptionalString(config.communications.sms.provider),
+    SNS_REGION: asOptionalString(config.communications.sms.snsRegion),
+    SNS_TOPIC_ARN: asOptionalString(config.communications.sms.snsTopicArn),
+    TWILIO_ACCOUNT_SID: asOptionalString(config.communications.sms.twilioAccountSid),
+    TWILIO_AUTH_TOKEN: asOptionalString(config.communications.sms.twilioAuthToken),
+    TWILIO_FROM_NUMBER: asOptionalString(config.communications.sms.twilioFromNumber),
+    MAX_RETRIES: config.communications.sms.maxRetries,
   })
 
   if (!result.success) {
@@ -115,10 +121,10 @@ export const getSmsConfig = (): SmsConfig => {
  */
 export const getWebhookConfig = (): WebhookConfig => {
   const result = WEBHOOK_CONFIG_SCHEMA.safeParse({
-    MAX_RETRIES: process.env.WEBHOOK_MAX_RETRIES,
-    TIMEOUT_MS: process.env.WEBHOOK_TIMEOUT_MS,
-    BACKOFF_BASE_MS: process.env.WEBHOOK_BACKOFF_BASE_MS,
-    MAX_BACKOFF_MS: process.env.WEBHOOK_MAX_BACKOFF_MS,
+    MAX_RETRIES: config.communications.webhook.maxRetries,
+    TIMEOUT_MS: config.communications.webhook.timeoutMs,
+    BACKOFF_BASE_MS: config.communications.webhook.backoffBaseMs,
+    MAX_BACKOFF_MS: config.communications.webhook.maxBackoffMs,
   })
 
   if (!result.success) {
@@ -133,8 +139,8 @@ export const getWebhookConfig = (): WebhookConfig => {
  */
 export const getNotificationConfig = (): NotificationConfig => {
   const result = NOTIFICATION_CONFIG_SCHEMA.safeParse({
-    PARALLEL_DISPATCH: process.env.NOTIFICATION_PARALLEL,
-    MAX_CONCURRENT_DISPATCHES: process.env.MAX_CONCURRENT_DISPATCHES,
+    PARALLEL_DISPATCH: config.communications.dispatch.parallelDispatch,
+    MAX_CONCURRENT_DISPATCHES: config.communications.dispatch.maxConcurrentDispatches,
   })
 
   if (!result.success) {
@@ -143,7 +149,6 @@ export const getNotificationConfig = (): NotificationConfig => {
 
   return result.data
 }
-
 
 
 

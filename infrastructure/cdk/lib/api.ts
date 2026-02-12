@@ -92,6 +92,8 @@ export type ApiOptions = {
   disablePlaneCExecuteEndpoint?: boolean
   wafAllowListIps?: string[]
   wafBlockListIps?: string[]
+  wafStripeWebhookAllowListIps?: string[]
+  wafAdminAllowListIps?: string[]
   wafEnableBotControl?: boolean
   otelLambdaLayerArn?: string
   planeAThrottleRate?: number
@@ -636,6 +638,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const enableWaf = options.enableWaf ?? options.envName === 'prod'
   const wafAllowList = options.wafAllowListIps ?? []
   const wafBlockList = options.wafBlockListIps ?? []
+  const wafStripeWebhookAllowList = options.wafStripeWebhookAllowListIps ?? []
+  const wafAdminAllowList = options.wafAdminAllowListIps ?? []
   const wafEnableBotControl = options.wafEnableBotControl ?? false
 
   if (enableCloudFront) {
@@ -658,6 +662,16 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
           },
         })
         const withApiPrefixes = (pathMatch: string): string[] => [`/api/v1${pathMatch}`]
+        const notIpSet = (ipSetArn: string): CfnWebACL.StatementProperty => ({
+          notStatement: {
+            statement: {
+              ipSetReferenceStatement: { arn: ipSetArn },
+            },
+          },
+        })
+        const andStatements = (statements: CfnWebACL.StatementProperty[]): CfnWebACL.StatementProperty => ({
+          andStatement: { statements },
+        })
 
         const pushRule = (rule: Omit<CfnWebACL.RuleProperty, 'priority'>): void => {
           rules.push({
@@ -707,6 +721,55 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
             visibilityConfig: {
               cloudWatchMetricsEnabled: true,
               metricName: `remit-scout-${options.envName}-block`,
+              sampledRequestsEnabled: true,
+            },
+          })
+        }
+
+        // Path-scoped IP allowlists (defense-in-depth).
+        if (wafStripeWebhookAllowList.length > 0) {
+          const stripeIpSet = new CfnIPSet(scope, 'PlaneAStripeWebhookIpSet', {
+            addresses: wafStripeWebhookAllowList,
+            ipAddressVersion: 'IPV4',
+            name: `remit-scout-${options.envName}-stripe-webhook-allow`,
+            scope: 'CLOUDFRONT',
+          })
+          pushRule({
+            name: 'StripeWebhookIpAllowlist',
+            action: { block: {} },
+            statement: andStatements([
+              buildPathMatch(withApiPrefixes('/billing/webhook')),
+              notIpSet(stripeIpSet.attrArn),
+            ]),
+            visibilityConfig: {
+              cloudWatchMetricsEnabled: true,
+              metricName: `remit-scout-${options.envName}-stripe-webhook-allow`,
+              sampledRequestsEnabled: true,
+            },
+          })
+        }
+
+        if (wafAdminAllowList.length > 0) {
+          const adminIpSet = new CfnIPSet(scope, 'PlaneAAdminIpSet', {
+            addresses: wafAdminAllowList,
+            ipAddressVersion: 'IPV4',
+            name: `remit-scout-${options.envName}-admin-allow`,
+            scope: 'CLOUDFRONT',
+          })
+          pushRule({
+            name: 'AdminIpAllowlist',
+            action: { block: {} },
+            statement: andStatements([
+              buildPathMatch([
+                ...withApiPrefixes('/admin'),
+                ...withApiPrefixes('/ops'),
+                ...withApiPrefixes('/audit'),
+              ]),
+              notIpSet(adminIpSet.attrArn),
+            ]),
+            visibilityConfig: {
+              cloudWatchMetricsEnabled: true,
+              metricName: `remit-scout-${options.envName}-admin-allow`,
               sampledRequestsEnabled: true,
             },
           })

@@ -14,50 +14,15 @@ import type { Pool } from 'pg'
 import { query } from '../../../shared/db'
 import { evaluatePublisherGates } from './publisher-gates'
 import { createLogger } from '../../../shared/logger'
-import { parseCorridorId } from '../../../shared/corridor'
-import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
-import { B2B_FIXED_AMOUNT_USD } from '../../../shared/macro-corridors'
+import { getB2bAmountBucket } from '../../../shared/amount-bucket'
+import type { AggregatedData, GateResult, PublisherResult } from './publisher-types'
 
 const logger = createLogger('plane-c.gold-publisher-live')
-
-export type AggregatedData = {
-  corridorId: string
-  timestampBucket: Date
-  providerCount: number
-  avgRate: number
-  minRate: number
-  maxRate: number
-  topProviderShare: number
-  topTwoShare: number
-  contributorCount: number
-  metadata?: Record<string, unknown>
-}
-
-export type GateResult = {
-  allowed: boolean
-  reasons: string[]
-}
-
-export type PublisherResult = {
-  published: number
-  withheld: number
-  errors: number
-}
 
 type QuoteRecord = {
   provider_id: string
   implied_fx_rate: number
   collected_at: Date
-}
-
-const getB2bAmountBucket = (corridorId: string): number => {
-  const parsed = parseCorridorId(corridorId)
-  if (!parsed) return B2B_FIXED_AMOUNT_USD
-  const sourceCurrency = parsed.sourceCurrency.toUpperCase()
-  if (sourceCurrency === 'USD') return B2B_FIXED_AMOUNT_USD
-  const rate = FIXED_EXCHANGE_RATES[sourceCurrency]
-  if (!rate || rate <= 0) return B2B_FIXED_AMOUNT_USD
-  return Math.round(B2B_FIXED_AMOUNT_USD * rate)
 }
 
 export class GoldPublisherLive {

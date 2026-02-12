@@ -5,21 +5,20 @@ import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implementations/corridor-volatility-repository'
+import { withTestTransaction } from './helpers/test-db'
 
-const planeBUrl = process.env.DATABASE_URL_PLANE_B || process.env.DATABASE_URL
-const shouldRun = Boolean(planeBUrl)
+const planeBUrl =
+  process.env.DATABASE_URL_PLANE_B ||
+  process.env.DATABASE_URL ||
+  'postgres://remit:remit@localhost:5432/remit'
+
+process.env.DATABASE_URL_PLANE_B = process.env.DATABASE_URL_PLANE_B || planeBUrl
 
 describe('Cache TTL End-to-End', () => {
-  if (!shouldRun) {
-    it.skip('DATABASE_URL_PLANE_B or DATABASE_URL required', () => {})
-    return
-  }
-
   let pool: Pool
   let volatilityService: VolatilityService
   let volatilityRepo: CorridorVolatilityRepository
   let previousOnDemand: string | undefined
-  const corridorIds = ['US-CL-USD-CLP', 'US-CO-USD-COP', 'GB-KE-GBP-KES']
 
   const ensureProvider = async (providerId: string) => {
     await pool.query(
@@ -57,34 +56,9 @@ describe('Cache TTL End-to-End', () => {
     pool = createPool(config.db.planeBUrl)
     volatilityService = new VolatilityService(pool)
     volatilityRepo = new CorridorVolatilityRepository(pool)
-
-    await pool.query(
-      'DELETE FROM silver.latest_quote_by_provider WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
-    await pool.query(
-      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
-    await pool.query(
-      'DELETE FROM silver.quote_record WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
   })
 
   afterEach(async () => {
-    await pool.query(
-      'DELETE FROM silver.latest_quote_by_provider WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
-    await pool.query(
-      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
-    await pool.query(
-      'DELETE FROM silver.quote_record WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
     await pool.end()
     if (previousOnDemand === undefined) {
       delete process.env.VOLATILITY_CACHE_ON_DEMAND
@@ -94,110 +68,116 @@ describe('Cache TTL End-to-End', () => {
   })
 
   it('calculates volatility from quote_record and assigns correct TTL', async () => {
-    const corridorId = 'US-CL-USD-CLP'
-    const baseRate = 18.0
-    const providerId = 'remitly'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'US-CL-USD-CLP'
+      const baseRate = 18.0
+      const providerId = 'remitly'
 
-    await ensureProvider(providerId)
-    await ensureCorridor(corridorId)
-    const ingestionRunId = await createIngestionRun(providerId)
+      await ensureProvider(providerId)
+      await ensureCorridor(corridorId)
+      const ingestionRunId = await createIngestionRun(providerId)
 
-    for (let i = 0; i < 15; i++) {
-      const rateVariation = (Math.random() - 0.5) * 1.0
-      const rate = baseRate + rateVariation
+      for (let i = 0; i < 15; i++) {
+        const rateVariation = (Math.random() - 0.5) * 1.0
+        const rate = baseRate + rateVariation
 
-      await pool.query(
-        `INSERT INTO silver.quote_record
-         (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} hours', NOW(), $12, $13)`,
-        [
-          providerId,
-          corridorId,
-          100,
-          'debit_card',
-          'bank_deposit',
-          100,
-          2,
-          102,
-          rate * 100,
-          rate,
-          'ok',
-          ingestionRunId,
-          `bronze:${i}`,
-        ],
-      )
-    }
+        await pool.query(
+          `INSERT INTO silver.quote_record
+           (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} hours', NOW(), $12, $13)`,
+          [
+            providerId,
+            corridorId,
+            100,
+            'debit_card',
+            'bank_deposit',
+            100,
+            2,
+            102,
+            rate * 100,
+            rate,
+            'ok',
+            ingestionRunId,
+            `bronze:${i}`,
+          ],
+        )
+      }
 
-    const calculated = await volatilityRepo.calculateVolatilityScore(corridorId)
-    expect(calculated).not.toBeNull()
+      const calculated = await volatilityRepo.calculateVolatilityScore(corridorId)
+      expect(calculated).not.toBeNull()
 
-    const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
-    expect(ttlResult.hasData).toBe(true)
-    expect(ttlResult.volatilityScore).not.toBeNull()
-    expect(['tier1', 'tier2', 'tier3']).toContain(ttlResult.tier)
-    expect([30 * 60, 2 * 60 * 60, 6 * 60 * 60]).toContain(ttlResult.ttlSeconds)
+      const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
+      expect(ttlResult.hasData).toBe(true)
+      expect(ttlResult.volatilityScore).not.toBeNull()
+      expect(['tier1', 'tier2', 'tier3']).toContain(ttlResult.tier)
+      expect([30 * 60, 2 * 60 * 60, 6 * 60 * 60]).toContain(ttlResult.ttlSeconds)
+    })
   })
 
   it('uses cached volatility score when available', async () => {
-    const corridorId = 'US-CO-USD-COP'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'US-CO-USD-COP'
 
-    await pool.query(
-      `INSERT INTO silver.corridor_volatility_cache
-       (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [corridorId, 0.12, 20, 55.0, 6.6],
-    )
+      await pool.query(
+        `INSERT INTO silver.corridor_volatility_cache
+         (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [corridorId, 0.12, 20, 55.0, 6.6],
+      )
 
-    const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
-    expect(ttlResult.hasData).toBe(true)
-    expect(ttlResult.volatilityScore).toBe(0.12)
-    expect(ttlResult.tier).toBe('tier2')
-    expect(ttlResult.ttlSeconds).toBe(2 * 60 * 60)
+      const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
+      expect(ttlResult.hasData).toBe(true)
+      expect(ttlResult.volatilityScore).toBe(0.12)
+      expect(ttlResult.tier).toBe('tier2')
+      expect(ttlResult.ttlSeconds).toBe(2 * 60 * 60)
+    })
   })
 
   it('handles quote freshness check with dynamic TTL', async () => {
-    const corridorId = 'GB-KE-GBP-KES'
-    const providerId = 'wise'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'GB-KE-GBP-KES'
+      const providerId = 'wise'
 
-    await ensureProvider(providerId)
-    await ensureCorridor(corridorId)
+      await ensureProvider(providerId)
+      await ensureCorridor(corridorId)
 
-    await pool.query(
-      `INSERT INTO silver.corridor_volatility_cache
-       (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [corridorId, 0.05, 20, 105.0, 5.25],
-    )
+      await pool.query(
+        `INSERT INTO silver.corridor_volatility_cache
+         (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [corridorId, 0.05, 20, 105.0, 5.25],
+      )
 
-    await pool.query(
-      `INSERT INTO silver.latest_quote_by_provider
-       (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
-       VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '1 hour', $6, $7, $8, $9, $10, $11)`,
-      [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 10500, 105.0, 'ok'],
-    )
+      await pool.query(
+        `INSERT INTO silver.latest_quote_by_provider
+         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
+         VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '1 hour', $6, $7, $8, $9, $10, $11)`,
+        [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 10500, 105.0, 'ok'],
+      )
 
-    const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
-    expect(ttlResult.tier).toBe('tier3')
-    expect(ttlResult.ttlSeconds).toBe(6 * 60 * 60)
+      const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
+      expect(ttlResult.tier).toBe('tier3')
+      expect(ttlResult.ttlSeconds).toBe(6 * 60 * 60)
 
-    const result = await query<{ collected_at: Date }>(
-      `SELECT collected_at
-       FROM silver.latest_quote_by_provider
-       WHERE corridor_id = $1
-         AND amount_bucket = $2
-         AND payin = $3
-         AND payout = $4
-         AND provider_id = $5`,
-      [corridorId, 100, 'debit_card', 'bank_deposit', 'wise'],
-      pool,
-    )
+      const result = await query<{ collected_at: Date }>(
+        `SELECT collected_at
+         FROM silver.latest_quote_by_provider
+         WHERE corridor_id = $1
+           AND amount_bucket = $2
+           AND payin = $3
+           AND payout = $4
+           AND provider_id = $5`,
+        [corridorId, 100, 'debit_card', 'bank_deposit', 'wise'],
+        pool,
+      )
 
-    const ageSeconds = Math.floor(
-      (Date.now() - new Date(result.rows[0].collected_at).getTime()) / 1000,
-    )
-    const isFresh = ageSeconds <= ttlResult.ttlSeconds
+      const ageSeconds = Math.floor(
+        (Date.now() - new Date(result.rows[0].collected_at).getTime()) / 1000,
+      )
+      const isFresh = ageSeconds <= ttlResult.ttlSeconds
 
-    expect(isFresh).toBe(true)
-    expect(ageSeconds).toBeLessThan(6 * 60 * 60)
+      expect(isFresh).toBe(true)
+      expect(ageSeconds).toBeLessThan(6 * 60 * 60)
+    })
   })
 })

@@ -1,10 +1,14 @@
 import { config } from '../../../shared/config'
+import { decodeJwt } from 'jose'
 import { fetchJwks } from './jwks-fetch'
 import { getCachedJwks, setCachedJwks } from './jwks-cache'
 import { verifyWithJwks } from './jwks-verify'
 import { remoteVerify } from './remote-verify'
+import { createLogger } from '../../../shared/logger'
 import type { AuthResult } from './types'
 import { AuthError } from './types'
+
+const logger = createLogger('plane-a.verify-supabase-jwt')
 
 const parseBearerToken = (header?: string) => {
   if (!header) {
@@ -19,6 +23,33 @@ const parseBearerToken = (header?: string) => {
 }
 
 const makeError = (code: AuthError['code'], message: string): AuthError => ({ code, message })
+
+const maxTokenAgeSeconds = (() => {
+  const raw = process.env.PLANE_A_MAX_TOKEN_AGE_SECONDS
+  const parsed = raw ? Number(raw) : 24 * 60 * 60
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+})()
+
+const enforceMaxTokenAge = (token: string): AuthError | null => {
+  if (!maxTokenAgeSeconds) return null
+  try {
+    const payload = decodeJwt(token)
+    const iat = payload.iat
+    if (typeof iat !== 'number' || !Number.isFinite(iat)) {
+      return null
+    }
+    const nowSeconds = Math.floor(Date.now() / 1000)
+    if (nowSeconds - iat > maxTokenAgeSeconds) {
+      return makeError('token_too_old', 'Token is too old. Please sign in again.')
+    }
+    return null
+  } catch (error) {
+    logger.debug('supabase_token_age_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
 
 export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<AuthResult> => {
   const token = parseBearerToken(authorizationHeader)
@@ -42,6 +73,8 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
     if (keys && keys.length > 0) {
       const user = await verifyWithJwks(token, keys)
       if (user) {
+        const ageError = enforceMaxTokenAge(token)
+        if (ageError) return ageError
         return user
       }
     }
@@ -54,6 +87,8 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
   if (allowRemote) {
     const user = await remoteVerify(token)
     if (user) {
+      const ageError = enforceMaxTokenAge(token)
+      if (ageError) return ageError
       return user
     }
   }

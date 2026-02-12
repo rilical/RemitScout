@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
+import { AppError, ValidationError } from '../../../shared/errors'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
@@ -411,7 +412,7 @@ const getActivePushDeviceCount = async (userId: string) => {
 }
 
 export const notificationsRoutes = async (app: FastifyInstance) => {
-  app.get('/notifications/preferences', { preHandler: requireAuth() }, async (request, reply) => {
+  app.get('/notifications/preferences', { preHandler: requireAuth() }, async (request) => {
     const user = request.user!
     try {
       const settings = toSettingsPayload(await getSettings(user.user_id))
@@ -421,16 +422,20 @@ export const notificationsRoutes = async (app: FastifyInstance) => {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Failed to load notification settings', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 
-  app.put('/notifications/preferences', { preHandler: requireAuth() }, async (request, reply) => {
+  app.put('/notifications/preferences', { preHandler: requireAuth() }, async (request) => {
     const parsed = settingsSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request data', {
+        details: parsed.error.issues,
+      })
     }
 
     const user = request.user!
@@ -498,16 +503,20 @@ export const notificationsRoutes = async (app: FastifyInstance) => {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Failed to update notification settings', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 
-  app.post('/notifications/push/subscribe', { preHandler: requireAuth() }, async (request, reply) => {
+  app.post('/notifications/push/subscribe', { preHandler: requireAuth() }, async (request) => {
     const parsed = pushSubscribeSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request data', {
+        details: parsed.error.issues,
+      })
     }
 
     const input = parsed.data
@@ -516,8 +525,9 @@ export const notificationsRoutes = async (app: FastifyInstance) => {
     const token = input.token ?? null
 
     if (!endpoint && !token) {
-      reply.code(400)
-      return { error: 'missing_token_or_subscription' }
+      throw new ValidationError('Missing token or subscription endpoint', {
+        details: [{ message: 'missing_token_or_subscription' }],
+      })
     }
 
     try {
@@ -559,16 +569,20 @@ export const notificationsRoutes = async (app: FastifyInstance) => {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Failed to subscribe device', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 
-  app.post('/notifications/push/unsubscribe', { preHandler: requireAuth() }, async (request, reply) => {
+  app.post('/notifications/push/unsubscribe', { preHandler: requireAuth() }, async (request) => {
     const parsed = pushUnsubscribeSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request data', {
+        details: parsed.error.issues,
+      })
     }
 
     const input = parsed.data
@@ -607,8 +621,11 @@ export const notificationsRoutes = async (app: FastifyInstance) => {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Failed to unsubscribe device', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 }

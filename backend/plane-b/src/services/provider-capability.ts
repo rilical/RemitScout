@@ -4,6 +4,7 @@ import type { CollectorRequest, FetchResult } from '../collectors/types'
 import { detectBlock } from '../collectors/block-detection'
 import { ensureCorridor } from '../collectors/base'
 import { parseCorridorId } from '../../../shared/corridor'
+import { createLogger } from '../../../shared/logger'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { ProviderCapabilityRepository } from '../repositories'
 import type { ProxyTier } from '../lib/proxy-router'
@@ -70,6 +71,8 @@ import { WIREBARLEY_SUPPORTED_CORRIDORS } from '../providers/wirebarley/supporte
 import { fetchIntermexQuote } from '../providers/intermex/fetch'
 import { extractIntermexMethodPairs } from '../providers/intermex/parse'
 import { INTERMEX_SUPPORTED_CORRIDORS } from '../providers/intermex/supported-corridors'
+
+const logger = createLogger('plane-b.provider-capability')
 
 type MethodPair = {
   payin_method?: string | null
@@ -295,7 +298,12 @@ const probeProviderCapability = async (
   let fetchResult: FetchResult
   try {
     fetchResult = await probe.fetch(request, { jitterMs: 0, proxyTier: 'NONE' })
-  } catch {
+  } catch (error) {
+    logger.warn('provider_capability_probe_failed', {
+      provider_id: request.provider_id,
+      corridor_id: request.corridor_id,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return { supported: false, reason: 'probe_error', source: 'probe' }
   }
 

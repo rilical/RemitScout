@@ -14,7 +14,7 @@ const getSesClient = (): SESClient | null => {
     return null
   }
 
-  const sesRegion = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
+  const sesRegion = config.aws.sesRegion
   if (!sesClient) {
     sesClient = new SESClient({ region: sesRegion })
   }
@@ -63,7 +63,7 @@ export const sendConfirmationEmail = async (
     throw new Error('ses_not_configured')
   }
 
-  const fromAddress = config.newsletter.from || process.env.SES_FROM_ADDRESS || ''
+  const fromAddress = config.newsletter.from || ''
   if (!fromAddress) {
     throw new Error('newsletter_from_address_missing')
   }
@@ -112,7 +112,7 @@ export const sendWelcomeEmail = async (email: string): Promise<void> => {
   const client = getSesClient()
   if (!client) return
 
-  const fromAddress = config.newsletter.from || process.env.SES_FROM_ADDRESS || ''
+  const fromAddress = config.newsletter.from || ''
   if (!fromAddress) {
     return
   }

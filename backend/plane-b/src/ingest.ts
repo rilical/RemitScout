@@ -1,9 +1,10 @@
 import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
 import { createPool } from '../../shared/db'
-import { assertRuntimeConfig, config } from '../../shared/config'
+import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { initErrorTracking } from '../../shared/error-tracker'
+import { createShutdownHandler } from '../../shared/shutdown'
 import { initTracing, startSpan, getCurrentSpan } from '../../shared/tracing'
 import { getQueueAgeSeconds, getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../../shared/sqs'
 import { partitionCorridors } from '../../shared/sharding'
@@ -20,30 +21,20 @@ import {
 import { startHealthServerOnce, stopHealthServerOnce } from './health-server'
 import { providerRegistry, type ProviderRegistryEntry } from './providers'
 import { processQuoteRefreshQueue } from './quote-refresh'
-import {
-  B2bSweepRepository,
-  FreshnessReportRepository,
-  IngestionRunRepository,
-  LatestQuoteRepository,
-  ProviderCapabilityRepository,
-  RightsMatrixRepository,
-} from './repositories'
+import { createPlaneBContainer, type PlaneBContainer } from './container'
 import { buildB2bAmountResolver } from './services/b2b-amount'
 import { filterQueuesByRightsMatrix } from './services/rights-matrix-filter'
 import { VolatilityService } from './services/volatility-service'
-
-if (config.env === 'production' || config.env === 'staging' || process.env.STRICT_CONFIG === '1') {
-  assertRuntimeConfig({
-    requirePlaneB: true,
-    requireRedis: true,
-  })
-}
+import { runStartupChecks } from '../../shared/startup'
+import { recordCloudWatchMetric } from '../../shared/cloudwatch-metrics'
+import { emitOpsEvent } from '../../shared/ops-events'
 
 initErrorTracking('plane-b')
 initTracing('plane-b')
 
 type IngestOptions = {
   pool?: Pool
+  container?: PlaneBContainer
 }
 
 const logger = createLogger('plane-b.ingest')
@@ -221,25 +212,17 @@ const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolea
   }
 }
 
-let shutdownRequested = false
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
-
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-  stopHealthServerOnce().catch((error) => {
-    logger.warn('health_server_close_failed', { error })
-  })
-
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const shutdown = createShutdownHandler({
+  name: 'plane-b.ingest',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+  onShutdownRequested: async () => {
+    await stopHealthServerOnce().catch((error) => {
+      logger.warn('health_server_close_failed', { error })
+    })
+  },
+})
 
 const estimateTargetShards = (
   corridorCount: number,
@@ -274,16 +257,15 @@ const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
 
 
 const getLastPrioritySweepAgeSeconds = async (
-  pool: Pool,
+  ingestionRunRepository: PlaneBContainer['repositories']['ingestionRun'],
   providerId: string,
   collectorType: string,
 ) => {
-  const repo = new IngestionRunRepository(pool)
-  return repo.getLastSweepAgeSeconds(providerId, collectorType)
+  return ingestionRunRepository.getLastSweepAgeSeconds(providerId, collectorType)
 }
 
 const shouldRunPrioritySweep = async (
-  pool: Pool,
+  ingestionRunRepository: PlaneBContainer['repositories']['ingestionRun'],
   providerId: string,
   collectorType: string,
   intervalSeconds: number,
@@ -291,7 +273,11 @@ const shouldRunPrioritySweep = async (
   if (intervalSeconds <= 0) {
     return { due: true, ageSeconds: null }
   }
-  const ageSeconds = await getLastPrioritySweepAgeSeconds(pool, providerId, collectorType)
+  const ageSeconds = await getLastPrioritySweepAgeSeconds(
+    ingestionRunRepository,
+    providerId,
+    collectorType,
+  )
   if (ageSeconds === null) {
     return { due: true, ageSeconds: null }
   }
@@ -299,9 +285,11 @@ const shouldRunPrioritySweep = async (
 }
 
 
-const loadUnsupportedCorridorsForProvider = async (pool: Pool, providerId: string) => {
-  const repo = new ProviderCapabilityRepository(pool)
-  const rows = await repo.loadUnsupportedCorridors(providerId)
+const loadUnsupportedCorridorsForProvider = async (
+  providerCapabilityRepository: PlaneBContainer['repositories']['providerCapability'],
+  providerId: string,
+) => {
+  const rows = await providerCapabilityRepository.loadUnsupportedCorridors(providerId)
   return new Set(rows.map(row => row.corridor_id).filter((id): id is string => Boolean(id)))
 }
 
@@ -312,11 +300,10 @@ type PriorityQueues = {
 }
 
 const loadPriorityQueues = async (
-  pool: Pool,
+  providerCapabilityRepository: PlaneBContainer['repositories']['providerCapability'],
   providerId: string,
   tierVersion?: string,
 ): Promise<PriorityQueues> => {
-  const repo = new ProviderCapabilityRepository(pool)
   const queues: PriorityQueues = {
     tier1: [],
     tier2: [],
@@ -324,7 +311,7 @@ const loadPriorityQueues = async (
   }
 
   if (tierVersion) {
-    const rows = await repo.loadPriorityCorridors(providerId, tierVersion)
+    const rows = await providerCapabilityRepository.loadPriorityCorridors(providerId, tierVersion)
     for (const row of rows) {
       if (!row.corridor_id) continue
       if (!isMacroCorridor(row.corridor_id)) continue
@@ -336,7 +323,7 @@ const loadPriorityQueues = async (
       }
     }
   } else {
-    const rows = await repo.loadObservedCorridors(providerId)
+    const rows = await providerCapabilityRepository.loadObservedCorridors(providerId)
     for (const row of rows) {
       if (!row.corridor_id) continue
       if (!isMacroCorridor(row.corridor_id)) continue
@@ -417,9 +404,10 @@ type RightsMatrixEntry = {
   destinationCountries: string[] | null
 }
 
-const loadProviderRights = async (pool: Pool) => {
-  const repo = new RightsMatrixRepository(pool)
-  const rows = await repo.loadProviderRights()
+const loadProviderRights = async (
+  rightsMatrixRepository: PlaneBContainer['repositories']['rightsMatrix'],
+) => {
+  const rows = await rightsMatrixRepository.loadProviderRights()
   const rights = new Map<string, RightsMatrixEntry>()
   for (const row of rows) {
     if (!row.provider_id) continue
@@ -472,7 +460,7 @@ type PriorityTierConfigEntry = {
 type PriorityTierConfig = Record<PriorityTierKey, PriorityTierConfigEntry>
 
 const loadFreshnessLagByCorridor = async (
-  pool: Pool,
+  latestQuoteRepository: PlaneBContainer['repositories']['latestQuote'],
   providerId: string,
   corridors: string[],
   amountByCorridor: Map<string, number>,
@@ -487,7 +475,6 @@ const loadFreshnessLagByCorridor = async (
   if (!corridors.length) {
     return ageByCorridor
   }
-  const repo = new LatestQuoteRepository(pool)
   const chunkSize = Number.isFinite(config.planeB.b2bFreshnessChunkSize)
     ? config.planeB.b2bFreshnessChunkSize
     : 0
@@ -502,7 +489,7 @@ const loadFreshnessLagByCorridor = async (
   for (const [amountBucket, corridorList] of buckets.entries()) {
     const corridorChunks = chunkSize > 0 ? chunkArray(corridorList, chunkSize) : [corridorList]
     for (const corridorChunk of corridorChunks) {
-      const rows = await repo.loadFreshnessLagByCorridor(
+      const rows = await latestQuoteRepository.loadFreshnessLagByCorridor(
         providerId,
         corridorChunk,
         amountBucket,
@@ -522,7 +509,7 @@ const loadFreshnessLagByCorridor = async (
 }
 
 const persistFreshnessReport = async (
-  pool: Pool,
+  freshnessReportRepository: PlaneBContainer['repositories']['freshnessReport'],
   providerId: string,
   payinMethod: string,
   payoutMethod: string,
@@ -533,8 +520,6 @@ const persistFreshnessReport = async (
     ? config.planeB.b2bFreshnessChunkSize
     : 0
   const reportChunks = chunkSize > 0 ? chunkArray(reports, chunkSize) : [reports]
-  const repo = new FreshnessReportRepository(pool)
-
   for (const chunk of reportChunks) {
     const observedAt = new Date().toISOString()
     const providerIds = chunk.map(() => providerId)
@@ -547,7 +532,7 @@ const persistFreshnessReport = async (
     const staleFlags = chunk.map(report => report.isStale)
     const observedAts = chunk.map(() => observedAt)
 
-    await repo.insertBatch({
+    await freshnessReportRepository.insertBatch({
       providerIds,
       corridorIds,
       amountBuckets,
@@ -562,7 +547,8 @@ const persistFreshnessReport = async (
 }
 
 const applyFreshnessSlo = async (options: {
-  pool: Pool
+  latestQuoteRepository: PlaneBContainer['repositories']['latestQuote']
+  freshnessReportRepository: PlaneBContainer['repositories']['freshnessReport']
   providerId: string
   corridors: string[]
   amountByCorridor: Map<string, number>
@@ -573,7 +559,8 @@ const applyFreshnessSlo = async (options: {
   enabled: boolean
 }) => {
   const {
-    pool,
+    latestQuoteRepository,
+    freshnessReportRepository,
     providerId,
     corridors,
     amountByCorridor,
@@ -591,7 +578,7 @@ const applyFreshnessSlo = async (options: {
     }
   }
   const ageByCorridor = await loadFreshnessLagByCorridor(
-    pool,
+    latestQuoteRepository,
     providerId,
     corridors,
     amountByCorridor,
@@ -626,7 +613,7 @@ const applyFreshnessSlo = async (options: {
   if (shouldEnforce) {
     try {
       await persistFreshnessReport(
-        pool,
+        freshnessReportRepository,
         providerId,
         payinMethod,
         payoutMethod,
@@ -663,14 +650,15 @@ const applyFreshnessSlo = async (options: {
   }
 }
 
-const reportSweepDurations = async (pool: Pool) => {
-  const repo = new IngestionRunRepository(pool)
-  const rows = await repo.loadLatestSweepDurations()
+const reportSweepDurations = async (
+  ingestionRunRepository: PlaneBContainer['repositories']['ingestionRun'],
+) => {
+  const rows = await ingestionRunRepository.loadLatestSweepDurations()
   logger.info('b2b_sweep_duration_report', { providers: rows })
 }
 
 const createProviderSweepRun = async (options: {
-  sweepRepo: B2bSweepRepository
+  sweepRepo: PlaneBContainer['repositories']['b2bSweep']
   providerId: string
   collectorType: string
   priorityTier: string
@@ -746,7 +734,7 @@ const createProviderSweepRun = async (options: {
 }
 
 export const runIngestion = async (options: IngestOptions = {}) => {
-  if (shutdownRequested) {
+  if (shutdown.isShuttingDown()) {
     logger.info('ingestion_skipped', { reason: 'shutdown_requested' })
     return false
   }
@@ -757,8 +745,10 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       if (!config.planeB.useSeedData) {
         const pool = options.pool ?? createPool(config.db.planeBUrl)
         const shouldClose = !options.pool
+        const container = options.container ?? createPlaneBContainer(pool)
+        const { repositories } = container
         const volatilityService = new VolatilityService(pool)
-        const sweepRepo = new B2bSweepRepository(pool)
+        const sweepRepo = repositories.b2bSweep
 
         const healthEnabled = process.env.PLANE_B_HEALTH_ENABLED !== '0'
 
@@ -792,10 +782,39 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         let totalQueueDepth = 0
         const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
         const maxQueueAgeSeconds = Math.max(config.planeB.b2bMaxQueueAgeSeconds || 0, 0)
+        let backpressureActive = false
+        const emitBackpressure = (reason: string, details: Record<string, unknown>) => {
+          backpressureActive = true
+          recordCloudWatchMetric({
+            name: 'worker_backpressure',
+            value: 1,
+            unit: 'Count',
+            dimensions: {
+              worker: 'plane-b-ingest',
+              reason,
+              environment: config.envName || config.env,
+            },
+          })
+          emitOpsEvent({
+            type: 'backpressure',
+            component: 'plane-b-ingest',
+            details: { reason, ...details },
+          })
+        }
         if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
           if (config.planeB.b2bDrainMode) {
             logger.warn('ingest_fanout_backpressure', {
               reason: 'drain_mode',
+            })
+            emitBackpressure('drain_mode', {})
+            recordCloudWatchMetric({
+              name: 'worker_backpressure_active',
+              value: 1,
+              unit: 'Count',
+              dimensions: {
+                worker: 'plane-b-ingest',
+                environment: config.envName || config.env,
+              },
             })
             return false
           }
@@ -815,6 +834,21 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   tier2_depth: queueStatsTier2.total,
                   max_queue_depth: maxQueueDepth,
                 })
+                emitBackpressure('queue_depth', {
+                  queue_depth: totalQueueDepth,
+                  tier1_depth: queueStats.total,
+                  tier2_depth: queueStatsTier2.total,
+                  max_queue_depth: maxQueueDepth,
+                })
+                recordCloudWatchMetric({
+                  name: 'worker_backpressure_active',
+                  value: 1,
+                  unit: 'Count',
+                  dimensions: {
+                    worker: 'plane-b-ingest',
+                    environment: config.envName || config.env,
+                  },
+                })
                 return false
               }
               if (maxQueueAgeSeconds > 0) {
@@ -828,6 +862,21 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                     tier1_age_seconds: queueAgeSeconds,
                     tier2_age_seconds: queueAgeTier2Seconds,
                     max_queue_age_seconds: maxQueueAgeSeconds,
+                  })
+                  emitBackpressure('queue_age', {
+                    queue_age_seconds: maxObservedAge,
+                    tier1_age_seconds: queueAgeSeconds,
+                    tier2_age_seconds: queueAgeTier2Seconds,
+                    max_queue_age_seconds: maxQueueAgeSeconds,
+                  })
+                  recordCloudWatchMetric({
+                    name: 'worker_backpressure_active',
+                    value: 1,
+                    unit: 'Count',
+                    dimensions: {
+                      worker: 'plane-b-ingest',
+                      environment: config.envName || config.env,
+                    },
                   })
                   return false
                 }
@@ -845,6 +894,22 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                   queue_delayed: queueStats.delayed,
                   max_queue_depth: maxQueueDepth,
                 })
+                emitBackpressure('queue_depth', {
+                  queue_depth: queueStats.total,
+                  queue_visible: queueStats.visible,
+                  queue_in_flight: queueStats.inFlight,
+                  queue_delayed: queueStats.delayed,
+                  max_queue_depth: maxQueueDepth,
+                })
+                recordCloudWatchMetric({
+                  name: 'worker_backpressure_active',
+                  value: 1,
+                  unit: 'Count',
+                  dimensions: {
+                    worker: 'plane-b-ingest',
+                    environment: config.envName || config.env,
+                  },
+                })
                 return false
               }
               if (maxQueueAgeSeconds > 0) {
@@ -855,12 +920,34 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                     queue_age_seconds: queueAgeSeconds,
                     max_queue_age_seconds: maxQueueAgeSeconds,
                   })
+                  emitBackpressure('queue_age', {
+                    queue_age_seconds: queueAgeSeconds,
+                    max_queue_age_seconds: maxQueueAgeSeconds,
+                  })
+                  recordCloudWatchMetric({
+                    name: 'worker_backpressure_active',
+                    value: 1,
+                    unit: 'Count',
+                    dimensions: {
+                      worker: 'plane-b-ingest',
+                      environment: config.envName || config.env,
+                    },
+                  })
                   return false
                 }
               }
             }
           }
         }
+        recordCloudWatchMetric({
+          name: 'worker_backpressure_active',
+          value: backpressureActive ? 1 : 0,
+          unit: 'Count',
+          dimensions: {
+            worker: 'plane-b-ingest',
+            environment: config.envName || config.env,
+          },
+        })
         if (config.planeB.b2cQueueInSweep) {
           if (ingestFanoutMode === 'queue' && ingestFanoutEnabled && maxQueueDepth > 0) {
             if (ingestFanoutTiered && ingestFanoutQueueTier1Url && ingestFanoutQueueTier2Url) {
@@ -938,7 +1025,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           tier2: planMinutes,
         }
 
-    const rightsByProvider = await loadProviderRights(pool)
+    const rightsByProvider = await loadProviderRights(repositories.rightsMatrix)
     const providers = providerRegistry
     const baseRatesByProvider = new Map(
       providerRegistry.map((provider) => [provider.providerId, provider.baseRates]),
@@ -981,7 +1068,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
     const queueEntries = await Promise.all(
       providerIds.map(async (providerId) => [
         providerId,
-        await loadPriorityQueues(pool, providerId, b2bTierVersion),
+        await loadPriorityQueues(repositories.providerCapability, providerId, b2bTierVersion),
       ] as const),
     )
     const queuesByProvider = new Map(queueEntries)
@@ -1049,7 +1136,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         const payinMethod = resolveB2bPayinMethod(providerId)
         const payoutMethod = resolveB2bPayoutMethod(providerId)
         const freshness = await applyFreshnessSlo({
-          pool,
+          latestQuoteRepository: repositories.latestQuote,
+          freshnessReportRepository: repositories.freshnessReport,
           providerId,
           corridors: eligibleCorridors,
           amountByCorridor,
@@ -1124,7 +1212,10 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           tier2: [],
           all: [],
         }
-        const unsupportedCorridors = await loadUnsupportedCorridorsForProvider(pool, providerId)
+        const unsupportedCorridors = await loadUnsupportedCorridorsForProvider(
+          repositories.providerCapability,
+          providerId,
+        )
         let queues = buildExpandedQueues({
           capabilityQueues: queue,
           supportedCorridors: provider.supportedCorridors,
@@ -1216,7 +1307,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             max_rpm: plan.maxRpm,
           })
           const gate = await shouldRunPrioritySweep(
-            pool,
+            repositories.ingestionRun,
             providerId,
             tierConfig.collectorType,
             tierConfig.intervalSeconds,
@@ -1568,7 +1659,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         ...statusPayload,
       })
       try {
-        await reportSweepDurations(pool)
+        await reportSweepDurations(repositories.ingestionRun)
       } catch (error) {
         logger.warn('b2b_sweep_duration_error', { error })
       }
@@ -1595,71 +1686,60 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 }
 
 if (require.main === module) {
-  if (shutdownRequested) {
-    logger.info('ingestion_skipped', { reason: 'shutdown_requested' })
-    process.exit(0)
-  }
+  void (async () => {
+    if (shutdown.isShuttingDown()) {
+      logger.info('ingestion_skipped', { reason: 'shutdown_requested' })
+      process.exit(0)
+    }
 
-  const loopEnabled = process.env.PLANE_B_INGEST_LOOP === '1'
-  const loopIntervalSeconds = Number(process.env.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS ?? 0)
-  const loopIntervalMs = Number.isFinite(loopIntervalSeconds) && loopIntervalSeconds > 0
-    ? Math.floor(loopIntervalSeconds * 1000)
-    : 60000
+    await runStartupChecks({
+      requirements: {
+        requirePlaneB: true,
+        requireRedis: true,
+        requireQueues: true,
+        requireStorage: true,
+      },
+    })
 
-  if (!loopEnabled) {
-    runIngestion()
-      .then((ran) => {
-        if (forceExitTimer) {
-          clearTimeout(forceExitTimer)
-        }
-        if (ran) {
-          logger.info('ingestion_complete', { mode: config.planeB.useSeedData ? 'seed' : 'collector' })
-        }
-        process.exit(0)
-      })
-      .catch((error) => {
-        if (forceExitTimer) {
-          clearTimeout(forceExitTimer)
-        }
-        logger.error('ingestion_failed', { error })
-        process.exit(1)
-      })
-  } else {
+    const loopEnabled = process.env.PLANE_B_INGEST_LOOP === '1'
+    const loopIntervalSeconds = Number(process.env.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS ?? 0)
+    const loopIntervalMs = Number.isFinite(loopIntervalSeconds) && loopIntervalSeconds > 0
+      ? Math.floor(loopIntervalSeconds * 1000)
+      : 60000
+
+    if (!loopEnabled) {
+      const ran = await runIngestion()
+      if (ran) {
+        logger.info('ingestion_complete', { mode: config.planeB.useSeedData ? 'seed' : 'collector' })
+      }
+      process.exit(0)
+    }
+
     logger.info('ingestion_loop_enabled', { interval_seconds: loopIntervalMs / 1000 })
-
-    const runLoop = async () => {
-      while (!shutdownRequested) {
-        const startedAt = Date.now()
-        try {
-          await runIngestion()
-        } catch (error) {
-          logger.error('ingestion_loop_failed', { error })
-        }
-        if (shutdownRequested) {
-          break
-        }
-        const elapsedMs = Date.now() - startedAt
-        const sleepMs = Math.max(loopIntervalMs - elapsedMs, 0)
-        if (sleepMs > 0) {
-          await new Promise(resolve => setTimeout(resolve, sleepMs))
-        }
+    while (!shutdown.isShuttingDown()) {
+      const startedAt = Date.now()
+      try {
+        await runIngestion()
+      } catch (error) {
+        logger.error('ingestion_loop_failed', { error })
+      }
+      if (shutdown.isShuttingDown()) {
+        break
+      }
+      const elapsedMs = Date.now() - startedAt
+      const sleepMs = Math.max(loopIntervalMs - elapsedMs, 0)
+      if (sleepMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, sleepMs))
       }
     }
 
-    runLoop()
-      .then(() => {
-        if (forceExitTimer) {
-          clearTimeout(forceExitTimer)
-        }
-        logger.info('ingestion_loop_complete')
-        process.exit(0)
-      })
-      .catch((error) => {
-        if (forceExitTimer) {
-          clearTimeout(forceExitTimer)
-        }
-        logger.error('ingestion_loop_error', { error })
-        process.exit(1)
-      })
-  }
+    logger.info('ingestion_loop_complete')
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
+    }
+    process.exit(0)
+  })().catch((error) => {
+    logger.error('ingestion_loop_error', { error })
+    process.exit(1)
+  })
 }

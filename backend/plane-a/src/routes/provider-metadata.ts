@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
 import { createLogger } from '../../../shared/logger'
+import { NotFoundError, ValidationError } from '../../../shared/errors'
 import {
   getAllProviderMetadata,
   getProviderMetadata,
@@ -62,11 +63,10 @@ export const providerMetadataRoutes = async (app: FastifyInstance) => {
     return { data: providers }
   })
 
-  app.get('/providers/metadata/:id', async (request, reply) => {
+  app.get('/providers/metadata/:id', async (request, _reply) => {
     const parsed = providerIdSchema.safeParse(request.params)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid provider id', { details: parsed.error.issues })
     }
 
     const id = parsed.data.id.toLowerCase()
@@ -74,8 +74,7 @@ export const providerMetadataRoutes = async (app: FastifyInstance) => {
       getProviderMetadata(id) || getProviderMetadataBySlug(id)
 
     if (!provider || provider.type === 'BANK') {
-      reply.code(404)
-      return { error: 'not_found' }
+      throw new NotFoundError('Provider not found')
     }
 
     try {
@@ -85,8 +84,7 @@ export const providerMetadataRoutes = async (app: FastifyInstance) => {
         error: error instanceof Error ? error.message : String(error),
         provider_id: id,
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 }

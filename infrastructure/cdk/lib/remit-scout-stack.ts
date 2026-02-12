@@ -31,6 +31,7 @@ import { createSynthetics } from './synthetics'
 import { createSnsSubscriptions } from './sns-subscriptions'
 import { createOpsPause } from './ops-pause'
 import { createGithubActionsOidcRoles } from './github-actions-oidc'
+import { loadCdkContextConfig } from './config-schema'
 
 const toOptionalBool = (value: string | boolean | undefined): boolean | undefined => {
   if (typeof value === 'boolean') return value
@@ -85,6 +86,8 @@ export class RemitScoutStack extends Stack {
     super(scope, id, props)
 
     const envName = props.envName ?? 'dev'
+    // Parse and validate CDK context early so typos/types fail fast during `cdk synth`.
+    const cdkContext = loadCdkContextConfig(this.node)
     Tags.of(this).add('project', 'remit-scout')
     Tags.of(this).add('service', 'remit-scout')
     Tags.of(this).add('environment', envName)
@@ -103,20 +106,32 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('backendImageTag') ??
       process.env.BACKEND_IMAGE_TAG ??
       'latest'
-    const devSharedSecretArn =
+    const sharedSecretArn =
+      this.node.tryGetContext('sharedSecretArn') ??
+      process.env.SHARED_SECRET_ARN ??
       this.node.tryGetContext('devSharedSecretArn') ??
-      process.env.DEV_SHARED_SECRET_ARN ??
-      (envName === 'dev'
-        ? 'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development-eZ3K6K'
-        : undefined)
-    const sesIdentityArns = toList(
-      this.node.tryGetContext('sesIdentityArns') ??
-        process.env.SES_IDENTITY_ARNS,
-    )
-    const snsTopicArns = toList(
-      this.node.tryGetContext('snsTopicArns') ??
-        process.env.SNS_TOPIC_ARNS,
-    )
+      process.env.DEV_SHARED_SECRET_ARN
+    if (!sharedSecretArn) {
+      throw new Error('sharedSecretArn context or SHARED_SECRET_ARN env var required')
+    }
+    const contextSesIdentityArns = cdkContext.sesIdentityArns ?? []
+    const contextSnsTopicArns = cdkContext.snsTopicArns ?? []
+    const sesIdentityArns =
+      contextSesIdentityArns.length > 0
+        ? contextSesIdentityArns
+        : toList(process.env.SES_IDENTITY_ARNS)
+    const snsTopicArns =
+      contextSnsTopicArns.length > 0
+        ? contextSnsTopicArns
+        : toList(process.env.SNS_TOPIC_ARNS)
+    if (envName !== 'dev') {
+      if (sesIdentityArns.length === 0) {
+        throw new Error('sesIdentityArns context or SES_IDENTITY_ARNS env var required for staging/prod')
+      }
+      if (snsTopicArns.length === 0) {
+        throw new Error('snsTopicArns context or SNS_TOPIC_ARNS env var required for staging/prod')
+      }
+    }
     const enableDbProxy =
       toOptionalBool(
         this.node.tryGetContext('enableDbProxy') ??
@@ -186,7 +201,7 @@ export class RemitScoutStack extends Stack {
     const networking = createNetworking(this, { envName, natGateways: devNatGateways })
     const iam = createIam(this, {
       envName,
-      sharedSecretArns: devSharedSecretArn ? [devSharedSecretArn] : [],
+      sharedSecretArns: [sharedSecretArn],
       sesIdentityArns,
       snsTopicArns,
     })
@@ -253,14 +268,14 @@ export class RemitScoutStack extends Stack {
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
       process.env.SUPABASE_SECRET_ARN ??
-      devSharedSecretArn
+      sharedSecretArn
     const supabaseSsmName =
       this.node.tryGetContext('supabaseSsmName') ??
       process.env.SUPABASE_SSM_NAME
     const stripeSecretArn =
       this.node.tryGetContext('stripeSecretArn') ??
       process.env.STRIPE_SECRET_ARN ??
-      devSharedSecretArn
+      sharedSecretArn
     const stripeSsmName =
       this.node.tryGetContext('stripeSsmName') ??
       process.env.STRIPE_SSM_NAME
@@ -641,10 +656,7 @@ export class RemitScoutStack extends Stack {
       process.env.PAGERDUTY_INTEGRATION_KEY
     const pipelineConnectionArn =
       this.node.tryGetContext('pipelineConnectionArn') ??
-      process.env.PIPELINE_CONNECTION_ARN ??
-      (envName === 'dev'
-        ? 'arn:aws:codeconnections:us-east-1:716156543157:connection/0610da3e-f756-4f7e-8899-995d5830a4ef'
-        : undefined)
+      process.env.PIPELINE_CONNECTION_ARN
     const pipelineRepoOwner =
       this.node.tryGetContext('pipelineRepoOwner') ??
       process.env.PIPELINE_REPO_OWNER ??

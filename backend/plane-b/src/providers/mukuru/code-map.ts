@@ -1,4 +1,4 @@
-import { toCanonicalPayinMethod, toCanonicalPayoutMethod } from '../../normalize/canonical'
+import { toCanonicalPayinMethod, toCanonicalPayoutMethod } from '../../../../shared/normalize/canonical'
 
 const SOURCE_COUNTRY_ALIASES: Record<string, string> = {
   US: 'AA', // Mukuru uses AA for "International" which is USD-based.

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { ValidationError } from '../../../shared/errors'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
@@ -52,8 +53,10 @@ export const corridorLimitsRoutes = async (app: FastifyInstance) => {
   app.get('/corridor-limits', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'from, to, fromCurrency, and toCurrency are required.' }
+      throw new ValidationError(
+        'from, to, fromCurrency, and toCurrency are required.',
+        { details: parsed.error.issues },
+      )
     }
 
     const from = normalizeCountry(parsed.data.from)
@@ -65,16 +68,13 @@ export const corridorLimitsRoutes = async (app: FastifyInstance) => {
     const fromCountry = getCountryByCode(from)
     const toCountry = getCountryByCode(to)
     if (!fromCountry || !toCountry) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'invalid country codes' }
+      throw new ValidationError('invalid country codes')
     }
     if (!isCurrencyAllowedForRequest(fromCountry.code, fromCurrency, 'source')) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'invalid fromCurrency' }
+      throw new ValidationError('invalid fromCurrency')
     }
     if (!isCurrencyAllowedForRequest(toCountry.code, toCurrency, 'destination')) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'invalid toCurrency' }
+      throw new ValidationError('invalid toCurrency')
     }
 
     try {

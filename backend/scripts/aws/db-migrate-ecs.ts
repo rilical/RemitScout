@@ -1,19 +1,28 @@
 import http from 'node:http'
 
 import { resolveDatabaseUrl } from '../../shared/aws-params'
+import { config } from '../../shared/config'
+import { initErrorTracking } from '../../shared/error-tracker'
+import { createLogger } from '../../shared/logger'
+
+initErrorTracking('db-migrate')
+const logger = createLogger('script.db-migrate-ecs')
 
 const stripSslMode = (value: string): string => {
   try {
     const url = new URL(value)
     url.searchParams.delete('sslmode')
     return url.toString()
-  } catch {
+  } catch (error) {
+    logger.debug('db_migrate_strip_sslmode_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return value
   }
 }
 
 const startHealthServer = async (): Promise<(() => Promise<void>)> => {
-  const port = Number(process.env.HEALTH_PORT) || 8080
+  const port = config.workers.health.port
   const server = http.createServer((req, res) => {
     const path = req.url?.split('?')[0] ?? ''
     if (req.method === 'GET' && (path === '/healthz' || path === '/health')) {
@@ -63,6 +72,13 @@ export const handler = async (): Promise<void> => {
     jsonKeys: ['url', 'DATABASE_URL_PLANE_B', 'database_url'],
   })
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+    },
+  })
+
   try {
     if (process.env.DATABASE_URL_PLANE_B) {
       process.env.DATABASE_URL_PLANE_B = stripSslMode(process.env.DATABASE_URL_PLANE_B)
@@ -84,7 +100,10 @@ if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
   handler()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error(error)
+      logger.error('fatal', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
       process.exit(1)
     })
 }

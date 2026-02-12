@@ -1,18 +1,22 @@
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { config } from '../../../../shared/config'
+
+const http = config.planeB.providerLimits.http.singx
+const playwright = config.planeB.providerLimits.playwright.singx
 
 export const httpLimits = {
-  rpm: toNumber(process.env.PLANE_B_SINGX_RPM, 20),
-  concurrency: toNumber(process.env.PLANE_B_SINGX_CONCURRENCY, 2),
+  rpm: http.rpm,
+  concurrency: http.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_SINGX_CORRIDOR_RPM, 4),
+  perCorridorRpm: http.perCorridorRpm,
 }
 
+/**
+ * MVP: Playwright support is not yet implemented.
+ * These limits are defined for future use and do not affect current functionality.
+ */
 export const playwrightLimits = {
-  rpm: toNumber(process.env.PLANE_B_SINGX_PLAYWRIGHT_RPM, 4),
-  concurrency: toNumber(process.env.PLANE_B_SINGX_PLAYWRIGHT_CONCURRENCY, 1),
+  rpm: playwright.rpm,
+  concurrency: playwright.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_SINGX_PLAYWRIGHT_CORRIDOR_RPM, 2),
+  perCorridorRpm: playwright.perCorridorRpm,
 }

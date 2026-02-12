@@ -8,10 +8,12 @@
  */
 
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { runGenericProbe } from './lib/generic-probe'
 import { formatError } from '../shared/utils/error-handling'
 
 const logger = createLogger('script.sendwave-probe')
+initTracing('sendwave-probe')
 
 const main = async () => {
   try {

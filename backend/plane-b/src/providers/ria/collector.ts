@@ -982,7 +982,7 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
       http2xxCount,
     },
     rates: providerRates,
-    maxRpm: httpLimits.maxRpm,
+    maxRpm: httpLimits.rpm,
   })
 
   if (shouldClose) {

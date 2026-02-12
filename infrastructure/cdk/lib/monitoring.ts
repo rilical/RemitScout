@@ -135,12 +135,31 @@ export const createMonitoring = (
     statistic: 'Sum',
     period: Duration.minutes(5),
   })
+  const planeA4xxCount = new Metric({
+    namespace: 'AWS/ApiGateway',
+    metricName: '4XXError',
+    dimensionsMap: {
+      ApiId: options.api.planeAApi.httpApiId,
+      Stage: '$default',
+    },
+    statistic: 'Sum',
+    period: Duration.minutes(5),
+  })
   const planeA5xxRate = new MathExpression({
     label: 'Plane A 5xx Rate',
     expression: 'IF(mcountA>0, m5xxA/mcountA, 0)',
     usingMetrics: {
       mcountA: planeARequestCount,
       m5xxA: planeA5xxCount,
+    },
+    period: Duration.minutes(5),
+  })
+  const planeA4xxRate = new MathExpression({
+    label: 'Plane A 4xx Rate',
+    expression: 'IF(mcountA>0, m4xxA/mcountA, 0)',
+    usingMetrics: {
+      mcountA: planeARequestCount,
+      m4xxA: planeA4xxCount,
     },
     period: Duration.minutes(5),
   })
@@ -278,6 +297,45 @@ export const createMonitoring = (
     alarm.addAlarmAction(criticalAction)
   }
 
+  // DLQ send failures are data loss events: DLQ is the last resort when a worker fails a message.
+  const dlqSendErrorQueues = [
+    options.queues.quoteRefreshQueue,
+    options.queues.fxRateRefreshQueue,
+    options.queues.exportJobQueue,
+    options.queues.alertEvaluationQueue,
+    options.queues.ingestFanoutQueue,
+    options.queues.ingestFanoutTier2Queue,
+    options.queues.goldLiveQueue,
+    options.queues.notificationsQueue,
+    options.queues.opsAlertsQueue,
+  ]
+
+  const dlqSendErrorAlarms = dlqSendErrorQueues.map((queue, index) =>
+    new Alarm(scope, `DlqSendErrorAlarm${index}`, {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-${queue.queueName}-dlq-send-errors`
+        : undefined,
+      metric: new Metric({
+        namespace: 'RemitScout',
+        metricName: 'sqs_dlq_send_errors_total',
+        dimensionsMap: {
+          queue_url: queue.queueUrl,
+          environment: options.envName,
+        },
+        statistic: 'Sum',
+        period: Duration.minutes(5),
+      }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+    }),
+  )
+
+  for (const alarm of dlqSendErrorAlarms) {
+    alarm.addAlarmAction(criticalAction)
+  }
+
   const lambdaErrorAlarm = new Alarm(scope, 'LambdaErrorAlarm', {
     alarmName: `remit-scout-${options.envName}-lambda-errors`,
     metric: options.api.planeAFunction.metricErrors({ period: Duration.minutes(5) }),
@@ -307,6 +365,195 @@ export const createMonitoring = (
     treatMissingData: TreatMissingData.NOT_BREACHING,
   })
   rdsCpuAlarm.addAlarmAction(warningAction)
+
+  const rdsConnectionsAlarm = new Alarm(scope, 'RdsConnectionsAlarm', {
+    alarmName: `remit-scout-${options.envName}-rds-connections-high`,
+    metric: options.database.cluster.metricDatabaseConnections({ period: Duration.minutes(5) }),
+    threshold: isProd ? 80 : 60,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Aurora DatabaseConnections approaching capacity',
+  })
+  rdsConnectionsAlarm.addAlarmAction(warningAction)
+
+  const poolWaitingPlaneA = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_waiting',
+    statistic: 'Maximum',
+    period: Duration.minutes(1),
+    dimensionsMap: {
+      pool_name: 'plane-a',
+      environment: options.envName,
+    },
+  })
+  const poolWaitingPlaneB = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_waiting',
+    statistic: 'Maximum',
+    period: Duration.minutes(1),
+    dimensionsMap: {
+      pool_name: 'plane-b',
+      environment: options.envName,
+    },
+  })
+  const poolWaitingPlaneC = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_waiting',
+    statistic: 'Maximum',
+    period: Duration.minutes(1),
+    dimensionsMap: {
+      pool_name: 'plane-c',
+      environment: options.envName,
+    },
+  })
+  const dbPoolWaitingMax = new MathExpression({
+    expression: 'MAX([a,b,c])',
+    usingMetrics: {
+      a: poolWaitingPlaneA,
+      b: poolWaitingPlaneB,
+      c: poolWaitingPlaneC,
+    },
+    period: Duration.minutes(1),
+    label: 'DB Pool Waiting Max',
+  })
+  const dbPoolWaitingAlarm = new Alarm(scope, 'DbPoolWaitingAlarm', {
+    alarmName: `remit-scout-${options.envName}-db-pool-waiting-high`,
+    metric: dbPoolWaitingMax,
+    threshold: 5,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'DB pool waiting count > 5 for at least 2 minutes',
+  })
+  dbPoolWaitingAlarm.addAlarmAction(opsAction)
+
+  const auroraFreeableMemoryAlarm = new Alarm(scope, 'AuroraFreeableMemoryAlarm', {
+    alarmName: `remit-scout-${options.envName}-aurora-freeable-memory-low`,
+    metric: options.database.cluster.metric('FreeableMemory', {
+      statistic: 'Average',
+      period: Duration.minutes(5),
+    }),
+    threshold: 500 * 1024 * 1024,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Aurora freeable memory below 500MB',
+  })
+  auroraFreeableMemoryAlarm.addAlarmAction(warningAction)
+
+  const auroraDiskQueueDepthAlarm = new Alarm(scope, 'AuroraDiskQueueDepthAlarm', {
+    alarmName: `remit-scout-${options.envName}-aurora-disk-queue-depth-high`,
+    metric: options.database.cluster.metric('DiskQueueDepth', {
+      statistic: 'Average',
+      period: Duration.minutes(5),
+    }),
+    threshold: 10,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Aurora disk queue depth above 10',
+  })
+  auroraDiskQueueDepthAlarm.addAlarmAction(warningAction)
+
+  const redisCurrConnectionsMetric = new Metric({
+    namespace: 'AWS/ElastiCache',
+    metricName: 'CurrConnections',
+    dimensionsMap: {
+      ReplicationGroupId: options.cache.replicationGroup.ref,
+    },
+    statistic: 'Average',
+    period: Duration.minutes(5),
+  })
+  const redisMaxConnectionsMetric = new Metric({
+    namespace: 'AWS/ElastiCache',
+    metricName: 'MaxConnections',
+    dimensionsMap: {
+      ReplicationGroupId: options.cache.replicationGroup.ref,
+    },
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+  })
+  const redisConnectionsUtilization = new MathExpression({
+    expression: 'IF(maxConn>0, curr/maxConn, 0)',
+    usingMetrics: {
+      curr: redisCurrConnectionsMetric,
+      maxConn: redisMaxConnectionsMetric,
+    },
+    period: Duration.minutes(5),
+    label: 'Redis Connections Utilization',
+  })
+  const redisConnectionsAlarm = new Alarm(scope, 'RedisConnectionsAlarm', {
+    alarmName: `remit-scout-${options.envName}-redis-connections-high`,
+    metric: redisConnectionsUtilization,
+    threshold: 0.8,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Redis CurrConnections exceeds 80% of MaxConnections',
+  })
+  redisConnectionsAlarm.addAlarmAction(warningAction)
+
+  const redisEngineCpuAlarm = new Alarm(scope, 'RedisEngineCpuAlarm', {
+    alarmName: `remit-scout-${options.envName}-redis-engine-cpu-high`,
+    metric: new Metric({
+      namespace: 'AWS/ElastiCache',
+      metricName: 'EngineCPUUtilization',
+      dimensionsMap: {
+        ReplicationGroupId: options.cache.replicationGroup.ref,
+      },
+      statistic: 'Average',
+      period: Duration.minutes(5),
+    }),
+    threshold: 70,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Redis EngineCPUUtilization exceeds 70%',
+  })
+  redisEngineCpuAlarm.addAlarmAction(warningAction)
+
+  const restartMetrics = [
+    options.ecs.planeBIngestService,
+    options.ecs.b2cRefreshService,
+    options.ecs.fxRateRefreshService,
+    options.ecs.ingestFanoutTier1Service,
+    options.ecs.ingestFanoutTier2Service,
+    options.ecs.goldLiveService,
+    options.ecs.notificationsQueueService,
+    options.ecs.opsAlertsQueueService,
+    options.ecs.alertEvaluationService,
+    options.ecs.exportWorkerService,
+  ].map((service, index) => ({
+    key: `m${index + 1}`,
+    metric: new Metric({
+      namespace: 'ECS/ContainerInsights',
+      metricName: 'RestartCount',
+      dimensionsMap: {
+        ClusterName: service.cluster.clusterName,
+        ServiceName: service.serviceName,
+      },
+      statistic: 'Sum',
+      period: Duration.minutes(15),
+    }),
+  }))
+  const restartExpression = restartMetrics.map(({ key }) => key).join('+') || '0'
+  const ecsRestartCountMetric = new MathExpression({
+    expression: restartExpression,
+    usingMetrics: Object.fromEntries(restartMetrics.map(({ key, metric }) => [key, metric])),
+    period: Duration.minutes(15),
+    label: 'ECS Restart Count (15m)',
+  })
+  const ecsRestartCountAlarm = new Alarm(scope, 'EcsRestartCountAlarm', {
+    alarmName: `remit-scout-${options.envName}-ecs-restarts-high`,
+    metric: ecsRestartCountMetric,
+    threshold: 3,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'ECS task restart count exceeds 3 within 15 minutes',
+  })
+  ecsRestartCountAlarm.addAlarmAction(opsAction)
 
   const sloMissingDataBehavior = isProd || isStaging
     ? TreatMissingData.BREACHING
@@ -577,6 +824,33 @@ export const createMonitoring = (
     'xoom',
     'singx',
   ]
+
+  const collectionProviders = [
+    'alansari',
+    'bossmoney',
+    'dahabshiil',
+    'instarem',
+    'intermex',
+    'koronapay',
+    'mukuru',
+    'orbitremit',
+    'pangea',
+    'paysend',
+    'placid',
+    'remitbee',
+    'remitly',
+    'ria',
+    'sendwave',
+    'singx',
+    'transfergo',
+    'wellsfargo',
+    'westernunion',
+    'wirebarley',
+    'wise',
+    'worldremit',
+    'xe',
+    'xoom',
+  ]
   const probeFailureAlarms = probeProviders.map((providerId) =>
     new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {
       alarmName: `remit-scout-${options.envName}-${providerId}-probe-failure`,
@@ -642,6 +916,17 @@ export const createMonitoring = (
   })
   apiErrorRateAlarm.addAlarmAction(warningAction)
 
+  const api4xxRateAlarm = new Alarm(scope, 'HighAPI4xxRateAlarm', {
+    alarmName: `remit-scout-${options.envName}-api-4xx-rate-high`,
+    metric: planeA4xxRate,
+    threshold: 0.10,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Plane A 4xx error rate exceeds 10% for 5 minutes',
+  })
+  api4xxRateAlarm.addAlarmAction(warningAction)
+
   // High API Latency: P95 > 5 seconds for 10 minutes
   const apiLatencyThresholdMs = isProd ? 800 : (isStaging ? 1000 : 1500)
   const apiLatencyAlarm = new Alarm(scope, 'HighAPILatencyAlarm', {
@@ -664,6 +949,26 @@ export const createMonitoring = (
   })
   apiLatencyAlarm.addAlarmAction(warningAction)
 
+  const apiP99LatencyAlarm = new Alarm(scope, 'HighAPIP99LatencyAlarm', {
+    alarmName: `remit-scout-${options.envName}-api-p99-latency-high`,
+    metric: new Metric({
+      namespace: 'AWS/ApiGateway',
+      metricName: 'Latency',
+      dimensionsMap: {
+        ApiId: options.api.planeAApi.httpApiId,
+        Stage: '$default',
+      },
+      statistic: 'p99',
+      period: Duration.minutes(5),
+    }),
+    threshold: 5000,
+    evaluationPeriods: 3,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Plane A API p99 latency exceeds 5s for 3 datapoints',
+  })
+  apiP99LatencyAlarm.addAlarmAction(warningAction)
+
   // API Endpoint Down: Lambda function errors
   const apiEndpointDownAlarm = new Alarm(scope, 'APIEndpointDownAlarm', {
     alarmName: `remit-scout-${options.envName}-api-endpoint-down`,
@@ -676,8 +981,81 @@ export const createMonitoring = (
   })
   apiEndpointDownAlarm.addAlarmAction(criticalAction)
 
-  // Provider health alarms that rely on custom metrics should be added only
-  // once those metrics are emitted with stable dimensions.
+  // Per-provider collection quality alarm:
+  // Trigger when any provider has at least 10 failures in 5 minutes and a
+  // failure rate above 50% over the same interval.
+  const providerFailureRateAlarms = collectionProviders.map((providerId) => {
+    const failures = new Metric({
+      namespace: 'RemitScout',
+      metricName: 'provider_collection_failure_by_provider_total',
+      statistic: 'Sum',
+      period: Duration.minutes(5),
+      dimensionsMap: {
+        provider_id: providerId,
+        environment: options.envName,
+      },
+    })
+    const successes = new Metric({
+      namespace: 'RemitScout',
+      metricName: 'provider_collection_success_by_provider_total',
+      statistic: 'Sum',
+      period: Duration.minutes(5),
+      dimensionsMap: {
+        provider_id: providerId,
+        environment: options.envName,
+      },
+    })
+    const failureRateWhenFailureVolumeHigh = new MathExpression({
+      expression: 'IF(f>=10, IF((f+s)>0, f/(f+s), 0), 0)',
+      usingMetrics: {
+        f: failures,
+        s: successes,
+      },
+      period: Duration.minutes(5),
+      label: `${providerId} collection failure rate`,
+    })
+    return new Alarm(scope, `ProviderCollectionFailureRate-${providerId}`, {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-provider-${providerId}-failure-rate`
+        : undefined,
+      metric: failureRateWhenFailureVolumeHigh,
+      threshold: 0.5,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `${providerId} has >=10 failures in 5m and failure ratio above 50%`,
+    })
+  })
+
+  for (const alarm of providerFailureRateAlarms) {
+    alarm.addAlarmAction(opsAction)
+  }
+
+  // Backpressure alarm (custom metric emitted by Plane B / scheduler)
+  const backpressureWorkers = ['b2b-sweep-scheduler', 'plane-b-ingest']
+  backpressureWorkers.forEach((worker) => {
+    const alarm = new Alarm(scope, `WorkerBackpressure-${worker}`, {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-${worker}-backpressure`
+        : undefined,
+      metric: new Metric({
+        namespace: 'RemitScout',
+        metricName: 'worker_backpressure_active',
+        statistic: 'Average',
+        period: Duration.minutes(1),
+        dimensionsMap: {
+          worker,
+          environment: options.envName,
+        },
+      }),
+      threshold: 1,
+      evaluationPeriods: 5,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `${worker} backpressure active for >= 5 minutes`,
+    })
+    alarm.addAlarmAction(opsAction)
+  })
 
   // Additional Dashboard Widgets for Data Health
   const dataFreshnessWidget = new GraphWidget({

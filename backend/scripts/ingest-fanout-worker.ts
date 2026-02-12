@@ -16,8 +16,11 @@ import {
   deleteMessages,
   receiveJsonMessages,
   createVisibilityTimeoutExtender,
+  drainAndStop,
   sendJsonMessage,
+  getQueueStats,
   type SqsMessage,
+  type VisibilityTimeoutExtender,
 } from '../shared/sqs'
 import { providerRegistry } from '../plane-b/src/providers'
 import { B2bSweepRepository, ProviderCapabilityRepository } from '../plane-b/src/repositories'
@@ -25,8 +28,12 @@ import { resolveProviderSupport } from '../plane-b/src/services/provider-capabil
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initErrorTracking } from '../shared/error-tracker'
 import { initTracing, startSpan } from '../shared/tracing'
 import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { createShutdownHandler } from '../shared/shutdown'
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
+import { emitOpsEvent } from '../shared/ops-events'
 
 type IngestFanoutMessage = {
   providerId: string
@@ -77,6 +84,7 @@ const queueUrl = config.queues.ingestFanout.url
 const queueMode = config.queues.ingestFanout.mode
 
 initTracing('ingest-fanout-worker')
+initErrorTracking('ingest-fanout-worker')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -95,25 +103,26 @@ const maxAttempts = Math.max(1, toNumber(process.env.INGEST_FANOUT_MAX_ATTEMPTS,
 const loopJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_LOOP_JITTER_MS)
 const messageJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_MESSAGE_JITTER_MS, 500)
 const providerJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_PROVIDER_JITTER_MS, 200)
+const backpressureThreshold = Math.max(
+  1,
+  toNumber(process.env.INGEST_FANOUT_BACKPRESSURE_THRESHOLD, batchSize * maxConcurrency * 4),
+)
 const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
 const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
-let shutdownRequested = false
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
-
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+let ingestBackpressureActive = false
+const activeExtenders = new Set<VisibilityTimeoutExtender>()
+const shutdown = createShutdownHandler({
+  name: 'ingest-fanout-worker',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+  onShutdownRequested: async () => {
+    await Promise.allSettled(Array.from(activeExtenders, (extender) => drainAndStop(extender)))
+  },
+})
+const { signal: shutdownSignal } = shutdown
 
 const providerById = new Map(providerRegistry.map(provider => [provider.providerId, provider]))
 
@@ -193,6 +202,50 @@ const buildTraceContext = (payload: {
   sweep_run_id: payload.sweepRunId ?? null,
   requested_at: payload.requestedAt ?? null,
 })
+
+const reportBackpressure = (active: boolean, queueDepth: number): void => {
+  recordCloudWatchMetric({
+    name: 'worker_backpressure_active',
+    value: active ? 1 : 0,
+    unit: 'Count',
+    dimensions: {
+      worker: 'ingest-fanout',
+      environment: config.envName || config.env,
+    },
+  })
+
+  if (active) {
+    recordCloudWatchMetric({
+      name: 'worker_backpressure',
+      value: 1,
+      unit: 'Count',
+      dimensions: {
+        worker: 'ingest-fanout',
+        reason: 'queue_depth',
+        environment: config.envName || config.env,
+      },
+    })
+  }
+
+  if (active && !ingestBackpressureActive) {
+    logger.warn('ingest_fanout_backpressure', {
+      reason: 'queue_depth',
+      queue_depth: queueDepth,
+      threshold: backpressureThreshold,
+    })
+    emitOpsEvent({
+      type: 'backpressure',
+      component: 'ingest-fanout-worker',
+      details: {
+        reason: 'queue_depth',
+        queue_depth: queueDepth,
+        threshold: backpressureThreshold,
+      },
+    })
+  }
+
+  ingestBackpressureActive = active
+}
 
 const runSweepUpdate = async (
   sweepRunId: string | undefined,
@@ -368,6 +421,8 @@ const processProviderPayload = async (
       maxRetries: 3,
       initialDelayMs: 2000,
       maxDelayMs: 30000,
+      signal: shutdownSignal,
+      operation: 'ingest-fanout.provider.run',
     },
   )
 
@@ -562,6 +617,8 @@ const processCorridorPayload = async (
           maxRetries: 3,
           initialDelayMs: 2000,
           maxDelayMs: 30000,
+          signal: shutdownSignal,
+          operation: 'ingest-fanout.provider.run_single',
         },
       )
       if (!ok) {
@@ -616,7 +673,7 @@ const processCorridorPayload = async (
   const workers = Array.from(
     { length: Math.min(providerConcurrency, payload.providers.length) },
     async () => {
-      while (!shutdownRequested) {
+      while (!shutdown.isShuttingDown()) {
         const task = payload.providers[taskIndex]
         if (!task) return
         taskIndex += 1
@@ -731,11 +788,12 @@ const processMessage = async (
   const { payload } = message
 
   try {
-    const stopExtending = createVisibilityTimeoutExtender(
+    const extender = createVisibilityTimeoutExtender(
       queueUrl!,
       message.receiptHandle,
       () => logger.debug('visibility_extended', { message_id: message.messageId }),
     )
+    activeExtenders.add(extender)
 
     try {
       if (isCorridorPayload(payload)) {
@@ -749,7 +807,8 @@ const processMessage = async (
       }
       return await processProviderPayload(pool, sweepRepo, { ...message, payload })
     } finally {
-      await stopExtending()
+      activeExtenders.delete(extender)
+      await extender()
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -778,7 +837,7 @@ const processMessagesWithConcurrency = async (
   let index = 0
 
   const workers = Array.from({ length: Math.min(maxConcurrency, messages.length) }, async () => {
-    while (!shutdownRequested) {
+    while (!shutdown.isShuttingDown()) {
       const current = messages[index]
       if (!current) return
       index += 1
@@ -846,6 +905,8 @@ const runWorker = async () => {
           loggerName: 'ingest-fanout-worker',
           enableDatabaseCheck: true,
           enableRedisCheck: true,
+          enableSqsCheck: true,
+          sqsQueueUrl: queueUrl,
         })
       } catch (error) {
         logger.warn('health_server_start_failed', {
@@ -857,10 +918,22 @@ const runWorker = async () => {
       batch_size: batchSize,
       concurrency: maxConcurrency,
       provider_concurrency: providerConcurrency,
+      backpressure_threshold: backpressureThreshold,
     })
-    while (!shutdownRequested) {
+    while (!shutdown.isShuttingDown()) {
       await applyJitter(logger, 'ingest_fanout_loop', loopJitterMs)
-      const messages = await receiveJsonMessages<IngestFanoutPayload>(queueUrl, batchSize)
+      try {
+        const queueStats = await getQueueStats(queueUrl)
+        reportBackpressure(queueStats.total >= backpressureThreshold, queueStats.total)
+      } catch (error) {
+        logger.debug('ingest_fanout_backpressure_check_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+      const { messages, error: receiveError } = await receiveJsonMessages<IngestFanoutPayload>(queueUrl, batchSize)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
+      }
       if (messages.length === 0) {
         await sleep(idleSleepMs)
         continue
@@ -872,19 +945,22 @@ const runWorker = async () => {
         sweepRepo,
         messages,
       )
-      await deleteMessages(queueUrl, deleteHandles)
+      const { failed } = await deleteMessages(queueUrl, deleteHandles)
+      if (failed.length > 0) {
+        logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+      }
     }
   } finally {
     await pool.end()
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
-    }
     if (healthServer) {
       await healthServer.close().catch((error) => {
         logger.warn('health_server_close_failed', {
           error: error instanceof Error ? error.message : String(error),
         })
       })
+    }
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
     }
   }
 }
@@ -896,7 +972,6 @@ export const runIngestFanoutWorkerLoop = async (): Promise<number> => {
 
 if (require.main === module) {
   runIngestFanoutWorkerLoop()
-    .then(code => process.exit(code))
     .catch((error) => {
       logger.error('fanout_worker_fatal', {
         error: error instanceof Error ? error.message : String(error),

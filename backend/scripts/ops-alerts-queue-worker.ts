@@ -12,12 +12,21 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { startHealthServer } from '../shared/health-server'
-import { deleteMessages, receiveJsonMessages, sendToDLQ } from '../shared/sqs'
+import {
+  deleteMessages,
+  receiveJsonMessages,
+  sendToDLQ,
+  createVisibilityTimeoutExtender,
+  drainAndStop,
+  type VisibilityTimeoutExtender,
+} from '../shared/sqs'
 import { notifyBlockAlert } from '../plane-b/src/collectors/alert-routing'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initErrorTracking } from '../shared/error-tracker'
+import { createShutdownHandler } from '../shared/shutdown'
 import { initTracing, startSpan } from '../shared/tracing'
-import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { applyJitter } from '../shared/worker-jitter'
 
 type OpsAlertsQueueMessage = {
   alertId: string
@@ -36,36 +45,28 @@ const logger = createLogger('script.ops-alerts-queue-worker')
 const queueUrl = config.queues.opsAlerts.url
 const queueMode = config.queues.opsAlerts.mode
 initTracing('ops-alerts-queue-worker')
+initErrorTracking('ops-alerts-queue-worker')
 
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const batchSize = toNumber(process.env.OPS_ALERTS_QUEUE_BATCH_SIZE, 10)
-const idleSleepMs = toNumber(process.env.OPS_ALERTS_QUEUE_IDLE_SLEEP_MS, 1000)
-const shutdownTimeoutMs = toNumber(process.env.OPS_ALERTS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
-const loopJitterMs = resolveJitterMs(process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS)
-const messageJitterMs = resolveJitterMs(process.env.OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS)
-const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
-const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
-const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
-let shutdownRequested = false
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+const batchSize = config.workers.opsAlertsQueueWorker.batchSize
+const idleSleepMs = config.workers.opsAlertsQueueWorker.idleSleepMs
+const shutdownTimeoutMs = config.workers.opsAlertsQueueWorker.shutdownTimeoutMs
+const loopJitterMs = config.workers.opsAlertsQueueWorker.loopJitterMs
+const messageJitterMs = config.workers.opsAlertsQueueWorker.messageJitterMs
+const healthEnabled = config.workers.health.enabled
+const healthPort = config.workers.health.port
+const isLambdaRuntime = config.runtime.isLambda
 let healthServer: { close: () => Promise<void> } | null = null
-
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const activeExtenders = new Set<VisibilityTimeoutExtender>()
+const shutdown = createShutdownHandler({
+  name: 'ops-alerts-queue-worker',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+  onShutdownRequested: async () => {
+    await Promise.allSettled(Array.from(activeExtenders, (extender) => drainAndStop(extender)))
+  },
+})
+const { signal: shutdownSignal } = shutdown
 
 const validatePayload = (payload: OpsAlertsQueueMessage | null): payload is OpsAlertsQueueMessage => {
   if (!payload) return false
@@ -92,6 +93,8 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
         loggerName: 'ops-alerts-queue-worker',
         enableDatabaseCheck: true,
         enableRedisCheck: true,
+        enableSqsCheck: true,
+        sqsQueueUrl: queueUrl,
       })
     } catch (error) {
       logger.warn('health_server_start_failed', {
@@ -104,9 +107,12 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
 
   try {
     logger.info('ops_alerts_worker_start', { batch_size: batchSize })
-    while (!shutdownRequested) {
+    while (!shutdown.isShuttingDown()) {
       await applyJitter(logger, 'ops_alerts_queue_loop', loopJitterMs)
-      const messages = await receiveJsonMessages<OpsAlertsQueueMessage>(queueUrl, batchSize)
+      const { messages, error: receiveError } = await receiveJsonMessages<OpsAlertsQueueMessage>(queueUrl, batchSize)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
+      }
       if (messages.length === 0) {
         await sleep(idleSleepMs)
         continue
@@ -127,6 +133,12 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
         const runWithSpan = async () => startSpan(
           'ops-alerts.queue.message',
           async () => {
+            const extender = createVisibilityTimeoutExtender(
+              queueUrl!,
+              message.receiptHandle,
+              () => logger.debug('visibility_extended', { message_id: message.messageId }),
+            )
+            activeExtenders.add(extender)
             try {
               await withWorkerRetry(
                 () => notifyBlockAlert(pool, payload.alertId, { force: true }),
@@ -134,6 +146,8 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
                   maxRetries: 3,
                   initialDelayMs: 1000,
                   maxDelayMs: 30000,
+                  signal: shutdownSignal,
+                  operation: 'ops-alerts.queue.notify',
                 },
               )
               await recordWorkerMetric('ops-alerts-queue-worker', 'message_processed', 1)
@@ -150,6 +164,9 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
               // Send to DLQ
               await sendToDLQ(queueUrl!, message, err)
               await recordWorkerMetric('ops-alerts-queue-worker', 'dlq_sent', 1)
+            } finally {
+              activeExtenders.delete(extender)
+              await extender()
             }
           },
           { attributes: { message_id: message.messageId } },
@@ -162,13 +179,13 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
         }
       }
 
-      await deleteMessages(queueUrl, deleteHandles)
+      const { failed } = await deleteMessages(queueUrl, deleteHandles)
+      if (failed.length > 0) {
+        logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+      }
     }
   } finally {
     await pool.end()
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
-    }
     if (healthServer) {
       await healthServer.close().catch((error) => {
         logger.warn('health_server_close_failed', {
@@ -176,14 +193,14 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
         })
       })
     }
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
+    }
   }
 }
 
 if (require.main === module) {
   runOpsAlertsQueueWorkerLoop()
-    .then(() => {
-      process.exit(0)
-    })
     .catch((error) => {
       logger.error('ops_alerts_worker_fatal', {
         error: error instanceof Error ? error.message : String(error),

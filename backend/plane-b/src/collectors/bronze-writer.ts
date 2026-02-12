@@ -21,7 +21,10 @@ export type BronzeWriteInput = {
 const tryParseJson = (value: string) => {
   try {
     return JSON.parse(value)
-  } catch {
+  } catch (error) {
+    logger.debug('bronze_payload_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return undefined
   }
 }
@@ -100,7 +103,12 @@ export const writeBronzePayload = async (pool: Pool, input: BronzeWriteInput) =>
             raw: JSON.stringify(normalized, Object.getOwnPropertyNames(normalized)),
             serialization_error: true,
           }
-        } catch {
+        } catch (nestedError) {
+          logger.warn('bronze_payload_serialization_fallback_failed', {
+            provider_id: input.provider_id,
+            corridor_id: input.corridor_id,
+            error: nestedError instanceof Error ? nestedError.message : String(nestedError),
+          })
           payloadObject = { raw: String(normalized), serialization_error: true }
         }
       } else {

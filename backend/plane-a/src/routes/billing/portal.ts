@@ -1,12 +1,15 @@
 import type { FastifyInstance } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
+import { createLogger } from '../../../../shared/logger'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient, isStripeConfigured } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
 import { getErrorMessage, isStripeError } from '../../types/errors'
+import { AppError, ValidationError } from '../../../../shared/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
+const logger = createLogger('plane-a.billing-portal')
 
 export const billingPortalRoutes = async (app: FastifyInstance) => {
   app.get('/billing/portal', { preHandler: requireAuth() }, async (request, reply) => {
@@ -21,8 +24,7 @@ export const billingPortalRoutes = async (app: FastifyInstance) => {
       await ensureUserPlan(planeAPool, user.user_id)
       const plan = await getUserPlan(planeAPool, user.user_id)
       if (!plan || !plan.stripe_customer_id) {
-        reply.code(400)
-        return { error: 'customer_not_found' }
+        throw new ValidationError('Invalid request', { details: { error: 'customer_not_found' } })
       }
 
       const stripe = getStripeClient()
@@ -43,12 +45,16 @@ export const billingPortalRoutes = async (app: FastifyInstance) => {
           message: errorMessage || 'Failed to create billing portal session' 
         }
       }
-    } catch (error: unknown) {
-      reply.code(500)
-      return { 
-        error: 'internal_error', 
-        message: 'An unexpected error occurred' 
-      }
+    } catch (error) {
+      logger.warn('billing_portal_failed', {
+        user_id: user.user_id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw new AppError('An unexpected error occurred', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 }

@@ -15,6 +15,8 @@ import {
   getMetrics as getCollectorMetrics,
 } from './collectors/collector-metrics'
 
+const moduleLogger = createLogger('plane-b.health-server')
+
 type HealthServer = {
   close: () => Promise<void>
 }
@@ -53,7 +55,10 @@ const checkDatabase = async (pool: Pool): Promise<boolean> => {
       timeoutPromise,
     ])
     return true
-  } catch {
+  } catch (error) {
+    moduleLogger.debug('health_database_check_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }
@@ -66,7 +71,10 @@ const checkRedis = async (): Promise<boolean> => {
     }
     await client.ping()
     return true
-  } catch {
+  } catch (error) {
+    moduleLogger.debug('health_redis_check_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }

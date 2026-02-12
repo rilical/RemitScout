@@ -1,3 +1,6 @@
+import type { PulseCacheFilters } from '../../../../shared/pulse-types'
+export type { PulseCacheFilters } from '../../../../shared/pulse-types'
+
 export type PulseCacheEntryInput = {
   key: string
   payload: string
@@ -23,15 +26,6 @@ export type PulseCorridorFilter = {
 export type PulseMethodFilter = {
   payin: string
   payout: string
-}
-
-export type PulseCacheFilters = {
-  corridor?: string | null
-  timeframe?: string | null
-  range?: string | null
-  amount?: number | null
-  payin?: string | null
-  payout?: string | null
 }
 
 export interface IPulseCacheRepository {

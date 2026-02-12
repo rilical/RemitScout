@@ -1,4 +1,5 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
+import { createLogger } from '../../shared/logger'
 
 export const handler = async (): Promise<void> => {
   await resolveDatabaseUrl({
@@ -29,26 +30,40 @@ export const handler = async (): Promise<void> => {
       secretArnEnv: 'EXPORT_JOB_QUEUE_SECRET_ARN',
       ssmNameEnv: 'EXPORT_JOB_QUEUE_SSM_NAME',
       jsonKeys: ['url', 'EXPORT_JOB_QUEUE_URL'],
-      required: false,
+      required: true,
     },
     {
       envVar: 'EXPORTS_S3_BUCKET',
       secretArnEnv: 'EXPORTS_S3_BUCKET_SECRET_ARN',
       ssmNameEnv: 'EXPORTS_S3_BUCKET_SSM_NAME',
       jsonKeys: ['bucket', 'EXPORTS_S3_BUCKET'],
-      required: false,
+      required: true,
     },
   ])
+
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneA: true,
+      requireRedis: true,
+      requireQueues: true,
+      requireStorage: true,
+    },
+  })
 
   const { runExportWorker } = await import('../export-worker')
   await runExportWorker()
 }
 
 if (require.main === module && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  const logger = createLogger('script.export-worker-ecs')
   handler()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error(error)
+      logger.error('fatal', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
       process.exit(1)
     })
 }

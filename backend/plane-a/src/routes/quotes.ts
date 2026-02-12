@@ -2,9 +2,9 @@ import type { FastifyInstance } from 'fastify'
 import type { Pool } from 'pg'
 import { createHash } from 'crypto'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { AppError, ValidationError } from '../../../shared/errors'
 import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { parseCorridorId } from '../../../shared/corridor'
@@ -13,74 +13,16 @@ import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/c
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { createTtlCache } from '../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../shared/business-metrics'
+import { normalizePayinMethod, normalizePayoutMethod } from '../../../shared/normalize/payment-methods'
+import { normalizeProviderId } from '../../../shared/provider-utils'
+import { DEFAULT_FALLBACK_TTL_SECONDS, MAX_B2C_QUOTE_AGE_SECONDS } from '../../../shared/constants'
 import { VolatilityService } from '../services/volatility-service'
 import { getProviderMetadata } from '../services/provider-metadata'
-import {
-  CorridorPriorityRepository,
-  CorridorCapabilityRepository,
-  LatestQuoteRepository,
-  QuoteRefreshRepository,
-  RightsMatrixRepository,
-} from '../repositories'
+import type { PlaneAContainer } from '../container'
 
 const logger = createLogger('plane-a.quotes')
 
-const planeAPool = getPool(config.db.planeAUrl)
-const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
-const quoteRefreshRepository = new QuoteRefreshRepository(planeAPool)
-const rightsMatrixRepository = new RightsMatrixRepository(planeAPool)
-const corridorPriorityRepository = new CorridorPriorityRepository(planeAPool)
-const corridorCapabilityRepository = new CorridorCapabilityRepository(planeAPool)
-
 const latestQuoteCache = createTtlCache<any[]>({ namespace: 'plane_a:latest_quote' })
-
-const normalizeProviderId = (value: string): string => value.trim().toLowerCase()
-
-const normalizePayinMethod = (value: string): string | null => {
-  const token = value.trim().toLowerCase()
-  if (!token) return null
-
-  // UI aliases -> canonical payin methods (Plane B normalization).
-  if (token === 'bank') return 'bank_transfer'
-  if (token === 'card') return 'debit_card'
-  if (token === 'cash') return 'cash'
-
-  // Accept canonical tokens.
-  if (
-    token === 'bank_transfer'
-    || token === 'debit_card'
-    || token === 'credit_card'
-    || token === 'apple_pay'
-    || token === 'google_pay'
-    || token === 'cash'
-  ) {
-    return token
-  }
-
-  return null
-}
-
-const normalizePayoutMethod = (value: string): string | null => {
-  const token = value.trim().toLowerCase()
-  if (!token) return null
-
-  // UI aliases -> canonical payout methods (Plane B normalization).
-  if (token === 'bank') return 'bank_deposit'
-  if (token === 'cash') return 'cash_pickup'
-  if (token === 'wallet') return 'mobile_wallet'
-
-  // Accept canonical tokens.
-  if (
-    token === 'bank_deposit'
-    || token === 'cash_pickup'
-    || token === 'mobile_wallet'
-    || token === 'airtime'
-  ) {
-    return token
-  }
-
-  return null
-}
 
 const querySchema = z.object({
   corridor_id: z.string().min(1),
@@ -106,13 +48,15 @@ const sleepWithJitter = async (jitterMs: number) => {
 }
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
-const MAX_B2C_QUOTE_AGE_SECONDS = 4 * 60 * 60
 const TIER_JITTER_MS: Record<string, number> = {
   tier_1: 0,
   tier_2: 200,
 }
 
-const getCorridorMaxAgeSeconds = async (corridorId: string) => {
+const getCorridorMaxAgeSeconds = async (
+  corridorPriorityRepository: PlaneAContainer['repositories']['corridorPriority'],
+  corridorId: string,
+) => {
   try {
     const { priorityTier, freshnessSloMinutes } =
       await corridorPriorityRepository.getPriorityInfo(corridorId)
@@ -141,7 +85,10 @@ const getCorridorMaxAgeSeconds = async (corridorId: string) => {
 }
 
 
-const getCorridorJitterMs = async (corridorId: string) => {
+const getCorridorJitterMs = async (
+  corridorPriorityRepository: PlaneAContainer['repositories']['corridorPriority'],
+  corridorId: string,
+) => {
   try {
     const tier = await corridorPriorityRepository.getPriorityTier(corridorId)
     if (tier && tier in TIER_JITTER_MS) {
@@ -158,6 +105,7 @@ const getCorridorJitterMs = async (corridorId: string) => {
 }
 
 const loadSupportedProviderIds = async (
+  rightsMatrixRepository: PlaneAContainer['repositories']['rightsMatrix'],
   sourceCountry: string,
   destCountry: string,
 ): Promise<string[]> => {
@@ -237,46 +185,50 @@ const getDynamicCacheTtl = async (pool: Pool, corridorId: string): Promise<numbe
       corridor_id: corridorId,
       error: errorMessage,
     })
-    // Fallback to default TTL (1 hour = 3600 seconds)
-    return 3600
+    return DEFAULT_FALLBACK_TTL_SECONDS
   }
 }
 
-const enqueueRefreshRequest = async (input: {
+const enqueueRefreshRequest = async (
+  quoteRefreshRepository: PlaneAContainer['repositories']['quoteRefresh'],
+  input: {
   providerId: string
   corridorId: string
   amountBucket: number
   payinMethod: string
   payoutMethod: string
-}) => {
+},
+) => {
   const requestId = await quoteRefreshRepository.enqueueRequest(input)
   return requestId ?? undefined
 }
 
 export const quotesRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container as PlaneAContainer
+  const latestQuoteRepository = repositories.latestQuote
+  const quoteRefreshRepository = repositories.quoteRefresh
+  const rightsMatrixRepository = repositories.rightsMatrix
+  const corridorPriorityRepository = repositories.corridorPriority
+  const corridorCapabilityRepository = repositories.corridorCapability
+
   app.get('/quotes/current', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     const { corridor_id } = parsed.data
     const payin = normalizePayinMethod(parsed.data.payin)
     const payout = normalizePayoutMethod(parsed.data.payout)
     if (!payin) {
-      reply.code(400)
-      return {
-        error: 'bad_request',
+      throw new ValidationError('Invalid payin method', {
         details: [{ message: 'invalid payin method', allowed: ['bank', 'card', 'cash', 'bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay'] }],
-      }
+      })
     }
     if (!payout) {
-      reply.code(400)
-      return {
-        error: 'bad_request',
+      throw new ValidationError('Invalid payout method', {
         details: [{ message: 'invalid payout method', allowed: ['bank', 'cash', 'wallet', 'bank_deposit', 'cash_pickup', 'mobile_wallet', 'airtime'] }],
-      }
+      })
     }
     const amountBucketInput = parsed.data.amount_bucket
     const amountInput = parsed.data.amount
@@ -285,8 +237,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
 
     const corridorParts = parseCorridorId(corridor_id)
     if (!corridorParts) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'invalid corridor_id' }] }
+      throw new ValidationError('Invalid corridor_id', { details: [{ message: 'invalid corridor_id' }] })
     }
     const sourceCountry = corridorParts.sourceCountry.toUpperCase()
     const destCountry = corridorParts.destCountry.toUpperCase()
@@ -295,50 +246,40 @@ export const quotesRoutes = async (app: FastifyInstance) => {
     const defaultDestCurrency = getCountryByCode(destCountry)?.currency?.toUpperCase() ?? null
     const isNonDefaultDestCurrency = Boolean(defaultDestCurrency && destCurrency !== defaultDestCurrency)
     if (!isCurrencyAllowedForRequest(sourceCountry, sourceCurrency, 'source')) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'invalid source currency' }] }
+      throw new ValidationError('Invalid source currency', { details: [{ message: 'invalid source currency' }] })
     }
     if (!isCurrencyAllowedForRequest(destCountry, destCurrency, 'destination')) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'invalid destination currency' }] }
+      throw new ValidationError('Invalid destination currency', { details: [{ message: 'invalid destination currency' }] })
     }
 
     if (amountBucketInput === undefined && amountInput === undefined) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'amount or amount_bucket is required' }] }
+      throw new ValidationError('amount or amount_bucket is required', { details: [{ message: 'amount or amount_bucket is required' }] })
     }
 
     if (amountInput !== undefined && !Number.isFinite(amountInput)) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'amount must be a number' }] }
+      throw new ValidationError('amount must be a number', { details: [{ message: 'amount must be a number' }] })
     }
 
     if (amountBucketInput !== undefined && !Number.isFinite(amountBucketInput)) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'amount_bucket must be a number' }] }
+      throw new ValidationError('amount_bucket must be a number', { details: [{ message: 'amount_bucket must be a number' }] })
     }
 
     const amountForCheck = amountInput ?? amountBucketInput ?? 0
     if (!Number.isFinite(amountForCheck) || amountForCheck <= 0) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'amount must be a positive number' }] }
+      throw new ValidationError('amount must be a positive number', { details: [{ message: 'amount must be a positive number' }] })
     }
 
     const minAmount = getMinAmount(sourceCurrency)
     const maxAmount = getMaxAmount(sourceCurrency)
     if (amountForCheck < minAmount) {
-      reply.code(400)
-      return {
-        error: 'bad_request',
+      throw new ValidationError(`amount must be >= ${minAmount} ${sourceCurrency}`, {
         details: [{ message: `amount must be >= ${minAmount} ${sourceCurrency}` }],
-      }
+      })
     }
     if (amountForCheck > maxAmount) {
-      reply.code(400)
-      return {
-        error: 'bad_request',
+      throw new ValidationError(`amount must be <= ${maxAmount} ${sourceCurrency}`, {
         details: [{ message: `amount must be <= ${maxAmount} ${sourceCurrency}` }],
-      }
+      })
     }
 
     let amount_bucket = amountBucketInput ?? 0
@@ -355,23 +296,19 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       amount_bucket = bucketSelection.bucket_used
 
       if (amountBucketInput !== undefined && !DEFAULT_AMOUNT_BUCKETS.includes(amountBucketInput)) {
-        reply.code(400)
-        return {
-          error: 'bad_request',
+        throw new ValidationError('amount_bucket must be a supported bucket', {
           details: [{ message: 'amount_bucket must be a supported bucket', allowed_buckets: DEFAULT_AMOUNT_BUCKETS }],
-        }
+        })
       }
 
       const maxBucketDeltaPct = Math.max(0, config.planeA.b2c.maxBucketDeltaPct ?? 0)
       if (amountInput !== undefined && maxBucketDeltaPct === 0 && bucketSelection.approximate) {
-        reply.code(400)
-        return {
-          error: 'bad_request',
+        throw new ValidationError('amount must match a supported bucket', {
           details: [{
             message: 'amount must match a supported bucket',
             allowed_buckets: DEFAULT_AMOUNT_BUCKETS,
           }],
-        }
+        })
       }
       if (
         amountInput !== undefined
@@ -379,19 +316,17 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         && bucketSelection.delta_pct !== null
         && bucketSelection.delta_pct > maxBucketDeltaPct
       ) {
-        reply.code(400)
-        return {
-          error: 'bad_request',
+        throw new ValidationError('amount too far from supported buckets', {
           details: [{
             message: 'amount too far from supported buckets',
             allowed_buckets: DEFAULT_AMOUNT_BUCKETS,
           }],
-        }
+        })
       }
 
       // Get dynamic TTL once before fetching
       const dynamicCacheTtlSeconds = await getDynamicCacheTtl(planeAPool, corridor_id)
-      const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridor_id)
+      const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorPriorityRepository, corridor_id)
       const freshnessSeconds = maxAgeSeconds > 0
         ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
         : Math.min(dynamicCacheTtlSeconds, MAX_B2C_QUOTE_AGE_SECONDS)
@@ -465,7 +400,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       const cacheAgeSeconds = getCacheAgeSeconds(newestCollectedAt)
 
       const supportedProviderIds = allowLive
-        ? await loadSupportedProviderIds(sourceCountry, destCountry)
+        ? await loadSupportedProviderIds(rightsMatrixRepository, sourceCountry, destCountry)
         : []
       const supportedProviderSet = new Set(
         supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean),
@@ -494,12 +429,11 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       }
 
       if (isNonDefaultDestCurrency && capabilityProviderIds.length === 0) {
-        reply.code(404)
-        return {
-          error: 'corridor_unsupported',
-          message: 'No providers support this currency for the selected corridor.',
-          corridor: corridor_id,
-        }
+        throw new AppError('No providers support this currency for the selected corridor.', {
+          statusCode: 404,
+          code: 'corridor_unsupported',
+          details: { corridor: corridor_id },
+        })
       }
 
       const allowedProviderSet = capabilityProviderIds.length
@@ -507,12 +441,11 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         : supportedProviderSet
 
       if (!allowedProviderSet.size) {
-        reply.code(404)
-        return {
-          error: 'corridor_unsupported',
-          message: 'No providers currently support this corridor.',
-          corridor: corridor_id,
-        }
+        throw new AppError('No providers currently support this corridor.', {
+          statusCode: 404,
+          code: 'corridor_unsupported',
+          details: { corridor: corridor_id },
+        })
       }
 
       result.rows = result.rows.filter((row) => {
@@ -557,7 +490,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
 
       if (allowLive && !cacheFresh && expectedProviders.length > 0) {
         refreshAttempted = true
-        const jitterMs = await getCorridorJitterMs(corridor_id)
+        const jitterMs = await getCorridorJitterMs(corridorPriorityRepository, corridor_id)
         await sleepWithJitter(jitterMs)
         const refreshTargets = staleProviders.length ? staleProviders : expectedProviders
         refreshProviderIds = refreshTargets
@@ -574,7 +507,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         // Don't await - these are fire-and-forget operations
         const enqueuePromises = refreshRequests.map(async (request) => {
           try {
-            const requestId = await enqueueRefreshRequest({
+            const requestId = await enqueueRefreshRequest(quoteRefreshRepository, {
               providerId: request.providerId,
               corridorId: corridor_id,
               amountBucket: amount_bucket,
@@ -597,6 +530,13 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         // Use Promise.allSettled to handle partial failures gracefully
         const enqueueResults = await Promise.allSettled(enqueuePromises)
         for (const result of enqueueResults) {
+          if (result.status === 'rejected') {
+            logger.warn('refresh_enqueue_rejected', {
+              corridor_id,
+              error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+            })
+            continue
+          }
           if (result.status === 'fulfilled' && result.value) {
             refreshRequestIds.push(result.value)
           }
@@ -666,8 +606,13 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       try {
         recordQuoteRequest(corridor_id, amount_bucket)
         recordSearch(sourceCountry, destCountry)
-      } catch {
-        // Silently ignore metrics errors
+      } catch (error) {
+        logger.debug('quote_metrics_record_failed', {
+          corridor_id,
+          source_country: sourceCountry,
+          dest_country: destCountry,
+          error: error instanceof Error ? error.message : String(error),
+        })
       }
 
       logger.debug('quotes_request_success', {
@@ -688,19 +633,14 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         error: errorMessage,
         stack: errorStack,
       })
-      reply.code(500)
-      return {
-        error: 'internal_error',
-        message: 'Failed to fetch quotes',
-      }
+      throw error
     }
   })
 
-  app.get('/quotes/refresh-status', async (request, reply) => {
+  app.get('/quotes/refresh-status', async (request, _reply) => {
     const parsed = refreshStatusSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     const raw = parsed.data.request_ids
@@ -710,14 +650,12 @@ export const quotesRoutes = async (app: FastifyInstance) => {
 
     const ids = rawIds.filter(Boolean)
     if (!ids.length) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'request_ids is required' }] }
+      throw new ValidationError('request_ids is required', { details: [{ message: 'request_ids is required' }] })
     }
 
     const invalidIds = ids.filter((id) => !z.string().uuid().safeParse(id).success)
     if (invalidIds.length) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'invalid request_ids' }] }
+      throw new ValidationError('invalid request_ids', { details: [{ message: 'invalid request_ids' }] })
     }
 
     const result = await quoteRefreshRepository.listStatusCounts(ids)

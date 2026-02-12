@@ -22,6 +22,8 @@ export interface IApiKeyRepository {
   createKey(input: ApiKeyCreateInput): Promise<ApiKeyRecord>
   listKeys(userId: string): Promise<ApiKeyRecord[]>
   getKeyByHash(keyHash: string): Promise<ApiKeyRecord | null>
+  listActiveKeysByPrefix(keyPrefix: string): Promise<ApiKeyRecord[]>
+  getActiveKeyById(userId: string, keyId: string): Promise<ApiKeyRecord | null>
   revokeKey(userId: string, keyId: string): Promise<boolean>
   markKeyUsed(keyId: string): Promise<void>
   countActiveKeys(userId: string): Promise<number>

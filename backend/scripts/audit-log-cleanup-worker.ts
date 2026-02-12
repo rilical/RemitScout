@@ -12,9 +12,11 @@ import { createLogger } from '../shared/logger'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { getErrorMessage } from '../shared/utils/error-handling'
 import { initTracing } from '../shared/tracing'
+import { createShutdownHandler } from '../shared/shutdown'
 
 const logger = createLogger('script.audit-log-cleanup')
 initTracing('audit-log-cleanup-worker')
+const { isShutdownRequested } = createShutdownHandler({ logger })
 const s3Client = new S3Client({})
 
 type AuditLogRow = {
@@ -105,6 +107,10 @@ const archiveAndDelete = async (
   const normalizedPrefix = normalizePrefix(prefix)
 
   for (;;) {
+    if (isShutdownRequested()) {
+      logger.warn('audit_log_cleanup_shutdown', { label: filter.label, batches_completed: batches })
+      break
+    }
     const { whereClause, params, limitParam, limit } = buildFilterClause(filter, batchSize)
 
     const result = await query<AuditLogRow>(
@@ -187,6 +193,10 @@ export const runAuditLogCleanup = async (): Promise<void> => {
   await recordBatchJobMetric('audit-log-cleanup', 'job_start')
 
   try {
+    if (isShutdownRequested()) {
+      logger.warn('audit_log_cleanup_skipped', { reason: 'shutdown_requested' })
+      return
+    }
     const tasks: ArchiveFilter[] = [
       {
         label: 'info',

@@ -3,14 +3,16 @@ import { z } from 'zod'
 import { getPool, query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
+import { DEFAULT_LIMIT_MAX } from '../../../../shared/constants'
 import { requireAdmin } from '../../plugins/auth-plugin'
 import { getErrorMessage } from '../../types/errors'
+import { ValidationError } from '../../../../shared/errors'
 
 const logger = createLogger('plane-a.ops.observer')
 const pool = getPool(config.db.planeAUrl)
 
 const querySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  limit: z.coerce.number().int().min(1).max(DEFAULT_LIMIT_MAX).default(50),
   windowHours: z.coerce.number().int().min(1).max(168).default(24),
 })
 
@@ -18,8 +20,7 @@ export const observerSummaryRoutes = (app: FastifyInstance) => {
   app.get('/ops/observer/summary', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const limit = parsed.data.limit

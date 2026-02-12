@@ -77,6 +77,17 @@ export const handler = async (): Promise<number> => {
     throw new Error(`Failed to resolve Plane C database URL: ${message}`)
   }
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+      requirePlaneCDb: true,
+      requireRedis: true,
+      requireQueues: true,
+      requireStorage: true,
+    },
+  })
+
   const { runGoldLiveWorker } = await import('../gold-live-worker')
   return await runGoldLiveWorker()
 }

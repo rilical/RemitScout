@@ -2,6 +2,9 @@ import { readdir, readFile } from 'fs/promises'
 import path from 'path'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
+import { initTracing } from '../shared/tracing'
+
+initTracing('db-migrate')
 
 const migrationsDir = path.resolve(__dirname, '..', 'db', 'migrations')
 
@@ -45,8 +48,12 @@ const getConnectionErrorHelp = (error: unknown): string => {
 }
 
 type MigrationTarget = { label: string; dbUrl: string }
+type MigrationRunOptions = { dryRun?: boolean }
 
-export const applyMigrations = async (target: MigrationTarget): Promise<number> => {
+export const applyMigrations = async (
+  target: MigrationTarget,
+  options: MigrationRunOptions = {},
+): Promise<number> => {
   const db = createPool(target.dbUrl)
   try {
     await db.query(
@@ -62,10 +69,22 @@ export const applyMigrations = async (target: MigrationTarget): Promise<number> 
     const files = (await readdir(migrationsDir))
       .filter((file) => file.endsWith('.sql'))
       .sort()
+    const pending = files.filter((file) => !applied.has(file))
+
+    if (options.dryRun) {
+      if (pending.length === 0) {
+        console.log(`[${target.label}] ✅ Dry run: no pending migrations`)
+      } else {
+        console.log(`[${target.label}] 🔎 Dry run: ${pending.length} pending migration(s):`)
+        for (const file of pending) {
+          console.log(`[${target.label}] - ${file}`)
+        }
+      }
+      return pending.length
+    }
 
     let appliedCount = 0
-    for (const file of files) {
-      if (applied.has(file)) continue
+    for (const file of pending) {
       const sql = await readFile(path.join(migrationsDir, file), 'utf8')
       await db.query('BEGIN')
       try {
@@ -92,6 +111,7 @@ export const applyMigrations = async (target: MigrationTarget): Promise<number> 
 }
 
 export const runMigrations = async (): Promise<void> => {
+  const dryRun = process.argv.includes('--dry-run')
   const planeBUrl = config.db.planeBUrl
   if (!planeBUrl) {
     console.error('\n❌ Database connection string is not configured\n')
@@ -110,7 +130,7 @@ export const runMigrations = async (): Promise<void> => {
   }
 
   for (const target of targets) {
-    await applyMigrations(target)
+    await applyMigrations(target, { dryRun })
   }
 }
 

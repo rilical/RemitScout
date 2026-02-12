@@ -7,6 +7,9 @@ export type WorkerRetryOptions = {
   maxDelayMs?: number
   backoffMultiplier?: number
   retryable?: (error: unknown) => boolean
+  timeoutMs?: number
+  signal?: AbortSignal
+  operation?: string
 }
 
 /**
@@ -50,6 +53,9 @@ export const withWorkerRetry = async <T>(
     maxDelayMs = 30000,
     backoffMultiplier = 2,
     retryable = isRetryableWorkerError,
+    timeoutMs,
+    signal,
+    operation: operationName,
   } = options
 
   return retry(operation, {
@@ -58,6 +64,9 @@ export const withWorkerRetry = async <T>(
     maxDelayMs,
     backoffMultiplier,
     retryable,
+    timeoutMs,
+    signal,
+    operation: operationName,
   })
 }
 
@@ -77,6 +86,5 @@ export const withWorkerRetryAndDLQ = async <T>(
     throw err
   }
 }
-
 
 

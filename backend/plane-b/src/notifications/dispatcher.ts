@@ -24,6 +24,7 @@ import type { Pool } from 'pg'
 import { createLogger } from '../../../shared/logger'
 import { config } from '../../../shared/config'
 import { sendJsonMessage } from '../../../shared/sqs'
+import { withWorkerRetry } from '../../../shared/worker-retry'
 import type { AnomalyResult } from '../signals/anomaly-detector'
 import type { WebhookSubscriptionRecord } from '../repositories'
 import { SignalRepository, WebhookRepository } from '../repositories'
@@ -78,7 +79,10 @@ const enqueueNotification = async (
   }
 
   try {
-    await sendJsonMessage(notificationsQueueUrl, payload)
+    await withWorkerRetry(
+      () => sendJsonMessage(notificationsQueueUrl, payload),
+      { maxRetries: 2, initialDelayMs: 500, maxDelayMs: 10000 },
+    )
     return true
   } catch (error) {
     logger.warn('notifications_queue_enqueue_failed', {
@@ -307,8 +311,14 @@ const dispatchWebhook = async (
   subscription: WebhookSubscriptionRecord,
   payload: WebhookPayload,
 ): Promise<void> => {
-  const webhookSecret = subscription.webhook_secret?.trim()
-  if (!webhookSecret) {
+  const rawSecret = subscription.webhook_secret?.trim() ?? ''
+  const secrets = rawSecret
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+  const currentSecret = secrets[0]
+  const previousSecret = secrets[1]
+  if (!currentSecret) {
     await recordNotificationMetric('webhook', 'failed', 1)
     logger.error('webhook_missing_secret', {
       subscription_id: subscription.subscription_id,
@@ -326,15 +336,22 @@ const dispatchWebhook = async (
       const timestamp = Date.now().toString()
       const payloadString = JSON.stringify(payload)
 
-      const signature = createHmac('sha256', webhookSecret)
+      const signature = createHmac('sha256', currentSecret)
         .update(`${timestamp}.${payloadString}`)
         .digest('hex')
+
+      const previousSignature = previousSecret
+        ? createHmac('sha256', previousSecret)
+          .update(`${timestamp}.${payloadString}`)
+          .digest('hex')
+        : null
 
       const response = await fetch(subscription.webhook_url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-RemitScout-Signature': signature,
+          ...(previousSignature ? { 'X-RemitScout-Signature-Previous': previousSignature } : {}),
           'X-RemitScout-Timestamp': timestamp,
         },
         body: payloadString,

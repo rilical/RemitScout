@@ -18,7 +18,7 @@
 
 import type { PoolClient } from 'pg'
 
-import { createPool } from '../shared/db'
+import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createShutdownHandler } from '../shared/shutdown'
@@ -56,7 +56,7 @@ let pool: ReturnType<typeof createPool> | null = null
 
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-const { isShutdownRequested } = createShutdownHandler({
+const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
   timeoutMs: 30000,
   logger,
   onShutdown: async () => {
@@ -147,6 +147,10 @@ export const runGoldPopularCorridorsJob = async (
       {
         maxRetries: 3,
         initialDelayMs: 500,
+        maxDelayMs: 10000,
+        timeoutMs: 60000,
+        operation: 'gold-popular-corridors.aggregate',
+        signal: shutdownSignal,
         retryable: (error) => {
           const errorMessage = error instanceof Error ? error.message : String(error)
           return errorMessage.includes('connection') ||
@@ -171,44 +175,52 @@ export const runGoldPopularCorridorsJob = async (
     try {
       await txRepo.clearAll()
 
-      for (const row of rows) {
-        if (!isValidRoute(row.route)) {
-          logger.warn('invalid_route_format', { route: row.route })
-          continue
-        }
+      const valid = rows.filter((row) => {
+        if (isValidRoute(row.route)) return true
+        logger.warn('invalid_route_format', { route: row.route })
+        return false
+      })
 
-        try {
-          await client.query('SAVEPOINT popular_corridor_insert')
-          await retry(
-            () => txRepo.insertCorridor({
-              route: row.route,
-              count24h: toNumber(row.count_24h, 0),
-              topProvider: row.top_provider ?? null,
-              feeRange: row.fee_range ?? null,
-              speedRange: row.speed_range ?? null,
-              bestFor: row.best_for ?? null,
-            }),
-            {
-              maxRetries: 2,
-              initialDelayMs: 200,
-              retryable: (error) => {
-                const errorMessage = error instanceof Error ? error.message : String(error)
-                return errorMessage.includes('connection') ||
-                       errorMessage.includes('timeout') ||
-                       errorMessage.includes('ECONNREFUSED')
-              },
+      if (valid.length > 0) {
+        // Bulk insert to avoid N+1 inserts (pattern: freshness-report-repository.ts).
+        await retry(
+          () => query(
+            `INSERT INTO gold.popular_corridors
+             (route, count_24h, top_provider, fee_range, speed_range, best_for)
+             SELECT * FROM UNNEST(
+               $1::text[],
+               $2::int[],
+               $3::text[],
+               $4::text[],
+               $5::text[],
+               $6::text[]
+             )`,
+            [
+              valid.map((r) => r.route),
+              valid.map((r) => toNumber(r.count_24h, 0)),
+              valid.map((r) => r.top_provider ?? null),
+              valid.map((r) => r.fee_range ?? null),
+              valid.map((r) => r.speed_range ?? null),
+              valid.map((r) => r.best_for ?? null),
+            ],
+            client!,
+          ),
+          {
+            maxRetries: 2,
+            initialDelayMs: 200,
+            maxDelayMs: 10000,
+            timeoutMs: 60000,
+            operation: 'gold-popular-corridors.insert_bulk',
+            signal: shutdownSignal,
+            retryable: (error) => {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              return errorMessage.includes('connection')
+                || errorMessage.includes('timeout')
+                || errorMessage.includes('ECONNREFUSED')
             },
-          )
-          await client.query('RELEASE SAVEPOINT popular_corridor_insert')
-          inserted += 1
-        } catch (error) {
-          await client.query('ROLLBACK TO SAVEPOINT popular_corridor_insert')
-          await client.query('RELEASE SAVEPOINT popular_corridor_insert')
-          logger.error('corridor_insert_failed', {
-            route: row.route,
-            error: error instanceof Error ? error.message : String(error),
-          })
-        }
+          },
+        )
+        inserted = valid.length
       }
 
       await client.query('COMMIT')

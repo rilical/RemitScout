@@ -9,11 +9,14 @@
 
 import http from 'node:http'
 import type { Pool } from 'pg'
+import { GetQueueAttributesCommand, SQSClient } from '@aws-sdk/client-sqs'
 
 import { createLogger } from './logger'
 import { config } from './config'
 import { getRedisClient } from './redis'
 import { createPool } from './db'
+
+const moduleLogger = createLogger('shared.health-server')
 
 export type HealthServer = {
   close: () => Promise<void>
@@ -28,7 +31,10 @@ export type HealthServerOptions = {
   metricsContentType?: string
   enableDatabaseCheck?: boolean
   enableRedisCheck?: boolean
+  enableSqsCheck?: boolean
+  sqsQueueUrl?: string | string[]
   healthEndpoint?: string
+  deepEndpoint?: string
   readyEndpoint?: string
   metricsEndpoint?: string
 }
@@ -54,7 +60,10 @@ const checkDatabase = async (pool: Pool): Promise<boolean> => {
       timeoutPromise,
     ])
     return true
-  } catch {
+  } catch (error) {
+    moduleLogger.debug('health_database_check_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }
@@ -67,7 +76,32 @@ const checkRedis = async (): Promise<boolean> => {
     }
     await client.ping()
     return true
-  } catch {
+  } catch (error) {
+    moduleLogger.debug('health_redis_check_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
+
+const checkSqs = async (queueUrls: string[]): Promise<boolean> => {
+  if (queueUrls.length === 0) return false
+  const sqs = new SQSClient({})
+  try {
+    for (const queueUrl of queueUrls) {
+      await sqs.send(
+        new GetQueueAttributesCommand({
+          QueueUrl: queueUrl,
+          AttributeNames: ['QueueArn'],
+        }),
+      )
+    }
+    return true
+  } catch (error) {
+    moduleLogger.debug('health_sqs_check_failed', {
+      queue_count: queueUrls.length,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }
@@ -84,13 +118,43 @@ export const startHealthServer = async (
   const loggerName = options.loggerName ?? 'shared.health-server'
   const logger = options.logger ?? createLogger(loggerName)
   const port = options.port ?? toNumber(process.env.HEALTH_PORT, 8080)
-  const pool = options.pool ?? createPool(config.db.planeBUrl)
   
   const healthEndpoint = options.healthEndpoint ?? '/healthz'
+  const deepEndpoint = options.deepEndpoint ?? '/healthz/deep'
   const readyEndpoint = options.readyEndpoint ?? '/readyz'
   const metricsEndpoint = options.metricsEndpoint ?? '/metrics'
   const enableDatabaseCheck = options.enableDatabaseCheck ?? true
   const enableRedisCheck = options.enableRedisCheck ?? true
+  const enableSqsCheck = options.enableSqsCheck ?? false
+  const queueUrls = (() => {
+    const raw = options.sqsQueueUrl
+    if (!raw) return []
+    const values = Array.isArray(raw) ? raw : [raw]
+    return values.map((value) => value.trim()).filter(Boolean)
+  })()
+  const ownsPool = enableDatabaseCheck && !options.pool
+  const pool = enableDatabaseCheck ? (options.pool ?? createPool(config.db.planeBUrl)) : null
+  const buildVersion = config.build.version || 'unknown'
+
+  const buildBasePayload = () => ({
+    version: buildVersion,
+    uptime_seconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  })
+
+  const getDependencyChecks = async () => {
+    const checks: Record<string, string> = {}
+    if (enableDatabaseCheck && pool) {
+      checks.database = (await checkDatabase(pool)) ? 'ok' : 'unreachable'
+    }
+    if (enableRedisCheck) {
+      checks.redis = (await checkRedis()) ? 'ok' : 'unreachable'
+    }
+    if (enableSqsCheck) {
+      checks.sqs = (await checkSqs(queueUrls)) ? 'ok' : 'unreachable'
+    }
+    return checks
+  }
 
   const server = http.createServer(async (req, res) => {
     if (req.method !== 'GET') {
@@ -103,22 +167,31 @@ export const startHealthServer = async (
 
     // Health endpoint (liveness probe)
     if (path === healthEndpoint || path === '/health') {
-      sendJson(res, 200, { status: 'ok', timestamp: new Date().toISOString() })
+      sendJson(res, 200, {
+        status: 'ok',
+        ...buildBasePayload(),
+      })
+      return
+    }
+
+    // Deep health endpoint (startup probe): verifies external dependencies.
+    if (path === deepEndpoint) {
+      const checks = await getDependencyChecks()
+      const allOk = Object.values(checks).every(status => status === 'ok')
+      const status = allOk ? 'ok' : 'not_ok'
+      const statusCode = allOk ? 200 : 503
+
+      sendJson(res, statusCode, {
+        status,
+        dependencies: checks,
+        ...buildBasePayload(),
+      })
       return
     }
 
     // Readiness endpoint (readiness probe)
     if (path === readyEndpoint || path === '/ready') {
-      const checks: Record<string, string> = {}
-      
-      if (enableDatabaseCheck) {
-        checks.database = (await checkDatabase(pool)) ? 'ok' : 'unreachable'
-      }
-      
-      if (enableRedisCheck) {
-        checks.redis = (await checkRedis()) ? 'ok' : 'unreachable'
-      }
-
+      const checks = await getDependencyChecks()
       const allOk = Object.values(checks).every(status => status === 'ok')
       const status = allOk ? 'ready' : 'not_ready'
       const statusCode = allOk ? 200 : 503
@@ -126,7 +199,7 @@ export const startHealthServer = async (
       sendJson(res, statusCode, {
         status,
         dependencies: checks,
-        timestamp: new Date().toISOString(),
+        ...buildBasePayload(),
       })
       return
     }
@@ -165,8 +238,8 @@ export const startHealthServer = async (
   logger.info('health_server_listening', { port, logger_name: loggerName })
 
   return {
-    close: () =>
-      new Promise((resolve, reject) => {
+    close: async () => {
+      await new Promise<void>((resolve, reject) => {
         server.close((error) => {
           if (error) {
             reject(error)
@@ -174,10 +247,14 @@ export const startHealthServer = async (
           }
           resolve()
         })
-      }),
+      })
+      if (ownsPool && pool) {
+        await pool.end().catch(() => {
+          // Ignore close errors for health-only pools.
+        })
+      }
+    },
   }
 }
-
-
 
 

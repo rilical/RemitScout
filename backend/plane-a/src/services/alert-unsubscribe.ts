@@ -38,10 +38,16 @@ const computeSignature = (payloadPart: string, secret: string): string => {
     .replace(/=+$/, '')
 }
 
-export const generateAlertUnsubscribeToken = (userId: string): string | null => {
+export const generateAlertUnsubscribeToken = (
+  userId: string,
+  alertId?: string | null,
+): string | null => {
   const secret = getSecret()
   if (!secret) {
-    logger.warn('alert_unsubscribe_secret_missing')
+    logger.warn('alert_unsubscribe_secret_missing', {
+      user_id: userId,
+      alert_id: alertId ?? null,
+    })
     return null
   }
 
@@ -57,7 +63,9 @@ export const generateAlertUnsubscribeToken = (userId: string): string | null => 
 export const verifyAlertUnsubscribeToken = (token: string): { userId: string } | null => {
   const secret = getSecret()
   if (!secret) {
-    logger.warn('alert_unsubscribe_secret_missing')
+    logger.warn('alert_unsubscribe_secret_missing', {
+      alert_id: null,
+    })
     return null
   }
 
@@ -77,14 +85,20 @@ export const verifyAlertUnsubscribeToken = (token: string): { userId: string } |
     if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
       return null
     }
-  } catch {
+  } catch (error) {
+    logger.warn('alert_unsubscribe_signature_compare_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 
   let payload: UnsubscribePayload
   try {
     payload = JSON.parse(fromBase64Url(payloadPart)) as UnsubscribePayload
-  } catch {
+  } catch (error) {
+    logger.warn('alert_unsubscribe_payload_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 

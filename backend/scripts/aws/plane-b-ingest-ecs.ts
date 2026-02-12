@@ -1,19 +1,9 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
+import { createShutdownHandler } from '../../shared/shutdown'
 
 const logger = createLogger('script.plane-b-ingest-ecs')
-
-let shutdownRequested = false
-
-const requestShutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('ingest_loop_shutdown_requested', { signal })
-}
-
-process.on('SIGTERM', () => requestShutdown('SIGTERM'))
-process.on('SIGINT', () => requestShutdown('SIGINT'))
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -52,6 +42,23 @@ export const handler = async (): Promise<void> => {
     },
   ])
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+      requireRedis: true,
+      requireQueues: true,
+      requireStorage: true,
+    },
+  })
+
+  const shutdown = createShutdownHandler({
+    name: 'plane-b-ingest-ecs',
+    logger,
+    timeoutMs: 30_000,
+    exitOnSignal: false,
+  })
+
   // Use TS source when available (dev/tsx), fall back to built output in prod.
   const candidates = [
     '../../plane-b/src/ingest',
@@ -84,7 +91,7 @@ export const handler = async (): Promise<void> => {
   const loopIntervalMs = resolveLoopIntervalMs()
   logger.info('ingest_loop_started', { interval_ms: loopIntervalMs })
 
-  while (!shutdownRequested) {
+  while (!shutdown.isShuttingDown()) {
     const startedAt = Date.now()
     try {
       await runIngestion()
@@ -93,13 +100,17 @@ export const handler = async (): Promise<void> => {
       logger.error('ingest_run_failed', { error: message, stack })
     }
 
-    if (shutdownRequested) break
+    if (shutdown.isShuttingDown()) break
     const elapsed = Date.now() - startedAt
     const sleepMs = Math.max(0, loopIntervalMs - elapsed)
     logger.info('ingest_loop_sleep', { sleep_ms: sleepMs })
     if (sleepMs > 0) {
       await sleep(sleepMs)
     }
+  }
+
+  if (shutdown.isShuttingDown()) {
+    await shutdown.shutdown('shutdown_requested')
   }
 }
 

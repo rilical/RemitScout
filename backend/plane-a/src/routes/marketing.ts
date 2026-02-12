@@ -1,15 +1,13 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createHash, randomUUID } from 'crypto'
-import { getPool, query } from '../../../shared/db'
+import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { AppError, RateLimitError, ValidationError } from '../../../shared/errors'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
-import { UserAccountRepository } from '../repositories'
 
 const logger = createLogger('plane-a.marketing')
-const pool = getPool(config.db.planeAUrl)
-const userAccountRepository = new UserAccountRepository(pool)
 
 const eventSchema = z.object({
   event_name: z.string().min(2).max(64),
@@ -44,7 +42,9 @@ const toTimestamp = (value?: number) => {
   return Math.floor(normalized)
 }
 
-const insertEvent = async (input: {
+const insertEvent = async (
+  pool: FastifyInstance['container']['pool'],
+  input: {
   event_name: string
   event_id: string
   event_time: number
@@ -171,7 +171,10 @@ const sendToMeta = async (payload: {
   }
 }
 
-const shouldSkipMarketing = async (userId?: string | null): Promise<boolean> => {
+const shouldSkipMarketing = async (
+  userAccountRepository: FastifyInstance['container']['repositories']['userAccount'],
+  userId?: string | null,
+): Promise<boolean> => {
   if (!userId) return false
   try {
     const settings = await userAccountRepository.getPrivacySettings(userId)
@@ -187,11 +190,13 @@ const shouldSkipMarketing = async (userId?: string | null): Promise<boolean> => 
 }
 
 export const marketingRoutes = async (app: FastifyInstance) => {
-  app.post('/marketing/meta', async (request, reply) => {
+  const pool = app.container.pool
+  const userAccountRepository = app.container.repositories.userAccount
+
+  app.post('/marketing/meta', async (request, _reply) => {
     const parsed = eventSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
     }
 
     const input = parsed.data
@@ -200,8 +205,7 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     const seed = `${request.ip || 'unknown'}:${input.event_name}`
     const rateKey = buildRateLimitKey('marketing:meta', seed)
     if (await checkRateLimit({ logger, key: rateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
-      reply.code(429)
-      return { error: 'rate_limited' }
+      throw new RateLimitError()
     }
     const user = request.user
     const userAgent = typeof request.headers['user-agent'] === 'string'
@@ -209,11 +213,11 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       : undefined
 
     try {
-      if (await shouldSkipMarketing(user?.user_id)) {
+      if (await shouldSkipMarketing(userAccountRepository, user?.user_id)) {
         return { success: true, skipped: 'opt_out' }
       }
 
-      const inserted = await insertEvent({
+      const inserted = await insertEvent(pool, {
         event_name: input.event_name,
         event_id: eventId,
         event_time: eventTime,
@@ -267,11 +271,17 @@ export const marketingRoutes = async (app: FastifyInstance) => {
 
       return { success: true, delivered: meta.delivered, event_id: eventId }
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error
+      }
       logger.warn('marketing_event_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Marketing event failed', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 }

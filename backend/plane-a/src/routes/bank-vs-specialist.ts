@@ -1,20 +1,17 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
-import { getPool, query } from '../../../shared/db'
-import { config } from '../../../shared/config'
+import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { createTtlCache } from '../../../shared/cache'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { getProviderMetadata } from '../services/provider-metadata'
-import { FxRateRepository } from '../repositories'
 import { getErrorMessage, getErrorStack } from '../types/errors'
+import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.bank-vs-specialist')
-const planeAPool = getPool(config.db.planeAUrl)
-const fxRateRepository = new FxRateRepository(planeAPool)
 
 const CORRIDOR_ID = 'US-MX-USD-MXN'
 const DEFAULT_AMOUNT = 500
@@ -232,28 +229,27 @@ const buildProviderQuote = (
 }
 
 export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
+  const planeAPool = app.container.pool
+  const fxRateRepository = app.container.repositories.fxRate
+
   app.get('/bank-vs-specialist', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const amount = parsed.data.amount ?? DEFAULT_AMOUNT
     if (!Number.isFinite(amount) || amount <= 0) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'amount must be positive' }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: 'amount must be positive' } })
     }
 
     const minAmount = getMinAmount('USD')
     const maxAmount = getMaxAmount('USD')
     if (amount < minAmount) {
-      reply.code(400)
-      return { error: 'bad_request', message: `amount must be >= ${minAmount} USD` }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: `amount must be >= ${minAmount} USD` } })
     }
     if (amount > maxAmount) {
-      reply.code(400)
-      return { error: 'bad_request', message: `amount must be <= ${maxAmount} USD` }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: `amount must be <= ${maxAmount} USD` } })
     }
 
     const amountBucket = computeBucketSelection(amount).bucket_used

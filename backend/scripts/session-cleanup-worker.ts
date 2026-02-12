@@ -9,10 +9,12 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
+import { createShutdownHandler } from '../shared/shutdown'
 import { SessionRepository } from '../plane-a/src/repositories'
 
 const logger = createLogger('script.session-cleanup')
 initTracing('session-cleanup-worker')
+const { isShutdownRequested } = createShutdownHandler({ logger })
 
 export const runSessionCleanup = async (): Promise<void> => {
   const pool = createPool(config.db.planeAUrl)
@@ -20,6 +22,10 @@ export const runSessionCleanup = async (): Promise<void> => {
   const start = Date.now()
 
   try {
+    if (isShutdownRequested()) {
+      logger.warn('session_cleanup_skipped', { reason: 'shutdown_requested' })
+      return
+    }
     const revoked = await repo.revokeExpiredSessions()
     const durationMs = Date.now() - start
     logger.info('session_cleanup_complete', {

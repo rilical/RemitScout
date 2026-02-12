@@ -1,5 +1,6 @@
 import type { CollectorRequest } from '../../collectors/types'
 import { requireCorridorId } from '../../../../shared/corridor'
+import { createLogger } from '../../../../shared/logger'
 import { qualityFlags, type QualityFlag } from '../../normalize/quality-flags'
 import {
   mapPayinMethod,
@@ -11,6 +12,8 @@ import {
   PLACID_CODE_BY_COUNTRY,
   PLACID_DESTINATION_CURRENCY_BY_COUNTRY,
 } from './supported-corridors'
+
+const logger = createLogger('plane-b.placid.parse')
 
 export type PlacidRate = {
   placidCode: string
@@ -98,7 +101,10 @@ const parseFeeStore = (html: string): PlacidFee[] => {
         }
       })
       .filter((entry): entry is PlacidFee => Boolean(entry))
-  } catch {
+  } catch (error) {
+    logger.warn('placid_fee_table_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }

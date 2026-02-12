@@ -17,6 +17,7 @@ import { OandaRateFetcher } from '../../shared/oanda-rate-fetcher'
 import { FxRateRefreshRepository } from './repositories'
 import type { FxRateRefreshRequestRecord } from './repositories/interfaces/fx-rate-refresh-repository.interface'
 import { FxRateRefreshStatus, type FxRateRefreshStatusValue } from './repositories/types/fx-rate-refresh-status'
+import { createPlaneBContainer, type PlaneBContainer } from './container'
 
 const logger = createLogger('plane-b.fx-rate-refresh')
 const messageJitterMs = resolveJitterMs(process.env.FX_RATE_REFRESH_MESSAGE_JITTER_MS, 0)
@@ -39,9 +40,11 @@ export type FxRateRefreshMessage = {
 
 export type FxRateRefreshQueueOptions = {
   pool?: Pool
+  container?: PlaneBContainer
   limit?: number
   maxRetries?: number
   concurrency?: number
+  signal?: AbortSignal
   onRequestFinished?: (event: FxRateRefreshQueueEvent) => void | Promise<void>
   onQueueDepth?: (depth: number) => void | Promise<void>
 }
@@ -118,7 +121,7 @@ export const getQueueDepth = async (pool: Pool): Promise<number> => {
   if (config.queues.fxRateRefreshUrl && config.queues.fxRateRefreshMode !== 'off') {
     return getSqsQueueDepth(config.queues.fxRateRefreshUrl)
   }
-  const repo = new FxRateRefreshRepository(pool)
+  const repo = createPlaneBContainer(pool).repositories.fxRateRefresh
   return repo.getQueueDepth()
 }
 
@@ -233,6 +236,7 @@ const processRequest = async (
 export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptions = {}) => {
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = !options.pool
+  const container = options.container ?? createPlaneBContainer(pool)
   const limit = options.limit ?? 50
   const maxRetries = options.maxRetries ?? 3
   const concurrency = Math.max(1, options.concurrency ?? 5)
@@ -243,7 +247,7 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
   const activeQueueUrl = useQueue ? (queueUrl as string) : null
   const dbFallbackEnabled = config.queues.fxRateRefreshDbFallback && queueMode === 'queue'
   const writeDb = true
-  const repo = new FxRateRefreshRepository(pool)
+  const repo = container.repositories.fxRateRefresh
   const fetcher = new OandaRateFetcher(pool)
   let processed = 0
 
@@ -255,6 +259,9 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
     const workerCount = Math.min(concurrency, items.length)
     const workers = Array.from({ length: workerCount }, async () => {
       while (index < items.length) {
+        if (options.signal?.aborted) {
+          return
+        }
         const current = items[index]
         index += 1
         await worker(current)
@@ -327,7 +334,10 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
       if (!activeQueueUrl) {
         throw new Error('fx_rate_refresh_queue_missing')
       }
-      const messages = await receiveJsonMessages<FxRateRefreshMessage>(activeQueueUrl, limit)
+      const { messages, error: receiveError } = await receiveJsonMessages<FxRateRefreshMessage>(activeQueueUrl, limit)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: activeQueueUrl, error: receiveError.message })
+      }
       logger.info('queue_claimed', {
         requested_limit: limit,
         claimed_count: messages.length,
@@ -506,7 +516,10 @@ export const processFxRateRefreshQueue = async (options: FxRateRefreshQueueOptio
         delete_count: deleteHandles.length,
       })
 
-      await deleteMessages(activeQueueUrl, deleteHandles)
+      const { failed } = await deleteMessages(activeQueueUrl, deleteHandles)
+      if (failed.length > 0) {
+        logger.warn('sqs_delete_failed', { queue_url: activeQueueUrl, failed_count: failed.length })
+      }
 
       if (dbFallbackEnabled) {
         const fallbackRequests = await repo.claimPendingRequests(limit, maxRetries)

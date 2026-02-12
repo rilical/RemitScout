@@ -5,6 +5,7 @@ import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
+import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.ads')
 const pool = getPool(config.db.planeAUrl)
@@ -93,8 +94,7 @@ export const adsRoutes = async (app: FastifyInstance) => {
   app.get('/ads/placement', async (request, reply) => {
     const parsed = placementQuerySchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     // Plus/Enterprise should be truly ad-free. Enforce server-side, not just in UI.
@@ -225,8 +225,7 @@ export const adsRoutes = async (app: FastifyInstance) => {
   app.post('/ads/click', async (request, reply) => {
     const parsed = clickSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const input = parsed.data
@@ -275,8 +274,7 @@ export const adsRoutes = async (app: FastifyInstance) => {
   app.get('/admin/ads', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     try {
@@ -395,8 +393,7 @@ export const adsRoutes = async (app: FastifyInstance) => {
   app.post('/admin/ads', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = createAdSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const { ad, placements } = parsed.data
@@ -474,16 +471,14 @@ export const adsRoutes = async (app: FastifyInstance) => {
   app.patch('/admin/ads/:id', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = updateAdSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const adId = request.params && typeof (request.params as { id?: string }).id === 'string'
       ? (request.params as { id?: string }).id
       : null
     if (!adId) {
-      reply.code(400)
-      return { error: 'missing_id' }
+            throw new ValidationError('Invalid request', { details: { error: 'missing_id' } })
     }
 
     const adUpdates = parsed.data.ad ?? {}

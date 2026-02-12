@@ -19,11 +19,12 @@ import {
   receiveJsonMessages,
   sendToDLQ,
 } from '../shared/sqs'
-import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { applyJitter } from '../shared/worker-jitter'
 import { recordQueueDepthMetric, recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
 import { evaluateAlertsForFrequency } from '../plane-a/src/services/alert-evaluator'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initErrorTracking } from '../shared/error-tracker'
 import { initTracing, startSpan } from '../shared/tracing'
 
 type AlertEvaluationMessage = {
@@ -36,23 +37,19 @@ const queueUrl = config.alerts.evaluation.queueUrl
 const evaluationEnabled = config.alerts.evaluation.enabled
 
 initTracing('alert-evaluation-worker')
-
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+initErrorTracking('alert-evaluation-worker')
 
 const batchSize = config.alerts.evaluation.batchSize
-const idleSleepMs = toNumber(process.env.ALERT_EVALUATION_IDLE_SLEEP_MS, 1000)
-const loopJitterMs = resolveJitterMs(process.env.ALERT_EVALUATION_LOOP_JITTER_MS, 0)
-const messageJitterMs = resolveJitterMs(process.env.ALERT_EVALUATION_MESSAGE_JITTER_MS, 0)
-const shutdownTimeoutMs = toNumber(process.env.ALERT_EVALUATION_SHUTDOWN_TIMEOUT_MS, 30000)
-const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
-const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
-const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+const idleSleepMs = config.workers.alertEvaluationWorker.idleSleepMs
+const loopJitterMs = config.workers.alertEvaluationWorker.loopJitterMs
+const messageJitterMs = config.workers.alertEvaluationWorker.messageJitterMs
+const shutdownTimeoutMs = config.workers.alertEvaluationWorker.shutdownTimeoutMs
+const healthEnabled = config.workers.health.enabled
+const healthPort = config.workers.health.port
+const isLambdaRuntime = config.runtime.isLambda
 let healthServer: { close: () => Promise<void> } | null = null
 
-const { isShutdownRequested } = createShutdownHandler({
+const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
   timeoutMs: shutdownTimeoutMs,
   logger,
 })
@@ -92,6 +89,8 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
         loggerName: 'alert-evaluation-worker',
         enableDatabaseCheck: true,
         enableRedisCheck: true,
+        enableSqsCheck: true,
+        sqsQueueUrl: queueUrl,
       })
     } catch (error) {
       logger.warn('health_server_start_failed', {
@@ -111,7 +110,10 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
       const queueName = resolveQueueName(queueUrl)
       await recordQueueDepthMetric(queueName, queueDepth)
 
-      const messages = await receiveJsonMessages<AlertEvaluationMessage>(queueUrl, batchSize)
+      const { messages, error: receiveError } = await receiveJsonMessages<AlertEvaluationMessage>(queueUrl, batchSize)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
+      }
       if (messages.length === 0) {
         if (options?.once) {
           break
@@ -142,7 +144,13 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
           try {
             await withWorkerRetry(
               () => evaluateAlertsForFrequency(pool, frequency, timeBucket),
-              { maxRetries: 3, initialDelayMs: 1000, maxDelayMs: 30000 },
+              {
+                maxRetries: 3,
+                initialDelayMs: 1000,
+                maxDelayMs: 30000,
+                signal: shutdownSignal,
+                operation: 'alert-evaluation.evaluate',
+              },
             )
             stopExtending()
             await recordWorkerMetric('alert-evaluation-worker', 'message_processed', 1)
@@ -178,7 +186,10 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
         )
       }
 
-      await deleteMessages(queueUrl, deleteHandles)
+      const { failed } = await deleteMessages(queueUrl, deleteHandles)
+      if (failed.length > 0) {
+        logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+      }
 
       if (options?.once) {
         break
@@ -200,7 +211,7 @@ export const runAlertEvaluationWorker = async (options?: { once?: boolean }) => 
   await runQueueWorker(options)
 }
 
-if (!process.env.VITEST && require.main === module) {
+if (config.env !== 'test' && require.main === module) {
   runAlertEvaluationWorker()
     .then(() => process.exit(0))
     .catch((error) => {

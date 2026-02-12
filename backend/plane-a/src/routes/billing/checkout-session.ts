@@ -1,6 +1,9 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import { z } from 'zod'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
+import { AppError, ConflictError, ValidationError } from '../../../../shared/errors'
+import { recordBusinessMetric } from '../../../../shared/business-metrics'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient, isStripeConfigured } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan, updatePlanFromStripe } from '../../services/user-plan'
@@ -8,32 +11,33 @@ import { getErrorMessage, isStripeError } from '../../types/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
 
-const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
-  const user = request.user!
+const checkoutSessionSchema = z.object({
+  // Valid plan codes are centrally defined (see entitlements), but duplicated here for runtime validation.
+  plan_code: z.enum(['free', 'plus', 'enterprise']),
+  billing_interval: z.enum(['month', 'year']).default('month'),
+})
 
-  if (!isStripeConfigured() || !config.billing.stripe.priceIdPlus) {
-    reply.code(500)
-    return { error: 'billing_not_configured' }
-  }
+const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyReply) => {
+  const user = request.user!
+  let metricStatus: 'success' | 'error' = 'error'
 
   try {
-    const body = request.body as { plan_code?: string; billing_interval?: 'month' | 'year' }
+    if (!isStripeConfigured() || !config.billing.stripe.priceIdPlus) {
+      throw new AppError('Billing not configured', { statusCode: 500, code: 'billing_not_configured' })
+    }
+
+    const body = checkoutSessionSchema.parse(request.body)
     const billingInterval = body.billing_interval || 'month'
 
     await ensureUserPlan(planeAPool, user.user_id)
     const plan = await getUserPlan(planeAPool, user.user_id)
     if (!plan) {
-      reply.code(500)
-      return { error: 'plan_not_found' }
+      throw new AppError('Plan not found', { statusCode: 500, code: 'plan_not_found' })
     }
 
     // Check if user already has active plus subscription
     if (plan.plan_code === 'plus' && plan.status === 'active' && plan.stripe_subscription_id) {
-      reply.code(400)
-      return { 
-        error: 'subscription_exists', 
-        message: 'User already has an active subscription' 
-      }
+      throw new ConflictError('User already has an active subscription')
     }
 
     const stripe = getStripeClient()
@@ -55,11 +59,12 @@ const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyRepl
         const errorMessage = isStripeError(error) 
           ? error.message 
           : getErrorMessage(error)
-        reply.code(500)
-        return { 
-          error: 'stripe_customer_creation_failed', 
-          message: errorMessage || 'Failed to create Stripe customer' 
-        }
+        throw new AppError('Failed to create Stripe customer', {
+          statusCode: 500,
+          code: 'stripe_customer_creation_failed',
+          details: { message: errorMessage },
+          cause: error,
+        })
       }
     }
 
@@ -69,11 +74,10 @@ const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyRepl
         : config.billing.stripe.priceIdPlus
 
       if (!priceId) {
-        reply.code(500)
-        return { 
-          error: 'price_not_configured', 
-          message: `Price ID not configured for ${billingInterval} billing` 
-        }
+        throw new AppError(`Price ID not configured for ${billingInterval} billing`, {
+          statusCode: 500,
+          code: 'price_not_configured',
+        })
       }
 
       const trialDays = config.billing.stripe.trialDays
@@ -91,6 +95,7 @@ const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyRepl
         },
       })
 
+      metricStatus = 'success'
       return {
         url: session.url,
         session_id: session.id,
@@ -99,18 +104,23 @@ const createCheckoutHandler = async (request: FastifyRequest, reply: FastifyRepl
       const errorMessage = isStripeError(error) 
         ? error.message 
         : getErrorMessage(error)
-      reply.code(500)
-      return { 
-        error: 'stripe_session_creation_failed', 
-        message: errorMessage || 'Failed to create checkout session' 
-      }
+      throw new AppError('Failed to create checkout session', {
+        statusCode: 500,
+        code: 'stripe_session_creation_failed',
+        details: { message: errorMessage },
+        cause: error,
+      })
     }
   } catch (error: unknown) {
-    reply.code(500)
-    return { 
-      error: 'internal_error', 
-      message: 'An unexpected error occurred' 
+    if (error instanceof z.ZodError) {
+      throw new ValidationError('Invalid request data', { details: error.errors, cause: error })
     }
+    throw error
+  } finally {
+    recordBusinessMetric('billing_checkout_total', 1, {
+      event_type: 'checkout_session',
+      status: metricStatus,
+    })
   }
 }
 

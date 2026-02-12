@@ -19,8 +19,11 @@ export const handleError = (
     captureExceptionWithContext(error, context, {
       service: service || 'remit-scout',
     })
-  } catch {
-    // Silently ignore if Sentry capture fails
+  } catch (captureError) {
+    logger.debug('error_capture_failed', {
+      service: service || 'remit-scout',
+      error: captureError instanceof Error ? captureError.message : String(captureError),
+    })
   }
 }
 
@@ -33,8 +36,11 @@ export const handleErrorWithBreadcrumb = (
 ): void => {
   try {
     addBreadcrumb(breadcrumbMessage, breadcrumbCategory, 'error')
-  } catch {
-    // Silently ignore breadcrumb failures
+  } catch (breadcrumbError) {
+    logger.debug('error_breadcrumb_failed', {
+      category: breadcrumbCategory,
+      error: breadcrumbError instanceof Error ? breadcrumbError.message : String(breadcrumbError),
+    })
   }
 
   handleError(error, context, service)
@@ -54,7 +60,6 @@ export const wrapAsync = <T>(
     throw error
   })
 }
-
 
 
 

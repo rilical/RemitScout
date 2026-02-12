@@ -1,8 +1,15 @@
 # Backend Documentation
 
 ## Toolchain
-- Node `>=20.19.0` (run `nvm use` from repo root; pins are in `.nvmrc` and `backend/.nvmrc`)
+- Node `>=20.19.0` (Node 20.19.x is the pinned baseline via `.nvmrc`; Node >=22 is also supported for local dev/CI)
 - pnpm (see repo root `package.json#packageManager`)
+
+## Dependency Policy
+- Lockfile (`/pnpm-lock.yaml`) is committed and authoritative
+- `engine-strict=true` and `save-exact=true` are set in repo root `/.npmrc`
+- New direct dependencies should be added as exact versions (enforced by `save-exact=true`)
+- Dependency updates are managed by Dependabot (patch/minor grouped where appropriate); major updates require manual review
+- License policy is enforced in CI via `scripts/ci/check-licenses.mjs` + `scripts/ci/license-policy.json`
 
 ## Layout
 - `plane-a/` - Public API (Plane A)

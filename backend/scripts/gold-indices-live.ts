@@ -10,6 +10,7 @@
 import type { Pool } from 'pg'
 import { query } from '../shared/db'
 import { createLogger } from '../shared/logger'
+import { normalizeCorridorFilter } from '../shared/corridor'
 import {
   DEFAULT_WEIGHT_MODEL,
   GLOBAL_WEIGHT_CORRIDOR_ID,
@@ -139,7 +140,22 @@ base AS (
   WHERE method_profile IS NOT NULL
 ),
 latest AS (
-  SELECT *
+  SELECT
+    corridor_id,
+    provider_id,
+    implied_fx_rate,
+    amount_bucket,
+    payin,
+    payout,
+    send_amount,
+    fee_amount,
+    collected_at,
+    bucket_day,
+    method_profile,
+    allowed_in_rvi,
+    allowed_in_rci,
+    allowed_in_teer,
+    rn
   FROM base
   WHERE rn = 1
 ),
@@ -597,14 +613,6 @@ type IndicesRow = {
   weight_confidence: number | null
   weight_window_days: number | null
   methodology_version: string | null
-}
-
-const normalizeCorridorFilter = (corridorIds?: string[]) => {
-  if (!corridorIds) return null
-  const unique = Array.from(
-    new Set(corridorIds.map((corridor) => corridor.trim()).filter(Boolean)),
-  )
-  return unique.length > 0 ? unique : null
 }
 
 export const upsertGoldIndicesLive = async (

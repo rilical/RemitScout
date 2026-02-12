@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { createLogger } from '../../../shared/logger'
 import { config } from '../../../shared/config'
+import { AppError } from '../../../shared/errors'
 import {
   getErrorMessage,
   getErrorStack,
@@ -28,6 +29,19 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
       error: errorMessage,
       stack: errorStack,
     })
+
+    if (error instanceof AppError) {
+      reply.code(error.statusCode)
+      return createApiError(
+        error.code,
+        errorMessage,
+        error.details !== undefined
+          ? error.details
+          : config.env === 'production' && error.statusCode >= 500
+            ? undefined
+            : error,
+      )
+    }
 
     // Handle specific error types
     if (isDatabaseError(error)) {
@@ -87,7 +101,5 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
     )
   })
 }
-
-
 
 

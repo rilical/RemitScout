@@ -21,7 +21,7 @@ import {
   CanonicalPayoutMethod,
   toCanonicalPayinMethod,
   toCanonicalPayoutMethod,
-} from './canonical'
+} from '../../../shared/normalize/canonical'
 import { deriveMethodProfile, MethodProfile } from './method-profile'
 import { qualityFlags, QualityFlag } from './quality-flags'
 

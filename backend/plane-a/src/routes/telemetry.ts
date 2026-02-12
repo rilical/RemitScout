@@ -1,18 +1,15 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
-import { getPool, query } from '../../../shared/db'
-import { config } from '../../../shared/config'
+import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
-import { TelemetryRepository, UserAccountRepository } from '../repositories'
+import { ValidationError } from '../../../shared/errors'
+import type { PlaneAContainer } from '../container'
 
 const logger = createLogger('plane-a.telemetry')
-const planeAPool = getPool(config.db.planeAUrl)
-const telemetryRepository = new TelemetryRepository(planeAPool)
-const userAccountRepository = new UserAccountRepository(planeAPool)
 
 const searchSchema = z.object({
   session_id: z.string().min(8),
@@ -81,7 +78,11 @@ const sanitizeTargetUrl = (raw: string): string => {
   try {
     const url = new URL(raw)
     return `${url.origin}${url.pathname}`
-  } catch {
+  } catch (error) {
+    logger.debug('telemetry_target_url_sanitize_failed', {
+      target_url: raw,
+      error: error instanceof Error ? error.message : String(error),
+    })
     const stripped = raw.split('?')[0] || raw
     return stripped.split('#')[0] || raw
   }
@@ -98,16 +99,19 @@ const getAnalyticsWindowHours = (hours?: number) => {
   return Number.isFinite(hours) && hours ? hours : 24
 }
 
-const getAnalyticsBucket = async () => {
+const getAnalyticsBucket = async (pool: PlaneAContainer['pool']) => {
   const result = await query<{ bucket: Date }>(
     `SELECT date_trunc('hour', NOW()) AS bucket`,
     [],
-    planeAPool,
+    pool,
   )
   return result.rows[0]?.bucket ?? new Date()
 }
 
-const shouldSkipTelemetry = async (userId?: string | null): Promise<boolean> => {
+const shouldSkipTelemetry = async (
+  userAccountRepository: PlaneAContainer['repositories']['userAccount'],
+  userId?: string | null,
+): Promise<boolean> => {
   if (!userId) return false
   try {
     const settings = await userAccountRepository.getPrivacySettings(userId)
@@ -122,7 +126,11 @@ const shouldSkipTelemetry = async (userId?: string | null): Promise<boolean> => 
   }
 }
 
-const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
+const fetchLiveTelemetryMetric = async (
+  pool: PlaneAContainer['pool'],
+  metric: string,
+  since: Date,
+) => {
   if (metric === 'heatmap') {
     const result = await query<{
       from_country: string
@@ -138,7 +146,7 @@ const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
        ORDER BY search_count DESC
        LIMIT 200`,
       [since],
-      planeAPool,
+      pool,
     )
     return result.rows
   }
@@ -156,7 +164,7 @@ const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
        ORDER BY search_count DESC
        LIMIT 100`,
       [since],
-      planeAPool,
+      pool,
     )
     return result.rows
   }
@@ -176,7 +184,7 @@ const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
        ORDER BY click_count DESC
        LIMIT 200`,
       [since],
-      planeAPool,
+      pool,
     )
     return result.rows
   }
@@ -191,7 +199,7 @@ const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
        FROM silver.telemetry_session
        WHERE last_activity >= $1`,
       [since],
-      planeAPool,
+      pool,
     )
     return {
       avg_engagement: result.rows[0]?.avg_engagement ?? 0,
@@ -203,11 +211,14 @@ const fetchLiveTelemetryMetric = async (metric: string, since: Date) => {
 }
 
 export const telemetryRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container
+  const telemetryRepository = repositories.telemetry
+  const userAccountRepository = repositories.userAccount
+
   app.post('/telemetry/search', async (request, reply) => {
     const parsed = searchSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const input = parsed.data
@@ -221,12 +232,11 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
       input.amount ? computeBucketSelection(input.amount).bucket_used : null
     )
     if (!amountBucket) {
-      reply.code(400)
-      return { error: 'bad_request', details: [{ message: 'amount_bucket_or_amount_required' }] }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'amount_bucket_or_amount_required' }] } })
     }
 
     try {
-      if (await shouldSkipTelemetry(request.user?.user_id)) {
+      if (await shouldSkipTelemetry(userAccountRepository, request.user?.user_id)) {
         return { success: true, skipped: 'opt_out' }
       }
 
@@ -268,8 +278,7 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
   app.post('/telemetry/click', async (request, reply) => {
     const parsed = clickSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const input = parsed.data
@@ -280,7 +289,7 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     try {
-      if (await shouldSkipTelemetry(request.user?.user_id)) {
+      if (await shouldSkipTelemetry(userAccountRepository, request.user?.user_id)) {
         return { success: true, skipped: 'opt_out' }
       }
 
@@ -338,8 +347,7 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
   app.post('/telemetry/conversion', async (request, reply) => {
     const parsed = conversionSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const input = parsed.data
@@ -350,7 +358,7 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
     }
 
     try {
-      if (await shouldSkipTelemetry(request.user?.user_id)) {
+      if (await shouldSkipTelemetry(userAccountRepository, request.user?.user_id)) {
         return { success: true, skipped: 'opt_out' }
       }
 
@@ -394,15 +402,14 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
   app.post('/telemetry/session', async (request, reply) => {
     const parsed = sessionSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const sessionId = parsed.data.session_id ?? makeId()
     const anonId = parsed.data.anon_id ?? makeId()
 
     try {
-      if (await shouldSkipTelemetry(request.user?.user_id)) {
+      if (await shouldSkipTelemetry(userAccountRepository, request.user?.user_id)) {
         return { success: true, skipped: 'opt_out' }
       }
 
@@ -436,8 +443,7 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
   app.get('/telemetry/analytics', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = analyticsSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const windowHours = getAnalyticsWindowHours(parsed.data.hours)
@@ -450,8 +456,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
       })
 
       if (!rows.length) {
-        const timeBucket = await getAnalyticsBucket()
-        const liveValue = await fetchLiveTelemetryMetric(parsed.data.metric, since)
+        const timeBucket = await getAnalyticsBucket(planeAPool)
+        const liveValue = await fetchLiveTelemetryMetric(planeAPool, parsed.data.metric, since)
         return {
           data: [
             {

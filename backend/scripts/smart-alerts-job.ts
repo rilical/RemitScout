@@ -136,7 +136,13 @@ const upsertSignals = async (pool: ReturnType<typeof createPool>) => {
          AND qr.collected_at >= NOW() - ($1 * INTERVAL '1 day')
      ),
      filtered_provider AS (
-       SELECT *
+       SELECT
+         corridor_id,
+         day_bucket,
+         provider_id,
+         implied_fx_rate,
+         collected_at,
+         rn
        FROM daily_provider
        WHERE rn = 1
      ),

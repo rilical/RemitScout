@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.19.0 <21"
+    "node": ">=20.19.0 <21 || >=22"
   },
   "scripts": {
     "build": "tsc",
@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "aws-cdk-lib": "^2.171.0",
-    "constructs": "^10.3.0"
+    "constructs": "^10.3.0",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

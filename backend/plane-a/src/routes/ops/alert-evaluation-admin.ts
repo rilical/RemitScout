@@ -3,9 +3,11 @@ import { z } from 'zod'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
+import { DEFAULT_LIMIT_MAX } from '../../../../shared/constants'
 import { requireAdmin } from '../../plugins/auth-plugin'
 import { getErrorMessage } from '../../types/errors'
 import { evaluateAlert, evaluateAlertsForFrequency } from '../../services/alert-evaluator'
+import { ValidationError } from '../../../../shared/errors'
 
 const logger = createLogger('plane-a.ops.alert-evaluation')
 const pool = getPool(config.db.planeAUrl)
@@ -14,7 +16,7 @@ const bodySchema = z.object({
   alertId: z.string().uuid().optional(),
   frequency: z.enum(['weekly', 'daily']).optional(),
   ignoreSchedule: z.boolean().default(true),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  limit: z.coerce.number().int().min(1).max(DEFAULT_LIMIT_MAX).default(50),
 }).refine((value) => Boolean(value.alertId || value.frequency), {
   message: 'alertId_or_frequency_required',
 })
@@ -36,8 +38,7 @@ export const alertEvaluationAdminRoutes = (app: FastifyInstance) => {
 
       const parsed = bodySchema.safeParse(request.body ?? {})
       if (!parsed.success) {
-        reply.code(400)
-        return { success: false, error: 'bad_request', details: parsed.error.issues }
+                throw new ValidationError('Invalid request', { details: { success: false, error: 'bad_request', details: parsed.error.issues } })
       }
 
       try {
@@ -68,4 +69,3 @@ export const alertEvaluationAdminRoutes = (app: FastifyInstance) => {
     },
   )
 }
-

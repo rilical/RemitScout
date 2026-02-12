@@ -4,7 +4,10 @@ import type { CollectorRequest, FetchResult } from '../../collectors/types'
 import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
+import { createLogger } from '../../../../shared/logger'
 import { getUserAgentForCorridor } from '../../collectors/user-agent'
+
+const logger = createLogger('plane-b.paysend.fetch')
 
 const PAYSEND_BASE_URL = 'https://paysend.com/api'
 
@@ -250,8 +253,10 @@ const resolveCurrencyId = async (code: string) => {
 
   try {
     await loadCurrencyMap()
-  } catch {
-    // Ignore bootstrap failures and fall back to the raw code.
+  } catch (error) {
+    logger.warn('paysend_currency_bootstrap_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
   return CURRENCY_ID_MAP[normalized] ?? normalized

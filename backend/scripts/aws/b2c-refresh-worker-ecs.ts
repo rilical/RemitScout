@@ -94,6 +94,16 @@ export const handler = async (): Promise<number> => {
     throw new Error(`Failed to resolve AWS environment variables: ${message}`)
   }
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+      requireRedis: true,
+      requireQueues: true,
+      requireStorage: true,
+    },
+  })
+
   // Import and run worker (using direct import path, not path.resolve)
   try {
     const { runB2cRefreshWorkerLoop } = await import('../b2c-refresh-worker')

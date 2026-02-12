@@ -28,6 +28,7 @@ import { indicesHealthRoutes } from './indices-health'
 import { observerSummaryRoutes } from './observer-summary'
 import { dbAdminRoutes } from './db-admin'
 import { alertEvaluationAdminRoutes } from './alert-evaluation-admin'
+import { apiKeysAdminRoutes } from './api-keys-admin'
 
 export const opsRoutes = async (app: FastifyInstance) => {
   remitlyHealthRoutes(app)
@@ -59,4 +60,5 @@ export const opsRoutes = async (app: FastifyInstance) => {
   observerSummaryRoutes(app)
   dbAdminRoutes(app)
   alertEvaluationAdminRoutes(app)
+  apiKeysAdminRoutes(app)
 }

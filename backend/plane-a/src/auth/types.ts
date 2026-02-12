@@ -30,7 +30,7 @@ export type AuthClaims = Record<string, unknown>
 export type AuthUser = {
   /** Unique user identifier (extracted from JWT 'sub' claim) */
   user_id: string
-  /** User email address (present if available in JWT claims) */
+  /** User email address (PII; present if available in JWT claims) */
   email?: string
   /** User role (present if available in JWT claims) */
   role?: string
@@ -44,12 +44,14 @@ export type AuthUser = {
  * - `missing_token`: Authorization header is missing or invalid
  * - `invalid_token`: Token format is invalid or signature verification failed
  * - `expired_token`: Token has expired (exp claim is in the past)
+ * - `token_too_old`: Token is valid but older than MAX_TOKEN_AGE
  * - `verification_failed`: Token verification failed for other reasons
  */
 export type AuthErrorCode =
   | 'missing_token'
   | 'invalid_token'
   | 'expired_token'
+  | 'token_too_old'
   | 'verification_failed'
 
 /**

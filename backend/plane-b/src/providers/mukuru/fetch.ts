@@ -158,38 +158,38 @@ const requestWithCookies = async (
   }
 
   const dispatcher = await resolveProxyDispatcher(proxyTier)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  const timeoutSignal = AbortSignal.timeout(timeoutMs)
   const requestHeaders: Record<string, string> = { ...headers }
   cookieJar.applyToHeaders(requestHeaders)
 
+  const response = await undiciFetch(url, {
+    method,
+    headers: requestHeaders,
+    body,
+    dispatcher,
+    signal: timeoutSignal,
+  })
+
+  const bodyText = await response.text()
+  const setCookies = parseSetCookie(response.headers)
+  cookieJar.updateFromSetCookie(setCookies)
+
+  let json: unknown
   try {
-    const response = await undiciFetch(url, {
-      method,
-      headers: requestHeaders,
-      body,
-      dispatcher,
-      signal: controller.signal,
-    })
-
-    const bodyText = await response.text()
-    const setCookies = parseSetCookie(response.headers)
-    cookieJar.updateFromSetCookie(setCookies)
-
-    let json: unknown
-    try {
-      json = JSON.parse(bodyText)
-    } catch {
-      json = undefined
-    }
-
-    return {
+    json = JSON.parse(bodyText)
+  } catch (error) {
+    logger.debug('mukuru_json_parse_failed', {
+      url,
       status: response.status,
-      bodyText,
-      json,
-    }
-  } finally {
-    clearTimeout(timeout)
+      error: error instanceof Error ? error.message : String(error),
+    })
+    json = undefined
+  }
+
+  return {
+    status: response.status,
+    bodyText,
+    json,
   }
 }
 

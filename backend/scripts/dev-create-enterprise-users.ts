@@ -198,11 +198,18 @@ const createSupabaseUser = async (email: string, password: string) => {
           details = JSON.stringify(payload)
         }
       }
-    } catch {
+    } catch (parseError) {
+      logger.debug('dev_enterprise_user_error_payload_parse_failed', {
+        status: response.status,
+        error: parseError instanceof Error ? parseError.message : String(parseError),
+      })
       try {
         details = await response.text()
-      } catch {
-        // Ignore body parsing errors
+      } catch (textError) {
+        logger.debug('dev_enterprise_user_error_text_parse_failed', {
+          status: response.status,
+          error: textError instanceof Error ? textError.message : String(textError),
+        })
       }
     }
     const suffix = details ? `: ${details}` : ''

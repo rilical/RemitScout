@@ -5,6 +5,7 @@ import {
 } from '@aws-sdk/client-cloudwatch'
 
 import { config } from './config'
+import { CircuitBreaker } from './circuit-breaker'
 import { createLogger } from './logger'
 import { registerCloudWatchClient } from './connection-manager'
 
@@ -12,6 +13,7 @@ export type CloudWatchMetricInput = {
   name: string
   value: number
   unit?: StandardUnit
+  namespace?: string
   dimensions?: Record<string, string>
   highCardinality?: boolean
 }
@@ -27,6 +29,11 @@ let client: CloudWatchClient | null = null
 let flushTimer: NodeJS.Timeout | null = null
 const metricQueue: CloudWatchMetricInput[] = []
 let droppedMetricsCount = 0
+const putMetricCircuit = new CircuitBreaker({
+  name: 'cloudwatch_put_metric_data',
+  openAfterFailures: 5,
+  openForMs: 60_000,
+})
 
 const getClient = () => {
   if (!client) {
@@ -40,6 +47,15 @@ const shouldRecordMetric = (metric: CloudWatchMetricInput): boolean => {
   if (!config.observability.cloudwatch.enabled) return false
   if (metric.highCardinality && !config.observability.cloudwatch.highCardinalityEnabled) {
     return false
+  }
+  // If CloudWatch is down, avoid unbounded queue growth. Still allow a small
+  // amount of "ops bookkeeping" metrics to be enqueued for later flush.
+  if (putMetricCircuit.isOpen()) {
+    const isCircuitMetric = metric.name === 'circuit_breaker_state_change'
+    const isOpsEventMetric = metric.name.startsWith('ops_event_')
+    if (!isCircuitMetric && !isOpsEventMetric) {
+      return false
+    }
   }
   return true
 }
@@ -109,26 +125,47 @@ const flushMetrics = async (): Promise<void> => {
     return
   }
   if (metricQueue.length === 0) return
+  if (!putMetricCircuit.canAttempt()) {
+    // Skip flush attempts during open window.
+    scheduleFlush()
+    return
+  }
 
   const batch = metricQueue.splice(0, MAX_BATCH_SIZE)
 
-  try {
-    const command = new PutMetricDataCommand({
-      Namespace: config.observability.cloudwatch.namespace,
-      MetricData: batch.map((metric) => ({
-        MetricName: metric.name,
-        Value: metric.value,
-        Unit: metric.unit,
-        Dimensions: toDimensions(metric.dimensions),
-      })),
-    })
+  const byNamespace = new Map<string, CloudWatchMetricInput[]>()
+  for (const metric of batch) {
+    const namespace = metric.namespace || config.observability.cloudwatch.namespace
+    const existing = byNamespace.get(namespace)
+    if (existing) {
+      existing.push(metric)
+    } else {
+      byNamespace.set(namespace, [metric])
+    }
+  }
 
-    await withRetry(() => getClient().send(command), 3)
-  } catch (error) {
-    logger.warn('cloudwatch_metrics_flush_failed', {
-      error: error instanceof Error ? error.message : String(error),
-      batch_size: batch.length,
-    })
+  for (const [namespace, metrics] of byNamespace.entries()) {
+    try {
+      const command = new PutMetricDataCommand({
+        Namespace: namespace,
+        MetricData: metrics.map((metric) => ({
+          MetricName: metric.name,
+          Value: metric.value,
+          Unit: metric.unit,
+          Dimensions: toDimensions(metric.dimensions),
+        })),
+      })
+
+      await withRetry(() => getClient().send(command), 3)
+      putMetricCircuit.onSuccess()
+    } catch (error) {
+      putMetricCircuit.onFailure(error)
+      logger.warn('cloudwatch_metrics_flush_failed', {
+        error: error instanceof Error ? error.message : String(error),
+        batch_size: metrics.length,
+        namespace,
+      })
+    }
   }
 
   if (metricQueue.length > 0) {

@@ -95,8 +95,9 @@ describe('sqs', () => {
 
       mockSend.mockResolvedValue({ Messages: mockMessages })
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
+      expect(error).toBeUndefined()
       expect(messages).toHaveLength(2)
       expect(messages[0].messageId).toBe('msg1')
       expect(messages[0].receiptHandle).toBe('handle1')
@@ -109,8 +110,9 @@ describe('sqs', () => {
       const { receiveJsonMessages } = await import('../shared/sqs')
       mockSend.mockResolvedValue({ Messages: [] })
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
+      expect(error).toBeUndefined()
       expect(messages).toHaveLength(0)
     })
 
@@ -118,8 +120,9 @@ describe('sqs', () => {
       const { receiveJsonMessages } = await import('../shared/sqs')
       mockSend.mockResolvedValue({})
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
+      expect(error).toBeUndefined()
       expect(messages).toHaveLength(0)
     })
 
@@ -149,8 +152,9 @@ describe('sqs', () => {
 
       mockSend.mockResolvedValue({ Messages: mockMessages })
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
+      expect(error).toBeUndefined()
       expect(messages).toHaveLength(1)
       expect(messages[0].payload).toBeNull()
     })
@@ -168,8 +172,9 @@ describe('sqs', () => {
 
       mockSend.mockResolvedValue({ Messages: mockMessages })
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
+      expect(error).toBeUndefined()
       expect(messages).toHaveLength(1)
       expect(messages[0].payload).toBeNull()
     })
@@ -178,9 +183,10 @@ describe('sqs', () => {
       const { receiveJsonMessages } = await import('../shared/sqs')
       mockSend.mockRejectedValue(new Error('Receive failed'))
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
       expect(messages).toHaveLength(0)
+      expect(error).toBeInstanceOf(Error)
     })
 
     it('handles missing message fields', async () => {
@@ -196,8 +202,9 @@ describe('sqs', () => {
 
       mockSend.mockResolvedValue({ Messages: mockMessages })
 
-      const messages = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
+      const { messages, error } = await receiveJsonMessages('https://queue.amazonaws.com/test', 5)
 
+      expect(error).toBeUndefined()
       expect(messages).toHaveLength(1)
       expect(messages[0].messageId).toBe('')
       expect(messages[0].receiptHandle).toBe('')
@@ -208,9 +215,12 @@ describe('sqs', () => {
   describe('deleteMessages', () => {
     it('deletes messages successfully', async () => {
       const { deleteMessages } = await import('../shared/sqs')
-      mockSend.mockResolvedValue({})
+      mockSend.mockResolvedValue({
+        Successful: [{ Id: '0' }, { Id: '1' }],
+        Failed: [],
+      })
 
-      await deleteMessages('https://queue.amazonaws.com/test', ['handle1', 'handle2'])
+      const result = await deleteMessages('https://queue.amazonaws.com/test', ['handle1', 'handle2'])
 
       expect(DeleteMessageBatchCommand).toHaveBeenCalledWith({
         QueueUrl: 'https://queue.amazonaws.com/test',
@@ -219,22 +229,24 @@ describe('sqs', () => {
           { Id: '1', ReceiptHandle: 'handle2' },
         ],
       })
+      expect(result).toEqual({ succeeded: ['handle1', 'handle2'], failed: [] })
     })
 
     it('skips deletion when receiptHandles is empty', async () => {
       const { deleteMessages } = await import('../shared/sqs')
-      await deleteMessages('https://queue.amazonaws.com/test', [])
+      const result = await deleteMessages('https://queue.amazonaws.com/test', [])
 
       expect(mockSend).not.toHaveBeenCalled()
+      expect(result).toEqual({ succeeded: [], failed: [] })
     })
 
     it('handles delete errors gracefully', async () => {
       const { deleteMessages } = await import('../shared/sqs')
       mockSend.mockRejectedValue(new Error('Delete failed'))
 
-      await expect(
-        deleteMessages('https://queue.amazonaws.com/test', ['handle1']),
-      ).resolves.not.toThrow()
+      const result = await deleteMessages('https://queue.amazonaws.com/test', ['handle1'])
+      expect(result.succeeded).toEqual([])
+      expect(result.failed).toEqual(['handle1'])
     })
   })
 

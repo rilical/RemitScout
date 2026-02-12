@@ -20,18 +20,23 @@ import { context as otelContext, trace, type Context } from '@opentelemetry/api'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { normalizeCorridorIds } from '../shared/corridor'
 import { startHealthServer } from '../shared/health-server'
 import {
   createVisibilityTimeoutExtender,
+  drainAndStop,
   deleteMessages,
   receiveJsonMessages,
   sendToDLQ,
+  type VisibilityTimeoutExtender,
 } from '../shared/sqs'
 import { withWorkerRetry } from '../shared/worker-retry'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { recordSLOValue } from '../shared/slo-tracker'
 import { GoldPublisherLive } from '../plane-c/src/services/gold-publisher-live'
 import { upsertGoldIndicesLive } from './gold-indices-live'
+import { initErrorTracking } from '../shared/error-tracker'
+import { createShutdownHandler } from '../shared/shutdown'
 import { initTracing, startSpan } from '../shared/tracing'
 import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 
@@ -40,6 +45,7 @@ const queueUrl = config.queues.goldLive.url
 const queueMode = config.queues.goldLive.mode
 
 initTracing('gold-live-worker')
+initErrorTracking('gold-live-worker')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -56,22 +62,18 @@ const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
 const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-let shutdownRequested = false
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
-
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const activeExtenders = new Set<VisibilityTimeoutExtender>()
+const shutdown = createShutdownHandler({
+  name: 'gold-live-worker',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+  onShutdownRequested: async () => {
+    await Promise.allSettled(Array.from(activeExtenders, (extender) => drainAndStop(extender)))
+  },
+})
+const { signal: shutdownSignal } = shutdown
 
 export type GoldLiveMessage = {
   corridorId: string
@@ -97,9 +99,6 @@ type CorridorBatch = {
   traceContext?: Context
   traceIdSample: string[]
 }
-
-const normalizeCorridorIds = (corridorIds: string[]): string[] =>
-  Array.from(new Set(corridorIds.map((corridor) => corridor.trim()).filter(Boolean)))
 
 const validatePayload = (payload: GoldLiveMessage | null): payload is GoldLiveMessage => {
   if (!payload) return false
@@ -221,6 +220,8 @@ const processBatch = async (
       maxRetries: 2,
       initialDelayMs: 250,
       maxDelayMs: 2000,
+      signal: shutdownSignal,
+      operation: 'gold-live.publisher.process_corridors',
     })
     publisherSuccess = true
   } catch (error) {
@@ -237,6 +238,8 @@ const processBatch = async (
         maxRetries: 2,
         initialDelayMs: 250,
         maxDelayMs: 2000,
+        signal: shutdownSignal,
+        operation: 'gold-live.indices.upsert',
       },
     )
     indicesSuccess = true
@@ -293,6 +296,8 @@ export const runGoldLiveWorker = async (): Promise<number> => {
           loggerName: 'gold-live-worker',
           enableDatabaseCheck: true,
           enableRedisCheck: true,
+          enableSqsCheck: true,
+          sqsQueueUrl: queueUrl,
         })
       } catch (error) {
         logger.warn('health_server_start_failed', {
@@ -300,12 +305,15 @@ export const runGoldLiveWorker = async (): Promise<number> => {
         })
       }
     }
-    while (!shutdownRequested) {
+    while (!shutdown.isShuttingDown()) {
       await applyJitter(logger, 'gold_live_loop', loopJitterMs)
-      const messages = await receiveJsonMessages<GoldLiveMessage>(queueUrl, batchSize)
+      const { messages, error: receiveError } = await receiveJsonMessages<GoldLiveMessage>(queueUrl, batchSize)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
+      }
 
       const invalidHandles: string[] = []
-      const stopExtenders: Array<() => Promise<void>> = []
+      const stopExtenders: VisibilityTimeoutExtender[] = []
 
       for (const message of messages) {
         await applyJitter(logger, 'gold_live_message', messageJitterMs)
@@ -326,12 +334,13 @@ export const runGoldLiveWorker = async (): Promise<number> => {
           continue
         }
 
-        const stopExtending = createVisibilityTimeoutExtender(
+        const extender = createVisibilityTimeoutExtender(
           queueUrl,
           message.receiptHandle,
           () => logger.debug('visibility_extended', { message_id: message.messageId }),
         )
-        stopExtenders.push(stopExtending)
+        stopExtenders.push(extender)
+        activeExtenders.add(extender)
 
         const traceContext = message.traceContext
         const spanContext = traceContext ? trace.getSpanContext(traceContext) : undefined
@@ -340,7 +349,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
       }
 
       if (invalidHandles.length > 0) {
-        await deleteMessages(queueUrl, invalidHandles)
+        const { failed } = await deleteMessages(queueUrl, invalidHandles)
+        if (failed.length > 0) {
+          logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+        }
       }
 
       const shouldFlush = messages.length === 0 || debouncer.size >= batchSize * 2
@@ -360,12 +372,16 @@ export const runGoldLiveWorker = async (): Promise<number> => {
           }),
         )
 
-        for (const stopExtending of stopExtenders) {
-          await stopExtending()
+        for (const extender of stopExtenders) {
+          activeExtenders.delete(extender)
+          await extender()
         }
 
         if (result.success) {
-          await deleteMessages(queueUrl, batch.receiptHandles)
+          const { failed } = await deleteMessages(queueUrl, batch.receiptHandles)
+          if (failed.length > 0) {
+            logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+          }
           await recordWorkerMetric('gold-live-worker', 'message_processed', batch.receiptHandles.length)
           logger.info('gold_live_corridors_updated', {
             corridor_count: batch.corridorIds.length,
@@ -386,7 +402,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
             await sendToDLQ(queueUrl, message, err)
             await recordWorkerMetric('gold-live-worker', 'dlq_sent', 1)
           }
-          await deleteMessages(queueUrl, batch.receiptHandles)
+          const { failed } = await deleteMessages(queueUrl, batch.receiptHandles)
+          if (failed.length > 0) {
+            logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+          }
 
           logger.warn('gold_live_batch_failed', {
             publisher_success: result.publisherSuccess,
@@ -397,8 +416,9 @@ export const runGoldLiveWorker = async (): Promise<number> => {
           })
         }
       } else {
-        for (const stopExtending of stopExtenders) {
-          await stopExtending()
+        for (const extender of stopExtenders) {
+          activeExtenders.delete(extender)
+          await extender()
         }
       }
 
@@ -415,7 +435,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
       })
       try {
         await processBatch(finalBatch, silverPool, goldPool, publisher)
-        await deleteMessages(queueUrl, finalBatch.receiptHandles)
+        const { failed } = await deleteMessages(queueUrl, finalBatch.receiptHandles)
+        if (failed.length > 0) {
+          logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+        }
       } catch (error) {
         logger.error('gold_live_shutdown_flush_failed', {
           error: error instanceof Error ? error.message : String(error),
@@ -425,15 +448,16 @@ export const runGoldLiveWorker = async (): Promise<number> => {
 
     await silverPool.end()
     await goldPool.end()
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
-    }
     if (healthServer) {
       await healthServer.close().catch((error) => {
         logger.warn('health_server_close_failed', {
           error: error instanceof Error ? error.message : String(error),
         })
       })
+    }
+
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
     }
   }
 
@@ -442,9 +466,6 @@ export const runGoldLiveWorker = async (): Promise<number> => {
 
 if (require.main === module) {
   runGoldLiveWorker()
-    .then((code) => {
-      process.exit(code)
-    })
     .catch((error) => {
       logger.error('gold_live_worker_fatal', {
         error: error instanceof Error ? error.message : String(error),

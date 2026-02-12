@@ -37,6 +37,9 @@ import {
 import { startHealthServer } from './gold-pulse-cache-job-health'
 import { retry } from '../shared/retry'
 
+const logger = createLogger('script.gold-pulse-cache')
+initTracing('gold-pulse-cache-job')
+
 const toNumber = (value: string | number | null | undefined, fallback: number | null = null) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
@@ -45,15 +48,35 @@ const toNumber = (value: string | number | null | undefined, fallback: number | 
 const serializeJson = (value: unknown) => {
   try {
     return JSON.stringify(value ?? null) ?? 'null'
-  } catch {
+  } catch (error) {
+    logger.debug('pulse_cache_json_serialize_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return JSON.stringify(String(value))
   }
 }
 
+const runConcurrent = async <T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> => {
+  if (items.length === 0) return
+  let nextIndex = 0
+  const workerCount = Math.max(1, Math.min(concurrency, items.length))
+  const workers = Array.from({ length: workerCount }, async () => {
+    for (;;) {
+      const i = nextIndex++
+      if (i >= items.length) return
+      await worker(items[i]!)
+    }
+  })
+  await Promise.all(workers)
+}
+
 const lockTtlSeconds = toNumber(process.env.GOLD_PULSE_CACHE_LOCK_TTL_SECONDS, 900) ?? 900
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
-const logger = createLogger('script.gold-pulse-cache')
-initTracing('gold-pulse-cache-job')
+const jobConcurrency = Math.max(1, Math.min(25, toNumber(process.env.GOLD_PULSE_CACHE_CONCURRENCY, 5) ?? 5))
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
@@ -62,7 +85,7 @@ let pool: ReturnType<typeof createPool> | null = null
 
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-const { isShutdownRequested } = createShutdownHandler({
+const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
   timeoutMs: 30000,
   logger,
   onShutdown: async () => {
@@ -148,6 +171,10 @@ export const runGoldPulseCacheJob = async (
       {
         maxRetries: 3,
         initialDelayMs: 500,
+        maxDelayMs: 10000,
+        timeoutMs: 60000,
+        operation: 'gold-pulse-cache.list_corridors',
+        signal: shutdownSignal,
         retryable: (error) => {
           const errorMessage = error instanceof Error ? error.message : String(error)
           return errorMessage.includes('connection') ||
@@ -191,40 +218,50 @@ export const runGoldPulseCacheJob = async (
 
     const filterContexts: PulseCacheFilters[] = [baseFilters]
 
+    const combos: Array<{ corridor: string; timeframe: PulseCacheFilters['timeframe']; amount: number }> = []
     for (const corridor of corridors) {
       for (const timeframe of PULSE_TIMEFRAMES) {
         for (const amount of PULSE_AMOUNTS) {
-          const methodPairs = await repo.listPulseMethods({
-            corridor: corridor.corridor,
-            timeframe,
-            amount,
-          })
-          if (methodPairs.length === 0) {
-            filterContexts.push({ corridor: corridor.corridor, timeframe, amount })
-            continue
-          }
-
-          for (const method of methodPairs) {
-            filterContexts.push({
-              corridor: corridor.corridor,
-              timeframe,
-              amount,
-              payin: method.payin,
-              payout: method.payout,
-            })
-          }
+          combos.push({ corridor: corridor.corridor, timeframe, amount })
         }
       }
     }
 
+    // Batch method discovery with a concurrency cap to avoid corridor×timeframe×amount sequential latency.
+    await runConcurrent(combos, jobConcurrency, async (combo) => {
+      const methodPairs = await repo.listPulseMethods({
+        corridor: combo.corridor,
+        timeframe: combo.timeframe,
+        amount: combo.amount,
+      })
+      if (methodPairs.length === 0) {
+        filterContexts.push({ corridor: combo.corridor, timeframe: combo.timeframe, amount: combo.amount })
+        return
+      }
+      for (const method of methodPairs) {
+        filterContexts.push({
+          corridor: combo.corridor,
+          timeframe: combo.timeframe,
+          amount: combo.amount,
+          payin: method.payin,
+          payout: method.payout,
+        })
+      }
+    })
+
     let filtersProcessed = 0
 
-    for (const filters of filterContexts) {
+    // Batch aggregation with a concurrency cap to avoid sequential corridor×filters latency.
+    await runConcurrent(filterContexts, jobConcurrency, async (filters) => {
       const cacheData = await retry(
         () => repo.aggregatePulseCacheData(filters),
         {
           maxRetries: 3,
           initialDelayMs: 500,
+          maxDelayMs: 10000,
+          timeoutMs: 60000,
+          operation: 'gold-pulse-cache.aggregate',
+          signal: shutdownSignal,
           retryable: (error) => {
             const errorMessage = error instanceof Error ? error.message : String(error)
             return errorMessage.includes('connection') ||
@@ -244,10 +281,11 @@ export const runGoldPulseCacheJob = async (
       }
 
       filtersProcessed += 1
-    }
+    })
 
     let upserted = 0
-    for (const [key, payload] of entries.entries()) {
+    const upsertEntries = [...entries.entries()]
+    await runConcurrent(upsertEntries, jobConcurrency, async ([key, payload]) => {
       try {
         const payloadJson = serializeJson(payload)
         await retry(
@@ -255,11 +293,15 @@ export const runGoldPulseCacheJob = async (
           {
             maxRetries: 2,
             initialDelayMs: 200,
+            maxDelayMs: 10000,
+            timeoutMs: 60000,
+            operation: 'gold-pulse-cache.upsert_entry',
+            signal: shutdownSignal,
             retryable: (error) => {
               const errorMessage = error instanceof Error ? error.message : String(error)
-              return errorMessage.includes('connection') ||
-                     errorMessage.includes('timeout') ||
-                     errorMessage.includes('ECONNREFUSED')
+              return errorMessage.includes('connection')
+                || errorMessage.includes('timeout')
+                || errorMessage.includes('ECONNREFUSED')
             },
           },
         )
@@ -270,7 +312,7 @@ export const runGoldPulseCacheJob = async (
           error: error instanceof Error ? error.message : String(error),
         })
       }
-    }
+    })
 
     const durationMs = Date.now() - startTime
     const durationSeconds = durationMs / 1000

@@ -1,10 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Pool } from 'pg'
-import { FxRateRepository } from '../plane-a/src/repositories/implementations/fx-rate-repository'
 import * as dbModule from '../shared/db'
-import { config } from '../shared/config'
 import { resetRedisState } from '../shared/redis'
 import { resetCircuitBreakers } from '../shared/repository-retry'
+
+const mockConfig = vi.hoisted(() => ({
+  redis: { url: '' },
+  fxRates: { oandaFallbackEnabled: false },
+  observability: { cloudwatch: { enabled: false } },
+}))
+
+vi.mock('../shared/config', () => ({ config: mockConfig }))
+
+import { FxRateRepository } from '../plane-a/src/repositories/implementations/fx-rate-repository'
 
 vi.mock('../shared/db', () => ({
   query: vi.fn(),
@@ -18,10 +26,6 @@ describe('FxRateRepository', () => {
     vi.clearAllMocks()
     resetRedisState()
     resetCircuitBreakers()
-    config.redis.url = ''
-    if (config.fxRates) {
-      config.fxRates.oandaFallbackEnabled = false
-    }
     mockPool = {} as Pool
     repository = new FxRateRepository(mockPool)
   })
@@ -149,6 +153,4 @@ describe('FxRateRepository', () => {
     })
   })
 })
-
-
 

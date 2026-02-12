@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { ValidationError } from '../shared/errors'
 
 const mockUpsertUserAccount = vi.fn()
 const mockGetPrivacySettings = vi.fn()
@@ -7,14 +8,6 @@ const mockUpdatePrivacySettings = vi.fn()
 
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
-}))
-
-vi.mock('../shared/config', () => ({
-  config: {
-    db: {
-      planeAUrl: '',
-    },
-  },
 }))
 
 vi.mock('../plane-a/src/repositories', () => ({
@@ -37,6 +30,16 @@ describe('account privacy routes', () => {
       get: vi.fn(),
       put: vi.fn(),
       delete: vi.fn(),
+      container: {
+        pool: {},
+        repositories: {
+          userAccount: {
+            upsertUserAccount: mockUpsertUserAccount,
+            getPrivacySettings: mockGetPrivacySettings,
+            updatePrivacySettings: mockUpdatePrivacySettings,
+          },
+        },
+      },
     } as any
 
     mockReply = {
@@ -130,5 +133,21 @@ describe('account privacy routes', () => {
     )
     expect(result.settings.marketing).toBe(true)
   })
-})
 
+  it('throws validation error when privacy payload is invalid', async () => {
+    const call = vi.mocked(app.put).mock.calls.find((c) => c[0] === '/account/privacy')
+    const handler = call?.[2] as any
+
+    const request = {
+      user: { user_id: 'u1', email: 'u@test.com' },
+      body: { analytics: 'yes' },
+    } as Partial<FastifyRequest>
+
+    const invalidRequest = handler(request, mockReply)
+    await expect(invalidRequest).rejects.toBeInstanceOf(ValidationError)
+    await expect(invalidRequest).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'validation_error',
+    })
+  })
+})

@@ -21,30 +21,24 @@ import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { startHealthServer } from '../shared/health-server'
-import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { applyJitter } from '../shared/worker-jitter'
+import { initErrorTracking } from '../shared/error-tracker'
 import { initTracing } from '../shared/tracing'
-
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const toBoolean = (value: string | undefined, fallback = false) => {
-  if (value === undefined) return fallback
-  return value === '1' || value === 'true' || value === 'yes'
-}
+import { createShutdownHandler } from '../shared/shutdown'
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
+import { emitOpsEvent } from '../shared/ops-events'
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-const limit = toNumber(process.env.FX_RATE_REFRESH_LIMIT, 50)
-const maxRetries = toNumber(process.env.FX_RATE_REFRESH_MAX_RETRIES, 3)
-const concurrency = toNumber(process.env.FX_RATE_REFRESH_CONCURRENCY, 5)
+const limit = config.workers.fxRateRefreshWorker.limit
+const maxRetries = config.workers.fxRateRefreshWorker.maxRetries
+const concurrency = config.workers.fxRateRefreshWorker.concurrency
 const logger = createLogger('script.fx-rate-refresh-worker')
 const lockTtlSeconds = 300
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = 30000
 
-const lockModeRaw = (process.env.FX_RATE_REFRESH_LOCK_MODE || 'auto').toLowerCase()
+const lockModeRaw = (config.workers.fxRateRefreshWorker.lockMode || 'auto').toLowerCase()
 const lockMode =
   lockModeRaw === 'none' || lockModeRaw === 'off'
     ? 'none'
@@ -55,38 +49,83 @@ const queueMode = config.queues.fxRateRefreshMode
 const queueUrl = config.queues.fxRateRefreshUrl
 const useQueue = queueMode === 'queue' && Boolean(queueUrl)
 const useLock = lockMode === 'single' || (lockMode === 'auto' && !useQueue)
-const loopEnabled = toBoolean(process.env.FX_RATE_REFRESH_LOOP)
-const loopDelayMs = Math.max(50, toNumber(process.env.FX_RATE_REFRESH_LOOP_DELAY_MS, 250))
-const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.FX_RATE_REFRESH_IDLE_DELAY_MS, 750))
-const loopJitterMs = resolveJitterMs(process.env.FX_RATE_REFRESH_LOOP_JITTER_MS, 0)
-const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
-const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
-const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+const loopEnabled = config.workers.fxRateRefreshWorker.loopEnabled
+const loopDelayMs = config.workers.fxRateRefreshWorker.loopDelayMs
+const idleDelayMs = Math.max(loopDelayMs, config.workers.fxRateRefreshWorker.idleDelayMs)
+const backpressureThreshold = Math.max(
+  1,
+  config.workers.fxRateRefreshWorker.backpressureThreshold || limit * 5,
+)
 
 initTracing('fx-rate-refresh-worker')
+initErrorTracking('fx-rate-refresh-worker')
+const loopJitterMs = config.workers.fxRateRefreshWorker.loopJitterMs
+const healthEnabled = config.workers.health.enabled
+const healthPort = config.workers.health.port
+const isLambdaRuntime = config.runtime.isLambda
 
-let shutdownRequested = false
+const shutdown = createShutdownHandler({
+  name: 'fx-rate-refresh-worker',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+})
+const { signal: shutdownSignal } = shutdown
+
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
+let fxBackpressureActive = false
 
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
+const handleQueueDepth = (depth: number) => {
+  const active = depth >= backpressureThreshold
 
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
+  recordCloudWatchMetric({
+    name: 'worker_backpressure_active',
+    value: active ? 1 : 0,
+    unit: 'Count',
+    dimensions: {
+      worker: 'fx-rate-refresh-worker',
+      environment: config.envName || config.env,
+    },
+  })
+
+  if (active) {
+    recordCloudWatchMetric({
+      name: 'worker_backpressure',
+      value: 1,
+      unit: 'Count',
+      dimensions: {
+        worker: 'fx-rate-refresh-worker',
+        reason: 'queue_depth',
+        environment: config.envName || config.env,
+      },
+    })
+  }
+
+  if (active && !fxBackpressureActive) {
+    logger.warn('worker_backpressure', {
+      worker: 'fx-rate-refresh-worker',
+      reason: 'queue_depth',
+      queue_depth: depth,
+      threshold: backpressureThreshold,
+    })
+    emitOpsEvent({
+      type: 'backpressure',
+      component: 'fx-rate-refresh-worker',
+      details: {
+        reason: 'queue_depth',
+        queue_depth: depth,
+        threshold: backpressureThreshold,
+      },
+    })
+  }
+
+  fxBackpressureActive = active
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
-
 export const runFxRateRefreshWorker = async (): Promise<number> => {
-  if (shutdownRequested) {
+  if (shutdown.isShuttingDown()) {
     logger.info('worker_skipped', { reason: 'shutdown_requested' })
     return 0
   }
@@ -96,11 +135,12 @@ export const runFxRateRefreshWorker = async (): Promise<number> => {
     lock_enabled: useLock,
     queue_mode: queueMode,
     queue_url_set: Boolean(queueUrl),
+    backpressure_threshold: backpressureThreshold,
   })
 
   if (useLock) {
     lock = new WorkerLock('fx-rate-refresh-worker', lockTtlSeconds)
-    const acquired = await lock.acquire()
+    const acquired = await lock.acquireLock(60_000)
 
     if (!acquired) {
       logger.info('worker_skipped', { reason: 'lock_already_held' })
@@ -130,6 +170,8 @@ export const runFxRateRefreshWorker = async (): Promise<number> => {
       limit,
       maxRetries,
       concurrency,
+      onQueueDepth: handleQueueDepth,
+      signal: shutdownSignal,
     })
     const durationMs = Date.now() - startTime
     const requestsPerSecond = durationMs > 0 ? count / (durationMs / 1000) : 0
@@ -169,6 +211,8 @@ export const runFxRateRefreshWorkerLoop = async (): Promise<number> => {
           loggerName: 'fx-rate-refresh-worker',
           enableDatabaseCheck: true,
           enableRedisCheck: true,
+          enableSqsCheck: useQueue,
+          sqsQueueUrl: useQueue ? queueUrl : undefined,
         })
       } catch (error) {
         logger.warn('health_server_start_failed', {
@@ -177,10 +221,10 @@ export const runFxRateRefreshWorkerLoop = async (): Promise<number> => {
       }
     }
     if (loopEnabled) {
-      while (!shutdownRequested) {
+      while (!shutdown.isShuttingDown()) {
         await applyJitter(logger, 'fx_rate_refresh_loop', loopJitterMs)
         const processed = await runFxRateRefreshWorker()
-        if (shutdownRequested) {
+        if (shutdown.isShuttingDown()) {
           break
         }
         const delayMs = processed > 0 ? loopDelayMs : idleDelayMs
@@ -196,15 +240,15 @@ export const runFxRateRefreshWorkerLoop = async (): Promise<number> => {
       stack: error instanceof Error ? error.stack : undefined,
     })
   } finally {
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
-    }
     if (healthServer) {
       await healthServer.close().catch((error) => {
         logger.warn('health_server_close_failed', {
           error: error instanceof Error ? error.message : String(error),
         })
       })
+    }
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
     }
   }
 

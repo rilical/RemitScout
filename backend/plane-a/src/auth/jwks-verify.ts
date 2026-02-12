@@ -13,8 +13,23 @@ const resolveIssuer = () => {
   return `${config.auth.supabase.url.replace(/\/$/, '')}/auth/v1`
 }
 
-const resolveAudience = () => {
-  return config.auth.supabase.jwtAudience || undefined
+const splitCsv = (value: string | undefined): string[] =>
+  (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+const resolveAudience = (): string | string[] | undefined => {
+  const configured = splitCsv(config.auth.supabase.jwtAudience)
+  if (configured.length === 1) return configured[0]
+  if (configured.length > 1) return configured
+
+  // Fail-closed default: Supabase access tokens typically use aud='authenticated'.
+  // When Plane A requires JWT auth, enforce aud even if SUPABASE_JWT_AUDIENCE was omitted.
+  if (config.planeA.requireJwt) {
+    return 'authenticated'
+  }
+  return undefined
 }
 
 const buildVerifyOptions = (): JWTVerifyOptions => {

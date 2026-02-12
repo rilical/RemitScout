@@ -12,47 +12,48 @@ import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { startHealthServer } from '../shared/health-server'
-import { deleteMessages, receiveJsonMessages, sendToDLQ, createVisibilityTimeoutExtender } from '../shared/sqs'
+import {
+  deleteMessages,
+  receiveJsonMessages,
+  sendToDLQ,
+  createVisibilityTimeoutExtender,
+  drainAndStop,
+  type VisibilityTimeoutExtender,
+} from '../shared/sqs'
 import { dispatchQueuedSignal, type NotificationsQueueMessage } from '../plane-b/src/notifications/dispatcher'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
+import { initErrorTracking } from '../shared/error-tracker'
+import { createShutdownHandler } from '../shared/shutdown'
 import { initTracing, startSpan } from '../shared/tracing'
-import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { applyJitter } from '../shared/worker-jitter'
 
 const logger = createLogger('script.notifications-queue-worker')
 const queueUrl = config.queues.notifications.url
 const queueMode = config.queues.notifications.mode
 initTracing('notifications-queue-worker')
+initErrorTracking('notifications-queue-worker')
 
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const batchSize = toNumber(process.env.NOTIFICATIONS_QUEUE_BATCH_SIZE, 10)
-const idleSleepMs = toNumber(process.env.NOTIFICATIONS_QUEUE_IDLE_SLEEP_MS, 1000)
-const shutdownTimeoutMs = toNumber(process.env.NOTIFICATIONS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
-const loopJitterMs = resolveJitterMs(process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS)
-const messageJitterMs = resolveJitterMs(process.env.NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS)
-const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
-const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
-const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
-let shutdownRequested = false
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+const batchSize = config.workers.notificationsQueueWorker.batchSize
+const idleSleepMs = config.workers.notificationsQueueWorker.idleSleepMs
+const shutdownTimeoutMs = config.workers.notificationsQueueWorker.shutdownTimeoutMs
+const loopJitterMs = config.workers.notificationsQueueWorker.loopJitterMs
+const messageJitterMs = config.workers.notificationsQueueWorker.messageJitterMs
+const healthEnabled = config.workers.health.enabled
+const healthPort = config.workers.health.port
+const isLambdaRuntime = config.runtime.isLambda
 let healthServer: { close: () => Promise<void> } | null = null
-
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+const activeExtenders = new Set<VisibilityTimeoutExtender>()
+const shutdown = createShutdownHandler({
+  name: 'notifications-queue-worker',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+  onShutdownRequested: async () => {
+    await Promise.allSettled(Array.from(activeExtenders, (extender) => drainAndStop(extender)))
+  },
+})
+const { signal: shutdownSignal } = shutdown
 
 const validatePayload = (payload: NotificationsQueueMessage | null): payload is NotificationsQueueMessage => {
   if (!payload) return false
@@ -81,6 +82,8 @@ export const runNotificationsQueueWorkerLoop = async () => {
         loggerName: 'notifications-queue-worker',
         enableDatabaseCheck: true,
         enableRedisCheck: true,
+        enableSqsCheck: true,
+        sqsQueueUrl: queueUrl,
       })
     } catch (error) {
       logger.warn('health_server_start_failed', {
@@ -93,9 +96,12 @@ export const runNotificationsQueueWorkerLoop = async () => {
 
   try {
     logger.info('notifications_worker_start', { batch_size: batchSize })
-    while (!shutdownRequested) {
+    while (!shutdown.isShuttingDown()) {
       await applyJitter(logger, 'notifications_queue_loop', loopJitterMs)
-      const messages = await receiveJsonMessages<NotificationsQueueMessage>(queueUrl, batchSize)
+      const { messages, error: receiveError } = await receiveJsonMessages<NotificationsQueueMessage>(queueUrl, batchSize)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
+      }
       if (messages.length === 0) {
         await sleep(idleSleepMs)
         continue
@@ -117,11 +123,12 @@ export const runNotificationsQueueWorkerLoop = async () => {
           'notifications.queue.message',
           async () => {
             // Extend visibility timeout for slow webhook deliveries
-            const stopExtending = createVisibilityTimeoutExtender(
+            const extender = createVisibilityTimeoutExtender(
               queueUrl!,
               message.receiptHandle,
               () => logger.debug('visibility_extended', { message_id: message.messageId }),
             )
+            activeExtenders.add(extender)
 
             try {
               await withWorkerRetry(
@@ -130,13 +137,13 @@ export const runNotificationsQueueWorkerLoop = async () => {
                   maxRetries: 3,
                   initialDelayMs: 1000,
                   maxDelayMs: 30000,
+                  signal: shutdownSignal,
+                  operation: 'notifications.queue.dispatch',
                 },
               )
-              stopExtending()
               await recordWorkerMetric('notifications-queue-worker', 'message_processed', 1)
               deleteHandles.push(message.receiptHandle)
             } catch (error) {
-              stopExtending()
               const err = error instanceof Error ? error : new Error(String(error))
               logger.error('notifications_item_failed', {
                 message_id: message.messageId,
@@ -147,6 +154,9 @@ export const runNotificationsQueueWorkerLoop = async () => {
               // Send to DLQ
               await sendToDLQ(queueUrl!, message, err)
               await recordWorkerMetric('notifications-queue-worker', 'dlq_sent', 1)
+            } finally {
+              activeExtenders.delete(extender)
+              await extender()
             }
           },
           { attributes: { message_id: message.messageId } },
@@ -159,13 +169,13 @@ export const runNotificationsQueueWorkerLoop = async () => {
         }
       }
 
-      await deleteMessages(queueUrl, deleteHandles)
+      const { failed } = await deleteMessages(queueUrl, deleteHandles)
+      if (failed.length > 0) {
+        logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
+      }
     }
   } finally {
     await pool.end()
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
-    }
     if (healthServer) {
       await healthServer.close().catch((error) => {
         logger.warn('health_server_close_failed', {
@@ -173,14 +183,14 @@ export const runNotificationsQueueWorkerLoop = async () => {
         })
       })
     }
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
+    }
   }
 }
 
 if (require.main === module) {
   runNotificationsQueueWorkerLoop()
-    .then(() => {
-      process.exit(0)
-    })
     .catch((error) => {
       logger.error('notifications_worker_fatal', {
         error: error instanceof Error ? error.message : String(error),

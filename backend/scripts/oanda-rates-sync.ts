@@ -34,7 +34,7 @@ import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
 
 const logger = createLogger('script.oanda-rates-sync')
 initTracing('oanda-rates-sync')
-const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
+const environmentDimension = config.envName || config.env || 'development'
 
 const MAJOR_CURRENCIES = [
   'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'NZD',
@@ -43,17 +43,8 @@ const MAJOR_CURRENCIES = [
   'ARS', 'COP', 'PEN', 'VND', 'PKR', 'BDT', 'EGP', 'NGN', 'KES', 'UGX',
 ]
 
-const toNumber = (value: string | undefined, fallback: number): number => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const toBoolean = (value: string | undefined): boolean => {
-  return value === '1' || value === 'true' || value === 'yes'
-}
-
 const resolveMaxPairs = (): number | null => {
-  const parsed = toNumber(process.env.OANDA_SYNC_MAX_PAIRS, 0)
+  const parsed = config.fxRates.syncMaxPairs
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return null
   }
@@ -61,10 +52,7 @@ const resolveMaxPairs = (): number | null => {
 }
 
 const shouldIncludeCapabilityPairs = (): boolean => {
-  if (process.env.OANDA_SYNC_INCLUDE_CAPABILITY !== undefined) {
-    return toBoolean(process.env.OANDA_SYNC_INCLUDE_CAPABILITY)
-  }
-  return config.env !== 'production' && config.env !== 'staging'
+  return config.fxRates.syncIncludeCapability
 }
 
 const applyPairLimit = (
@@ -90,8 +78,8 @@ const dedupePairs = (pairs: Array<{ base: string; quote: string }>) => {
 }
 
 const getCurrencyPairsFromEnv = (): Array<{ base: string; quote: string }> => {
-  const currencies = process.env.OANDA_SYNC_CURRENCIES
-    ? process.env.OANDA_SYNC_CURRENCIES.split(',').map(c => c.trim().toUpperCase()).filter(Boolean)
+  const currencies = config.fxRates.syncCurrencies.length > 0
+    ? config.fxRates.syncCurrencies
     : MAJOR_CURRENCIES
 
   const pairs: Array<{ base: string; quote: string }> = []
@@ -256,8 +244,11 @@ const syncRates = async (): Promise<void> => {
       pool = createPool(config.db.planeAUrl)
     }
 
-    const useAuthenticatedApi = toBoolean(process.env.OANDA_USE_AUTHENTICATED_API)
-    const apiKey = process.env.OANDA_API_KEY
+    const useAuthenticatedApi = config.fxRates.useAuthenticatedApi
+    const apiKey = config.fxRates.apiKey
+    if (useAuthenticatedApi && !apiKey) {
+      throw new Error('OANDA_API_KEY is required when OANDA_USE_AUTHENTICATED_API is enabled')
+    }
     const fetcher = new OandaRateFetcher(pool, useAuthenticatedApi, apiKey)
     const fxRateRepository = new FxRateRepository(pool)
     const fxRateHistoryRepository = new FxRateHistoryRepository(pool)
@@ -273,7 +264,7 @@ const syncRates = async (): Promise<void> => {
       use_authenticated_api: useAuthenticatedApi,
     })
 
-    const concurrency = Math.max(1, toNumber(process.env.OANDA_SYNC_CONCURRENCY, 2))
+    const concurrency = Math.max(1, config.fxRates.syncConcurrency)
     let index = 0
     const workerCount = Math.min(concurrency, pairs.length)
     const workers = Array.from({ length: workerCount }, async () => {
@@ -396,12 +387,12 @@ const syncRates = async (): Promise<void> => {
 }
 
 const runContinuousSync = async (): Promise<void> => {
-  const intervalMinutes = toNumber(process.env.OANDA_SYNC_INTERVAL_MINUTES, config.fxRates?.syncIntervalMinutes ?? 60)
+  const intervalMinutes = config.fxRates.syncIntervalMinutes
   const intervalMs = intervalMinutes * 60 * 1000
 
   logger.info('starting_continuous_sync', {
     interval_minutes: intervalMinutes,
-    use_authenticated_api: toBoolean(process.env.OANDA_USE_AUTHENTICATED_API),
+    use_authenticated_api: config.fxRates.useAuthenticatedApi,
   })
 
   await syncRates()

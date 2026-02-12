@@ -1,11 +1,13 @@
 import type { Pool } from 'pg'
 import { createLogger } from '../../../shared/logger'
 import { query } from '../../../shared/db'
+import { config } from '../../../shared/config'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 import { parseCorridorId } from '../../../shared/corridor'
 import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
+import { recordBusinessMetric } from '../../../shared/business-metrics'
 import { AlertRepository, FxRateRepository, LatestQuoteRepository } from '../repositories'
 import { sendAlertEmail, sendAlertPush, sendAlertSms } from './alert-notifications'
 import { getUserPlan } from './user-plan'
@@ -124,16 +126,11 @@ const resolveUsdEquivalentBucket = (payload: Record<string, unknown>): number =>
   return computeBucketSelection(amount).bucket_used
 }
 
-const toPositiveInt = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
-  return Math.floor(parsed)
-}
-
-const SMART_ALERT_MIN_CONFIDENCE = toPositiveInt(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70)
-const SMART_ALERT_MIN_SAMPLE_DAYS = toPositiveInt(process.env.SMART_ALERTS_MIN_SAMPLE_DAYS, 21)
-const WEEKLY_SEND_DOW = Math.min(7, Math.max(1, toPositiveInt(process.env.ALERTS_WEEKLY_SEND_DOW, 1)))
-const WEEKLY_SEND_HOUR = Math.min(23, Math.max(0, toPositiveInt(process.env.ALERTS_WEEKLY_SEND_HOUR, 9)))
+const SMART_ALERT_MIN_CONFIDENCE = config.alerts.smart.minConfidence
+const SMART_ALERT_MIN_SAMPLE_DAYS = config.alerts.smart.minSampleDays
+const WEEKLY_SEND_DOW = config.alerts.smart.weeklySendDow
+const WEEKLY_SEND_HOUR = config.alerts.smart.weeklySendHour
+const ALERT_EVALUATION_CONCURRENCY = config.alerts.evaluation.concurrency
 
 export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolean> {
   try {
@@ -618,13 +615,22 @@ export async function evaluateAlertsForFrequency(
       pool,
     )
 
+    const ids = result.rows.map((r) => r.id)
     let triggeredCount = 0
-    for (const row of result.rows) {
-      const triggered = await evaluateAlert(pool, row.id)
-      if (triggered) {
-        triggeredCount++
+
+    // Concurrency-limited evaluation to avoid sequential N+1 latency and DB pool exhaustion.
+    // Default is 5; override via ALERT_EVALUATION_CONCURRENCY.
+    let nextIndex = 0
+    const workerCount = Math.min(ALERT_EVALUATION_CONCURRENCY, ids.length)
+    const workers = Array.from({ length: workerCount }, async () => {
+      for (;;) {
+        const i = nextIndex++
+        if (i >= ids.length) return
+        const triggered = await evaluateAlert(pool, ids[i]!)
+        if (triggered) triggeredCount++
       }
-    }
+    })
+    await Promise.all(workers)
 
     const durationSeconds = (Date.now() - startTime) / 1000
     recordCloudWatchMetric({
@@ -633,12 +639,14 @@ export async function evaluateAlertsForFrequency(
       unit: 'Count',
       dimensions: { frequency },
     })
+    recordBusinessMetric('alerts_evaluated_total', result.rows.length, { frequency })
     recordCloudWatchMetric({
       name: 'alerts_triggered',
       value: triggeredCount,
       unit: 'Count',
       dimensions: { frequency },
     })
+    recordBusinessMetric('alerts_triggered_total', triggeredCount, { frequency })
     recordCloudWatchMetric({
       name: 'alerts_evaluation_duration_seconds',
       value: durationSeconds,

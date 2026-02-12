@@ -1,12 +1,16 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { createLogger } from '../../../../shared/logger'
 import type {
   CircuitBreakerOpenRecord,
   CircuitBreakerRecord,
   CircuitBreakerStateRecord,
   ICircuitBreakerRepository,
 } from '../interfaces/circuit-breaker-repository.interface'
+
+const logger = createLogger('plane-b.circuit-breaker-repository')
+const CIRCUIT_BREAKER_LOAD_LIMIT = 10000
 
 export class CircuitBreakerRepository implements ICircuitBreakerRepository {
   constructor(private readonly pool: Pool) {}
@@ -108,10 +112,17 @@ export class CircuitBreakerRepository implements ICircuitBreakerRepository {
 
   async loadAllCircuits(): Promise<CircuitBreakerRecord[]> {
     const result = await query<CircuitBreakerRecord>(
-      'SELECT provider_id, corridor_id, state, cooldown_until FROM silver.circuit_breaker',
-      [],
+      'SELECT provider_id, corridor_id, state, cooldown_until FROM silver.circuit_breaker LIMIT $1',
+      [CIRCUIT_BREAKER_LOAD_LIMIT],
       this.pool,
     )
+    if (result.rows.length === CIRCUIT_BREAKER_LOAD_LIMIT) {
+      logger.warn('circuit_breaker_load_limit_hit', {
+        method: 'loadAllCircuits',
+        limit: CIRCUIT_BREAKER_LOAD_LIMIT,
+        row_count: result.rows.length,
+      })
+    }
     return result.rows
   }
 }

@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "engines": {
-    "node": ">=20.19.0 <21"
+    "node": ">=20.19.0 <21 || >=22"
   },
   "volta": {
     "node": "20.19.0",
@@ -13,6 +13,8 @@
   "scripts": {
     "lint": "eslint backend",
     "lint:compliance": "eslint backend",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged",
     "verifier:emit:passed": "node scripts/verifier/emit-verify.mjs verify.passed --json '{}'",
     "verifier:emit:failed": "node scripts/verifier/emit-verify.mjs verify.failed --json '{}'",
     "verifier:smoke": "node scripts/verifier/smoke.mjs",
@@ -21,11 +23,43 @@
     "verifier:contract": "node scripts/verifier/check-quality-contract.mjs",
     "verifier:workflow-consumer-contract": "node scripts/verifier/check-workflow-consumer.mjs"
   },
+  "lint-staged": {
+    "{pnpm-lock.yaml,package.json,backend/package.json,frontend/package.json,infrastructure/cdk/package.json}": "node scripts/ci/precommit-audit.mjs"
+  },
   "devDependencies": {
-    "eslint": "^8.50.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.17.0",
     "eslint-plugin-boundaries": "^5.0.1",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0"
+    "husky": "9.1.7",
+    "lint-staged": "16.2.7"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "current",
+        "linux"
+      ],
+      "cpu": [
+        "current",
+        "x64",
+        "arm64"
+      ]
+    },
+    "overrides": {
+      "@aws-sdk/client-cloudwatch": "3.981.0",
+      "@aws-sdk/client-ecs": "3.981.0",
+      "@aws-sdk/client-elasticache": "3.981.0",
+      "@aws-sdk/client-eventbridge": "3.981.0",
+      "@aws-sdk/client-rds": "3.981.0",
+      "@aws-sdk/client-s3": "3.981.0",
+      "@aws-sdk/client-secrets-manager": "3.981.0",
+      "@aws-sdk/client-ses": "3.981.0",
+      "@aws-sdk/client-sns": "3.981.0",
+      "@aws-sdk/client-sqs": "3.981.0",
+      "@aws-sdk/client-ssm": "3.981.0",
+      "@aws-sdk/s3-request-presigner": "3.981.0"
+    }
   },
   "packageManager": "pnpm@10.19.0+sha512.c9fc7236e92adf5c8af42fd5bf1612df99c2ceb62f27047032f4720b33f8eacdde311865e91c411f2774f618d82f320808ecb51718bfa82c060c4ba7c76a32b8"
 }

@@ -6,15 +6,6 @@
       "omar@remit-scout.com",
       "admin@remit-scout.com"
     ],
-    "sesIdentityArns": [
-      "arn:aws:ses:us-east-1:716156543157:identity/remit-scout.com",
-      "arn:aws:ses:us-east-1:716156543157:identity/alerts@remit-scout.com"
-    ],
-    "snsTopicArns": [
-      "arn:aws:sns:us-east-1:716156543157:remit-scout-dev-alerts-critical",
-      "arn:aws:sns:us-east-1:716156543157:remit-scout-dev-alerts-warning",
-      "arn:aws:sns:us-east-1:716156543157:remit-scout-dev-alerts-ops"
-    ],
     "devPaused": true,
     "planeBIngestDesiredCount": 0,
     "planeBB2cRefreshDesiredCount": 0,

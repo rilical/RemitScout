@@ -2,15 +2,9 @@ import { describe, it, expect } from 'vitest'
 import Stripe from 'stripe'
 import { buildApp } from '../plane-a/src/app'
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-const shouldRun = Boolean(webhookSecret && process.env.DATABASE_URL_PLANE_A)
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_secret'
 
 describe('billing webhook idempotency', () => {
-  if (!shouldRun || !webhookSecret) {
-    it.skip('STRIPE_WEBHOOK_SECRET and DATABASE_URL_PLANE_A required', () => {})
-    return
-  }
-
   it('does not double-process the same event', async () => {
     const app = await buildApp()
     const payload = JSON.stringify({

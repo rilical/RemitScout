@@ -1,10 +1,12 @@
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { resolveProviderSupport } from '../plane-b/src/services/provider-capability'
 import { providerRegistry } from '../plane-b/src/providers'
 
 const logger = createLogger('script.provider-capability-probe')
+initTracing('provider-capability-probe')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)

@@ -548,7 +548,15 @@ export abstract class BaseCollector {
         payinMethod,
         payoutMethod,
       )
-    } catch {
+    } catch (error) {
+      this.logger.debug('latest_quote_age_lookup_failed', {
+        provider_id: this.providerId,
+        corridor_id: corridorId,
+        amount_bucket: amountBucket,
+        payin_method: payinMethod,
+        payout_method: payoutMethod,
+        error: error instanceof Error ? error.message : String(error),
+      })
       return null
     }
   }

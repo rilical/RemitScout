@@ -15,8 +15,10 @@ import { Counter, Gauge, Registry } from 'prom-client'
 import { createLogger } from '../shared/logger'
 import { config } from '../shared/config'
 import { createShutdownHandler } from '../shared/shutdown'
+import { initTracing } from '../shared/tracing'
 
 const logger = createLogger('script.synthetic-monitor')
+initTracing('synthetic-monitor')
 
 const register = new Registry()
 
@@ -70,7 +72,12 @@ const fetchWithTimeout = async (
     let body: unknown
     try {
       body = await response.json()
-    } catch {
+    } catch (error) {
+      logger.debug('synthetic_monitor_response_parse_failed', {
+        url,
+        status: response.status,
+        error: error instanceof Error ? error.message : String(error),
+      })
       body = null
     }
     return { status: response.status, body, duration }
@@ -254,6 +261,9 @@ const startServer = (): Promise<void> => {
           res.setHeader('content-type', register.contentType)
           res.end(metrics)
         } catch (error) {
+          logger.warn('synthetic_monitor_metrics_failed', {
+            error: error instanceof Error ? error.message : String(error),
+          })
           res.statusCode = 500
           res.end('metrics_error')
         }
@@ -321,7 +331,4 @@ run().catch((error) => {
   })
   process.exit(1)
 })
-
-
-
 

@@ -1,24 +1,19 @@
 import { describe, it, expect } from 'vitest'
 import { Pool } from 'pg'
+import { withTestTransaction } from './helpers/test-db'
 
-const shouldRun = process.env.RUN_BRONZE_GUARDRAIL_TEST === '1'
-const planeAUrl = process.env.DATABASE_URL_PLANE_A
-
-const skipGuardrail = !shouldRun || !planeAUrl
+const planeAUrl = process.env.DATABASE_URL_PLANE_A || process.env.DATABASE_URL || 'postgres://remit:remit@localhost:5432/remit'
 
 describe('Plane A Bronze guardrail', () => {
-  if (skipGuardrail) {
-    it.skip('RUN_BRONZE_GUARDRAIL_TEST=1 and DATABASE_URL_PLANE_A required', () => {})
-    return
-  }
-
   const bronzeTables = ['provider_raw']
 
   for (const table of bronzeTables) {
     it(`denies Plane A access to bronze.${table}`, async () => {
       const pool = new Pool({ connectionString: planeAUrl })
       try {
-        await pool.query(`SELECT * FROM bronze.${table} LIMIT 1`)
+        await withTestTransaction(pool, async () => {
+          await pool.query(`SELECT * FROM bronze.${table} LIMIT 1`)
+        })
       } catch (error: any) {
         const message = String(error?.message || '')
         expect(message.toLowerCase()).toContain('permission')

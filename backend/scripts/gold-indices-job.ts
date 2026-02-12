@@ -22,6 +22,7 @@ import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { retry } from '../shared/retry'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { formatError } from '../shared/utils/error-handling'
+import { normalizeCorridorFilter } from '../shared/corridor'
 import {
   DEFAULT_WEIGHT_MODEL,
   GLOBAL_WEIGHT_CORRIDOR_ID,
@@ -96,7 +97,7 @@ let pool: ReturnType<typeof createPool> | null = null
 
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-const { isShutdownRequested } = createShutdownHandler({
+const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
   timeoutMs: 30000,
   logger,
   onShutdown: async () => {
@@ -133,7 +134,7 @@ WITH weight_snapshot AS (
     window_days,
     weight_confidence
   FROM gold.provider_weight_snapshot
-  WHERE model_version = '${weightModel}'
+  WHERE model_version = $8
 ),
 corridor_weights AS (
   SELECT
@@ -143,14 +144,14 @@ corridor_weights AS (
     window_days,
     weight_confidence
   FROM weight_snapshot
-  WHERE corridor_id <> '${GLOBAL_WEIGHT_CORRIDOR_ID}'
+  WHERE corridor_id <> $9
 ),
 global_weights AS (
   SELECT
     provider_id,
     weight
   FROM weight_snapshot
-  WHERE corridor_id = '${GLOBAL_WEIGHT_CORRIDOR_ID}'
+  WHERE corridor_id = $9
 ),
 weight_meta AS (
   SELECT
@@ -229,7 +230,22 @@ base AS (
   WHERE method_profile IS NOT NULL
 ),
 latest AS (
-  SELECT *
+  SELECT
+    corridor_id,
+    provider_id,
+    implied_fx_rate,
+    amount_bucket,
+    payin,
+    payout,
+    send_amount,
+    fee_amount,
+    collected_at,
+    bucket_day,
+    method_profile,
+    allowed_in_rvi,
+    allowed_in_rci,
+    allowed_in_teer,
+    rn
   FROM base
   WHERE rn = 1
 ),
@@ -422,7 +438,7 @@ weighted_metrics AS (
       COALESCE(provider_count_rci, 0),
       COALESCE(provider_count_rvi, 0)
     )::int AS provider_count,
-    '${weightModel}'::text AS weighting_model
+    $8::text AS weighting_model
   FROM weighted_agg
 ),
 prepared_base AS (
@@ -450,7 +466,7 @@ prepared_base AS (
     wm.weighting_model,
     wmeta.weight_confidence,
     wmeta.window_days,
-    '${methodologyVersion}'::text AS methodology_version
+    $10::text AS methodology_version
   FROM with_volatility wv
   LEFT JOIN weighted_metrics wm
     ON wm.corridor_id = wv.corridor_id
@@ -598,14 +614,6 @@ SELECT COUNT(*)::int AS upserted
 FROM upserted
 `
 
-const normalizeCorridorFilter = (corridorIds?: string[]) => {
-  if (!corridorIds) return null
-  const unique = Array.from(
-    new Set(corridorIds.map((corridor) => corridor.trim()).filter(Boolean)),
-  )
-  return unique.length > 0 ? unique : null
-}
-
 export const upsertGoldIndices = async (
   pool: Pool,
   options: {
@@ -627,6 +635,9 @@ export const upsertGoldIndices = async (
       maxDailyChangeRatio,
       rateRatioMin,
       rateRatioMax,
+      weightModel,
+      GLOBAL_WEIGHT_CORRIDOR_ID,
+      methodologyVersion,
     ],
     pool,
   )
@@ -741,6 +752,10 @@ export const runGoldIndicesJob = async (
       {
         maxRetries: 3,
         initialDelayMs: 500,
+        maxDelayMs: 10000,
+        timeoutMs: 60000,
+        operation: 'gold-indices.upsert',
+        signal: shutdownSignal,
         retryable: (error) => {
           const errorMessage = error instanceof Error ? error.message : String(error)
           return errorMessage.includes('connection') ||

@@ -7,6 +7,8 @@ import {
 } from '../../../shared/metrics-registry'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
+
 const providerCollectionSuccessTotal = new Counter({
   name: 'provider_collection_success_total',
   help: 'Successful provider collections.',
@@ -56,6 +58,16 @@ export const recordCollection = (
       dimensions: { provider_id: provider, corridor_id: corridor },
       highCardinality: true,
     })
+    recordCloudWatchMetric({
+      name: 'provider_collection_success_by_provider_total',
+      value: 1,
+      unit: 'Count',
+      dimensions: {
+        provider_id: provider,
+        environment: environmentDimension,
+      },
+      highCardinality: true,
+    })
   } else {
     providerCollectionFailureTotal.inc({
       provider_id: provider,
@@ -70,6 +82,16 @@ export const recordCollection = (
         provider_id: provider,
         corridor_id: corridor,
         error_type: errorType || 'unknown',
+      },
+      highCardinality: true,
+    })
+    recordCloudWatchMetric({
+      name: 'provider_collection_failure_by_provider_total',
+      value: 1,
+      unit: 'Count',
+      dimensions: {
+        provider_id: provider,
+        environment: environmentDimension,
       },
       highCardinality: true,
     })
@@ -106,6 +128,4 @@ export const updateCircuitBreakerState = (
 }
 
 export { getMetrics, metricsContentType }
-
-
 

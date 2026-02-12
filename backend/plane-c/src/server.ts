@@ -1,15 +1,10 @@
-import { assertRuntimeConfig, config } from '../../shared/config'
+import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { createShutdownHandler } from '../../shared/shutdown'
 import { initErrorTracking } from '../../shared/error-tracker'
 import { initTracing, shutdownTracing } from '../../shared/tracing'
+import { runStartupChecks } from '../../shared/startup'
 import { buildApp } from './app'
-
-if (config.env === 'production' || config.env === 'staging' || process.env.STRICT_CONFIG === '1') {
-  assertRuntimeConfig({
-    requirePlaneC: true,
-  })
-}
 
 initErrorTracking('plane-c')
 initTracing('plane-c')
@@ -29,6 +24,15 @@ const { isShutdownRequested } = createShutdownHandler({
 
 const start = async () => {
   try {
+    await runStartupChecks({
+      requirements: {
+        requirePlaneCDb: true,
+        requireRedis: true,
+        requireQueues: true,
+        requireStorage: true,
+      },
+    })
+
     await app.listen({ port: config.planeC.port, host: '0.0.0.0' })
     logger.info('server_started', { port: config.planeC.port })
   } catch (error) {

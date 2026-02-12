@@ -1,14 +1,13 @@
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { config } from '../../../../shared/config'
+
+const http = config.planeB.providerLimits.http.transfergo
+const playwright = config.planeB.providerLimits.playwright.transfergo
 
 export const httpLimits = {
-  rpm: toNumber(process.env.PLANE_B_TRANSFERGO_RPM, 8),
-  maxRpm: toNumber(process.env.PLANE_B_TRANSFERGO_MAX_RPM, 12),
-  concurrency: toNumber(process.env.PLANE_B_TRANSFERGO_CONCURRENCY, 2),
+  rpm: http.rpm,
+  concurrency: http.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_TRANSFERGO_CORRIDOR_RPM, 3),
+  perCorridorRpm: http.perCorridorRpm,
 }
 
 /**
@@ -16,8 +15,8 @@ export const httpLimits = {
  * These limits are defined for future use and do not affect current functionality.
  */
 export const playwrightLimits = {
-  rpm: toNumber(process.env.PLANE_B_TRANSFERGO_PLAYWRIGHT_RPM, 4),
-  concurrency: toNumber(process.env.PLANE_B_TRANSFERGO_PLAYWRIGHT_CONCURRENCY, 1),
+  rpm: playwright.rpm,
+  concurrency: playwright.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_TRANSFERGO_PLAYWRIGHT_CORRIDOR_RPM, 2),
+  perCorridorRpm: playwright.perCorridorRpm,
 }

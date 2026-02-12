@@ -1,23 +1,11 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
-import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import {
-  FxRateHistoryRepository,
-  FxRateRepository,
-  FxRateRefreshRepository,
-  LatestQuoteRepository,
-} from '../repositories'
+import { AppError, ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.rates')
-
-const planeAPool = getPool(config.db.planeAUrl)
-const fxRateRepository = new FxRateRepository(planeAPool)
-const fxRateHistoryRepository = new FxRateHistoryRepository(planeAPool)
-const fxRateRefreshRepository = new FxRateRefreshRepository(planeAPool)
-const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 
 const pairSchema = z.object({
   base: z.string().min(3).max(3),
@@ -67,6 +55,7 @@ const enqueueFxRateRefreshIfNeeded = async (
   base: string,
   quote: string,
   record: { last_updated?: string | Date | null; updated_at?: string | Date | null } | null,
+  fxRateRefreshRepository: FastifyInstance['container']['repositories']['fxRateRefresh'],
 ) => {
   if (!config.fxRates?.refreshEnabled) {
     return null
@@ -91,11 +80,15 @@ const enqueueFxRateRefreshIfNeeded = async (
 }
 
 export const ratesRoutes = async (app: FastifyInstance) => {
-  app.get('/rates/spot', async (request, reply) => {
+  const fxRateRepository = app.container.repositories.fxRate
+  const fxRateHistoryRepository = app.container.repositories.fxRateHistory
+  const fxRateRefreshRepository = app.container.repositories.fxRateRefresh
+  const latestQuoteRepository = app.container.repositories.latestQuote
+
+  app.get('/rates/spot', async (request, _reply) => {
     const parsed = pairSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     const base = parsed.data.base.toUpperCase()
@@ -103,16 +96,23 @@ export const ratesRoutes = async (app: FastifyInstance) => {
 
     try {
       const record = await fxRateRepository.getRateRecord(base, quote)
-      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, record)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
+        base,
+        quote,
+        record,
+        fxRateRefreshRepository,
+      )
       if (!record || record.rate === null || record.rate === undefined) {
-        reply.code(404)
-        return {
-          error: 'rate_unavailable',
-          base,
-          quote,
-          refreshQueued: Boolean(refreshRequestId),
-          refreshRequestId,
-        }
+        throw new AppError('Rate unavailable', {
+          statusCode: 404,
+          code: 'rate_unavailable',
+          details: {
+            base,
+            quote,
+            refreshQueued: Boolean(refreshRequestId),
+            refreshRequestId,
+          },
+        })
       }
 
       const updatedAt = toIsoString(record.last_updated ?? record.updated_at)
@@ -134,16 +134,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 
-  app.get('/rates/providers', async (request, reply) => {
+  app.get('/rates/providers', async (request, _reply) => {
     const parsed = providersSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     const base = parsed.data.base.toUpperCase()
@@ -158,7 +156,12 @@ export const ratesRoutes = async (app: FastifyInstance) => {
       const midMarketRate = rateRecord?.rate !== null && rateRecord?.rate !== undefined
         ? Number(rateRecord.rate)
         : null
-      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, rateRecord)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
+        base,
+        quote,
+        rateRecord,
+        fxRateRefreshRepository,
+      )
 
       const data = latestQuotes
         .filter((quoteRow) => quoteRow.implied_fx_rate !== null && quoteRow.implied_fx_rate !== undefined)
@@ -191,16 +194,14 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 
-  app.get('/rates/history', async (request, reply) => {
+  app.get('/rates/history', async (request, _reply) => {
     const parsed = historySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     const base = parsed.data.base.toUpperCase()
@@ -217,7 +218,12 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         rowsPromise,
         fxRateRepository.getRateRecord(base, quote),
       ])
-      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, rateRecord)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
+        base,
+        quote,
+        rateRecord,
+        fxRateRefreshRepository,
+      )
 
       if (rows.length === 0) {
         logger.warn('rate_history_empty', {
@@ -228,15 +234,19 @@ export const ratesRoutes = async (app: FastifyInstance) => {
           endDate,
           message: 'No rate history found in database. OANDA sync may not be running or data not yet populated.',
         })
-        reply.code(404)
-        return {
-          error: 'rate_unavailable',
-          base,
-          quote,
-          message: 'No rate history available. OANDA sync may be pending.',
-          refreshQueued: Boolean(refreshRequestId),
-          refreshRequestId,
-        }
+        throw new AppError('No rate history available. OANDA sync may be pending.', {
+          statusCode: 404,
+          code: 'rate_unavailable',
+          details: {
+            base,
+            quote,
+            days,
+            startDate,
+            endDate,
+            refreshQueued: Boolean(refreshRequestId),
+            refreshRequestId,
+          },
+        })
       }
 
       const history = rows.map((row) => ({
@@ -274,19 +284,17 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       })
-      reply.code(500)
-      return { error: 'internal_error', message: 'Failed to fetch rate history' }
+      throw error
     }
   })
 
-  app.get('/rates/exchange/:base/:quote', async (request, reply) => {
+  app.get('/rates/exchange/:base/:quote', async (request, _reply) => {
     const parsed = historySchema.safeParse({
       ...(request.params as Record<string, unknown>),
       ...(request.query as Record<string, unknown>),
     })
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid parameters', { details: parsed.error.issues })
     }
 
     const base = parsed.data.base.toUpperCase()
@@ -295,7 +303,12 @@ export const ratesRoutes = async (app: FastifyInstance) => {
 
     try {
       const result = await fxRateRepository.getRateWithHistory(base, quote, days)
-      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, result.current)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
+        base,
+        quote,
+        result.current,
+        fxRateRefreshRepository,
+      )
       const current = result.current
         ? {
             rate: Number(result.current.rate),
@@ -335,19 +348,17 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 
-  app.get('/rates/exchange/:base/:quote/history', async (request, reply) => {
+  app.get('/rates/exchange/:base/:quote/history', async (request, _reply) => {
     const parsed = historySchema.safeParse({
       ...(request.params as Record<string, unknown>),
       ...(request.query as Record<string, unknown>),
     })
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid parameters', { details: parsed.error.issues })
     }
 
     const base = parsed.data.base.toUpperCase()
@@ -364,7 +375,12 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         rowsPromise,
         fxRateRepository.getRateRecord(base, quote),
       ])
-      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(base, quote, rateRecord)
+      const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
+        base,
+        quote,
+        rateRecord,
+        fxRateRefreshRepository,
+      )
 
       const history = rows.map((row) => ({
         date: row.rate_date instanceof Date
@@ -394,8 +410,7 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 }

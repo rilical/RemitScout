@@ -14,7 +14,7 @@
  * as `invalid_method_profile` in quality flags.
  */
 
-import { CanonicalPayinMethod, CanonicalPayoutMethod } from './canonical'
+import { CanonicalPayinMethod, CanonicalPayoutMethod } from '../../../shared/normalize/canonical'
 
 /**
  * Method profile types matching database enum.

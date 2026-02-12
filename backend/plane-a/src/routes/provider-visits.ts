@@ -1,14 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
-import { ProviderVisitRepository } from '../repositories'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.provider-visits')
-const planeAPool = getPool(config.db.planeAUrl)
-const providerVisitRepository = new ProviderVisitRepository(planeAPool)
 
 const trackSchema = z.object({
   session_id: z.string().min(8),
@@ -43,7 +39,11 @@ const sanitizeTargetUrl = (raw: string): string => {
   try {
     const url = new URL(raw)
     return `${url.origin}${url.pathname}`
-  } catch {
+  } catch (error) {
+    logger.debug('provider_visit_target_url_sanitize_failed', {
+      raw_target_url: raw,
+      error: error instanceof Error ? error.message : String(error),
+    })
     const stripped = raw.split('?')[0] || raw
     return stripped.split('#')[0] || raw
   }
@@ -57,11 +57,12 @@ const toDateOrNull = (value?: string) => {
 }
 
 export const providerVisitRoutes = async (app: FastifyInstance) => {
+  const providerVisitRepository = app.container.repositories.providerVisit
+
   app.post('/provider-visits/track', async (request, reply) => {
     const parsed = trackSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const input = parsed.data
@@ -120,11 +121,10 @@ export const providerVisitRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/provider-visits/:id/feedback', { preHandler: requireAuth() }, async (request, reply) => {
+  app.post('/provider-visits/:id/feedback', { preHandler: requireAuth() }, async (request, _reply) => {
     const parsed = feedbackSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const user = request.user!
@@ -132,14 +132,12 @@ export const providerVisitRoutes = async (app: FastifyInstance) => {
     const visit = await providerVisitRepository.getVisitById(visitId)
 
     if (!visit || visit.user_id !== user.user_id) {
-      reply.code(404)
-      return { error: 'not_found' }
+            throw new NotFoundError('Not found', { details: { error: 'not_found' } })
     }
 
     const transferDate = toDateOrNull(parsed.data.transfer_date)
     if (parsed.data.transfer_date && !transferDate) {
-      reply.code(400)
-      return { error: 'invalid_date', field: 'transfer_date' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date', field: 'transfer_date' } })
     }
 
     let rateDifferencePct: number | null = null
@@ -165,8 +163,7 @@ export const providerVisitRoutes = async (app: FastifyInstance) => {
     })
 
     if (!updated) {
-      reply.code(404)
-      return { error: 'not_found' }
+            throw new NotFoundError('Not found', { details: { error: 'not_found' } })
     }
 
     return { success: true }

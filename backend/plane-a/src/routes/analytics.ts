@@ -1,14 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
-import { AnalyticsRepository } from '../repositories'
+import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.analytics')
-const planeAPool = getPool(config.db.planeAUrl)
-const analyticsRepository = new AnalyticsRepository(planeAPool)
 
 const dateRangeSchema = z.object({
   start_date: z.string().min(1),
@@ -75,17 +71,17 @@ const parseDateRange = (input: { start_date: string; end_date: string }) => {
 }
 
 export const analyticsRoutes = async (app: FastifyInstance) => {
+  const analyticsRepository = app.container.repositories.analytics
+
   app.get('/analytics/corridors', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = corridorSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -114,14 +110,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/corridors/trends', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = corridorTrendSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -145,14 +139,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/providers', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = providersSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -175,14 +167,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/providers/impact', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = providerImpactSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -221,14 +211,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/providers/ctr', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = providerCtrSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -252,14 +240,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/engagement', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = engagementSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -282,14 +268,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/engagement/sessions', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = dateRangeSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -311,14 +295,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/heatmap', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = heatmapSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -341,14 +323,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/savings', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = savingsSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -371,14 +351,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/users', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = userBehaviorSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -401,14 +379,12 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/revenue', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = revenueSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const range = parseDateRange(parsed.data)
     if (!range) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {

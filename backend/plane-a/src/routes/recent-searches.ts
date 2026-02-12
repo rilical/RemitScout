@@ -1,15 +1,12 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
+import { RateLimitError, ValidationError } from '../../../shared/errors'
+import { DEFAULT_FALLBACK_TTL_SECONDS } from '../../../shared/constants'
 import { requireAuth } from '../plugins/auth-plugin'
-import { RecentSearchRepository } from '../repositories'
 
 const logger = createLogger('plane-a.recent-searches')
-const planeAPool = getPool(config.db.planeAUrl)
-const recentSearchRepository = new RecentSearchRepository(planeAPool)
 
 const listSchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional(),
@@ -34,7 +31,7 @@ const checkRateLimit = async (userId: string): Promise<boolean> => {
     const key = `recent-search:rate:${userId}`
     const count = await redis.incr(key)
     if (count === 1) {
-      await redis.expire(key, 3600)
+      await redis.expire(key, DEFAULT_FALLBACK_TTL_SECONDS)
     }
     return count > 100
   } catch (error) {
@@ -70,11 +67,12 @@ const toRecentSearchPayload = (row: {
 })
 
 export const recentSearchRoutes = async (app: FastifyInstance) => {
-  app.get('/recent-searches', { preHandler: requireAuth() }, async (request, reply) => {
+  const recentSearchRepository = app.container.repositories.recentSearch
+
+  app.get('/recent-searches', { preHandler: requireAuth() }, async (request, _reply) => {
     const parsed = listSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     const user = request.user!
@@ -91,24 +89,21 @@ export const recentSearchRoutes = async (app: FastifyInstance) => {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 
-  app.post('/recent-searches', { preHandler: requireAuth() }, async (request, reply) => {
+  app.post('/recent-searches', { preHandler: requireAuth() }, async (request, _reply) => {
     const parsed = createSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
     }
 
     const user = request.user!
     const input = parsed.data
 
     if (await checkRateLimit(user.user_id)) {
-      reply.code(429)
-      return { error: 'rate_limited' }
+      throw new RateLimitError()
     }
 
     try {
@@ -136,8 +131,7 @@ export const recentSearchRoutes = async (app: FastifyInstance) => {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw error
     }
   })
 }

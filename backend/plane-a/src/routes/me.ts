@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type Stripe from 'stripe'
 import { z } from 'zod'
-import { getPool, query } from '../../../shared/db'
+import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { upsertUserAccount } from '../services/user-account'
@@ -13,11 +13,9 @@ import { getStripeClient, isStripeConfigured } from '../services/stripe-client'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
-import { UserAccountRepository } from '../repositories'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 
-const planeAPool = getPool(config.db.planeAUrl)
 const logger = createLogger('plane-a.me')
-const userAccountRepository = new UserAccountRepository(planeAPool)
 
 const profileUpdateSchema = z.object({
   name: z.string().max(200).optional(),
@@ -201,6 +199,9 @@ const updateSupabasePassword = async (accessToken: string, newPassword: string):
 }
 
 export const meRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container
+  const userAccountRepository = repositories.userAccount
+
   app.get('/me', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
 
@@ -327,8 +328,7 @@ export const meRoutes = async (app: FastifyInstance) => {
     const user = request.user!
     const parsed = apiKeyCreateSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     try {
@@ -341,8 +341,7 @@ export const meRoutes = async (app: FastifyInstance) => {
       }
 
       if (hasTierOneScope(parsed.data.scopes)) {
-        reply.code(400)
-        return { error: 'tier_disabled', message: 'Tier 1 API access is disabled.' }
+                throw new ValidationError('Invalid request', { details: { error: 'tier_disabled', message: 'Tier 1 API access is disabled.' } })
       }
 
       const activeCount = await countActiveApiKeys(planeAPool, user.user_id)
@@ -416,8 +415,7 @@ export const meRoutes = async (app: FastifyInstance) => {
 
       const rotated = await rotateApiKey(planeAPool, user.user_id, keyId)
       if (!rotated) {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
 
       try {
@@ -479,8 +477,7 @@ export const meRoutes = async (app: FastifyInstance) => {
 
       const revoked = await revokeApiKey(planeAPool, user.user_id, keyId)
       if (!revoked) {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
 
       try {
@@ -568,8 +565,7 @@ export const meRoutes = async (app: FastifyInstance) => {
       }
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
-        reply.code(400)
-        return { error: 'invalid_request', details: error.flatten() }
+                throw new ValidationError('Invalid request', { details: { error: 'invalid_request', details: error.flatten() } })
       }
 
       logger.error('me_profile_update_failed', {
@@ -587,8 +583,7 @@ export const meRoutes = async (app: FastifyInstance) => {
     const user = request.user!
     const parsed = passwordUpdateSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'invalid_request', details: parsed.error.flatten() }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_request', details: parsed.error.flatten() } })
     }
 
     if (!config.auth.supabase.url || !config.auth.supabase.publishableKey) {
@@ -597,8 +592,7 @@ export const meRoutes = async (app: FastifyInstance) => {
     }
 
     if (!user.email) {
-      reply.code(400)
-      return { error: 'missing_email' }
+            throw new ValidationError('Invalid request', { details: { error: 'missing_email' } })
     }
 
     const accessToken = parseBearerToken(request.headers.authorization)

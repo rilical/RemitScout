@@ -27,3 +27,20 @@ export const requireCorridorId = (corridorId: string): ParsedCorridorId => {
 export const formatCorridorId = (input: ParsedCorridorId): string => {
   return `${input.sourceCountry}-${input.destCountry}-${input.sourceCurrency}-${input.destCurrency}`
 }
+
+export const normalizeCorridorIds = (corridorIds: Array<string | null | undefined>): string[] => {
+  return Array.from(
+    new Set(
+      corridorIds
+        .map((corridor) => (corridor ?? '').trim())
+        .filter(Boolean)
+        .map((corridor) => corridor.toUpperCase()),
+    ),
+  )
+}
+
+export const normalizeCorridorFilter = (corridorIds?: Array<string | null | undefined>) => {
+  if (!corridorIds) return null
+  const unique = normalizeCorridorIds(corridorIds)
+  return unique.length > 0 ? unique : null
+}

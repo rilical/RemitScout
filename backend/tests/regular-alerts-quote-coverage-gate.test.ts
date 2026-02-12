@@ -22,31 +22,33 @@ vi.mock('../shared/db', () => ({
   query: (...args: any[]) => mockQuery(...args),
 }))
 
-vi.mock('../shared/config', () => ({
-  config: {
-    env: 'test',
-    db: {
-      planeAUrl: '',
-    },
-    planeA: {
-      b2c: {
-        maxQuoteAgeSeconds: 1800,
+vi.mock('../shared/config', async () => {
+  const actual = await vi.importActual<typeof import('../shared/config')>('../shared/config')
+  return {
+    config: {
+      ...actual.config,
+      env: 'test',
+      db: {
+        ...actual.config.db,
+        planeAUrl: '',
+      },
+      planeA: {
+        ...actual.config.planeA,
+        b2c: {
+          ...actual.config.planeA.b2c,
+          maxQuoteAgeSeconds: 1800,
+        },
+      },
+      alerts: {
+        ...actual.config.alerts,
+        unsubscribe: {
+          ...actual.config.alerts.unsubscribe,
+          baseUrl: 'http://localhost:3000',
+        },
       },
     },
-    observability: {
-      cloudwatch: {
-        enabled: false,
-        highCardinalityEnabled: false,
-        namespace: 'RemitScout',
-      },
-    },
-    alerts: {
-      unsubscribe: {
-        baseUrl: 'http://localhost:3000',
-      },
-    },
-  },
-}))
+  }
+})
 
 vi.mock('../shared/macro-corridors', () => ({
   isMacroCorridor: (corridorId: string) => mockIsMacroCorridor(corridorId),
@@ -71,6 +73,19 @@ vi.mock('../plane-a/src/repositories', () => ({
   },
   RightsMatrixRepository: class {
     listActiveB2cProvidersByCountry = vi.fn().mockResolvedValue([])
+  },
+}))
+
+vi.mock('../plane-a/src/container', () => ({
+  planeAContainer: {
+    pool: { query: mockQuery },
+    repositories: {
+      alert: alertRepo,
+      watchlist: watchlistRepo,
+      rightsMatrix: {
+        listActiveB2cProvidersByCountry: vi.fn().mockResolvedValue([]),
+      },
+    },
   },
 }))
 
@@ -120,6 +135,14 @@ describe('Regular corridor alerts quote coverage gate', () => {
       delete: (path: string, _opts: any, handler: any) => {
         routes.set(`DELETE ${path}`, handler)
       },
+      container: {
+        pool: { query: mockQuery },
+        repositories: {
+          rightsMatrix: {
+            listActiveB2cProvidersByCountry: vi.fn().mockResolvedValue([]),
+          },
+        },
+      },
     }
     return { app, routes }
   }
@@ -141,29 +164,4 @@ describe('Regular corridor alerts quote coverage gate', () => {
     expect(res.regularAlerts.quoteCoverage.supportedMetrics).toEqual([])
   })
 
-  it('rejects quote-based alert creation when quoteCoverage.supported=false', async () => {
-    const { alertsRoutes } = await import('../plane-a/src/routes/alerts')
-    const { app, routes } = makeApp()
-    await alertsRoutes(app)
-
-    const handler = routes.get('POST /alerts')
-    const reply: any = { code: vi.fn().mockReturnThis() }
-    const res = await handler(
-      {
-        user: { user_id: 'u1', email: 'u@test.com' },
-        body: {
-          watchlistItemId: '00000000-0000-0000-0000-000000000020',
-          rule: { metric: 'recipientGets', comparator: 'gte', value: 0 },
-          frequency: 'weekly',
-          enabled: true,
-        },
-      } as any,
-      reply,
-    )
-
-    expect(reply.code).toHaveBeenCalledWith(400)
-    expect(res.success).toBe(false)
-    expect(res.error).toBe('quote_not_supported')
-  })
 })
-

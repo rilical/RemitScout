@@ -4,19 +4,11 @@ import type { Pool } from 'pg'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
-
-const planeBUrl = process.env.DATABASE_URL_PLANE_B || process.env.DATABASE_URL
-const shouldRun = Boolean(planeBUrl)
+import { withTestTransaction } from './helpers/test-db'
 
 describe('Cache Freshness Integration', () => {
-  if (!shouldRun) {
-    it.skip('DATABASE_URL_PLANE_B or DATABASE_URL required', () => {})
-    return
-  }
-
   let pool: Pool
   let volatilityService: VolatilityService
-  const corridorIds = ['US-AR-USD-ARS', 'GB-NG-GBP-NGN', 'CA-AU-CAD-AUD']
 
   const ensureProvider = async (providerId: string) => {
     await pool.query(
@@ -41,26 +33,9 @@ describe('Cache Freshness Integration', () => {
   beforeEach(async () => {
     pool = createPool(config.db.planeBUrl)
     volatilityService = new VolatilityService(pool)
-
-    await pool.query(
-      'DELETE FROM silver.latest_quote_by_provider WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
-    await pool.query(
-      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
   })
 
   afterEach(async () => {
-    await pool.query(
-      'DELETE FROM silver.latest_quote_by_provider WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
-    await pool.query(
-      'DELETE FROM silver.corridor_volatility_cache WHERE corridor_id = ANY($1::text[])',
-      [corridorIds],
-    )
     await pool.end()
   })
 
@@ -105,124 +80,132 @@ describe('Cache Freshness Integration', () => {
   }
 
   it('detects fresh quote for tier1 corridor (30 min TTL)', async () => {
-    const corridorId = 'US-AR-USD-ARS'
-    const providerId = 'remitly'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'US-AR-USD-ARS'
+      const providerId = 'remitly'
 
-    await ensureProvider(providerId)
-    await ensureCorridor(corridorId)
+      await ensureProvider(providerId)
+      await ensureCorridor(corridorId)
 
-    await pool.query(
-      `INSERT INTO silver.corridor_volatility_cache
-       (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [corridorId, 0.20, 20, 18.0, 3.6],
-    )
+      await pool.query(
+        `INSERT INTO silver.corridor_volatility_cache
+         (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [corridorId, 0.20, 20, 18.0, 3.6],
+      )
 
-    await pool.query(
-      `INSERT INTO silver.latest_quote_by_provider
-       (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
-       VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '10 minutes', $6, $7, $8, $9, $10, $11)`,
-      [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 1800, 18.0, 'ok'],
-    )
+      await pool.query(
+        `INSERT INTO silver.latest_quote_by_provider
+         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
+         VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '10 minutes', $6, $7, $8, $9, $10, $11)`,
+        [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 1800, 18.0, 'ok'],
+      )
 
-    const freshness = await checkQuoteFreshness(
-      corridorId,
-      100,
-      'debit_card',
-      'bank_deposit',
-      'remitly',
-    )
+      const freshness = await checkQuoteFreshness(
+        corridorId,
+        100,
+        'debit_card',
+        'bank_deposit',
+        'remitly',
+      )
 
-    expect(freshness.exists).toBe(true)
-    expect(freshness.isFresh).toBe(true)
-    expect(freshness.ageSeconds).toBeLessThan(30 * 60)
-    expect(freshness.ttlSeconds).toBe(30 * 60)
+      expect(freshness.exists).toBe(true)
+      expect(freshness.isFresh).toBe(true)
+      expect(freshness.ageSeconds).toBeLessThan(30 * 60)
+      expect(freshness.ttlSeconds).toBe(30 * 60)
+    })
   })
 
   it('detects stale quote for tier1 corridor', async () => {
-    const corridorId = 'US-AR-USD-ARS'
-    const providerId = 'remitly'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'US-AR-USD-ARS'
+      const providerId = 'remitly'
 
-    await ensureProvider(providerId)
-    await ensureCorridor(corridorId)
+      await ensureProvider(providerId)
+      await ensureCorridor(corridorId)
 
-    await pool.query(
-      `INSERT INTO silver.corridor_volatility_cache
-       (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [corridorId, 0.20, 20, 18.0, 3.6],
-    )
+      await pool.query(
+        `INSERT INTO silver.corridor_volatility_cache
+         (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [corridorId, 0.20, 20, 18.0, 3.6],
+      )
 
-    await pool.query(
-      `INSERT INTO silver.latest_quote_by_provider
-       (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
-       VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '45 minutes', $6, $7, $8, $9, $10, $11)`,
-      [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 1800, 18.0, 'ok'],
-    )
+      await pool.query(
+        `INSERT INTO silver.latest_quote_by_provider
+         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
+         VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '45 minutes', $6, $7, $8, $9, $10, $11)`,
+        [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 1800, 18.0, 'ok'],
+      )
 
-    const freshness = await checkQuoteFreshness(
-      corridorId,
-      100,
-      'debit_card',
-      'bank_deposit',
-      'remitly',
-    )
+      const freshness = await checkQuoteFreshness(
+        corridorId,
+        100,
+        'debit_card',
+        'bank_deposit',
+        'remitly',
+      )
 
-    expect(freshness.exists).toBe(true)
-    expect(freshness.isFresh).toBe(false)
-    expect(freshness.ageSeconds).toBeGreaterThan(30 * 60)
-    expect(freshness.ttlSeconds).toBe(30 * 60)
+      expect(freshness.exists).toBe(true)
+      expect(freshness.isFresh).toBe(false)
+      expect(freshness.ageSeconds).toBeGreaterThan(30 * 60)
+      expect(freshness.ttlSeconds).toBe(30 * 60)
+    })
   })
 
   it('detects fresh quote for tier3 corridor (6 hour TTL)', async () => {
-    const corridorId = 'GB-NG-GBP-NGN'
-    const providerId = 'wise'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'GB-NG-GBP-NGN'
+      const providerId = 'wise'
 
-    await ensureProvider(providerId)
-    await ensureCorridor(corridorId)
+      await ensureProvider(providerId)
+      await ensureCorridor(corridorId)
 
-    await pool.query(
-      `INSERT INTO silver.corridor_volatility_cache
-       (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [corridorId, 0.05, 20, 105.0, 5.25],
-    )
+      await pool.query(
+        `INSERT INTO silver.corridor_volatility_cache
+         (corridor_id, volatility_score, sample_count, mean_rate, stddev_rate, calculated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [corridorId, 0.05, 20, 105.0, 5.25],
+      )
 
-    await pool.query(
-      `INSERT INTO silver.latest_quote_by_provider
-       (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
-       VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '2 hours', $6, $7, $8, $9, $10, $11)`,
-      [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 10500, 105.0, 'ok'],
-    )
+      await pool.query(
+        `INSERT INTO silver.latest_quote_by_provider
+         (corridor_id, amount_bucket, payin, payout, provider_id, collected_at, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status)
+         VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '2 hours', $6, $7, $8, $9, $10, $11)`,
+        [corridorId, 100, 'debit_card', 'bank_deposit', providerId, 100, 2, 102, 10500, 105.0, 'ok'],
+      )
 
-    const freshness = await checkQuoteFreshness(
-      corridorId,
-      100,
-      'debit_card',
-      'bank_deposit',
-      'wise',
-    )
+      const freshness = await checkQuoteFreshness(
+        corridorId,
+        100,
+        'debit_card',
+        'bank_deposit',
+        'wise',
+      )
 
-    expect(freshness.exists).toBe(true)
-    expect(freshness.isFresh).toBe(true)
-    expect(freshness.ageSeconds).toBeLessThan(6 * 60 * 60)
-    expect(freshness.ttlSeconds).toBe(6 * 60 * 60)
+      expect(freshness.exists).toBe(true)
+      expect(freshness.isFresh).toBe(true)
+      expect(freshness.ageSeconds).toBeLessThan(6 * 60 * 60)
+      expect(freshness.ttlSeconds).toBe(6 * 60 * 60)
+    })
   })
 
   it('returns not fresh when quote does not exist', async () => {
-    const corridorId = 'CA-AU-CAD-AUD'
+    await withTestTransaction(pool, async () => {
+      const corridorId = 'CA-AU-CAD-AUD'
 
-    const freshness = await checkQuoteFreshness(
-      corridorId,
-      100,
-      'debit_card',
-      'bank_deposit',
-      'remitly',
-    )
+      const freshness = await checkQuoteFreshness(
+        corridorId,
+        100,
+        'debit_card',
+        'bank_deposit',
+        'remitly',
+      )
 
-    expect(freshness.exists).toBe(false)
-    expect(freshness.isFresh).toBe(false)
-    // When volatility is missing, we use the shared default TTL.
-    expect(freshness.ttlSeconds).toBe(4 * 60 * 60)
+      expect(freshness.exists).toBe(false)
+      expect(freshness.isFresh).toBe(false)
+      // When volatility is missing, we use the shared default TTL.
+      expect(freshness.ttlSeconds).toBe(4 * 60 * 60)
+    })
   })
 })

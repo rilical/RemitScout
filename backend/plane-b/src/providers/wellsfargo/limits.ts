@@ -1,19 +1,22 @@
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { config } from '../../../../shared/config'
+
+const http = config.planeB.providerLimits.http.wellsfargo
+const playwright = config.planeB.providerLimits.playwright.wellsfargo
 
 export const httpLimits = {
-  rpm: toNumber(process.env.PLANE_B_WELLSFARGO_RPM, 6),
-  concurrency: toNumber(process.env.PLANE_B_WELLSFARGO_CONCURRENCY, 1),
+  rpm: http.rpm,
+  concurrency: http.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_WELLSFARGO_CORRIDOR_RPM, 2),
+  perCorridorRpm: http.perCorridorRpm,
 }
 
+/**
+ * MVP: Playwright support is not yet implemented.
+ * These limits are defined for future use and do not affect current functionality.
+ */
 export const playwrightLimits = {
-  rpm: toNumber(process.env.PLANE_B_WELLSFARGO_PLAYWRIGHT_RPM, 4),
-  concurrency: toNumber(process.env.PLANE_B_WELLSFARGO_PLAYWRIGHT_CONCURRENCY, 1),
+  rpm: playwright.rpm,
+  concurrency: playwright.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_WELLSFARGO_PLAYWRIGHT_CORRIDOR_RPM, 2),
+  perCorridorRpm: playwright.perCorridorRpm,
 }
-

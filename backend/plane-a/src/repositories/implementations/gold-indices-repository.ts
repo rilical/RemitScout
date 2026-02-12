@@ -1,41 +1,14 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import type {
+  GoldIndicesAvailability,
+  GoldIndicesRow,
+  IGoldIndicesRepository,
+  ResolveCorridorInput,
+} from '../interfaces/gold-indices-repository.interface'
 
-export type GoldIndicesRow = {
-  date: Date
-  corridor_id: string
-  amount_bucket: number
-  method_profile: string
-  teer_rate: number | null
-  rci_ratio: number | null
-  rvi_bps: number | null
-  provider_count_binned: number | null
-  provider_count: number | null
-  suppression_flag: boolean
-  suppression_reason: string | null
-  weighting_model: string | null
-  methodology_version: string | null
-  mid_market_rate: number | null
-  weight_confidence: number | null
-  weight_window_days: number | null
-  created_at: Date
-}
-
-export type GoldIndicesAvailability = {
-  min_date: Date | null
-  max_date: Date | null
-  total_count: number
-}
-
-export type ResolveCorridorInput = {
-  sourceCountry?: string | null
-  destCountry?: string | null
-  sourceCurrency?: string | null
-  destCurrency?: string | null
-}
-
-export class GoldIndicesRepository {
+export class GoldIndicesRepository implements IGoldIndicesRepository {
   constructor(private readonly pool: Pool) {}
 
   async getAvailability(input: {

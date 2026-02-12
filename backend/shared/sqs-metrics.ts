@@ -32,6 +32,27 @@ const sqsMessagesFailed = new Counter({
   registers: [metricsRegistry],
 })
 
+const sqsReceiveErrors = new Counter({
+  name: 'sqs_receive_errors_total',
+  help: 'Total SQS receive errors.',
+  labelNames: ['queue_url'],
+  registers: [metricsRegistry],
+})
+
+const sqsDeleteErrors = new Counter({
+  name: 'sqs_delete_errors_total',
+  help: 'Total SQS delete errors.',
+  labelNames: ['queue_url'],
+  registers: [metricsRegistry],
+})
+
+const sqsDlqSendErrors = new Counter({
+  name: 'sqs_dlq_send_errors_total',
+  help: 'Total SQS DLQ send errors (DLQ send is a last-resort safety net).',
+  labelNames: ['queue_url'],
+  registers: [metricsRegistry],
+})
+
 const sqsVisibilityExtended = new Counter({
   name: 'sqs_visibility_extended_total',
   help: 'Total SQS message visibility timeouts extended.',
@@ -83,6 +104,50 @@ export const trackMessageFailed = (queueUrl: string, operation: string): void =>
     value: 1,
     unit: 'Count',
     dimensions: { queue_url: queueUrl, operation, environment: environmentDimension },
+  })
+}
+
+export const trackReceiveError = (queueUrl: string): void => {
+  sqsReceiveErrors.inc({ queue_url: queueUrl })
+  recordCloudWatchMetric({
+    name: 'sqs_receive_errors',
+    value: 1,
+    unit: 'Count',
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
+  })
+  // Keep a `_total` variant for parity with Prometheus counter names.
+  recordCloudWatchMetric({
+    name: 'sqs_receive_errors_total',
+    value: 1,
+    unit: 'Count',
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
+  })
+}
+
+export const trackDeleteError = (queueUrl: string, count: number = 1): void => {
+  sqsDeleteErrors.inc({ queue_url: queueUrl }, count)
+  recordCloudWatchMetric({
+    name: 'sqs_delete_errors',
+    value: count,
+    unit: 'Count',
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
+  })
+  // Keep a `_total` variant for parity with Prometheus counter names.
+  recordCloudWatchMetric({
+    name: 'sqs_delete_errors_total',
+    value: count,
+    unit: 'Count',
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
+  })
+}
+
+export const trackDlqSendError = (queueUrl: string): void => {
+  sqsDlqSendErrors.inc({ queue_url: queueUrl })
+  recordCloudWatchMetric({
+    name: 'sqs_dlq_send_errors_total',
+    value: 1,
+    unit: 'Count',
+    dimensions: { queue_url: queueUrl, environment: environmentDimension },
   })
 }
 

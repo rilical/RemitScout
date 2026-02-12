@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { query } from '../../../../shared/db'
+import { createLogger } from '../../../../shared/logger'
 import { withRetry } from '../../../../shared/repository-retry'
 import type {
   IRightsMatrixRepository,
@@ -13,6 +14,9 @@ import type {
   RightsMatrixStoplistRecord,
   RightsMatrixUpsertInput,
 } from '../interfaces/rights-matrix-repository.interface'
+
+const logger = createLogger('plane-b.rights-matrix-repository')
+const RIGHTS_MATRIX_LOAD_LIMIT = 10000
 
 export class RightsMatrixRepository implements IRightsMatrixRepository {
   constructor(private readonly pool: Pool) {}
@@ -80,10 +84,18 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
               status,
               last_reviewed_at,
               reviewer
-         FROM silver.rights_matrix`,
-      [],
+         FROM silver.rights_matrix
+         LIMIT $1`,
+      [RIGHTS_MATRIX_LOAD_LIMIT],
       this.pool,
     ))
+    if (result.rows.length === RIGHTS_MATRIX_LOAD_LIMIT) {
+      logger.warn('rights_matrix_load_limit_hit', {
+        method: 'loadProviderRights',
+        limit: RIGHTS_MATRIX_LOAD_LIMIT,
+        row_count: result.rows.length,
+      })
+    }
     return result.rows
   }
 
@@ -123,10 +135,17 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
 
   async loadStoplistStatuses(): Promise<RightsMatrixStoplistRecord[]> {
     const result = await query<RightsMatrixStoplistRecord>(
-      'SELECT provider_id, stoplist_status FROM silver.rights_matrix',
-      [],
+      'SELECT provider_id, stoplist_status FROM silver.rights_matrix LIMIT $1',
+      [RIGHTS_MATRIX_LOAD_LIMIT],
       this.pool,
     )
+    if (result.rows.length === RIGHTS_MATRIX_LOAD_LIMIT) {
+      logger.warn('rights_matrix_load_limit_hit', {
+        method: 'loadStoplistStatuses',
+        limit: RIGHTS_MATRIX_LOAD_LIMIT,
+        row_count: result.rows.length,
+      })
+    }
     return result.rows
   }
 

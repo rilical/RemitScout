@@ -1,19 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { ValidationError } from '../shared/errors'
 
 const mockListByUserId = vi.fn()
 
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
   query: vi.fn(),
-}))
-
-vi.mock('../shared/config', () => ({
-  config: {
-    db: {
-      planeAUrl: '',
-    },
-  },
 }))
 
 vi.mock('../plane-a/src/repositories', () => ({
@@ -32,6 +25,15 @@ describe('history recent route', () => {
     app = {
       get: vi.fn(),
       post: vi.fn(),
+      container: {
+        pool: {},
+        repositories: {
+          comparisonHistory: {
+            listByUserId: mockListByUserId,
+            create: vi.fn(),
+          },
+        },
+      },
     } as any
 
     mockReply = {
@@ -77,5 +79,20 @@ describe('history recent route', () => {
       method: 'bank',
     })
   })
-})
 
+  it('throws validation error when recent limit is out of range', async () => {
+    const call = vi.mocked(app.get).mock.calls.find((c) => c[0] === '/history/recent')
+    const handler = call?.[2] as any
+
+    const invalidRequest = handler(
+      { user: { user_id: 'u1' }, query: { limit: 100 } } as Partial<FastifyRequest>,
+      mockReply,
+    )
+
+    await expect(invalidRequest).rejects.toBeInstanceOf(ValidationError)
+    await expect(invalidRequest).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'validation_error',
+    })
+  })
+})

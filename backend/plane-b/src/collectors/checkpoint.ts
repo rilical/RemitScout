@@ -86,8 +86,16 @@ export const loadCheckpoint = async (
       started_at: Date
       last_updated_at: Date
     }>(
-      `SELECT * FROM collector_checkpoints
-       WHERE provider_id = $1 AND collector_type = $2 AND ingestion_run_id = $3`,
+      `SELECT provider_id,
+              collector_type,
+              ingestion_run_id,
+              last_corridor_id,
+              last_amount_bucket,
+              completed_corridors,
+              started_at,
+              last_updated_at
+         FROM collector_checkpoints
+        WHERE provider_id = $1 AND collector_type = $2 AND ingestion_run_id = $3`,
       [providerId, collectorType, ingestionRunId],
       pool,
     )
@@ -148,7 +156,5 @@ export const clearCheckpoint = async (
     })
   }
 }
-
-
 
 

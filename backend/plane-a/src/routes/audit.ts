@@ -1,14 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin, requireAuth } from '../plugins/auth-plugin'
-import { AuditLogRepository } from '../repositories'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.audit')
-const planeAPool = getPool(config.db.planeAUrl)
-const auditRepository = new AuditLogRepository(planeAPool)
 
 const listSchema = z.object({
   actor_id: z.string().optional(),
@@ -33,18 +29,18 @@ const parseDateOrNull = (value?: string) => {
 }
 
 export const auditRoutes = async (app: FastifyInstance) => {
+  const auditRepository = app.container.repositories.auditLog
+
   app.get('/audit/logs', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const startDate = parseDateOrNull(parsed.data.start_date)
     const endDate = parseDateOrNull(parsed.data.end_date)
     if ((parsed.data.start_date && !startDate) || (parsed.data.end_date && !endDate)) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     try {
@@ -82,15 +78,13 @@ export const auditRoutes = async (app: FastifyInstance) => {
   app.get('/audit/logs/export', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const startDate = parseDateOrNull(parsed.data.start_date)
     const endDate = parseDateOrNull(parsed.data.end_date)
     if ((parsed.data.start_date && !startDate) || (parsed.data.end_date && !endDate)) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
 
     const format = parsed.data.format ?? 'json'
@@ -127,15 +121,13 @@ export const auditRoutes = async (app: FastifyInstance) => {
   app.get('/audit/logs/:eventId', { preHandler: requireAdmin() }, async (request, reply) => {
     const eventId = String((request.params as { eventId?: string }).eventId ?? '')
     if (!eventId) {
-      reply.code(400)
-      return { error: 'missing_event_id' }
+            throw new ValidationError('Invalid request', { details: { error: 'missing_event_id' } })
     }
 
     try {
       const log = await auditRepository.getLog(eventId)
       if (!log) {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
       return { log }
     } catch (error) {

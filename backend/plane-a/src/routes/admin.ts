@@ -1,16 +1,12 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool, query } from '../../../shared/db'
-import { config } from '../../../shared/config'
+import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
-import { UserAccountRepository, UserPlanRepository } from '../repositories'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.admin')
-const planeAPool = getPool(config.db.planeAUrl)
-const userAccountRepository = new UserAccountRepository(planeAPool)
-const userPlanRepository = new UserPlanRepository(planeAPool)
 
 const listSchema = z.object({
   query: z.string().min(1).optional(),
@@ -54,11 +50,14 @@ type UserWithPlan = {
 }
 
 export const adminRoutes = async (app: FastifyInstance) => {
+  const planeAPool = app.container.pool
+  const userAccountRepository = app.container.repositories.userAccount
+  const userPlanRepository = app.container.repositories.userPlan
+
   app.get('/admin/users', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     try {
@@ -79,8 +78,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
   app.get('/admin/plans', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = planListSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     try {
@@ -161,8 +159,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
   app.post('/admin/plans/grant', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = planGrantSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const { user_id: userId, email, plan_code: planCode, notes } = parsed.data
@@ -179,15 +176,13 @@ export const adminRoutes = async (app: FastifyInstance) => {
           planeAPool,
         )
         if (!userResult.rows[0]) {
-          reply.code(404)
-          return { error: 'user_not_found', message: `No user found with email: ${targetEmail}` }
+                    throw new NotFoundError('Not found', { details: { error: 'user_not_found', message: `No user found with email: ${targetEmail}` } })
         }
         targetUserId = userResult.rows[0].user_id
       }
 
       if (!targetUserId) {
-        reply.code(400)
-        return { error: 'user_id_required' }
+                throw new ValidationError('Invalid request', { details: { error: 'user_id_required' } })
       }
 
       await userPlanRepository.ensureUserPlan(targetUserId)
@@ -276,8 +271,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
     }).safeParse(request.body ?? {})
 
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const { user_id: userId, email, reason } = parsed.data
@@ -294,15 +288,13 @@ export const adminRoutes = async (app: FastifyInstance) => {
           planeAPool,
         )
         if (!userResult.rows[0]) {
-          reply.code(404)
-          return { error: 'user_not_found' }
+                    throw new NotFoundError('Not found', { details: { error: 'user_not_found' } })
         }
         targetUserId = userResult.rows[0].user_id
       }
 
       if (!targetUserId) {
-        reply.code(400)
-        return { error: 'user_id_required' }
+                throw new ValidationError('Invalid request', { details: { error: 'user_id_required' } })
       }
 
       await query(
@@ -371,8 +363,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
   app.patch('/admin/users/role', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = roleSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const { user_id: userId, email, role } = parsed.data
@@ -383,8 +374,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
         : await userAccountRepository.updateUserRoleByEmail(email!, role)
 
       if (!updated) {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
 
       try {

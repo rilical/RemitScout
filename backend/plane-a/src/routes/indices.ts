@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool, query } from '../../../shared/db'
+import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { createTtlCache } from '../../../shared/cache'
@@ -12,13 +12,12 @@ import {
   TIER_2_CADENCE_SECONDS,
 } from '../../../shared/corridor-tiers'
 import { DEFAULT_WEIGHT_MODEL, INDICES_METHODOLOGY_VERSION } from '../../../shared/weighting-model'
+import { DEFAULT_AMOUNT_BUCKET } from '../../../shared/constants'
 import { requireEntitlement } from '../plugins/auth-plugin'
-import { GoldIndicesRepository } from '../repositories'
+import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.indices')
-const planeAPool = getPool(config.db.planeAUrl)
 const indicesCache = createTtlCache<IndicesSeriesResponse>({ namespace: 'plane_a:indices' })
-const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
 const envName = (process.env.ENVIRONMENT || '').toLowerCase()
 const isVitestRuntime = Boolean(process.env.VITEST_WORKER_ID || process.env.VITEST)
 const allowUnauthedIndices =
@@ -161,18 +160,19 @@ const getCollectionCadenceMinutes = (collectionTier: 'tier_1' | 'tier_2') =>
   )
 
 export const indicesRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container
+  const goldIndicesRepository = repositories.goldIndices
+
   app.get('/indices/series', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const corridorId = parsed.data.corridor_id
     const corridorParts = parseCorridorId(corridorId)
     if (!corridorParts) {
-      reply.code(400)
-      return { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' } })
     }
     const normalizedCorridorId = formatCorridorId({
       sourceCountry: corridorParts.sourceCountry.toUpperCase(),
@@ -180,7 +180,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
       destCurrency: corridorParts.destCurrency.toUpperCase(),
     })
-    const amountBucket = parsed.data.amount_bucket ?? 500
+    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
     const methodProfile = parsed.data.method_profile ?? 'standard_bank'
     const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 365)
 
@@ -384,15 +384,13 @@ export const indicesRoutes = async (app: FastifyInstance) => {
   app.get('/indices/latest', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const corridorId = parsed.data.corridor_id
     const corridorParts = parseCorridorId(corridorId)
     if (!corridorParts) {
-      reply.code(400)
-      return { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' } })
     }
     const normalizedCorridorId = formatCorridorId({
       sourceCountry: corridorParts.sourceCountry.toUpperCase(),
@@ -400,7 +398,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
       destCurrency: corridorParts.destCurrency.toUpperCase(),
     })
-    const amountBucket = parsed.data.amount_bucket ?? 500
+    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
     const methodProfile = parsed.data.method_profile ?? 'standard_bank'
 
     const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2)
@@ -531,10 +529,10 @@ export const indicesRoutes = async (app: FastifyInstance) => {
            COUNT(*)::int AS data_points,
            MAX(created_at) AS last_updated
          FROM gold_export.cdp_daily
-         WHERE amount_bucket = 500
+         WHERE amount_bucket = $1
          GROUP BY corridor_id
          ORDER BY corridor_id`,
-        [],
+        [DEFAULT_AMOUNT_BUCKET],
         planeAPool,
       )
 

@@ -4,61 +4,160 @@ on:
   workflow_run:
     workflows: ['ci/main']
     types: [completed]
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      env:
+        description: Environment to deploy
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      ref:
+        description: Git ref (sha/branch/tag). Leave empty to use default.
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   deploy-dev:
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop'
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop') ||
+      (github.event_name == 'workflow_dispatch' && inputs.env == 'dev')
     runs-on: ubuntu-latest
     environment: dev
     permissions:
       contents: read
       id-token: write
+      actions: write
+    env:
+      SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node_version: 20.19.6
           pnpm_version: 10.19.0
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-      - name: Deploy (dev)
+
+      - name: Validate Required Secrets (dev)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${SHARED_SECRET_ARN:-}" ]; then
+            echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: dev)."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Compute Build Vars
+        id: vars
         shell: bash
         env:
           ENV_NAME: dev
-          STACK_NAME: ${{ vars.STACK_NAME }}
         run: |
           set -euo pipefail
-          AWS_REGION="${{ vars.AWS_REGION }}"
-          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-          IMAGE_TAG="$(git rev-parse --short=7 HEAD)"
-          ECR_REPO="remit-scout-backend-${ENV_NAME}"
-          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+          echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_OUTPUT"
+          echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+          VERSION="$(jq -r '.version' package.json)"
+          echo "SEMVER_TAG=v${VERSION}" >> "$GITHUB_OUTPUT"
 
+      - name: Ensure ECR Repo
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          ENV_NAME: ${{ steps.vars.outputs.ENV_NAME }}
+        run: |
+          set -euo pipefail
+          ECR_REPO="remit-scout-backend-${ENV_NAME}"
           aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
             aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
 
+      - name: Login To ECR
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
           aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-          docker build \
-            -f backend/Dockerfile \
-            --build-arg BUILD_VERSION="${IMAGE_TAG}" \
-            -t "${ECR_URI}:${IMAGE_TAG}" \
-            .
-          docker push "${ECR_URI}:${IMAGE_TAG}"
+      - name: Build + Push Backend Image (with Cache)
+        id: build_push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          build-args: |
+            BUILD_VERSION=${{ steps.vars.outputs.IMAGE_TAG }}
+          tags: |
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-dev:${{ steps.vars.outputs.IMAGE_TAG }}
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-dev:${{ steps.vars.outputs.SEMVER_TAG }}
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-dev:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-          echo "Scanning backend image (HIGH/CRITICAL)..."
+      - name: Scan Backend Image (Trivy HIGH/CRITICAL)
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-dev"
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
             image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
 
+      - name: CDK Diff (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
           pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk diff \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c devPaused=true \
+            -c planeBIngestDesiredCount=0 \
+            -c planeBB2cRefreshDesiredCount=0 \
+            -c planeBIngestFanoutTier1DesiredCount=0 \
+            -c planeBIngestFanoutTier2DesiredCount=0 \
+            -c goldLiveDesiredCount=0 \
+            -c planeBNotificationsDesiredCount=0 \
+            -c planeBOpsAlertsDesiredCount=0 \
+            -c planeBQueueWorkerDesiredCount=0 \
+            -c planeBQueueWorkerMaxCount=0 \
+            -c planeBDisableTier1=true \
+            -c enableFrontend=false
+
+      - name: CDK Deploy (dev, paused)
+        shell: bash
+        env:
+          ENV_NAME: dev
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
           pnpm -C infrastructure/cdk cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
@@ -76,69 +175,13 @@ jobs:
             -c enableFrontend=false \
             --require-approval never
 
-          echo "Dev deployed (paused)."
-
-  deploy-staging:
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
-    runs-on: ubuntu-latest
-    environment: staging
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: 20.19.6
-          pnpm_version: 10.19.0
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_REGION }}
-      - name: Deploy (staging)
+      - name: Run Migrations (dev)
         shell: bash
         env:
-          ENV_NAME: staging
+          ENV_NAME: dev
           STACK_NAME: ${{ vars.STACK_NAME }}
-          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
-            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
-            exit 1
-          fi
-
-          AWS_REGION="${{ vars.AWS_REGION }}"
-          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-          IMAGE_TAG="$(git rev-parse --short=7 HEAD)"
-          ECR_REPO="remit-scout-backend-${ENV_NAME}"
-          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
-
-          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
-            aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
-
-          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-
-          docker build \
-            -f backend/Dockerfile \
-            --build-arg BUILD_VERSION="${IMAGE_TAG}" \
-            -t "${ECR_URI}:${IMAGE_TAG}" \
-            .
-          docker push "${ECR_URI}:${IMAGE_TAG}"
-
-          echo "Scanning backend image (HIGH/CRITICAL)..."
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
-
-          pnpm -C infrastructure/cdk build
-          pnpm -C infrastructure/cdk cdk deploy \
-            -c env="${ENV_NAME}" \
-            -c backendImageTag="${IMAGE_TAG}" \
-            --require-approval never
-
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
           sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
@@ -149,7 +192,249 @@ jobs:
           IFS=',' read -r -a subnets <<< "$subnet_csv"
 
           cluster="remit-scout-${ENV_NAME}"
-          echo "Running migrations on ECS: cluster=${cluster}"
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=ENABLED}" \
+            --query "tasks[0].taskArn" --output text)"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "Migration task failed (exitCode=$exit_code): $task_arn"
+            exit 1
+          fi
+
+      - name: Wait For ECS Stability (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+        run: |
+          set -euo pipefail
+          cluster="remit-scout-${ENV_NAME}"
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ]; then
+            aws ecs wait services-stable --cluster "$cluster" --services $services
+          fi
+
+      - name: Post-deploy Smoke (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+          API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+
+      - name: Record Last-known-good Image (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          aws ssm put-parameter \
+            --name "/remit-scout/${ENV_NAME}/last-good-image" \
+            --value "${IMAGE_TAG}" \
+            --overwrite
+
+      - name: Record Deployment (CloudWatch)
+        shell: bash
+        env:
+          ENV_NAME: dev
+          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          aws cloudwatch put-metric-data \
+            --namespace RemitScout/Deployments \
+            --metric-name DeploymentCount \
+            --value 1 \
+            --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
+
+      - name: Notify Slack
+        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
+          ENV_NAME: dev
+          STATUS: ${{ job.status }}
+          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
+
+  deploy-staging:
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.env == 'staging')
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+      actions: write
+    env:
+      SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
+      SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
+      SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Validate Required GitHub Environment Vars (staging)
+        shell: bash
+        env:
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
+            exit 1
+          fi
+          if [ -z "${SHARED_SECRET_ARN:-}" ]; then
+            echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: staging)."
+            exit 1
+          fi
+          if [ -z "${SES_IDENTITY_ARNS:-}" ] || [ -z "${SNS_TOPIC_ARNS:-}" ]; then
+            echo "Missing SES_IDENTITY_ARNS / SNS_TOPIC_ARNS (configure in GitHub environment vars: staging)."
+            exit 1
+          fi
+
+      - name: Compute Build Vars
+        id: vars
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_OUTPUT"
+          echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+          VERSION="$(jq -r '.version' package.json)"
+          echo "SEMVER_TAG=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Capture Previous Good Image Tag (staging)
+        id: prev_good
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          value="$(aws ssm get-parameter --name \"/remit-scout/${ENV_NAME}/last-good-image\" --query 'Parameter.Value' --output text 2>/dev/null || true)"
+          echo "TAG=${value}" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure ECR Repo
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          ECR_REPO="remit-scout-backend-${ENV_NAME}"
+          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
+
+      - name: Login To ECR
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+      - name: Build + Push Backend Image (with Cache)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          build-args: |
+            BUILD_VERSION=${{ steps.vars.outputs.IMAGE_TAG }}
+          tags: |
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-staging:${{ steps.vars.outputs.IMAGE_TAG }}
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-staging:${{ steps.vars.outputs.SEMVER_TAG }}
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-staging:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan Backend Image (Trivy HIGH/CRITICAL)
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-staging"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
+
+      - name: CDK Diff (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk diff \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}"
+
+      - name: CDK Deploy (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            --require-approval never
+
+      - name: Run Migrations (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+
+          cluster="remit-scout-${ENV_NAME}"
           subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
           subnet_list="[${subnet_list%,}]"
           task_arn="$(aws ecs run-task \
@@ -165,6 +450,28 @@ jobs:
             exit 1
           fi
 
+      - name: Wait For ECS Stability (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          cluster="remit-scout-${ENV_NAME}"
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ]; then
+            aws ecs wait services-stable --cluster "$cluster" --services $services
+          fi
+
+      - name: Deploy Frontend (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           bucket="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendBucketName") | .OutputValue')"
           dist_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionId") | .OutputValue')"
           plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
@@ -174,7 +481,6 @@ jobs:
             api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
-          echo "Building frontend for staging..."
           export NODE_ENV=staging
           export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
           export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
@@ -186,10 +492,338 @@ jobs:
           pnpm -C frontend build
           pnpm -C frontend generate
 
-          echo "Deploying frontend to S3..."
           aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"
           aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "no-cache, no-store, must-revalidate" --exclude "*" --include "*.html" --include "*.json"
           aws cloudfront create-invalidation --distribution-id "$dist_id" --paths "/*" >/dev/null
 
-          echo "Running post-deploy API smoke..."
+      - name: Post-deploy Smoke (staging) + Auto Rollback On Failure
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          PREV_GOOD_TAG: ${{ steps.prev_good.outputs.TAG }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          set +e
           API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+          smoke_ec=$?
+          set -e
+          if [ "$smoke_ec" != "0" ]; then
+            echo "Smoke test failed."
+            if [ -n "${PREV_GOOD_TAG:-}" ] && [ "${PREV_GOOD_TAG:-}" != "None" ]; then
+              echo "Triggering rollback to last-known-good image: ${PREV_GOOD_TAG}"
+              gh workflow run rollback.yml -f env="${ENV_NAME}" -f image_tag="${PREV_GOOD_TAG}" || true
+            else
+              echo "No last-known-good image tag found in SSM; skipping rollback dispatch."
+            fi
+            exit 1
+          fi
+
+      - name: Record Last-known-good Image (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          aws ssm put-parameter \
+            --name "/remit-scout/${ENV_NAME}/last-good-image" \
+            --value "${IMAGE_TAG}" \
+            --overwrite
+
+      - name: Record Deployment (CloudWatch)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          aws cloudwatch put-metric-data \
+            --namespace RemitScout/Deployments \
+            --metric-name DeploymentCount \
+            --value 1 \
+            --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
+
+      - name: Notify Slack
+        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
+          ENV_NAME: staging
+          STATUS: ${{ job.status }}
+          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
+
+  deploy-prod:
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.env == 'prod') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+      actions: write
+    env:
+      SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
+      SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
+      SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref || (inputs.ref != '' && inputs.ref || github.sha) }}
+
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+
+      - name: Full Test Suite (prod gate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm -C backend lint
+          pnpm -C backend test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Validate Required GitHub Environment Vars (prod)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${SHARED_SECRET_ARN:-}" ]; then
+            echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: prod)."
+            exit 1
+          fi
+          if [ -z "${SES_IDENTITY_ARNS:-}" ] || [ -z "${SNS_TOPIC_ARNS:-}" ]; then
+            echo "Missing SES_IDENTITY_ARNS / SNS_TOPIC_ARNS (configure in GitHub environment vars: prod)."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Compute Build Vars
+        id: vars
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_OUTPUT"
+          echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            IMAGE_TAG="${GITHUB_REF_NAME}"
+          else
+            IMAGE_TAG="$(git rev-parse --short=7 HEAD)"
+          fi
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          VERSION="$(jq -r '.version' package.json)"
+          echo "SEMVER_TAG=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Capture Previous Good Image Tag (prod)
+        id: prev_good
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          value="$(aws ssm get-parameter --name \"/remit-scout/${ENV_NAME}/last-good-image\" --query 'Parameter.Value' --output text 2>/dev/null || true)"
+          echo "TAG=${value}" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure ECR Repo
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          ECR_REPO="remit-scout-backend-${ENV_NAME}"
+          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
+
+      - name: Login To ECR
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+      - name: Build + Push Backend Image (with Cache)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          build-args: |
+            BUILD_VERSION=${{ steps.vars.outputs.IMAGE_TAG }}
+          tags: |
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:${{ steps.vars.outputs.IMAGE_TAG }}
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:${{ steps.vars.outputs.SEMVER_TAG }}
+            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan Backend Image (Trivy HIGH/CRITICAL)
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-prod"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
+
+      - name: CDK Diff (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk diff \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}"
+
+      - name: CDK Deploy (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            --require-approval never
+
+      - name: Run Migrations (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+
+          cluster="remit-scout-${ENV_NAME}"
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --query "tasks[0].taskArn" --output text)"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "Migration task failed (exitCode=$exit_code): $task_arn"
+            exit 1
+          fi
+
+      - name: Wait For ECS Stability (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          cluster="remit-scout-${ENV_NAME}"
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ]; then
+            aws ecs wait services-stable --cluster "$cluster" --services $services
+          fi
+
+      - name: Post-deploy Smoke (prod) + Auto Rollback On Failure
+        shell: bash
+        env:
+          ENV_NAME: prod
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          PREV_GOOD_TAG: ${{ steps.prev_good.outputs.TAG }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          set +e
+          API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+          smoke_ec=$?
+          set -e
+          if [ "$smoke_ec" != "0" ]; then
+            echo "Smoke test failed."
+            if [ -n "${PREV_GOOD_TAG:-}" ] && [ "${PREV_GOOD_TAG:-}" != "None" ]; then
+              echo "Triggering rollback to last-known-good image: ${PREV_GOOD_TAG}"
+              gh workflow run rollback.yml -f env="${ENV_NAME}" -f image_tag="${PREV_GOOD_TAG}" || true
+            else
+              echo "No last-known-good image tag found in SSM; skipping rollback dispatch."
+            fi
+            exit 1
+          fi
+
+      - name: Record Last-known-good Image (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          aws ssm put-parameter \
+            --name "/remit-scout/${ENV_NAME}/last-good-image" \
+            --value "${IMAGE_TAG}" \
+            --overwrite
+
+      - name: Record Deployment (CloudWatch)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          aws cloudwatch put-metric-data \
+            --namespace RemitScout/Deployments \
+            --metric-name DeploymentCount \
+            --value 1 \
+            --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
+
+      - name: Notify Slack
+        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
+          ENV_NAME: prod
+          STATUS: ${{ job.status }}
+          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null

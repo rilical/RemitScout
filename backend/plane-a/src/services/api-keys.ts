@@ -1,7 +1,8 @@
-import { createHash, randomBytes } from 'crypto'
+import { createHash, randomBytes, timingSafeEqual } from 'crypto'
 import type { Pool } from 'pg'
 import { createLogger } from '../../../shared/logger'
 import { query } from '../../../shared/db'
+import { getRedisClient } from '../../../shared/redis'
 import { ApiKeyRepository } from '../repositories'
 
 export type ApiKeyContext = {
@@ -31,6 +32,10 @@ export type ApiKeyRotateResult = {
 }
 
 const logger = createLogger('plane-a.api-keys')
+const API_KEY_ROTATION_GRACE_SECONDS = Math.max(
+  0,
+  Math.floor(Number(process.env.API_KEY_ROTATION_GRACE_SECONDS ?? '300')),
+)
 
 const toBase64Url = (buffer: Buffer) => {
   return buffer
@@ -127,6 +132,12 @@ export const rotateApiKey = async (
   userId: string,
   keyId: string,
 ): Promise<ApiKeyRotateResult | null> => {
+  const repo = new ApiKeyRepository(pool)
+  const existing = await repo.getActiveKeyById(userId, keyId)
+  if (!existing) {
+    return null
+  }
+
   const token = generateApiKeyToken()
   const keyHash = hashApiKey(token)
   const keyPrefix = token.slice(0, 8)
@@ -156,6 +167,32 @@ export const rotateApiKey = async (
     return null
   }
 
+  if (API_KEY_ROTATION_GRACE_SECONDS > 0) {
+    const redis = await getRedisClient()
+    if (redis) {
+      try {
+        const gracePayload = JSON.stringify({
+          key_id: existing.key_id,
+          user_id: existing.user_id,
+          key_prefix: existing.key_prefix,
+          key_hash: existing.key_hash,
+          name: existing.name,
+          scopes: existing.scopes ?? [],
+        })
+        await redis.set(
+          `plane-a:api-key-grace:${existing.key_prefix}`,
+          gracePayload,
+          { EX: API_KEY_ROTATION_GRACE_SECONDS },
+        )
+      } catch (error) {
+        logger.warn('api_key_rotation_grace_write_failed', {
+          key_id: existing.key_id,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+  }
+
   return {
     key_id: record.key_id,
     key_prefix: record.key_prefix,
@@ -174,7 +211,63 @@ export const countActiveApiKeys = async (pool: Pool, userId: string): Promise<nu
 export const validateApiKey = async (pool: Pool, token: string): Promise<ApiKeyContext | null> => {
   const repo = new ApiKeyRepository(pool)
   const hash = hashApiKey(token)
-  const record = await repo.getKeyByHash(hash)
+  const prefix = token.slice(0, 8)
+  const candidates = await repo.listActiveKeysByPrefix(prefix)
+  let record = candidates.find((candidate) => {
+    try {
+      const left = Buffer.from(candidate.key_hash, 'utf8')
+      const right = Buffer.from(hash, 'utf8')
+      if (left.length !== right.length) return false
+      return timingSafeEqual(left, right)
+    } catch (error) {
+      logger.debug('api_key_hash_compare_failed', {
+        key_id: candidate.key_id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return false
+    }
+  }) ?? null
+
+  // Rotation grace period: old prefix+hash can remain valid briefly to avoid deploy race conditions.
+  if (!record && API_KEY_ROTATION_GRACE_SECONDS > 0) {
+    const redis = await getRedisClient()
+    if (redis) {
+      try {
+        const raw = await redis.get(`plane-a:api-key-grace:${prefix}`)
+        if (raw) {
+          const parsed = JSON.parse(raw) as {
+            key_id: string
+            user_id: string
+            key_prefix: string
+            key_hash: string
+            name: string | null
+            scopes: string[]
+          }
+          const left = Buffer.from(parsed.key_hash, 'utf8')
+          const right = Buffer.from(hash, 'utf8')
+          if (left.length === right.length && timingSafeEqual(left, right)) {
+            record = {
+              key_id: parsed.key_id,
+              user_id: parsed.user_id,
+              key_prefix: parsed.key_prefix,
+              key_hash: parsed.key_hash,
+              name: parsed.name,
+              scopes: parsed.scopes ?? [],
+              created_at: new Date(0),
+              last_used_at: null,
+              revoked_at: null,
+            }
+          }
+        }
+      } catch (error) {
+        logger.warn('api_key_rotation_grace_read_failed', {
+          key_prefix: prefix,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+  }
+
   if (!record) return null
 
   try {

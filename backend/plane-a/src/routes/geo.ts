@@ -4,6 +4,7 @@ import { createHash } from 'crypto'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { createTtlCache } from '../../../shared/cache'
+import { DEFAULT_FALLBACK_TTL_SECONDS } from '../../../shared/constants'
 import { COUNTRIES } from '../../../shared/countries-currencies'
 
 const logger = createLogger('plane-a.geo')
@@ -93,7 +94,10 @@ export const geoRoutes = async (app: FastifyInstance) => {
       }
     }
 
-    reply.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+    reply.header(
+      'Cache-Control',
+      `public, max-age=${DEFAULT_FALLBACK_TTL_SECONDS}, stale-while-revalidate=86400`,
+    )
     return response
   })
 }

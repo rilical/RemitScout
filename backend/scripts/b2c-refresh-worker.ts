@@ -31,23 +31,20 @@ import type { QuoteRefreshQueueEvent } from '../plane-b/src/quote-refresh'
 import type { WorkerLock as WorkerLockType } from '../plane-b/src/lib/worker-lock'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
-import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { applyJitter } from '../shared/worker-jitter'
+import { initErrorTracking } from '../shared/error-tracker'
 import { initTracing } from '../shared/tracing'
 import { startHealthServer } from '../shared/health-server'
+import { createShutdownHandler } from '../shared/shutdown'
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
+import { emitOpsEvent } from '../shared/ops-events'
 import { getMetrics, metricsContentType } from './b2c-refresh-worker-metrics'
 import { recordRequest, updateQueueDepth } from './b2c-refresh-worker-metrics'
 
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const toBoolean = (value: string | undefined, fallback = false) => {
-  if (value === undefined) return fallback
-  return value === '1' || value === 'true' || value === 'yes'
-}
-
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+initErrorTracking('b2c-refresh-worker')
+initTracing('b2c-refresh-worker')
 
 const loadPlaneBDeps = async () => {
   try {
@@ -59,7 +56,10 @@ const loadPlaneBDeps = async () => {
       processQuoteRefreshQueue: quoteRefresh.processQuoteRefreshQueue,
       WorkerLock: workerLock.WorkerLock,
     }
-  } catch {
+  } catch (error) {
+    logger.warn('plane_b_dist_import_fallback', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     const distQuoteRefreshPath = '../plane-b/quote-refresh'
     const distWorkerLockPath = '../plane-b/lib/worker-lock'
     const [quoteRefresh, workerLock] = await Promise.all([
@@ -73,18 +73,18 @@ const loadPlaneBDeps = async () => {
   }
 }
 
-const limit = toNumber(process.env.B2C_REFRESH_LIMIT, config.planeB.b2cRefreshBatchLimit)
+const limit = config.workers.b2cRefreshWorker.limit
 const maxRetries = config.planeB.b2cRefreshMaxRetries
-const concurrency = toNumber(process.env.B2C_REFRESH_CONCURRENCY, config.planeB.b2cRefreshConcurrency)
+const concurrency = config.workers.b2cRefreshWorker.concurrency
 const logger = createLogger('script.b2c-refresh-worker')
 const lockTtlSeconds = 300
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = 30000
-const healthEnabled = process.env.B2C_REFRESH_HEALTH_ENABLED !== '0'
-const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const healthEnabled = config.workers.b2cRefreshWorker.healthEnabled
+const healthPort = config.workers.health.port
 
-const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
-const lockModeRaw = (process.env.B2C_REFRESH_LOCK_MODE || 'auto').toLowerCase()
+const isLambdaRuntime = config.runtime.isLambda
+const lockModeRaw = (config.workers.b2cRefreshWorker.lockMode || 'auto').toLowerCase()
 const lockMode =
   lockModeRaw === 'none' || lockModeRaw === 'off'
     ? 'none'
@@ -95,35 +95,27 @@ const queueMode = config.queues.quoteRefreshMode
 const queueUrl = config.queues.quoteRefreshUrl
 const useQueue = queueMode === 'queue' && Boolean(queueUrl)
 const useLock = lockMode === 'single' || (lockMode === 'auto' && !useQueue)
-const loopEnabled = toBoolean(process.env.B2C_REFRESH_LOOP)
-const loopDelayMs = Math.max(50, toNumber(process.env.B2C_REFRESH_LOOP_DELAY_MS, 250))
-const idleDelayMs = Math.max(loopDelayMs, toNumber(process.env.B2C_REFRESH_IDLE_DELAY_MS, 750))
-const loopJitterMs = resolveJitterMs(process.env.B2C_REFRESH_LOOP_JITTER_MS, 0)
+const loopEnabled = config.workers.b2cRefreshWorker.loopEnabled
+const loopDelayMs = config.workers.b2cRefreshWorker.loopDelayMs
+const idleDelayMs = Math.max(loopDelayMs, config.workers.b2cRefreshWorker.idleDelayMs)
+const loopJitterMs = config.workers.b2cRefreshWorker.loopJitterMs
+const backpressureThreshold = Math.max(
+  1,
+  config.workers.b2cRefreshWorker.backpressureThreshold || limit * 5,
+)
 
-initTracing('b2c-refresh-worker')
+const shutdown = createShutdownHandler({
+  name: 'b2c-refresh-worker',
+  logger,
+  timeoutMs: shutdownTimeoutMs,
+  exitOnSignal: false,
+})
+const { signal: shutdownSignal } = shutdown
 
-let shutdownRequested = false
 let lock: WorkerLockType | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
-let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
-
-/**
- * Handles graceful shutdown on SIGTERM/SIGINT.
- */
-const shutdown = (signal: string) => {
-  if (shutdownRequested) return
-  shutdownRequested = true
-  logger.info('shutdown_requested', { signal })
-
-  forceExitTimer = setTimeout(() => {
-    logger.warn('shutdown_forced', { timeout_ms: shutdownTimeoutMs })
-    process.exit(1)
-  }, shutdownTimeoutMs)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+let b2cBackpressureActive = false
 
 const handleRequestFinished = (event: QuoteRefreshQueueEvent) => {
   recordRequest({
@@ -136,13 +128,57 @@ const handleRequestFinished = (event: QuoteRefreshQueueEvent) => {
 
 const handleQueueDepth = (depth: number) => {
   updateQueueDepth(depth)
+  const active = depth >= backpressureThreshold
+
+  recordCloudWatchMetric({
+    name: 'worker_backpressure_active',
+    value: active ? 1 : 0,
+    unit: 'Count',
+    dimensions: {
+      worker: 'b2c-refresh-worker',
+      environment: config.envName || config.env,
+    },
+  })
+
+  if (active) {
+    recordCloudWatchMetric({
+      name: 'worker_backpressure',
+      value: 1,
+      unit: 'Count',
+      dimensions: {
+        worker: 'b2c-refresh-worker',
+        reason: 'queue_depth',
+        environment: config.envName || config.env,
+      },
+    })
+  }
+
+  if (active && !b2cBackpressureActive) {
+    logger.warn('worker_backpressure', {
+      worker: 'b2c-refresh-worker',
+      reason: 'queue_depth',
+      queue_depth: depth,
+      threshold: backpressureThreshold,
+    })
+    emitOpsEvent({
+      type: 'backpressure',
+      component: 'b2c-refresh-worker',
+      details: {
+        reason: 'queue_depth',
+        queue_depth: depth,
+        threshold: backpressureThreshold,
+      },
+    })
+  }
+
+  b2cBackpressureActive = active
 }
 
 /**
  * Main worker execution function.
  */
 export const runB2cRefreshWorker = async (): Promise<number> => {
-  if (shutdownRequested) {
+  if (shutdown.isShuttingDown()) {
     logger.info('worker_skipped', { reason: 'shutdown_requested' })
     return 0
   }
@@ -152,6 +188,7 @@ export const runB2cRefreshWorker = async (): Promise<number> => {
     lock_enabled: useLock,
     queue_mode: queueMode,
     queue_url_set: Boolean(queueUrl),
+    backpressure_threshold: backpressureThreshold,
   })
 
   const { processQuoteRefreshQueue, WorkerLock } = await loadPlaneBDeps()
@@ -159,7 +196,7 @@ export const runB2cRefreshWorker = async (): Promise<number> => {
   if (useLock) {
     const localLock = new WorkerLock('b2c-refresh-worker', lockTtlSeconds)
     lock = localLock
-    const acquired = await localLock.acquire()
+    const acquired = await localLock.acquireLock(60_000)
 
     if (!acquired) {
       logger.info('worker_skipped', { reason: 'lock_already_held' })
@@ -191,6 +228,7 @@ export const runB2cRefreshWorker = async (): Promise<number> => {
       concurrency,
       onRequestFinished: handleRequestFinished,
       onQueueDepth: handleQueueDepth,
+      signal: shutdownSignal,
     })
     const durationMs = Date.now() - startTime
     const requestsPerSecond = durationMs > 0 ? count / (durationMs / 1000) : 0
@@ -244,6 +282,8 @@ export const runB2cRefreshWorkerLoop = async (
         metricsContentType,
         enableDatabaseCheck: true,
         enableRedisCheck: true,
+        enableSqsCheck: useQueue,
+        sqsQueueUrl: useQueue ? queueUrl : undefined,
       })
     } catch (error) {
       logger.warn('health_server_unavailable', {
@@ -255,10 +295,10 @@ export const runB2cRefreshWorkerLoop = async (
   let exitCode = 0
   try {
     if (loopEnabled) {
-      while (!shutdownRequested) {
+      while (!shutdown.isShuttingDown()) {
         await applyJitter(logger, 'b2c_refresh_loop', loopJitterMs)
         const processed = await runB2cRefreshWorker()
-        if (shutdownRequested) {
+        if (shutdown.isShuttingDown()) {
           break
         }
         const delayMs = processed > 0 ? loopDelayMs : idleDelayMs
@@ -275,8 +315,8 @@ export const runB2cRefreshWorkerLoop = async (
     })
   } finally {
     await closeHealthServer()
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
+    if (shutdown.isShuttingDown()) {
+      await shutdown.shutdown('shutdown_requested')
     }
   }
 

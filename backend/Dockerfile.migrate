@@ -1,12 +1,22 @@
-FROM node:20-alpine
-
+FROM public.ecr.aws/docker/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8 AS deps
 WORKDIR /app
-RUN apk add --no-cache ca-certificates && corepack enable
+RUN corepack enable
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY backend/package.json backend/
 RUN pnpm install --filter remit-scout-backend... --frozen-lockfile
 
-COPY backend backend
+FROM public.ecr.aws/docker/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
+WORKDIR /app
+RUN apk add --no-cache ca-certificates
 
-CMD ["/app/backend/node_modules/.bin/tsx", "/app/backend/scripts/aws/db-migrate-ecs.ts"]
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/backend/node_modules ./backend/node_modules
+COPY backend/db/migrations ./backend/db/migrations
+COPY backend/scripts/aws/db-migrate-ecs.ts ./backend/scripts/aws/
+COPY backend/shared ./backend/shared
+
+RUN chown -R node:node /app
+USER node
+
+CMD ["npx", "tsx", "backend/scripts/aws/db-migrate-ecs.ts"]

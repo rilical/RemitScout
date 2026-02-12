@@ -7,3 +7,6 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - "@parcel/watcher"
+  - protobufjs
+  - sharp
+  - unrs-resolver

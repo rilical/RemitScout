@@ -15,11 +15,15 @@ import { createLogger } from './logger'
 import { isRetryableError, isThrottlingError } from './aws-errors'
 import { retry } from './retry'
 import { registerSQSClient } from './connection-manager'
+import { startSpan } from './tracing'
 import {
   trackMessageSent,
   trackMessageReceived,
   trackMessageDeleted,
   trackMessageFailed,
+  trackReceiveError,
+  trackDeleteError,
+  trackDlqSendError,
   trackVisibilityExtended,
   trackQueueDepth,
 } from './sqs-metrics'
@@ -38,6 +42,12 @@ const getLongPollSeconds = () => {
   const raw = toNumber(process.env.SQS_LONG_POLL_SECONDS, 20)
   if (!Number.isFinite(raw) || raw < 0) return 0
   return Math.min(20, Math.floor(raw))
+}
+
+const getQueueName = (queueUrl: string): string => {
+  const normalized = queueUrl.trim().replace(/\/+$/, '')
+  const parts = normalized.split('/')
+  return parts[parts.length - 1] || queueUrl
 }
 
 const getClient = (): SQSClient => {
@@ -169,17 +179,24 @@ export const extendVisibilityTimeout = async (
   await extendMessageVisibility(queueUrl, receiptHandle, visibilityTimeout)
 }
 
+export type VisibilityTimeoutExtender = (() => Promise<void>) & {
+  extendNow: () => Promise<void>
+  stopExtending: () => Promise<void>
+}
+
 export const createVisibilityTimeoutExtender = (
   queueUrl: string,
   receiptHandle: string,
   onExtend?: () => void,
-): (() => Promise<void>) => {
+): VisibilityTimeoutExtender => {
   let intervalId: NodeJS.Timeout | null = null
   let lastExtension = Date.now()
   let stopped = false
+  let resolvedVisibilityTimeout: number | null = null
 
   const start = async () => {
     const visibilityTimeout = await getVisibilityTimeout(queueUrl)
+    resolvedVisibilityTimeout = visibilityTimeout
     if (stopped) return
     const extensionInterval = visibilityTimeout * 1000 * VISIBILITY_EXTENSION_THRESHOLD
 
@@ -203,19 +220,55 @@ export const createVisibilityTimeoutExtender = (
     }, extensionInterval)
   }
 
-  start().catch((error) => {
+  const started = start().catch((error) => {
     logger.warn('visibility_extender_start_failed', {
       queue_url: queueUrl,
       error: error instanceof Error ? error.message : String(error),
     })
   })
 
-  return async () => {
+  const stopExtending = async () => {
     stopped = true
     if (intervalId) {
       clearInterval(intervalId)
       intervalId = null
     }
+  }
+
+  const extendNow = async () => {
+    await started
+    if (stopped) return
+    if (!resolvedVisibilityTimeout) {
+      resolvedVisibilityTimeout = await getVisibilityTimeout(queueUrl)
+    }
+    if (stopped) return
+    await extendMessageVisibility(queueUrl, receiptHandle, resolvedVisibilityTimeout)
+    lastExtension = Date.now()
+    if (onExtend) onExtend()
+  }
+
+  const extender = (async () => stopExtending()) as VisibilityTimeoutExtender
+  extender.extendNow = extendNow
+  extender.stopExtending = stopExtending
+  return extender
+}
+
+export const drainAndStop = async (extender: VisibilityTimeoutExtender): Promise<void> => {
+  // Best-effort: extend once to reduce redelivery risk during shutdown, then
+  // stop extending so the message can be retried elsewhere if we don't finish.
+  try {
+    await extender.extendNow()
+  } catch (error) {
+    logger.debug('drain_extend_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+  try {
+    await extender.stopExtending()
+  } catch (error) {
+    logger.debug('drain_stop_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 
@@ -248,7 +301,11 @@ export const getDLQUrl = async (queueUrl: string): Promise<string | null> => {
           }
         }
         return null
-      } catch {
+      } catch (policyError) {
+        logger.warn('dlq_redrive_policy_parse_failed', {
+          queue_url: queueUrl,
+          error: policyError instanceof Error ? policyError.message : String(policyError),
+        })
         return null
       }
     }
@@ -263,7 +320,12 @@ export const getDLQUrl = async (queueUrl: string): Promise<string | null> => {
 }
 
 /**
- * Sends a message to the Dead Letter Queue.
+ * Sends a failed message to the queue's configured DLQ.
+ *
+ * Error behavior:
+ * - Resolves without throwing if no DLQ is configured.
+ * - Catches and logs DLQ send failures to avoid crashing workers.
+ * - Emits `sqs_dlq_send_errors_total` on DLQ send failures.
  */
 export const sendToDLQ = async <T>(
   queueUrl: string,
@@ -314,6 +376,7 @@ export const sendToDLQ = async <T>(
       message_id: originalMessage.messageId,
     })
   } catch (dlqError) {
+    trackDlqSendError(queueUrl)
     logger.error('dlq_send_failed', {
       queue_url: queueUrl,
       message_id: originalMessage.messageId,
@@ -323,6 +386,14 @@ export const sendToDLQ = async <T>(
   }
 }
 
+/**
+ * Sends a single JSON message with bounded retries.
+ *
+ * Error behavior:
+ * - Retries transient AWS errors with exponential backoff.
+ * - Throws when retries are exhausted.
+ * - Emits send failure metrics when final send fails.
+ */
 export const sendJsonMessage = async <T>(
   queueUrl: string,
   payload: T,
@@ -330,16 +401,29 @@ export const sendJsonMessage = async <T>(
 ): Promise<void> => {
   const maxRetries = options?.maxRetries ?? 3
   const retryDelayMs = options?.retryDelayMs ?? 100
+  const queueName = getQueueName(queueUrl)
 
   const sendAttempt = async (): Promise<void> => {
     const sqs = getClient()
     const traceAttributes = buildTraceMessageAttributes()
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(payload),
-        ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
-      }),
+    await startSpan(
+      'sqs.send_json_message',
+      async () => {
+        await sqs.send(
+          new SendMessageCommand({
+            QueueUrl: queueUrl,
+            MessageBody: JSON.stringify(payload),
+            ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
+          }),
+        )
+      },
+      {
+        attributes: {
+          'messaging.system': 'aws.sqs',
+          'messaging.destination': queueName,
+          'aws.sqs.queue_url': queueUrl,
+        },
+      },
     )
   }
 
@@ -382,19 +466,32 @@ export const sendBatchJsonMessages = async <T>(
 
   const maxRetries = options?.maxRetries ?? 3
   const retryDelayMs = options?.retryDelayMs ?? 100
+  const queueName = getQueueName(queueUrl)
 
   const sendBatchAttempt = async (): Promise<void> => {
     const sqs = getClient()
     const traceAttributes = buildTraceMessageAttributes()
-    await sqs.send(
-      new SendMessageBatchCommand({
-        QueueUrl: queueUrl,
-        Entries: messages.map((msg) => ({
-          Id: msg.id,
-          MessageBody: JSON.stringify(msg.payload),
-          ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
-        })),
-      }),
+    await startSpan(
+      'sqs.send_batch_json_messages',
+      async () => {
+        await sqs.send(
+          new SendMessageBatchCommand({
+            QueueUrl: queueUrl,
+            Entries: messages.map((msg) => ({
+              Id: msg.id,
+              MessageBody: JSON.stringify(msg.payload),
+              ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
+            })),
+          }),
+        )
+      },
+      {
+        attributes: {
+          'messaging.system': 'aws.sqs',
+          'messaging.destination': queueName,
+          'aws.sqs.queue_url': queueUrl,
+        },
+      },
     )
   }
 
@@ -430,28 +527,50 @@ export const sendBatchJsonMessages = async <T>(
   }
 }
 
+/**
+ * Receives and JSON-decodes SQS messages.
+ *
+ * Error behavior:
+ * - Invalid JSON payloads are logged and returned with `payload: null`.
+ * - On SQS receive failure, catches and returns `{ messages: [], error }`.
+ * - Emits receive failure metrics (`sqs_receive_errors_total`) on SQS failures.
+ */
 export const receiveJsonMessages = async <T>(
   queueUrl: string,
   maxMessages: number,
-): Promise<SqsMessage<T>[]> => {
+): Promise<{ messages: SqsMessage<T>[]; error?: Error }> => {
   try {
     const waitTimeSeconds = getLongPollSeconds()
     const sqs = getClient()
-    const response = await sqs.send(
-      new ReceiveMessageCommand({
-        QueueUrl: queueUrl,
-        MaxNumberOfMessages: Math.min(maxMessages, 10),
-        WaitTimeSeconds: waitTimeSeconds,
-        MessageAttributeNames: ['All'],
-        AttributeNames: ['All'],
-      }),
+    const queueName = getQueueName(queueUrl)
+    const response = await startSpan(
+      'sqs.receive_json_messages',
+      async () => {
+        return await sqs.send(
+          new ReceiveMessageCommand({
+            QueueUrl: queueUrl,
+            MaxNumberOfMessages: Math.min(maxMessages, 10),
+            WaitTimeSeconds: waitTimeSeconds,
+            MessageAttributeNames: ['All'],
+            AttributeNames: ['All'],
+          }),
+        )
+      },
+      {
+        attributes: {
+          'messaging.system': 'aws.sqs',
+          'messaging.destination': queueName,
+          'aws.sqs.queue_url': queueUrl,
+        },
+      },
     )
 
     const messages = response.Messages ?? []
     if (messages.length > 0) {
       trackMessageReceived(queueUrl, messages.length)
     }
-    return messages.map((message) => {
+    return {
+      messages: messages.map((message) => {
       const body = message.Body ?? ''
       let payload: T | null = null
       if (body) {
@@ -502,23 +621,43 @@ export const receiveJsonMessages = async <T>(
         traceContext,
         raw: message,
       }
-    })
+      }),
+    }
   } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error))
+    trackMessageFailed(queueUrl, 'receive')
+    trackReceiveError(queueUrl)
     logger.error('receive_failed', {
       queue_url: queueUrl,
-      error: error instanceof Error ? error.message : String(error),
+      error: err.message,
     })
-    return []
+    return { messages: [], error: err }
   }
 }
 
+export type DeleteMessagesResult = {
+  succeeded: string[]
+  failed: string[]
+}
+
+/**
+ * Deletes receipt handles in batch (up to 10 per API call).
+ *
+ * Error behavior:
+ * - Never throws on per-batch failures.
+ * - Returns failed receipt handles in `failed` for caller-side handling.
+ * - Emits delete failure metrics (`sqs_delete_errors_total`) for partial/total failures.
+ */
 export const deleteMessages = async (
   queueUrl: string,
   receiptHandles: string[],
-): Promise<void> => {
-  if (receiptHandles.length === 0) return
+): Promise<DeleteMessagesResult> => {
+  if (receiptHandles.length === 0) return { succeeded: [], failed: [] }
 
   const sqs = getClient()
+  const queueName = getQueueName(queueUrl)
+  const succeeded: string[] = []
+  const failed: string[] = []
   const batchSize = 10
   for (let i = 0; i < receiptHandles.length; i += batchSize) {
     const batch = receiptHandles.slice(i, i + batchSize)
@@ -528,22 +667,74 @@ export const deleteMessages = async (
     }))
 
     try {
-      await sqs.send(
-        new DeleteMessageBatchCommand({
-          QueueUrl: queueUrl,
-          Entries: entries,
-        }),
+      const response = await startSpan(
+        'sqs.delete_messages',
+        async () => {
+          return await sqs.send(
+            new DeleteMessageBatchCommand({
+              QueueUrl: queueUrl,
+              Entries: entries,
+            }),
+          )
+        },
+        {
+          attributes: {
+            'messaging.system': 'aws.sqs',
+            'messaging.destination': queueName,
+            'aws.sqs.queue_url': queueUrl,
+          },
+        },
       )
-      trackMessageDeleted(queueUrl, batch.length)
+      const handleById = new Map(entries.map((entry) => [entry.Id, entry.ReceiptHandle]))
+      const successfulIds = (response.Successful ?? [])
+        .map((entry) => entry.Id)
+        .filter((id): id is string => Boolean(id))
+      const failedEntries = response.Failed ?? []
+      const failedIds = failedEntries
+        .map((entry) => entry.Id)
+        .filter((id): id is string => Boolean(id))
+
+      for (const id of successfulIds) {
+        const handle = handleById.get(id)
+        if (handle) succeeded.push(handle)
+      }
+      for (const id of failedIds) {
+        const handle = handleById.get(id)
+        if (handle) failed.push(handle)
+      }
+
+      if (successfulIds.length > 0) {
+        trackMessageDeleted(queueUrl, successfulIds.length)
+      }
+      if (failedIds.length > 0) {
+        // Caller needs to know this happened; visibility timeout is the safety net.
+        trackMessageFailed(queueUrl, 'delete')
+        trackDeleteError(queueUrl, failedIds.length)
+        logger.warn('delete_partial_failure', {
+          queue_url: queueUrl,
+          batch_size: batch.length,
+          failed_count: failedIds.length,
+          // Avoid logging receipt handles.
+          failures: failedEntries.map((entry) => ({
+            code: entry.Code,
+            message: entry.Message,
+            senderFault: entry.SenderFault,
+          })),
+        })
+      }
     } catch (error) {
       trackMessageFailed(queueUrl, 'delete')
+      trackDeleteError(queueUrl, batch.length)
       logger.error('delete_failed', {
         queue_url: queueUrl,
         batch_size: batch.length,
         error: error instanceof Error ? error.message : String(error),
       })
+      failed.push(...batch)
     }
   }
+
+  return { succeeded, failed }
 }
 
 export const getQueueDepth = async (queueUrl: string): Promise<number> => {

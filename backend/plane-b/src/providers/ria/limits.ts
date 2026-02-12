@@ -1,14 +1,13 @@
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { config } from '../../../../shared/config'
+
+const http = config.planeB.providerLimits.http.ria
+const playwright = config.planeB.providerLimits.playwright.ria
 
 export const httpLimits = {
-  rpm: toNumber(process.env.PLANE_B_RIA_RPM, 6),
-  maxRpm: toNumber(process.env.PLANE_B_RIA_MAX_RPM, 10),
-  concurrency: toNumber(process.env.PLANE_B_RIA_CONCURRENCY, 1),
+  rpm: http.rpm,
+  concurrency: http.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_RIA_CORRIDOR_RPM, 2),
+  perCorridorRpm: http.perCorridorRpm,
 }
 
 /**
@@ -16,8 +15,8 @@ export const httpLimits = {
  * These limits are defined for future use and do not affect current functionality.
  */
 export const playwrightLimits = {
-  rpm: toNumber(process.env.PLANE_B_RIA_PLAYWRIGHT_RPM, 4),
-  concurrency: toNumber(process.env.PLANE_B_RIA_PLAYWRIGHT_CONCURRENCY, 1),
+  rpm: playwright.rpm,
+  concurrency: playwright.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_RIA_PLAYWRIGHT_CORRIDOR_RPM, 2),
+  perCorridorRpm: playwright.perCorridorRpm,
 }

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 
-import { getPool, query } from '../../../shared/db'
+import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { createTtlCache } from '../../../shared/cache'
@@ -12,12 +12,10 @@ import {
 } from '../../../shared/pulse-cache-keys'
 import { getExportTierInfo, TIER_1_CADENCE_SECONDS, TIER_2_CADENCE_SECONDS } from '../../../shared/corridor-tiers'
 import { requireEntitlement } from '../plugins/auth-plugin'
-import { GoldIndicesRepository, PulseCacheRepository } from '../repositories'
+import { ValidationError } from '../../../shared/errors'
+import type { PlaneAContainer } from '../container'
 
 const logger = createLogger('plane-a.pulse')
-const planeAPool = getPool(config.db.planeAUrl)
-const pulseCacheRepository = new PulseCacheRepository(planeAPool)
-const goldIndicesRepository = new GoldIndicesRepository(planeAPool)
 const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
 const pulseCorridorsCache = createTtlCache({ namespace: 'plane_a:pulse_corridors' })
 const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
@@ -41,7 +39,10 @@ const parsePayload = (payload: unknown): unknown => {
   if (typeof payload !== 'string') return payload
   try {
     return JSON.parse(payload)
-  } catch {
+  } catch (error) {
+    logger.debug('pulse_payload_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return payload
   }
 }
@@ -156,11 +157,11 @@ const parseCorridorFromId = (corridorId?: string | null) => {
 }
 
 const resolveIndicesCorridorId = async (
+  goldIndicesRepository: PlaneAContainer['repositories']['goldIndices'],
   filters: PulseCacheFilters,
   explicitCorridorId?: string | null,
 ): Promise<string | null> => {
   if (explicitCorridorId) return explicitCorridorId
-  if (filters.corridorId) return filters.corridorId
 
   const corridorFromId = parseCorridorFromId(filters.corridor ?? null)
   if (corridorFromId) {
@@ -226,6 +227,7 @@ const buildIndicesChartSeries = (
 }
 
 const loadPulseEntry = async (
+  pulseCacheRepository: PlaneAContainer['repositories']['pulseCache'],
   baseKey: string,
   filters: PulseCacheFilters,
   fallback: unknown,
@@ -255,13 +257,14 @@ const loadPulseEntry = async (
 }
 
 const loadIndicesChartData = async (
+  goldIndicesRepository: PlaneAContainer['repositories']['goldIndices'],
   chartId: string,
   filters: PulseCacheFilters,
   query: Record<string, unknown>,
 ): Promise<ReturnType<typeof buildChartData>> => {
   const fallback = buildChartData(chartId)
   const explicitCorridorId = typeof query.corridor_id === 'string' ? query.corridor_id : null
-  const corridorId = await resolveIndicesCorridorId(filters, explicitCorridorId)
+  const corridorId = await resolveIndicesCorridorId(goldIndicesRepository, filters, explicitCorridorId)
   const methodProfile = resolveIndicesMethodProfile(filters)
 
   if (!corridorId || !methodProfile) {
@@ -319,7 +322,6 @@ const loadIndicesChartData = async (
 
 const buildPulseFilters = (query: Record<string, unknown>): PulseCacheFilters => {
   const corridor = typeof query.corridor === 'string' ? query.corridor : null
-  const corridorId = typeof query.corridor_id === 'string' ? query.corridor_id : null
   const timeframe = typeof query.timeframe === 'string' && query.timeframe.trim()
     ? query.timeframe
     : '30d'
@@ -340,7 +342,6 @@ const buildPulseFilters = (query: Record<string, unknown>): PulseCacheFilters =>
 
   return {
     corridor,
-    corridorId,
     timeframe,
     range,
     amount: Number.isFinite(amountRaw) ? amountRaw : null,
@@ -743,7 +744,7 @@ type GoldTrackedCorridorRow = {
   max_date: Date | null
 }
 
-const loadTrackedCorridorsFromGold = async () => {
+const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool']) => {
   const result = await query<GoldTrackedCorridorRow>(
     `SELECT
        corridor_id,
@@ -851,7 +852,20 @@ const loadTrackedCorridorsFromGold = async () => {
 }
 
 export const pulseRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container
+  const pulseCacheRepository = repositories.pulseCache
+  const goldIndicesRepository = repositories.goldIndices
   const guard = { preHandler: requireEntitlement('pulse') }
+  const loadPulse = (
+    baseKey: string,
+    filters: PulseCacheFilters,
+    fallback: unknown,
+  ) => loadPulseEntry(pulseCacheRepository, baseKey, filters, fallback)
+  const loadIndices = (
+    chartId: string,
+    filters: PulseCacheFilters,
+    query: Record<string, unknown>,
+  ) => loadIndicesChartData(goldIndicesRepository, chartId, filters, query)
 
   app.get('/pulse/corridors', guard, async () => {
     const cacheKey = [
@@ -866,7 +880,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
 
     try {
-      const tracked = await loadTrackedCorridorsFromGold()
+      const tracked = await loadTrackedCorridorsFromGold(planeAPool)
       if (tracked.length > 0) {
         await pulseCorridorsCache.set(cacheKey, tracked, 60 * 60 * 1000)
         return tracked
@@ -877,7 +891,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         error: error instanceof Error ? error.message : String(error),
       })
 
-      const { payload } = await loadPulseEntry('corridors', {}, pulseDefaults.corridors)
+      const { payload } = await loadPulse('corridors', {}, pulseDefaults.corridors)
       const fallback = mapCorridors(payload)
       await pulseCorridorsCache.set(cacheKey, fallback, 10 * 60 * 1000)
       return fallback
@@ -890,9 +904,9 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       typeof request.query === 'object' && request.query ? (request.query as any).corridor : undefined,
     )
     const [overview, coverage, snapshot] = await Promise.all([
-      loadPulseEntry('overview', filters, null),
-      loadPulseEntry('coverage-summary', filters, null),
-      loadPulseEntry('snapshot-summary', filters, null),
+      loadPulse('overview', filters, null),
+      loadPulse('coverage-summary', filters, null),
+      loadPulse('snapshot-summary', filters, null),
     ])
     const updatedAt = overview.updatedAt
     const payload = mapOverview(
@@ -910,15 +924,14 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/pulse/charts/:chartId', guard, async (request, reply) => {
+  app.get('/pulse/charts/:chartId', guard, async (request, _reply) => {
     const chartId = (request.params as { chartId?: string }).chartId
     if (!chartId) {
-      reply.code(400)
-      return { error: 'missing_chart_id' }
+            throw new ValidationError('Invalid request', { details: { error: 'missing_chart_id' } })
     }
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     if (INDEX_CHART_IDS.has(chartId)) {
-      const indices = await loadIndicesChartData(chartId, filters, (request.query ?? {}) as Record<string, unknown>)
+      const indices = await loadIndices(chartId, filters, (request.query ?? {}) as Record<string, unknown>)
       return {
         ...indices,
         dataAvailable: Array.isArray(indices.series) && indices.series.length > 0,
@@ -926,7 +939,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         source: 'gold_export',
       }
     }
-    const { payload, updatedAt } = await loadPulseEntry(`chart:${chartId}`, filters, null)
+    const { payload, updatedAt } = await loadPulse(`chart:${chartId}`, filters, null)
     return {
       ...normalizeChartPayload(chartId, payload, updatedAt),
       dataAvailable: Boolean(updatedAt),
@@ -937,7 +950,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/method-coverage', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('method-coverage', filters, pulseDefaults.methodCoverage)
+    const { payload } = await loadPulse('method-coverage', filters, pulseDefaults.methodCoverage)
     return mapMethodCoverage(payload)
   })
 
@@ -947,13 +960,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const page = Math.max(1, toNumber(query.page, 1))
     const pageSize = Math.max(1, toNumber(query.pageSize, 20))
     const filters = buildPulseFilters(query)
-    const { payload } = await loadPulseEntry('table', filters, pulseDefaults.table)
+    const { payload } = await loadPulse('table', filters, pulseDefaults.table)
     return mapTableData(payload, amount, page, pageSize)
   })
 
   app.get('/pulse/hero', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry('hero', filters, pulseDefaults.hero)
+    const { payload, updatedAt } = await loadPulse('hero', filters, pulseDefaults.hero)
     if (isObject(payload)) {
       return {
         ...payload,
@@ -974,10 +987,10 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   app.get('/pulse/coverage-summary', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     const [coverage, methodCoverage, overview, snapshot] = await Promise.all([
-      loadPulseEntry('coverage-summary', filters, pulseDefaults.coverageSummary),
-      loadPulseEntry('method-coverage', filters, pulseDefaults.methodCoverage),
-      loadPulseEntry('overview', filters, null),
-      loadPulseEntry('snapshot-summary', filters, null),
+      loadPulse('coverage-summary', filters, pulseDefaults.coverageSummary),
+      loadPulse('method-coverage', filters, pulseDefaults.methodCoverage),
+      loadPulse('overview', filters, null),
+      loadPulse('snapshot-summary', filters, null),
     ])
     const payload = mapCoverageSummary(
       coverage.payload,
@@ -999,9 +1012,9 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const amount = toNumber(query.amount, 1000)
     const filters = buildPulseFilters(query)
     const [snapshot, methodCoverage, providerBenchmarking] = await Promise.all([
-      loadPulseEntry('snapshot-summary', filters, pulseDefaults.snapshotSummary),
-      loadPulseEntry('method-coverage', filters, pulseDefaults.methodCoverage),
-      loadPulseEntry('provider-benchmarking', filters, pulseDefaults.providerBenchmarking),
+      loadPulse('snapshot-summary', filters, pulseDefaults.snapshotSummary),
+      loadPulse('method-coverage', filters, pulseDefaults.methodCoverage),
+      loadPulse('provider-benchmarking', filters, pulseDefaults.providerBenchmarking),
     ])
     const summary = mapSnapshotSummary(
       snapshot.payload,
@@ -1027,7 +1040,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const query = (request.query ?? {}) as Record<string, unknown>
     const amount = toNumber(query.amount, 1000)
     const filters = buildPulseFilters(query)
-    const { payload } = await loadPulseEntry(
+    const { payload } = await loadPulse(
       'provider-benchmarking',
       filters,
       pulseDefaults.providerBenchmarking,
@@ -1037,13 +1050,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/events', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('events', filters, pulseDefaults.events)
+    const { payload } = await loadPulse('events', filters, pulseDefaults.events)
     return mapEvents(payload)
   })
 
   app.get('/pulse/providers/heatmap', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry(
+    const { payload, updatedAt } = await loadPulse(
       'provider-heatmap',
       filters,
       pulseDefaults.providerHeatmap,
@@ -1067,7 +1080,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/smart-send', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry('smart-send', filters, pulseDefaults.smartSend)
+    const { payload, updatedAt } = await loadPulse('smart-send', filters, pulseDefaults.smartSend)
     if (isObject(payload)) {
       return {
         ...payload,
@@ -1087,7 +1100,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/market-snapshot', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry(
+    const { payload, updatedAt } = await loadPulse(
       'market-snapshot',
       filters,
       pulseDefaults.marketSnapshot,
@@ -1111,13 +1124,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/true-cost', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('true-cost', filters, pulseDefaults.trueCost)
+    const { payload } = await loadPulse('true-cost', filters, pulseDefaults.trueCost)
     return Array.isArray(payload) ? payload : pulseDefaults.trueCost
   })
 
   app.get('/pulse/market-depth', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry('market-depth', filters, pulseDefaults.marketDepth)
+    const { payload, updatedAt } = await loadPulse('market-depth', filters, pulseDefaults.marketDepth)
     if (isObject(payload)) {
       return {
         ...payload,
@@ -1136,7 +1149,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/arbitrage', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry('arbitrage', filters, pulseDefaults.arbitrage)
+    const { payload, updatedAt } = await loadPulse('arbitrage', filters, pulseDefaults.arbitrage)
     if (isObject(payload)) {
       return {
         ...payload,
@@ -1150,7 +1163,11 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/bank-comparison', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulseEntry('bank-comparison', filters, pulseDefaults.bankComparison)
+    const { payload, updatedAt } = await loadPulse(
+      'bank-comparison',
+      filters,
+      pulseDefaults.bankComparison,
+    )
     if (isObject(payload)) {
       return {
         ...payload,
@@ -1169,7 +1186,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/cost-trend', guard, async (request) => {
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
-    const { payload } = await loadPulseEntry('cost-trend', filters, pulseDefaults.costTrend)
+    const { payload } = await loadPulse('cost-trend', filters, pulseDefaults.costTrend)
     return Array.isArray(payload) ? payload : pulseDefaults.costTrend
   })
 
@@ -1184,7 +1201,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       lastUpdated: '',
     }
 
-    const { payload, updatedAt } = await loadPulseEntry('fx-rate-history', filters, fallback)
+    const { payload, updatedAt } = await loadPulse('fx-rate-history', filters, fallback)
     if (isObject(payload) && 'history' in payload) {
       return {
         ...payload,

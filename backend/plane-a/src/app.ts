@@ -11,6 +11,7 @@ import {
   getMetrics as getApiMetrics,
   metricsContentType as apiMetricsContentType,
 } from '../../shared/api-metrics'
+import { recordBusinessMetric } from '../../shared/business-metrics'
 import { getTracer } from '../../shared/tracing'
 import { getRedisClient } from '../../shared/redis'
 import { authPlugin, requireAuth } from './plugins/auth-plugin'
@@ -21,11 +22,13 @@ import { setupTimeoutMonitor } from './plugins/timeout-monitor'
 import { setupPayloadSizeMonitor } from './plugins/payload-size'
 import { setupLambdaOptimizations } from './plugins/lambda-optimization'
 import { setupRdsProxyMonitor } from './plugins/rds-proxy-monitor'
+import { registerAdminIpAllowlist } from './plugins/ip-allowlist'
 import { registerSessionTracker } from './plugins/session-tracker-plugin'
+import { planeAContainer } from './container'
 import { billingRoutes } from './routes/billing'
 import { meRoutes } from './routes/me'
 import { quotesRoutes } from './routes/quotes'
-import { providersRoutes } from './routes/providers'
+import { providersRoutes } from './routes/providers/index'
 import { providerMetadataRoutes } from './routes/provider-metadata'
 import { corridorCurrenciesRoutes } from './routes/corridor-currencies'
 import { corridorLimitsRoutes } from './routes/corridor-limits'
@@ -57,7 +60,40 @@ import { notificationsRoutes } from './routes/notifications'
 import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
 
-export const buildApp = async () => {
+const logger = createLogger('plane-a.app')
+
+export const PLANE_A_ACCOUNT_ROUTE_PREFIXES = [
+  '/api/v1/me',
+  '/api/v1/pulse',
+  '/api/v1/watchlist',
+  '/api/v1/alerts',
+  '/api/v1/history',
+  '/api/v1/exports',
+  '/api/v1/data',
+  '/api/v1/account',
+  '/api/v1/dashboard',
+  '/api/v1/sessions',
+] as const
+
+export const PLANE_A_AUTH_BYPASS_PATHS_BASE = [
+  '/api/v1/billing/webhook',
+  '/api/v1/alerts/unsubscribe',
+] as const
+
+export const getPlaneAAuthBypassPaths = () => {
+  const authBypassPaths = new Set<string>(PLANE_A_AUTH_BYPASS_PATHS_BASE)
+  const allowUnauthedAlerts =
+    config.env === 'development' || config.env === 'test' || process.env.ENVIRONMENT === 'dev'
+  if (allowUnauthedAlerts) {
+    authBypassPaths.add('/api/v1/alerts/corridor-eligibility')
+    authBypassPaths.add('/api/v1/alerts/macro-corridors')
+  }
+  return authBypassPaths
+}
+
+export const buildApp = async (options?: {
+  onRoute?: (routeOptions: unknown) => void
+}) => {
   const app = Fastify({
     logger: { level: config.env === 'production' ? 'info' : 'debug' },
     genReqId: (req) => {
@@ -72,9 +108,17 @@ export const buildApp = async () => {
     },
   })
 
+  if (options?.onRoute) {
+    // Used by tests to capture registered routes for auth coverage assertions.
+    app.addHook('onRoute', (routeOptions) => {
+      options.onRoute?.(routeOptions)
+    })
+  }
+
   // Lazy load database pool - only create when needed
   // This reduces cold start time
   const getPlaneAPool = () => getPool(config.db.planeAUrl)
+  app.decorate('container', planeAContainer)
 
   if (config.planeA.adminEmails.length === 0) {
     const logger = createLogger('plane-a.app')
@@ -118,7 +162,7 @@ export const buildApp = async () => {
   
   // CORS configuration for API Gateway compatibility
   // API Gateway requires explicit CORS headers
-  app.register(cors, {
+  app.register(cors as any, {
     origin: corsOriginSetting,
     credentials: config.planeA.cors.allowCredentials,
     methods: config.planeA.cors.allowedMethods.length > 0
@@ -137,29 +181,8 @@ export const buildApp = async () => {
       files: 1,
     },
   })
-  const accountRoutePrefixes = [
-    '/api/v1/me',
-    '/api/v1/billing',
-    '/api/v1/pulse',
-    '/api/v1/watchlist',
-    '/api/v1/alerts',
-    '/api/v1/history',
-    '/api/v1/exports',
-    '/api/v1/data',
-    '/api/v1/account',
-    '/api/v1/dashboard',
-    '/api/v1/sessions',
-  ]
-  const authBypassPaths = new Set([
-    '/api/v1/billing/webhook',
-    '/api/v1/alerts/unsubscribe',
-  ])
-  const allowUnauthedAlerts =
-    config.env === 'development' || config.env === 'test' || process.env.ENVIRONMENT === 'dev'
-  if (allowUnauthedAlerts) {
-    authBypassPaths.add('/api/v1/alerts/corridor-eligibility')
-    authBypassPaths.add('/api/v1/alerts/macro-corridors')
-  }
+  const accountRoutePrefixes = [...PLANE_A_ACCOUNT_ROUTE_PREFIXES]
+  const authBypassPaths = getPlaneAAuthBypassPaths()
   const accountAuth = requireAuth()
 
   app.addHook('preHandler', async (request, reply) => {
@@ -181,6 +204,31 @@ export const buildApp = async () => {
   setupPayloadSizeMonitor(app)
   setupLambdaOptimizations(app)
   setupRdsProxyMonitor(app)
+  registerAdminIpAllowlist(app)
+
+  // Security headers (API responses).
+  app.addHook('onSend', async (request, reply, payload) => {
+    reply.header('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'")
+    reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    reply.header('X-Content-Type-Options', 'nosniff')
+
+    const prodLike =
+      config.env === 'production'
+      || config.env === 'staging'
+      || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
+    if (prodLike) {
+      reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+    }
+
+    const path = request.url.split('?')[0] || ''
+    if (path.startsWith('/api/v1') && (request.user || request.apiKey)) {
+      reply.header('Cache-Control', 'no-store, no-cache, must-revalidate')
+      reply.header('Pragma', 'no-cache')
+      reply.header('Expires', '0')
+    }
+
+    return payload
+  })
   
   // Use Redis-based rate limiting for Lambda (distributed) or fallback to memory
   // In Lambda, in-memory rate limiting only works within a single invocation
@@ -190,22 +238,81 @@ export const buildApp = async () => {
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
     process.env.AWS_REGION,
   )
+
+  const toPerWindow = (perMinute: number) => {
+    const windowMs = Math.max(1000, config.planeA.rateLimitWindowMs)
+    return Math.max(1, Math.ceil((perMinute * windowMs) / 60_000))
+  }
+
+  const maxRequestsForPath = (request: import('fastify').FastifyRequest) => {
+    const path = request.url.split('?')[0] || ''
+    const method = request.method
+
+    // Admin/ops surfaces: high but not unlimited.
+    if (
+      path.startsWith('/api/v1/ops')
+      || path.startsWith('/api/v1/admin')
+      || path.startsWith('/api/v1/analytics')
+      || path.startsWith('/api/v1/audit')
+      || path.startsWith('/api/v1/telemetry/analytics')
+    ) {
+      return toPerWindow(600)
+    }
+
+    // Auth-sensitive paths (lower ceilings).
+    if (method === 'POST' && (path === '/api/v1/billing/checkout-session' || path === '/api/v1/stripe/create-checkout')) {
+      return toPerWindow(10)
+    }
+    if (method === 'POST' && path === '/api/v1/billing/webhook') {
+      return toPerWindow(60)
+    }
+    if (method === 'POST' && path === '/api/v1/me/api-keys') {
+      return toPerWindow(5)
+    }
+    if (method === 'POST' && path.startsWith('/api/v1/me/api-keys/') && path.endsWith('/rotate')) {
+      return toPerWindow(5)
+    }
+    if (method === 'POST' && path === '/api/v1/me/password') {
+      return toPerWindow(5)
+    }
+    if (method === 'DELETE' && path === '/api/v1/account') {
+      return toPerWindow(2)
+    }
+
+    // Default: public vs authenticated budget.
+    const base = config.planeA.rateLimitMax
+    return request.user ? base * 5 : base
+  }
+
+  const isProdLike =
+    config.env === 'production'
+    || config.env === 'staging'
+    || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
   
   if (isAwsRuntime && config.redis.url) {
     // Use Redis for distributed rate limiting in Lambda
     await registerRedisRateLimit(app, {
       timeWindow: config.planeA.rateLimitWindowMs,
-      max: (request) => (request.user ? config.planeA.rateLimitMax * 5 : config.planeA.rateLimitMax),
-      keyGenerator: (request) => (request.user ? `user:${request.user.user_id}` : `ip:${request.ip}`),
-      skipOnError: true, // Fail open if Redis is unavailable
+      max: maxRequestsForPath,
+      keyGenerator: (request) => {
+        if (request.apiKey) return `apiKey:${request.apiKey.key_id}`
+        if (request.user) return `user:${request.user.user_id}`
+        return `ip:${request.ip}`
+      },
+      // In prod/staging, do not skip; fall back to in-memory limiter to avoid fail-open.
+      skipOnError: !isProdLike,
     })
   } else {
     // Fallback to in-memory rate limiting (local dev or Redis unavailable)
     // Note: In Lambda, this only works within a single invocation
     registerMemoryRateLimit(app, {
       timeWindow: config.planeA.rateLimitWindowMs,
-      max: (request) => (request.user ? config.planeA.rateLimitMax * 5 : config.planeA.rateLimitMax),
-      keyGenerator: (request) => (request.user ? `user:${request.user.user_id}` : `ip:${request.ip}`),
+      max: maxRequestsForPath,
+      keyGenerator: (request) => {
+        if (request.apiKey) return `apiKey:${request.apiKey.key_id}`
+        if (request.user) return `user:${request.user.user_id}`
+        return `ip:${request.ip}`
+      },
     })
   }
 
@@ -256,6 +363,11 @@ export const buildApp = async () => {
       const statusCode = reply.statusCode
       const durationSeconds = reply.elapsedTime / 1000
       recordRequest(method, route, statusCode, durationSeconds)
+      recordBusinessMetric('api_requests_total', 1, {
+        endpoint: route,
+        method,
+        status_code: String(statusCode),
+      })
 
       // Security headers
       reply.header('X-Content-Type-Options', 'nosniff')
@@ -280,8 +392,12 @@ export const buildApp = async () => {
         }
         span.end()
       }
-    } catch {
-      // Silently ignore metrics/tracing recording errors
+    } catch (error) {
+      logger.debug('request_observability_record_failed', {
+        method: request.method,
+        url: request.url,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
   })
 
@@ -315,6 +431,9 @@ export const buildApp = async () => {
         },
       }
     } catch (error) {
+      logger.warn('ready_check_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
       reply.code(503)
       return { status: 'not_ready' }
     }
@@ -326,6 +445,9 @@ export const buildApp = async () => {
       reply.type(apiMetricsContentType)
       return metrics
     } catch (error) {
+      logger.warn('metrics_collection_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
       reply.code(500)
       return { error: 'Failed to collect metrics' }
     }

@@ -16,6 +16,7 @@ import {
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { AWSXRayPropagator } from '@opentelemetry/propagator-aws-xray'
 import { createLogger } from './logger'
+import { config } from './config'
 
 const logger = createLogger('shared.tracing')
 
@@ -25,7 +26,7 @@ let initialized = false
 const configValue = (value?: string) => value?.trim() || ''
 
 const parseExporterMode = (): string[] => {
-  const raw = configValue(process.env.TRACING_EXPORTER)
+  const raw = configValue(config.observability.tracing.exporter)
   if (raw) {
     const modes: string[] = []
     for (const value of raw.split(',')) {
@@ -40,7 +41,7 @@ const parseExporterMode = (): string[] => {
     return Array.from(new Set(modes))
   }
 
-  if (configValue(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)) {
+  if (configValue(config.observability.tracing.otlpEndpoint)) {
     return ['xray']
   }
 
@@ -57,12 +58,12 @@ export const initTracing = (serviceName: string): void => {
     return
   }
 
-  const environment = process.env.NODE_ENV || 'development'
-  const version = process.env.npm_package_version || 'unknown'
+  const environment = config.env || 'development'
+  const version = config.build.version || 'unknown'
   const exporterModes = parseExporterMode()
   const requestedXray = exporterModes.includes('xray')
   const requestedOtlp = exporterModes.includes('otlp')
-  const otlpEndpoint = configValue(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)
+  const otlpEndpoint = configValue(config.observability.tracing.otlpEndpoint)
   const useOtlp = Boolean(otlpEndpoint) && (requestedXray || requestedOtlp)
 
   try {
@@ -142,7 +143,7 @@ export const startSpan = async <T>(
   options?: SpanOptions,
 ): Promise<T> => {
   if (isHealthCheck(name, options?.attributes)) {
-    if (process.env.TRACE_FILTER_HEALTH_CHECKS === '1') {
+    if (config.observability.tracing.filterHealthChecks) {
       return await fn({} as Span)
     }
   }
@@ -189,7 +190,7 @@ export const startChildSpan = async <T>(
   options?: SpanOptions,
 ): Promise<T> => {
   if (isHealthCheck(name, options?.attributes)) {
-    if (process.env.TRACE_FILTER_HEALTH_CHECKS === '1') {
+    if (config.observability.tracing.filterHealthChecks) {
       return await fn({} as Span)
     }
   }
@@ -255,34 +256,28 @@ export const addAWSContextAttributes = (): void => {
 
   const attributes: Record<string, string> = {}
 
-  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    attributes['aws.lambda.function_name'] = process.env.AWS_LAMBDA_FUNCTION_NAME
-    if (process.env.AWS_REQUEST_ID || process.env._X_AMZN_TRACE_ID) {
-      const requestId = process.env.AWS_REQUEST_ID || process.env._X_AMZN_TRACE_ID?.split(';')[0]
-      if (requestId) {
-        attributes['aws.lambda.request_id'] = requestId
-      }
-    }
+  if (config.runtime.lambdaFunctionName) {
+    attributes['aws.lambda.function_name'] = config.runtime.lambdaFunctionName
   }
 
-  if (process.env.ECS_CONTAINER_METADATA_URI || process.env.ECS_CONTAINER_METADATA_URI_V4) {
-    if (process.env.ECS_TASK_ARN) {
-      const taskId = process.env.ECS_TASK_ARN.split('/').pop() || ''
+  if (config.runtime.isEcs) {
+    if (config.runtime.ecsTaskArn) {
+      const taskId = config.runtime.ecsTaskArn.split('/').pop() || ''
       attributes['aws.ecs.task_id'] = taskId
     }
-    if (process.env.ECS_CONTAINER_NAME) {
-      attributes['aws.ecs.container_id'] = process.env.ECS_CONTAINER_NAME
+    if (config.runtime.ecsContainerName) {
+      attributes['aws.ecs.container_id'] = config.runtime.ecsContainerName
     }
   }
 
-  if (process.env.AWS_REGION) {
-    attributes['aws.region'] = process.env.AWS_REGION
+  if (config.aws.region) {
+    attributes['aws.region'] = config.aws.region
   }
 
-  if (process.env.AWS_ACCOUNT_ID) {
-    attributes['aws.account_id'] = process.env.AWS_ACCOUNT_ID
-  } else if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    const accountMatch = process.env.AWS_LAMBDA_FUNCTION_NAME.match(/^arn:aws:lambda:.*?:(.*?):/)
+  if (config.runtime.awsAccountId) {
+    attributes['aws.account_id'] = config.runtime.awsAccountId
+  } else if (config.runtime.lambdaFunctionArn) {
+    const accountMatch = config.runtime.lambdaFunctionArn.match(/^arn:aws:lambda:.*?:(.*?):/)
     if (accountMatch) {
       attributes['aws.account_id'] = accountMatch[1]
     }
@@ -307,11 +302,9 @@ export const resetTracingState = (): void => {
 }
 
 const shouldSampleTrace = (): boolean => {
-  if (process.env.TRACE_SAMPLE_RATE) {
-    const sampleRate = Number(process.env.TRACE_SAMPLE_RATE)
-    if (Number.isFinite(sampleRate) && sampleRate >= 0 && sampleRate <= 1) {
-      return Math.random() < sampleRate
-    }
+  const sampleRate = config.observability.tracing.sampleRate
+  if (Number.isFinite(sampleRate) && sampleRate >= 0 && sampleRate <= 1) {
+    return Math.random() < sampleRate
   }
 
   if (totalSpans > ERROR_RATE_WINDOW) {

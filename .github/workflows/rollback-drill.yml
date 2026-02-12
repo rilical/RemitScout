@@ -1,0 +1,226 @@
+name: cd/rollback-drill
+
+on:
+  schedule:
+    - cron: '0 4 * * 0' # Weekly on Sunday
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment for rollback drill
+        required: true
+        default: staging
+        type: choice
+        options:
+          - dev
+          - staging
+
+permissions:
+  contents: read
+
+jobs:
+  rollback-drill:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Resolve Drill Tags
+        id: tags
+        shell: bash
+        env:
+          ENV_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
+        run: |
+          set -euo pipefail
+
+          current_tag="$(aws ssm get-parameter --name "/remit-scout/${ENV_NAME}/last-good-image" --query 'Parameter.Value' --output text)"
+          if [ -z "$current_tag" ] || [ "$current_tag" = "None" ]; then
+            echo "Unable to resolve current last-good tag for env=${ENV_NAME}."
+            exit 1
+          fi
+
+          repo="remit-scout-backend-${ENV_NAME}"
+          candidate="$(aws ecr describe-images \
+            --repository-name "$repo" \
+            --query "reverse(sort_by(imageDetails,&imagePushedAt))[].imageTags[]" \
+            --output text \
+            | tr '\t' '\n' \
+            | sed '/^None$/d' \
+            | awk -v cur="$current_tag" '$0!=cur && length($0)>0 {print; exit}')"
+
+          if [ -z "${candidate:-}" ]; then
+            echo "No previous tag found in ECR for env=${ENV_NAME}; cannot run rollback drill."
+            exit 1
+          fi
+
+          echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "CURRENT_TAG=${current_tag}" >> "$GITHUB_OUTPUT"
+          echo "ROLLBACK_TAG=${candidate}" >> "$GITHUB_OUTPUT"
+
+      - name: Build CDK
+        run: pnpm -C infrastructure/cdk build
+
+      - name: Roll Back To Previous Image
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+          ROLLBACK_TAG: ${{ steps.tags.outputs.ROLLBACK_TAG }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${ROLLBACK_TAG}" \
+            --require-approval never
+
+      - name: Run Migrations (rollback tag)
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+          assign_ip="DISABLED"
+          if [ "$ENV_NAME" = "dev" ]; then assign_ip="ENABLED"; fi
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+          cluster="remit-scout-${ENV_NAME}"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=$assign_ip}" \
+            --query "tasks[0].taskArn" --output text)"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "Migration task failed on rollback tag (exitCode=$exit_code): $task_arn"
+            exit 1
+          fi
+
+      - name: Wait For ECS Stability (rollback tag)
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+        run: |
+          set -euo pipefail
+          cluster="remit-scout-${ENV_NAME}"
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ]; then
+            aws ecs wait services-stable --cluster "$cluster" --services $services
+          fi
+
+      - name: Smoke Test (rollback tag)
+        id: rollback_smoke
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+          API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+
+      - name: Restore Current Image
+        if: always()
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+          CURRENT_TAG: ${{ steps.tags.outputs.CURRENT_TAG }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CURRENT_TAG:-}" ]; then
+            echo "No CURRENT_TAG available; skipping restore."
+            exit 0
+          fi
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${CURRENT_TAG}" \
+            --require-approval never
+
+      - name: Run Migrations (restored tag)
+        if: always()
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+          assign_ip="DISABLED"
+          if [ "$ENV_NAME" = "dev" ]; then assign_ip="ENABLED"; fi
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+          cluster="remit-scout-${ENV_NAME}"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=$assign_ip}" \
+            --query "tasks[0].taskArn" --output text)"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "Migration task failed on restore (exitCode=$exit_code): $task_arn"
+            exit 1
+          fi
+
+      - name: Wait For ECS Stability (restored tag)
+        if: always()
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+        run: |
+          set -euo pipefail
+          cluster="remit-scout-${ENV_NAME}"
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ]; then
+            aws ecs wait services-stable --cluster "$cluster" --services $services
+          fi
+
+      - name: Smoke Test (restored tag)
+        if: always()
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+          API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke

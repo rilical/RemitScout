@@ -1,5 +1,5 @@
-import { RemovalPolicy } from 'aws-cdk-lib'
-import { Repository } from 'aws-cdk-lib/aws-ecr'
+import { Duration, RemovalPolicy } from 'aws-cdk-lib'
+import { Repository, TagStatus } from 'aws-cdk-lib/aws-ecr'
 import type { Construct } from 'constructs'
 
 export type RegistryResources = {
@@ -20,8 +20,15 @@ export const createRegistry = (
     removalPolicy: options.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
-        maxImageCount: 25,
-        description: 'Retain the last 25 images.',
+        maxImageCount: 30,
+        rulePriority: 1,
+        description: 'Keep last 30 images',
+      },
+      {
+        maxImageAge: Duration.days(90),
+        tagStatus: TagStatus.UNTAGGED,
+        rulePriority: 2,
+        description: 'Delete untagged images after 90 days',
       },
     ],
   })

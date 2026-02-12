@@ -1,8 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { OandaRateFetcher } from '../shared/oanda-rate-fetcher'
 import * as dbModule from '../shared/db'
 import * as redisModule from '../shared/redis'
-import { config } from '../shared/config'
+
+const mockConfig = vi.hoisted(() => ({
+  redis: { url: '' },
+  fxRates: {
+    oandaRateLimitMaxRetries: 1,
+    oandaRateLimitBackoffMs: 0,
+    oandaRateLimitBackoffMaxMs: 0,
+    oandaRateLimitJitterMs: 0,
+    oandaRpm: 100000,
+    oandaBurstMultiplier: 2,
+  },
+}))
+
+vi.mock('../shared/config', () => ({ config: mockConfig }))
+
+import { OandaRateFetcher } from '../shared/oanda-rate-fetcher'
 
 vi.mock('../shared/db', () => ({
   query: vi.fn(),
@@ -17,15 +31,6 @@ describe('OandaRateFetcher', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    config.redis.url = ''
-    if (config.fxRates) {
-      config.fxRates.oandaRateLimitMaxRetries = 1
-      config.fxRates.oandaRateLimitBackoffMs = 0
-      config.fxRates.oandaRateLimitBackoffMaxMs = 0
-      config.fxRates.oandaRateLimitJitterMs = 0
-      config.fxRates.oandaRpm = 100000
-      config.fxRates.oandaBurstMultiplier = 2
-    }
     vi.mocked(redisModule.getRedisClient).mockResolvedValue(null)
   })
 

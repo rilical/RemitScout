@@ -141,17 +141,23 @@ const init = async () => {
       },
     ])
 
-    const { config, assertRuntimeConfig } = await import('../../shared/config')
+    const { config } = await import('../../shared/config')
+    const { runStartupChecks } = await import('../../shared/startup')
     const { initErrorTracking } = await import('../../shared/error-tracker')
     const { initTracing } = await import('../../shared/tracing')
     const { buildApp } = await import('./app')
 
-    assertRuntimeConfig({
-      requirePlaneA: true,
-      requireRedis: true,
-      requireSupabase: true,
-      requireStripe: true,
-      requireJwtSecret: config.planeA.requireJwt,
+    await runStartupChecks({
+      requirements: {
+        requirePlaneA: true,
+        requirePlaneC: true,
+        requireRedis: true,
+        requireQueues: true,
+        requireStorage: true,
+        requireSupabase: true,
+        requireStripe: true,
+        requireJwtSecret: config.planeA.requireJwt,
+      },
     })
 
     initErrorTracking('plane-a')
@@ -194,7 +200,13 @@ export const handler = async (
   }
 
   if (!proxy) {
-    logger.error('lambda_proxy_not_initialized')
+    const eventPath =
+      event && typeof event === 'object' && 'path' in event
+        ? (event as { path?: unknown }).path
+        : undefined
+    logger.error('lambda_proxy_not_initialized', {
+      event_path: typeof eventPath === 'string' ? eventPath : null,
+    })
     return {
       statusCode: 500,
       headers: {

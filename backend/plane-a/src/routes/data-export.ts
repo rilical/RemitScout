@@ -1,18 +1,17 @@
 import type { FastifyInstance } from 'fastify'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { getPool, query } from '../../../shared/db'
+import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { sendJsonMessage } from '../../../shared/sqs'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
-import { ExportJobRepository, type ExportJobType } from '../repositories'
+import { type ExportJobType } from '../repositories'
+import { NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.data-export')
-const planeAPool = getPool(config.db.planeAUrl)
-const exportJobRepository = new ExportJobRepository(planeAPool)
 const s3Client = new S3Client({})
 
 const getBucket = () => config.storage.exports?.bucket || ''
@@ -71,6 +70,9 @@ const enqueueExportJob = async (jobId: string, jobType: ExportJobType, userId: s
 }
 
 export const dataExportRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container
+  const exportJobRepository = repositories.exportJob
+
   app.post('/data/export', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
 
@@ -157,8 +159,7 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
     try {
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== user.user_id || job.job_type !== 'gdpr_export') {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
 
       return {
@@ -191,8 +192,7 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
     try {
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== user.user_id || job.job_type !== 'gdpr_export') {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
       if (job.status !== 'done' || !job.s3_key) {
         reply.code(409)

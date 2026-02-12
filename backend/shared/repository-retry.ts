@@ -1,5 +1,6 @@
 import { createLogger } from './logger'
 import { formatError, isError } from './utils/error-handling'
+import { CircuitBreakerOpenError } from './errors'
 
 const logger = createLogger('shared.repository-retry')
 
@@ -111,6 +112,7 @@ class CircuitBreaker {
   private state: 'closed' | 'open' | 'half-open' = 'closed'
 
   constructor(
+    private readonly repositoryName: string,
     private readonly failureThreshold: number = 5,
     private readonly resetTimeoutMs: number = 60000,
   ) {}
@@ -126,7 +128,7 @@ class CircuitBreaker {
           failures: this.failures,
         })
       } else {
-        throw new Error('Circuit breaker is open')
+        throw new CircuitBreakerOpenError(this.repositoryName)
       }
     }
 
@@ -176,7 +178,7 @@ const circuitBreakers = new Map<string, CircuitBreaker>()
  */
 const getCircuitBreaker = (repository: string): CircuitBreaker => {
   if (!circuitBreakers.has(repository)) {
-    circuitBreakers.set(repository, new CircuitBreaker(5, 60000))
+    circuitBreakers.set(repository, new CircuitBreaker(repository, 5, 60000))
   }
   return circuitBreakers.get(repository)!
 }
@@ -195,5 +197,3 @@ export const withCircuitBreaker = async <T>(
 export const resetCircuitBreakers = (): void => {
   circuitBreakers.clear()
 }
-
-

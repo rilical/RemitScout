@@ -2,6 +2,7 @@ import type { Span } from '@opentelemetry/api'
 import type { AuthError, AuthUser } from '../auth/types'
 import type { ApiKeyContext } from '../services/api-keys'
 import type { Entitlements, PlanCode } from '../services/entitlements'
+import type { PlaneAContainer } from '../container'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -14,5 +15,9 @@ declare module 'fastify' {
     traceId?: string
     span?: Span
     startTime?: number
+  }
+
+  interface FastifyInstance {
+    container: PlaneAContainer
   }
 }

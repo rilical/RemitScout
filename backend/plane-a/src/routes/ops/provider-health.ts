@@ -1,20 +1,13 @@
 import type { FastifyInstance } from 'fastify'
-import { getPool } from '../../../../shared/db'
-import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { getHealthCorridors, type ProviderId } from '../../../../shared/health-corridors'
 import { requireAdmin } from '../../plugins/auth-plugin'
 import { getProviderMetadata } from '../../services/provider-metadata'
-import { LatestQuoteRepository, QuoteAttemptRepository } from '../../repositories'
 
 type ProviderHealthOptions = {
   providerId: ProviderId
   displayName: string
 }
-
-const planeAPool = getPool(config.db.planeAUrl)
-const quoteAttemptRepository = new QuoteAttemptRepository(planeAPool)
-const latestQuoteRepository = new LatestQuoteRepository(planeAPool)
 
 const minutesSince = (value: string | Date | null) => {
   if (!value) return null
@@ -26,6 +19,8 @@ const minutesSince = (value: string | Date | null) => {
 export const registerProviderHealthRoutes = (app: FastifyInstance, options: ProviderHealthOptions) => {
   const { providerId, displayName } = options
   const logger = createLogger(`plane-a.ops.${providerId}-health`)
+  const quoteAttemptRepository = app.container.repositories.quoteAttempt
+  const latestQuoteRepository = app.container.repositories.latestQuote
 
   app.get(`/ops/${providerId}/health`, { preHandler: requireAdmin() }, async (request, reply) => {
     const healthCorridors = getHealthCorridors(providerId)

@@ -13,10 +13,11 @@ import {
 import { applyJitter, resolveJitterMs } from '../../shared/worker-jitter'
 import { startSpan } from '../../shared/tracing'
 import { getProvider } from './providers'
-import { LatestQuoteRepository, QuoteRefreshRepository } from './repositories'
+import { QuoteRefreshRepository } from './repositories'
 import type { QuoteRefreshRequestRecord } from './repositories/interfaces/quote-refresh-repository.interface'
 import { QuoteRefreshStatus, type QuoteRefreshStatusValue } from './repositories/types/quote-refresh-status'
 import { VolatilityService } from './services/volatility-service'
+import { createPlaneBContainer, type PlaneBContainer } from './container'
 
 const logger = createLogger('plane-b.quote-refresh')
 const messageJitterMs = resolveJitterMs(process.env.B2C_REFRESH_MESSAGE_JITTER_MS, 0)
@@ -41,15 +42,18 @@ export type QuoteRefreshMessage = {
 
 export type QuoteRefreshQueueOptions = {
   pool?: Pool
+  container?: PlaneBContainer
   limit?: number
   maxRetries?: number
   concurrency?: number
+  signal?: AbortSignal
   onRequestFinished?: (event: QuoteRefreshQueueEvent) => void | Promise<void>
   onQueueDepth?: (depth: number) => void | Promise<void>
 }
 
 const checkQuoteFreshness = async (
   pool: Pool,
+  latestQuoteRepository: PlaneBContainer['repositories']['latestQuote'],
   corridorId: string,
   amountBucket: number,
   payinMethod: string,
@@ -59,8 +63,7 @@ const checkQuoteFreshness = async (
   const volatilityService = new VolatilityService(pool)
   const ttlResult = await volatilityService.getCacheTtlForCorridor(corridorId)
 
-  const latestRepo = new LatestQuoteRepository(pool)
-  const collectedAt = await latestRepo.getLatestCollectedAt(
+  const collectedAt = await latestQuoteRepository.getLatestCollectedAt(
     corridorId,
     amountBucket,
     payinMethod,
@@ -113,7 +116,7 @@ export const getQueueDepth = async (pool: Pool): Promise<number> => {
   if (config.queues.quoteRefreshUrl && config.queues.quoteRefreshMode !== 'off') {
     return getSqsQueueDepth(config.queues.quoteRefreshUrl)
   }
-  const repo = new QuoteRefreshRepository(pool)
+  const repo = createPlaneBContainer(pool).repositories.quoteRefresh
   return repo.getQueueDepth()
 }
 
@@ -161,6 +164,7 @@ const buildRequestFromMessage = (
 
 const processRequest = async (
   pool: Pool,
+  latestQuoteRepository: PlaneBContainer['repositories']['latestQuote'],
   repo: QuoteRefreshRepository,
   request: QuoteRefreshRequestRecord,
   maxRetries: number,
@@ -172,6 +176,7 @@ const processRequest = async (
   try {
     const freshness = await checkQuoteFreshness(
       pool,
+      latestQuoteRepository,
       request.corridor_id,
       request.amount_bucket,
       request.payin_method,
@@ -244,6 +249,7 @@ const processRequest = async (
 export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions = {}) => {
   const pool = options.pool ?? createPool(config.db.planeBUrl)
   const shouldClose = !options.pool
+  const container = options.container ?? createPlaneBContainer(pool)
   const limit = options.limit ?? config.planeB.b2cRefreshBatchLimit
   const maxRetries = options.maxRetries ?? config.planeB.b2cRefreshMaxRetries
   const concurrency = Math.max(1, options.concurrency ?? config.planeB.b2cRefreshConcurrency)
@@ -255,7 +261,8 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
   const dbFallbackEnabled = config.queues.quoteRefreshDbFallback && queueMode === 'queue'
   // Always update DB statuses so refresh-status can track SQS-backed runs.
   const writeDb = true
-  const repo = new QuoteRefreshRepository(pool)
+  const repo = container.repositories.quoteRefresh
+  const latestQuoteRepository = container.repositories.latestQuote
   let processed = 0
 
   const runWithConcurrency = async <T>(
@@ -266,6 +273,9 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
     const workerCount = Math.min(concurrency, items.length)
     const workers = Array.from({ length: workerCount }, async () => {
       while (index < items.length) {
+        if (options.signal?.aborted) {
+          return
+        }
         const current = items[index]
         index += 1
         await worker(current)
@@ -302,10 +312,11 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         source,
       })
 
-      const { status, skipReason } = await processRequest(
-        pool,
-        repo,
-        request,
+          const { status, skipReason } = await processRequest(
+            pool,
+            latestQuoteRepository,
+            repo,
+            request,
         maxRetries,
         writeDb,
       )
@@ -339,7 +350,10 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
       if (!activeQueueUrl) {
         throw new Error('quote_refresh_queue_missing')
       }
-      const messages = await receiveJsonMessages<QuoteRefreshMessage>(activeQueueUrl, limit)
+      const { messages, error: receiveError } = await receiveJsonMessages<QuoteRefreshMessage>(activeQueueUrl, limit)
+      if (receiveError) {
+        logger.error('sqs_receive_failed', { queue_url: activeQueueUrl, error: receiveError.message })
+      }
       logger.info('queue_claimed', {
         requested_limit: limit,
         claimed_count: messages.length,
@@ -490,6 +504,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
 
             const { status, skipReason } = await processRequest(
               pool,
+              latestQuoteRepository,
               repo,
               request,
               maxRetries,
@@ -529,7 +544,10 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
         delete_count: deleteHandles.length,
       })
 
-      await deleteMessages(activeQueueUrl, deleteHandles)
+      const { failed } = await deleteMessages(activeQueueUrl, deleteHandles)
+      if (failed.length > 0) {
+        logger.warn('sqs_delete_failed', { queue_url: activeQueueUrl, failed_count: failed.length })
+      }
 
       if (dbFallbackEnabled) {
         const fallbackRequests = await repo.claimPendingRequests(limit, maxRetries)

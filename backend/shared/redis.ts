@@ -24,7 +24,22 @@ const isElastiCacheCluster = (url: string): boolean => {
   return url.includes('.cluster.') && url.includes('.cache.amazonaws.com')
 }
 
-const checkConnectionHealth = async (instance: RedisClient): Promise<boolean> => {
+const redactRedisUrl = (raw: string): string => {
+  try {
+    const parsed = new URL(raw)
+    const port = parsed.port ? `:${parsed.port}` : ''
+    return `${parsed.protocol}//${parsed.hostname}${port}`
+  } catch (error) {
+    logger.debug('redis_url_redaction_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return 'redis://[redacted]'
+  }
+}
+
+const checkConnectionHealth = async (
+  instance: RedisClient,
+): Promise<{ ok: boolean; reason?: string }> => {
   try {
     const pong = await Promise.race([
       instance.ping(),
@@ -32,12 +47,11 @@ const checkConnectionHealth = async (instance: RedisClient): Promise<boolean> =>
         setTimeout(() => reject(new Error('PING timeout')), 5000),
       ),
     ])
-    return pong === 'PONG'
+    return pong === 'PONG' ? { ok: true } : { ok: false, reason: `unexpected_pong:${pong}` }
   } catch (error) {
-    logger.warn('redis_health_check_failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return false
+    const reason = error instanceof Error ? error.message : String(error)
+    logger.warn('redis_health_check_failed', { error: reason })
+    return { ok: false, reason }
   }
 }
 
@@ -58,7 +72,7 @@ const setupReconnection = (instance: RedisClient): void => {
   })
 
   instance.on('end', () => {
-    logger.warn('redis_connection_ended')
+    logger.warn('redis_connection_ended', { url: redactRedisUrl(config.redis.url) })
     client = null
   })
 }
@@ -68,8 +82,10 @@ const closeInstance = async (instance: RedisClient): Promise<void> => {
     await instance.quit().catch(() => {
       instance.disconnect()
     })
-  } catch {
-    // Best-effort shutdown; ignore connection errors.
+  } catch (error) {
+    logger.debug('redis_instance_close_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 
@@ -78,7 +94,7 @@ const createConnection = (): Promise<RedisClient | null> => {
   logger.debug('creating_redis_client', {
     is_lambda: isLambda,
     is_cluster: isCluster,
-    url_prefix: config.redis.url.substring(0, 20),
+    url: redactRedisUrl(config.redis.url),
   })
 
   const instance = createClient({
@@ -108,8 +124,8 @@ const createConnection = (): Promise<RedisClient | null> => {
         return null
       }
       const healthy = await checkConnectionHealth(instance)
-      if (!healthy) {
-        logger.error('redis_connect_health_check_failed')
+      if (!healthy.ok) {
+        logger.error('redis_connect_health_check_failed', { error: healthy.reason ?? 'unknown' })
         trackConnectionAttempt(false)
         trackConnectionFailure()
         await closeInstance(instance)
@@ -155,8 +171,10 @@ export const getRedisClient = (): Promise<RedisClient | null> => {
       const instance = client
       return checkConnectionHealth(instance)
         .then(async (healthy) => {
-          if (!healthy) {
-            logger.warn('redis_client_unhealthy_resetting')
+          if (!healthy.ok) {
+            logger.warn('redis_client_unhealthy_resetting', {
+              reason: healthy.reason ?? 'unknown',
+            })
             await closeInstance(instance)
             client = null
             connecting = null
@@ -175,7 +193,10 @@ export const getRedisClient = (): Promise<RedisClient | null> => {
 
           return createConnection()
         })
-        .catch(() => {
+        .catch((error) => {
+          logger.warn('redis_health_check_then_failed', {
+            error: error instanceof Error ? error.message : String(error),
+          })
           return createConnection()
         })
     }
@@ -200,8 +221,10 @@ export const disconnectRedis = async (): Promise<void> => {
       })
       try {
         client.disconnect()
-      } catch {
-        // Ignore disconnect errors after quit failure.
+      } catch (disconnectError) {
+        logger.debug('redis_disconnect_after_quit_failed', {
+          error: disconnectError instanceof Error ? disconnectError.message : String(disconnectError),
+        })
       }
     }
     client = null

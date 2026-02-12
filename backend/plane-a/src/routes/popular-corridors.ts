@@ -1,23 +1,22 @@
 import type { FastifyInstance } from 'fastify'
 import { createHash } from 'crypto'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { recordSearch } from '../../../shared/business-metrics'
-import { PopularCorridorRepository } from '../repositories'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import type { PopularCorridorRecord } from '../repositories/interfaces/popular-corridor-repository.interface'
 
-const planeAPool = getPool(config.db.planeAUrl)
-const popularCorridorRepository = new PopularCorridorRepository(planeAPool)
 const logger = createLogger('plane-a.popular-corridors')
 
 export const popularCorridorsRoutes = async (app: FastifyInstance) => {
+  const popularCorridorRepository = app.container.repositories.popularCorridor
+
   app.get('/popular-corridors', async (request, reply) => {
     try {
       recordSearch('popular', 'corridors')
-    } catch {
-      // Silently ignore metrics errors
+    } catch (error) {
+      logger.debug('popular_corridor_metrics_record_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
     try {
       // Always fetch 6 corridors from real telemetry data

@@ -3,9 +3,11 @@ import { z } from 'zod'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
+import { AppError, RateLimitError, ValidationError } from '../../../shared/errors'
 import { createLogger } from '../../../shared/logger'
 import { recordRequest } from '../../../shared/api-metrics'
 import { formatError } from '../../../shared/utils/error-handling'
+import { DEFAULT_FALLBACK_TTL_SECONDS } from '../../../shared/constants'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 
 const logger = createLogger('plane-a.contact')
@@ -179,23 +181,17 @@ This message was sent from the Remit-Scout contact form.
 }
 
 export const contactRoutes = async (app: FastifyInstance) => {
-  app.post('/contact', async (request, reply) => {
+  app.post('/contact', async (request) => {
     const startTime = Date.now()
-    let statusCode = 200
 
     try {
       const body = contactFormSchema.parse(request.body)
       const seed = `${request.ip || 'unknown'}:${body.email.toLowerCase().trim()}`
       const rateKey = buildRateLimitKey('contact:rate', seed)
-      if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: 3600, component: 'contact' })) {
+      if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: DEFAULT_FALLBACK_TTL_SECONDS, component: 'contact' })) {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('POST', '/contact', 429, durationSeconds)
-        reply.code(429)
-        return {
-          success: false,
-          error: 'rate_limited',
-          message: 'Please wait before sending another message.',
-        }
+        throw new RateLimitError('Please wait before sending another message.')
       }
 
       // Log the contact form submission
@@ -272,18 +268,21 @@ export const contactRoutes = async (app: FastifyInstance) => {
         message: 'Thank you for contacting us. We will get back to you soon.',
       }
     } catch (error) {
-      statusCode = error instanceof z.ZodError ? 400 : 500
+      const isValidationError = error instanceof z.ZodError
+      const isRateLimitError = error instanceof RateLimitError
+      const statusCode = isRateLimitError ? 429 : isValidationError ? 400 : 500
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('POST', '/contact', statusCode, durationSeconds)
 
-      if (error instanceof z.ZodError) {
-        reply.code(400)
-        return {
-          success: false,
-          error: 'validation_error',
-          message: 'Invalid form data. Please check your input.',
+      if (isRateLimitError) {
+        throw error
+      }
+
+      if (isValidationError) {
+        throw new ValidationError('Invalid form data. Please check your input.', {
           details: error.errors,
-        }
+          cause: error,
+        })
       }
 
       logger.error('contact_form_error', {
@@ -291,12 +290,14 @@ export const contactRoutes = async (app: FastifyInstance) => {
         stack: error instanceof Error ? error.stack : undefined,
       })
 
-      reply.code(500)
-      return {
-        success: false,
-        error: 'internal_error',
-        message: 'An error occurred while submitting your message. Please try again later.',
-      }
+      throw new AppError(
+        'An error occurred while submitting your message. Please try again later.',
+        {
+          statusCode: 500,
+          code: 'internal_error',
+          cause: error,
+        },
+      )
     }
   })
 }

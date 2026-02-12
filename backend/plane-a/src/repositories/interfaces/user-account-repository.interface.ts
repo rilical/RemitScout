@@ -43,7 +43,7 @@ export type UserRoleUpdateInput = {
 }
 
 export interface IUserAccountRepository {
-  upsertUserAccount(input: UserAccountUpsertInput): Promise<void>
+  upsertUserAccount(input: UserAccountUpsertInput): Promise<{ created: boolean }>
   getProfile(userId: string): Promise<UserAccountProfile | null>
   updateProfile(input: UserAccountProfileUpdateInput): Promise<UserAccountProfile | null>
   getPrivacySettings(userId: string): Promise<UserPrivacySettings | null>

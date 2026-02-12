@@ -36,12 +36,19 @@ const init = async () => {
       ]),
     })
 
-    const { assertRuntimeConfig } = await import('../../shared/config')
+    const { runStartupChecks } = await import('../../shared/startup')
     const { initErrorTracking } = await import('../../shared/error-tracker')
     const { initTracing } = await import('../../shared/tracing')
     const { buildApp } = await import('./app')
 
-    assertRuntimeConfig({ requirePlaneC: true })
+    await runStartupChecks({
+      requirements: {
+        requirePlaneCDb: true,
+        requireRedis: true,
+        requireQueues: true,
+        requireStorage: true,
+      },
+    })
 
     initErrorTracking('plane-c')
     initTracing('plane-c')

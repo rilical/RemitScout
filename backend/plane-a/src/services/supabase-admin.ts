@@ -1,4 +1,7 @@
 import { getErrorMessage } from '../types/errors'
+import { createLogger } from '../../../shared/logger'
+
+const logger = createLogger('plane-a.supabase-admin')
 
 export const deleteSupabaseAccount = async (
   userId: string,
@@ -22,8 +25,12 @@ export const deleteSupabaseAccount = async (
       if (payload && typeof payload === 'object' && 'message' in payload) {
         details = String((payload as { message?: string }).message || '')
       }
-    } catch {
-      // Ignore JSON parsing errors
+    } catch (error) {
+      logger.debug('supabase_delete_error_payload_parse_failed', {
+        user_id: userId,
+        status: response.status,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
 
     const errorMessage = details || `Supabase deletion failed with status ${response.status}`

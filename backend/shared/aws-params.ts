@@ -123,8 +123,11 @@ const parseSecretValue = (raw: string, jsonKeys?: string[]): string => {
         return value
       }
     }
-  } catch {
-    // Fall back to raw secret value if not JSON.
+  } catch (error) {
+    logger.debug('secret_json_parse_failed', {
+      keys: jsonKeys,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
   return raw
@@ -134,7 +137,10 @@ const parseSecretJson = (raw: string): Record<string, string> | null => {
   try {
     const parsed = JSON.parse(raw) as Record<string, string>
     return parsed
-  } catch {
+  } catch (error) {
+    logger.debug('secret_json_parse_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 }
@@ -306,7 +312,11 @@ export const resolveProxyUrl = async (source: ProxyUrlSource): Promise<string | 
         try {
           const parsed = JSON.parse(raw) as Record<string, string>
           url = parsed[source.jsonKey]
-        } catch {
+        } catch (error) {
+          logger.debug('proxy_url_secret_json_parse_failed', {
+            env_var: source.envVar,
+            error: error instanceof Error ? error.message : String(error),
+          })
           // If not JSON, try raw value
           url = raw
         }
@@ -341,7 +351,10 @@ const isValidUrl = (url: string): boolean => {
   try {
     const parsed = new URL(url)
     return parsed.protocol === 'http:' || parsed.protocol === 'https:'
-  } catch {
+  } catch (error) {
+    logger.debug('proxy_url_validation_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }

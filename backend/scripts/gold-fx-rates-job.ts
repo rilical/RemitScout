@@ -49,7 +49,7 @@ let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
 let pool: ReturnType<typeof createPool> | null = null
 
-const { isShutdownRequested } = createShutdownHandler({
+const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
   timeoutMs: 30000,
   logger,
   onShutdown: async () => {
@@ -139,6 +139,10 @@ export const runGoldFxRatesJob = async (
       {
         maxRetries: 3,
         initialDelayMs: 500,
+        maxDelayMs: 10000,
+        timeoutMs: 60000,
+        operation: 'gold-fx-rates.aggregate',
+        signal: shutdownSignal,
         retryable: (error) => {
           const errorMessage = error instanceof Error ? error.message : String(error)
           return errorMessage.includes('connection') ||
@@ -186,6 +190,10 @@ export const runGoldFxRatesJob = async (
           {
             maxRetries: 2,
             initialDelayMs: 200,
+            maxDelayMs: 10000,
+            timeoutMs: 60000,
+            operation: 'gold-fx-rates.upsert',
+            signal: shutdownSignal,
             retryable: (error) => {
               const errorMessage = error instanceof Error ? error.message : String(error)
               return errorMessage.includes('connection') ||

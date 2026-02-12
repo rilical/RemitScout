@@ -63,9 +63,9 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   const sharedSecretArns = (options.sharedSecretArns ?? []).filter(Boolean)
   if (sharedSecretArns.length > 0) {
     secretsPolicyResources.push(...sharedSecretArns)
-  } else if (options.envName === 'dev') {
-    secretsPolicyResources.push(
-      'arn:aws:secretsmanager:us-east-1:716156543157:secret:rs-development*',
+  } else {
+    Annotations.of(scope).addWarning(
+      'No sharedSecretArns provided; IAM secret access is limited to remit-scout namespace pattern only.',
     )
   }
   const secretsPolicy = new PolicyStatement({

@@ -2,8 +2,10 @@ import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { createPool } from '../shared/db'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
+import { initTracing } from '../shared/tracing'
 
 const logger = createLogger('script.cache-ttl-probe')
+initTracing('cache-ttl-probe')
 
 const TEST_CORRIDORS = (
   process.env.CACHE_TTL_TEST_CORRIDORS ||

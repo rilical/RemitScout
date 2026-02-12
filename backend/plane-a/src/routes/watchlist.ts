@@ -1,11 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { DEFAULT_AMOUNT_BUCKET } from '../../../shared/constants'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
@@ -13,14 +12,17 @@ import { upsertUsageSnapshot } from '../services/plan-usage'
 import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
-import { WatchlistRepository } from '../repositories'
+import type { PlaneAContainer } from '../container'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.watchlist')
-const pool = getPool(config.db.planeAUrl)
-const watchlistRepository = new WatchlistRepository(pool)
-const USD_EQUIVALENT_AMOUNT = 500
+const USD_EQUIVALENT_AMOUNT = DEFAULT_AMOUNT_BUCKET
 
-const updateWatchlistUsage = async (userId: string) => {
+const updateWatchlistUsage = async (
+  pool: PlaneAContainer['pool'],
+  watchlistRepository: PlaneAContainer['repositories']['watchlist'],
+  userId: string,
+) => {
   try {
     const count = await watchlistRepository.countByUserId(userId)
     await upsertUsageSnapshot(pool, userId, 'watchlist_count', count)
@@ -150,6 +152,8 @@ function defaultLabel(target: z.infer<typeof watchTargetSchema>): string {
 }
 
 async function getWatchlistLimit(
+  pool: PlaneAContainer['pool'],
+  watchlistRepository: PlaneAContainer['repositories']['watchlist'],
   userId: string,
 ): Promise<{ limit: number | 'unlimited'; plan: Awaited<ReturnType<typeof getUserPlan>> | null }> {
   const plan = await getUserPlan(pool, userId)
@@ -163,11 +167,17 @@ async function getWatchlistLimit(
   return { limit, plan }
 }
 
-async function getWatchlistCount(userId: string): Promise<number> {
+async function getWatchlistCount(
+  watchlistRepository: PlaneAContainer['repositories']['watchlist'],
+  userId: string,
+): Promise<number> {
   return watchlistRepository.countByUserId(userId)
 }
 
 export const watchlistRoutes = async (app: FastifyInstance) => {
+  const { pool, repositories } = app.container as PlaneAContainer
+  const watchlistRepository = repositories.watchlist
+
   app.get('/watchlist', { preHandler: requireAuth() }, async (request, reply) => {
     const startTime = Date.now()
     const user = request.user!
@@ -289,7 +299,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           })
         }
 
-        await updateWatchlistUsage(user.user_id)
+        await updateWatchlistUsage(pool, watchlistRepository, user.user_id)
 
         return {
           success: true,
@@ -305,9 +315,9 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       }
 
       // Check quota
-      const { limit, plan } = await getWatchlistLimit(user.user_id)
+      const { limit, plan } = await getWatchlistLimit(pool, watchlistRepository, user.user_id)
       if (limit !== 'unlimited') {
-        const count = await getWatchlistCount(user.user_id)
+        const count = await getWatchlistCount(watchlistRepository, user.user_id)
         if (count >= limit) {
           const isPlanActive = plan?.status === 'active' || plan?.status === 'trialing'
           const effectivePlanCode = plan && isPlanActive ? plan.plan_code : 'free'
@@ -372,7 +382,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
         })
       }
 
-      await updateWatchlistUsage(user.user_id)
+      await updateWatchlistUsage(pool, watchlistRepository, user.user_id)
 
       return {
         success: true,
@@ -390,13 +400,12 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       recordRequest('POST', '/watchlist', error instanceof z.ZodError ? 400 : 500, durationSeconds)
 
       if (error instanceof z.ZodError) {
-        reply.code(400)
-        return {
+                throw new ValidationError('Invalid request', { details: {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
           details: error.errors,
-        }
+        } })
       }
 
       logger.error('watchlist_create_failed', {
@@ -428,12 +437,11 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('PATCH', '/watchlist/:id', 404, durationSeconds)
 
-        reply.code(404)
-        return {
+                throw new NotFoundError('Not found', { details: {
           success: false,
           error: 'not_found',
           message: 'Watchlist item not found',
-        }
+        } })
       }
 
       const target = payloadToTarget(row.target_type, row.target_payload as Record<string, unknown>)
@@ -495,13 +503,12 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       recordRequest('PATCH', '/watchlist/:id', error instanceof z.ZodError ? 400 : 500, durationSeconds)
 
       if (error instanceof z.ZodError) {
-        reply.code(400)
-        return {
+                throw new ValidationError('Invalid request', { details: {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
           details: error.errors,
-        }
+        } })
       }
 
       logger.error('watchlist_update_failed', {
@@ -532,12 +539,11 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('DELETE', '/watchlist/:id', 404, durationSeconds)
 
-        reply.code(404)
-        return {
+                throw new NotFoundError('Not found', { details: {
           success: false,
           error: 'not_found',
           message: 'Watchlist item not found',
-        }
+        } })
       }
 
       const durationSeconds = (Date.now() - startTime) / 1000
@@ -575,7 +581,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      await updateWatchlistUsage(user.user_id)
+      await updateWatchlistUsage(pool, watchlistRepository, user.user_id)
 
       return {
         success: true,

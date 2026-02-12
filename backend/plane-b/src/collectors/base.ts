@@ -284,8 +284,12 @@ export const insertAttempt = async (
         input.success ? undefined : (input.errorType ?? input.errorMessage ?? undefined),
       )
     }
-  } catch {
-    // Silently ignore metrics errors
+  } catch (error) {
+    logger.debug('record_collection_metric_failed', {
+      provider_id: providerId,
+      corridor_id: input.corridorId,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
   try {
@@ -873,8 +877,12 @@ export const recordCircuitOpen = async (
     await circuitRepo.openCircuit(providerId, corridorId, reason, cooldownUntil)
     try {
       updateCircuitBreakerState(providerId, corridorId ?? 'global', 'open')
-    } catch {
-      // Silently ignore metrics errors
+    } catch (error) {
+      logger.warn('circuit_breaker_update_failed', {
+        provider_id: providerId,
+        corridor_id: corridorId ?? 'global',
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
     logger.debug('circuit_opened', {
       provider_id: providerId,
@@ -918,8 +926,12 @@ export const recordCircuitHalfOpen = async (
     await circuitRepo.halfOpenCircuit(providerId, corridorId, cooldownUntil)
     try {
       updateCircuitBreakerState(providerId, corridorId ?? 'global', 'half_open')
-    } catch {
-      // Silently ignore metrics errors
+    } catch (error) {
+      logger.warn('circuit_breaker_update_failed', {
+        provider_id: providerId,
+        corridor_id: corridorId ?? 'global',
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
     logger.debug('circuit_half_opened', {
       provider_id: providerId,
@@ -954,8 +966,12 @@ export const recordCircuitClosed = async (
     await circuitRepo.closeCircuit(providerId, corridorId)
     try {
       updateCircuitBreakerState(providerId, corridorId ?? 'global', 'closed')
-    } catch {
-      // Silently ignore metrics errors
+    } catch (error) {
+      logger.warn('circuit_breaker_update_failed', {
+        provider_id: providerId,
+        corridor_id: corridorId ?? 'global',
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
     logger.debug('circuit_closed', {
       provider_id: providerId,

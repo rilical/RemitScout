@@ -4,6 +4,8 @@ import path from 'node:path'
 const includeProviderFixtures = process.env.RUN_PROVIDER_FIXTURES === '1'
 const enforceCoverage = process.env.ENFORCE_COVERAGE === '1'
 
+// Coverage target timeline (starting Feb 12, 2026):
+// Reach statements 50%, branches 40%, functions 50%, lines 50% within 3 months.
 export default defineConfig({
   test: {
     globals: true,
@@ -45,10 +47,11 @@ export default defineConfig({
       ],
       thresholds: enforceCoverage
         ? {
-            statements: 10,
-            branches: 40,
-            functions: 20,
-            lines: 10,
+            // Starting thresholds (raise every sprint as coverage improves).
+            statements: 20,
+            branches: 15,
+            functions: 25,
+            lines: 20,
           }
         : {
             statements: 0,

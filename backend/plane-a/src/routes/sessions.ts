@@ -1,12 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
-import { config } from '../../../shared/config'
+import { NotFoundError, ValidationError } from '../../../shared/errors'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
-import { SessionRepository } from '../repositories'
 import {
   deriveSessionId,
   detectDeviceType,
@@ -15,8 +13,6 @@ import {
 } from '../services/session-utils'
 
 const logger = createLogger('plane-a.sessions')
-const pool = getPool(config.db.planeAUrl)
-const repository = new SessionRepository(pool)
 
 const trackSessionSchema = z.object({
   session_id: z.string().min(8),
@@ -31,6 +27,9 @@ const revokeAllSchema = z.object({
 })
 
 export const sessionsRoutes = async (app: FastifyInstance) => {
+  const pool = app.container.pool
+  const repository = app.container.repositories.session
+
   app.get('/sessions', { preHandler: requireAuth() }, async (request) => {
     const user = request.user!
     const currentSessionId = deriveSessionId(request)
@@ -51,13 +50,14 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.delete('/sessions/:id', { preHandler: requireAuth() }, async (request, reply) => {
+  app.delete('/sessions/:id', { preHandler: requireAuth() }, async (request) => {
     const user = request.user!
     const params = request.params as { id?: string }
     const sessionId = params.id
     if (!sessionId) {
-      reply.code(400)
-      return { error: 'missing_session_id' }
+      throw new ValidationError('Session id is required', {
+        details: [{ message: 'missing_session_id' }],
+      })
     }
     const currentSessionId = deriveSessionId(request)
 
@@ -65,13 +65,13 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
     const target = sessions.find((session) => session.session_id === sessionId)
 
     if (!target) {
-      reply.code(404)
-      return { error: 'session_not_found' }
+      throw new NotFoundError('Session not found')
     }
 
     if (currentSessionId && sessionId === currentSessionId) {
-      reply.code(400)
-      return { error: 'cannot_revoke_current_session' }
+      throw new ValidationError('Cannot revoke current session', {
+        details: [{ message: 'cannot_revoke_current_session' }],
+      })
     }
 
     await repository.revokeSession(sessionId)
@@ -135,7 +135,7 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
     return { success: true, revoked }
   })
 
-  app.post('/sessions/track', async (request, reply) => {
+  app.post('/sessions/track', async (request) => {
     try {
       const body = trackSessionSchema.parse(request.body ?? {})
       const sessionId = body.session_id
@@ -143,8 +143,9 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
       const userAgent = request.headers['user-agent']
 
       if (!request.user && !anonId) {
-        reply.code(400)
-        return { error: 'missing_anon_id' }
+        throw new ValidationError('Anonymous id is required for unauthenticated tracking', {
+          details: [{ message: 'missing_anon_id' }],
+        })
       }
 
       const location = body.location || getLocationFromHeaders(request.headers)
@@ -169,8 +170,19 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
       logger.warn('session_track_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(400)
-      return { error: 'invalid_request' }
+      if (error instanceof z.ZodError) {
+        throw new ValidationError('Invalid session tracking request', {
+          details: error.issues,
+          cause: error,
+        })
+      }
+      if (error instanceof ValidationError) {
+        throw error
+      }
+      throw new ValidationError('Invalid session tracking request', {
+        details: [{ message: 'invalid_request' }],
+        cause: error,
+      })
     }
   })
 }

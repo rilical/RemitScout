@@ -14,9 +14,11 @@
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { initTracing } from '../shared/tracing'
 import { formatError } from '../shared/utils/error-handling'
 
 const logger = createLogger('script.aws-synthetic-monitor')
+initTracing('synthetic-monitor')
 
 const cloudWatchClient = new CloudWatchClient({})
 
@@ -40,7 +42,12 @@ const fetchWithTimeout = async (
     let body: unknown
     try {
       body = await response.json()
-    } catch {
+    } catch (error) {
+      logger.debug('synthetic_monitor_response_parse_failed', {
+        url,
+        status: response.status,
+        error: error instanceof Error ? error.message : String(error),
+      })
       body = null
     }
     return { status: response.status, body, duration }
@@ -266,5 +273,3 @@ export const handler = async (): Promise<{ success: boolean; results: TestResult
     results: testResults,
   }
 }
-
-

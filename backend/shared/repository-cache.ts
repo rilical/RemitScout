@@ -39,8 +39,11 @@ export class RepositoryCache {
 
       try {
         return JSON.parse(raw) as T
-      } catch {
-        logger.warn('cache_parse_failed', { key: cacheKey })
+      } catch (error) {
+        logger.warn('cache_parse_failed', {
+          key: cacheKey,
+          error: error instanceof Error ? error.message : String(error),
+        })
         return null
       }
     } catch (error: unknown) {
@@ -126,6 +129,5 @@ export const fxRateCache = new RepositoryCache('fx_rate', 300) // 5 minutes
 export const fxRateHistoryCache = new RepositoryCache('fx_rate_history', 3600) // 1 hour
 export const pulseCache = new RepositoryCache('pulse_cache', 3600) // 1 hour
 export const queueDepthCache = new RepositoryCache('queue_depth', 30) // 30 seconds
-
 
 

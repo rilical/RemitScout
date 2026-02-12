@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createLogger } from '../../../shared/logger'
+import { ValidationError } from '../../../shared/errors'
 import { getAvailableCurrenciesForCountry, getCountryByCode } from '../../../shared/countries-currencies'
 
 const logger = createLogger('plane-a.corridor-currencies')
@@ -27,11 +28,10 @@ const normalizeCountry = (value: string) => value.trim().toUpperCase()
 const unique = (values: string[]) => Array.from(new Set(values))
 
 export const corridorCurrenciesRoutes = async (app: FastifyInstance) => {
-  app.get('/corridor-currencies', async (request, reply) => {
+  app.get('/corridor-currencies', async (request, _reply) => {
     const parsed = querySchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'from and to are required.' }
+      throw new ValidationError('from and to are required.', { details: parsed.error.issues })
     }
 
     const from = normalizeCountry(parsed.data.from)
@@ -40,8 +40,7 @@ export const corridorCurrenciesRoutes = async (app: FastifyInstance) => {
     const fromCountry = getCountryByCode(from)
     const toCountry = getCountryByCode(to)
     if (!fromCountry || !toCountry) {
-      reply.code(400)
-      return { error: 'bad_request', message: 'Invalid corridor countries.' }
+      throw new ValidationError('Invalid corridor countries.')
     }
 
     try {
@@ -66,8 +65,7 @@ export const corridorCurrenciesRoutes = async (app: FastifyInstance) => {
         to,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error', message: 'Failed to load corridor currencies.' }
+      throw error
     }
   })
 }

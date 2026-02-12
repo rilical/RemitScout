@@ -78,8 +78,10 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
 
   try {
     new URL(url)
-  } catch {
-    throw new Error(`Invalid URL format: ${url}`)
+  } catch (error) {
+    throw new Error(
+      `Invalid URL format: ${url} (${error instanceof Error ? error.message : String(error)})`,
+    )
   }
 
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
@@ -146,15 +148,14 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
   const dispatcher = resolvedProxyUrl ? new ProxyAgent(resolvedProxyUrl) : undefined
 
   const executeRequest = async (): Promise<HttpResponse> => {
-    const requestController = new AbortController()
-    const requestTimeout = setTimeout(() => requestController.abort(), timeoutMs)
+    const timeoutSignal = AbortSignal.timeout(timeoutMs)
 
     try {
       const response = await undiciFetch(url, {
         method,
         headers: finalHeaders,
         body: payload,
-        signal: requestController.signal,
+        signal: timeoutSignal,
         dispatcher,
       })
 
@@ -162,7 +163,6 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       try {
         bodyText = await response.text()
       } catch (error: unknown) {
-        clearTimeout(requestTimeout)
         const { message } = formatError(error)
         logger.error('http_response_body_read_failed', {
           url,
@@ -192,11 +192,10 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
             url,
             status: response.status,
             body_preview: bodyText.substring(0, 200),
+            error: error instanceof Error ? error.message : String(error),
           })
         }
       }
-
-      clearTimeout(requestTimeout)
 
       if (response.status >= 500 || response.status === 429) {
         throw new Error(`HTTP ${response.status}: ${url}`)
@@ -219,8 +218,6 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
         parseError,
       }
     } catch (error: unknown) {
-      clearTimeout(requestTimeout)
-
       if (isError(error) && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
         throw new Error(`Request timeout after ${timeoutMs}ms: ${url}`)
       }

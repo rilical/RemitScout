@@ -3,6 +3,8 @@ import { Counter, Gauge, Histogram } from 'prom-client'
 import { recordCloudWatchMetric } from './cloudwatch-metrics'
 import { getMetrics, metricsContentType, metricsRegistry } from './metrics-registry'
 
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
+
 const dbQueryDurationSeconds = new Histogram({
   name: 'db_query_duration_seconds',
   help: 'Database query duration in seconds.',
@@ -18,9 +20,23 @@ const dbConnectionPoolActive = new Gauge({
   registers: [metricsRegistry],
 })
 
+const dbConnectionPoolTotal = new Gauge({
+  name: 'db_connection_pool_total',
+  help: 'Total database connections.',
+  labelNames: ['pool_name'],
+  registers: [metricsRegistry],
+})
+
 const dbConnectionPoolIdle = new Gauge({
   name: 'db_connection_pool_idle',
   help: 'Idle database connections.',
+  labelNames: ['pool_name'],
+  registers: [metricsRegistry],
+})
+
+const dbConnectionPoolWaiting = new Gauge({
+  name: 'db_connection_pool_waiting',
+  help: 'Database connection requests waiting for an available client.',
   labelNames: ['pool_name'],
   registers: [metricsRegistry],
 })
@@ -75,26 +91,40 @@ export const recordQueryFromSql = (
 
 export const updateConnectionPoolMetrics = (
   poolName: string,
+  total: number,
   active: number,
   idle: number,
+  waiting: number,
 ) => {
+  dbConnectionPoolTotal.set({ pool_name: poolName }, total)
   dbConnectionPoolActive.set({ pool_name: poolName }, active)
   dbConnectionPoolIdle.set({ pool_name: poolName }, idle)
+  dbConnectionPoolWaiting.set({ pool_name: poolName }, waiting)
+  recordCloudWatchMetric({
+    name: 'db_connection_pool_total',
+    value: total,
+    unit: 'Count',
+    dimensions: { pool_name: poolName, environment: environmentDimension },
+  })
   recordCloudWatchMetric({
     name: 'db_connection_pool_active',
     value: active,
     unit: 'Count',
-    dimensions: { pool_name: poolName },
+    dimensions: { pool_name: poolName, environment: environmentDimension },
   })
   recordCloudWatchMetric({
     name: 'db_connection_pool_idle',
     value: idle,
     unit: 'Count',
-    dimensions: { pool_name: poolName },
+    dimensions: { pool_name: poolName, environment: environmentDimension },
+  })
+  recordCloudWatchMetric({
+    name: 'db_connection_pool_waiting',
+    value: waiting,
+    unit: 'Count',
+    dimensions: { pool_name: poolName, environment: environmentDimension },
   })
 }
 
 export { getMetrics, metricsContentType }
-
-
 

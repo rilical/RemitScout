@@ -1,5 +1,6 @@
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3'
 import { SQSClient, GetQueueAttributesCommand } from '@aws-sdk/client-sqs'
+import { getPool } from './db'
 import { getRedisClient } from './redis'
 import { config } from './config'
 import { createLogger } from './logger'
@@ -27,6 +28,37 @@ export const validateAwsConfig = async (
   options: ValidationOptions = {},
 ): Promise<ValidationResult[]> => {
   const results: ValidationResult[] = []
+
+  // Validate Database connectivity (Aurora/RDS proxy).
+  if (!options.skipDatabase) {
+    const databases = [
+      { name: 'plane_a', url: config.db.planeAUrl },
+      { name: 'plane_b', url: config.db.planeBUrl },
+      { name: 'plane_c', url: config.db.planeCUrl },
+    ]
+
+    for (const db of databases) {
+      if (!db.url) {
+        continue
+      }
+      try {
+        const pool = getPool(db.url)
+        await pool.query('SELECT 1')
+        results.push({ service: `db_${db.name}`, valid: true })
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logger.error('db_validation_failed', {
+          database: db.name,
+          error: errorMessage,
+        })
+        results.push({
+          service: `db_${db.name}`,
+          valid: false,
+          error: errorMessage,
+        })
+      }
+    }
+  }
 
   // Validate S3 Bronze Storage
   if (!options.skipS3 && config.storage.bronze.bucket) {

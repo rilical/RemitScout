@@ -1,16 +1,7 @@
 import './load-env'
 import './error-extensions'
 import { PROVIDER_QUALITY_GATES } from './provider-quality-gates'
-
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const toBoolean = (value: string | undefined, fallback = false) => {
-  if (value === undefined || value === '') return fallback
-  return value === '1' || value === 'true' || value === 'yes'
-}
+import { clampInt, toBoolean, toList, toNumber, toPositiveInt } from './config-helpers'
 
 const toQueueMode = (value: string | undefined) => {
   if (value === 'queue' || value === 'shadow') return value
@@ -44,7 +35,7 @@ const isAwsRuntime = Boolean(
 
 const isStaging = process.env.NODE_ENV === 'staging'
 const isStrictConfig =
-  process.env.NODE_ENV === 'production' || isStaging || process.env.STRICT_CONFIG === '1'
+  process.env.NODE_ENV === 'production' || isStaging || toBoolean(process.env.STRICT_CONFIG)
 
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
@@ -59,13 +50,102 @@ const getDatabaseUrl = (primary?: string, fallback?: string) => {
   return ''
 }
 
-const toList = (value: string | undefined) =>
-  (value || '').split(',').map(item => item.trim()).filter(Boolean)
+type ProviderLimits = {
+  rpm: number
+  concurrency: number
+  perCorridorRpm: number
+}
 
-export const config = {
-  env: process.env.NODE_ENV || 'development',
+const resolveProviderHttpLimits = (
+  envPrefix: string,
+  defaults: ProviderLimits = { rpm: 12, concurrency: 2, perCorridorRpm: 4 },
+): ProviderLimits => {
+  const rpm = toNumber(process.env[`${envPrefix}_RPM`], defaults.rpm)
+  const concurrency = toNumber(process.env[`${envPrefix}_CONCURRENCY`], defaults.concurrency)
+  const perCorridorRpm = toNumber(
+    process.env[`${envPrefix}_CORRIDOR_RPM`],
+    defaults.perCorridorRpm,
+  )
+  return { rpm, concurrency, perCorridorRpm }
+}
+
+const resolveProviderPlaywrightLimits = (
+  envPrefix: string,
+  defaults: ProviderLimits = { rpm: 4, concurrency: 1, perCorridorRpm: 2 },
+): ProviderLimits => {
+  const rpm = toNumber(process.env[`${envPrefix}_PLAYWRIGHT_RPM`], defaults.rpm)
+  const concurrency = toNumber(
+    process.env[`${envPrefix}_PLAYWRIGHT_CONCURRENCY`],
+    defaults.concurrency,
+  )
+  const perCorridorRpm = toNumber(
+    process.env[`${envPrefix}_PLAYWRIGHT_CORRIDOR_RPM`],
+    defaults.perCorridorRpm,
+  )
+  return { rpm, concurrency, perCorridorRpm }
+}
+
+type Primitive = null | undefined | string | number | boolean | symbol | bigint
+export type DeepReadonly<T> =
+  T extends Primitive
+    ? T
+    : T extends (infer U)[]
+      ? ReadonlyArray<DeepReadonly<U>>
+      : T extends (...args: never[]) => unknown
+        ? T
+        : { readonly [K in keyof T]: DeepReadonly<T[K]> }
+
+const deepFreeze = <T>(obj: T): DeepReadonly<T> => {
+  if (obj === null || obj === undefined) return obj as DeepReadonly<T>
+  if (typeof obj !== 'object') return obj as DeepReadonly<T>
+  if (Object.isFrozen(obj)) return obj as DeepReadonly<T>
+
+  for (const key of Object.getOwnPropertyNames(obj)) {
+    const value = (obj as Record<string, unknown>)[key]
+    deepFreeze(value)
+  }
+
+  return Object.freeze(obj) as DeepReadonly<T>
+}
+
+const env = process.env.NODE_ENV || 'development'
+
+const rawConfig = {
+  env,
+  envName: process.env.ENVIRONMENT || '',
   runtime: {
     readOnly: toBoolean(process.env.READ_ONLY_MODE),
+    isAwsRuntime,
+    isStaging,
+    isStrictConfig,
+    isLambda: Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME),
+    isEcs: Boolean(
+      process.env.ECS_CONTAINER_METADATA_URI || process.env.ECS_CONTAINER_METADATA_URI_V4,
+    ),
+    // Snapshot environment-derived AWS metadata so the rest of the codebase can avoid direct
+    // `process.env` reads (enforced by lint). Values are stable per container.
+    ecsMetadataUri: process.env.ECS_CONTAINER_METADATA_URI || '',
+    ecsMetadataUriV4: process.env.ECS_CONTAINER_METADATA_URI_V4 || '',
+    lambdaFunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME || '',
+    lambdaFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION || '',
+    lambdaFunctionArn: process.env.AWS_LAMBDA_FUNCTION_ARN || '',
+    ecsTaskArn: process.env.ECS_TASK_ARN || '',
+    ecsContainerName: process.env.ECS_CONTAINER_NAME || '',
+    awsAccountId: process.env.AWS_ACCOUNT_ID || '',
+  },
+  build: {
+    // Prefer explicit version in deploys; fall back to npm injected var when present.
+    version: process.env.APP_VERSION || process.env.npm_package_version || '',
+  },
+  logging: {
+    level: process.env.LOG_LEVEL || '',
+  },
+  aws: {
+    region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '',
+    sesRegion:
+      process.env.SES_REGION || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1',
+    snsRegion:
+      process.env.SNS_REGION || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1',
   },
   providerQualityGates: PROVIDER_QUALITY_GATES,
   planeA: {
@@ -75,11 +155,11 @@ export const config = {
     enterpriseApiRateLimitMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_MAX, 600),
     enterpriseApiRateLimitWindowMs: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_WINDOW_MS, 60000),
     enterpriseApiKeyMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_KEY_MAX, 5),
-    requireApiKey: process.env.PLANE_A_REQUIRE_API_KEY === '1',
-    requireJwt: process.env.PLANE_A_REQUIRE_JWT === '1',
+    requireApiKey: toBoolean(process.env.PLANE_A_REQUIRE_API_KEY),
+    requireJwt: toBoolean(process.env.PLANE_A_REQUIRE_JWT),
     apiKeys: (process.env.PLANE_A_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean),
     jwtSecret: process.env.PLANE_A_JWT_SECRET || '',
-    planeCBaseUrl: process.env.PLANE_C_BASE_URL || 'http://localhost:4100',
+    planeCBaseUrl: process.env.PLANE_C_BASE_URL || (isStrictConfig ? '' : 'http://localhost:4100'),
     adminEmails: (process.env.PLANE_A_ADMIN_EMAILS || '')
       .split(',')
       .map(email => email.trim().toLowerCase())
@@ -101,12 +181,41 @@ export const config = {
       allowedMethods: toList(process.env.PLANE_A_CORS_ALLOWED_METHODS),
       allowCredentials: toBoolean(process.env.PLANE_A_CORS_ALLOW_CREDENTIALS),
     },
+    smartAlerts: {
+      enabled: toBoolean(
+        process.env.PLANE_A_SMART_ALERTS_ENABLED,
+        env !== 'production' && env !== 'staging',
+      ),
+      intervalMinutes: toNumber(process.env.PLANE_A_SMART_ALERTS_INTERVAL_MINUTES, 15),
+    },
+    swagger: {
+      enabled: isAwsRuntime ? toBoolean(process.env.SWAGGER_ENABLED) : true,
+      apiGatewayUrl:
+        process.env.API_GATEWAY_URL ||
+        process.env.API_BASE_URL ||
+        (process.env.AWS_REGION && process.env.API_ID
+          ? `https://${process.env.API_ID}.execute-api.${process.env.AWS_REGION}.amazonaws.com`
+          : ''),
+      apiId: process.env.API_ID || '',
+    },
   },
   planeC: {
     port: toNumber(process.env.PLANE_C_PORT, 4100),
   },
   planeB: {
     useSeedData: toBoolean(process.env.PLANE_B_USE_SEED_DATA),
+    ingest: {
+      loopEnabled: toBoolean(process.env.PLANE_B_INGEST_LOOP),
+      loopIntervalSeconds: toNumber(process.env.PLANE_B_INGEST_LOOP_INTERVAL_SECONDS, 60),
+      ingestFanoutMessageMode: (process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE || 'corridor')
+        .toLowerCase()
+        .trim(),
+      b2bCorridorProviderBatchSize: toPositiveInt(
+        process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE,
+        0,
+      ),
+      healthEnabled: toBoolean(process.env.PLANE_B_HEALTH_ENABLED, true),
+    },
     b2bSweepIntervalMinutes: toNumber(process.env.PLANE_B_B2B_SWEEP_INTERVAL_MINUTES, 15),
     b2bTargetMinutes: toNumber(process.env.PLANE_B_B2B_TARGET_MINUTES, 180),
     b2bMaxTargetMinutes: toNumber(process.env.PLANE_B_B2B_MAX_TARGET_MINUTES, 1440),
@@ -501,6 +610,136 @@ export const config = {
     b2cLiveRpm: toNumber(process.env.PLANE_B_B2C_LIVE_RPM, 0),
     b2cLivePerCorridorRpm: toNumber(process.env.PLANE_B_B2C_LIVE_CORRIDOR_RPM, 0),
     disableTier1: toBoolean(process.env.PLANE_B_DISABLE_TIER1),
+    providerLimits: {
+      http: {
+        alansari: resolveProviderHttpLimits('PLANE_B_ALANSARI', {
+          rpm: 20,
+          concurrency: 1,
+          perCorridorRpm: 4,
+        }),
+        bossmoney: resolveProviderHttpLimits('PLANE_B_BOSSMONEY', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        dahabshiil: resolveProviderHttpLimits('PLANE_B_DAHABSHIIL', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        instarem: resolveProviderHttpLimits('PLANE_B_INSTAREM', {
+          rpm: 30,
+          concurrency: 2,
+          perCorridorRpm: 6,
+        }),
+        intermex: resolveProviderHttpLimits('PLANE_B_INTERMEX', {
+          rpm: 20,
+          concurrency: 1,
+          perCorridorRpm: 4,
+        }),
+        koronapay: resolveProviderHttpLimits('PLANE_B_KORONAPAY', {
+          rpm: 20,
+          concurrency: 2,
+          perCorridorRpm: 4,
+        }),
+        mukuru: resolveProviderHttpLimits('PLANE_B_MUKURU', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        orbitremit: resolveProviderHttpLimits('PLANE_B_ORBITREMIT', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        pangea: resolveProviderHttpLimits('PLANE_B_PANGEA', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        paysend: resolveProviderHttpLimits('PLANE_B_PAYSEND', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        placid: resolveProviderHttpLimits('PLANE_B_PLACID', {
+          rpm: 20,
+          concurrency: 2,
+          perCorridorRpm: 4,
+        }),
+        remitbee: resolveProviderHttpLimits('PLANE_B_REMITBEE', {
+          rpm: 20,
+          concurrency: 2,
+          perCorridorRpm: 4,
+        }),
+        remitly: resolveProviderHttpLimits('PLANE_B_REMITLY'),
+        ria: resolveProviderHttpLimits('PLANE_B_RIA', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        sendwave: resolveProviderHttpLimits('PLANE_B_SENDWAVE', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        singx: resolveProviderHttpLimits('PLANE_B_SINGX', {
+          rpm: 20,
+          concurrency: 2,
+          perCorridorRpm: 4,
+        }),
+        transfergo: resolveProviderHttpLimits('PLANE_B_TRANSFERGO', {
+          rpm: 8,
+          concurrency: 2,
+          perCorridorRpm: 3,
+        }),
+        wellsfargo: resolveProviderHttpLimits('PLANE_B_WELLSFARGO', {
+          rpm: 6,
+          concurrency: 1,
+          perCorridorRpm: 2,
+        }),
+        westernunion: resolveProviderHttpLimits('PLANE_B_WESTERNUNION'),
+        wirebarley: resolveProviderHttpLimits('PLANE_B_WIREBARLEY', {
+          rpm: 20,
+          concurrency: 1,
+          perCorridorRpm: 4,
+        }),
+        wise: resolveProviderHttpLimits('PLANE_B_WISE', { rpm: 30, concurrency: 2, perCorridorRpm: 2 }),
+        worldremit: resolveProviderHttpLimits('PLANE_B_WORLDREMIT', {
+          rpm: 10,
+          concurrency: 1,
+          perCorridorRpm: 3,
+        }),
+        xe: resolveProviderHttpLimits('PLANE_B_XE'),
+        xoom: resolveProviderHttpLimits('PLANE_B_XOOM'),
+      },
+      playwright: {
+        alansari: resolveProviderPlaywrightLimits('PLANE_B_ALANSARI'),
+        bossmoney: resolveProviderPlaywrightLimits('PLANE_B_BOSSMONEY'),
+        dahabshiil: resolveProviderPlaywrightLimits('PLANE_B_DAHABSHIIL'),
+        instarem: resolveProviderPlaywrightLimits('PLANE_B_INSTAREM'),
+        intermex: resolveProviderPlaywrightLimits('PLANE_B_INTERMEX'),
+        koronapay: resolveProviderPlaywrightLimits('PLANE_B_KORONAPAY'),
+        mukuru: resolveProviderPlaywrightLimits('PLANE_B_MUKURU'),
+        orbitremit: resolveProviderPlaywrightLimits('PLANE_B_ORBITREMIT'),
+        pangea: resolveProviderPlaywrightLimits('PLANE_B_PANGEA'),
+        paysend: resolveProviderPlaywrightLimits('PLANE_B_PAYSEND'),
+        placid: resolveProviderPlaywrightLimits('PLANE_B_PLACID'),
+        remitbee: resolveProviderPlaywrightLimits('PLANE_B_REMITBEE'),
+        remitly: resolveProviderPlaywrightLimits('PLANE_B_REMITLY'),
+        ria: resolveProviderPlaywrightLimits('PLANE_B_RIA'),
+        sendwave: resolveProviderPlaywrightLimits('PLANE_B_SENDWAVE'),
+        singx: resolveProviderPlaywrightLimits('PLANE_B_SINGX'),
+        transfergo: resolveProviderPlaywrightLimits('PLANE_B_TRANSFERGO'),
+        wellsfargo: resolveProviderPlaywrightLimits('PLANE_B_WELLSFARGO'),
+        westernunion: resolveProviderPlaywrightLimits('PLANE_B_WESTERNUNION'),
+        wirebarley: resolveProviderPlaywrightLimits('PLANE_B_WIREBARLEY'),
+        wise: resolveProviderPlaywrightLimits('PLANE_B_WISE'),
+        worldremit: resolveProviderPlaywrightLimits('PLANE_B_WORLDREMIT'),
+        xe: resolveProviderPlaywrightLimits('PLANE_B_XE'),
+        xoom: resolveProviderPlaywrightLimits('PLANE_B_XOOM'),
+      },
+    },
   },
   fxRates: {
     oandaFallbackEnabled: toBoolean(process.env.FX_RATE_OANDA_FALLBACK),
@@ -510,6 +749,15 @@ export const config = {
     dbFreshnessHours: toNumber(process.env.FX_RATE_DB_FRESHNESS_HOURS, 1),
     historyDays: toNumber(process.env.FX_RATE_HISTORY_DAYS, 30),
     syncIntervalMinutes: toNumber(process.env.OANDA_SYNC_INTERVAL_MINUTES, 60),
+    useAuthenticatedApi: toBoolean(process.env.OANDA_USE_AUTHENTICATED_API),
+    apiKey: process.env.OANDA_API_KEY || '',
+    syncCurrencies: toList(process.env.OANDA_SYNC_CURRENCIES).map((c) => c.toUpperCase()),
+    syncIncludeCapability:
+      process.env.OANDA_SYNC_INCLUDE_CAPABILITY !== undefined
+        ? toBoolean(process.env.OANDA_SYNC_INCLUDE_CAPABILITY)
+        : env !== 'production' && env !== 'staging',
+    syncMaxPairs: toNumber(process.env.OANDA_SYNC_MAX_PAIRS, 0),
+    syncConcurrency: toNumber(process.env.OANDA_SYNC_CONCURRENCY, 2),
     oandaRpm: toNumber(process.env.OANDA_RPM, 60),
     oandaBurstMultiplier: toNumber(process.env.OANDA_BURST_MULTIPLIER, 2),
     oandaRateLimitMaxRetries: toNumber(process.env.OANDA_RATE_LIMIT_MAX_RETRIES, 3),
@@ -565,6 +813,12 @@ export const config = {
   },
   alerts: {
     slackWebhookUrl: process.env.ALERT_SLACK_WEBHOOK_URL || '',
+    smart: {
+      minConfidence: clampInt(toPositiveInt(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70), 1, 100),
+      minSampleDays: clampInt(toPositiveInt(process.env.SMART_ALERTS_MIN_SAMPLE_DAYS, 21), 1, 365),
+      weeklySendDow: clampInt(toPositiveInt(process.env.ALERTS_WEEKLY_SEND_DOW, 1), 1, 7),
+      weeklySendHour: clampInt(toPositiveInt(process.env.ALERTS_WEEKLY_SEND_HOUR, 9), 0, 23),
+    },
     unsubscribe: {
       secret: process.env.ALERT_UNSUBSCRIBE_SECRET || '',
       baseUrl:
@@ -591,7 +845,20 @@ export const config = {
           : true,
       queueUrl: process.env.ALERT_EVALUATION_QUEUE_URL || '',
       batchSize: toNumber(process.env.ALERT_EVALUATION_BATCH_SIZE, 10),
-      concurrency: toNumber(process.env.ALERT_EVALUATION_CONCURRENCY, 10),
+      concurrency: clampInt(toPositiveInt(process.env.ALERT_EVALUATION_CONCURRENCY, 10), 1, 25),
+    },
+    notifications: {
+      auditAttempts: toBoolean(process.env.ALERTS_NOTIFICATION_AUDIT),
+      auditContent: toBoolean(process.env.ALERTS_NOTIFICATION_AUDIT_CONTENT),
+      auditPii: toBoolean(process.env.ALERTS_NOTIFICATION_AUDIT_PII),
+      email: {
+        enabled: toBoolean(process.env.ALERTS_EMAIL_ENABLED),
+        from: process.env.ALERTS_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+        fromName: process.env.ALERTS_EMAIL_FROM_NAME || 'Remit-Scout Alerts',
+      },
+      sms: {
+        enabled: toBoolean(process.env.ALERTS_SMS_ENABLED),
+      },
     },
   },
   observability: {
@@ -609,6 +876,9 @@ export const config = {
         process.env.TRACING_EXPORTER ||
         (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? 'xray' : '')
       ).toLowerCase(),
+      otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || '',
+      filterHealthChecks: toBoolean(process.env.TRACE_FILTER_HEALTH_CHECKS),
+      sampleRate: toNumber(process.env.TRACE_SAMPLE_RATE, NaN),
     },
   },
   db: {
@@ -694,16 +964,133 @@ export const config = {
     tokenExpiryHours: toNumber(process.env.NEWSLETTER_TOKEN_EXPIRY_HOURS, 168),
     welcomeEnabled: toBoolean(process.env.NEWSLETTER_WELCOME_ENABLED),
   },
+  communications: {
+    email: {
+      provider: (process.env.EMAIL_PROVIDER || 'ses').toLowerCase(),
+      sesRegion: process.env.SES_REGION || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '',
+      sesFromAddress: process.env.SES_FROM_ADDRESS || '',
+      sesFromName: process.env.SES_FROM_NAME || '',
+      sesReplyTo: process.env.SES_REPLY_TO || '',
+      sendgridApiKey: process.env.SENDGRID_API_KEY || '',
+      legacyFromAddress: process.env.EMAIL_FROM_ADDRESS || '',
+      legacyFromName: process.env.EMAIL_FROM_NAME || '',
+      maxRetries: toNumber(process.env.EMAIL_MAX_RETRIES, 2),
+    },
+    sms: {
+      provider: (process.env.SMS_PROVIDER || 'sns').toLowerCase(),
+      snsRegion: process.env.SNS_REGION || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '',
+      snsTopicArn: process.env.SNS_TOPIC_ARN || '',
+      twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || '',
+      twilioFromNumber: process.env.TWILIO_FROM_NUMBER || '',
+      maxRetries: toNumber(process.env.SMS_MAX_RETRIES, 2),
+    },
+    webhook: {
+      maxRetries: toNumber(process.env.WEBHOOK_MAX_RETRIES, 3),
+      timeoutMs: toNumber(process.env.WEBHOOK_TIMEOUT_MS, 5000),
+      backoffBaseMs: toNumber(process.env.WEBHOOK_BACKOFF_BASE_MS, 1000),
+      maxBackoffMs: toNumber(process.env.WEBHOOK_MAX_BACKOFF_MS, 8000),
+    },
+    dispatch: {
+      parallelDispatch:
+        process.env.NOTIFICATION_PARALLEL !== undefined
+          ? toBoolean(process.env.NOTIFICATION_PARALLEL, true)
+          : true,
+      maxConcurrentDispatches: clampInt(toNumber(process.env.MAX_CONCURRENT_DISPATCHES, 10), 1, 100),
+    },
+  },
+  workers: {
+    health: {
+      enabled: toBoolean(process.env.WORKER_HEALTH_ENABLED, true),
+      port: toNumber(process.env.HEALTH_PORT, 8080),
+    },
+    exportWorker: {
+      queueBatchSize: toNumber(process.env.EXPORT_QUEUE_BATCH_SIZE, 5),
+      queueIdleSleepMs: toNumber(process.env.EXPORT_QUEUE_IDLE_SLEEP_MS, 2000),
+      queueLockTtlSeconds: toNumber(process.env.EXPORT_QUEUE_LOCK_TTL_SECONDS, 120),
+      shutdownTimeoutMs: toNumber(process.env.EXPORT_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000),
+      jobExpiryDays: toNumber(process.env.EXPORT_JOB_EXPIRY_DAYS, 7),
+      fetchPageSize: clampInt(toNumber(process.env.EXPORT_FETCH_PAGE_SIZE, 1000), 100, 5000),
+    },
+    alertEvaluationWorker: {
+      idleSleepMs: toNumber(process.env.ALERT_EVALUATION_IDLE_SLEEP_MS, 1000),
+      loopJitterMs: toNumber(process.env.ALERT_EVALUATION_LOOP_JITTER_MS, 0),
+      messageJitterMs: toNumber(process.env.ALERT_EVALUATION_MESSAGE_JITTER_MS, 0),
+      shutdownTimeoutMs: toNumber(process.env.ALERT_EVALUATION_SHUTDOWN_TIMEOUT_MS, 30000),
+    },
+    notificationsQueueWorker: {
+      batchSize: toNumber(process.env.NOTIFICATIONS_QUEUE_BATCH_SIZE, 10),
+      idleSleepMs: toNumber(process.env.NOTIFICATIONS_QUEUE_IDLE_SLEEP_MS, 1000),
+      shutdownTimeoutMs: toNumber(process.env.NOTIFICATIONS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000),
+      loopJitterMs: toNumber(process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS, 0),
+      messageJitterMs: toNumber(process.env.NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS, 0),
+    },
+    opsAlertsQueueWorker: {
+      batchSize: toNumber(process.env.OPS_ALERTS_QUEUE_BATCH_SIZE, 10),
+      idleSleepMs: toNumber(process.env.OPS_ALERTS_QUEUE_IDLE_SLEEP_MS, 1000),
+      shutdownTimeoutMs: toNumber(process.env.OPS_ALERTS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000),
+      loopJitterMs: toNumber(process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS, 0),
+      messageJitterMs: toNumber(process.env.OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS, 0),
+    },
+    fxRateRefreshWorker: {
+      limit: toNumber(process.env.FX_RATE_REFRESH_LIMIT, 50),
+      maxRetries: toNumber(process.env.FX_RATE_REFRESH_MAX_RETRIES, 3),
+      concurrency: toNumber(process.env.FX_RATE_REFRESH_CONCURRENCY, 5),
+      backpressureThreshold: toNumber(process.env.FX_RATE_REFRESH_BACKPRESSURE_THRESHOLD, 0),
+      lockMode: (process.env.FX_RATE_REFRESH_LOCK_MODE || 'auto').toLowerCase(),
+      loopEnabled: toBoolean(process.env.FX_RATE_REFRESH_LOOP),
+      loopDelayMs: Math.max(50, toNumber(process.env.FX_RATE_REFRESH_LOOP_DELAY_MS, 250)),
+      idleDelayMs: toNumber(process.env.FX_RATE_REFRESH_IDLE_DELAY_MS, 750),
+      loopJitterMs: toNumber(process.env.FX_RATE_REFRESH_LOOP_JITTER_MS, 0),
+    },
+    b2cRefreshWorker: {
+      limit: toNumber(process.env.B2C_REFRESH_LIMIT, 50),
+      concurrency: toNumber(process.env.B2C_REFRESH_CONCURRENCY, 5),
+      healthEnabled: toBoolean(process.env.B2C_REFRESH_HEALTH_ENABLED, true),
+      backpressureThreshold: toNumber(process.env.B2C_REFRESH_BACKPRESSURE_THRESHOLD, 0),
+      lockMode: (process.env.B2C_REFRESH_LOCK_MODE || 'auto').toLowerCase(),
+      loopEnabled: toBoolean(process.env.B2C_REFRESH_LOOP),
+      loopDelayMs: Math.max(50, toNumber(process.env.B2C_REFRESH_LOOP_DELAY_MS, 250)),
+      idleDelayMs: toNumber(process.env.B2C_REFRESH_IDLE_DELAY_MS, 750),
+      loopJitterMs: toNumber(process.env.B2C_REFRESH_LOOP_JITTER_MS, 0),
+    },
+  },
+  indices: {
+    amountBucket: toNumber(process.env.GOLD_INDICES_AMOUNT_BUCKET, 500),
+    providerWeightModel: process.env.PROVIDER_WEIGHT_MODEL || '',
+  },
+  dbPool: {
+    disablePoolSignalCleanup: toBoolean(process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP),
+    maxOverride: toNumber(process.env.DB_POOL_MAX, NaN),
+    minOverride: toNumber(process.env.DB_POOL_MIN, NaN),
+    sslMode: process.env.DB_SSL_MODE || process.env.PGSSLMODE || '',
+    queryTimeoutMs: toNumber(process.env.DB_QUERY_TIMEOUT_MS, 30000),
+    connectionTimeoutMs: toNumber(process.env.DB_CONNECTION_TIMEOUT_MS, 10000),
+    idleTimeoutMs: toNumber(process.env.DB_IDLE_TIMEOUT_MS, 30000),
+    keepAliveEnabled: process.env.DB_KEEPALIVE !== '0',
+    keepAliveInitialDelayMs: toNumber(process.env.DB_KEEPALIVE_INITIAL_DELAY_MS, 10000),
+    maxUses: toNumber(process.env.DB_MAX_USES, 0),
+    disableStatementTimeoutExplicit: toBoolean(process.env.DB_DISABLE_STATEMENT_TIMEOUT),
+  },
 }
+
+export type Config = typeof rawConfig
+export const config: DeepReadonly<Config> = deepFreeze(rawConfig)
 
 export type RuntimeConfigRequirements = {
   requirePlaneA?: boolean
   requirePlaneB?: boolean
+  // Plane C is a hard dependency for Plane A (API calls). This flag validates the Plane C base URL.
   requirePlaneC?: boolean
+  // Plane C server/lambda runtime DB requirements.
+  requirePlaneCDb?: boolean
   requireRedis?: boolean
   requireSupabase?: boolean
   requireStripe?: boolean
   requireJwtSecret?: boolean
+  requireQueues?: boolean
+  requireStorage?: boolean
+  requireAlerts?: boolean
 }
 
 export const assertRuntimeConfig = (
@@ -717,11 +1104,48 @@ export const assertRuntimeConfig = (
   if (requirements.requirePlaneB && !config.db.planeBUrl) {
     missing.push('DATABASE_URL_PLANE_B')
   }
-  if (requirements.requirePlaneC && !config.db.planeCUrl) {
+  if (requirements.requirePlaneCDb && !config.db.planeCUrl) {
     missing.push('DATABASE_URL_PLANE_C')
+  }
+  if (requirements.requirePlaneC && !config.planeA.planeCBaseUrl) {
+    missing.push('PLANE_C_BASE_URL')
+  }
+  if (requirements.requirePlaneC && config.runtime.isAwsRuntime && config.planeA.planeCBaseUrl) {
+    const raw = config.planeA.planeCBaseUrl.trim().toLowerCase()
+    const isLocalhost =
+      raw.includes('://localhost')
+      || raw.includes('://127.0.0.1')
+      || raw.startsWith('localhost')
+      || raw.startsWith('127.0.0.1')
+    if (isLocalhost) {
+      missing.push('PLANE_C_BASE_URL (must not be localhost/127.0.0.1 in AWS)')
+    }
   }
   if (requirements.requireRedis && !config.redis.url) {
     missing.push('REDIS_URL')
+  }
+  if (requirements.requireQueues) {
+    if (!config.queues.quoteRefreshUrl) missing.push('QUOTE_REFRESH_QUEUE_URL')
+    if (!config.queues.fxRateRefreshUrl) missing.push('FX_RATE_REFRESH_QUEUE_URL')
+    if (!config.queues.exports.url) missing.push('EXPORT_JOB_QUEUE_URL')
+    if (!config.queues.ingestFanout.url) missing.push('PLANE_B_INGEST_FANOUT_QUEUE_URL')
+    if (!config.queues.notifications.url) missing.push('PLANE_B_NOTIFICATIONS_QUEUE_URL')
+    if (!config.queues.opsAlerts.url) missing.push('PLANE_B_OPS_ALERT_QUEUE_URL')
+    if (!config.queues.goldLive.url) missing.push('GOLD_LIVE_QUEUE_URL')
+    if (!config.alerts.evaluation.queueUrl) missing.push('ALERT_EVALUATION_QUEUE_URL')
+  }
+  if (requirements.requireStorage) {
+    if (!config.storage.bronze.bucket) missing.push('BRONZE_S3_BUCKET')
+    if (!config.storage.exports.bucket) missing.push('EXPORTS_S3_BUCKET')
+  }
+  if (requirements.requireAlerts) {
+    if (!config.alerts.slackWebhookUrl) missing.push('ALERT_SLACK_WEBHOOK_URL')
+    if (config.alerts.email.enabled && !config.alerts.email.smtpHost) {
+      missing.push('ALERT_SMTP_HOST')
+    }
+    if (config.alerts.email.enabled && !config.alerts.email.from) {
+      missing.push('ALERT_EMAIL_FROM')
+    }
   }
   if (requirements.requireSupabase) {
     if (!config.auth.supabase.url) {
@@ -741,6 +1165,9 @@ export const assertRuntimeConfig = (
     if (!config.billing.stripe.priceIdPlus) {
       missing.push('STRIPE_PRICE_ID_PLUS')
     }
+    if (!config.billing.stripe.priceIdPlusAnnual) {
+      missing.push('STRIPE_PRICE_ID_PLUS_ANNUAL')
+    }
   }
   if (requirements.requireJwtSecret && !config.planeA.jwtSecret) {
     missing.push('PLANE_A_JWT_SECRET')
@@ -750,3 +1177,10 @@ export const assertRuntimeConfig = (
     throw new Error(`Missing required configuration: ${missing.join(', ')}`)
   }
 }
+
+export * from './config-db'
+export * from './config-queues'
+export * from './config-plane-a'
+export * from './config-plane-b'
+export * from './config-alerts'
+export * from './config-storage'

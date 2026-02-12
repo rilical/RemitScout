@@ -88,6 +88,16 @@ export const handler = async (): Promise<number> => {
     throw new Error(`Failed to resolve AWS environment variables: ${message}`)
   }
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+      requireRedis: true,
+      requireQueues: true,
+      requireStorage: true,
+    },
+  })
+
   try {
     const { runFxRateRefreshWorkerLoop } = await import('../fx-rate-refresh-worker')
     return await runFxRateRefreshWorkerLoop()

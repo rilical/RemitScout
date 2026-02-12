@@ -19,6 +19,7 @@ import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { computeBucketSelection } from '../shared/amount-bucket'
 import { createLogger } from '../shared/logger'
+import { normalizeProviderId } from '../shared/provider-utils'
 import { createShutdownHandler } from '../shared/shutdown'
 import { applyShard } from '../shared/sharding'
 import { QuoteRefreshRepository } from '../plane-a/src/repositories'
@@ -37,7 +38,6 @@ const toBoolean = (value: string | undefined, fallback = true) => {
 }
 
 const normalizeToken = (value: string | null | undefined) => value?.trim().toLowerCase() ?? ''
-const normalizeProviderId = (value: string | null | undefined) => value?.trim().toLowerCase() ?? ''
 
 const allowedPayoutMethods = new Set([
   'bank_deposit',

@@ -8,12 +8,12 @@
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { normalizeProviderId } from '../shared/provider-utils'
 import { createShutdownHandler } from '../shared/shutdown'
 
 const logger = createLogger('script.b2c-tier2-warmup-audit')
 
 const normalizeToken = (value: string | null | undefined) => value?.trim().toLowerCase() ?? ''
-const normalizeProviderId = (value: string | null | undefined) => value?.trim().toLowerCase() ?? ''
 
 const allowedPayoutMethods = new Set([
   'bank_deposit',

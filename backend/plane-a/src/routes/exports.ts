@@ -2,21 +2,19 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { sendJsonMessage } from '../../../shared/sqs'
+import { DEFAULT_LIMIT_MAX } from '../../../shared/constants'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import {
-  ExportJobRepository,
   type ExportJobType,
 } from '../repositories'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.exports')
-const planeAPool = getPool(config.db.planeAUrl)
-const exportJobRepository = new ExportJobRepository(planeAPool)
 
 const s3Client = new S3Client({})
 
@@ -31,7 +29,7 @@ const exportCreateSchema = z.object({
 
 const exportListSchema = z.object({
   status: z.enum(['queued', 'running', 'done', 'failed']).optional(),
-  limit: z.coerce.number().int().positive().max(200).optional(),
+  limit: z.coerce.number().int().positive().max(DEFAULT_LIMIT_MAX).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 })
 
@@ -155,11 +153,13 @@ const enqueueExportJob = async (jobId: string, jobType: ExportJobType, userId: s
 }
 
 export const exportsRoutes = async (app: FastifyInstance) => {
+  const { pool: planeAPool, repositories } = app.container
+  const exportJobRepository = repositories.exportJob
+
   app.post('/exports', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const parsed = exportCreateSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const actor = resolveActor(request, reply)
@@ -184,37 +184,32 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     const dateTo = toDateToOrNull(parsed.data.dateTo)
 
     if (parsed.data.dateFrom && !dateFrom) {
-      reply.code(400)
-      return { error: 'invalid_date', field: 'dateFrom' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date', field: 'dateFrom' } })
     }
     if (parsed.data.dateTo && !dateTo) {
-      reply.code(400)
-      return { error: 'invalid_date', field: 'dateTo' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date', field: 'dateTo' } })
     }
 
     const requiresDateRange = dataType === 'history' || dataType === 'all'
     if (finiteExportMaxDays && requiresDateRange) {
       if (!dateFrom || !dateTo) {
-        reply.code(400)
-        return { error: 'export_date_range_required', allowedDays: finiteExportMaxDays }
+                throw new ValidationError('Invalid request', { details: { error: 'export_date_range_required', allowedDays: finiteExportMaxDays } })
       }
     }
 
     if (dateFrom && dateTo) {
       if (dateFrom.getTime() > dateTo.getTime()) {
-        reply.code(400)
-        return { error: 'invalid_date_range' }
+                throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
       }
 
       if (finiteExportMaxDays) {
         const windowDays = getInclusiveWindowDays(dateFrom, dateTo)
         if (windowDays > finiteExportMaxDays) {
-          reply.code(400)
-          return {
+                    throw new ValidationError('Invalid request', { details: {
             error: 'export_window_exceeds_plan_limit',
             allowedDays: finiteExportMaxDays,
             windowDays,
-          }
+          } })
         }
       }
     }
@@ -303,8 +298,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.get('/exports', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const parsed = exportListSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const actor = resolveActor(request, reply)
@@ -346,16 +340,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     if (!actor) return
     const parsedParams = exportJobParamsSchema.safeParse(request.params)
     if (!parsedParams.success) {
-      reply.code(400)
-      return { error: 'invalid_export_id' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_export_id' } })
     }
     const jobId = parsedParams.data.id
 
     try {
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== actor.userId) {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
 
       return {
@@ -387,16 +379,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     if (!actor) return
     const parsedParams = exportJobParamsSchema.safeParse(request.params)
     if (!parsedParams.success) {
-      reply.code(400)
-      return { error: 'invalid_export_id' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_export_id' } })
     }
     const jobId = parsedParams.data.id
 
     try {
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== actor.userId) {
-        reply.code(404)
-        return { error: 'not_found' }
+                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
       if (job.status !== 'done' || !job.s3_key) {
         reply.code(409)

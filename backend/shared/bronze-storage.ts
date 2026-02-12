@@ -4,6 +4,7 @@ import { promisify } from 'util'
 import { randomUUID } from 'crypto'
 
 import { config } from './config'
+import { CircuitBreaker } from './circuit-breaker'
 import { createLogger } from './logger'
 
 const logger = createLogger('shared.bronze-storage')
@@ -11,6 +12,11 @@ const gzipAsync = promisify(gzip)
 
 let s3Client: S3Client | null = null
 let bucketValidated = false
+const s3Circuit = new CircuitBreaker({
+  name: 's3_bronze_uploads',
+  openAfterFailures: 5,
+  openForMs: 60_000,
+})
 
 const getClient = () => {
   if (!s3Client) {
@@ -86,6 +92,11 @@ export const writeBronzePayloadToS3 = async (
     return null
   }
 
+  if (!s3Circuit.canAttempt()) {
+    logger.warn('bronze_s3_circuit_open_skip', { bucket })
+    return null
+  }
+
   // Validate bucket exists
   if (!(await validateBucket(bucket))) {
     return null
@@ -129,6 +140,7 @@ export const writeBronzePayloadToS3 = async (
         ),
       3,
     )
+    s3Circuit.onSuccess()
 
     return {
       bucket,
@@ -137,6 +149,7 @@ export const writeBronzePayloadToS3 = async (
       sizeBytes: compressedBody.length,
     }
   } catch (error) {
+    s3Circuit.onFailure(error)
     logger.warn('bronze_s3_write_failed', {
       bucket,
       key,
@@ -155,6 +168,18 @@ export const writeBronzePayloadsToS3 = async (
   const results = await Promise.allSettled(
     inputs.map((input) => writeBronzePayloadToS3(input)),
   )
+
+  for (let i = 0; i < results.length; i += 1) {
+    const result = results[i]
+    if (result.status === 'rejected') {
+      const input = inputs[i]
+      logger.warn('bronze_s3_batch_write_rejected', {
+        provider_id: input?.providerId,
+        corridor_id: input?.corridorId,
+        error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+      })
+    }
+  }
 
   return results.map((result) => (result.status === 'fulfilled' ? result.value : null))
 }

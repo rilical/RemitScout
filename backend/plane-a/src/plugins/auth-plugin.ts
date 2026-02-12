@@ -19,6 +19,42 @@ type RateLimitEntry = {
 
 const apiKeyRateLimitStore = new Map<string, RateLimitEntry>()
 
+const normalizeScope = (value: string) => value.trim().toLowerCase()
+
+const resolveRequiredApiKeyScopes = (request: FastifyRequest): string[] => {
+  const rawPath = request.routeOptions?.url || request.url.split('?')[0] || ''
+  if (!rawPath) return []
+
+  const path = rawPath.startsWith('/api/v1') ? rawPath.slice('/api/v1'.length) || '/' : rawPath
+
+  // Ops/admin routes should never be accessible via API keys.
+  if (path.startsWith('/ops') || path.startsWith('/admin') || path.startsWith('/audit')) {
+    return ['__forbidden__']
+  }
+
+  if (path.startsWith('/indices')) return ['indices:read']
+  if (
+    path.startsWith('/providers')
+    || path.startsWith('/quotes')
+    || path.startsWith('/corridor-currencies')
+    || path.startsWith('/corridor-limits')
+    || path.startsWith('/rates')
+    || path.startsWith('/pulse')
+    || path.startsWith('/popular-corridors')
+    || path.startsWith('/geo')
+  ) {
+    return ['corridors:read']
+  }
+  if (path.startsWith('/exports')) return ['exports:read']
+  return []
+}
+
+const hasAllScopes = (scopes: string[] | undefined, required: string[]) => {
+  if (!required.length) return true
+  const set = new Set((scopes ?? []).map(normalizeScope))
+  return required.every((scope) => set.has(normalizeScope(scope)))
+}
+
 export const authPlugin = (app: FastifyInstance) => {
   app.addHook('preHandler', async (request: FastifyRequest) => {
     const apiKeyToken = resolveApiKeyToken(request)
@@ -85,86 +121,94 @@ export const authPlugin = (app: FastifyInstance) => {
   })
 }
 
-export const requireAuth = () => async (request: FastifyRequest, reply: FastifyReply) => {
-  if (request.accountDeleted) {
-    reply.code(403)
-    return reply.send({
-      error: 'account_deleted',
-      code: 'account_deleted',
-      message: 'This account has been deleted.',
-    })
-  }
-
-  if (request.authError) {
-    const errorCode = request.authError.code
-    const statusCode = errorCode === 'missing_token' ? 401 : 401
-    reply.code(statusCode)
-    return reply.send({ 
-      error: 'unauthorized',
-      code: errorCode,
-      message: request.authError.message 
-    })
-  }
-
-  if (!request.user) {
-    if (request.apiKeyError) {
-      reply.code(401)
+export const requireAuth = () => {
+  const handler = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (request.accountDeleted) {
+      reply.code(403)
       return reply.send({
-        error: 'unauthorized',
-        code: request.apiKeyError.code,
-        message: request.apiKeyError.message,
+        error: 'account_deleted',
+        code: 'account_deleted',
+        message: 'This account has been deleted.',
       })
     }
-    reply.code(401)
-    return reply.send({ error: 'unauthorized' })
+
+    if (request.authError) {
+      const errorCode = request.authError.code
+      const statusCode = errorCode === 'missing_token' ? 401 : 401
+      reply.code(statusCode)
+      return reply.send({
+        error: 'unauthorized',
+        code: errorCode,
+        message: request.authError.message,
+      })
+    }
+
+    if (!request.user) {
+      if (request.apiKeyError) {
+        reply.code(401)
+        return reply.send({
+          error: 'unauthorized',
+          code: request.apiKeyError.code,
+          message: request.apiKeyError.message,
+        })
+      }
+      reply.code(401)
+      return reply.send({ error: 'unauthorized' })
+    }
   }
+  ;(handler as { __guardTag?: string }).__guardTag = 'requireAuth'
+  return handler
 }
 
-export const requireAdmin = () => async (request: FastifyRequest, reply: FastifyReply) => {
-  if (request.accountDeleted) {
-    reply.code(403)
-    return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
-  }
+export const requireAdmin = () => {
+  const handler = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (request.accountDeleted) {
+      reply.code(403)
+      return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
+    }
 
-  if (!request.user) {
-    reply.code(401)
-    return reply.send({ error: 'unauthorized' })
-  }
+    if (!request.user) {
+      reply.code(401)
+      return reply.send({ error: 'unauthorized' })
+    }
 
-  const email = request.user.email?.toLowerCase()
-  const allowlist = config.planeA.adminEmails
-  if (allowlist.length > 0) {
-    if (email && allowlist.includes(email)) {
+    const email = request.user.email?.toLowerCase()
+    const allowlist = config.planeA.adminEmails
+    if (allowlist.length > 0) {
+      if (email && allowlist.includes(email)) {
+        return
+      }
+      reply.code(403)
+      return reply.send({ error: 'forbidden' })
+    }
+
+    const supabaseRole = request.user.role
+    if (supabaseRole === 'admin' || supabaseRole === 'super_admin') {
       return
     }
+
+    try {
+      const result = await query<{ app_role: string | null }>(
+        `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
+        [request.user.user_id],
+        planeAPool,
+      )
+      const appRole = result.rows[0]?.app_role
+      if (appRole === 'admin' || appRole === 'super_admin') {
+        return
+      }
+    } catch (error) {
+      logger.warn('admin_role_lookup_failed', {
+        user_id: request.user.user_id,
+        error: getErrorMessage(error),
+      })
+    }
+
     reply.code(403)
     return reply.send({ error: 'forbidden' })
   }
-
-  const supabaseRole = request.user.role
-  if (supabaseRole === 'admin' || supabaseRole === 'super_admin') {
-    return
-  }
-
-  try {
-    const result = await query<{ app_role: string | null }>(
-      `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
-      [request.user.user_id],
-      planeAPool,
-    )
-    const appRole = result.rows[0]?.app_role
-    if (appRole === 'admin' || appRole === 'super_admin') {
-      return
-    }
-  } catch (error) {
-    logger.warn('admin_role_lookup_failed', {
-      user_id: request.user.user_id,
-      error: getErrorMessage(error),
-    })
-  }
-
-  reply.code(403)
-  return reply.send({ error: 'forbidden' })
+  ;(handler as { __guardTag?: string }).__guardTag = 'requireAdmin'
+  return handler
 }
 
 const planeAPool = getPool(config.db.planeAUrl)
@@ -283,77 +327,89 @@ const applyApiKeyRateLimit = async (
   return true
 }
 
-export const requireEntitlement = (entitlement: EntitlementType) => async (request: FastifyRequest, reply: FastifyReply) => {
-  if (request.accountDeleted) {
-    reply.code(403)
-    return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
-  }
-
-  const userId = request.user?.user_id ?? request.apiKey?.user_id
-  if (!userId) {
-    if (request.apiKeyError) {
-      reply.code(401)
-      return reply.send({
-        error: 'unauthorized',
-        code: request.apiKeyError.code,
-        message: request.apiKeyError.message,
-      })
-    }
-    reply.code(401)
-    return reply.send({ error: 'unauthorized' })
-  }
-
-  try {
-    await ensureUserPlan(planeAPool, userId)
-    const plan = await getUserPlan(planeAPool, userId)
-    
-    if (!plan) {
-      reply.code(500)
-      return reply.send({ error: 'plan_not_found' })
-    }
-    if (request.apiKey && plan.plan_code !== 'enterprise') {
+export const requireEntitlement = (entitlement: EntitlementType) => {
+  const handler = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (request.accountDeleted) {
       reply.code(403)
-      return reply.send({ error: 'enterprise_required' })
-    }
-    if (request.apiKey && !isPlanActive(plan.status)) {
-      reply.code(403)
-      return reply.send({ error: 'plan_inactive' })
-    }
-    if (request.user && isPaidEntitlement(entitlement) && !isPlanActive(plan.status)) {
-      reply.code(403)
-      return reply.send({ error: 'plan_inactive' })
+      return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
     }
 
-    const normalizedPlanCode: PlanCode = plan.plan_code === 'plus' || plan.plan_code === 'enterprise' || plan.plan_code === 'free'
-      ? plan.plan_code
-      : 'free'
-    const effectivePlanCode: PlanCode = isPlanActive(plan.status) ? normalizedPlanCode : 'free'
-    const entitlements: Entitlements = getEntitlementsForPlan(effectivePlanCode)
-    if (!isEntitled(entitlement, entitlements)) {
-      reply.code(403)
-      return reply.send({ error: 'forbidden', entitlement })
-    }
-
-    request.entitlementsContext = {
-      planCode: effectivePlanCode,
-      entitlements,
-    }
-
-    if (request.apiKey) {
-      const allowed = await applyApiKeyRateLimit(request, reply, request.apiKey.key_id)
-      if (!allowed) {
-        return
+    const userId = request.user?.user_id ?? request.apiKey?.user_id
+    if (!userId) {
+      if (request.apiKeyError) {
+        reply.code(401)
+        return reply.send({
+          error: 'unauthorized',
+          code: request.apiKeyError.code,
+          message: request.apiKeyError.message,
+        })
       }
+      reply.code(401)
+      return reply.send({ error: 'unauthorized' })
     }
-  } catch (error) {
-    const logger = createLogger('plane-a.auth-plugin')
-    logger.error('entitlement_check_failed', {
-      user_id: userId,
-      entitlement,
-      error: error as Error,
-    })
-    
-    reply.code(500)
-    return reply.send({ error: 'internal_server_error', message: 'Failed to check entitlements' })
+
+    try {
+      await ensureUserPlan(planeAPool, userId)
+      const plan = await getUserPlan(planeAPool, userId)
+
+      if (!plan) {
+        reply.code(500)
+        return reply.send({ error: 'plan_not_found' })
+      }
+      if (request.apiKey && plan.plan_code !== 'enterprise') {
+        reply.code(403)
+        return reply.send({ error: 'enterprise_required' })
+      }
+      if (request.apiKey && !isPlanActive(plan.status)) {
+        reply.code(403)
+        return reply.send({ error: 'plan_inactive' })
+      }
+      if (request.user && isPaidEntitlement(entitlement) && !isPlanActive(plan.status)) {
+        reply.code(403)
+        return reply.send({ error: 'plan_inactive' })
+      }
+
+      const normalizedPlanCode: PlanCode = plan.plan_code === 'plus' || plan.plan_code === 'enterprise' || plan.plan_code === 'free'
+        ? plan.plan_code
+        : 'free'
+      const effectivePlanCode: PlanCode = isPlanActive(plan.status) ? normalizedPlanCode : 'free'
+      const entitlements: Entitlements = getEntitlementsForPlan(effectivePlanCode)
+      if (!isEntitled(entitlement, entitlements)) {
+        reply.code(403)
+        return reply.send({ error: 'forbidden', entitlement })
+      }
+
+      request.entitlementsContext = {
+        planCode: effectivePlanCode,
+        entitlements,
+      }
+
+      if (request.apiKey) {
+        const requiredScopes = resolveRequiredApiKeyScopes(request)
+        if (!hasAllScopes(request.apiKey.scopes, requiredScopes)) {
+          reply.code(403)
+          return reply.send({
+            error: 'insufficient_scope',
+            requiredScopes,
+          })
+        }
+        const allowed = await applyApiKeyRateLimit(request, reply, request.apiKey.key_id)
+        if (!allowed) {
+          return
+        }
+      }
+    } catch (error) {
+      const logger = createLogger('plane-a.auth-plugin')
+      logger.error('entitlement_check_failed', {
+        user_id: userId,
+        entitlement,
+        error: error as Error,
+      })
+
+      reply.code(500)
+      return reply.send({ error: 'internal_server_error', message: 'Failed to check entitlements' })
+    }
   }
+  ;(handler as { __guardTag?: string }).__guardTag = `requireEntitlement:${entitlement}`
+  return handler
 }

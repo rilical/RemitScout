@@ -118,6 +118,20 @@ jobs:
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
+      - name: AWS SDK version alignment
+        run: pnpm -C backend exec tsx scripts/ci/check-sdk-versions.ts
+      - name: Migration lint
+        run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
+      - name: SQL interpolation guardrail (changed files)
+        run: |
+          pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-a
+          pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only
+          pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-c
+          pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --root scripts
+      - name: License audit (prod deps)
+        run: pnpm licenses list --prod --json | node scripts/ci/check-licenses.mjs
+      - name: sharp native smoke
+        run: pnpm -C backend exec node -e "require('sharp'); console.log('sharp ok')"
       - run: pnpm -C backend lint
       - run: pnpm -C frontend lint
       - name: Boundary enforcement (Golden Rule)
@@ -169,6 +183,38 @@ jobs:
           fi
           echo "✅ Migration immutability check passed"
 
+  migration-dry-run:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_backend == 'true'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test -d test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgres://test:test@localhost:5432/test
+      DATABASE_URL_PLANE_A: postgres://test:test@localhost:5432/test
+      DATABASE_URL_PLANE_B: postgres://test:test@localhost:5432/test
+      DATABASE_URL_PLANE_C: postgres://test:test@localhost:5432/test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
+      - name: Migration dry-run
+        run: pnpm -C backend db:migrate
+
   backend-tests:
     runs-on: ubuntu-latest
     needs: changes
@@ -193,6 +239,7 @@ jobs:
       DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
       DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
       PLANE_A_ADMIN_EMAILS: admin@example.com
+      ENFORCE_COVERAGE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -200,6 +247,8 @@ jobs:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend db:migrate
+      - run: pnpm -C backend db:seed
+      - run: pnpm -C backend exec tsx scripts/generate-fixtures.ts
       - run: pnpm -C backend test:coverage
       - uses: actions/upload-artifact@v4
         with:
@@ -208,12 +257,39 @@ jobs:
       - name: Upload coverage to Codecov
         if: github.event_name == 'pull_request'
         uses: codecov/codecov-action@v4
-        continue-on-error: true
         with:
           files: ./backend/coverage/lcov.info
           flags: backend
           name: backend-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+
+  backend-docker-native-deps:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_backend == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image (${{ matrix.platform }})
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="remit-scout-backend-native:${{ matrix.platform }}"
+          tag="${tag//\//-}"
+          docker buildx build \
+            --platform "${{ matrix.platform }}" \
+            --file backend/Dockerfile \
+            --target runner \
+            --build-arg SKIP_BACKEND_BUILD=1 \
+            --tag "$tag" \
+            --load \
+            .
+          docker run --rm --platform "${{ matrix.platform }}" "$tag" node -e "require('sharp'); console.log('sharp ok')"
 
   frontend-unit:
     runs-on: ubuntu-latest
@@ -247,6 +323,8 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm -C frontend exec playwright install --with-deps
       - run: pnpm -C frontend build
+      - name: Check bundle size
+        run: node scripts/ci/check-frontend-bundle-size.mjs
       - run: pnpm -C frontend test:e2e
       - name: Upload Playwright artifacts
         if: failure()
@@ -322,4 +400,3 @@ jobs:
           pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend ci:config-validate
       - run: pnpm -C backend ci:observability
-

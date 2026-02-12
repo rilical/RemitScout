@@ -1,16 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { getPool, query } from '../../../shared/db'
-import { config } from '../../../shared/config'
+import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth, requireEntitlement } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
-import { ComparisonHistoryRepository } from '../repositories'
+import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.history')
-const planeAPool = getPool(config.db.planeAUrl)
-const historyRepository = new ComparisonHistoryRepository(planeAPool)
 
 const historyQuerySchema = z.object({
   corridor_id: z.string().min(3),
@@ -54,11 +51,13 @@ const resolveUserId = (request: FastifyRequest, reply: FastifyReply): string | n
 }
 
 export const historyRoutes = async (app: FastifyInstance) => {
+  const planeAPool = app.container.pool
+  const historyRepository = app.container.repositories.comparisonHistory
+
   app.get('/history/recent', { preHandler: requireAuth() }, async (request, reply) => {
     const parsed = recentQuerySchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const user = request.user!
@@ -91,8 +90,7 @@ export const historyRoutes = async (app: FastifyInstance) => {
   app.get('/history/corridor', { preHandler: requireEntitlement('history') }, async (request, reply) => {
     const parsed = historyQuerySchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const userId = resolveUserId(request, reply)
@@ -106,8 +104,7 @@ export const historyRoutes = async (app: FastifyInstance) => {
     const corridorId = parsed.data.corridor_id
     const granularity = parsed.data.granularity ?? 'daily'
     if (granularity !== 'daily') {
-      reply.code(400)
-      return { error: 'granularity_not_supported', granularity }
+            throw new ValidationError('Invalid request', { details: { error: 'granularity_not_supported', granularity } })
     }
 
     const toDate = parseDate(parsed.data.to_date) ?? new Date()
@@ -116,12 +113,10 @@ export const historyRoutes = async (app: FastifyInstance) => {
       new Date(toDate.getTime() - (maxDays ?? 30) * 24 * 60 * 60 * 1000)
 
     if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-      reply.code(400)
-      return { error: 'invalid_date_range' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
     }
     if (fromDate > toDate) {
-      reply.code(400)
-      return { error: 'invalid_date_range', message: 'from_date is after to_date' }
+            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range', message: 'from_date is after to_date' } })
     }
 
     if (typeof maxDays === 'number') {
@@ -236,8 +231,7 @@ export const historyRoutes = async (app: FastifyInstance) => {
   app.post('/history', { preHandler: requireAuth() }, async (request, reply) => {
     const parsed = historyCreateSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
     const user = request.user!

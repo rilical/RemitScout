@@ -105,7 +105,10 @@ const parseSubscription = (value: unknown) => {
   if (typeof value === 'string') {
     try {
       return JSON.parse(value) as Record<string, unknown>
-    } catch {
+    } catch (error) {
+      logger.debug('push_subscription_parse_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return null
     }
   }
@@ -324,8 +327,11 @@ const sendSnsPush = async (pool: Pool, device: DeviceRow, payload: PushPayload):
     if (shouldDeactivateSns(error) && device.sns_endpoint_arn && client) {
       try {
         await client.send(new DeleteEndpointCommand({ EndpointArn: device.sns_endpoint_arn }))
-      } catch {
-        // Ignore cleanup errors
+      } catch (cleanupError) {
+        logger.debug('sns_endpoint_cleanup_failed', {
+          device_id: device.id,
+          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        })
       }
     }
     return false

@@ -4,6 +4,8 @@ import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { recordBusinessMetric } from '../../../shared/business-metrics'
+import { safeAsync } from '../../../shared/safe-async'
 import { getErrorMessage } from '../types/errors'
 import { getRequestContext, logAuditEvent } from './audit-log'
 import { deleteStripeCustomer } from './stripe-admin'
@@ -168,8 +170,11 @@ export const deleteUserAccount = async (
   } catch (error) {
     try {
       await client.query('ROLLBACK')
-    } catch {
-      // ignore rollback errors
+    } catch (rollbackError) {
+      logger.error('transaction_rollback_failed', {
+        user_id: userId,
+        error: getErrorMessage(rollbackError),
+      })
     }
     errors.push('user_delete_failed')
     logger.warn('account_delete_transaction_failed', {
@@ -186,8 +191,8 @@ export const deleteUserAccount = async (
     client.release()
   }
 
-  try {
-    await logAuditEvent(pool, {
+  await safeAsync(
+    () => logAuditEvent(pool, {
       actorId: userId,
       actorType: 'user',
       actorRole: options?.actorRole,
@@ -200,22 +205,24 @@ export const deleteUserAccount = async (
       category: 'user_action',
       severity: 'info',
       ...getRequestContext(options?.request),
-    })
-  } catch (error) {
-    logger.warn('audit_log_failed', {
-      user_id: userId,
-      error: getErrorMessage(error),
-    })
-  }
+    }),
+    logger,
+    'audit_log_write_failed',
+    { user_id: userId, action: 'account.delete' },
+  )
 
-  try {
-    await deleteExportObjects(exportKeys, warnings)
-  } catch (error) {
+  const exportDeleteOk = await safeAsync(
+    async () => {
+      await deleteExportObjects(exportKeys, warnings)
+      return true
+    },
+    logger,
+    'export_delete_failed',
+    { user_id: userId },
+    { defaultValue: false },
+  )
+  if (!exportDeleteOk) {
     warnings.push('export_delete_failed')
-    logger.warn('export_delete_failed', {
-      user_id: userId,
-      error: getErrorMessage(error),
-    })
   }
 
   const serviceRoleKey = config.auth.supabase.serviceRoleKey
@@ -238,6 +245,7 @@ export const deleteUserAccount = async (
     email: account.email,
     warnings: warnings.length,
   })
+  recordBusinessMetric('user_deletions_total', 1)
 
   return {
     deleted: true,

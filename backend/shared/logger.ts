@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto'
 import { context as otelContext, trace } from '@opentelemetry/api'
+import { redactSensitive } from './log-redactor'
+import { config } from './config'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -19,10 +21,10 @@ const normalizeLevel = (value?: string): LogLevel => {
 }
 
 const resolveLogLevel = (): LogLevel => {
-  if (process.env.LOG_LEVEL) {
-    return normalizeLevel(process.env.LOG_LEVEL)
+  if (config.logging.level) {
+    return normalizeLevel(config.logging.level)
   }
-  return process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+  return config.env === 'production' ? 'info' : 'debug'
 }
 
 const serializeError = (error: unknown) => {
@@ -46,7 +48,7 @@ const normalizeContext = (context?: Record<string, unknown>) => {
     }
     normalized[key] = value
   }
-  return normalized
+  return redactSensitive(normalized) as Record<string, unknown>
 }
 
 /**
@@ -56,33 +58,26 @@ const getAwsLogContext = (): Record<string, unknown> => {
   const context: Record<string, unknown> = {}
 
   // Lambda context
-  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    context.lambda_function_name = process.env.AWS_LAMBDA_FUNCTION_NAME
-    context.lambda_function_version = process.env.AWS_LAMBDA_FUNCTION_VERSION
-    context.lambda_request_id =
-      process.env.AWS_REQUEST_ID || process.env.AWS_LAMBDA_REQUEST_ID
+  if (config.runtime.lambdaFunctionName) {
+    context.lambda_function_name = config.runtime.lambdaFunctionName
+    context.lambda_function_version = config.runtime.lambdaFunctionVersion
   }
 
   // ECS context
-  if (process.env.ECS_TASK_ARN) {
-    context.ecs_task_arn = process.env.ECS_TASK_ARN
-    const arnParts = process.env.ECS_TASK_ARN.split('/')
+  if (config.runtime.ecsTaskArn) {
+    context.ecs_task_arn = config.runtime.ecsTaskArn
+    const arnParts = config.runtime.ecsTaskArn.split('/')
     if (arnParts.length > 0) {
       context.ecs_task_id = arnParts[arnParts.length - 1]
     }
   }
-  if (process.env.ECS_CONTAINER_NAME) {
-    context.ecs_container_name = process.env.ECS_CONTAINER_NAME
+  if (config.runtime.ecsContainerName) {
+    context.ecs_container_name = config.runtime.ecsContainerName
   }
 
   // AWS general
-  if (process.env.AWS_REGION) {
-    context.aws_region = process.env.AWS_REGION
-  }
-
-  // Correlation ID from header (if available in request context)
-  if (process.env.X_CORRELATION_ID) {
-    context.correlation_id = process.env.X_CORRELATION_ID
+  if (config.aws.region) {
+    context.aws_region = config.aws.region
   }
 
   return context
@@ -90,19 +85,25 @@ const getAwsLogContext = (): Record<string, unknown> => {
 
 export const createLogger = (component: string, traceId?: string) => {
   const currentLevel = resolveLogLevel()
-  const activeSpan = trace.getSpan(otelContext.active())
-  const activeTraceId = activeSpan?.spanContext().traceId
-  const resolvedTraceId = traceId || activeTraceId || randomUUID()
+  const fallbackTraceId = traceId || randomUUID()
   const awsContext = getAwsLogContext()
 
   const emit = (level: LogLevel, event: string, context?: Record<string, unknown>) => {
     if (levelRank[level] < levelRank[currentLevel]) return
+
+    // Resolve IDs at emit-time so logs correlate with the active span (when present).
+    const activeSpan = trace.getSpan(otelContext.active())
+    const spanContext = activeSpan?.spanContext()
+    const trace_id = traceId || spanContext?.traceId || fallbackTraceId
+    const span_id = spanContext?.spanId || null
+
     const payload = {
       level,
       time: new Date().toISOString(),
       component,
       event,
-      trace_id: resolvedTraceId,
+      trace_id,
+      span_id,
       ...awsContext,
       ...normalizeContext(context),
     }

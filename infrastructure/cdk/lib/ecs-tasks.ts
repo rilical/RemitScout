@@ -139,7 +139,7 @@ export const createEcsTasks = (
   const workerHealthCheck: HealthCheck = {
     command: [
       'CMD-SHELL',
-      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/healthz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/readyz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
     ],
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),
@@ -361,7 +361,7 @@ export const createEcsTasks = (
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
-    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: isProd ? '1' : '0',
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
@@ -568,6 +568,7 @@ export const createEcsTasks = (
       logGroup: planeBIngestLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const planeBIngestOtelLogGroup = new LogGroup(scope, 'PlaneBIngestOtelLogGroup', {
@@ -622,6 +623,7 @@ export const createEcsTasks = (
       logGroup: b2bSweepSchedulerLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const b2bSweepSchedulerOtelLogGroup = new LogGroup(
@@ -688,6 +690,7 @@ export const createEcsTasks = (
       logGroup: b2cRefreshLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const b2cRefreshOtelLogGroup = new LogGroup(scope, 'B2cRefreshOtelLogGroup', {
@@ -743,6 +746,7 @@ export const createEcsTasks = (
       logGroup: fxRateRefreshLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const fxRateRefreshOtelLogGroup = new LogGroup(scope, 'FxRateRefreshOtelLogGroup', {
@@ -842,6 +846,7 @@ export const createEcsTasks = (
         logGroup: ingestFanoutLogGroup,
       }),
       healthCheck: workerHealthCheck,
+      stopTimeout: Duration.seconds(45),
     })
 
     if (enableTelemetry) {
@@ -931,6 +936,7 @@ export const createEcsTasks = (
       logGroup: goldLiveLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const goldLiveOtelLogGroup = new LogGroup(scope, 'GoldLiveOtelLogGroup', {
@@ -993,6 +999,7 @@ export const createEcsTasks = (
       logGroup: notificationsLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const notificationsOtelLogGroup = new LogGroup(
@@ -1059,6 +1066,7 @@ export const createEcsTasks = (
       logGroup: opsAlertsLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const opsAlertsOtelLogGroup = new LogGroup(scope, 'OpsAlertsQueueOtelLogGroup', {
@@ -1149,6 +1157,7 @@ export const createEcsTasks = (
       logGroup: alertEvaluationLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const alertEvaluationOtelLogGroup = new LogGroup(
@@ -1223,6 +1232,7 @@ export const createEcsTasks = (
       logGroup: exportWorkerLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
   if (enableTelemetry) {
     const exportWorkerOtelLogGroup = new LogGroup(
@@ -1281,6 +1291,7 @@ export const createEcsTasks = (
       logGroup: dbMigrateLogGroup,
     }),
     healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(45),
   })
 
   return {

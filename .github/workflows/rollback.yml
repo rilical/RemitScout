@@ -10,9 +10,10 @@ on:
         options:
           - dev
           - staging
+          - prod
       image_tag:
         description: ECR image tag to deploy (e.g. 1.2.3 or abc1234)
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -25,6 +26,10 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
+      SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
+      SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -35,11 +40,27 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+      - name: Resolve Image Tag (SSM fallback)
+        shell: bash
+        env:
+          ENV_NAME: ${{ inputs.env }}
+          IMAGE_TAG_INPUT: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          if [ -n "${IMAGE_TAG_INPUT:-}" ]; then
+            echo "IMAGE_TAG=${IMAGE_TAG_INPUT}" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          tag="$(aws ssm get-parameter --name \"/remit-scout/${ENV_NAME}/last-good-image\" --query 'Parameter.Value' --output text)"
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+            echo "No last-known-good image found in SSM for env=${ENV_NAME}."
+            exit 1
+          fi
+          echo "IMAGE_TAG=${tag}" >> "$GITHUB_ENV"
       - name: Roll back stack to image tag
         shell: bash
         env:
           ENV_NAME: ${{ inputs.env }}
-          IMAGE_TAG: ${{ inputs.image_tag }}
           STACK_NAME: ${{ vars.STACK_NAME }}
         run: |
           set -euo pipefail

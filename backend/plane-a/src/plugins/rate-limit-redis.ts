@@ -1,30 +1,14 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getRedisClient } from '../../../shared/redis'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 
 const logger = createLogger('plane-a.rate-limit-redis')
 
-const rateLimitBypassPrefixes = [
-  '/api/v1/analytics',
-  '/api/v1/audit',
-  '/api/v1/ops',
-  '/api/v1/telemetry/analytics',
-]
-
-const shouldBypassRateLimit = (request: FastifyRequest): boolean => {
-  const deploymentEnv = (process.env.ENVIRONMENT ?? '').toLowerCase()
-  if (deploymentEnv && !['prod', 'production', 'staging'].includes(deploymentEnv)) {
-    return true
-  }
-  if (config.env !== 'production' && config.env !== 'staging') {
-    return true
-  }
-  const path = request.url.split('?')[0]
-  if (!path) {
-    return false
-  }
-  return rateLimitBypassPrefixes.some((prefix) => path.startsWith(prefix))
+const shouldSkipRateLimit = (request: FastifyRequest): boolean => {
+  if (request.method === 'OPTIONS') return true
+  const path = request.url.split('?')[0] || ''
+  if (!path) return false
+  return path === '/healthz' || path === '/readyz' || path === '/metrics'
 }
 
 interface RateLimitOptions {
@@ -32,6 +16,22 @@ interface RateLimitOptions {
   max: number | ((request: FastifyRequest) => number)
   keyGenerator?: (request: FastifyRequest) => string
   skipOnError?: boolean
+}
+
+type MemoryEntry = { count: number; resetAt: number }
+
+const createMemoryLimiter = (timeWindowMs: number) => {
+  const store = new Map<string, MemoryEntry>()
+  return (key: string) => {
+    const now = Date.now()
+    const entry = store.get(key)
+    if (!entry || entry.resetAt < now) {
+      store.set(key, { count: 1, resetAt: now + timeWindowMs })
+      return { count: 1, resetAt: now + timeWindowMs }
+    }
+    entry.count += 1
+    return { count: entry.count, resetAt: entry.resetAt }
+  }
 }
 
 /**
@@ -45,21 +45,20 @@ export const registerRedisRateLimit = async (
   const redis = await getRedisClient()
 
   if (!redis) {
-    logger.warn('rate_limit_redis_unavailable', {
-      message: 'Redis not available, rate limiting disabled. Consider using API Gateway throttling.',
+    logger.warn('rate_limit_redis_unavailable_falling_back', {
+      message: 'Redis not available; falling back to in-memory rate limiting.',
     })
+    registerMemoryRateLimit(app, options)
     return
   }
 
   const timeWindowMs = options.timeWindow
   const timeWindowSeconds = Math.ceil(timeWindowMs / 1000)
+  const memoryLimit = createMemoryLimiter(timeWindowMs)
 
-  app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-    // Skip rate limiting for OPTIONS requests
-    if (request.method === 'OPTIONS') {
-      return
-    }
-    if (shouldBypassRateLimit(request)) {
+  // Use preHandler so auth hooks can populate request.user / request.apiKey first.
+  app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (shouldSkipRateLimit(request)) {
       return
     }
 
@@ -115,10 +114,32 @@ export const registerRedisRateLimit = async (
         return
       }
 
-      // Default: allow request on error (fail open)
-      logger.warn('rate_limit_error_allowing_request', {
-        message: 'Rate limit check failed, allowing request (fail open)',
+      // Fail closed in production posture: fall back to in-memory limiter for this invocation
+      // rather than skipping rate limiting entirely.
+      logger.warn('rate_limit_error_falling_back_to_memory', {
+        message: 'Rate limit check failed; using in-memory limiter fallback.',
+        error: errorMessage,
       })
+
+      const maxRequests =
+        typeof options.max === 'function' ? options.max(request) : options.max
+      const key = options.keyGenerator
+        ? options.keyGenerator(request)
+        : `rate-limit:${request.ip}`
+      const entry = memoryLimit(key)
+
+      reply.header('X-RateLimit-Limit', String(maxRequests))
+      reply.header('X-RateLimit-Remaining', String(Math.max(0, maxRequests - entry.count)))
+      reply.header('X-RateLimit-Reset', String(entry.resetAt))
+
+      if (entry.count > maxRequests) {
+        reply.code(429)
+        return {
+          error: 'rate_limit_exceeded',
+          message: `Rate limit exceeded. Maximum ${maxRequests} requests per ${timeWindowSeconds} seconds.`,
+          retryAfter: timeWindowSeconds,
+        }
+      }
     }
   })
 }
@@ -134,11 +155,9 @@ export const registerMemoryRateLimit = (
   const store = new Map<string, { count: number; resetAt: number }>()
   const timeWindowMs = options.timeWindow
 
-  app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-    if (request.method === 'OPTIONS') {
-      return
-    }
-    if (shouldBypassRateLimit(request)) {
+  // Use preHandler so auth hooks can populate request.user / request.apiKey first.
+  app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (shouldSkipRateLimit(request)) {
       return
     }
 

@@ -10,14 +10,7 @@ vi.mock('../plane-a/src/auth/verify-supabase-jwt', () => ({
 
 import { buildApp } from '../plane-a/src/app'
 
-const shouldRun = Boolean(process.env.DATABASE_URL_PLANE_A)
-
 describe('GET /api/me', () => {
-  if (!shouldRun) {
-    it.skip('DATABASE_URL_PLANE_A required', () => {})
-    return
-  }
-
   it('returns plan and entitlements for authenticated user', async () => {
     const app = await buildApp()
     const response = await app.inject({

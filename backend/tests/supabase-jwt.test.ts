@@ -1,25 +1,31 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { config } from '../shared/config'
+const mockConfig = vi.hoisted(() => ({
+  auth: {
+    supabase: {
+      verifyMode: 'auto' as 'auto' | 'jwks' | 'remote',
+      remoteVerifyCacheTtlSeconds: 60,
+    },
+  },
+}))
+
+vi.mock('../shared/config', () => ({ config: mockConfig }))
 import { verifySupabaseJwt } from '../plane-a/src/auth/verify-supabase-jwt'
 import { fetchJwks } from '../plane-a/src/auth/jwks-fetch'
 import { getCachedJwks } from '../plane-a/src/auth/jwks-cache'
 import { verifyWithJwks } from '../plane-a/src/auth/jwks-verify'
 import { remoteVerify } from '../plane-a/src/auth/remote-verify'
-
 vi.mock('../plane-a/src/auth/jwks-fetch', () => ({ fetchJwks: vi.fn() }))
 vi.mock('../plane-a/src/auth/jwks-cache', () => ({ getCachedJwks: vi.fn(), setCachedJwks: vi.fn() }))
 vi.mock('../plane-a/src/auth/jwks-verify', () => ({ verifyWithJwks: vi.fn() }))
 vi.mock('../plane-a/src/auth/remote-verify', () => ({ remoteVerify: vi.fn() }))
 
 describe('verifySupabaseJwt', () => {
-  const originalVerifyMode = config.auth.supabase.verifyMode
-
   beforeEach(() => {
     vi.resetAllMocks()
   })
 
   afterEach(() => {
-    config.auth.supabase.verifyMode = originalVerifyMode
+    mockConfig.auth.supabase.verifyMode = 'auto'
   })
 
   it('returns missing_token when header is missing', async () => {
@@ -28,7 +34,7 @@ describe('verifySupabaseJwt', () => {
   })
 
   it('verifies with jwks when available', async () => {
-    config.auth.supabase.verifyMode = 'jwks'
+    mockConfig.auth.supabase.verifyMode = 'jwks'
     vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
     vi.mocked(verifyWithJwks).mockResolvedValue({ user_id: 'u1', claims: {} })
 
@@ -37,7 +43,7 @@ describe('verifySupabaseJwt', () => {
   })
 
   it('falls back to remote when jwks is empty', async () => {
-    config.auth.supabase.verifyMode = 'auto'
+    mockConfig.auth.supabase.verifyMode = 'auto'
     vi.mocked(getCachedJwks).mockReturnValue(null)
     vi.mocked(fetchJwks).mockResolvedValue([])
     vi.mocked(remoteVerify).mockResolvedValue({ user_id: 'u2', claims: {} })
@@ -47,7 +53,7 @@ describe('verifySupabaseJwt', () => {
   })
 
   it('returns verification_failed when remote fails', async () => {
-    config.auth.supabase.verifyMode = 'remote'
+    mockConfig.auth.supabase.verifyMode = 'remote'
     vi.mocked(remoteVerify).mockResolvedValue(null)
 
     const result = await verifySupabaseJwt('Bearer token')

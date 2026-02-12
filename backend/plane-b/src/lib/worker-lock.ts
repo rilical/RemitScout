@@ -9,6 +9,9 @@
 import { getRedisClient } from '../../../shared/redis'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
+import { emitOpsEvent } from '../../../shared/ops-events'
+import { setTimeout as sleep } from 'timers/promises'
 
 const logger = createLogger('plane-b.worker-lock')
 const localLocks = new Map<string, { value: string; expiresAt: number }>()
@@ -24,6 +27,8 @@ export class WorkerLock {
   private lockKey: string
   private lockValue: string
   private ttlSeconds: number
+  private acquiredAtMs: number | null = null
+  private lockName: string
 
   /**
    * Creates a new worker lock.
@@ -32,9 +37,29 @@ export class WorkerLock {
    * @param ttlSeconds - Lock expiration time in seconds (default: 60)
    */
   constructor(lockName: string, ttlSeconds = 60) {
+    this.lockName = lockName
     this.lockKey = `worker:lock:${lockName}`
     this.lockValue = `${process.pid}_${Date.now()}`
     this.ttlSeconds = ttlSeconds
+  }
+
+  private emitMetric(name: string): void {
+    try {
+      recordCloudWatchMetric({
+        name,
+        value: 1,
+        unit: 'Count',
+        dimensions: {
+          job: this.lockName,
+          environment: config.envName || config.env,
+        },
+      })
+    } catch (error) {
+      logger.debug('worker_lock_metric_emit_failed', {
+        metric: name,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   /**
@@ -57,6 +82,8 @@ export class WorkerLock {
           }
           localLocks.set(this.lockKey, { value: this.lockValue, expiresAt: now + this.ttlSeconds * 1000 })
           logger.info('lock_acquired', { lock_key: this.lockKey, ttl_seconds: this.ttlSeconds, mode: 'local' })
+          this.acquiredAtMs = Date.now()
+          this.emitMetric('worker_lock_acquired')
           return true
         }
         logger.error('lock_acquire_failed', {
@@ -76,8 +103,16 @@ export class WorkerLock {
       const acquired = result === 'OK'
       if (acquired) {
         logger.info('lock_acquired', { lock_key: this.lockKey, ttl_seconds: this.ttlSeconds })
+        this.acquiredAtMs = Date.now()
+        this.emitMetric('worker_lock_acquired')
       } else {
         logger.warn('lock_already_held', { lock_key: this.lockKey })
+        this.emitMetric('worker_lock_contention')
+        emitOpsEvent({
+          type: 'lock_contention',
+          component: 'worker-lock',
+          details: { lock_key: this.lockKey, job: this.lockName },
+        })
       }
       return acquired
     } catch (error) {
@@ -87,6 +122,42 @@ export class WorkerLock {
       })
       return false
     }
+  }
+
+  /**
+   * Attempts to acquire the lock, polling until `maxWaitMs` expires.
+   *
+   * Returns true when acquired, false when not acquired in time (or Redis unavailable).
+   */
+  async acquireLock(maxWaitMs: number = 60_000): Promise<boolean> {
+    const deadline = Date.now() + Math.max(0, maxWaitMs)
+    let attempts = 0
+
+    while (Date.now() < deadline) {
+      if (attempts > 0) {
+        this.emitMetric('worker_lock_contention')
+      }
+      const acquired = await this.acquire()
+      if (acquired) {
+        return true
+      }
+
+      // If Redis is required (prod) and unavailable, fail fast.
+      if (config.env === 'production' && !config.redis.url) {
+        return false
+      }
+
+      attempts += 1
+      await sleep(1000)
+    }
+
+    logger.warn('lock_acquire_timeout', {
+      lock_key: this.lockKey,
+      job: this.lockName,
+      max_wait_ms: maxWaitMs,
+      attempts,
+    })
+    return false
   }
 
   /**
@@ -161,6 +232,18 @@ export class WorkerLock {
         localLocks.delete(this.lockKey)
         logger.info('lock_released', { lock_key: this.lockKey, mode: 'local' })
       }
+      if (this.acquiredAtMs) {
+        const elapsedMs = Date.now() - this.acquiredAtMs
+        if (elapsedMs > this.ttlSeconds * 1000 * 0.8) {
+          logger.warn('lock_execution_approaching_ttl', {
+            lock_key: this.lockKey,
+            job: this.lockName,
+            elapsed_ms: elapsedMs,
+            lock_ttl_seconds: this.ttlSeconds,
+            mode: 'local',
+          })
+        }
+      }
       return
     }
 
@@ -175,6 +258,17 @@ export class WorkerLock {
           current_value: current,
           expected_value: this.lockValue,
         })
+      }
+      if (this.acquiredAtMs) {
+        const elapsedMs = Date.now() - this.acquiredAtMs
+        if (elapsedMs > this.ttlSeconds * 1000 * 0.8) {
+          logger.warn('lock_execution_approaching_ttl', {
+            lock_key: this.lockKey,
+            job: this.lockName,
+            elapsed_ms: elapsedMs,
+            lock_ttl_seconds: this.ttlSeconds,
+          })
+        }
       }
     } catch (error) {
       logger.error('lock_release_failed', {

@@ -59,6 +59,16 @@ export const handler = async (): Promise<number> => {
     throw new Error(`Failed to resolve AWS environment variables: ${message}`)
   }
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+      requireRedis: true,
+      requireQueues: true,
+      requireStorage: true,
+    },
+  })
+
   const { runIngestFanoutWorkerLoop } = await import('../ingest-fanout-worker')
   return await runIngestFanoutWorkerLoop()
 }

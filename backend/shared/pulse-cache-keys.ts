@@ -1,16 +1,10 @@
+import type { PulseCacheFilters } from './pulse-types'
+
 export type PulseTimeframeKey = '24h' | '7d' | '30d' | '1y' | 'max'
 export type PulseRangeKey = '7d' | '30d' | '90d' | '365d'
 export type PulseMethodKey = 'bank' | 'card' | 'cash' | 'wallet'
 
-export type PulseCacheFilters = {
-  corridor?: string | null
-  corridorId?: string | null
-  timeframe?: string | null
-  range?: string | null
-  amount?: number | null
-  payin?: string | null
-  payout?: string | null
-}
+export type { PulseCacheFilters } from './pulse-types'
 
 export const PULSE_TIMEFRAMES: PulseTimeframeKey[] = ['24h', '7d', '30d', '1y', 'max']
 export const PULSE_RANGES: PulseRangeKey[] = ['7d', '30d', '90d', '365d']

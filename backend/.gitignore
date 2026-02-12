@@ -4,5 +4,3 @@
 !.env.local.example
 dist
 node_modules
-
-plane-b/src/providers/*/fixtures/

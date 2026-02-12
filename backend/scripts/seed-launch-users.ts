@@ -110,7 +110,11 @@ const supabaseBaseUrl = () => config.auth.supabase.url.replace(/\/$/, '')
 const parseJson = async (response: Response): Promise<unknown> => {
   try {
     return await response.json()
-  } catch {
+  } catch (error) {
+    console.warn('[seed-launch-users] response json parse failed', {
+      status: response.status,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 }

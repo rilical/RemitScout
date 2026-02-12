@@ -1,5 +1,6 @@
 import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
+import { createLogger } from '../../../../shared/logger'
 import type {
   IAlertRepository,
   AlertRuleInput,
@@ -8,6 +9,8 @@ import type {
   AlertStateRow,
   AlertEventRow,
 } from '../interfaces/alert-repository.interface'
+
+const logger = createLogger('plane-a.alert-repository')
 
 export class AlertRepository implements IAlertRepository {
   constructor(private readonly pool: Pool) {}
@@ -229,6 +232,21 @@ export class AlertRepository implements IAlertRepository {
       version?: number
     },
   ): Promise<void> {
+    // Avoid read-modify-write races between concurrent evaluations by serializing per alert_id.
+    // We lock the alert_rule row (always exists if alert exists) before reading/upserting alert_state.
+    const client = await this.pool.connect()
+    try {
+      await client.query('BEGIN')
+      const locked = await query<{ id: string }>(
+        'SELECT id FROM silver.alert_rule WHERE id = $1 FOR UPDATE',
+        [alertId],
+        client,
+      )
+      if (locked.rows.length === 0) {
+        await client.query('ROLLBACK')
+        return
+      }
+
     const updateFields: string[] = []
     const values: unknown[] = []
     let paramIndex = 1
@@ -263,11 +281,18 @@ export class AlertRepository implements IAlertRepository {
     }
 
     if (updateFields.length === 0) {
+      await client.query('COMMIT')
       return
     }
 
     // Get current state to use as defaults for INSERT
-    const currentState = await this.getAlertState(alertId)
+    const currentState = await query<AlertStateRow>(
+      `SELECT alert_id, last_evaluated_at, last_value, in_alarm, last_triggered_at, last_notified_at, snoozed_until, version
+       FROM silver.alert_state
+       WHERE alert_id = $1`,
+      [alertId],
+      client,
+    ).then((r) => r.rows[0] || null)
 
     const baseValues = [
       alertId,
@@ -293,8 +318,20 @@ export class AlertRepository implements IAlertRepository {
        ON CONFLICT (alert_id) DO UPDATE SET
          ${updateSet}`,
       [...baseValues, ...values],
-      this.pool,
+      client,
     )
+    await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK').catch((rollbackError) => {
+        logger.error('transaction_rollback_failed', {
+          alert_id: alertId,
+          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+        })
+      })
+      throw error
+    } finally {
+      client.release()
+    }
   }
 
   async createAlertEvent(

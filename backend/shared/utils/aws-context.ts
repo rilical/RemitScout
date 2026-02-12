@@ -5,6 +5,11 @@
  * (Lambda, ECS) and related metadata.
  */
 
+import { config } from '../config'
+import { createLogger } from '../logger'
+
+const logger = createLogger('shared.aws-context')
+
 export type LambdaContext = {
   functionName?: string
   functionVersion?: string
@@ -29,10 +34,8 @@ export type AwsContext = {
   ecs?: EcsContext
 }
 
-const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
-const isECS = Boolean(
-  process.env.ECS_CONTAINER_METADATA_URI || process.env.ECS_CONTAINER_METADATA_URI_V4,
-)
+const isLambda = config.runtime.isLambda
+const isECS = config.runtime.isEcs
 
 /**
  * Extracts Lambda context from AWS Lambda context object or environment.
@@ -59,23 +62,6 @@ export const getLambdaContext = (context?: unknown): LambdaContext => {
     }
   }
 
-  // Fallback to environment variables
-  if (!lambdaContext.functionName && process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    lambdaContext.functionName = process.env.AWS_LAMBDA_FUNCTION_NAME
-  }
-  if (!lambdaContext.functionVersion && process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-    lambdaContext.functionVersion = process.env.AWS_LAMBDA_FUNCTION_VERSION
-  }
-  if (!lambdaContext.requestId && process.env.AWS_REQUEST_ID) {
-    lambdaContext.requestId = process.env.AWS_REQUEST_ID
-  }
-
-  // Calculate timeout if available
-  const timeoutSeconds = Number(process.env.AWS_LAMBDA_FUNCTION_TIMEOUT)
-  if (Number.isFinite(timeoutSeconds) && timeoutSeconds > 0) {
-    lambdaContext.timeoutMs = timeoutSeconds * 1000
-  }
-
   return lambdaContext
 }
 
@@ -85,21 +71,21 @@ export const getLambdaContext = (context?: unknown): LambdaContext => {
 export const getEcsContext = async (): Promise<EcsContext> => {
   const ecsContext: EcsContext = {}
 
-  if (process.env.ECS_TASK_ARN) {
-    ecsContext.taskArn = process.env.ECS_TASK_ARN
+  if (config.runtime.ecsTaskArn) {
+    ecsContext.taskArn = config.runtime.ecsTaskArn
     // Extract task ID from ARN: arn:aws:ecs:region:account:task/cluster/task-id
-    const arnParts = process.env.ECS_TASK_ARN.split('/')
+    const arnParts = config.runtime.ecsTaskArn.split('/')
     if (arnParts.length > 0) {
       ecsContext.taskId = arnParts[arnParts.length - 1]
     }
   }
 
-  if (process.env.ECS_CONTAINER_NAME) {
-    ecsContext.containerName = process.env.ECS_CONTAINER_NAME
+  if (config.runtime.ecsContainerName) {
+    ecsContext.containerName = config.runtime.ecsContainerName
   }
 
   // Try to fetch container metadata if available
-  const metadataUri = process.env.ECS_CONTAINER_METADATA_URI_V4 || process.env.ECS_CONTAINER_METADATA_URI
+  const metadataUri = config.runtime.ecsMetadataUriV4 || config.runtime.ecsMetadataUri
   if (metadataUri) {
     try {
       const response = await fetch(`${metadataUri}/task`, { signal: AbortSignal.timeout(1000) })
@@ -112,8 +98,11 @@ export const getEcsContext = async (): Promise<EcsContext> => {
           ecsContext.containerName = metadata.ContainerName
         }
       }
-    } catch {
-      // Silently fail metadata fetch
+    } catch (error) {
+      logger.debug('ecs_metadata_fetch_failed', {
+        metadata_uri: metadataUri,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 
@@ -124,19 +113,19 @@ export const getEcsContext = async (): Promise<EcsContext> => {
  * Gets AWS region from environment.
  */
 export const getAwsRegion = (): string | undefined => {
-  return process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION
+  return config.aws.region || undefined
 }
 
 /**
  * Gets AWS account ID from environment or STS.
  */
 export const getAwsAccountId = async (): Promise<string | undefined> => {
-  if (process.env.AWS_ACCOUNT_ID) {
-    return process.env.AWS_ACCOUNT_ID
+  if (config.runtime.awsAccountId) {
+    return config.runtime.awsAccountId
   }
 
   // Try to extract from Lambda function ARN
-  const functionArn = process.env.AWS_LAMBDA_FUNCTION_ARN
+  const functionArn = config.runtime.lambdaFunctionArn
   if (functionArn) {
     const arnParts = functionArn.split(':')
     if (arnParts.length >= 5) {
@@ -145,7 +134,7 @@ export const getAwsAccountId = async (): Promise<string | undefined> => {
   }
 
   // Try to extract from ECS task ARN
-  const taskArn = process.env.ECS_TASK_ARN
+  const taskArn = config.runtime.ecsTaskArn
   if (taskArn) {
     const arnParts = taskArn.split(':')
     if (arnParts.length >= 5) {
@@ -192,6 +181,3 @@ export const isLambdaTimeoutWarning = (lambdaContext?: LambdaContext, threshold 
 
   return elapsed >= thresholdMs
 }
-
-
-

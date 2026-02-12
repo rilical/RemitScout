@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createHash } from 'crypto'
-import { getPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { NewsletterRepository } from '../repositories'
+import { AppError, RateLimitError, ValidationError } from '../../../shared/errors'
+import { DEFAULT_FALLBACK_TTL_SECONDS } from '../../../shared/constants'
 import { generateToken, hashToken } from '../utils/token-generator'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
@@ -12,8 +12,6 @@ import { getErrorMessage } from '../types/errors'
 import { sendConfirmationEmail, sendWelcomeEmail } from '../services/newsletter-email'
 
 const logger = createLogger('plane-a.newsletter')
-const planeAPool = getPool(config.db.planeAUrl)
-const newsletterRepository = new NewsletterRepository(planeAPool)
 
 const subscribeSchema = z.object({
   email: z.string().email(),
@@ -30,7 +28,10 @@ const hashEmail = (email: string): string => {
   return createHash('sha256').update(normalizeEmail(email)).digest('hex')
 }
 
-const isEmailSuppressed = async (email: string): Promise<boolean> => {
+const isEmailSuppressed = async (
+  email: string,
+  planeAPool: FastifyInstance['container']['pool'],
+): Promise<boolean> => {
   const emailHash = hashEmail(email)
   const result = await planeAPool.query(
     `SELECT 1 FROM silver.email_suppression WHERE email_hash = $1 LIMIT 1`,
@@ -66,11 +67,13 @@ const buildRedirect = (path: string, status: string) => {
 }
 
 export const newsletterRoutes = async (app: FastifyInstance) => {
-  app.post('/newsletter/subscribe', async (request, reply) => {
+  const planeAPool = app.container.pool
+  const newsletterRepository = app.container.repositories.newsletter
+
+  app.post('/newsletter/subscribe', async (request, _reply) => {
     const parsed = subscribeSchema.safeParse(request.body)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
     }
 
     const email = normalizeEmail(parsed.data.email)
@@ -83,14 +86,12 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
       }
 
       const rateKey = buildRateLimitKey('newsletter:rate', email)
-      if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: 3600, component: 'newsletter' })) {
-        reply.code(429)
-        return { error: 'rate_limited', message: 'Please wait before requesting another confirmation email.' }
+      if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: DEFAULT_FALLBACK_TTL_SECONDS, component: 'newsletter' })) {
+        throw new RateLimitError('Please wait before requesting another confirmation email.')
       }
 
-      if (await isEmailSuppressed(email)) {
-        reply.code(400)
-        return { error: 'email_suppressed', message: 'This email address cannot receive newsletters.' }
+      if (await isEmailSuppressed(email, planeAPool)) {
+        throw new ValidationError('This email address cannot receive newsletters.')
       }
 
       const verifyToken = generateToken()
@@ -122,17 +123,22 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
 
       return { success: true, status: 'pending' }
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error
+      }
       const message = error instanceof Error ? error.message : String(error)
       if (message === 'email_suppressed') {
-        reply.code(400)
-        return { error: 'email_suppressed', message: 'This email address cannot receive newsletters.' }
+        throw new ValidationError('This email address cannot receive newsletters.')
       }
       logger.error('newsletter_subscribe_failed', {
         email,
         error: message,
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Newsletter subscribe failed', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 
@@ -140,8 +146,7 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
     const query = request.query as { token?: string }
     const token = typeof query.token === 'string' ? query.token : ''
     if (!token) {
-      reply.code(400)
-      return sendHtml(reply, renderHtml('Invalid token', 'Missing confirmation token.'))
+            throw new ValidationError('Invalid request', { details: sendHtml(reply, renderHtml('Invalid token', 'Missing confirmation token.')) })
     }
 
     try {
@@ -212,8 +217,7 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
     const query = request.query as { token?: string }
     const token = typeof query.token === 'string' ? query.token : ''
     if (!token) {
-      reply.code(400)
-      return sendHtml(reply, renderHtml('Invalid token', 'Missing unsubscribe token.'))
+            throw new ValidationError('Invalid request', { details: sendHtml(reply, renderHtml('Invalid token', 'Missing unsubscribe token.')) })
     }
 
     try {
@@ -265,11 +269,10 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/newsletter/status', async (request, reply) => {
+  app.get('/newsletter/status', async (request, _reply) => {
     const parsed = statusSchema.safeParse(request.query)
     if (!parsed.success) {
-      reply.code(400)
-      return { error: 'bad_request', details: parsed.error.issues }
+      throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
     try {
@@ -279,8 +282,11 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
       logger.error('newsletter_status_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return { error: 'internal_error' }
+      throw new AppError('Newsletter status failed', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 }

@@ -1,3 +1,7 @@
+import { parseCorridorId } from './corridor'
+import { FIXED_EXCHANGE_RATES } from './currency-limits'
+import { B2B_FIXED_AMOUNT_USD } from './macro-corridors'
+
 export type BucketSelection = {
   bucket_used: number
   fee_bucket_used: number
@@ -72,4 +76,18 @@ export const computeBucketSelection = (
     approximate,
     delta_pct: Number.isFinite(deltaPct) ? deltaPct : null,
   }
+}
+
+/**
+ * B2B bucket selection is fixed to a USD baseline, converted to the sending currency.
+ * This keeps exports and indices consistent across currencies while preserving a stable "size".
+ */
+export const getB2bAmountBucket = (corridorId: string): number => {
+  const parsed = parseCorridorId(corridorId)
+  if (!parsed) return B2B_FIXED_AMOUNT_USD
+  const sourceCurrency = parsed.sourceCurrency.toUpperCase()
+  if (sourceCurrency === 'USD') return B2B_FIXED_AMOUNT_USD
+  const rate = FIXED_EXCHANGE_RATES[sourceCurrency]
+  if (!rate || rate <= 0) return B2B_FIXED_AMOUNT_USD
+  return Math.round(B2B_FIXED_AMOUNT_USD * rate)
 }

@@ -49,8 +49,16 @@ export const handler = async (): Promise<number> => {
     throw new Error(`Failed to resolve database URL: ${message}`)
   }
 
+  const { runStartupChecks } = await import('../../shared/startup')
+  await runStartupChecks({
+    requirements: {
+      requirePlaneB: true,
+      requireQueues: true,
+    },
+  })
+
   try {
-    const { runB2bSweepScheduler } = await import('../b2b-sweep-scheduler')
+    const { runB2bSweepScheduler } = await import('../b2b-sweep-dispatch')
     return await runB2bSweepScheduler()
   } catch (error: unknown) {
     const { message, stack } = formatError(error)

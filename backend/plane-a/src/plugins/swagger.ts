@@ -8,21 +8,9 @@ import { config } from '../../../shared/config'
  * Get server URLs based on environment
  */
 const getServerUrls = (): Array<{ url: string; description: string }> => {
-  const isAwsRuntime = Boolean(
-    process.env.AWS_EXECUTION_ENV ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.AWS_REGION,
-  )
-
   // In Lambda, try to get API Gateway URL from environment or construct it
-  if (isAwsRuntime) {
-    const apiGatewayUrl =
-      process.env.API_GATEWAY_URL ||
-      process.env.API_BASE_URL ||
-      (process.env.AWS_REGION && process.env.API_ID
-        ? `https://${process.env.API_ID}.execute-api.${process.env.AWS_REGION}.amazonaws.com`
-        : undefined)
-
+  if (config.runtime.isAwsRuntime) {
+    const apiGatewayUrl = config.planeA.swagger.apiGatewayUrl
     if (apiGatewayUrl) {
       return [
         {
@@ -53,13 +41,7 @@ const getServerUrls = (): Array<{ url: string; description: string }> => {
 }
 
 export const swaggerPlugin = async (app: FastifyInstance) => {
-  const isAwsRuntime = Boolean(
-    process.env.AWS_EXECUTION_ENV ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.AWS_REGION,
-  )
-
-  if (isAwsRuntime && process.env.SWAGGER_ENABLED !== '1') {
+  if (config.runtime.isAwsRuntime && !config.planeA.swagger.enabled) {
     app.log.info('Swagger UI disabled in AWS runtime')
     return
   }

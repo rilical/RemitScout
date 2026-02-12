@@ -50,7 +50,7 @@ let goldPool: Pool | null = null
 
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-const { isShutdownRequested } = createShutdownHandler({
+const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
   timeoutMs: 30000,
   logger,
   onShutdown: async () => {
@@ -180,6 +180,10 @@ export const runGoldReconciliationJob = async (): Promise<void> => {
       {
         maxRetries: 3,
         initialDelayMs: 500,
+        maxDelayMs: 10000,
+        timeoutMs: 60000,
+        operation: 'gold-reconciliation.find_stale_corridors',
+        signal: shutdownSignal,
         retryable: (error) => {
           const errorMessage = error instanceof Error ? error.message : String(error)
           return errorMessage.includes('connection') ||

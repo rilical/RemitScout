@@ -1,13 +1,13 @@
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { config } from '../../../../shared/config'
+
+const http = config.planeB.providerLimits.http.paysend
+const playwright = config.planeB.providerLimits.playwright.paysend
 
 export const httpLimits = {
-  rpm: toNumber(process.env.PLANE_B_PAYSEND_RPM, 6),
-  concurrency: toNumber(process.env.PLANE_B_PAYSEND_CONCURRENCY, 1),
+  rpm: http.rpm,
+  concurrency: http.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_PAYSEND_CORRIDOR_RPM, 2),
+  perCorridorRpm: http.perCorridorRpm,
 }
 
 /**
@@ -15,8 +15,8 @@ export const httpLimits = {
  * These limits are defined for future use and do not affect current functionality.
  */
 export const playwrightLimits = {
-  rpm: toNumber(process.env.PLANE_B_PAYSEND_PLAYWRIGHT_RPM, 4),
-  concurrency: toNumber(process.env.PLANE_B_PAYSEND_PLAYWRIGHT_CONCURRENCY, 1),
+  rpm: playwright.rpm,
+  concurrency: playwright.concurrency,
   perLocale: true,
-  perCorridorRpm: toNumber(process.env.PLANE_B_PAYSEND_PLAYWRIGHT_CORRIDOR_RPM, 2),
+  perCorridorRpm: playwright.perCorridorRpm,
 }

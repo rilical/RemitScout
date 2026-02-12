@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { ValidationError } from '../shared/errors'
 
 const mockGetEntries = vi.fn()
 const mockGetIndicesSeries = vi.fn()
@@ -11,17 +12,6 @@ vi.mock('../shared/db', () => ({
 
 vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
   requireEntitlement: () => () => undefined,
-}))
-
-vi.mock('../plane-a/src/repositories', () => ({
-  PulseCacheRepository: vi.fn().mockImplementation(() => ({
-    getEntries: mockGetEntries,
-  })),
-  GoldIndicesRepository: vi.fn().mockImplementation(() => ({
-    getIndicesSeries: mockGetIndicesSeries,
-    getIndicesLatest: vi.fn(),
-    resolveCorridorId: mockResolveCorridorId,
-  })),
 }))
 
 describe('pulse chart route', () => {
@@ -37,6 +27,19 @@ describe('pulse chart route', () => {
 
     app = {
       get: vi.fn(),
+      container: {
+        pool: {},
+        repositories: {
+          pulseCache: {
+            getEntries: mockGetEntries,
+          },
+          goldIndices: {
+            getIndicesSeries: mockGetIndicesSeries,
+            getIndicesLatest: vi.fn(),
+            resolveCorridorId: mockResolveCorridorId,
+          },
+        },
+      },
     } as any
 
     mockRequest = {
@@ -111,5 +114,24 @@ describe('pulse chart route', () => {
     expect(result.series).toHaveLength(1)
     expect(result.series[0].points).toHaveLength(1)
     expect(result.series[0].points[0].v).toBeCloseTo(2.5)
+  })
+
+  it('throws validation error when chartId param is missing', async () => {
+    const handler = vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/pulse/charts/:chartId')?.[2] as any
+
+    const invalidRequest = handler(
+      {
+        params: {},
+        query: {},
+      } as Partial<FastifyRequest>,
+      mockReply,
+    )
+    await expect(invalidRequest).rejects.toBeInstanceOf(ValidationError)
+    await expect(invalidRequest).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'validation_error',
+    })
   })
 })

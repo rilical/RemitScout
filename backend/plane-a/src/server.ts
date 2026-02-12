@@ -1,19 +1,10 @@
-import { assertRuntimeConfig, config } from '../../shared/config'
+import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { createShutdownHandler } from '../../shared/shutdown'
 import { initErrorTracking } from '../../shared/error-tracker'
 import { initTracing, shutdownTracing } from '../../shared/tracing'
+import { runStartupChecks } from '../../shared/startup'
 import { buildApp } from './app'
-
-if (config.env === 'production' || config.env === 'staging' || process.env.STRICT_CONFIG === '1') {
-  assertRuntimeConfig({
-    requirePlaneA: true,
-    requireRedis: true,
-    requireSupabase: true,
-    requireStripe: true,
-    requireJwtSecret: config.planeA.requireJwt,
-  })
-}
 
 initErrorTracking('plane-a')
 initTracing('plane-a')
@@ -33,16 +24,6 @@ const loadSmartAlertsJob = async (): Promise<(() => Promise<void>) | null> => {
   }
 }
 
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const toBoolean = (value: string | undefined, fallback: boolean) => {
-  if (value === undefined) return fallback
-  return value === '1' || value === 'true' || value === 'yes'
-}
-
 const start = async () => {
   let app: Awaited<ReturnType<typeof buildApp>> | null = null
   let isShutdownRequested = () => false
@@ -50,6 +31,20 @@ const start = async () => {
   let smartAlertsRunning = false
 
   try {
+    // Fail-fast validation for required runtime config. For ECS, also validates AWS connectivity.
+    await runStartupChecks({
+      requirements: {
+        requirePlaneA: true,
+        requirePlaneC: true,
+        requireRedis: true,
+        requireQueues: true,
+        requireStorage: true,
+        requireSupabase: true,
+        requireStripe: true,
+        requireJwtSecret: config.planeA.requireJwt,
+      },
+    })
+
     app = await buildApp()
     const shutdown = createShutdownHandler({
       timeoutMs: 30000,
@@ -69,14 +64,8 @@ const start = async () => {
     await app.listen({ port: config.planeA.port, host: '0.0.0.0' })
     logger.info('server_started', { port: config.planeA.port })
 
-    const enableSmartAlertsScheduler = toBoolean(
-      process.env.PLANE_A_SMART_ALERTS_ENABLED,
-      config.env !== 'production' && config.env !== 'staging',
-    )
-    const smartAlertsIntervalMinutes = toNumber(
-      process.env.PLANE_A_SMART_ALERTS_INTERVAL_MINUTES,
-      15,
-    )
+    const enableSmartAlertsScheduler = config.planeA.smartAlerts.enabled
+    const smartAlertsIntervalMinutes = config.planeA.smartAlerts.intervalMinutes
 
     if (enableSmartAlertsScheduler && smartAlertsIntervalMinutes > 0) {
       if (!config.db.planeBUrl) {

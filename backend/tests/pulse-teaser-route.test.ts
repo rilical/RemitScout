@@ -68,5 +68,20 @@ describe('pulse teaser route', () => {
     expect(result.movers[0].providerCount).toBe(12)
     expect(result.updatedAt).toBe(bucketB.toISOString())
   })
-})
 
+  it('returns internal_error when query fails', async () => {
+    mockQuery.mockRejectedValue(new Error('db down'))
+
+    const app = { get: vi.fn() } as any as FastifyInstance
+    const { pulseTeaserRoutes } = await import('../plane-a/src/routes/pulse-teaser')
+    await pulseTeaserRoutes(app)
+
+    const handler = vi.mocked(app.get).mock.calls.find((c) => c[0] === '/pulse/teaser')?.[1] as any
+    const reply = { code: vi.fn().mockReturnThis() } as any
+    const result = await handler({ query: { limit: '3' } } as any, reply)
+
+    expect(reply.code).toHaveBeenCalledWith(500)
+    expect(reply.code.mock.calls[0][0]).toBe(500)
+    expect(result.error).toBe('internal_error')
+  })
+})

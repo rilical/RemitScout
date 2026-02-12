@@ -13,11 +13,9 @@ const logger = createLogger('plane-a.alert-notifications')
 let sesClient: SESClient | null = null
 let snsClient: SNSClient | null = null
 
-const isTruthy = (value: string | undefined) => value === '1' || value === 'true' || value === 'yes'
-
-const shouldAuditAttempts = () => isTruthy(process.env.ALERTS_NOTIFICATION_AUDIT)
-const shouldAuditContent = () => isTruthy(process.env.ALERTS_NOTIFICATION_AUDIT_CONTENT)
-const shouldAuditPii = () => isTruthy(process.env.ALERTS_NOTIFICATION_AUDIT_PII)
+const shouldAuditAttempts = () => config.alerts.notifications.auditAttempts
+const shouldAuditContent = () => config.alerts.notifications.auditContent
+const shouldAuditPii = () => config.alerts.notifications.auditPii
 
 const resolveAlertBaseUrl = (): string => (
   config.alerts.unsubscribe.baseUrl ||
@@ -27,9 +25,9 @@ const resolveAlertBaseUrl = (): string => (
 )
 
 const getSesClient = (): SESClient | null => {
-  const sesRegion = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
-  const alertsEmailEnabled = process.env.ALERTS_EMAIL_ENABLED === '1' || process.env.ALERTS_EMAIL_ENABLED === 'true'
-  const alertsEmailFrom = process.env.ALERTS_EMAIL_FROM || process.env.SES_FROM_ADDRESS
+  const sesRegion = config.aws.sesRegion
+  const alertsEmailEnabled = config.alerts.notifications.email.enabled
+  const alertsEmailFrom = config.alerts.notifications.email.from
 
   if (!alertsEmailEnabled || !alertsEmailFrom) {
     return null
@@ -43,8 +41,8 @@ const getSesClient = (): SESClient | null => {
 }
 
 const getSnsClient = (): SNSClient | null => {
-  const snsRegion = process.env.SNS_REGION || process.env.AWS_REGION || 'us-east-1'
-  const alertsSmsEnabled = process.env.ALERTS_SMS_ENABLED === '1' || process.env.ALERTS_SMS_ENABLED === 'true'
+  const snsRegion = config.aws.snsRegion
+  const alertsSmsEnabled = config.alerts.notifications.sms.enabled
 
   if (!alertsSmsEnabled) {
     return null
@@ -412,8 +410,8 @@ export async function sendAlertEmail(
       return false
     }
 
-    const alertsEmailFrom = process.env.ALERTS_EMAIL_FROM || process.env.SES_FROM_ADDRESS || 'alerts@remitscout.com'
-    const alertsEmailFromName = process.env.ALERTS_EMAIL_FROM_NAME || 'Remit-Scout Alerts'
+    const alertsEmailFrom = config.alerts.notifications.email.from || 'alerts@remitscout.com'
+    const alertsEmailFromName = config.alerts.notifications.email.fromName || 'Remit-Scout Alerts'
     const siteUrl = resolveAlertBaseUrl()
     if (!siteUrl) {
       await recordAlertNotificationAttempt(pool, {
@@ -432,7 +430,7 @@ export async function sendAlertEmail(
       })
       return false
     }
-    const unsubscribeToken = generateAlertUnsubscribeToken(userId)
+    const unsubscribeToken = generateAlertUnsubscribeToken(userId, alertId)
     const unsubscribeLink = unsubscribeToken
       ? `${siteUrl.replace(/\/$/, '')}/api/v1/alerts/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
       : null
@@ -630,8 +628,13 @@ export async function sendAlertEmail(
         error: message,
         subject,
       })
-    } catch {
-      // ignore (audit path must never block alert evaluation)
+    } catch (auditError) {
+      // Audit path must never block alert evaluation, but failures must be visible.
+      logger.warn('audit_log_write_failed', {
+        alert_id: alertId,
+        user_id: userId,
+        error: auditError instanceof Error ? auditError.message : String(auditError),
+      })
     }
     logger.error('alert_email_send_failed', {
       user_id: userId,

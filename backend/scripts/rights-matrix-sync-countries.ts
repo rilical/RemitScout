@@ -1,8 +1,7 @@
-import { createPool } from '../shared/db'
+import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { parseCorridorId } from '../shared/corridor'
 import { initTracing } from '../shared/tracing'
-import { RightsMatrixRepository } from '../plane-b/src/repositories/implementations/rights-matrix-repository'
 import {
   REMITLY_DESTINATION_COUNTRIES,
   REMITLY_SOURCE_COUNTRIES,
@@ -146,7 +145,6 @@ const corridorSupportEntries: CorridorSupport[] = [
 
 export const runRightsMatrixSyncCountries = async (): Promise<void> => {
   const pool = createPool(config.db.planeBUrl)
-  const repo = new RightsMatrixRepository(pool)
 
   try {
     const results: CountrySupport[] = [...countrySupportEntries]
@@ -163,20 +161,39 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
       })
     }
 
-    for (const entry of results) {
-      if (!entry.sourceCountries.length || !entry.destinationCountries.length) {
-        console.warn('[rights-matrix] skipping empty support list', {
-          provider_id: entry.providerId,
-          source_count: entry.sourceCountries.length,
-          destination_count: entry.destinationCountries.length,
-        })
-        continue
-      }
-      await repo.upsertProviderCountrySupport({
-        providerId: entry.providerId,
-        sourceCountries: entry.sourceCountries,
-        destinationCountries: entry.destinationCountries,
+    const valid = results.filter((entry) => {
+      if (entry.sourceCountries.length && entry.destinationCountries.length) return true
+      console.warn('[rights-matrix] skipping empty support list', {
+        provider_id: entry.providerId,
+        source_count: entry.sourceCountries.length,
+        destination_count: entry.destinationCountries.length,
       })
+      return false
+    })
+
+    if (valid.length > 0) {
+      // Bulk upsert to avoid N+1 writes.
+      await query(
+        `INSERT INTO silver.rights_matrix (provider_id, source_countries, destination_countries)
+         SELECT * FROM UNNEST(
+           $1::text[],
+           $2::text[][],
+           $3::text[][]
+         )
+         ON CONFLICT (provider_id) DO UPDATE SET
+           source_countries = EXCLUDED.source_countries,
+           destination_countries = EXCLUDED.destination_countries,
+           updated_at = NOW()`,
+        [
+          valid.map((e) => e.providerId),
+          valid.map((e) => e.sourceCountries),
+          valid.map((e) => e.destinationCountries),
+        ],
+        pool,
+      )
+    }
+
+    for (const entry of valid) {
       console.log('[rights-matrix] updated country support', {
         provider_id: entry.providerId,
         source_count: entry.sourceCountries.length,

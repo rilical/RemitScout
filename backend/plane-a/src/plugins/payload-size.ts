@@ -28,9 +28,14 @@ export const setupPayloadSizeMonitor = (app: FastifyInstance): void => {
       try {
         payloadString = JSON.stringify(payload)
         payloadSize = Buffer.byteLength(payloadString, 'utf8')
-      } catch {
-        // If stringify fails, estimate based on object
-        payloadSize = JSON.stringify(payload).length
+      } catch (error) {
+        logger.debug('payload_size_stringify_failed', {
+          method: request.method,
+          url: request.url,
+          error: error instanceof Error ? error.message : String(error),
+        })
+        // If stringify fails, fall back to a bounded best-effort estimate.
+        payloadSize = Buffer.byteLength(String(payload), 'utf8')
       }
     }
 
@@ -69,7 +74,6 @@ export const setupPayloadSizeMonitor = (app: FastifyInstance): void => {
     return payload
   })
 }
-
 
 
 

@@ -770,7 +770,7 @@ export const runTransferGoCollector = async (options: TransferGoCollectorOptions
       http2xxCount,
     },
     rates: providerRates,
-    maxRpm: httpLimits.maxRpm,
+    maxRpm: httpLimits.rpm,
   })
 
   if (shouldClose) {

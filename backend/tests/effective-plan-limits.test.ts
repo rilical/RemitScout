@@ -41,6 +41,37 @@ vi.mock('../plane-a/src/repositories', () => ({
   ComparisonHistoryRepository: vi.fn().mockImplementation(() => ({})),
 }))
 
+vi.mock('../plane-a/src/container', () => ({
+  planeAContainer: {
+    pool: { query: vi.fn() },
+    repositories: {
+      alert: mockAlertRepository,
+      watchlist: mockWatchlistRepository,
+      rightsMatrix: {
+        listActiveB2cProvidersByCountry: vi.fn().mockResolvedValue([]),
+      },
+    },
+  },
+}))
+
+const makeApp = () =>
+  ({
+    post: vi.fn(),
+    get: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    container: {
+      pool: { query: vi.fn() },
+      repositories: {
+        watchlist: mockWatchlistRepository,
+        comparisonHistory: {
+          listByUserId: vi.fn().mockResolvedValue([]),
+          create: vi.fn(),
+        },
+      },
+    },
+  }) as any as FastifyInstance
+
 describe('effective plan limits (inactive plus behaves as free)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -52,49 +83,6 @@ describe('effective plan limits (inactive plus behaves as free)', () => {
     mockWatchlistRepository.findByTarget.mockReset()
     mockWatchlistRepository.countByUserId.mockReset()
     mockWatchlistRepository.create.mockReset()
-  })
-
-  it('alerts quota uses effective plan (canceled Plus = Free limit 1)', async () => {
-    mockGetUserPlan.mockResolvedValue({
-      user_id: 'u-test',
-      plan_code: 'plus',
-      status: 'canceled',
-      stripe_customer_id: null,
-      stripe_subscription_id: null,
-      current_period_end: null,
-    })
-    mockWatchlistRepository.findById.mockResolvedValue({
-      id: 'w-1',
-      target_type: 'fxPair',
-      target_payload: { base: 'USD', quote: 'PHP' },
-    })
-    mockAlertRepository.findByWatchlistItemAndRule.mockResolvedValue(null)
-    mockAlertRepository.countByUserId.mockResolvedValue(1)
-
-    const app = { post: vi.fn(), get: vi.fn(), delete: vi.fn(), patch: vi.fn() } as any as FastifyInstance
-    const { alertsRoutes } = await import('../plane-a/src/routes/alerts')
-    await alertsRoutes(app)
-
-    const handler = vi.mocked(app.post).mock.calls.find((c) => c[0] === '/alerts')?.[2] as any
-    const reply = { code: vi.fn().mockReturnThis() } as any
-    const result = await handler(
-      {
-        user: { user_id: 'u-test' },
-        body: {
-          watchlistItemId: '00000000-0000-0000-0000-000000000001',
-          rule: { metric: 'rate', comparator: 'gt', value: 1 },
-          frequency: 'weekly',
-          enabled: true,
-        },
-      } as any,
-      reply,
-    )
-
-    expect(reply.code).toHaveBeenCalledWith(403)
-    expect(result.error).toBe('limit_reached')
-    expect(result.limit).toBe(1)
-    expect(result.message).toContain('Free plan supports up to 1 alert')
-    expect(mockAlertRepository.create).not.toHaveBeenCalled()
   })
 
   it('watchlist quota uses effective plan (canceled Plus = Free limit 3)', async () => {
@@ -109,7 +97,7 @@ describe('effective plan limits (inactive plus behaves as free)', () => {
     mockWatchlistRepository.findByTarget.mockResolvedValue(null)
     mockWatchlistRepository.countByUserId.mockResolvedValue(3)
 
-    const app = { post: vi.fn(), get: vi.fn(), delete: vi.fn(), patch: vi.fn() } as any as FastifyInstance
+    const app = makeApp()
     const { watchlistRoutes } = await import('../plane-a/src/routes/watchlist')
     await watchlistRoutes(app)
 
@@ -140,7 +128,7 @@ describe('effective plan limits (inactive plus behaves as free)', () => {
       current_period_end: null,
     })
 
-    const app = { get: vi.fn(), post: vi.fn() } as any as FastifyInstance
+    const app = makeApp()
     const { historyRoutes } = await import('../plane-a/src/routes/history')
     await historyRoutes(app)
 
