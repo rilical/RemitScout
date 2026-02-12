@@ -1,0 +1,26 @@
+name: Setup Node + pnpm
+description: Standard setup for Node + pnpm with caching and install
+
+inputs:
+  node_version:
+    description: Node version to use
+    required: true
+  pnpm_version:
+    description: pnpm version to use
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node_version }}
+        cache: pnpm
+    - uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm_version }}
+    - shell: bash
+      run: corepack enable
+    - shell: bash
+      run: pnpm install --frozen-lockfile --prefer-offline
+

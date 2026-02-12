@@ -17,7 +17,11 @@ import {
   DeleteReplicationGroupCommand,
   DescribeReplicationGroupsCommand,
 } from '@aws-sdk/client-elasticache'
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
+import {
+  SSMClient,
+  GetParameterCommand,
+  PutParameterCommand,
+} from '@aws-sdk/client-ssm'
 
 import { createLogger } from '../../shared/logger'
 
@@ -234,6 +238,35 @@ const createRedisReplicationGroup = async (
   }
 }
 
+const waitForDbClusterAvailable = async (
+  client: RDSClient,
+  clusterId: string,
+  maxWaitMs: number,
+): Promise<boolean> => {
+  const start = Date.now()
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  while (Date.now() - start < maxWaitMs) {
+    try {
+      const response = await client.send(
+        new DescribeDBClustersCommand({ DBClusterIdentifier: clusterId }),
+      )
+      const status = response.DBClusters?.[0]?.Status ?? 'unknown'
+      if (status === 'available') {
+        logger.info('db_ready', { clusterId, status })
+        return true
+      }
+      logger.info('db_waiting', { clusterId, status })
+    } catch (error) {
+      logger.warn('db_wait_failed', { clusterId, error: String(error) })
+    }
+    await sleep(5000)
+  }
+
+  logger.warn('db_wait_timeout', { clusterId, maxWaitMs })
+  return false
+}
+
 export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean }> => {
   const envName = process.env.ENVIRONMENT ?? 'dev'
   const pauseParamName =
@@ -300,21 +333,37 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const shouldPause = resolvedPaused
   logger.info('pause_state', { envName, shouldPause, hardStopEnabled })
 
-  const rules =
-    allowlist.length > 0 ? allowlist : await listRulesByPrefix(events, rulePrefix)
-  await setRulesEnabled(events, rules, !shouldPause)
-
-  const desiredMap = shouldPause && pauseEcs
-    ? Object.fromEntries(ecsServiceNames.map((name) => [name, 0]))
-    : Object.fromEntries(
-        ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]),
-      )
-  if (pauseEcs || !shouldPause) {
-    await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
+  try {
+    await ssm.send(
+      new PutParameterCommand({
+        Name: pauseParamName,
+        Value: shouldPause ? 'true' : 'false',
+        Type: 'String',
+        Overwrite: true,
+      }),
+    )
+  } catch (error) {
+    logger.warn('pause_param_write_failed', {
+      pauseParamName,
+      shouldPause,
+      error: String(error),
+    })
   }
 
+  // Safety invariant: pausing must always disable *all* rules by prefix, even if an allowlist is set.
+  // Allowlist exists to make resume low-noise (enable only a small set), not to make pause partial.
   if (hardStopEnabled) {
     if (shouldPause) {
+      const allRules = await listRulesByPrefix(events, rulePrefix)
+      await setRulesEnabled(events, allRules, false)
+
+      const desiredMap = pauseEcs
+        ? Object.fromEntries(ecsServiceNames.map((name) => [name, 0]))
+        : Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
+      if (pauseEcs) {
+        await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
+      }
+
       if (dbClusterId) {
         await stopDbCluster(rds, dbClusterId)
       }
@@ -326,6 +375,13 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
     } else {
       if (dbClusterId) {
         await startDbCluster(rds, dbClusterId)
+        const ready = await waitForDbClusterAvailable(rds, dbClusterId, 90000)
+        if (!ready) {
+          logger.warn('resume_db_not_ready_continuing', {
+            envName,
+            message: 'DB is still starting; continuing resume anyway (some scheduled tasks may log connection timeouts until DB becomes available).',
+          })
+        }
       }
       if (
         redisReplicationGroupId &&
@@ -357,6 +413,38 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
           redisSecurityGroupIds,
         })
       }
+
+      // Resume must be low-noise: first disable everything, then enable the allowlist (or all).
+      // Only do this after the DB is reachable to avoid noisy "connection timeout" runs.
+      const allRules = await listRulesByPrefix(events, rulePrefix)
+      await setRulesEnabled(events, allRules, false)
+      const rulesToEnable = allowlist.length > 0 ? allowlist : allRules
+      await setRulesEnabled(events, rulesToEnable, true)
+
+      const desiredMap = pauseEcs
+        ? Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
+        : Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
+      await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
+    }
+  } else {
+    // Soft mode: no DB/Redis stop/start; only toggle rules + ECS desired counts.
+    if (shouldPause) {
+      const allRules = await listRulesByPrefix(events, rulePrefix)
+      await setRulesEnabled(events, allRules, false)
+    } else {
+      const allRules = await listRulesByPrefix(events, rulePrefix)
+      await setRulesEnabled(events, allRules, false)
+      const rulesToEnable = allowlist.length > 0 ? allowlist : allRules
+      await setRulesEnabled(events, rulesToEnable, true)
+    }
+
+    const desiredMap = shouldPause && pauseEcs
+      ? Object.fromEntries(ecsServiceNames.map((name) => [name, 0]))
+      : Object.fromEntries(
+          ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]),
+        )
+    if (pauseEcs || !shouldPause) {
+      await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
     }
   }
 

@@ -158,7 +158,7 @@ const buildGeneratedEmails = (prefix: string, domain: string, count: number) => 
   const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '')
   return Array.from({ length: count }, (_, index) => {
     const suffix = String(index + 1).padStart(2, '0')
-    return `${prefix}+${stamp}-${suffix}@${domain}`
+    return `${prefix}-${stamp}-${suffix}@${domain}`
   })
 }
 

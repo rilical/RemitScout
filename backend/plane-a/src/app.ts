@@ -14,7 +14,6 @@ import {
 import { getTracer } from '../../shared/tracing'
 import { getRedisClient } from '../../shared/redis'
 import { authPlugin, requireAuth } from './plugins/auth-plugin'
-import { createBackwardCompatibilityLayer } from './plugins/api-versioning'
 import { swaggerPlugin } from './plugins/swagger'
 import { setupErrorHandler } from './plugins/error-handler'
 import { registerRedisRateLimit, registerMemoryRateLimit } from './plugins/rate-limit-redis'
@@ -139,36 +138,26 @@ export const buildApp = async () => {
     },
   })
   const accountRoutePrefixes = [
-    '/api/me',
     '/api/v1/me',
-    '/api/billing',
     '/api/v1/billing',
-    '/api/pulse',
     '/api/v1/pulse',
-    '/api/watchlist',
     '/api/v1/watchlist',
-    '/api/alerts',
     '/api/v1/alerts',
-    '/api/history',
     '/api/v1/history',
-    '/api/exports',
     '/api/v1/exports',
-    '/api/data',
     '/api/v1/data',
-    '/api/account',
     '/api/v1/account',
-    '/api/dashboard',
     '/api/v1/dashboard',
-    '/api/sessions',
     '/api/v1/sessions',
   ]
-  const authBypassPaths = new Set(['/api/billing/webhook', '/api/v1/billing/webhook'])
+  const authBypassPaths = new Set([
+    '/api/v1/billing/webhook',
+    '/api/v1/alerts/unsubscribe',
+  ])
   const allowUnauthedAlerts =
     config.env === 'development' || config.env === 'test' || process.env.ENVIRONMENT === 'dev'
   if (allowUnauthedAlerts) {
-    authBypassPaths.add('/api/alerts/corridor-eligibility')
     authBypassPaths.add('/api/v1/alerts/corridor-eligibility')
-    authBypassPaths.add('/api/alerts/macro-corridors')
     authBypassPaths.add('/api/v1/alerts/macro-corridors')
   }
   const accountAuth = requireAuth()
@@ -187,7 +176,6 @@ export const buildApp = async () => {
     return accountAuth(request, reply)
   })
 
-  createBackwardCompatibilityLayer(app)
   setupErrorHandler(app)
   setupTimeoutMonitor(app)
   setupPayloadSizeMonitor(app)
@@ -223,9 +211,9 @@ export const buildApp = async () => {
 
   app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (request, body, done) => {
     // Preserve raw body for Stripe webhook signature verification
-    // Works with both /api/billing/webhook and /api/v1/billing/webhook
+    // Works on /api/v1/billing/webhook only (legacy /api/* removed)
     const path = request.url.split('?')[0]
-    if (path === '/api/billing/webhook' || path === '/api/v1/billing/webhook') {
+    if (path === '/api/v1/billing/webhook') {
       done(null, body)
       return
     }
@@ -381,40 +369,26 @@ export const buildApp = async () => {
   app.register(bankVsSpecialistRoutes, { prefix: '/api/v1' })
   app.register(geoRoutes, { prefix: '/api/v1' })
 
-  app.register(quotesRoutes, { prefix: '/api' })
-  app.register(providersRoutes, { prefix: '/api' })
-  app.register(providerMetadataRoutes, { prefix: '/api' })
-  app.register(corridorCurrenciesRoutes, { prefix: '/api' })
-  app.register(corridorLimitsRoutes, { prefix: '/api' })
-  app.register(popularCorridorsRoutes, { prefix: '/api' })
-  app.register(meRoutes, { prefix: '/api' })
-  app.register(billingRoutes, { prefix: '/api' })
-  app.register(pulseStatusRoutes, { prefix: '/api' })
-  app.register(pulseTeaserRoutes, { prefix: '/api' })
-  app.register(pulseRoutes, { prefix: '/api' })
-  app.register(ratesRoutes, { prefix: '/api' })
-  app.register(opsRoutes, { prefix: '/api' })
-  app.register(contactRoutes, { prefix: '/api' })
-  app.register(watchlistRoutes, { prefix: '/api' })
-  app.register(alertsRoutes, { prefix: '/api' })
-  app.register(newsletterRoutes, { prefix: '/api' })
-  app.register(recentSearchRoutes, { prefix: '/api' })
-  app.register(telemetryRoutes, { prefix: '/api' })
-  app.register(historyRoutes, { prefix: '/api' })
-  app.register(indicesRoutes, { prefix: '/api' })
-  app.register(exportsRoutes, { prefix: '/api' })
-  app.register(dataExportRoutes, { prefix: '/api' })
-  app.register(sessionsRoutes, { prefix: '/api' })
-  app.register(accountRoutes, { prefix: '/api' })
-  app.register(providerVisitRoutes, { prefix: '/api' })
-  app.register(analyticsRoutes, { prefix: '/api' })
-  app.register(auditRoutes, { prefix: '/api' })
-  app.register(adminRoutes, { prefix: '/api' })
-  app.register(notificationsRoutes, { prefix: '/api' })
-  app.register(adsRoutes, { prefix: '/api' })
-  app.register(marketingRoutes, { prefix: '/api' })
-  app.register(bankVsSpecialistRoutes, { prefix: '/api' })
-  app.register(geoRoutes, { prefix: '/api' })
+  const legacyGonePayload = (legacyPath: string) => {
+    const normalized = legacyPath === '/api' ? '/api' : legacyPath.replace(/\/+$/, '')
+    const suffix = normalized === '/api' ? '' : normalized.slice('/api'.length)
+    return {
+      error: 'gone',
+      message: 'Legacy /api/* routes have been removed. Use /api/v1/*.',
+      alternativePath: `/api/v1${suffix || ''}`,
+    }
+  }
+
+  app.all('/api', async (_request, reply) => {
+    reply.code(410)
+    return legacyGonePayload('/api')
+  })
+
+  app.all('/api/*', async (request, reply) => {
+    const path = request.url.split('?')[0] || '/api'
+    reply.code(410)
+    return legacyGonePayload(path)
+  })
 
   return app
 }

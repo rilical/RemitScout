@@ -1,37 +1,123 @@
-name: CI
+name: ci/core
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - develop
-    tags:
-      - "v*"
-  pull_request:
+  workflow_call:
+    inputs:
+      mode:
+        description: pr | main | nightly
+        required: true
+        type: string
+      node_version:
+        required: false
+        type: string
+        default: 20.19.6
+      pnpm_version:
+        required: false
+        type: string
+        default: 10.19.0
   workflow_dispatch:
+    inputs:
+      mode:
+        description: pr | main | nightly
+        required: true
+        default: pr
+        type: choice
+        options:
+          - pr
+          - main
+          - nightly
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-core-${{ github.ref }}-${{ inputs.mode || github.event.inputs.mode }}
   cancel-in-progress: true
 
-env:
-  NODE_VERSION: 20.19.6
-  PNPM_VERSION: 10.19.0
+permissions:
+  contents: read
 
 jobs:
-  lint-typecheck-build:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      backend_changed: ${{ steps.filter.outputs.backend_changed }}
+      frontend_changed: ${{ steps.filter.outputs.frontend_changed }}
+      infra_changed: ${{ steps.filter.outputs.infra_changed }}
+      migrations_changed: ${{ steps.filter.outputs.migrations_changed }}
+      docs_only: ${{ steps.filter.outputs.docs_only }}
+      run_backend: ${{ steps.flags.outputs.run_backend }}
+      run_frontend: ${{ steps.flags.outputs.run_frontend }}
+      run_infra: ${{ steps.flags.outputs.run_infra }}
+      run_e2e: ${{ steps.flags.outputs.run_e2e }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
+          filters: |
+            backend_changed:
+              - 'backend/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            frontend_changed:
+              - 'frontend/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            infra_changed:
+              - 'infrastructure/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            migrations_changed:
+              - 'backend/db/migrations/**'
+            docs_only:
+              - 'docs/**'
+              - 'README.md'
+              - 'notes/**'
+      - id: flags
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MODE="${{ inputs.mode || github.event.inputs.mode }}"
+          BACKEND="${{ steps.filter.outputs.backend_changed }}"
+          FRONTEND="${{ steps.filter.outputs.frontend_changed }}"
+          INFRA="${{ steps.filter.outputs.infra_changed }}"
+          DOCS_ONLY="${{ steps.filter.outputs.docs_only }}"
+
+          if [ "$MODE" = "nightly" ]; then
+            echo "run_backend=true" >> "$GITHUB_OUTPUT"
+            echo "run_frontend=true" >> "$GITHUB_OUTPUT"
+            echo "run_infra=true" >> "$GITHUB_OUTPUT"
+            echo "run_e2e=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$DOCS_ONLY" = "true" ] && [ "$BACKEND" != "true" ] && [ "$FRONTEND" != "true" ] && [ "$INFRA" != "true" ]; then
+            echo "run_backend=false" >> "$GITHUB_OUTPUT"
+            echo "run_frontend=false" >> "$GITHUB_OUTPUT"
+            echo "run_infra=false" >> "$GITHUB_OUTPUT"
+            echo "run_e2e=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "run_backend=$BACKEND" >> "$GITHUB_OUTPUT"
+          echo "run_frontend=$FRONTEND" >> "$GITHUB_OUTPUT"
+          echo "run_infra=$INFRA" >> "$GITHUB_OUTPUT"
+          echo "run_e2e=$FRONTEND" >> "$GITHUB_OUTPUT"
+
+  lint-typecheck-build:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend lint
       - run: pnpm -C frontend lint
       - name: Boundary enforcement (Golden Rule)
@@ -48,8 +134,45 @@ jobs:
       - run: pnpm -C frontend type-check
       - run: pnpm -C backend build
 
+  contract-types:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_backend == 'true' || needs.changes.outputs.run_frontend == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
+      - run: pnpm -C frontend api:types:check
+
+  migration-immutability:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.migrations_changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Disallow editing historical migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${{ github.base_ref }}"
+          git fetch origin "$base" --depth=1
+          # Only allow added migrations in PR diffs. Modified/deleted migrations are blocked.
+          bad=$(git diff --name-status "origin/$base"...HEAD -- backend/db/migrations | awk '$1 != "A" {print}')
+          if [ -n "$bad" ]; then
+            echo "Editing existing migrations is not allowed:"
+            echo "$bad"
+            exit 1
+          fi
+          echo "✅ Migration immutability check passed"
+
   backend-tests:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_backend == 'true'
     services:
       postgres:
         image: postgres:15
@@ -72,14 +195,10 @@ jobs:
       PLANE_A_ADMIN_EMAILS: admin@example.com
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend db:migrate
       - run: pnpm -C backend test:coverage
       - uses: actions/upload-artifact@v4
@@ -96,36 +215,16 @@ jobs:
           name: backend-coverage
           fail_ci_if_error: false
 
-  guardrail:
-    if: ${{ secrets.DATABASE_URL_PLANE_A != '' }}
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
-      RUN_BRONZE_GUARDRAIL_TEST: "1"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm -C backend test -- tests/guardrails.test.ts
-
   frontend-unit:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_frontend == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C frontend test:coverage
       - uses: actions/upload-artifact@v4
         with:
@@ -134,16 +233,14 @@ jobs:
 
   frontend-e2e:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_e2e == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -151,9 +248,20 @@ jobs:
       - run: pnpm -C frontend exec playwright install --with-deps
       - run: pnpm -C frontend build
       - run: pnpm -C frontend test:e2e
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          if-no-files-found: ignore
 
   smoke:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.run_backend == 'true'
     services:
       postgres:
         image: postgres:15
@@ -176,20 +284,18 @@ jobs:
       PLANE_A_ADMIN_EMAILS: admin@example.com
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend db:migrate
       - run: pnpm -C backend ci:seed-sanity
       - run: pnpm -C backend ci:api-smoke
 
   config-validate:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     env:
       NODE_ENV: production
       STRICT_CONFIG: "1"
@@ -210,104 +316,10 @@ jobs:
       CLOUDWATCH_METRICS_ENABLED: "1"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend ci:config-validate
       - run: pnpm -C backend ci:observability
 
-  audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --audit-level=high
-
-  gitleaks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gitleaks/gitleaks-action@v2
-        with:
-          args: "--verbose --redact"
-
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/ci
-
-  iac-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm -C infrastructure/cdk build
-      - uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: infrastructure/cdk
-          framework: cdk
-
-  release-gate:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    needs:
-      - lint-typecheck-build
-      - backend-tests
-      - frontend-unit
-      - frontend-e2e
-      - smoke
-      - config-validate
-      - audit
-      - gitleaks
-      - semgrep
-      - iac-scan
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit
-          POSTGRES_DB: remit
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U remit -d remit"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - run: pnpm install --frozen-lockfile
-      - run: node scripts/check-version-tag.mjs
-      - run: pnpm -C backend db:migrate

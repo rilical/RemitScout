@@ -74,6 +74,8 @@ tools/aws-cli/
 *.cache
 .cache/
 .temp/
+backend/tmp/
+frontend/tmp/
 
 # CI/contract artifacts (local-only)
 artifacts/

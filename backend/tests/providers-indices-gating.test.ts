@@ -191,4 +191,36 @@ describe('providers indices gating', () => {
     expect(result.indicesReason).toBe('unsupported_method')
     expect(result.indices).toBeUndefined()
   })
+
+  it('returns schema-complete quotes_unavailable payload when no quotes exist', async () => {
+    mockListLatestByCorridorAllMethods.mockResolvedValue([])
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-PH-USD-PHP',
+        amount_bucket: 500,
+        method: 'bank',
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(result.error?.code).toBe('quotes_unavailable')
+    expect(typeof result.comparisonId).toBe('string')
+    expect(typeof result.start).toBe('string')
+    expect(result.data).toEqual([])
+    expect(result.cache).toEqual(
+      expect.objectContaining({
+        ttl_seconds: expect.any(Number),
+        age_seconds: null,
+        fresh: false,
+      }),
+    )
+    expect(result.indicesReason).toBe('quotes_unavailable')
+  })
 })

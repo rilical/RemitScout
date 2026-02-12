@@ -291,7 +291,7 @@
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                         />
                       </svg>
-                      No data
+                      {{ option.unavailableLabel || 'No data' }}
                     </span>
                     <span
                       v-else-if="option.locked"
@@ -329,36 +329,38 @@
                   <span v-else>{{ option.label }}</span>
                 </template>
               </UniversalDropdown>
-              <!-- Smart Alert Unavailable Explanation -->
               <div
-                v-if="smartAlertDisabledReason && smartAlertDisabledReason !== 'plus_required'"
+                v-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'not_offered'"
+                class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+              >
+                <span class="block text-slate-700">{{ SMART_NOT_OFFERED_COPY }}</span>
+                <NuxtLink
+                  to="/smart-corridors"
+                  class="mt-1 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800"
+                >
+                  See supported Smart corridors
+                </NuxtLink>
+              </div>
+
+              <div
+                v-if="target.type === 'corridor' && quoteCoverageCopy"
+                class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+              >
+                {{ quoteCoverageCopy }}
+              </div>
+
+              <div
+                v-else-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'rolling_out'"
                 class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
               >
-                <div class="flex items-start gap-2">
-                  <svg
-                    class="w-4 h-4 flex-shrink-0 mt-0.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <span class="font-medium">Smart alerts unavailable for this corridor.</span>
-                    <span class="block mt-0.5 text-amber-700">{{ smartAlertDisabledMessage }}</span>
-                    <span
-                      v-if="corridorEligibility"
-                      class="block mt-1 text-amber-600"
-                    >
-                      Try popular corridors like US→Mexico, UK→India, or US→Philippines.
-                    </span>
-                  </div>
-                </div>
+                {{ smartRollingOutCopy }}
+              </div>
+
+              <div
+                v-else-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'available'"
+                class="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800"
+              >
+                {{ SMART_AVAILABLE_COPY }}
               </div>
             </div>
 
@@ -665,8 +667,16 @@ type CorridorEligibility = {
   corridorId: string
   isMacroCorridor: boolean
   smartAlerts: {
+    programEligible: boolean
+    status: 'available' | 'rolling_out' | 'not_offered'
     eligible: boolean
     reason: string | null
+    dataProgress: {
+      sampleDays: number | null
+      minSampleDays: number
+      confidence: number | null
+      minConfidence: number
+    }
     confidence: number | null
     sampleDays: number | null
     requirements: {
@@ -678,11 +688,39 @@ type CorridorEligibility = {
     eligible: boolean
     refreshCadence: string
     note: string
+    fxCoverage?: {
+      supported: boolean
+    }
+    quoteCoverage?: {
+      supported: boolean
+      eligibleProviderCount: number
+      observedProviderCount: number
+      latestQuoteCollectedAt: string | null
+      fresh: boolean
+      supportedMetrics: Array<'recipientGets' | 'fee' | 'totalCost'>
+    }
   }
 }
 
 const corridorEligibility = ref<CorridorEligibility | null>(null)
 const eligibilityLoading = ref(false)
+
+const SMART_NOT_OFFERED_COPY = 'Smart Alerts are available for select major corridors we track continuously.'
+const SMART_AVAILABLE_COPY = 'Smart Alerts are available for this corridor.'
+
+const smartProgramEligible = computed(() => corridorEligibility.value?.smartAlerts?.programEligible === true)
+const smartStatus = computed(() => corridorEligibility.value?.smartAlerts?.status ?? null)
+const smartDataProgress = computed(() => corridorEligibility.value?.smartAlerts?.dataProgress ?? null)
+
+const smartRollingOutCopy = computed(() => {
+  const progress = smartDataProgress.value
+  const sampleDays = progress?.sampleDays ?? corridorEligibility.value?.smartAlerts?.sampleDays ?? null
+  const minSampleDays = progress?.minSampleDays ?? corridorEligibility.value?.smartAlerts?.requirements?.minSampleDays ?? 21
+  if (sampleDays === null) {
+    return `Collecting data for Smart Alerts: 0/${minSampleDays} days.`
+  }
+  return `Collecting data for Smart Alerts: ${sampleDays}/${minSampleDays} days.`
+})
 
 const loadCorridorEligibility = async () => {
   if (!isOpen.value || import.meta.server) {
@@ -703,6 +741,7 @@ const loadCorridorEligibility = async () => {
         to: corridorTo.value,
         fromCurrency: corridorFromCurrency.value,
         toCurrency: corridorToCurrency.value,
+        method: corridorMethod.value,
       },
       timeoutMs: 5000,
       retries: 0,
@@ -722,13 +761,23 @@ const loadCorridorEligibility = async () => {
   }
 }
 
+const quoteCoverage = computed(() => corridorEligibility.value?.regularAlerts?.quoteCoverage ?? null)
+const quoteCoverageSupported = computed(() => quoteCoverage.value?.supported === true)
+
+const quoteCoverageCopy = computed(() => {
+  if (eligibilityLoading.value) return null
+  if (!corridorEligibility.value) return null
+  if (quoteCoverageSupported.value) return null
+  return 'Quote-based alerts aren’t available for this corridor yet. Use an FX Rate Alert instead.'
+})
+
 const smartAlertDisabledReason = computed(() => {
   if (!isPlus.value) return 'plus_required'
   if (eligibilityLoading.value) return 'loading'
   if (!corridorEligibility.value) return 'unknown'
-  if (!corridorEligibility.value.smartAlerts.eligible) {
-    return corridorEligibility.value.smartAlerts.reason || 'no_data'
-  }
+  if (corridorEligibility.value.smartAlerts.programEligible === false) return 'not_offered'
+  if (corridorEligibility.value.smartAlerts.status === 'rolling_out') return 'rolling_out'
+  if (corridorEligibility.value.smartAlerts.status !== 'available') return 'unknown'
   return null
 })
 
@@ -740,12 +789,10 @@ const smartAlertDisabledMessage = computed(() => {
       return 'Checking corridor data...'
     case 'unknown':
       return 'Unable to verify corridor data availability'
-    case 'no_data':
-      return 'Not enough data for this corridor yet'
-    case 'insufficient_history':
-      return `Need ${corridorEligibility.value?.smartAlerts.requirements?.minSampleDays ?? 21}+ days of history`
-    case 'low_confidence':
-      return 'Not enough providers covering this corridor'
+    case 'not_offered':
+      return SMART_NOT_OFFERED_COPY
+    case 'rolling_out':
+      return smartRollingOutCopy.value
     default:
       return null
   }
@@ -781,22 +828,48 @@ const metricOptions = computed(() => {
   const options = []
   switch (target.value.type) {
     case 'corridor':
+      options.push({ value: 'rate' as const, label: 'FX rate' })
       options.push(
-        { value: 'recipientGets' as const, label: 'Recipient gets' },
-        { value: 'totalCost' as const, label: 'Total cost' },
-        { value: 'fee' as const, label: 'Fee' },
+        {
+          value: 'recipientGets' as const,
+          label: 'Recipient gets',
+          disabled: !quoteCoverageSupported.value && metric.value !== 'recipientGets',
+        },
+        {
+          value: 'totalCost' as const,
+          label: 'Total cost',
+          disabled: !quoteCoverageSupported.value && metric.value !== 'totalCost',
+        },
+        {
+          value: 'fee' as const,
+          label: 'Fee',
+          disabled: !quoteCoverageSupported.value && metric.value !== 'fee',
+        },
       )
       {
+        const shouldIncludeSmart = metric.value === 'sendScore' || smartProgramEligible.value
+        if (!shouldIncludeSmart) break
+
         const reason = smartAlertDisabledReason.value
         const smartDisabled = reason !== null
         const isDataIssue = reason && !['plus_required', 'loading'].includes(reason)
         const isLoading = reason === 'loading'
+        const unavailableLabel = !isDataIssue
+          ? undefined
+          : reason === 'rolling_out'
+            ? 'Collecting'
+            : reason === 'not_offered'
+              ? 'Not offered'
+              : reason === 'unknown'
+                ? 'Unknown'
+                : 'No data'
         options.push({
           value: 'sendScore' as const,
           label: 'Intelligent Alert',
           disabled: smartDisabled,
           locked: !isPlus.value,
           unavailable: isDataIssue,
+          unavailableLabel,
           loading: isLoading,
           unavailableReason: smartAlertDisabledMessage.value,
         })
@@ -961,7 +1034,12 @@ const handleLimitRemove = async (id: string) => {
 }
 
 const isSmartMetric = computed(() => metric.value === 'sendScore')
-const showCurrency = computed(() => target.value.type === 'corridor' && !isSmartMetric.value)
+const showCurrency = computed(() => (
+  target.value.type === 'corridor'
+  && !isSmartMetric.value
+  && metric.value !== 'rate'
+  && metric.value !== 'midMarketRate'
+))
 const valueStep = computed(() => (isSmartMetric.value ? 1 : 0.01))
 const valueMin = computed(() => (isSmartMetric.value ? 0 : undefined))
 const valueMax = computed(() => (isSmartMetric.value ? 100 : undefined))
@@ -1004,6 +1082,7 @@ const shouldDefaultToSmartAlert = computed(() => (
   (context.value?.source === 'alerts' || context.value?.source === 'pulse')
   && isPlus.value
   && target.value.type === 'corridor'
+  && corridorEligibility.value?.smartAlerts?.status === 'available'
 ))
 
 async function save() {
@@ -1158,8 +1237,8 @@ watch(metric, (nextMetric) => {
       metric.value = firstEnabledMetric.value
       return
     }
-    if (smartAlertDisabledReason.value && smartAlertDisabledReason.value !== 'plus_required') {
-      error.value = smartAlertDisabledMessage.value || 'Smart alerts not available for this corridor.'
+    if (smartAlertDisabledReason.value) {
+      error.value = smartAlertDisabledMessage.value || 'Unable to verify corridor data availability'
       metric.value = firstEnabledMetric.value
       return
     }

@@ -76,6 +76,30 @@ const getPoolSizeLimits = (): { max: number; min: number } => {
   return { max, min }
 }
 
+export const normalizeConnectionStringForSslMode = (
+  connectionString: string,
+  sslMode: string | undefined,
+): string => {
+  if (!connectionString || (sslMode !== 'require' && sslMode !== 'disable')) {
+    return connectionString
+  }
+
+  try {
+    const parsed = new URL(connectionString)
+    const sslParams = ['sslmode', 'ssl', 'sslcert', 'sslkey', 'sslrootcert']
+    const hasSslParams = sslParams.some((param) => parsed.searchParams.has(param))
+    if (!hasSslParams) {
+      return connectionString
+    }
+    for (const param of sslParams) {
+      parsed.searchParams.delete(param)
+    }
+    return parsed.toString()
+  } catch {
+    return connectionString
+  }
+}
+
 export const createPool = (connectionString?: string) => {
   const sslMode = process.env.DB_SSL_MODE || process.env.PGSSLMODE
   const sslEnabled = sslMode === 'require' || sslMode === 'verify-full' || sslMode === 'verify-ca'
@@ -88,15 +112,19 @@ export const createPool = (connectionString?: string) => {
   const isProduction = process.env.NODE_ENV === 'production'
   const poolLimits = getPoolSizeLimits()
   const resolvedConnectionString = connectionString || config.db.url
+  const normalizedConnectionString = normalizeConnectionStringForSslMode(
+    resolvedConnectionString,
+    sslMode,
+  )
   const disableStatementTimeout = (() => {
     if (process.env.DB_DISABLE_STATEMENT_TIMEOUT === '1') return true
-    if (!resolvedConnectionString) return false
+    if (!normalizedConnectionString) return false
     try {
-      const host = new URL(resolvedConnectionString).hostname
+      const host = new URL(normalizedConnectionString).hostname
       return host.includes('.proxy-') || host.includes('proxy-')
     } catch {
-      return resolvedConnectionString.includes('.proxy-')
-        || resolvedConnectionString.includes('proxy-')
+      return normalizedConnectionString.includes('.proxy-')
+        || normalizedConnectionString.includes('proxy-')
     }
   })()
 
@@ -108,7 +136,7 @@ export const createPool = (connectionString?: string) => {
     : undefined
 
   const pool = new Pool({
-    connectionString: resolvedConnectionString,
+    connectionString: normalizedConnectionString,
     ssl: sslConfig,
     ...(disableStatementTimeout ? {} : { statement_timeout: queryTimeoutMs }),
     query_timeout: queryTimeoutMs,

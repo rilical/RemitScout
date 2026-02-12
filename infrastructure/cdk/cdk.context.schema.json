@@ -402,6 +402,22 @@
       "type": "boolean",
       "description": "Enable deployment stage in CI/CD pipeline"
     },
+    "enableGithubActionsOidc": {
+      "type": "boolean",
+      "description": "Create GitHub Actions OIDC provider + deploy roles in this account"
+    },
+    "githubRepoOwner": {
+      "type": "string",
+      "description": "GitHub repository owner for GitHub Actions OIDC roles"
+    },
+    "githubRepoName": {
+      "type": "string",
+      "description": "GitHub repository name for GitHub Actions OIDC roles"
+    },
+    "githubActionsOidcProviderArn": {
+      "type": "string",
+      "description": "Existing GitHub Actions OIDC provider ARN (if already created in the AWS account)"
+    },
     "planeADomainName": {
       "type": "string",
       "description": "Custom domain name for Plane A API (e.g., api.remit-scout.com)"

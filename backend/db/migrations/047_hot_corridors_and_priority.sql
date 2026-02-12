@@ -87,7 +87,7 @@ WITH latest_snapshot AS (
 )
 SELECT
   corridor_id,
-  provider_count,
+  provider_count::bigint AS provider_count,
   NULL::double precision AS freshness_p95_minutes,
   NULL::numeric AS success_rate_24h,
   NULL::numeric AS block_rate_24h,

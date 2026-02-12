@@ -259,8 +259,12 @@ describe('alert-evaluator', () => {
 
     const result = await evaluateAlertsForFrequency(mockPool, 'daily', 12)
 
-    expect(result).toBe(0)
-    expect(query).toHaveBeenCalledWith(expect.stringContaining('FROM silver.alert_rule'), ['daily', 12], mockPool)
+    expect(result).toEqual({ total: 2, triggered: 0 })
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('FROM silver.alert_rule'),
+      ['daily', 12, 5000],
+      mockPool,
+    )
     expect(recordCloudWatchMetric).toHaveBeenCalledTimes(3)
   })
 })

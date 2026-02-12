@@ -14,6 +14,8 @@ export type EcsServiceResources = {
   goldLiveService: FargateService
   notificationsQueueService: FargateService
   opsAlertsQueueService: FargateService
+  alertEvaluationService: FargateService
+  exportWorkerService: FargateService
 }
 
 export type EcsServiceOptions = {
@@ -28,6 +30,8 @@ export type EcsServiceOptions = {
   goldLiveTask: FargateTaskDefinition
   notificationsQueueTask: FargateTaskDefinition
   opsAlertsQueueTask: FargateTaskDefinition
+  alertEvaluationTask: FargateTaskDefinition
+  exportWorkerTask: FargateTaskDefinition
   queues: QueueResources
   ingestFanoutMode?: string
   quoteRefreshMode?: string
@@ -35,6 +39,12 @@ export type EcsServiceOptions = {
   goldLiveMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
+  alertEvaluationMode?: string
+  exportJobMode?: string
+  b2cRefreshServiceEnabled?: boolean
+  fxRateRefreshServiceEnabled?: boolean
+  alertEvaluationServiceEnabled?: boolean
+  exportServiceEnabled?: boolean
   planeBIngestDesiredCount?: number
   queueWorkerDesiredCount?: number
   queueWorkerMaxCount?: number
@@ -45,6 +55,8 @@ export type EcsServiceOptions = {
   goldLiveDesiredCount?: number
   notificationsDesiredCount?: number
   opsAlertsDesiredCount?: number
+  alertEvaluationDesiredCount?: number
+  exportWorkerDesiredCount?: number
   queueWorkerSpotOnly?: boolean
   paused?: boolean
 }
@@ -56,6 +68,10 @@ export const createEcsServices = (
   const isDev = options.envName === 'dev'
   const isProd = options.envName === 'prod'
   const isPaused = options.paused === true
+  const b2cRefreshServiceEnabled = options.b2cRefreshServiceEnabled ?? true
+  const fxRateRefreshServiceEnabled = options.fxRateRefreshServiceEnabled ?? true
+  const alertEvaluationServiceEnabled = options.alertEvaluationServiceEnabled ?? false
+  const exportServiceEnabled = options.exportServiceEnabled ?? false
 
   const baseIngestDesired = isProd ? 1 : 0
   const baseQueueDesired = isProd ? 1 : 0
@@ -89,6 +105,12 @@ export const createEcsServices = (
   const opsAlertsDesired = isPaused
     ? 0
     : (options.opsAlertsDesiredCount ?? queueWorkerDesired)
+  const alertEvaluationDesired = isPaused
+    ? 0
+    : (options.alertEvaluationDesiredCount ?? (isProd ? 1 : 0))
+  const exportWorkerDesired = isPaused
+    ? 0
+    : (options.exportWorkerDesiredCount ?? (isProd ? 1 : 0))
 
   const spotOnly = options.queueWorkerSpotOnly ?? isDev
   const spotCapacityProviderStrategies = spotOnly
@@ -243,6 +265,42 @@ export const createEcsServices = (
   })
   tagManaged(opsAlertsQueueService)
 
+  const alertEvaluationService = new FargateService(scope, 'AlertEvaluationWorkerService', {
+    cluster: options.cluster,
+    taskDefinition: options.alertEvaluationTask,
+    desiredCount:
+      alertEvaluationServiceEnabled && options.alertEvaluationMode === 'queue' && !isPaused
+        ? alertEvaluationDesired
+        : 0,
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
+    securityGroups: [options.planeBSecurityGroup],
+    capacityProviderStrategies: spotCapacityProviderStrategies,
+    enableExecuteCommand,
+    circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
+  })
+  tagManaged(alertEvaluationService)
+
+  const exportWorkerService = new FargateService(scope, 'ExportWorkerService', {
+    cluster: options.cluster,
+    taskDefinition: options.exportWorkerTask,
+    desiredCount:
+      exportServiceEnabled && options.exportJobMode === 'queue' && !isPaused
+        ? exportWorkerDesired
+        : 0,
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
+    securityGroups: [options.planeBSecurityGroup],
+    capacityProviderStrategies: spotCapacityProviderStrategies,
+    enableExecuteCommand,
+    circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
+  })
+  tagManaged(exportWorkerService)
+
   const scaleMax = options.queueWorkerMaxCount ?? (isDev ? 5 : 10)
   const targetValue = isProd ? 25 : 20
   const resolveScaleBounds = (desired: number) => {
@@ -259,7 +317,7 @@ export const createEcsServices = (
   const scaleOutCooldown = isDev ? Duration.minutes(2) : Duration.minutes(1)
   const defaultQueueAgeTargetSeconds = isProd ? 120 : 300
 
-  if (!isPaused && options.quoteRefreshMode === 'queue') {
+  if (!isPaused && options.quoteRefreshMode === 'queue' && b2cRefreshServiceEnabled) {
     const b2cBounds = resolveScaleBounds(b2cRefreshDesired)
     const b2cScaling = b2cRefreshService.autoScaleTaskCount({
       minCapacity: b2cBounds.min,
@@ -279,7 +337,7 @@ export const createEcsServices = (
     })
   }
 
-  if (!isPaused && options.fxRateRefreshMode === 'queue') {
+  if (!isPaused && options.fxRateRefreshMode === 'queue' && fxRateRefreshServiceEnabled) {
     const fxBounds = resolveScaleBounds(fxRateRefreshDesired)
     const fxScaling = fxRateRefreshService.autoScaleTaskCount({
       minCapacity: fxBounds.min,
@@ -398,6 +456,46 @@ export const createEcsServices = (
     })
   }
 
+  if (!isPaused && alertEvaluationServiceEnabled && options.alertEvaluationMode === 'queue') {
+    const bounds = resolveScaleBounds(alertEvaluationDesired)
+    const scaling = alertEvaluationService.autoScaleTaskCount({
+      minCapacity: bounds.min,
+      maxCapacity: bounds.max,
+    })
+    scaling.scaleToTrackCustomMetric('AlertEvaluationQueueDepth', {
+      metric: options.queues.alertEvaluationQueue.metricApproximateNumberOfMessagesVisible(),
+      targetValue,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+    scaling.scaleToTrackCustomMetric('AlertEvaluationQueueAge', {
+      metric: options.queues.alertEvaluationQueue.metricApproximateAgeOfOldestMessage(),
+      targetValue: defaultQueueAgeTargetSeconds,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+  }
+
+  if (!isPaused && exportServiceEnabled && options.exportJobMode === 'queue') {
+    const bounds = resolveScaleBounds(exportWorkerDesired)
+    const scaling = exportWorkerService.autoScaleTaskCount({
+      minCapacity: bounds.min,
+      maxCapacity: bounds.max,
+    })
+    scaling.scaleToTrackCustomMetric('ExportWorkerQueueDepth', {
+      metric: options.queues.exportJobQueue.metricApproximateNumberOfMessagesVisible(),
+      targetValue,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+    scaling.scaleToTrackCustomMetric('ExportWorkerQueueAge', {
+      metric: options.queues.exportJobQueue.metricApproximateAgeOfOldestMessage(),
+      targetValue: defaultQueueAgeTargetSeconds,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+  }
+
   return {
     planeBIngestService,
     b2cRefreshService,
@@ -407,5 +505,7 @@ export const createEcsServices = (
     goldLiveService,
     notificationsQueueService,
     opsAlertsQueueService,
+    alertEvaluationService,
+    exportWorkerService,
   }
 }

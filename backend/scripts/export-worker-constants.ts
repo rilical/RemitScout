@@ -1,0 +1,17 @@
+export const CORRIDOR_HISTORY_HEADERS = [
+  'date',
+  'corridor_id',
+  'amount_bucket',
+  'method_profile',
+  'teer_rate',
+  'rci_ratio',
+  'rvi_bps',
+  'rci_median_bps',
+  'rci_p10_bps',
+  'rci_p90_bps',
+  'dispersion_bps',
+  'volatility_7d',
+  'provider_count_binned',
+  'suppression_flag',
+  'suppression_reason',
+]

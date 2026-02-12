@@ -1,0 +1,80 @@
+name: cd/rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment to roll back
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+      image_tag:
+        description: ECR image tag to deploy (e.g. 1.2.3 or abc1234)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Roll back stack to image tag
+        shell: bash
+        env:
+          ENV_NAME: ${{ inputs.env }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            --require-approval never
+
+          # Run migrations again (forward-only posture). This is idempotent and ensures schema is up to date.
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+
+          assign_ip="DISABLED"
+          if [ "$ENV_NAME" = "dev" ]; then assign_ip="ENABLED"; fi
+
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+
+          cluster="remit-scout-${ENV_NAME}"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=$assign_ip}" \
+            --query "tasks[0].taskArn" --output text)"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "Migration task failed (exitCode=$exit_code): $task_arn"
+            exit 1
+          fi

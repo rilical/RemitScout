@@ -56,42 +56,6 @@ export type ScheduledJobsResources = {
   b2bSweepSchedulerRule: Rule
   oandaSyncFunction: IFunction
   oandaSyncRule: Rule
-  remitlyProbeFunction: IFunction
-  remitlyProbeRule: Rule
-  westernunionProbeFunction: IFunction
-  westernunionProbeRule: Rule
-  wiseProbeFunction: IFunction
-  wiseProbeRule: Rule
-  worldremitProbeFunction: IFunction
-  worldremitProbeRule: Rule
-  riaProbeFunction: IFunction
-  riaProbeRule: Rule
-  dahabshiilProbeFunction: IFunction
-  dahabshiilProbeRule: Rule
-  mukuruProbeFunction: IFunction
-  mukuruProbeRule: Rule
-  sendwaveProbeFunction: IFunction
-  sendwaveProbeRule: Rule
-  xeProbeFunction: IFunction
-  xeProbeRule: Rule
-  alansariProbeFunction: IFunction
-  alansariProbeRule: Rule
-  instaremProbeFunction: IFunction
-  instaremProbeRule: Rule
-  xoomProbeFunction: IFunction
-  xoomProbeRule: Rule
-  remitbeeProbeFunction: IFunction
-  remitbeeProbeRule: Rule
-  singxProbeFunction: IFunction
-  singxProbeRule: Rule
-  placidProbeFunction: IFunction
-  placidProbeRule: Rule
-  koronapayProbeFunction: IFunction
-  koronapayProbeRule: Rule
-  wirebarleyProbeFunction: IFunction
-  wirebarleyProbeRule: Rule
-  intermexProbeFunction: IFunction
-  intermexProbeRule: Rule
 }
 
 export type ScheduledJobsOptions = {
@@ -131,6 +95,8 @@ export type ScheduledJobsOptions = {
   auditLogsBucketName?: string
   auditLogsPrefix?: string
   alertEvaluationQueueUrl?: string
+  alertEvaluationServiceEnabled?: boolean
+  exportServiceEnabled?: boolean
   planeBDbSecretArn?: string
   planeBDbSsmName?: string
   planeCDbSecretArn?: string
@@ -485,7 +451,7 @@ export const createScheduledJobs = (
     ruleName: ruleName('export-worker'),
     schedule: Schedule.rate(Duration.minutes(exportWorkerIntervalMinutes)),
     description: `Runs export worker every ${exportWorkerIntervalMinutes} minute(s) to drain queued export jobs.`,
-    enabled: rulesEnabled,
+    enabled: rulesEnabled && !options.exportServiceEnabled,
   })
   tagManagedRule(exportWorkerRule, options.envName)
 
@@ -663,7 +629,7 @@ export const createScheduledJobs = (
     ruleName: ruleName('alert-evaluation-worker'),
     schedule: Schedule.rate(Duration.minutes(alertEvaluationIntervalMinutes)),
     description: `Runs alert evaluation worker every ${alertEvaluationIntervalMinutes} minute(s) to drain queued alert evaluations.`,
-    enabled: rulesEnabled,
+    enabled: rulesEnabled && !options.alertEvaluationServiceEnabled,
   })
   tagManagedRule(alertEvaluationWorkerRule, options.envName)
   alertEvaluationWorkerRule.addTarget(
@@ -1771,12 +1737,14 @@ export const createScheduledJobs = (
   })
 
   const b2cRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
-  const b2cRefreshDesiredCount = options.b2cRefreshDesiredCount ?? 0
   const b2cRefreshRule = new Rule(scope, 'B2cRefreshWorkerSchedule', {
     ruleName: ruleName('b2c-refresh-worker'),
     schedule: Schedule.rate(Duration.minutes(b2cRefreshIntervalMinutes)),
     description: `Runs the B2C refresh worker on a ${b2cRefreshIntervalMinutes}-minute cadence.`,
-    enabled: rulesEnabled && (!b2cRefreshServiceEnabled || b2cRefreshDesiredCount === 0),
+    // If the B2C refresh worker is deployed as an ECS service (with autoscaling), we must not
+    // also schedule one-off tasks. Scheduling + a loop-enabled task definition can explode
+    // into many long-running tasks and exhaust Fargate vCPU.
+    enabled: rulesEnabled && !b2cRefreshServiceEnabled,
   })
   tagManagedRule(b2cRefreshRule, options.envName)
 
@@ -1793,12 +1761,14 @@ export const createScheduledJobs = (
   )
 
   const fxRateRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
-  const fxRateRefreshDesiredCount = options.fxRateRefreshDesiredCount ?? 0
   const fxRateRefreshRule = new Rule(scope, 'FxRateRefreshWorkerSchedule', {
     ruleName: ruleName('fx-rate-refresh-worker'),
     schedule: Schedule.rate(Duration.minutes(fxRateRefreshIntervalMinutes)),
     description: `Runs the FX rate refresh worker on a ${fxRateRefreshIntervalMinutes}-minute cadence.`,
-    enabled: rulesEnabled && (!fxRateRefreshServiceEnabled || fxRateRefreshDesiredCount === 0),
+    // If the FX refresh worker is deployed as an ECS service (with autoscaling), we must not
+    // also schedule one-off tasks. Scheduling + a loop-enabled task definition can explode
+    // into many long-running tasks and exhaust Fargate vCPU.
+    enabled: rulesEnabled && !fxRateRefreshServiceEnabled,
   })
   tagManagedRule(fxRateRefreshRule, options.envName)
 
@@ -1848,12 +1818,7 @@ export const createScheduledJobs = (
     { id: 'AlAnsari', providerId: 'alansari' },
     { id: 'Instarem', providerId: 'instarem' },
     { id: 'Xoom', providerId: 'xoom' },
-    { id: 'Remitbee', providerId: 'remitbee' },
     { id: 'Singx', providerId: 'singx' },
-    { id: 'Placid', providerId: 'placid' },
-    { id: 'Koronapay', providerId: 'koronapay' },
-    { id: 'WireBarley', providerId: 'wirebarley' },
-    { id: 'Intermex', providerId: 'intermex' },
   ]
 
   const probeFunctions: Record<string, IFunction> = {}
@@ -1896,7 +1861,6 @@ export const createScheduledJobs = (
         ...(planeBDbPort && { PLANE_B_DB_PORT: planeBDbPort }),
         ...(planeBDbName && { PLANE_B_DB_NAME: planeBDbName }),
       },
-      logRetention: logRetention,
       layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
     })
 
@@ -1980,42 +1944,6 @@ export const createScheduledJobs = (
     b2bSweepSchedulerRule,
     oandaSyncFunction,
     oandaSyncRule,
-    remitlyProbeFunction: probeFunctions.remitlyProbeFunction,
-    remitlyProbeRule: probeRules.remitlyProbeRule,
-    westernunionProbeFunction: probeFunctions.westernunionProbeFunction,
-    westernunionProbeRule: probeRules.westernunionProbeRule,
-    wiseProbeFunction: probeFunctions.wiseProbeFunction,
-    wiseProbeRule: probeRules.wiseProbeRule,
-    worldremitProbeFunction: probeFunctions.worldremitProbeFunction,
-    worldremitProbeRule: probeRules.worldremitProbeRule,
-    riaProbeFunction: probeFunctions.riaProbeFunction,
-    riaProbeRule: probeRules.riaProbeRule,
-    dahabshiilProbeFunction: probeFunctions.dahabshiilProbeFunction,
-    dahabshiilProbeRule: probeRules.dahabshiilProbeRule,
-    sendwaveProbeFunction: probeFunctions.sendwaveProbeFunction,
-    sendwaveProbeRule: probeRules.sendwaveProbeRule,
-    mukuruProbeFunction: probeFunctions.mukuruProbeFunction,
-    mukuruProbeRule: probeRules.mukuruProbeRule,
-    xeProbeFunction: probeFunctions.xeProbeFunction,
-    xeProbeRule: probeRules.xeProbeRule,
-    alansariProbeFunction: probeFunctions.alansariProbeFunction,
-    alansariProbeRule: probeRules.alansariProbeRule,
-    instaremProbeFunction: probeFunctions.instaremProbeFunction,
-    instaremProbeRule: probeRules.instaremProbeRule,
-    xoomProbeFunction: probeFunctions.xoomProbeFunction,
-    xoomProbeRule: probeRules.xoomProbeRule,
-    remitbeeProbeFunction: probeFunctions.remitbeeProbeFunction,
-    remitbeeProbeRule: probeRules.remitbeeProbeRule,
-    singxProbeFunction: probeFunctions.singxProbeFunction,
-    singxProbeRule: probeRules.singxProbeRule,
-    placidProbeFunction: probeFunctions.placidProbeFunction,
-    placidProbeRule: probeRules.placidProbeRule,
-    koronapayProbeFunction: probeFunctions.koronapayProbeFunction,
-    koronapayProbeRule: probeRules.koronapayProbeRule,
-    wirebarleyProbeFunction: probeFunctions.wirebarleyProbeFunction,
-    wirebarleyProbeRule: probeRules.wirebarleyProbeRule,
-    intermexProbeFunction: probeFunctions.intermexProbeFunction,
-    intermexProbeRule: probeRules.intermexProbeRule,
   }
 }
 

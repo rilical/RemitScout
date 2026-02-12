@@ -20,8 +20,7 @@ const shouldSkip = (path: string) => {
     clean === '/healthz' ||
     clean === '/readyz' ||
     clean === '/metrics' ||
-    clean.startsWith('/api/health') ||
-    clean.startsWith('/api/ops')
+    clean.startsWith('/api/v1/ops')
   )
 }
 

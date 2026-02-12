@@ -3,7 +3,7 @@ info:
   title: Remit-Scout Auth API
   version: 0.1.0
 paths:
-  /api/me:
+  /api/v1/me:
     get:
       summary: Get current user plan and entitlements
       security:

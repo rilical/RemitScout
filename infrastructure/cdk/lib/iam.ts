@@ -89,9 +89,13 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     resources: ['*'],
   })
   const sesPolicyResources =
-    options.sesIdentityArns && options.sesIdentityArns.length > 0
-      ? options.sesIdentityArns
-      : ['*']
+    options.envName === 'dev'
+      ? ['*']
+      : (
+        options.sesIdentityArns && options.sesIdentityArns.length > 0
+          ? options.sesIdentityArns
+          : ['*']
+      )
   const snsPolicyResources =
     options.snsTopicArns && options.snsTopicArns.length > 0
       ? options.snsTopicArns

@@ -172,7 +172,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 
 definePageMeta({
-  middleware: 'auth',
+  middleware: ['auth', 'admin'],
   layout: 'default',
 })
 

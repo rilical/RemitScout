@@ -15,12 +15,14 @@ import archiver from 'archiver'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import {
   deleteMessages,
   receiveJsonMessages,
   sendToDLQ,
   createVisibilityTimeoutExtender,
 } from '../shared/sqs'
+import { CORRIDOR_HISTORY_HEADERS } from './export-worker-constants'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
@@ -57,9 +59,13 @@ const idleSleepMs = toNumber(process.env.EXPORT_QUEUE_IDLE_SLEEP_MS, 2000)
 const lockTtlSeconds = toNumber(process.env.EXPORT_QUEUE_LOCK_TTL_SECONDS, 120)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const jobExpiryDays = toNumber(process.env.EXPORT_JOB_EXPIRY_DAYS, 7)
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
 let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
+let healthServer: { close: () => Promise<void> } | null = null
 
 const shutdown = (signal: string) => {
   if (shutdownRequested) return
@@ -428,6 +434,9 @@ const fetchCorridorHistory = async (
     corridor_id: string
     amount_bucket: number
     method_profile: string
+    teer_rate: number | null
+    rci_ratio: number | null
+    rvi_bps: number | null
     rci_median_bps: number | null
     rci_p10_bps: number | null
     rci_p90_bps: number | null
@@ -441,6 +450,9 @@ const fetchCorridorHistory = async (
             corridor_id,
             amount_bucket,
             method_profile,
+            teer_rate::double precision AS teer_rate,
+            rci_ratio::double precision AS rci_ratio,
+            rvi_bps::double precision AS rvi_bps,
             rci_median_bps::double precision AS rci_median_bps,
             rci_p10_bps::double precision AS rci_p10_bps,
             rci_p90_bps::double precision AS rci_p90_bps,
@@ -461,6 +473,9 @@ const fetchCorridorHistory = async (
     corridor_id: row.corridor_id,
     amount_bucket: row.amount_bucket,
     method_profile: row.method_profile,
+    teer_rate: row.teer_rate,
+    rci_ratio: row.rci_ratio,
+    rvi_bps: row.rvi_bps,
     rci_median_bps: row.rci_median_bps,
     rci_p10_bps: row.rci_p10_bps,
     rci_p90_bps: row.rci_p90_bps,
@@ -494,20 +509,7 @@ const buildSectionsForJob = async (
     if (corridorHistory.length > 0) {
       sections.push({
         title: 'corridor_history',
-        headers: [
-          'date',
-          'corridor_id',
-          'amount_bucket',
-          'method_profile',
-          'rci_median_bps',
-          'rci_p10_bps',
-          'rci_p90_bps',
-          'dispersion_bps',
-          'volatility_7d',
-          'provider_count_binned',
-          'suppression_flag',
-          'suppression_reason',
-        ],
+        headers: [...CORRIDOR_HISTORY_HEADERS],
         rows: corridorHistory,
       })
     }
@@ -795,23 +797,6 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
     return
   }
 
-  const lock = new WorkerLock('export-queue-worker', lockTtlSeconds)
-  const acquired = await lock.acquire()
-  if (!acquired) {
-    logger.info('export_worker_skipped', { reason: 'lock_already_held' })
-    await recordWorkerMetric('export-queue-worker', 'lock_failed', 1)
-    return
-  }
-
-  const lockRefreshTimer = setInterval(() => {
-    lock.extend().catch((error) => {
-      logger.warn('lock_extend_failed', {
-        lock_key: 'export-queue-worker',
-        error: error instanceof Error ? error.message : String(error),
-      })
-    })
-  }, lockRefreshMs)
-
   try {
     while (!shutdownRequested) {
       const messages = await receiveJsonMessages<ExportQueueMessage>(queueUrl, batchSize)
@@ -862,8 +847,7 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
       }
     }
   } finally {
-    clearInterval(lockRefreshTimer)
-    await lock.release()
+    // no-op: SQS handles distribution; lock-free for ECS scaling
   }
 }
 
@@ -929,6 +913,22 @@ export const runExportWorker = async (options?: { once?: boolean }) => {
     logger.warn('export_bucket_missing', { bucket })
   }
 
+  if (!isLambdaRuntime && healthEnabled) {
+    try {
+      healthServer = await startHealthServer({
+        port: healthPort,
+        logger,
+        loggerName: 'export-worker',
+        enableDatabaseCheck: true,
+        enableRedisCheck: true,
+      })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
   try {
     if (queueMode === 'off') {
       await runDbWorker(options)
@@ -936,23 +936,29 @@ export const runExportWorker = async (options?: { once?: boolean }) => {
       await runQueueWorker(options)
     }
   } finally {
-    await pool.end().catch(() => {
-      // Ignore shutdown errors
-    })
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
   }
 }
 
-runExportWorker()
-  .then(() => {
-    if (forceExitTimer) {
-      clearTimeout(forceExitTimer)
-    }
-    process.exit(0)
-  })
-  .catch((error) => {
-    logger.error('export_worker_fatal', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+if (!process.env.VITEST && !process.env.AWS_LAMBDA_FUNCTION_NAME && require.main === module) {
+  runExportWorker()
+    .then(() => {
+      if (forceExitTimer) {
+        clearTimeout(forceExitTimer)
+      }
+      process.exit(0)
     })
-    process.exit(1)
-  })
+    .catch((error) => {
+      logger.error('export_worker_fatal', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      process.exit(1)
+    })
+}

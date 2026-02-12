@@ -29,10 +29,6 @@ const getServerUrls = (): Array<{ url: string; description: string }> => {
           url: `${apiGatewayUrl}/api/v1`,
           description: 'Production API (v1)',
         },
-        {
-          url: `${apiGatewayUrl}/api`,
-          description: 'Production API (deprecated)',
-        },
       ]
     }
 
@@ -41,10 +37,6 @@ const getServerUrls = (): Array<{ url: string; description: string }> => {
       {
         url: '/api/v1',
         description: 'API Gateway (v1) - relative URL',
-      },
-      {
-        url: '/api',
-        description: 'API Gateway (deprecated) - relative URL',
       },
     ]
   }
@@ -56,10 +48,6 @@ const getServerUrls = (): Array<{ url: string; description: string }> => {
     {
       url: `${baseUrl}/api/v1`,
       description: 'Local development (v1)',
-    },
-    {
-      url: `${baseUrl}/api`,
-      description: 'Local development (deprecated)',
     },
   ]
 }
@@ -95,7 +83,7 @@ export const swaggerPlugin = async (app: FastifyInstance) => {
         info: {
           title: 'Remit-Scout API',
           version: '1.0.0',
-          description: 'Remit-Scout API for comparing money transfer providers and accessing remittance data. All endpoints are versioned under `/api/v1/*`. Unversioned endpoints at `/api/*` are deprecated and will be sunset on January 3, 2026.',
+          description: 'Remit-Scout API for comparing money transfer providers and accessing remittance data. All endpoints are versioned under `/api/v1/*`.',
         },
         servers: getServerUrls(),
         tags: [

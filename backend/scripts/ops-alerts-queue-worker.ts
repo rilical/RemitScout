@@ -13,7 +13,6 @@ import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { startHealthServer } from '../shared/health-server'
 import { deleteMessages, receiveJsonMessages, sendToDLQ } from '../shared/sqs'
-import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { notifyBlockAlert } from '../plane-b/src/collectors/alert-routing'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
@@ -45,8 +44,6 @@ const toNumber = (value: string | undefined, fallback: number) => {
 
 const batchSize = toNumber(process.env.OPS_ALERTS_QUEUE_BATCH_SIZE, 10)
 const idleSleepMs = toNumber(process.env.OPS_ALERTS_QUEUE_IDLE_SLEEP_MS, 1000)
-const lockTtlSeconds = toNumber(process.env.OPS_ALERTS_QUEUE_LOCK_TTL_SECONDS, 60)
-const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = toNumber(process.env.OPS_ALERTS_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000)
 const loopJitterMs = resolveJitterMs(process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS)
 const messageJitterMs = resolveJitterMs(process.env.OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS)
@@ -102,22 +99,6 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
       })
     }
   }
-
-  const lock = new WorkerLock('ops-alerts-queue-worker', lockTtlSeconds)
-  const acquired = await lock.acquire()
-  if (!acquired) {
-    logger.info('ops_alerts_worker_skipped', { reason: 'lock_already_held' })
-    return
-  }
-
-  const lockRefreshTimer = setInterval(() => {
-    lock.extend().catch((error) => {
-      logger.warn('lock_extend_failed', {
-        lock_key: 'ops-alerts-queue-worker',
-        error: error instanceof Error ? error.message : String(error),
-      })
-    })
-  }, lockRefreshMs)
 
   const pool = createPool(config.db.planeBUrl)
 
@@ -184,8 +165,6 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
       await deleteMessages(queueUrl, deleteHandles)
     }
   } finally {
-    clearInterval(lockRefreshTimer)
-    await lock.release()
     await pool.end()
     if (forceExitTimer) {
       clearTimeout(forceExitTimer)

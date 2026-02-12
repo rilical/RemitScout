@@ -2,6 +2,9 @@ type BackendUser = {
   user_id: string
   email: string
   name: string | null
+  role?: string | null
+  app_role?: string | null
+  is_admin?: boolean
 }
 
 type MeResponse = {

@@ -99,6 +99,7 @@ export const createOpsPause = (
   })
 
   pauseParam.grantRead(controllerFunction)
+  pauseParam.grantWrite(controllerFunction)
 
   const ecsServiceArn = stack.formatArn({
     service: 'ecs',

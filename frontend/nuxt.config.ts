@@ -66,7 +66,7 @@ const resolvePublicApiBase = () => {
   if (apiEndpoint) {
     return `${apiEndpoint.replace(/\/$/, '')}/api/v1`
   }
-  return isAwsEnvironment ? '/api' : '/api'
+  return '/api/v1'
 }
 const resolveServerApiBase = () => {
   const apiBase = readEnvValue('API_BASE')

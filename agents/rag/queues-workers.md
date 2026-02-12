@@ -194,6 +194,11 @@ Config:
 - `SELECT COUNT(*) FROM silver.fx_rate_refresh_request WHERE status = 'pending';`
 
 
+## Codex skills (automated validation)
+- `remit-scout-queue-corridor-watchdog` — validates every corridor through the full pipeline: sweep → enqueue → ingest → Silver → Gold. Checks all 9 queues + DLQs, sweep run completion, stuck tasks, DB fallback queues, circuit breakers, and per-corridor delivery.
+- Writes output to **Section 14: Queue & Corridor Pipeline** in `ops/reports/daily-ops-report.md`.
+- The self-healing automation reads findings and applies queue-specific playbooks (stuck task re-enqueue, DLQ diagnosis, worker scaling, circuit breaker monitoring).
+
 ## Self-healing loop
 - Detect missing/incorrect fundamentals that affect multiple agents and propose updates to `ARCHITECTURE.md`.
 - Detect agent-specific gaps and propose updates to this RAG file.

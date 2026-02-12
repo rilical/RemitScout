@@ -1252,14 +1252,30 @@ export const providersRoutes = async (app: FastifyInstance) => {
       if (!filteredQuotes.length) {
         const message = 'Quotes are being collected for this corridor. Please try again shortly.'
         return {
+          comparisonId,
+          start,
           error: { code: 'quotes_unavailable', message },
           message,
+          updatedAt: null,
           corridor: corridorId,
           amount: requestedAmount || amountBucket,
           method: requestedMethod,
           bucketUsed,
           approximate,
+          bucketDeltaPct: (requestedAmount && approximate && requestedAmount > 0)
+            ? Math.abs(bucketUsed - requestedAmount) / requestedAmount
+            : null,
+          midMarketRate: midMarketRate ?? null,
+          midMarketSource: midMarketSource ?? null,
+          midMarketUpdatedAt,
+          data: [],
+          cache: {
+            ttl_seconds: cacheTtlSeconds,
+            age_seconds: null,
+            fresh: false,
+          },
           availableMethods: orderMethods(availableMethods),
+          indicesReason: 'quotes_unavailable',
         }
       }
 

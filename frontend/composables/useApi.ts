@@ -48,8 +48,8 @@ export const useApi = () => {
   const { accessToken } = useAuth()
 
   const base = import.meta.server
-    ? (config.apiBase || config.public.apiBase || '/api')
-    : (config.public.apiBase || '/api')
+    ? (config.apiBase || config.public.apiBase || '/api/v1')
+    : (config.public.apiBase || '/api/v1')
 
   const makeRequestId = () => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {

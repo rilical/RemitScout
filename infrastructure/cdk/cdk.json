@@ -18,6 +18,7 @@
     "devPaused": true,
     "planeBIngestDesiredCount": 0,
     "planeBB2cRefreshDesiredCount": 0,
+    "planeBFxRateRefreshDesiredCount": 0,
     "planeBIngestFanoutTier1DesiredCount": 0,
     "planeBIngestFanoutTier2DesiredCount": 0,
     "goldLiveDesiredCount": 0,
@@ -26,8 +27,9 @@
     "planeBQueueWorkerDesiredCount": 0,
     "planeBQueueWorkerMaxCount": 0,
     "planeBDisableTier1": true,
-    "enableFrontend": false,
-    "cpuArchitecture": "arm64"
+    "enableFrontend": true,
+    "cpuArchitecture": "arm64",
+    "enableGithubActionsOidc": false
   },
   "watch": {
     "include": [

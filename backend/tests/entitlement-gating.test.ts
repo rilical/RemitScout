@@ -35,7 +35,7 @@ describe('entitlement gating', () => {
     })
     const response = await app.inject({
       method: 'GET',
-      url: '/api/pulse/status',
+      url: '/api/v1/pulse/status',
       headers: { authorization: 'Bearer token' },
     })
 
@@ -59,7 +59,7 @@ describe('entitlement gating', () => {
     })
     const response = await app.inject({
       method: 'GET',
-      url: '/api/pulse/status',
+      url: '/api/v1/pulse/status',
       headers: { authorization: 'Bearer token' },
     })
 

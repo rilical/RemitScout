@@ -1,0 +1,195 @@
+name: cd/deploy
+
+on:
+  workflow_run:
+    workflows: ['ci/main']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-dev:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop'
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Deploy (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          AWS_REGION="${{ vars.AWS_REGION }}"
+          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          IMAGE_TAG="$(git rev-parse --short=7 HEAD)"
+          ECR_REPO="remit-scout-backend-${ENV_NAME}"
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+
+          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
+
+          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          docker build \
+            -f backend/Dockerfile \
+            --build-arg BUILD_VERSION="${IMAGE_TAG}" \
+            -t "${ECR_URI}:${IMAGE_TAG}" \
+            .
+          docker push "${ECR_URI}:${IMAGE_TAG}"
+
+          echo "Scanning backend image (HIGH/CRITICAL)..."
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
+
+          pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c devPaused=true \
+            -c planeBIngestDesiredCount=0 \
+            -c planeBB2cRefreshDesiredCount=0 \
+            -c planeBIngestFanoutTier1DesiredCount=0 \
+            -c planeBIngestFanoutTier2DesiredCount=0 \
+            -c goldLiveDesiredCount=0 \
+            -c planeBNotificationsDesiredCount=0 \
+            -c planeBOpsAlertsDesiredCount=0 \
+            -c planeBQueueWorkerDesiredCount=0 \
+            -c planeBQueueWorkerMaxCount=0 \
+            -c planeBDisableTier1=true \
+            -c enableFrontend=false \
+            --require-approval never
+
+          echo "Dev deployed (paused)."
+
+  deploy-staging:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Deploy (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
+            exit 1
+          fi
+
+          AWS_REGION="${{ vars.AWS_REGION }}"
+          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          IMAGE_TAG="$(git rev-parse --short=7 HEAD)"
+          ECR_REPO="remit-scout-backend-${ENV_NAME}"
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+
+          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
+
+          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          docker build \
+            -f backend/Dockerfile \
+            --build-arg BUILD_VERSION="${IMAGE_TAG}" \
+            -t "${ECR_URI}:${IMAGE_TAG}" \
+            .
+          docker push "${ECR_URI}:${IMAGE_TAG}"
+
+          echo "Scanning backend image (HIGH/CRITICAL)..."
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
+
+          pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            --require-approval never
+
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+
+          cluster="remit-scout-${ENV_NAME}"
+          echo "Running migrations on ECS: cluster=${cluster}"
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --query "tasks[0].taskArn" --output text)"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "Migration task failed (exitCode=$exit_code): $task_arn"
+            exit 1
+          fi
+
+          bucket="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendBucketName") | .OutputValue')"
+          dist_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionId") | .OutputValue')"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          echo "Building frontend for staging..."
+          export NODE_ENV=staging
+          export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
+          export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
+          export PLANE_A_API_ENDPOINT="${plane_a_api:-}"
+          export PUBLIC_API_BASE="${api_base}/api/v1"
+          export PUBLIC_SUPABASE_URL="${PUBLIC_SUPABASE_URL}"
+          export PUBLIC_SUPABASE_ANON_KEY="${PUBLIC_SUPABASE_ANON_KEY}"
+
+          pnpm -C frontend build
+          pnpm -C frontend generate
+
+          echo "Deploying frontend to S3..."
+          aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"
+          aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "no-cache, no-store, must-revalidate" --exclude "*" --include "*.html" --include "*.json"
+          aws cloudfront create-invalidation --distribution-id "$dist_id" --paths "/*" >/dev/null
+
+          echo "Running post-deploy API smoke..."
+          API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke

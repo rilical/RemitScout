@@ -69,8 +69,8 @@ export const sendConfirmationEmail = async (
   }
 
   const fromName = config.newsletter.fromName || 'Remit-Scout Newsletter'
-  const confirmUrl = buildLink('/api/newsletter/confirm', verifyToken)
-  const unsubscribeUrl = buildLink('/api/newsletter/unsubscribe', unsubscribeToken)
+  const confirmUrl = buildLink('/api/v1/newsletter/confirm', verifyToken)
+  const unsubscribeUrl = buildLink('/api/v1/newsletter/unsubscribe', unsubscribeToken)
 
   const subject = 'Confirm your Remit-Scout newsletter subscription'
   const htmlBody = `

@@ -22,7 +22,7 @@ describe('GET /api/me', () => {
     const app = await buildApp()
     const response = await app.inject({
       method: 'GET',
-      url: '/api/me',
+      url: '/api/v1/me',
       headers: { authorization: 'Bearer token' },
     })
 

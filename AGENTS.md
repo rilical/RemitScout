@@ -50,7 +50,7 @@ Output format (exact, section numbers required):
 
 ---
 
-## 12 agents (registry)
+## 15 agents (registry)
 1) Cloud Architect
    - RAG: `agents/rag/cloud-architect.md`
 2) Plane A API Guardian
@@ -75,6 +75,18 @@ Output format (exact, section numbers required):
     - RAG: `agents/rag/delta-drift.md`
 12) SLO Police
     - RAG: `agents/rag/slo-police.md`
+13) Infrastructure Sentinel
+    - RAG: `agents/rag/infra-sentinel.md`
+    - Scope: AWS resource state, environment drift, cost guardrails, DB health, pipeline throughput
+    - Skills: `remit-scout-aws-resource-audit`, `remit-scout-db-observer`, `remit-scout-env-drift-detector`, `remit-scout-daily-ops-report`, `remit-scout-dev-cost-guard`
+14) Provider Onboarding
+    - RAG: `agents/rag/provider-onboarding.md`
+    - Scope: New provider scaffolding, rights-matrix wiring, probe Lambda, CDK integration, validation
+    - Skills: `remit-scout-provider-onboarding`, `remit-scout-provider-health-probe`
+15) Data Quality Sentinel
+    - RAG: `agents/rag/data-quality-sentinel.md`
+    - Scope: Rate anomaly detection, FX rate validation, Silver↔Gold reconciliation, provider API change detection
+    - Skills: `remit-scout-rate-anomaly-detector`, `remit-scout-fx-rate-anomaly-detector`, `remit-scout-silver-gold-reconciliation`, `remit-scout-provider-api-change-detector`
 
 ---
 

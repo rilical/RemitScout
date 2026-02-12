@@ -307,6 +307,17 @@ const dispatchWebhook = async (
   subscription: WebhookSubscriptionRecord,
   payload: WebhookPayload,
 ): Promise<void> => {
+  const webhookSecret = subscription.webhook_secret?.trim()
+  if (!webhookSecret) {
+    await recordNotificationMetric('webhook', 'failed', 1)
+    logger.error('webhook_missing_secret', {
+      subscription_id: subscription.subscription_id,
+      client_id: subscription.client_id,
+      webhook_url: subscription.webhook_url,
+    })
+    return
+  }
+
   let retryCount = 0
   const startTime = Date.now()
 
@@ -315,7 +326,7 @@ const dispatchWebhook = async (
       const timestamp = Date.now().toString()
       const payloadString = JSON.stringify(payload)
 
-      const signature = createHmac('sha256', subscription.webhook_secret ?? '')
+      const signature = createHmac('sha256', webhookSecret)
         .update(`${timestamp}.${payloadString}`)
         .digest('hex')
 

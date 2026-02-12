@@ -36,6 +36,52 @@ const latestQuoteCache = createTtlCache<any[]>({ namespace: 'plane_a:latest_quot
 
 const normalizeProviderId = (value: string): string => value.trim().toLowerCase()
 
+const normalizePayinMethod = (value: string): string | null => {
+  const token = value.trim().toLowerCase()
+  if (!token) return null
+
+  // UI aliases -> canonical payin methods (Plane B normalization).
+  if (token === 'bank') return 'bank_transfer'
+  if (token === 'card') return 'debit_card'
+  if (token === 'cash') return 'cash'
+
+  // Accept canonical tokens.
+  if (
+    token === 'bank_transfer'
+    || token === 'debit_card'
+    || token === 'credit_card'
+    || token === 'apple_pay'
+    || token === 'google_pay'
+    || token === 'cash'
+  ) {
+    return token
+  }
+
+  return null
+}
+
+const normalizePayoutMethod = (value: string): string | null => {
+  const token = value.trim().toLowerCase()
+  if (!token) return null
+
+  // UI aliases -> canonical payout methods (Plane B normalization).
+  if (token === 'bank') return 'bank_deposit'
+  if (token === 'cash') return 'cash_pickup'
+  if (token === 'wallet') return 'mobile_wallet'
+
+  // Accept canonical tokens.
+  if (
+    token === 'bank_deposit'
+    || token === 'cash_pickup'
+    || token === 'mobile_wallet'
+    || token === 'airtime'
+  ) {
+    return token
+  }
+
+  return null
+}
+
 const querySchema = z.object({
   corridor_id: z.string().min(1),
   amount_bucket: z.coerce.number().int().optional(),
@@ -215,7 +261,23 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       return { error: 'bad_request', details: parsed.error.issues }
     }
 
-    const { corridor_id, payin, payout } = parsed.data
+    const { corridor_id } = parsed.data
+    const payin = normalizePayinMethod(parsed.data.payin)
+    const payout = normalizePayoutMethod(parsed.data.payout)
+    if (!payin) {
+      reply.code(400)
+      return {
+        error: 'bad_request',
+        details: [{ message: 'invalid payin method', allowed: ['bank', 'card', 'cash', 'bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay'] }],
+      }
+    }
+    if (!payout) {
+      reply.code(400)
+      return {
+        error: 'bad_request',
+        details: [{ message: 'invalid payout method', allowed: ['bank', 'cash', 'wallet', 'bank_deposit', 'cash_pickup', 'mobile_wallet', 'airtime'] }],
+      }
+    }
     const amountBucketInput = parsed.data.amount_bucket
     const amountInput = parsed.data.amount
     const allowLive = parsed.data.live ?? amountInput !== undefined

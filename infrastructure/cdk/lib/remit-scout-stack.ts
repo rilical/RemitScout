@@ -30,6 +30,7 @@ import { createMonitoring } from './monitoring'
 import { createSynthetics } from './synthetics'
 import { createSnsSubscriptions } from './sns-subscriptions'
 import { createOpsPause } from './ops-pause'
+import { createGithubActionsOidcRoles } from './github-actions-oidc'
 
 const toOptionalBool = (value: string | boolean | undefined): boolean | undefined => {
   if (typeof value === 'boolean') return value
@@ -156,6 +157,25 @@ export class RemitScoutStack extends Stack {
           process.env.COST_GUARDRAILS_CREATE_CUR,
       ) ?? envName === 'prod'
 
+    const enableGithubActionsOidc =
+      toOptionalBool(
+        this.node.tryGetContext('enableGithubActionsOidc') ??
+          process.env.ENABLE_GITHUB_ACTIONS_OIDC,
+      ) ?? false
+    const githubRepoOwner =
+      this.node.tryGetContext('githubRepoOwner') ??
+      this.node.tryGetContext('pipelineRepoOwner') ??
+      process.env.GITHUB_REPO_OWNER ??
+      'rilical'
+    const githubRepoName =
+      this.node.tryGetContext('githubRepoName') ??
+      this.node.tryGetContext('pipelineRepoName') ??
+      process.env.GITHUB_REPO_NAME ??
+      'remit-scout-v2'
+    const githubActionsOidcProviderArn =
+      this.node.tryGetContext('githubActionsOidcProviderArn') ??
+      process.env.GITHUB_ACTIONS_OIDC_PROVIDER_ARN
+
     const devNatGateways = envName === 'dev'
       ? toOptionalNumber(
           this.node.tryGetContext('devNatGateways') ??
@@ -171,6 +191,14 @@ export class RemitScoutStack extends Stack {
       snsTopicArns,
     })
     const registry = createRegistry(this, { envName })
+
+    createGithubActionsOidcRoles(this, {
+      enabled: enableGithubActionsOidc,
+      repoOwner: String(githubRepoOwner),
+      repoName: String(githubRepoName),
+      providerArn: githubActionsOidcProviderArn ? String(githubActionsOidcProviderArn) : undefined,
+    })
+
     const database = createDatabase(this, {
       envName,
       vpc: networking.vpc,
@@ -302,7 +330,7 @@ export class RemitScoutStack extends Stack {
     const b2cQueueInSweep =
       this.node.tryGetContext('planeBB2cQueueInSweep') ??
       process.env.PLANE_B_B2C_QUEUE_IN_SWEEP ??
-      (b2cRefreshServiceEnabled ? undefined : (envName === 'dev' ? '0' : undefined))
+      (b2cRefreshServiceEnabled ? '0' : (envName === 'dev' ? '0' : undefined))
     const planeBB2bTargetMinutes =
       this.node.tryGetContext('planeBB2bTargetMinutes') ??
       process.env.PLANE_B_B2B_TARGET_MINUTES ??
@@ -375,6 +403,22 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBOpsAlertsDesiredCount') ??
         process.env.PLANE_B_OPS_ALERTS_DESIRED_COUNT,
     ) ?? (envName === 'prod' ? 1 : envName === 'dev' ? 1 : undefined)
+    const alertEvaluationServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('alertEvaluationServiceEnabled') ??
+        process.env.ALERT_EVALUATION_SERVICE_ENABLED,
+    ) ?? (envName === 'prod')
+    const alertEvaluationDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('alertEvaluationDesiredCount') ??
+        process.env.ALERT_EVALUATION_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : 0)
+    const exportServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('exportServiceEnabled') ??
+        process.env.EXPORT_SERVICE_ENABLED,
+    ) ?? (envName === 'prod')
+    const exportWorkerDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('exportWorkerDesiredCount') ??
+        process.env.EXPORT_WORKER_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : 0)
     const rawPlaneBQueueWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
@@ -529,11 +573,11 @@ export class RemitScoutStack extends Stack {
     const disablePlaneAExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneAExecuteEndpoint') ??
         process.env.PLANE_A_DISABLE_EXECUTE_ENDPOINT,
-    ) ?? (envName !== 'dev')
+    ) ?? false
     const disablePlaneCExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneCExecuteEndpoint') ??
         process.env.PLANE_C_DISABLE_EXECUTE_ENDPOINT,
-    ) ?? (envName !== 'dev')
+    ) ?? (envName !== 'dev' && Boolean(planeCBaseUrl))
     const wafAllowListIps = (() => {
       const raw =
         this.node.tryGetContext('wafAllowListIps') ??
@@ -642,7 +686,13 @@ export class RemitScoutStack extends Stack {
       ? opsPauseAllowlist
       : (envName === 'prod'
         ? ['telemetry-analytics', 'session-cleanup', 'audit-log-cleanup']
-        : [])
+        : (envName === 'dev'
+          ? [
+              // Dev default: keep resume low-noise/low-cost. OpsPause will still disable *all* rules on pause.
+              'alert-evaluation-worker',
+              'alert-evaluation-weekly',
+            ]
+          : []))
     const hardStopEnabled = envName !== 'prod'
 
     const compute = createCompute(this, {
@@ -703,10 +753,22 @@ export class RemitScoutStack extends Stack {
       proxyDatacenterUrl,
       bronzeBucketName: storage.bronzeBucket.bucketName,
       bronzePrefix,
+      planeADbSecretArn,
+      planeADbSsmName,
+      planeADbHost,
+      planeADbPort,
+      planeADbName,
+      alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+      exportJobQueueUrl: queues.exportJobQueue.queueUrl,
+      exportJobQueueMode,
+      exportsBucketName: storage.exportsBucket.bucketName,
+      exportsPrefix,
+      communicationsSecretArn,
       b2cQueueInSweep,
-      b2cRefreshLoopEnabled: b2cRefreshServiceEnabled && (b2cRefreshDesiredCount ?? 0) > 0,
-      fxRateRefreshLoopEnabled:
-        fxRateRefreshServiceEnabled && (fxRateRefreshDesiredCount ?? 0) > 0,
+      // Services are long-running queue workers; allow desiredCount=0 with autoscaling without
+      // forcing one-shot tasks that churn. Scheduled tasks are disabled when services are enabled.
+      b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
+      fxRateRefreshLoopEnabled: fxRateRefreshServiceEnabled,
       planeBB2bTargetMinutes,
       planeBB2bObservationMode,
       planeBB2bMaxQueueDepth,
@@ -873,6 +935,8 @@ export class RemitScoutStack extends Stack {
       goldLiveTask: tasks.goldLiveTask,
       notificationsQueueTask: tasks.notificationsQueueTask,
       opsAlertsQueueTask: tasks.opsAlertsQueueTask,
+      alertEvaluationTask: tasks.alertEvaluationTask,
+      exportWorkerTask: tasks.exportWorkerTask,
       queues,
       ingestFanoutMode,
       quoteRefreshMode: quoteRefreshQueueMode,
@@ -880,6 +944,12 @@ export class RemitScoutStack extends Stack {
       goldLiveMode: goldLiveQueueMode,
       notificationsMode,
       opsAlertsMode,
+      alertEvaluationMode: alertEvaluationServiceEnabled ? 'queue' : 'off',
+      exportJobMode: exportJobQueueMode,
+      b2cRefreshServiceEnabled,
+      fxRateRefreshServiceEnabled,
+      alertEvaluationServiceEnabled,
+      exportServiceEnabled,
       b2cRefreshDesiredCount: b2cRefreshServiceEnabled
         ? (b2cRefreshDesiredCount ?? 0)
         : 0,
@@ -894,6 +964,12 @@ export class RemitScoutStack extends Stack {
       goldLiveDesiredCount,
       notificationsDesiredCount,
       opsAlertsDesiredCount,
+      alertEvaluationDesiredCount: alertEvaluationServiceEnabled
+        ? (alertEvaluationDesiredCount ?? 0)
+        : 0,
+      exportWorkerDesiredCount: exportServiceEnabled
+        ? (exportWorkerDesiredCount ?? 0)
+        : 0,
       queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
       paused: devPaused,
     })
@@ -1008,6 +1084,8 @@ export class RemitScoutStack extends Stack {
       auditLogsBucketName: storage.auditLogsBucket.bucketName,
       auditLogsPrefix,
       alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+      alertEvaluationServiceEnabled,
+      exportServiceEnabled,
       planeBDbHost,
       planeBDbPort,
       planeBDbName,
@@ -1031,6 +1109,8 @@ export class RemitScoutStack extends Stack {
       opsAlertsMode === 'queue' ? (opsAlertsDesiredCount ?? queueWorkerBaseline) : 0
     const b2cRefreshBaseline = b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0
     const fxRateRefreshBaseline = fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0
+    const alertEvaluationBaseline = alertEvaluationServiceEnabled ? (alertEvaluationDesiredCount ?? 0) : 0
+    const exportWorkerBaseline = exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0
     const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
 
     const opsPause = createOpsPause(this, {
@@ -1045,6 +1125,8 @@ export class RemitScoutStack extends Stack {
         ecsServices.goldLiveService.serviceName,
         ecsServices.notificationsQueueService.serviceName,
         ecsServices.opsAlertsQueueService.serviceName,
+        ecsServices.alertEvaluationService.serviceName,
+        ecsServices.exportWorkerService.serviceName,
       ],
       ecsBaselineDesired: {
         [ecsServices.planeBIngestService.serviceName]: planeBIngestBaseline,
@@ -1055,6 +1137,8 @@ export class RemitScoutStack extends Stack {
         [ecsServices.goldLiveService.serviceName]: goldLiveBaseline,
         [ecsServices.notificationsQueueService.serviceName]: notificationsBaseline,
         [ecsServices.opsAlertsQueueService.serviceName]: opsAlertsBaseline,
+        [ecsServices.alertEvaluationService.serviceName]: alertEvaluationBaseline,
+        [ecsServices.exportWorkerService.serviceName]: exportWorkerBaseline,
       },
       eventRulePrefix: `remit-scout-${envName}-`,
       eventRuleAllowlist: resolvedOpsPauseAllowlist,
@@ -1132,8 +1216,10 @@ export class RemitScoutStack extends Stack {
     queues.fxRateRefreshQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.exportJobQueue.grantSendMessages(iam.planeALambdaRole)
     queues.exportJobQueue.grantConsumeMessages(iam.planeALambdaRole)
+    queues.exportJobDlq.grantSendMessages(iam.planeALambdaRole)
     queues.alertEvaluationQueue.grantSendMessages(iam.planeALambdaRole)
     queues.alertEvaluationQueue.grantConsumeMessages(iam.planeALambdaRole)
+    queues.alertEvaluationDlq.grantSendMessages(iam.planeALambdaRole)
     queues.ingestFanoutQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.ingestFanoutDlq.grantSendMessages(iam.planeBEcsTaskRole)
@@ -1278,12 +1364,16 @@ export class RemitScoutStack extends Stack {
       value: queues.opsAlertsDlq.queueUrl,
       description: 'Ops alerts DLQ URL',
     })
+    new CfnOutput(this, 'DbMigrateTaskDefinitionArn', {
+      value: tasks.dbMigrateTask.taskDefinitionArn,
+      description: 'ECS task definition ARN for database migrations',
+    })
     new CfnOutput(this, 'PlaneAApiUrl', {
       value: api.planeAApi.apiEndpoint,
       description: 'Plane A HTTP API endpoint',
     })
     new CfnOutput(this, 'PlaneCApiUrl', {
-      value: api.planeCApi.apiEndpoint,
+      value: planeCBaseUrl ?? api.planeCApi.apiEndpoint,
       description: 'Plane C HTTP API endpoint',
     })
     if (api.planeACloudFront) {

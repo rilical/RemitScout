@@ -42,6 +42,41 @@ const toNumber = (value: string | number | null | undefined, fallback: number) =
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+type FxFreshnessAssessment = {
+  historyMaxDate: Date | null
+  historyAgeHours: number | null
+  historyFresh: boolean
+  snapshotMaxUpdatedAt: Date | null
+  snapshotAgeHours: number | null
+  snapshotFresh: boolean
+  canProceed: boolean
+}
+
+const toAgeHours = (timestamp: Date | null): number | null => {
+  if (!timestamp) return null
+  return (Date.now() - timestamp.getTime()) / (1000 * 60 * 60)
+}
+
+export const assessFxFreshness = (params: {
+  historyMaxDate: Date | null
+  snapshotMaxUpdatedAt: Date | null
+  maxAgeHours: number
+}): FxFreshnessAssessment => {
+  const historyAgeHours = toAgeHours(params.historyMaxDate)
+  const snapshotAgeHours = toAgeHours(params.snapshotMaxUpdatedAt)
+  const historyFresh = historyAgeHours !== null && historyAgeHours <= params.maxAgeHours
+  const snapshotFresh = snapshotAgeHours !== null && snapshotAgeHours <= params.maxAgeHours
+  return {
+    historyMaxDate: params.historyMaxDate,
+    historyAgeHours,
+    historyFresh,
+    snapshotMaxUpdatedAt: params.snapshotMaxUpdatedAt,
+    snapshotAgeHours,
+    snapshotFresh,
+    canProceed: historyFresh || snapshotFresh,
+  }
+}
+
 const lockTtlSeconds = toNumber(process.env.GOLD_INDICES_LOCK_TTL_SECONDS, 900)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const lookbackDays = Math.max(0, toNumber(process.env.GOLD_INDICES_LOOKBACK_DAYS, 8))
@@ -650,31 +685,57 @@ export const runGoldIndicesJob = async (
   try {
     await recordBatchJobMetric('gold-indices-job', 'job_start')
     const fxMaxAgeHours = Number(process.env.GOLD_INDICES_FX_MAX_AGE_HOURS || '24')
-    const fxFreshnessResult = await query<{ max_rate_date: Date | null }>(
-      `SELECT MAX(rate_date) AS max_rate_date FROM gold.fx_rate_history`,
+    const fxFreshnessResult = await query<{
+      max_rate_date: Date | null
+      max_last_updated: Date | null
+    }>(
+      `SELECT
+         (SELECT MAX(rate_date)::timestamptz FROM gold.fx_rate_history) AS max_rate_date,
+         (SELECT MAX(last_updated) FROM gold.fx_rates) AS max_last_updated`,
       [],
       pool!,
     )
-    const maxRateDate = fxFreshnessResult.rows[0]?.max_rate_date ?? null
-    if (!maxRateDate) {
-      logger.warn('fx_history_missing', { max_rate_date: null })
+    const freshness = assessFxFreshness({
+      historyMaxDate: fxFreshnessResult.rows[0]?.max_rate_date ?? null,
+      snapshotMaxUpdatedAt: fxFreshnessResult.rows[0]?.max_last_updated ?? null,
+      maxAgeHours: fxMaxAgeHours,
+    })
+
+    if (!freshness.historyMaxDate && !freshness.snapshotMaxUpdatedAt) {
+      logger.warn('fx_rates_missing', {
+        max_rate_date: null,
+        max_last_updated: null,
+      })
       await recordBatchJobMetric('gold-indices-job', 'job_failure', 0, {
-        reason: 'fx_history_missing',
+        reason: 'fx_rates_missing',
       })
       return
     }
-    const fxAgeHours = (Date.now() - new Date(maxRateDate).getTime()) / (1000 * 60 * 60)
-    if (fxAgeHours > fxMaxAgeHours) {
-      logger.warn('fx_history_stale', {
-        max_rate_date: maxRateDate.toISOString(),
-        fx_age_hours: fxAgeHours,
+
+    if (!freshness.canProceed) {
+      logger.warn('fx_rates_stale', {
+        max_rate_date: freshness.historyMaxDate?.toISOString() ?? null,
+        fx_history_age_hours: freshness.historyAgeHours,
+        max_last_updated: freshness.snapshotMaxUpdatedAt?.toISOString() ?? null,
+        fx_rates_age_hours: freshness.snapshotAgeHours,
         max_age_hours: fxMaxAgeHours,
       })
       await recordBatchJobMetric('gold-indices-job', 'job_failure', 0, {
-        reason: 'fx_history_stale',
+        reason: 'fx_rates_stale',
       })
       return
     }
+
+    if (!freshness.historyFresh && freshness.snapshotFresh) {
+      logger.warn('fx_history_stale_using_snapshot', {
+        max_rate_date: freshness.historyMaxDate?.toISOString() ?? null,
+        fx_history_age_hours: freshness.historyAgeHours,
+        max_last_updated: freshness.snapshotMaxUpdatedAt?.toISOString() ?? null,
+        fx_rates_age_hours: freshness.snapshotAgeHours,
+        max_age_hours: fxMaxAgeHours,
+      })
+    }
+
     const upserted = await retry(
       () => upsertGoldIndices(pool!, { amountBucket, lookbackDays }),
       {

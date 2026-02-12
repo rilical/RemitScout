@@ -291,7 +291,7 @@ export const createPipeline = (
                 'if [ -n "$FRONTEND_BUCKET_NAME" ] && [ -n "$FRONTEND_DISTRIBUTION_ID" ]; then',
                 '  echo "Deploying frontend to S3..."',
                 '  aws s3 sync "$BUILD_ARTIFACT_DIR/frontend/.output/public" s3://$FRONTEND_BUCKET_NAME --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"',
-                '  aws s3 sync "$BUILD_ARTIFACT_DIR/frontend/.output/public" s3://$FRONTEND_BUCKET_NAME --delete --cache-control "no-cache, no-store, must-revalidate" --include "*.html" --include "*.json"',
+                '  aws s3 sync "$BUILD_ARTIFACT_DIR/frontend/.output/public" s3://$FRONTEND_BUCKET_NAME --delete --cache-control "no-cache, no-store, must-revalidate" --exclude "*" --include "*.html" --include "*.json"',
                 '  echo "Invalidating CloudFront cache..."',
                 '  aws cloudfront create-invalidation --distribution-id $FRONTEND_DISTRIBUTION_ID --paths "/*"',
                 '  echo "Frontend deployment complete"',

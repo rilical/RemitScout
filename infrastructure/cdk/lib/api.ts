@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { Annotations, Duration, Fn, Stack, Token } from 'aws-cdk-lib'
+import { Annotations, Duration, Fn, RemovalPolicy, Stack, Token } from 'aws-cdk-lib'
 import { HttpApi, HttpMethod, HttpStage } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
 import {
@@ -23,8 +23,8 @@ import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53'
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
-import { CfnIPSet, CfnWebACL } from 'aws-cdk-lib/aws-wafv2'
-import { RetentionDays } from 'aws-cdk-lib/aws-logs'
+import { CfnIPSet, CfnLoggingConfiguration, CfnWebACL } from 'aws-cdk-lib/aws-wafv2'
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
@@ -355,7 +355,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const planeCIamAuthorizer = enablePlaneCIamAuth
     ? new HttpIamAuthorizer()
     : undefined
-  const planeCIntegration = new HttpLambdaIntegration('PlaneCLambdaIntegration', planeCFunction)
+  const planeCIntegration = new HttpLambdaIntegration('PlaneCLambdaIntegration', planeCFunction, {
+    // Avoid per-route Lambda permissions (resource policy size blow-ups as routes grow).
+    scopePermissionToRoute: false,
+  })
   planeCApi.addRoutes({
     path: '/{proxy+}',
     methods: [HttpMethod.ANY],
@@ -371,6 +374,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
 
   if (options.planeCBaseUrl) {
     planeAEnvironment.PLANE_C_BASE_URL = options.planeCBaseUrl
+  } else if (options.disablePlaneCExecuteEndpoint) {
+    throw new Error('planeCBaseUrl is required when disablePlaneCExecuteEndpoint is true')
   } else {
     planeAEnvironment.PLANE_C_BASE_URL = planeCApi.apiEndpoint
   }
@@ -470,6 +475,9 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       'ALERTS_EMAIL_FROM',
       'ALERTS_EMAIL_FROM_NAME',
       'ALERTS_SMS_ENABLED',
+      'ALERTS_NOTIFICATION_AUDIT',
+      'ALERTS_NOTIFICATION_AUDIT_CONTENT',
+      'ALERTS_NOTIFICATION_AUDIT_PII',
       'NEWSLETTER_EMAIL_ENABLED',
       'NEWSLETTER_EMAIL_FROM',
       'NEWSLETTER_EMAIL_FROM_NAME',
@@ -506,13 +514,19 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.',
     )
   }
+  if ((options.disablePlaneAExecuteEndpoint ?? false) && (options.enableCloudFront ?? false)) {
+    throw new Error('disablePlaneAExecuteEndpoint cannot be true when CloudFront is enabled')
+  }
 
   const planeAApi = new HttpApi(scope, 'PlaneAHttpApi', {
     apiName: `remit-scout-plane-a-${options.envName}`,
     disableExecuteApiEndpoint: options.disablePlaneAExecuteEndpoint ?? false,
     createDefaultStage: false,
   })
-  const planeAIntegration = new HttpLambdaIntegration('PlaneALambdaIntegration', planeAFunction)
+  const planeAIntegration = new HttpLambdaIntegration('PlaneALambdaIntegration', planeAFunction, {
+    // Avoid per-route Lambda permissions (resource policy size blow-ups as routes grow).
+    scopePermissionToRoute: false,
+  })
 
   const publicMetricsEnabled = options.envName === 'dev'
     || process.env.PLANE_A_PUBLIC_METRICS === '1'
@@ -520,33 +534,42 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/healthz',
     '/readyz',
     ...(publicMetricsEnabled ? ['/metrics'] : []),
+    // Legacy tombstones
+    '/api',
+    '/api/{proxy+}',
     // Public web experience (no auth)
-    '/api/quotes/current',
     '/api/v1/quotes/current',
-    '/api/providers',
     '/api/v1/providers',
-    '/api/providers/metadata',
     '/api/v1/providers/metadata',
-    '/api/providers/metadata/{id}',
     '/api/v1/providers/metadata/{id}',
-    '/api/corridor-currencies',
     '/api/v1/corridor-currencies',
-    '/api/corridor-limits',
     '/api/v1/corridor-limits',
-    '/api/rates/spot',
     '/api/v1/rates/spot',
-    '/api/rates/providers',
     '/api/v1/rates/providers',
-    '/api/rates/history',
     '/api/v1/rates/history',
-    '/api/geo',
     '/api/v1/geo',
-    '/api/popular-corridors',
     '/api/v1/popular-corridors',
-    '/api/billing/webhook',
-    '/api/v1/billing/webhook',
-    '/api/contact',
     '/api/v1/contact',
+    '/api/v1/pulse/teaser',
+    '/api/v1/bank-vs-specialist',
+    '/api/v1/billing/webhook',
+    '/api/v1/alerts/unsubscribe',
+    '/api/v1/alerts/corridor-eligibility',
+    '/api/v1/alerts/macro-corridors',
+    '/api/v1/newsletter/subscribe',
+    '/api/v1/newsletter/confirm',
+    '/api/v1/newsletter/unsubscribe',
+    '/api/v1/newsletter/status',
+    '/api/v1/telemetry/search',
+    '/api/v1/telemetry/click',
+    '/api/v1/telemetry/conversion',
+    '/api/v1/telemetry/session',
+    '/api/v1/marketing/meta',
+    '/api/v1/ads/placement',
+    '/api/v1/ads/click',
+    '/api/v1/indices/latest',
+    '/api/v1/indices/series',
+    '/api/v1/indices/corridors',
   ]
 
   for (const path of publicRoutes) {
@@ -556,6 +579,19 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       integration: planeAIntegration,
     })
   }
+
+  planeAApi.addRoutes({
+    path: '/api/v1/{proxy+}',
+    methods: [HttpMethod.ANY],
+    integration: planeAIntegration,
+    authorizer: planeAJwtAuthorizer,
+  })
+  planeAApi.addRoutes({
+    path: '/api/v1',
+    methods: [HttpMethod.ANY],
+    integration: planeAIntegration,
+    authorizer: planeAJwtAuthorizer,
+  })
 
   planeAApi.addRoutes({
     path: '/{proxy+}',
@@ -621,10 +657,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
             })),
           },
         })
-        const withApiPrefixes = (pathMatch: string): string[] => [
-          `/api${pathMatch}`,
-          `/api/v1${pathMatch}`,
-        ]
+        const withApiPrefixes = (pathMatch: string): string[] => [`/api/v1${pathMatch}`]
 
         const pushRule = (rule: Omit<CfnWebACL.RuleProperty, 'priority'>): void => {
           rules.push({
@@ -804,6 +837,21 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
             sampledRequestsEnabled: true,
           },
           rules,
+        })
+
+        const wafLogGroup = new LogGroup(scope, 'PlaneAWafLogGroup', {
+          logGroupName: `aws-waf-logs-remit-scout-${options.envName}-edge`,
+          retention: options.envName === 'prod' ? RetentionDays.ONE_MONTH : RetentionDays.TWO_WEEKS,
+        })
+        if (options.envName !== 'prod') {
+          wafLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY)
+        } else {
+          wafLogGroup.applyRemovalPolicy(RemovalPolicy.RETAIN)
+        }
+
+        new CfnLoggingConfiguration(scope, 'PlaneAWafLogging', {
+          resourceArn: planeAWaf.attrArn,
+          logDestinationConfigs: [wafLogGroup.logGroupArn],
         })
       } else {
         Annotations.of(scope).addWarning(

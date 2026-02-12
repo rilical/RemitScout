@@ -21,7 +21,7 @@ export type AuthClaims = Record<string, unknown>
  * @example
  * ```typescript
  * // In a route handler
- * fastify.get('/api/me', async (request, reply) => {
+ * fastify.get('/api/v1/me', async (request, reply) => {
  *   const user = request.user // Type: AuthUser
  *   return { user_id: user.user_id, email: user.email }
  * })

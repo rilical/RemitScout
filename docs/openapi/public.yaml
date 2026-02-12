@@ -3,7 +3,7 @@ info:
   title: Remit-Scout Public API
   version: 0.1.0
 paths:
-  /api/quotes/current:
+  /api/v1/quotes/current:
     get:
       summary: Current quotes for a corridor
       parameters:
@@ -125,7 +125,7 @@ paths:
                           type: object
                         updated_at:
                           type: string
-  /api/popular-corridors:
+  /api/v1/popular-corridors:
     get:
       summary: Popular corridors summary
       responses:
@@ -160,7 +160,7 @@ paths:
                         best_for:
                           type: string
 
-  /api/bank-vs-specialist:
+  /api/v1/bank-vs-specialist:
     get:
       summary: Bank vs specialist comparison (US to Mexico)
       parameters:
@@ -245,7 +245,7 @@ paths:
                   updatedAt:
                     type: string
 
-  /api/geo:
+  /api/v1/geo:
     get:
       summary: Geolocation lookup
       responses:

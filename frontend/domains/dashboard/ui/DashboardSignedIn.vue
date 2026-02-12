@@ -5037,6 +5037,11 @@ type OpsProviderId = typeof opsProviders[number]['id']
 
 const opsAdminLinks = [
   {
+    label: 'Observer Console',
+    description: 'AWS click-paths + ops status for ingestion, gold indices, alerts, and exports.',
+    to: '/admin/observer',
+  },
+  {
     label: 'Analytics Console',
     description: 'Traffic, corridor demand, provider CTR, and savings metrics.',
     to: '/admin/analytics',

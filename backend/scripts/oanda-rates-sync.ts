@@ -52,11 +52,29 @@ const toBoolean = (value: string | undefined): boolean => {
   return value === '1' || value === 'true' || value === 'yes'
 }
 
+const resolveMaxPairs = (): number | null => {
+  const parsed = toNumber(process.env.OANDA_SYNC_MAX_PAIRS, 0)
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null
+  }
+  return Math.floor(parsed)
+}
+
 const shouldIncludeCapabilityPairs = (): boolean => {
   if (process.env.OANDA_SYNC_INCLUDE_CAPABILITY !== undefined) {
     return toBoolean(process.env.OANDA_SYNC_INCLUDE_CAPABILITY)
   }
   return config.env !== 'production' && config.env !== 'staging'
+}
+
+const applyPairLimit = (
+  pairs: Array<{ base: string; quote: string }>,
+  maxPairs: number | null,
+) => {
+  if (!maxPairs || maxPairs <= 0) {
+    return pairs
+  }
+  return pairs.slice(0, maxPairs)
 }
 
 const dedupePairs = (pairs: Array<{ base: string; quote: string }>) => {
@@ -244,10 +262,14 @@ const syncRates = async (): Promise<void> => {
     const fxRateRepository = new FxRateRepository(pool)
     const fxRateHistoryRepository = new FxRateHistoryRepository(pool)
 
-    const pairs = await buildCurrencyPairs(pool)
+    const allPairs = await buildCurrencyPairs(pool)
+    const maxPairs = resolveMaxPairs()
+    const pairs = applyPairLimit(allPairs, maxPairs)
 
     logger.info('sync_start', {
       total_pairs: pairs.length,
+      total_pairs_before_limit: allPairs.length,
+      max_pairs: maxPairs,
       use_authenticated_api: useAuthenticatedApi,
     })
 
@@ -351,6 +373,8 @@ const syncRates = async (): Promise<void> => {
       success_count: successCount,
       failure_count: failureCount,
       total_pairs: pairs.length,
+      total_pairs_before_limit: allPairs.length,
+      max_pairs: maxPairs,
       duration_ms: durationMs,
     })
   } catch (error) {

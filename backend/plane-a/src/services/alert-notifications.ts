@@ -13,6 +13,12 @@ const logger = createLogger('plane-a.alert-notifications')
 let sesClient: SESClient | null = null
 let snsClient: SNSClient | null = null
 
+const isTruthy = (value: string | undefined) => value === '1' || value === 'true' || value === 'yes'
+
+const shouldAuditAttempts = () => isTruthy(process.env.ALERTS_NOTIFICATION_AUDIT)
+const shouldAuditContent = () => isTruthy(process.env.ALERTS_NOTIFICATION_AUDIT_CONTENT)
+const shouldAuditPii = () => isTruthy(process.env.ALERTS_NOTIFICATION_AUDIT_PII)
+
 const resolveAlertBaseUrl = (): string => (
   config.alerts.unsubscribe.baseUrl ||
   config.billing.stripe.frontendBaseUrl ||
@@ -136,6 +142,77 @@ function hashEmail(email: string): string {
   return createHash('sha256').update(email.toLowerCase().trim()).digest('hex')
 }
 
+const truncateText = (value: string, maxChars: number) => {
+  if (value.length <= maxChars) return value
+  return `${value.slice(0, Math.max(0, maxChars - 1))}…`
+}
+
+async function recordAlertNotificationAttempt(
+  pool: Pool,
+  input: {
+    alertId: string
+    userId: string
+    channel: 'email' | 'sms' | 'push'
+    provider: string
+    status: 'skipped' | 'sent' | 'failed'
+    skipReason?: string | null
+    error?: string | null
+    toEmail?: string | null
+    subject?: string | null
+    textBody?: string | null
+    htmlBody?: string | null
+  },
+) {
+  if (!shouldAuditAttempts()) return
+
+  const includePii = shouldAuditPii()
+  const includeContent = shouldAuditContent()
+  const toEmail = typeof input.toEmail === 'string' ? input.toEmail : null
+  const toEmailHash = toEmail ? hashEmail(toEmail) : null
+
+  try {
+    await pool.query(
+      `INSERT INTO silver.alert_notification_attempt (
+         alert_id,
+         user_id,
+         channel,
+         provider,
+         to_email_hash,
+         to_email,
+         subject,
+         text_body,
+         html_body,
+         status,
+         skip_reason,
+         error
+       )
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      [
+        input.alertId,
+        input.userId,
+        input.channel,
+        input.provider,
+        toEmailHash,
+        includePii ? toEmail : null,
+        input.subject ?? null,
+        includeContent && input.textBody ? truncateText(input.textBody, 20_000) : null,
+        includeContent && input.htmlBody ? truncateText(input.htmlBody, 40_000) : null,
+        input.status,
+        input.skipReason ?? null,
+        input.error ?? null,
+      ],
+    )
+  } catch (error) {
+    logger.warn('alert_notification_attempt_audit_failed', {
+      alert_id: input.alertId,
+      user_id: input.userId,
+      channel: input.channel,
+      provider: input.provider,
+      error: formatError(error).message,
+    })
+  }
+}
+
 async function isEmailSuppressed(pool: Pool, email: string): Promise<boolean> {
   const emailHash = hashEmail(email)
   const result = await pool.query(
@@ -243,6 +320,15 @@ export async function sendAlertEmail(
   try {
     const settings = await getNotificationSettings(pool, userId)
     if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'email')) {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'skipped',
+        skipReason: !settings.rateAlertsEnabled ? 'rate_alerts_disabled' : 'email_disabled',
+        subject,
+      })
       logger.debug('alert_email_skipped', {
         user_id: userId,
         alert_id: alertId,
@@ -253,6 +339,15 @@ export async function sendAlertEmail(
 
     const pref = await getNotificationPref(pool, userId, 'email')
     if (pref.unsubscribed) {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'skipped',
+        skipReason: 'unsubscribed',
+        subject,
+      })
       logger.debug('alert_email_skipped', {
         user_id: userId,
         alert_id: alertId,
@@ -263,6 +358,15 @@ export async function sendAlertEmail(
 
     const email = (await getUserEmail(pool, userId)) ?? undefined
     if (!email) {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'skipped',
+        skipReason: 'no_email',
+        subject,
+      })
       logger.debug('alert_email_skipped', {
         user_id: userId,
         alert_id: alertId,
@@ -271,6 +375,16 @@ export async function sendAlertEmail(
       return false
     }
     if (await isEmailSuppressed(pool, email)) {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'skipped',
+        skipReason: 'suppressed',
+        toEmail: email,
+        subject,
+      })
       logger.debug('alert_email_suppressed', {
         user_id: userId,
         alert_id: alertId,
@@ -281,6 +395,16 @@ export async function sendAlertEmail(
 
     const client = getSesClient()
     if (!client) {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'skipped',
+        skipReason: 'not_configured',
+        toEmail: email,
+        subject,
+      })
       logger.warn('alert_email_not_configured', {
         user_id: userId,
         alert_id: alertId,
@@ -292,6 +416,16 @@ export async function sendAlertEmail(
     const alertsEmailFromName = process.env.ALERTS_EMAIL_FROM_NAME || 'Remit-Scout Alerts'
     const siteUrl = resolveAlertBaseUrl()
     if (!siteUrl) {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'skipped',
+        skipReason: 'site_url_missing',
+        toEmail: email,
+        subject,
+      })
       logger.warn('alert_email_site_url_missing', {
         user_id: userId,
         alert_id: alertId,
@@ -300,7 +434,7 @@ export async function sendAlertEmail(
     }
     const unsubscribeToken = generateAlertUnsubscribeToken(userId)
     const unsubscribeLink = unsubscribeToken
-      ? `${siteUrl.replace(/\/$/, '')}/api/alerts/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
+      ? `${siteUrl.replace(/\/$/, '')}/api/v1/alerts/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
       : null
 
     const metricLabel = (value?: string) => {
@@ -465,6 +599,18 @@ export async function sendAlertEmail(
       }),
     )
 
+    await recordAlertNotificationAttempt(pool, {
+      alertId,
+      userId,
+      channel: 'email',
+      provider: 'ses',
+      status: 'sent',
+      toEmail: email,
+      subject,
+      textBody,
+      htmlBody,
+    })
+
     logger.info('alert_email_sent', {
       user_id: userId,
       alert_id: alertId,
@@ -474,6 +620,19 @@ export async function sendAlertEmail(
     return true
   } catch (error: unknown) {
     const { message } = formatError(error)
+    try {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'failed',
+        error: message,
+        subject,
+      })
+    } catch {
+      // ignore (audit path must never block alert evaluation)
+    }
     logger.error('alert_email_send_failed', {
       user_id: userId,
       alert_id: alertId,

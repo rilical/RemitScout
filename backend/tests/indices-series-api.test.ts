@@ -78,7 +78,7 @@ describe('GET /api/indices/series', () => {
     const app = await buildApp()
     const response = await app.inject({
       method: 'GET',
-      url: '/api/indices/series?corridor_id=US-PH-USD-PHP&amount_bucket=500&method_profile=standard_bank&days=30',
+      url: '/api/v1/indices/series?corridor_id=US-PH-USD-PHP&amount_bucket=500&method_profile=standard_bank&days=30',
       headers: {
         'x-api-key': 'test-key',
       },
@@ -110,7 +110,7 @@ describe('GET /api/indices/series', () => {
     const app = await buildApp()
     const response = await app.inject({
       method: 'GET',
-      url: '/api/indices/series?corridor_id=US-PH-USD-PHP',
+      url: '/api/v1/indices/series?corridor_id=US-PH-USD-PHP',
     })
 
     expect(response.statusCode).toBe(401)

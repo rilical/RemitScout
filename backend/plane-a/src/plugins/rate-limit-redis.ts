@@ -6,17 +6,17 @@ import { createLogger } from '../../../shared/logger'
 const logger = createLogger('plane-a.rate-limit-redis')
 
 const rateLimitBypassPrefixes = [
-  '/api/analytics',
   '/api/v1/analytics',
-  '/api/audit',
   '/api/v1/audit',
-  '/api/ops',
   '/api/v1/ops',
-  '/api/telemetry/analytics',
   '/api/v1/telemetry/analytics',
 ]
 
 const shouldBypassRateLimit = (request: FastifyRequest): boolean => {
+  const deploymentEnv = (process.env.ENVIRONMENT ?? '').toLowerCase()
+  if (deploymentEnv && !['prod', 'production', 'staging'].includes(deploymentEnv)) {
+    return true
+  }
   if (config.env !== 'production' && config.env !== 'staging') {
     return true
   }
@@ -187,5 +187,3 @@ export const registerMemoryRateLimit = (
     }
   })
 }
-
-

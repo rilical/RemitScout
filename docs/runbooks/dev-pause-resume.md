@@ -8,6 +8,14 @@ We use **two layers**:
 1) **CDK `devPaused`**: controls the *desired* steady state (what a redeploy converges to).
 2) **OpsPause Lambda**: fast runtime toggle that also **stops/starts Aurora**.
 
+OpsPause uses an optional **EventBridge allowlist**:
+- **Pause**: always disables *all* rules by prefix (`remit-scout-<env>-*`) to avoid spend leaks.
+- **Resume**: if an allowlist is configured, it enables *only* those rules (low-noise dev observation).
+  Everything else stays disabled unless you enable it intentionally.
+
+If you’re running a structured dev observation window, follow:
+- `docs/runbooks/dev-observation-session.md`
+
 Guardrails:
 - **Nightly auto-pause** at **12:00am ET** (EventBridge Scheduler → OpsPause).
 - **Cost guardrail auto-pause** on **Budget / Anomaly** notifications (SNS → OpsPause).

@@ -12,6 +12,9 @@ type BackendProfile = {
   user_id: string
   email: string
   name?: string | null
+  role?: string | null
+  app_role?: string | null
+  is_admin?: boolean
 }
 
 type AuthResult = {
@@ -53,7 +56,7 @@ const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
 
 export const useAuth = () => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || '/api'
+  const apiBase = config.public.apiBase || '/api/v1'
 
   const user = useState<User | null>('auth:user', () => null)
   const session = useState<Session | null>('auth:session', () => null)

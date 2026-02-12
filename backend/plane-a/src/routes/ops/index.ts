@@ -25,6 +25,9 @@ import { intermexHealthRoutes } from './intermex-health'
 import { alansariHealthRoutes } from './alansari-health'
 import { b2bSweepStatusRoutes } from './b2b-sweep-status'
 import { indicesHealthRoutes } from './indices-health'
+import { observerSummaryRoutes } from './observer-summary'
+import { dbAdminRoutes } from './db-admin'
+import { alertEvaluationAdminRoutes } from './alert-evaluation-admin'
 
 export const opsRoutes = async (app: FastifyInstance) => {
   remitlyHealthRoutes(app)
@@ -53,4 +56,7 @@ export const opsRoutes = async (app: FastifyInstance) => {
   intermexHealthRoutes(app)
   b2bSweepStatusRoutes(app)
   indicesHealthRoutes(app)
+  observerSummaryRoutes(app)
+  dbAdminRoutes(app)
+  alertEvaluationAdminRoutes(app)
 }

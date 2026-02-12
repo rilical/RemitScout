@@ -1,0 +1,47 @@
+name: ci/infra-synth
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            infra:
+              - 'infrastructure/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+      - name: CDK synth (dev context)
+        if: steps.filter.outputs.infra == 'true'
+        run: |
+          pnpm -C infrastructure/cdk build
+          pnpm -C infrastructure/cdk cdk synth -c env=dev -c backendImageTag=ci --quiet
+      - name: IaC scan (Checkov)
+        if: steps.filter.outputs.infra == 'true'
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infrastructure/cdk
+          framework: cdk
+      - name: No infra changes
+        if: steps.filter.outputs.infra != 'true'
+        run: echo "No infrastructure changes; skipping synth."

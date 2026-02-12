@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Remit-Scout GitHub Actions OIDC deploy roles (dev/staging/prod)
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Description: GitHub org/user that owns the repo (e.g. rilical)
+  GitHubRepo:
+    Type: String
+    Description: GitHub repo name (e.g. remit-scout-v2)
+  OidcProviderArn:
+    Type: String
+    Description: Existing IAM OIDC provider ARN for token.actions.githubusercontent.com
+
+Resources:
+  DeployDevRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: remit-scout-gha-deploy-dev
+      Description: GitHub Actions deploy role for dev (refs/heads/develop)
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderArn
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/develop
+      Policies:
+        - PolicyName: remit-scout-gha-deploy-dev
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFormationRead
+                Effect: Allow
+                Action:
+                  - cloudformation:Describe*
+                  - cloudformation:Get*
+                  - cloudformation:List*
+                Resource: '*'
+              - Sid: BootstrapAssume
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+              - Sid: EcrPushPull
+                Effect: Allow
+                Action:
+                  - ecr:*
+                Resource: '*'
+              - Sid: FrontendS3
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: arn:aws:s3:::remit-scout-*
+              - Sid: FrontendS3Objects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:GetObject
+                Resource: arn:aws:s3:::remit-scout-*/*
+              - Sid: CloudFrontInvalidate
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                Resource: '*'
+              - Sid: EcsMigrations
+                Effect: Allow
+                Action:
+                  - ecs:RunTask
+                  - ecs:DescribeTasks
+                  - ecs:DescribeServices
+                  - ecs:ListTasks
+                Resource: '*'
+              - Sid: PassRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/remit-scout-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+
+  DeployStagingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: remit-scout-gha-deploy-staging
+      Description: GitHub Actions deploy role for staging (refs/heads/main)
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderArn
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+      Policies:
+        - PolicyName: remit-scout-gha-deploy-staging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFormationRead
+                Effect: Allow
+                Action:
+                  - cloudformation:Describe*
+                  - cloudformation:Get*
+                  - cloudformation:List*
+                Resource: '*'
+              - Sid: BootstrapAssume
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+              - Sid: EcrPushPull
+                Effect: Allow
+                Action:
+                  - ecr:*
+                Resource: '*'
+              - Sid: FrontendS3
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: arn:aws:s3:::remit-scout-*
+              - Sid: FrontendS3Objects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:GetObject
+                Resource: arn:aws:s3:::remit-scout-*/*
+              - Sid: CloudFrontInvalidate
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                Resource: '*'
+              - Sid: EcsMigrations
+                Effect: Allow
+                Action:
+                  - ecs:RunTask
+                  - ecs:DescribeTasks
+                  - ecs:DescribeServices
+                  - ecs:ListTasks
+                Resource: '*'
+              - Sid: PassRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/remit-scout-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+
+  DeployProdRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: remit-scout-gha-deploy-prod
+      Description: GitHub Actions deploy role for prod (refs/tags/v*)
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderArn
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/tags/v*
+      Policies:
+        - PolicyName: remit-scout-gha-deploy-prod
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFormationRead
+                Effect: Allow
+                Action:
+                  - cloudformation:Describe*
+                  - cloudformation:Get*
+                  - cloudformation:List*
+                Resource: '*'
+              - Sid: BootstrapAssume
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+              - Sid: EcrPushPull
+                Effect: Allow
+                Action:
+                  - ecr:*
+                Resource: '*'
+              - Sid: FrontendS3
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: arn:aws:s3:::remit-scout-*
+              - Sid: FrontendS3Objects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:GetObject
+                Resource: arn:aws:s3:::remit-scout-*/*
+              - Sid: CloudFrontInvalidate
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                Resource: '*'
+              - Sid: EcsMigrations
+                Effect: Allow
+                Action:
+                  - ecs:RunTask
+                  - ecs:DescribeTasks
+                  - ecs:DescribeServices
+                  - ecs:ListTasks
+                Resource: '*'
+              - Sid: PassRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/remit-scout-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+
+Outputs:
+  DeployDevRoleArn:
+    Value: !GetAtt DeployDevRole.Arn
+  DeployStagingRoleArn:
+    Value: !GetAtt DeployStagingRole.Arn
+  DeployProdRoleArn:
+    Value: !GetAtt DeployProdRole.Arn

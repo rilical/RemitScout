@@ -559,11 +559,14 @@ export async function evaluateAlertsForFrequency(
   pool: Pool,
   frequency: 'weekly' | 'daily',
   timeBucket?: number,
-): Promise<number> {
+  options?: { ignoreSchedule?: boolean; limit?: number },
+): Promise<{ total: number; triggered: number }> {
   try {
     const startTime = Date.now()
     const { query } = await import('../../../shared/db')
     const params: Array<string | number> = [frequency]
+    const ignoreSchedule = options?.ignoreSchedule === true
+    const limit = Math.max(1, Math.min(options?.limit ?? 5000, 5000))
     const conditions: string[] = [
       'ar.enabled = TRUE',
       'ar.frequency = $1',
@@ -581,29 +584,36 @@ export async function evaluateAlertsForFrequency(
       joins += ` LEFT JOIN silver.notification_pref np
         ON np.user_id = wi.user_id AND np.owner_type = 'user' AND np.channel = 'email'`
       conditions.push('COALESCE(np.unsubscribed, FALSE) = FALSE')
-      conditions.push(
-        `EXTRACT(HOUR FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))
-         = COALESCE(np.daily_send_hour, ${frequency === 'weekly' ? WEEKLY_SEND_HOUR : 9})`,
-      )
-      if (frequency === 'weekly') {
+
+      if (!ignoreSchedule) {
         conditions.push(
-          `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))
-           = ${WEEKLY_SEND_DOW}`,
+          `EXTRACT(HOUR FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))
+           = COALESCE(np.daily_send_hour, ${frequency === 'weekly' ? WEEKLY_SEND_HOUR : 9})`,
         )
-      }
-      if (Number.isFinite(timeBucket)) {
-        params.push(timeBucket as number)
-        conditions.push(
-          `EXTRACT(HOUR FROM (NOW() AT TIME ZONE 'UTC')) = $${params.length}`,
-        )
+        if (frequency === 'weekly') {
+          conditions.push(
+            `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE COALESCE(np.timezone, 'UTC')))
+             = ${WEEKLY_SEND_DOW}`,
+          )
+        }
+        if (Number.isFinite(timeBucket)) {
+          params.push(timeBucket as number)
+          conditions.push(
+            `EXTRACT(HOUR FROM (NOW() AT TIME ZONE 'UTC')) = $${params.length}`,
+          )
+        }
       }
     }
 
+    params.push(limit)
+    const limitParam = `$${params.length}`
     const result = await query<{ id: string }>(
       `SELECT ar.id
        FROM silver.alert_rule ar
        ${joins}
-       WHERE ${conditions.join(' AND ')}`,
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY ar.updated_at DESC
+       LIMIT ${limitParam}`,
       params,
       pool,
     )
@@ -641,14 +651,16 @@ export async function evaluateAlertsForFrequency(
       time_bucket: timeBucket,
       total: result.rows.length,
       triggered: triggeredCount,
+      ignore_schedule: ignoreSchedule,
+      limit,
     })
 
-    return triggeredCount
+    return { total: result.rows.length, triggered: triggeredCount }
   } catch (error: unknown) {
     logger.error('alerts_evaluation_batch_failed', {
       frequency,
       error: error instanceof Error ? error.message : String(error),
     })
-    return 0
+    return { total: 0, triggered: 0 }
   }
 }

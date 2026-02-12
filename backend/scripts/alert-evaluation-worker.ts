@@ -11,6 +11,7 @@ import { context as otelContext } from '@opentelemetry/api'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
+import { startHealthServer } from '../shared/health-server'
 import {
   createVisibilityTimeoutExtender,
   deleteMessages,
@@ -19,7 +20,6 @@ import {
   sendToDLQ,
 } from '../shared/sqs'
 import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
-import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { recordQueueDepthMetric, recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
 import { evaluateAlertsForFrequency } from '../plane-a/src/services/alert-evaluator'
@@ -46,9 +46,11 @@ const batchSize = config.alerts.evaluation.batchSize
 const idleSleepMs = toNumber(process.env.ALERT_EVALUATION_IDLE_SLEEP_MS, 1000)
 const loopJitterMs = resolveJitterMs(process.env.ALERT_EVALUATION_LOOP_JITTER_MS, 0)
 const messageJitterMs = resolveJitterMs(process.env.ALERT_EVALUATION_MESSAGE_JITTER_MS, 0)
-const lockTtlSeconds = toNumber(process.env.ALERT_EVALUATION_LOCK_TTL_SECONDS, 60)
-const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
 const shutdownTimeoutMs = toNumber(process.env.ALERT_EVALUATION_SHUTDOWN_TIMEOUT_MS, 30000)
+const healthEnabled = process.env.WORKER_HEALTH_ENABLED !== '0'
+const healthPort = toNumber(process.env.HEALTH_PORT, 8080)
+const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+let healthServer: { close: () => Promise<void> } | null = null
 
 const { isShutdownRequested } = createShutdownHandler({
   timeoutMs: shutdownTimeoutMs,
@@ -82,21 +84,21 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
     return
   }
 
-  const lock = new WorkerLock('alert-evaluation-worker', lockTtlSeconds)
-  const acquired = await lock.acquire()
-  if (!acquired) {
-    logger.info('alert_evaluation_worker_skipped', { reason: 'lock_already_held' })
-    return
-  }
-
-  const lockRefreshTimer = setInterval(() => {
-    lock.extend().catch((error) => {
-      logger.warn('lock_extend_failed', {
-        lock_key: 'alert-evaluation-worker',
+  if (!isLambdaRuntime && healthEnabled) {
+    try {
+      healthServer = await startHealthServer({
+        port: healthPort,
+        logger,
+        loggerName: 'alert-evaluation-worker',
+        enableDatabaseCheck: true,
+        enableRedisCheck: true,
+      })
+    } catch (error) {
+      logger.warn('health_server_start_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
-    })
-  }, lockRefreshMs)
+    }
+  }
 
   const pool = createPool(config.db.planeAUrl)
 
@@ -183,9 +185,14 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
       }
     }
   } finally {
-    clearInterval(lockRefreshTimer)
-    await lock.release()
     await pool.end()
+    if (healthServer) {
+      await healthServer.close().catch((error) => {
+        logger.warn('health_server_close_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
   }
 }
 

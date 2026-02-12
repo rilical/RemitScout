@@ -35,6 +35,10 @@ const exportListSchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 })
 
+const exportJobParamsSchema = z.object({
+  id: z.string().uuid(),
+})
+
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -340,7 +344,12 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.get('/exports/:id', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
-    const jobId = String((request.params as { id: string }).id)
+    const parsedParams = exportJobParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      reply.code(400)
+      return { error: 'invalid_export_id' }
+    }
+    const jobId = parsedParams.data.id
 
     try {
       const job = await exportJobRepository.getById(jobId)
@@ -376,7 +385,12 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.get('/exports/:id/download', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
-    const jobId = String((request.params as { id: string }).id)
+    const parsedParams = exportJobParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      reply.code(400)
+      return { error: 'invalid_export_id' }
+    }
+    const jobId = parsedParams.data.id
 
     try {
       const job = await exportJobRepository.getById(jobId)

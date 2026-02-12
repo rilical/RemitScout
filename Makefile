@@ -4,25 +4,25 @@ AWS_ACCOUNT ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --
 CDK_DEFAULT_ACCOUNT := $(AWS_ACCOUNT)
 CDK_DEFAULT_REGION := $(AWS_REGION)
 OPS_PAUSE_FN_PREFIX ?= remit-scout-dev-OpsPauseControllerFunction
+COMMUNICATIONS_SECRET_NAME ?= remit-scout/dev/communications
+COMMUNICATIONS_SECRET_ARN ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws secretsmanager describe-secret --region $(AWS_REGION) --secret-id $(COMMUNICATIONS_SECRET_NAME) --query ARN --output text 2>/dev/null)
 
-.PHONY: pause-dev resume-dev status-dev ops-pause-dev ops-resume-dev
+.PHONY: pause-dev resume-dev status-dev ops-pause-dev ops-resume-dev db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
 
 pause-dev:
 	@echo "Pausing dev (CDK deploy with devPaused=true)"
 	@cd infrastructure/cdk && \
-		AWS_PROFILE=$(AWS_PROFILE) \
-		CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) \
-		CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) \
-		npx cdk deploy -c env=dev -c devPaused=true
+		export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
+		eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
+		npx cdk deploy -c env=dev -c devPaused=true --require-approval never
 	@$(MAKE) ops-pause-dev
 
 resume-dev:
 	@echo "Resuming dev (CDK deploy with devPaused=false)"
 	@cd infrastructure/cdk && \
-		AWS_PROFILE=$(AWS_PROFILE) \
-		CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) \
-		CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) \
-		npx cdk deploy -c env=dev -c devPaused=false
+		export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
+		eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
+		npx cdk deploy -c env=dev -c devPaused=false --require-approval never
 	@$(MAKE) ops-resume-dev
 
 ops-pause-dev:
@@ -87,3 +87,107 @@ status-dev:
 		--output table
 	@echo "Drift check (optional)"
 	@echo "aws cloudformation detect-stack-drift --stack-name remit-scout-dev --region $(AWS_REGION) --profile $(AWS_PROFILE)"
+
+db-migrate-dev:
+	@$(MAKE) db-migrate-env ENV=dev
+
+db-migrate-staging:
+	@$(MAKE) db-migrate-env ENV=staging
+
+db-migrate-prod:
+	@$(MAKE) db-migrate-env ENV=prod
+
+.PHONY: db-migrate-env
+db-migrate-env:
+	@ENV_NAME="$${ENV:-dev}"; \
+	CLUSTER="remit-scout-$$ENV_NAME"; \
+	echo "Running DB migrations on $$CLUSTER"; \
+	SERVICE_ARN=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs list-services \
+		--cluster "$$CLUSTER" \
+		--region $(AWS_REGION) \
+		--query "serviceArns[?contains(@, 'PlaneBIngestService')]|[0]" \
+		--output text); \
+	if [ -z "$$SERVICE_ARN" ] || [ "$$SERVICE_ARN" = "None" ]; then \
+		echo "ERROR: Could not find PlaneBIngestService in $$CLUSTER"; \
+		exit 1; \
+	fi; \
+	SERVICE_JSON=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
+		--cluster "$$CLUSTER" \
+		--services "$$SERVICE_ARN" \
+		--region $(AWS_REGION) \
+		--output json); \
+	SERVICE_TASK_DEF=$$(echo "$$SERVICE_JSON" | jq -r '.services[0].taskDefinition'); \
+	NETWORK_CONFIG=$$(echo "$$SERVICE_JSON" | jq -c '.services[0].networkConfiguration'); \
+	if [ -z "$$SERVICE_TASK_DEF" ] || [ "$$SERVICE_TASK_DEF" = "null" ]; then \
+		echo "ERROR: Could not resolve task definition for $$SERVICE_ARN"; \
+		exit 1; \
+	fi; \
+	MIGRATE_TASK_DEF=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs list-task-definitions \
+		--region $(AWS_REGION) \
+		--status ACTIVE \
+		--sort DESC \
+		--query "taskDefinitionArns[?contains(@, '$$ENV_NAME') && (contains(@, 'db-migrate') || contains(@, 'DbMigrate'))]|[0]" \
+		--output text); \
+	if [ -n "$$MIGRATE_TASK_DEF" ] && [ "$$MIGRATE_TASK_DEF" != "None" ]; then \
+		TASK_DEF="$$MIGRATE_TASK_DEF"; \
+		echo "Using dedicated migration task definition: $$TASK_DEF"; \
+		TASK_ARN=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs run-task \
+			--cluster "$$CLUSTER" \
+			--launch-type FARGATE \
+			--task-definition "$$TASK_DEF" \
+			--network-configuration "$$NETWORK_CONFIG" \
+			--region $(AWS_REGION) \
+			--query 'tasks[0].taskArn' \
+			--output text); \
+	else \
+		TASK_DEF="$$SERVICE_TASK_DEF"; \
+		echo "No dedicated migration task definition found; overriding command on $$TASK_DEF"; \
+		CONTAINER_NAME=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-task-definition \
+			--task-definition "$$TASK_DEF" \
+			--region $(AWS_REGION) \
+			--query 'taskDefinition.containerDefinitions[0].name' \
+			--output text); \
+		if [ -z "$$CONTAINER_NAME" ] || [ "$$CONTAINER_NAME" = "None" ]; then \
+			echo "ERROR: Could not resolve container name for $$TASK_DEF"; \
+			exit 1; \
+		fi; \
+		OVERRIDES=$$(jq -nc --arg name "$$CONTAINER_NAME" \
+			'{containerOverrides:[{name:$$name,command:["node","backend/dist/scripts/aws/db-migrate-ecs.js"]}]}' ); \
+		TASK_ARN=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs run-task \
+			--cluster "$$CLUSTER" \
+			--launch-type FARGATE \
+			--task-definition "$$TASK_DEF" \
+			--network-configuration "$$NETWORK_CONFIG" \
+			--overrides "$$OVERRIDES" \
+			--region $(AWS_REGION) \
+			--query 'tasks[0].taskArn' \
+			--output text); \
+	fi; \
+	if [ -z "$$TASK_ARN" ] || [ "$$TASK_ARN" = "None" ]; then \
+		echo "ERROR: ECS run-task failed for $$CLUSTER"; \
+		exit 1; \
+	fi; \
+	echo "Migration task started: $$TASK_ARN"; \
+	AWS_PROFILE=$(AWS_PROFILE) aws ecs wait tasks-stopped \
+		--cluster "$$CLUSTER" \
+		--tasks "$$TASK_ARN" \
+		--region $(AWS_REGION); \
+	EXIT_CODE=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-tasks \
+		--cluster "$$CLUSTER" \
+		--tasks "$$TASK_ARN" \
+		--region $(AWS_REGION) \
+		--query 'tasks[0].containers[0].exitCode' \
+		--output text); \
+	STOP_REASON=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-tasks \
+		--cluster "$$CLUSTER" \
+		--tasks "$$TASK_ARN" \
+		--region $(AWS_REGION) \
+		--query 'tasks[0].stoppedReason' \
+		--output text); \
+	echo "Task exit code: $$EXIT_CODE"; \
+	echo "Stopped reason: $$STOP_REASON"; \
+	if [ "$$EXIT_CODE" != "0" ]; then \
+		echo "ERROR: migration task failed"; \
+		exit 1; \
+	fi; \
+	echo "DB migrations completed for $$ENV_NAME"

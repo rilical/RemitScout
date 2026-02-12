@@ -20,7 +20,7 @@ servers:
     description: Production
 
 paths:
-  /api/providers:
+  /api/v1/providers:
     get:
       summary: Get provider quotes for a corridor
       description: |
@@ -108,7 +108,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/indices/series:
+  /api/v1/indices/series:
     get:
       summary: Get index series for a corridor
       description: |
@@ -184,7 +184,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/indices/latest:
+  /api/v1/indices/latest:
     get:
       summary: Get latest index point for a corridor
       description: |
@@ -253,12 +253,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/quotes/current:
+  /api/v1/quotes/current:
     get:
       summary: Get current quotes for a corridor
       description: |
         Returns raw normalized quotes from the database for a specific corridor, 
-        amount bucket, and payment methods. More technical endpoint than /api/providers.
+        amount bucket, and payment methods. More technical endpoint than /api/v1/providers.
       tags:
         - Quotes
       parameters:
@@ -310,7 +310,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/popular-corridors:
+  /api/v1/popular-corridors:
     get:
       summary: Get popular corridors
       description: Returns the most popular remittance corridors based on recent searches
@@ -326,7 +326,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/bank-vs-specialist:
+  /api/v1/bank-vs-specialist:
     get:
       summary: Bank vs specialist comparison (US to Mexico)
       description: |
@@ -455,7 +455,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/geo:
+  /api/v1/geo:
     get:
       summary: Geolocation lookup
       description: Returns country and currency based on forwarded headers (CloudFront/Cloudflare).
@@ -483,7 +483,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/me:
+  /api/v1/me:
     get:
       summary: Get current user information
       description: Returns user plan, entitlements, and usage information
@@ -503,7 +503,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/me/api-keys:
+  /api/v1/me/api-keys:
     get:
       summary: List enterprise API keys
       description: Returns API keys for the current user (enterprise only)
@@ -560,7 +560,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/me/api-keys/{keyId}/rotate:
+  /api/v1/me/api-keys/{keyId}/rotate:
     post:
       summary: Rotate an enterprise API key
       description: Rotates the API key token for the given key ID (enterprise only)
@@ -590,7 +590,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/me/api-keys/{keyId}:
+  /api/v1/me/api-keys/{keyId}:
     delete:
       summary: Revoke an enterprise API key
       description: Revokes the API key for the given key ID (enterprise only)
@@ -623,7 +623,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/billing/checkout-session:
+  /api/v1/billing/checkout-session:
     post:
       summary: Create Stripe checkout session
       description: Creates a Stripe checkout session for upgrading to Plus plan
@@ -657,7 +657,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/billing/portal:
+  /api/v1/billing/portal:
     get:
       summary: Get Stripe billing portal link
       description: Returns a link to the Stripe customer portal for managing subscriptions
@@ -679,7 +679,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/billing/webhook:
+  /api/v1/billing/webhook:
     post:
       summary: Stripe webhook handler
       description: Handles Stripe webhook events (internal use only)
@@ -703,7 +703,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/pulse/status:
+  /api/v1/pulse/status:
     get:
       summary: Pulse service status
       description: Check if Pulse service is available (requires Plus entitlement)
@@ -727,7 +727,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/teaser:
+  /api/v1/pulse/teaser:
     get:
       summary: Pulse teaser movers
       description: |
@@ -814,7 +814,7 @@ paths:
                           description: Bucket timestamp (UTC)
                           example: '2026-01-01T08:00:00.000Z'
 
-  /api/pulse/corridors:
+  /api/v1/pulse/corridors:
     get:
       summary: Pulse corridor list
       description: Returns available Pulse corridors (requires Pulse entitlement)
@@ -849,7 +849,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/overview:
+  /api/v1/pulse/overview:
     get:
       summary: Pulse overview
       description: Returns Pulse overview tiles and charts (requires Pulse entitlement)
@@ -935,7 +935,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/charts/{chartId}:
+  /api/v1/pulse/charts/{chartId}:
     get:
       summary: Pulse chart data
       description: Returns chart series for a chart id (requires Pulse entitlement)
@@ -1023,7 +1023,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/table:
+  /api/v1/pulse/table:
     get:
       summary: Pulse table data
       description: Returns provider table rows (requires Pulse entitlement)
@@ -1100,7 +1100,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/hero:
+  /api/v1/pulse/hero:
     get:
       summary: Pulse hero chart
       description: Returns hero chart data (requires Pulse entitlement)
@@ -1169,7 +1169,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/coverage-summary:
+  /api/v1/pulse/coverage-summary:
     get:
       summary: Pulse coverage summary
       description: Returns coverage summary (requires Pulse entitlement)
@@ -1212,7 +1212,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/snapshot-summary:
+  /api/v1/pulse/snapshot-summary:
     get:
       summary: Pulse snapshot summary
       description: Returns snapshot summary (requires Pulse entitlement)
@@ -1266,7 +1266,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/providers/heatmap:
+  /api/v1/pulse/providers/heatmap:
     get:
       summary: Pulse provider heatmap
       description: Returns provider heatmap data (requires Pulse entitlement)
@@ -1318,7 +1318,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/smart-send:
+  /api/v1/pulse/smart-send:
     get:
       summary: Pulse smart send
       description: Returns smart send guidance (requires Pulse entitlement)
@@ -1366,7 +1366,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/market-snapshot:
+  /api/v1/pulse/market-snapshot:
     get:
       summary: Pulse market snapshot
       description: Returns market snapshot data (requires Pulse entitlement)
@@ -1411,7 +1411,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/true-cost:
+  /api/v1/pulse/true-cost:
     get:
       summary: Pulse true cost breakdown
       description: Returns provider true cost breakdown (requires Pulse entitlement)
@@ -1463,7 +1463,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/market-depth:
+  /api/v1/pulse/market-depth:
     get:
       summary: Pulse market depth
       description: Returns market depth summary (requires Pulse entitlement)
@@ -1510,7 +1510,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/arbitrage:
+  /api/v1/pulse/arbitrage:
     get:
       summary: Pulse arbitrage insight
       description: Returns arbitrage opportunity summary (requires Pulse entitlement)
@@ -1556,7 +1556,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/bank-comparison:
+  /api/v1/pulse/bank-comparison:
     get:
       summary: Pulse bank comparison
       description: Returns bank comparison summary (requires Pulse entitlement)
@@ -1611,7 +1611,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/cost-trend:
+  /api/v1/pulse/cost-trend:
     get:
       summary: Pulse cost trend
       description: Returns cost trend time series (requires Pulse entitlement)
@@ -1660,7 +1660,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/fx-rate-history:
+  /api/v1/pulse/fx-rate-history:
     get:
       summary: Pulse FX rate history
       description: Returns FX rate history for a corridor (requires Pulse entitlement)
@@ -1712,7 +1712,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/events:
+  /api/v1/pulse/events:
     get:
       summary: Pulse events feed
       description: Returns corridor event feed (requires Pulse entitlement)
@@ -1782,7 +1782,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/providers/benchmarking:
+  /api/v1/pulse/providers/benchmarking:
     get:
       summary: Pulse provider benchmarking
       description: Returns provider benchmarking data for a corridor (requires Pulse entitlement)
@@ -1856,7 +1856,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/pulse/method-coverage:
+  /api/v1/pulse/method-coverage:
     get:
       summary: Pulse method coverage
       description: Returns method coverage for a corridor (requires Pulse entitlement)
@@ -1924,7 +1924,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/ops/{provider}/health:
+  /api/v1/ops/{provider}/health:
     get:
       summary: Provider health check (Admin only)
       description: Returns health status for a specific provider
@@ -1951,7 +1951,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/ops/indices/health:
+  /api/v1/ops/indices/health:
     get:
       summary: Indices readiness health (Admin only)
       description: Returns Tier-0 indices readiness summary and reasons if degraded.

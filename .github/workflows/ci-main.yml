@@ -1,0 +1,19 @@
+name: ci/main
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: ci/main
+    uses: ./.github/workflows/ci.yml
+    with:
+      mode: main

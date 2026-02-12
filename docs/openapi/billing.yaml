@@ -3,7 +3,7 @@ info:
   title: Remit-Scout Billing API
   version: 0.1.0
 paths:
-  /api/billing/checkout-session:
+  /api/v1/billing/checkout-session:
     post:
       summary: Create Stripe checkout session
       security:
@@ -11,7 +11,7 @@ paths:
       responses:
         "200":
           description: Checkout session created
-  /api/billing/portal:
+  /api/v1/billing/portal:
     get:
       summary: Create Stripe billing portal session
       security:
@@ -19,7 +19,7 @@ paths:
       responses:
         "200":
           description: Portal session created
-  /api/billing/webhook:
+  /api/v1/billing/webhook:
     post:
       summary: Stripe webhook handler
       parameters:

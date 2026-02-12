@@ -13,7 +13,12 @@ export class ExportJobRepository implements IExportJobRepository {
   async create(input: ExportJobInput): Promise<ExportJobRow> {
     const result = await query<ExportJobRow>(
       `INSERT INTO silver.export_job (user_id, job_type, params, status)
-       VALUES ($1, $2, $3::jsonb, COALESCE($4, 'queued'))
+       VALUES (
+         $1,
+         $2,
+         $3::jsonb,
+         COALESCE($4::export_job_status, 'queued'::export_job_status)
+       )
        RETURNING id, user_id, job_type, params, status, s3_key, expires_at, created_at, started_at, finished_at, error`,
       [input.user_id, input.job_type, JSON.stringify(input.params ?? null), input.status ?? null],
       this.pool,
@@ -51,7 +56,7 @@ export class ExportJobRepository implements IExportJobRepository {
       `SELECT COUNT(*)::text AS count
        FROM silver.export_job
        WHERE user_id = $1
-         AND status = ANY($2)`,
+         AND status = ANY($2::export_job_status[])`,
       [userId, statusList],
       this.pool,
     )
@@ -69,7 +74,7 @@ export class ExportJobRepository implements IExportJobRepository {
   ): Promise<void> {
     await query(
       `UPDATE silver.export_job
-       SET status = $2,
+       SET status = $2::export_job_status,
            started_at = COALESCE($3, started_at),
            finished_at = COALESCE($4, finished_at),
            error = $5

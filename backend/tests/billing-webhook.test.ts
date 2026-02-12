@@ -26,7 +26,7 @@ describe('billing webhook idempotency', () => {
 
     const first = await app.inject({
       method: 'POST',
-      url: '/api/billing/webhook',
+      url: '/api/v1/billing/webhook',
       headers: {
         'content-type': 'application/json',
         'stripe-signature': signature,
@@ -38,7 +38,7 @@ describe('billing webhook idempotency', () => {
 
     const second = await app.inject({
       method: 'POST',
-      url: '/api/billing/webhook',
+      url: '/api/v1/billing/webhook',
       headers: {
         'content-type': 'application/json',
         'stripe-signature': signature,

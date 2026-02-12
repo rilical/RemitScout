@@ -50,6 +50,7 @@ import {
   getMacroLanes,
   B2B_FIXED_AMOUNT_USD,
   isMacroCorridor as _isMacroCorridor,
+  type MacroLane,
   type PayoutMethod,
 } from '../shared/macro-corridors'
 
@@ -286,6 +287,59 @@ const loadTierSnapshot = async (
     tierMap.set(row.corridor_id, tier)
   }
   return tierMap
+}
+
+type NormalizeMacroLanesOptions = {
+  tierSnapshot?: Map<string, CorridorTier> | null
+  disableTier1: boolean
+}
+
+type NormalizeMacroLanesResult = {
+  lanes: MacroLane[]
+  stats: {
+    tierSnapshotOverrides: number
+    lanesDemotedToTier2: number
+  }
+}
+
+export const normalizeMacroLanesForSweep = (
+  macroLanes: MacroLane[],
+  options: NormalizeMacroLanesOptions,
+): NormalizeMacroLanesResult => {
+  let tierSnapshotOverrides = 0
+  let lanesDemotedToTier2 = 0
+
+  const lanes = macroLanes.map((lane) => {
+    const snapshotTier = options.tierSnapshot?.get(lane.corridorId)
+    const resolvedTier = snapshotTier ?? lane.tier
+
+    if (snapshotTier && snapshotTier !== lane.tier) {
+      tierSnapshotOverrides += 1
+    }
+
+    const normalizedTier =
+      options.disableTier1 && resolvedTier === 'tier_1'
+        ? 'tier_2'
+        : resolvedTier
+
+    if (options.disableTier1 && resolvedTier === 'tier_1') {
+      lanesDemotedToTier2 += 1
+    }
+
+    if (normalizedTier === lane.tier) {
+      return lane
+    }
+
+    return { ...lane, tier: normalizedTier }
+  })
+
+  return {
+    lanes,
+    stats: {
+      tierSnapshotOverrides,
+      lanesDemotedToTier2,
+    },
+  }
 }
 
 const loadFreshnessLagByCorridor = async (
@@ -1002,15 +1056,17 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
       })
     }
 
-    const macroLanes = rawMacroLanes.map(lane => {
-      if (tierSnapshot && tierSnapshot.has(lane.corridorId)) {
-        return { ...lane, tier: tierSnapshot.get(lane.corridorId)! }
-      }
-      return lane
+    const normalizedMacroLanes = normalizeMacroLanesForSweep(rawMacroLanes, {
+      tierSnapshot,
+      disableTier1: config.planeB.disableTier1,
     })
+    const macroLanes = normalizedMacroLanes.lanes
 
     logger.info('scheduler_data_loaded', {
       tier_version: b2bTierVersion,
+      disable_tier1: config.planeB.disableTier1,
+      tier_snapshot_overrides: normalizedMacroLanes.stats.tierSnapshotOverrides,
+      lanes_demoted_to_tier2: normalizedMacroLanes.stats.lanesDemotedToTier2,
       total_lanes: macroLanes.length,
       capabilities_loaded: allCapabilities.length,
       providers_with_rights: rightsByProvider.size,

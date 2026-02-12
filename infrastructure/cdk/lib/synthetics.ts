@@ -166,8 +166,8 @@ export const createSynthetics = (
   syntheticsBucket.grantReadWrite(syntheticsRole)
 
   const healthCheckUrl = `${options.planeABaseUrl}/healthz`
-  const quotesUrl = `${options.planeABaseUrl}/api/quotes/current?from=USD&to=EUR&amount=100`
-  const indicesUrl = `${options.planeABaseUrl}/api/indices/latest?corridor_id=US-MX-USD-MXN&amount_bucket=500&method_profile=standard_bank`
+  const quotesUrl = `${options.planeABaseUrl}/api/v1/quotes/current?from=USD&to=EUR&amount=100`
+  const indicesUrl = `${options.planeABaseUrl}/api/v1/indices/latest?corridor_id=US-MX-USD-MXN&amount_bucket=500&method_profile=standard_bank`
 
   const healthCheckCanary = new CfnCanary(scope, 'HealthCheckCanary', {
     name: `remit-scout-${options.envName}-health-check`,

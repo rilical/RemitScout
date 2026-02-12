@@ -28,6 +28,9 @@ export type EcsTaskResources = {
   goldLiveTask: FargateTaskDefinition
   notificationsQueueTask: FargateTaskDefinition
   opsAlertsQueueTask: FargateTaskDefinition
+  alertEvaluationTask: FargateTaskDefinition
+  exportWorkerTask: FargateTaskDefinition
+  dbMigrateTask: FargateTaskDefinition
 }
 
 export type EcsTaskOptions = {
@@ -41,6 +44,17 @@ export type EcsTaskOptions = {
   planeBDbHost?: string
   planeBDbPort?: string
   planeBDbName?: string
+  planeADbSecretArn?: string
+  planeADbSsmName?: string
+  planeADbHost?: string
+  planeADbPort?: string
+  planeADbName?: string
+  alertEvaluationQueueUrl?: string
+  exportJobQueueUrl?: string
+  exportJobQueueMode?: string
+  exportsBucketName?: string
+  exportsPrefix?: string
+  communicationsSecretArn?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
   planeCDbHost?: string
@@ -1070,6 +1084,205 @@ export const createEcsTasks = (
     })
   }
 
+  const planeADbSecretArn = options.planeADbSecretArn ?? options.planeBDbSecretArn
+  const planeADbSsmName = options.planeADbSsmName ?? options.planeBDbSsmName
+  const planeADbHost = options.planeADbHost ?? options.planeBDbHost
+  const planeADbPort = options.planeADbPort ?? options.planeBDbPort
+  const planeADbName = options.planeADbName ?? options.planeBDbName
+
+  const planeAWorkerEnv: Record<string, string> = {
+    ...sharedEnv,
+  }
+  if (planeADbHost) {
+    planeAWorkerEnv.PLANE_A_DB_HOST = planeADbHost
+  }
+  if (planeADbSecretArn) {
+    planeAWorkerEnv.PLANE_A_DB_SECRET_ARN = planeADbSecretArn
+  }
+  if (planeADbSsmName) {
+    planeAWorkerEnv.PLANE_A_DB_SSM_NAME = planeADbSsmName
+  }
+  if (planeADbPort) {
+    planeAWorkerEnv.PLANE_A_DB_PORT = planeADbPort
+  }
+  if (planeADbName) {
+    planeAWorkerEnv.PLANE_A_DB_NAME = planeADbName
+  }
+
+  const alertEvaluationTask = new FargateTaskDefinition(
+    scope,
+    'AlertEvaluationWorkerTask',
+    {
+      cpu: 256,
+      memoryLimitMiB: 512,
+      executionRole: options.roles.planeBEcsTaskExecutionRole,
+      taskRole: options.roles.planeBEcsTaskRole,
+      runtimePlatform,
+    },
+  )
+
+  const alertEvaluationLogGroup = new LogGroup(scope, 'AlertEvaluationWorkerLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/alert-evaluation-worker`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+  const alertEvaluationEnv: Record<string, string> = {
+    ...planeAWorkerEnv,
+    ALERT_EVALUATION_ENABLED: '1',
+  }
+  if (options.alertEvaluationQueueUrl) {
+    alertEvaluationEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.communicationsSecretArn) {
+    alertEvaluationEnv.COMMUNICATIONS_SECRET_ARN = options.communicationsSecretArn
+  }
+  alertEvaluationTask.addContainer('AlertEvaluationWorkerContainer', {
+    image,
+    command: resolveCommand(
+      'scripts/aws/alert-evaluation-worker-ecs.js',
+      'scripts/aws/alert-evaluation-worker-ecs.ts',
+    ),
+    environment: alertEvaluationEnv,
+    ...secretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'alert-evaluation-worker',
+      logGroup: alertEvaluationLogGroup,
+    }),
+    healthCheck: workerHealthCheck,
+  })
+  if (enableTelemetry) {
+    const alertEvaluationOtelLogGroup = new LogGroup(
+      scope,
+      'AlertEvaluationWorkerOtelLogGroup',
+      {
+        logGroupName: `/remit-scout/${options.envName}/alert-evaluation-worker-otel`,
+        retention: logRetention,
+        removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      },
+    )
+    alertEvaluationTask.addContainer('AlertEvaluationOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'alert-evaluation-worker-otel',
+        logGroup: alertEvaluationOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
+
+  const exportWorkerTask = new FargateTaskDefinition(
+    scope,
+    'ExportWorkerTask',
+    {
+      cpu: 256,
+      memoryLimitMiB: 512,
+      executionRole: options.roles.planeBEcsTaskExecutionRole,
+      taskRole: options.roles.planeBEcsTaskRole,
+      runtimePlatform,
+    },
+  )
+
+  const exportWorkerLogGroup = new LogGroup(scope, 'ExportWorkerLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/export-worker`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+  const exportWorkerEnv: Record<string, string> = {
+    ...planeAWorkerEnv,
+  }
+  if (options.exportJobQueueUrl) {
+    exportWorkerEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportJobQueueMode) {
+    exportWorkerEnv.EXPORT_JOB_QUEUE_MODE = options.exportJobQueueMode
+  }
+  if (options.exportsBucketName) {
+    exportWorkerEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  if (options.exportsPrefix) {
+    exportWorkerEnv.EXPORTS_S3_PREFIX = options.exportsPrefix
+  }
+  exportWorkerTask.addContainer('ExportWorkerContainer', {
+    image,
+    command: resolveCommand(
+      'scripts/aws/export-worker-ecs.js',
+      'scripts/aws/export-worker-ecs.ts',
+    ),
+    environment: exportWorkerEnv,
+    ...secretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'export-worker',
+      logGroup: exportWorkerLogGroup,
+    }),
+    healthCheck: workerHealthCheck,
+  })
+  if (enableTelemetry) {
+    const exportWorkerOtelLogGroup = new LogGroup(
+      scope,
+      'ExportWorkerOtelLogGroup',
+      {
+        logGroupName: `/remit-scout/${options.envName}/export-worker-otel`,
+        retention: logRetention,
+        removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      },
+    )
+    exportWorkerTask.addContainer('ExportWorkerOtelCollector', {
+      image: ContainerImage.fromRegistry(
+        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+      ),
+      cpu: 32,
+      memoryLimitMiB: 256,
+      environment: {
+        AWS_REGION: Stack.of(scope).region,
+        AWS_OTEL_CONFIG_CONTENT: otelConfigContent,
+      },
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'export-worker-otel',
+        logGroup: exportWorkerOtelLogGroup,
+      }),
+      portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
+    })
+  }
+
+  const dbMigrateTask = new FargateTaskDefinition(scope, 'DbMigrateTask', {
+    cpu: 256,
+    memoryLimitMiB: 512,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
+  })
+
+  const dbMigrateLogGroup = new LogGroup(scope, 'DbMigrateLogGroup', {
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+
+  dbMigrateTask.addContainer('DbMigrateContainer', {
+    image,
+    command: resolveCommand(
+      'scripts/aws/db-migrate-ecs.js',
+      'scripts/aws/db-migrate-ecs.ts',
+    ),
+    environment: {
+      ...sharedEnv,
+      HEALTH_PORT: '8080',
+    },
+    ...secretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'db-migrate',
+      logGroup: dbMigrateLogGroup,
+    }),
+    healthCheck: workerHealthCheck,
+  })
+
   return {
     planeBIngestTask,
     b2cRefreshTask,
@@ -1080,5 +1293,8 @@ export const createEcsTasks = (
     goldLiveTask,
     notificationsQueueTask,
     opsAlertsQueueTask,
+    alertEvaluationTask,
+    exportWorkerTask,
+    dbMigrateTask,
   }
 }

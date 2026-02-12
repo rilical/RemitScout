@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type Stripe from 'stripe'
 import { z } from 'zod'
-import { getPool } from '../../../shared/db'
+import { getPool, query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { upsertUserAccount } from '../services/user-account'
@@ -227,6 +227,23 @@ export const meRoutes = async (app: FastifyInstance) => {
       const usage = await getUsageForUser(planeAPool, user.user_id)
       const billing = await buildBillingInfo(plan)
       const profile = await userAccountRepository.getProfile(user.user_id)
+      const appRoleResult = await query<{ app_role: string | null }>(
+        `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
+        [user.user_id],
+        planeAPool,
+      )
+      const appRole = appRoleResult.rows[0]?.app_role ?? null
+
+      const email = user.email?.toLowerCase() ?? null
+      const adminAllowlist = config.planeA.adminEmails
+      const isAdminByEmail = adminAllowlist.length > 0 && email ? adminAllowlist.includes(email) : false
+      const supabaseRole = user.role ?? null
+      const isAdmin =
+        isAdminByEmail
+        || supabaseRole === 'admin'
+        || supabaseRole === 'super_admin'
+        || appRole === 'admin'
+        || appRole === 'super_admin'
 
       logger.debug('me_request_success', {
         user_id: user.user_id,
@@ -241,6 +258,9 @@ export const meRoutes = async (app: FastifyInstance) => {
           user_id: user.user_id,
           email: user.email,
           name: profile?.name ?? null,
+          role: supabaseRole,
+          app_role: appRole,
+          is_admin: Boolean(isAdmin),
         },
         plan: {
           plan_code: plan.plan_code,

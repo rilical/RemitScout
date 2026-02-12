@@ -11,14 +11,18 @@ import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import { verifyAlertUnsubscribeToken } from '../services/alert-unsubscribe'
-import { AlertRepository, WatchlistRepository } from '../repositories'
+import { AlertRepository, RightsMatrixRepository, WatchlistRepository } from '../repositories'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 import { isMacroCorridor, getMacroCorridors } from '../../../shared/macro-corridors'
+import { parseCorridorId } from '../../../shared/corridor'
+import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
+import { computeBucketSelection } from '../../../shared/amount-bucket'
 
 const logger = createLogger('plane-a.alerts')
 const pool = getPool(config.db.planeAUrl)
 const alertRepository = new AlertRepository(pool)
 const watchlistRepository = new WatchlistRepository(pool)
+const rightsMatrixRepository = new RightsMatrixRepository(pool)
 const ALERT_COOLDOWN_MINUTES: Record<'weekly' | 'daily', number> = {
   weekly: 10080,
   daily: 1440,
@@ -92,6 +96,120 @@ async function getAlertCount(userId: string): Promise<number> {
 
 const SMART_ALERT_MIN_CONFIDENCE = 70
 const SMART_ALERT_MIN_SAMPLE_DAYS = 21
+const SMART_ALERT_NOT_OFFERED_MESSAGE = 'Smart Alerts are available for select major corridors we track continuously.'
+const REGULAR_ALERT_SUPPORTED_METRICS = ['recipientGets', 'fee', 'totalCost'] as const
+
+type RegularAlertMetric = (typeof REGULAR_ALERT_SUPPORTED_METRICS)[number]
+
+type QuoteCoverage = {
+  supported: boolean
+  eligibleProviderCount: number
+  observedProviderCount: number
+  latestQuoteCollectedAt: string | null
+  fresh: boolean
+  supportedMetrics: RegularAlertMetric[]
+}
+
+type FxCoverage = {
+  supported: boolean
+}
+
+const toPositiveNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null
+  const n = typeof value === 'string' ? Number(value) : Number(value)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+const resolveUsdEquivalentBucket = (currency: string): number => {
+  const normalized = currency.toUpperCase()
+  const rate = FIXED_EXCHANGE_RATES[normalized] ?? 1
+  const amount = 500 * rate
+  return computeBucketSelection(amount).bucket_used
+}
+
+const resolveBucketForEligibility = (corridorId: string): number => {
+  const parts = parseCorridorId(corridorId)
+  const sourceCurrency = parts?.sourceCurrency?.toUpperCase() ?? null
+  if (!sourceCurrency) return 500
+  return resolveUsdEquivalentBucket(sourceCurrency)
+}
+
+const resolveMethodForEligibility = (raw: unknown): string => {
+  if (typeof raw !== 'string') return 'bank'
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : 'bank'
+}
+
+const computeQuoteCoverage = async (input: {
+  corridorId: string
+  payinMethod: string
+  payoutMethod: string
+  amountBucket: number
+  maxAgeSeconds: number
+}): Promise<QuoteCoverage> => {
+  const corridorParts = parseCorridorId(input.corridorId)
+  const sourceCountry = corridorParts?.sourceCountry?.toUpperCase() ?? null
+  const destCountry = corridorParts?.destCountry?.toUpperCase() ?? null
+
+  let eligibleProviderCount = 0
+  if (sourceCountry && destCountry) {
+    try {
+      const eligible = await rightsMatrixRepository.listActiveB2cProvidersByCountry(sourceCountry, destCountry)
+      eligibleProviderCount = eligible.length
+    } catch (error) {
+      logger.warn('quote_coverage_rights_matrix_failed', {
+        corridor_id: input.corridorId,
+        error: getErrorMessage(error),
+      })
+    }
+  }
+
+  const quoteResult = await query<{
+    latest: Date | null
+    provider_count: number
+  }>(
+    `SELECT MAX(collected_at) AS latest,
+            COUNT(DISTINCT provider_id)::int AS provider_count
+       FROM silver.latest_quote_by_provider
+      WHERE corridor_id = $1
+        AND amount_bucket = $2
+        AND status = 'ok'`,
+    // Corridor-level coverage gate: we consider quote coverage available if *any* fresh quote exists
+    // for the corridor+bucket, regardless of method mix. Method-specific gating is handled elsewhere.
+    [input.corridorId, input.amountBucket],
+    pool,
+  )
+
+  const latest = quoteResult.rows[0]?.latest ?? null
+  const observedProviderCount = quoteResult.rows[0]?.provider_count ?? 0
+  const latestIso = latest ? new Date(latest).toISOString() : null
+  const fresh = latest
+    ? (Date.now() - new Date(latest).getTime()) <= input.maxAgeSeconds * 1000
+    : false
+
+  const supported = observedProviderCount > 0 && latestIso !== null
+
+  return {
+    supported,
+    eligibleProviderCount,
+    observedProviderCount,
+    latestQuoteCollectedAt: latestIso,
+    fresh,
+    supportedMetrics: supported ? [...REGULAR_ALERT_SUPPORTED_METRICS] : [],
+  }
+}
+
+const computeFxCoverage = async (base: string, quote: string): Promise<FxCoverage> => {
+  const result = await query<{ ok: number }>(
+    `SELECT 1 AS ok
+       FROM gold.fx_rates
+      WHERE base_currency = $1 AND quote_currency = $2
+      LIMIT 1`,
+    [base.toUpperCase(), quote.toUpperCase()],
+    pool,
+  )
+  return { supported: result.rows.length > 0 }
+}
 
 type CorridorSignalData = {
   confidence: number | null
@@ -157,6 +275,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       fromCurrency?: string
       toCurrency?: string
       corridorId?: string
+      method?: string
+      amountBucket?: string | number
     }
 
     let corridorId: string | null = null
@@ -190,6 +310,7 @@ export const alertsRoutes = async (app: FastifyInstance) => {
     }
 
     const isMacro = isMacroCorridor(corridorId)
+    const programEligible = isMacro
     const signalData = await checkCorridorSignalData(corridorId)
 
     const hasConfidence = signalData !== null
@@ -208,13 +329,16 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       && now >= new Date(signalData.best_window_start)
       && now <= new Date(signalData.best_window_end)
 
-    const signalActive = dataReady
+    const signalActive = programEligible
+      && dataReady
       && signalData !== null
       && signalData.alert_eligible === true
       && inActiveWindow
 
     let reason: string | null = null
-    if (!dataReady) {
+    if (!programEligible) {
+      reason = 'not_offered'
+    } else if (!dataReady) {
       if (signalData === null) {
         reason = 'no_data'
       } else if (!hasSamples) {
@@ -224,18 +348,54 @@ export const alertsRoutes = async (app: FastifyInstance) => {
       }
     }
 
+    const status: 'available' | 'rolling_out' | 'not_offered' =
+      !programEligible ? 'not_offered' : dataReady ? 'available' : 'rolling_out'
+
     const durationSeconds = (Date.now() - startTime) / 1000
     recordRequest('GET', '/alerts/corridor-eligibility', 200, durationSeconds)
+
+    const corridorCurrencies = (() => {
+      const parts = parseCorridorId(corridorId)
+      return parts
+        ? {
+            base: parts.sourceCurrency.toUpperCase(),
+            quote: parts.destCurrency.toUpperCase(),
+          }
+        : null
+    })()
+    const fxCoverage = corridorCurrencies
+      ? await computeFxCoverage(corridorCurrencies.base, corridorCurrencies.quote)
+      : { supported: false }
+
+    const amountBucket =
+      toPositiveNumberOrNull(queryParams.amountBucket) ?? resolveBucketForEligibility(corridorId)
+    const method = resolveMethodForEligibility(queryParams.method)
+    const maxAgeSeconds = Math.max(60, Math.floor(config.planeA.b2c.maxQuoteAgeSeconds ?? 1800))
+    const quoteCoverage = await computeQuoteCoverage({
+      corridorId,
+      amountBucket,
+      payinMethod: method,
+      payoutMethod: 'bank',
+      maxAgeSeconds,
+    })
 
     return {
       success: true,
       corridorId,
       isMacroCorridor: isMacro,
       smartAlerts: {
-        eligible: dataReady,
+        programEligible,
+        status,
+        eligible: status === 'available',
         reason,
-        dataReady,
+        dataReady: status === 'available',
         signalActive,
+        dataProgress: {
+          sampleDays: signalData?.sample_days ?? null,
+          minSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+          confidence: signalData?.confidence ?? null,
+          minConfidence: SMART_ALERT_MIN_CONFIDENCE,
+        },
         confidence: signalData?.confidence ?? null,
         sampleDays: signalData?.sample_days ?? null,
         sendScore: signalData?.send_score ?? null,
@@ -258,6 +418,8 @@ export const alertsRoutes = async (app: FastifyInstance) => {
         note: isMacro
           ? 'This corridor is covered by our regular data collection.'
           : 'Quotes for this corridor are refreshed when users view it or before alert evaluation.',
+        fxCoverage,
+        quoteCoverage,
       },
     }
   })
@@ -568,6 +730,19 @@ export const alertsRoutes = async (app: FastifyInstance) => {
           }
         }
 
+        if (!isMacroCorridor(corridorId)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+
+          reply.code(400)
+          return {
+            success: false,
+            error: 'smart_not_offered',
+            message: SMART_ALERT_NOT_OFFERED_MESSAGE,
+            corridorId,
+          }
+        }
+
         const signalData = await checkCorridorSignalData(corridorId)
         const hasData = signalData
           && signalData.confidence !== null
@@ -594,6 +769,50 @@ export const alertsRoutes = async (app: FastifyInstance) => {
                   requiredSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
                 }
               : null,
+          }
+        }
+      }
+
+      if (watchlistItem.target_type === 'corridor' && REGULAR_ALERT_SUPPORTED_METRICS.includes(body.rule.metric as any)) {
+        const corridorId = resolveCorridorIdFromWatchlist(
+          watchlistItem.target_type,
+          watchlistItem.target_payload as Record<string, unknown>,
+        )
+        const payload = watchlistItem.target_payload as Record<string, unknown>
+        const payinMethod = resolveMethodForEligibility(payload.method)
+        const amountBucket =
+          toPositiveNumberOrNull(payload.amountBucket) ?? resolveBucketForEligibility(corridorId || '')
+
+        if (!corridorId) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+          reply.code(400)
+          return {
+            success: false,
+            error: 'invalid_corridor',
+            message: 'Quote-based alerts require a valid corridor.',
+          }
+        }
+
+        const maxAgeSeconds = Math.max(60, Math.floor(config.planeA.b2c.maxQuoteAgeSeconds ?? 1800))
+        const quoteCoverage = await computeQuoteCoverage({
+          corridorId,
+          amountBucket,
+          payinMethod,
+          payoutMethod: 'bank',
+          maxAgeSeconds,
+        })
+
+        if (!quoteCoverage.supported) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('POST', '/alerts', 400, durationSeconds)
+          reply.code(400)
+          return {
+            success: false,
+            error: 'quote_not_supported',
+            message: 'Quote-based alerts aren’t available for this corridor yet. Use an FX Rate Alert instead.',
+            corridorId,
+            quoteCoverage,
           }
         }
       }
@@ -836,6 +1055,19 @@ export const alertsRoutes = async (app: FastifyInstance) => {
             }
           }
 
+          if (!isMacroCorridor(corridorId)) {
+            const durationSeconds = (Date.now() - startTime) / 1000
+            recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+
+            reply.code(400)
+            return {
+              success: false,
+              error: 'smart_not_offered',
+              message: SMART_ALERT_NOT_OFFERED_MESSAGE,
+              corridorId,
+            }
+          }
+
           const signalData = await checkCorridorSignalData(corridorId)
           const hasData = signalData
             && signalData.confidence !== null
@@ -854,7 +1086,70 @@ export const alertsRoutes = async (app: FastifyInstance) => {
               message: 'Smart alerts need at least 3 weeks of historical data. This corridor doesn\'t have enough data yet.',
               suggestion: 'Try a rate alert instead, or choose a popular corridor.',
               corridorId,
+              currentData: signalData
+                ? {
+                    confidence: signalData.confidence,
+                    sampleDays: signalData.sample_days,
+                    requiredConfidence: SMART_ALERT_MIN_CONFIDENCE,
+                    requiredSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+                  }
+                : null,
             }
+          }
+        }
+      }
+
+      if (nextMetric !== 'sendScore' && REGULAR_ALERT_SUPPORTED_METRICS.includes(nextMetric as any)) {
+        const watchlistItem = await watchlistRepository.findById(existing.watchlist_item_id, user.user_id)
+        if (!watchlistItem || watchlistItem.target_type !== 'corridor') {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+          reply.code(400)
+          return {
+            success: false,
+            error: 'invalid_corridor',
+            message: 'Quote-based alerts require a corridor watchlist item.',
+          }
+        }
+
+        const corridorId = resolveCorridorIdFromWatchlist(
+          watchlistItem.target_type,
+          watchlistItem.target_payload as Record<string, unknown>,
+        )
+        if (!corridorId) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+          reply.code(400)
+          return {
+            success: false,
+            error: 'invalid_corridor',
+            message: 'Quote-based alerts require a valid corridor.',
+          }
+        }
+
+        const payload = watchlistItem.target_payload as Record<string, unknown>
+        const payinMethod = resolveMethodForEligibility(payload.method)
+        const amountBucket =
+          toPositiveNumberOrNull(payload.amountBucket) ?? resolveBucketForEligibility(corridorId)
+        const maxAgeSeconds = Math.max(60, Math.floor(config.planeA.b2c.maxQuoteAgeSeconds ?? 1800))
+        const quoteCoverage = await computeQuoteCoverage({
+          corridorId,
+          amountBucket,
+          payinMethod,
+          payoutMethod: 'bank',
+          maxAgeSeconds,
+        })
+
+        if (!quoteCoverage.supported) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+          reply.code(400)
+          return {
+            success: false,
+            error: 'quote_not_supported',
+            message: 'Quote-based alerts aren’t available for this corridor yet. Use an FX Rate Alert instead.',
+            corridorId,
+            quoteCoverage,
           }
         }
       }

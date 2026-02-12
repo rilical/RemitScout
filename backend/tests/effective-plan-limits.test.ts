@@ -35,6 +35,9 @@ vi.mock('../plane-a/src/services/user-plan', () => ({
 vi.mock('../plane-a/src/repositories', () => ({
   AlertRepository: vi.fn().mockImplementation(() => mockAlertRepository),
   WatchlistRepository: vi.fn().mockImplementation(() => mockWatchlistRepository),
+  RightsMatrixRepository: vi.fn().mockImplementation(() => ({
+    listActiveB2cProvidersByCountry: vi.fn().mockResolvedValue([]),
+  })),
   ComparisonHistoryRepository: vi.fn().mockImplementation(() => ({})),
 }))
 

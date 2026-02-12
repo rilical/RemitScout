@@ -575,12 +575,7 @@ export const createMonitoring = (
     'alansari',
     'instarem',
     'xoom',
-    'remitbee',
     'singx',
-    'placid',
-    'koronapay',
-    'wirebarley',
-    'intermex',
   ]
   const probeFailureAlarms = probeProviders.map((providerId) =>
     new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {

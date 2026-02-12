@@ -71,7 +71,7 @@ const testHealthEndpoint = async (baseUrl: string): Promise<TestResult> => {
 const testQuotesEndpoint = async (baseUrl: string): Promise<TestResult> => {
   const startTime = Date.now()
   try {
-    const url = `${baseUrl}/api/quotes/current?corridor_id=US-USD_IN-INR&amount=1000&payin=bank_transfer&payout=bank_deposit`
+    const url = `${baseUrl}/api/v1/quotes/current?corridor_id=US-USD_IN-INR&amount=1000&payin=bank_transfer&payout=bank_deposit`
     const { status, body, duration } = await fetchWithTimeout(url, 5000)
 
     if (status !== 200) {
@@ -113,7 +113,7 @@ const testPopularCorridorsEndpoint = async (baseUrl: string): Promise<TestResult
   const startTime = Date.now()
   try {
     const { status, body, duration } = await fetchWithTimeout(
-      `${baseUrl}/api/popular-corridors`,
+      `${baseUrl}/api/v1/popular-corridors`,
       3000,
     )
 
@@ -266,6 +266,5 @@ export const handler = async (): Promise<{ success: boolean; results: TestResult
     results: testResults,
   }
 }
-
 
 
