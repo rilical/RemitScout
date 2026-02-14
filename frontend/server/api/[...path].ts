@@ -3,10 +3,10 @@ import { proxyToBackend } from '~/server/utils/backendProxy'
 
 const ALLOWED_PATH_PREFIXES = [
   '/providers', '/quotes', '/corridors', '/popular-corridors',
-  '/offers', '/bank-vs-specialist', '/geo', '/click',
+  '/offers', '/ads', '/bank-vs-specialist', '/geo', '/click',
   '/newsletter', '/recent-searches', '/billing',
   '/me', '/watchlist', '/alerts', '/exports',
-  '/sessions', '/telemetry', '/admin',
+  '/sessions', '/telemetry', '/admin', '/ops', '/audit', '/analytics',
 ] as const
 
 export default defineEventHandler(async (event) => {

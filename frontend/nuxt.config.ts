@@ -283,6 +283,8 @@ export default defineNuxtConfig({
     // Server-only backend base URL for BFF proxying (must be absolute).
     apiBase: resolveServerApiBase(),
     public: {
+      remitScoutEnv: (resolveEnvValue('PUBLIC_REMIT_SCOUT_ENV', 'REMIT_SCOUT_ENV', 'ENVIRONMENT') || (isDev ? 'dev' : 'prod')).toLowerCase(),
+      awsRegion: resolveEnvValue('PUBLIC_AWS_REGION', 'AWS_REGION') || 'us-east-1',
       siteUrl:
         process.env.PUBLIC_SITE_URL
         || (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID

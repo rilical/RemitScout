@@ -12,16 +12,20 @@
           <div class="flex flex-col gap-2 sm:flex-row">
             <button
               class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
-              :disabled="ensuring"
-              title="Creates silver.alert_notification_attempt (dev/staging only)"
+              :disabled="ensuring || !isSuperAdmin"
+              :title="isSuperAdmin
+                ? 'Super-admin only. Status by default; type APPLY to run DDL ensure in dev.'
+                : 'Super-admin required.'"
               @click="ensureAuditTable"
             >
               {{ ensuring ? 'Ensuring…' : 'Ensure email audit table' }}
             </button>
             <button
               class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
-              :disabled="evaluating"
-              title="Admin-only dev helper: evaluate alerts now (ignores schedule constraints)"
+              :disabled="evaluating || !isSuperAdmin"
+              :title="isSuperAdmin
+                ? 'Super-admin only. Defaults to dry-run; type RUN to execute.'
+                : 'Super-admin required.'"
               @click="runAlertEvaluation"
             >
               {{ evaluating ? 'Evaluating…' : 'Run alert evaluation' }}
@@ -37,6 +41,12 @@
         </div>
         <div class="mt-3 text-body-sm text-rs-muted">
           Last refresh: {{ formatTimestamp(lastRefresh) }}
+        </div>
+        <div
+          v-if="actionMessage"
+          class="mt-2 text-body-sm text-neutral-600"
+        >
+          {{ actionMessage }}
         </div>
         <ErrorState
           v-if="error"
@@ -327,8 +337,29 @@
 
           <div class="rounded-xl border border-neutral-100 p-4">
             <div class="text-body-sm font-semibold text-rs-fg">Email send attempts (audit)</div>
-            <div class="mt-1 text-body-sm text-rs-muted">
-              Enable via <code>ALERTS_NOTIFICATION_AUDIT=1</code> (optional <code>..._CONTENT</code>, <code>..._PII</code>).
+            <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div class="text-body-sm text-rs-muted">
+                Enable via <code>ALERTS_NOTIFICATION_AUDIT=1</code> (optional <code>..._CONTENT</code>, <code>..._PII</code>).
+              </div>
+              <label
+                v-if="isSuperAdmin"
+                class="flex items-center gap-2 text-body-sm text-neutral-600"
+              >
+                <input
+                  v-model="includePii"
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-neutral-300 text-brand-600"
+                  :disabled="loading"
+                  @change="refresh"
+                >
+                Show PII
+              </label>
+            </div>
+            <div
+              v-if="includePii && observerSummary?.pii && observerSummary.pii.requested && !observerSummary.pii.included"
+              class="mt-1 text-xs text-neutral-400"
+            >
+              PII was requested but not included. Enable <code>ALERTS_NOTIFICATION_AUDIT_PII=1</code> and re-check.
             </div>
             <div class="mt-2 overflow-auto">
               <table class="min-w-full text-body-sm">
@@ -467,9 +498,10 @@ n/a
       <section class="rounded-2xl bg-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">CSV paths (no CLI)</h2>
         <ul class="mt-4 list-disc space-y-2 pl-5 text-body-sm text-neutral-700">
+          <li>Gold exports snapshot: open <strong>/admin/gold-exports</strong> to browse and download TEER/RCI/RVI CSV.</li>
           <li>RDS Query Editor v2: run SQL from <code>docs/runbooks/sql/observer-pack.sql</code> and click <strong>Export to CSV</strong>.</li>
           <li>Product export flow: create export via <code>/api/v1/exports</code>, then download from Exports UI.</li>
-          <li>S3 export artifacts: open <code>remit-scout-exports-dev</code> and download generated files under the <code>exports/</code> prefix.</li>
+          <li>S3 export artifacts: open the Exports bucket (AWS click-paths above) and download generated files under the <code>exports/</code> prefix.</li>
         </ul>
       </section>
     </div>
@@ -483,7 +515,23 @@ import { setSeo } from '~/composables/useSeo'
 definePageMeta({ middleware: ['auth', 'admin'] })
 
 const route = useRoute()
-const { public: { siteUrl } } = useRuntimeConfig()
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig.public.siteUrl
+
+const normalizeEnv = (value?: string) => {
+  const raw = (value || '').toLowerCase().trim()
+  if (!raw) return 'dev'
+  if (raw === 'production') return 'prod'
+  if (raw === 'development') return 'dev'
+  return raw
+}
+
+const envName = normalizeEnv((runtimeConfig.public as any).remitScoutEnv as string | undefined)
+const awsRegion = String((runtimeConfig.public as any).awsRegion || 'us-east-1')
+
+const stackName = `remit-scout-${envName}`
+const bronzeBucket = `remit-scout-bronze-${envName}`
+const exportsBucket = `remit-scout-exports-${envName}`
 
 setSeo({
   title: 'Admin: Observer | Remit-Scout',
@@ -537,6 +585,10 @@ type ProviderCheckRow = {
 type ObserverSummaryResponse = {
   success: boolean
   timestamp: string
+  pii?: {
+    requested: boolean
+    included: boolean
+  }
   gold: {
     latest_date: string | null
   }
@@ -604,56 +656,74 @@ type ObserverSummaryResponse = {
 
 const { request } = useApi()
 
+type MeResponse = {
+  success: boolean
+  user: {
+    role: string | null
+    app_role: string | null
+    is_admin: boolean
+  }
+}
+
 const loading = ref(false)
 const ensuring = ref(false)
 const evaluating = ref(false)
 const error = ref<string | null>(null)
+const actionMessage = ref<string | null>(null)
 const lastRefresh = ref<string | null>(null)
 const indicesHealth = ref<IndicesHealthResponse | null>(null)
 const b2bSweepStatus = ref<B2bSweepStatusResponse | null>(null)
 const providerChecks = ref<ProviderCheckRow[]>([])
 const observerSummary = ref<ObserverSummaryResponse | null>(null)
+const includePii = ref(false)
+const me = ref<MeResponse | null>(null)
+
+const isSuperAdmin = computed(() => {
+  const role = me.value?.user?.role ?? null
+  const appRole = me.value?.user?.app_role ?? null
+  return role === 'super_admin' || appRole === 'super_admin'
+})
 
 const awsLinks = [
   {
     label: 'CloudWatch Dashboard',
     description: 'Primary visual health page for queue depth, SLO, errors, and latency.',
-    href: 'https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=remit-scout-dev',
+    href: `https://${awsRegion}.console.aws.amazon.com/cloudwatch/home?region=${awsRegion}#dashboards:name=${encodeURIComponent(stackName)}`,
   },
   {
-    label: 'ECS Cluster (dev)',
+    label: 'ECS Cluster',
     description: 'Worker desired/running counts and service-level failures.',
-    href: 'https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/remit-scout-dev/services?region=us-east-1',
+    href: `https://${awsRegion}.console.aws.amazon.com/ecs/v2/clusters/${encodeURIComponent(stackName)}/services?region=${awsRegion}`,
   },
   {
     label: 'SQS Queues',
     description: 'Backlog + oldest message age for ingest, alerts, exports, and B2C.',
-    href: 'https://us-east-1.console.aws.amazon.com/sqs/v3/home?region=us-east-1#/queues',
+    href: `https://${awsRegion}.console.aws.amazon.com/sqs/v3/home?region=${awsRegion}#/queues`,
   },
   {
     label: 'RDS Query Editor v2',
     description: 'Run observer SQL and export CSV directly from AWS UI.',
-    href: 'https://us-east-1.console.aws.amazon.com/rds/home?region=us-east-1#query-editor:',
+    href: `https://${awsRegion}.console.aws.amazon.com/rds/home?region=${awsRegion}#query-editor:`,
   },
   {
     label: 'Bronze bucket',
     description: 'Raw payload objects (when collection is running).',
-    href: 'https://s3.console.aws.amazon.com/s3/buckets/remit-scout-bronze-dev?region=us-east-1&bucketType=general&prefix=bronze%2F',
+    href: `https://s3.console.aws.amazon.com/s3/buckets/${encodeURIComponent(bronzeBucket)}?region=${awsRegion}&bucketType=general&prefix=bronze%2F`,
   },
   {
     label: 'Exports bucket',
     description: 'Generated CSV/PDF files from export jobs.',
-    href: 'https://s3.console.aws.amazon.com/s3/buckets/remit-scout-exports-dev?region=us-east-1&bucketType=general&prefix=exports%2F',
+    href: `https://s3.console.aws.amazon.com/s3/buckets/${encodeURIComponent(exportsBucket)}?region=${awsRegion}&bucketType=general&prefix=exports%2F`,
   },
   {
     label: 'SES Account dashboard',
     description: 'Check sandbox state and whether send-path is blocked by identity limits.',
-    href: 'https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/account-dashboard',
+    href: `https://${awsRegion}.console.aws.amazon.com/ses/home?region=${awsRegion}#/account-dashboard`,
   },
   {
     label: 'SES Verified identities',
     description: 'Confirm From domain/email and recipient verification status.',
-    href: 'https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/verified-identities',
+    href: `https://${awsRegion}.console.aws.amazon.com/ses/home?region=${awsRegion}#/verified-identities`,
   },
 ] as const
 
@@ -683,18 +753,50 @@ const formatTimestamp = (value?: string | null) => {
   return date.toLocaleString()
 }
 
+const loadMe = async () => {
+  try {
+    me.value = await request<MeResponse>('/me', { method: 'GET', timeoutMs: 15000, retries: 0 })
+  }
+  catch {
+    me.value = null
+  }
+}
+
 const ensureAuditTable = async () => {
   if (ensuring.value) return
+  if (!isSuperAdmin.value) {
+    error.value = 'Super-admin access is required for this action.'
+    return
+  }
   ensuring.value = true
   try {
-    const result = await request<{ success: boolean, error?: string, message?: string }>(
+    const typed = typeof window !== 'undefined'
+      ? window.prompt('Type APPLY to run DDL ensure in dev. Leave blank to check status.')
+      : null
+    const wantsEnsure = (typed || '').trim().toUpperCase() === 'APPLY'
+    const result = await request<{
+      success: boolean
+      error?: string
+      message?: string
+      exists?: boolean
+      missing?: boolean
+      requested_mode?: string
+      applied_mode?: string
+      migration?: string
+    }>(
       '/ops/db/ensure-alert-notification-attempts',
-      { method: 'POST', timeoutMs: 8000, retries: 0 },
+      {
+        method: 'POST',
+        body: wantsEnsure ? { mode: 'ensure', confirm: 'APPLY' } : { mode: 'status' },
+        timeoutMs: 15000,
+        retries: 0,
+      },
     )
     if (!result?.success) {
       error.value = result?.message || 'Failed to ensure email audit table.'
     }
     else {
+      actionMessage.value = result?.message || 'Email audit table check completed.'
       await loadObserver()
     }
   }
@@ -708,11 +810,26 @@ const ensureAuditTable = async () => {
 
 const runAlertEvaluation = async () => {
   if (evaluating.value) return
+  if (!isSuperAdmin.value) {
+    error.value = 'Super-admin access is required for this action.'
+    return
+  }
   evaluating.value = true
   try {
+    const typed = typeof window !== 'undefined'
+      ? window.prompt('Type RUN to execute (sends notifications). Leave blank for dry-run.')
+      : null
+    const isExecute = (typed || '').trim().toUpperCase() === 'RUN'
+    const mode = isExecute ? 'execute' as const : 'dry_run' as const
     const result = await request<any>('/ops/alerts/evaluate', {
       method: 'POST',
-      body: { frequency: 'daily', ignoreSchedule: true, limit: 50 },
+      body: {
+        frequency: 'daily',
+        ignoreSchedule: true,
+        limit: 50,
+        mode,
+        confirm: isExecute ? 'RUN' : undefined,
+      },
       timeoutMs: 25000,
       retries: 0,
     })
@@ -720,6 +837,13 @@ const runAlertEvaluation = async () => {
       error.value = result?.message || 'Alert evaluation failed.'
     }
     else {
+      if (result?.mode === 'batch') {
+        actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): triggered ${result?.triggered ?? 0}/${result?.total ?? 0}.`
+      } else if (result?.mode === 'single') {
+        actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): alert ${result?.alertId} triggered=${Boolean(result?.triggered)}.`
+      } else {
+        actionMessage.value = `Alert evaluation (${mode}) completed.`
+      }
       await loadObserver()
     }
   }
@@ -739,7 +863,12 @@ const loadObserver = async () => {
     const [indicesResult, sweepResult, summaryResult, providerResults] = await Promise.allSettled([
       request<IndicesHealthResponse>('/ops/indices/health'),
       request<B2bSweepStatusResponse>('/ops/b2b-sweep-status'),
-      request<ObserverSummaryResponse>('/ops/observer/summary?limit=50'),
+      request<ObserverSummaryResponse>('/ops/observer/summary', {
+        query: {
+          limit: '50',
+          include_pii: includePii.value ? '1' : '0',
+        },
+      }),
       Promise.allSettled(
         watchedProviders.map(async (provider) => {
           const response = await request<ProviderHealthResponse>(`/ops/${provider.id}/health`)
@@ -795,5 +924,8 @@ const refresh = () => {
   void loadObserver()
 }
 
-onMounted(loadObserver)
+onMounted(() => {
+  void loadMe()
+  void loadObserver()
+})
 </script>

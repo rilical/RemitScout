@@ -28,7 +28,13 @@ const resolveRequiredApiKeyScopes = (request: FastifyRequest): string[] => {
   const path = rawPath.startsWith('/api/v1') ? rawPath.slice('/api/v1'.length) || '/' : rawPath
 
   // Ops/admin routes should never be accessible via API keys.
-  if (path.startsWith('/ops') || path.startsWith('/admin') || path.startsWith('/audit')) {
+  if (
+    path.startsWith('/ops')
+    || path.startsWith('/admin')
+    || path.startsWith('/audit')
+    || path.startsWith('/analytics')
+    || path.startsWith('/telemetry/analytics')
+  ) {
     return ['__forbidden__']
   }
 
@@ -208,6 +214,47 @@ export const requireAdmin = () => {
     return reply.send({ error: 'forbidden' })
   }
   ;(handler as { __guardTag?: string }).__guardTag = 'requireAdmin'
+  return handler
+}
+
+export const requireSuperAdmin = () => {
+  const handler = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (request.accountDeleted) {
+      reply.code(403)
+      return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
+    }
+
+    if (!request.user) {
+      reply.code(401)
+      return reply.send({ error: 'unauthorized' })
+    }
+
+    const supabaseRole = request.user.role
+    if (supabaseRole === 'super_admin') {
+      return
+    }
+
+    try {
+      const result = await query<{ app_role: string | null }>(
+        `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
+        [request.user.user_id],
+        planeAPool,
+      )
+      const appRole = result.rows[0]?.app_role
+      if (appRole === 'super_admin') {
+        return
+      }
+    } catch (error) {
+      logger.warn('super_admin_role_lookup_failed', {
+        user_id: request.user.user_id,
+        error: getErrorMessage(error),
+      })
+    }
+
+    reply.code(403)
+    return reply.send({ error: 'forbidden' })
+  }
+  ;(handler as { __guardTag?: string }).__guardTag = 'requireSuperAdmin'
   return handler
 }
 

@@ -4899,8 +4899,8 @@ const checkAdminAccess = async (signal?: AbortSignal) => {
   if (adminAccessChecked.value) return
   let aborted = false
   try {
-    await request('/admin/users', { query: { limit: 1 }, signal })
-    hasAdminAccess.value = true
+    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
+    hasAdminAccess.value = Boolean(me?.user?.is_admin)
   }
  catch (error: any) {
     if (error?.name === 'AbortError') {
@@ -5129,6 +5129,16 @@ const opsAdminLinks = [
     label: 'Observer Console',
     description: 'AWS click-paths + ops status for ingestion, gold indices, alerts, and exports.',
     to: '/admin/observer',
+  },
+  {
+    label: 'Gold Exports',
+    description: 'Browse and export latest TEER/RCI/RVI snapshot across all corridors.',
+    to: '/admin/gold-exports',
+  },
+  {
+    label: 'Enterprise Management',
+    description: 'Grant/revoke Plus/Enterprise plans and manage entitlements for accounts.',
+    to: '/admin/enterprise',
   },
   {
     label: 'Analytics Console',

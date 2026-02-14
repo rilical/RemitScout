@@ -14,6 +14,7 @@ const pool = getPool(config.db.planeAUrl)
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(DEFAULT_LIMIT_MAX).default(50),
   windowHours: z.coerce.number().int().min(1).max(168).default(24),
+  include_pii: z.coerce.number().int().min(0).max(1).default(0),
 })
 
 export const observerSummaryRoutes = (app: FastifyInstance) => {
@@ -25,8 +26,31 @@ export const observerSummaryRoutes = (app: FastifyInstance) => {
 
     const limit = parsed.data.limit
     const windowHours = parsed.data.windowHours
+    const includePiiRequested = parsed.data.include_pii === 1
 
     try {
+      let includePii = false
+      if (includePiiRequested && config.alerts.notifications.auditPii) {
+        const supabaseRole = request.user?.role ?? null
+        if (supabaseRole === 'super_admin') {
+          includePii = true
+        }
+        else {
+          try {
+            const roleResult = await query<{ app_role: string | null }>(
+              `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
+              [request.user?.user_id ?? ''],
+              pool,
+            )
+            includePii = roleResult.rows[0]?.app_role === 'super_admin'
+          } catch (roleError) {
+            logger.warn('observer_summary_super_admin_lookup_failed', {
+              error: getErrorMessage(roleError),
+            })
+          }
+        }
+      }
+
       const latestQuotes = await query<{
         provider_id: string
         corridor_id: string
@@ -177,6 +201,10 @@ export const observerSummaryRoutes = (app: FastifyInstance) => {
       return {
         success: true,
         timestamp: new Date().toISOString(),
+        pii: {
+          requested: includePiiRequested,
+          included: includePii,
+        },
         gold: {
           latest_date: latestGoldDate.rows[0]?.latest_date ?? null,
         },
@@ -233,7 +261,7 @@ export const observerSummaryRoutes = (app: FastifyInstance) => {
             channel: row.channel,
             provider: row.provider,
             to_email_hash: row.to_email_hash,
-            to_email: row.to_email,
+            to_email: includePii ? row.to_email : null,
             subject: row.subject,
             status: row.status,
             skip_reason: row.skip_reason,

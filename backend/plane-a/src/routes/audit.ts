@@ -21,11 +21,43 @@ const listSchema = z.object({
   format: z.enum(['csv', 'json']).optional(),
 })
 
+const DAY_MS = 24 * 60 * 60 * 1000
+const DEFAULT_WINDOW_DAYS = 7
+const MAX_WINDOW_DAYS = 90
+
 const parseDateOrNull = (value?: string) => {
   if (!value) return null
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return null
   return parsed
+}
+
+const resolveDateRange = (input: { start_date?: string; end_date?: string }) => {
+  const explicitStart = parseDateOrNull(input.start_date)
+  const explicitEnd = parseDateOrNull(input.end_date)
+
+  if (input.start_date && !explicitStart) {
+    throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
+  }
+  if (input.end_date && !explicitEnd) {
+    throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
+  }
+
+  const endDate = explicitEnd ?? new Date()
+  const startDate = explicitStart ?? new Date(endDate.getTime() - DEFAULT_WINDOW_DAYS * DAY_MS)
+
+  if (startDate.getTime() > endDate.getTime()) {
+    throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
+  }
+
+  const windowMs = endDate.getTime() - startDate.getTime()
+  if (windowMs > MAX_WINDOW_DAYS * DAY_MS) {
+    throw new ValidationError('Invalid request', {
+      details: { error: 'date_range_too_large', max_days: MAX_WINDOW_DAYS },
+    })
+  }
+
+  return { startDate, endDate }
 }
 
 export const auditRoutes = async (app: FastifyInstance) => {
@@ -34,14 +66,12 @@ export const auditRoutes = async (app: FastifyInstance) => {
   app.get('/audit/logs', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', {
+        details: { error: 'bad_request', details: parsed.error.issues },
+      })
     }
 
-    const startDate = parseDateOrNull(parsed.data.start_date)
-    const endDate = parseDateOrNull(parsed.data.end_date)
-    if ((parsed.data.start_date && !startDate) || (parsed.data.end_date && !endDate)) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const { startDate, endDate } = resolveDateRange(parsed.data)
 
     try {
       const result = await auditRepository.getLogs({
@@ -52,8 +82,8 @@ export const auditRoutes = async (app: FastifyInstance) => {
         entity_id: parsed.data.entity_id,
         category: parsed.data.category,
         severity: parsed.data.severity,
-        start_date: startDate ?? undefined,
-        end_date: endDate ?? undefined,
+        start_date: startDate,
+        end_date: endDate,
         limit: parsed.data.limit ?? 100,
         offset: parsed.data.offset ?? 0,
       })
@@ -78,14 +108,12 @@ export const auditRoutes = async (app: FastifyInstance) => {
   app.get('/audit/logs/export', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', {
+        details: { error: 'bad_request', details: parsed.error.issues },
+      })
     }
 
-    const startDate = parseDateOrNull(parsed.data.start_date)
-    const endDate = parseDateOrNull(parsed.data.end_date)
-    if ((parsed.data.start_date && !startDate) || (parsed.data.end_date && !endDate)) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const { startDate, endDate } = resolveDateRange(parsed.data)
 
     const format = parsed.data.format ?? 'json'
 
@@ -99,8 +127,8 @@ export const auditRoutes = async (app: FastifyInstance) => {
           entity_id: parsed.data.entity_id,
           category: parsed.data.category,
           severity: parsed.data.severity,
-          start_date: startDate ?? undefined,
-          end_date: endDate ?? undefined,
+          start_date: startDate,
+          end_date: endDate,
           limit: parsed.data.limit ?? 1000,
           offset: parsed.data.offset ?? 0,
         },

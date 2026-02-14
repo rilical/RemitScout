@@ -6,6 +6,9 @@ import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.analytics')
 
+const DAY_MS = 24 * 60 * 60 * 1000
+const MAX_WINDOW_DAYS = 90
+
 const dateRangeSchema = z.object({
   start_date: z.string().min(1),
   end_date: z.string().min(1),
@@ -61,12 +64,24 @@ const revenueSchema = dateRangeSchema.extend({
   limit: z.coerce.number().int().min(1).max(500).optional(),
 })
 
-const parseDateRange = (input: { start_date: string; end_date: string }) => {
+const parseAndValidateDateRange = (input: { start_date: string; end_date: string }) => {
   const start = new Date(input.start_date)
   const end = new Date(input.end_date)
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return null
+    throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
   }
+
+  if (start.getTime() > end.getTime()) {
+    throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
+  }
+
+  const windowMs = end.getTime() - start.getTime()
+  if (windowMs > MAX_WINDOW_DAYS * DAY_MS) {
+    throw new ValidationError('Invalid request', {
+      details: { error: 'date_range_too_large', max_days: MAX_WINDOW_DAYS },
+    })
+  }
+
   return { start, end }
 }
 
@@ -76,13 +91,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/corridors', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = corridorSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const corridors = await analyticsRepository.getPopularCorridors({
@@ -110,13 +122,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/corridors/trends', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = corridorTrendSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const trends = await analyticsRepository.getCorridorTrends({
@@ -139,13 +148,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/providers', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = providersSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const providers = await analyticsRepository.getFavoriteProviders({
@@ -167,13 +173,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/providers/impact', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = providerImpactSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const providers = await analyticsRepository.getProviderImpactSummary({
@@ -211,13 +214,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/providers/ctr', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = providerCtrSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const ctrData = await analyticsRepository.getProviderClickThroughRates({
@@ -240,13 +240,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/engagement', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = engagementSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const engagement = await analyticsRepository.getEngagementMetrics({
@@ -268,13 +265,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/engagement/sessions', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = dateRangeSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const metrics = await analyticsRepository.getSessionMetrics({
@@ -295,13 +289,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/heatmap', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = heatmapSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const heatmap = await analyticsRepository.getGeographicHeatmap({
@@ -323,13 +314,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/savings', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = savingsSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const savings = await analyticsRepository.getSavingsMetrics({
@@ -351,13 +339,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/users', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = userBehaviorSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const patterns = await analyticsRepository.getUserBehaviorPatterns({
@@ -379,13 +364,10 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
   app.get('/analytics/revenue', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = revenueSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const range = parseDateRange(parsed.data)
-    if (!range) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
+    const range = parseAndValidateDateRange(parsed.data)
 
     try {
       const revenue = await analyticsRepository.getRevenueMetrics({

@@ -132,7 +132,12 @@ const WEEKLY_SEND_DOW = config.alerts.smart.weeklySendDow
 const WEEKLY_SEND_HOUR = config.alerts.smart.weeklySendHour
 const ALERT_EVALUATION_CONCURRENCY = config.alerts.evaluation.concurrency
 
-export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolean> {
+export async function evaluateAlert(
+  pool: Pool,
+  alertId: string,
+  options?: { dryRun?: boolean },
+): Promise<boolean> {
+  const dryRun = options?.dryRun === true
   try {
     // Get alert rule and watchlist item
     const alertRepository = new AlertRepository(pool)
@@ -481,17 +486,19 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
     const newInAlarm = shouldTrigger
     const newVersion = (state?.version || 1) + 1
 
-    await alertRepository.updateAlertState(alertId, {
-      last_evaluated_at: now,
-      last_value: currentValue,
-      in_alarm: newInAlarm,
-      last_triggered_at: newInAlarm ? now : state?.last_triggered_at || null,
-      last_notified_at: newInAlarm && !state?.last_notified_at ? now : state?.last_notified_at || null,
-      version: newVersion,
-    })
+    if (!dryRun) {
+      await alertRepository.updateAlertState(alertId, {
+        last_evaluated_at: now,
+        last_value: currentValue,
+        in_alarm: newInAlarm,
+        last_triggered_at: newInAlarm ? now : state?.last_triggered_at || null,
+        last_notified_at: newInAlarm && !state?.last_notified_at ? now : state?.last_notified_at || null,
+        version: newVersion,
+      })
+    }
 
     // Create alert event if triggered
-    if (shouldTrigger) {
+    if (shouldTrigger && !dryRun) {
       const context = {
         alert_id: alertId,
         metric: alert.metric,
@@ -540,6 +547,15 @@ export async function evaluateAlert(pool: Pool, alertId: string): Promise<boolea
         push_sent: pushSent,
       })
     }
+    if (shouldTrigger && dryRun) {
+      logger.info('alert_would_trigger', {
+        alert_id: alertId,
+        user_id: watchlist_item.user_id,
+        metric: alert.metric,
+        current_value: currentValue,
+        threshold,
+      })
+    }
 
     return shouldTrigger
   } catch (error: unknown) {
@@ -556,13 +572,14 @@ export async function evaluateAlertsForFrequency(
   pool: Pool,
   frequency: 'weekly' | 'daily',
   timeBucket?: number,
-  options?: { ignoreSchedule?: boolean; limit?: number },
+  options?: { ignoreSchedule?: boolean; limit?: number; dryRun?: boolean },
 ): Promise<{ total: number; triggered: number }> {
   try {
     const startTime = Date.now()
     const { query } = await import('../../../shared/db')
     const params: Array<string | number> = [frequency]
     const ignoreSchedule = options?.ignoreSchedule === true
+    const dryRun = options?.dryRun === true
     const limit = Math.max(1, Math.min(options?.limit ?? 5000, 5000))
     const conditions: string[] = [
       'ar.enabled = TRUE',
@@ -626,7 +643,7 @@ export async function evaluateAlertsForFrequency(
       for (;;) {
         const i = nextIndex++
         if (i >= ids.length) return
-        const triggered = await evaluateAlert(pool, ids[i]!)
+        const triggered = await evaluateAlert(pool, ids[i]!, { dryRun })
         if (triggered) triggeredCount++
       }
     })
@@ -660,6 +677,7 @@ export async function evaluateAlertsForFrequency(
       total: result.rows.length,
       triggered: triggeredCount,
       ignore_schedule: ignoreSchedule,
+      dry_run: dryRun,
       limit,
     })
 

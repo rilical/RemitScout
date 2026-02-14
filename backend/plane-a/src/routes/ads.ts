@@ -4,6 +4,7 @@ import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
+import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { ValidationError } from '../../../shared/errors'
 
@@ -27,33 +28,72 @@ const clickSchema = z.object({
   anon_id: z.string().optional(),
   corridor_id: z.string().optional(),
   page_path: z.string().optional(),
-  target_url: z.string().optional(),
+  target_url: z.string().trim().max(2048).optional().refine((value) => {
+    if (!value) return true
+    try {
+      const parsed = new URL(value)
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    }
+    catch {
+      return false
+    }
+  }, { message: 'invalid_target_url' }),
   is_affiliate: z.boolean().optional(),
 })
 
+const isHttpUrl = (value: string): boolean => {
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .url()
+  .refine(isHttpUrl, { message: 'url_must_be_http_https' })
+
+const hexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#[0-9a-fA-F]{6}$/, { message: 'invalid_hex_color' })
+
+const optionalText = (max: number) => z.string().trim().min(1).max(max).optional()
+
+const optionalDateTime = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), { message: 'invalid_datetime' })
+  .optional()
+
 const adSchema = z.object({
-  name: z.string().min(1),
-  tagline: z.string().min(1),
-  brandColor: z.string().min(1),
-  url: z.string().min(1),
-  ctaText: z.string().optional(),
-  rating: z.number().optional(),
-  reviewCount: z.string().optional(),
-  logoLetter: z.string().optional(),
-  weight: z.number().int().min(1).optional(),
-  label: z.string().optional(),
+  name: z.string().trim().min(1).max(80),
+  tagline: z.string().trim().min(1).max(180),
+  brandColor: hexColorSchema,
+  url: httpUrlSchema,
+  ctaText: optionalText(80),
+  rating: z.coerce.number().min(0).max(5).optional(),
+  reviewCount: optionalText(32),
+  logoLetter: optionalText(4),
+  weight: z.coerce.number().int().min(1).max(1000).optional(),
+  label: optionalText(32),
   isAffiliate: z.boolean().optional(),
-  providerId: z.string().optional(),
+  providerId: z.string().uuid().optional(),
   kind: z.enum(['sponsored', 'house']).optional(),
   status: z.enum(['active', 'inactive']).optional(),
-  startAt: z.string().optional(),
-  endAt: z.string().optional(),
+  startAt: optionalDateTime,
+  endAt: optionalDateTime,
 })
 
 const placementSchema = z.object({
-  placement: z.string().min(1),
+  placement: z.string().trim().min(1).max(64),
   layout: z.enum(['horizontal', 'vertical', 'compact']).optional(),
-  priority: z.number().int().optional(),
+  priority: z.coerce.number().int().min(0).max(100).optional(),
 })
 
 const createAdSchema = z.object({
@@ -88,6 +128,109 @@ const pickWeighted = <T extends { weight?: number | null }>(ads: T[], seed: stri
     if (target < cursor) return ad
   }
   return ads[0]
+}
+
+type AdminAdSnapshot = {
+  id: string
+  name: string
+  tagline: string
+  brandColor: string
+  url: string
+  ctaText: string | null
+  rating: number | null
+  reviewCount: string | null
+  logoLetter: string | null
+  weight: number | null
+  label: string | null
+  isAffiliate: boolean | null
+  providerId: string | null
+  kind: string | null
+  status: string | null
+  startAt: string | null
+  endAt: string | null
+  placements: Array<{ placement: string; layout: string | null; priority: number }>
+}
+
+const fetchAdminAdSnapshot = async (adId: string): Promise<AdminAdSnapshot | null> => {
+  const adResult = await query<{
+    id: string
+    name: string
+    tagline: string
+    brand_color: string
+    url: string
+    cta_text: string | null
+    rating: number | null
+    review_count: string | null
+    logo_letter: string | null
+    weight: number | null
+    label: string | null
+    is_affiliate: boolean | null
+    provider_id: string | null
+    kind: string | null
+    status: string | null
+    start_at: string | null
+    end_at: string | null
+  }>(
+    `SELECT
+       id,
+       name,
+       tagline,
+       brand_color,
+       url,
+       cta_text,
+       rating,
+       review_count,
+       logo_letter,
+       weight,
+       label,
+       is_affiliate,
+       provider_id,
+       kind,
+       status,
+       start_at::text AS start_at,
+       end_at::text AS end_at
+     FROM silver.ad_inventory
+     WHERE id = $1`,
+    [adId],
+    pool,
+  )
+
+  const adRow = adResult.rows[0]
+  if (!adRow) return null
+
+  const placementsResult = await query<{ placement: string; layout: string | null; priority: number }>(
+    `SELECT placement, layout, priority
+     FROM silver.ad_placement
+     WHERE ad_id = $1
+     ORDER BY priority DESC`,
+    [adId],
+    pool,
+  )
+
+  return {
+    id: adRow.id,
+    name: adRow.name,
+    tagline: adRow.tagline,
+    brandColor: adRow.brand_color,
+    url: adRow.url,
+    ctaText: adRow.cta_text,
+    rating: adRow.rating,
+    reviewCount: adRow.review_count,
+    logoLetter: adRow.logo_letter,
+    weight: adRow.weight,
+    label: adRow.label,
+    isAffiliate: adRow.is_affiliate,
+    providerId: adRow.provider_id,
+    kind: adRow.kind,
+    status: adRow.status,
+    startAt: adRow.start_at,
+    endAt: adRow.end_at,
+    placements: placementsResult.rows.map((row) => ({
+      placement: row.placement,
+      layout: row.layout,
+      priority: row.priority,
+    })),
+  }
 }
 
 export const adsRoutes = async (app: FastifyInstance) => {
@@ -168,6 +311,15 @@ export const adsRoutes = async (app: FastifyInstance) => {
 
       const seed = input.session_id || input.anon_id || input.placement
       const picked = pickWeighted(result.rows, seed)
+
+      if (!isHttpUrl(picked.url)) {
+        logger.warn('ad_invalid_url_blocked', {
+          ad_id: picked.id,
+          placement: input.placement,
+          url: picked.url,
+        })
+        return { ad: null }
+      }
 
       if (input.session_id || input.anon_id) {
         await query(
@@ -458,6 +610,34 @@ export const adsRoutes = async (app: FastifyInstance) => {
         )
       }
 
+      const afterSnapshot = await fetchAdminAdSnapshot(adId)
+      try {
+        await logAuditEvent(pool, {
+          actorId: request.user?.user_id ?? 'unknown',
+          actorType: 'admin',
+          actorRole: request.user?.role ?? undefined,
+          action: 'admin.ads.create',
+          entityType: 'ad_inventory',
+          entityId: adId,
+          category: 'admin',
+          severity: 'warning',
+          reason: 'admin_create',
+          afterSnapshot: afterSnapshot ?? {
+            id: adId,
+            ...ad,
+            placements,
+          },
+          metadata: {
+            placements_count: placements.length,
+          },
+          ...getRequestContext(request),
+        })
+      } catch (auditError) {
+        logger.warn('admin_ads_create_audit_failed', {
+          error: auditError instanceof Error ? auditError.message : String(auditError),
+        })
+      }
+
       return { id: adId }
     } catch (error) {
       logger.error('admin_ads_create_failed', {
@@ -483,6 +663,12 @@ export const adsRoutes = async (app: FastifyInstance) => {
 
     const adUpdates = parsed.data.ad ?? {}
     try {
+      const beforeSnapshot = await fetchAdminAdSnapshot(adId)
+      if (!beforeSnapshot) {
+        reply.code(404)
+        return { error: 'not_found' }
+      }
+
       if (Object.keys(adUpdates).length > 0) {
         const updates: string[] = []
         const values: Array<string | number | boolean | null> = []
@@ -537,6 +723,32 @@ export const adsRoutes = async (app: FastifyInstance) => {
             pool,
           )
         }
+      }
+
+      const afterSnapshot = await fetchAdminAdSnapshot(adId)
+      try {
+        await logAuditEvent(pool, {
+          actorId: request.user?.user_id ?? 'unknown',
+          actorType: 'admin',
+          actorRole: request.user?.role ?? undefined,
+          action: 'admin.ads.update',
+          entityType: 'ad_inventory',
+          entityId: adId,
+          category: 'admin',
+          severity: 'warning',
+          reason: 'admin_update',
+          beforeSnapshot,
+          afterSnapshot: afterSnapshot ?? null,
+          metadata: {
+            updated_fields: Object.keys(adUpdates),
+            placements_updated: Boolean(parsed.data.placements),
+          },
+          ...getRequestContext(request),
+        })
+      } catch (auditError) {
+        logger.warn('admin_ads_update_audit_failed', {
+          error: auditError instanceof Error ? auditError.message : String(auditError),
+        })
       }
 
       return { success: true }

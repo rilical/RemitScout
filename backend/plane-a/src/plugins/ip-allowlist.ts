@@ -46,9 +46,12 @@ export const registerAdminIpAllowlist = (app: FastifyInstance) => {
 
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const path = request.url.split('?')[0] || ''
-    if (!path.startsWith('/api/v1/ops') && !path.startsWith('/api/v1/admin')) {
-      return
-    }
+    const protectedPrefixes = ['/api/v1/ops', '/api/v1/admin', '/api/v1/audit', '/api/v1/analytics']
+    const protectedExact = new Set(['/api/v1/telemetry/analytics'])
+    const isProtected =
+      protectedPrefixes.some(prefix => path.startsWith(prefix))
+      || protectedExact.has(path)
+    if (!isProtected) return
 
     const ip = resolveClientIp(request)
     if (!ip) {
